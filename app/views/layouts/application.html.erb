@@ -5,10 +5,29 @@
   <%= stylesheet_link_tag    "application", media: "all", "data-turbolinks-track" => true %>
   <%= javascript_include_tag "application", "data-turbolinks-track" => true %>
   <%= csrf_meta_tags %>
+  <!--[if lt IE 9]>
+    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
 </head>
 <body>
-
-<%= yield %>
-
+  <header class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar-inner">
+      <div class="container-fluid">
+        <%= link_to "CodePractice", '#', class: "brand" %>
+        <nav class="nav-collapse collapse">
+          <p class="navbar-text pull-right">
+              <a href="#" class="navbar-link">Sign In</a>
+          </p>
+          <ul class="nav">
+            <li class="active"><%= link_to "Home",    '#' %></li>
+            <li><%= link_to "Help",    '#' %></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </header>
+  <div class="container">
+    <%= yield %>
+  </div>
 </body>
 </html>
