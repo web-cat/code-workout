@@ -1,2 +1,446 @@
-<h1>StaticPages#home</h1>
-<p>Find me in app/views/static_pages/home.html.erb</p>
+  <header class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar-inner">
+      <div class="container-fluid">
+        <%= link_to "CodePractice", '#', class: "brand" %>
+        <nav class="nav-collapse collapse">
+          <p class="navbar-text pull-right">
+              <a href="#" class="navbar-link">Joe Hokie</a>
+          </p>
+          <ul class="nav">
+            <li class="active"><%= link_to "Home",    '#' %></li>
+            <li><%= link_to "Assignments",    '#' %></li>
+            <li><%= link_to "Help",    '#' %></li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+<div class="row-fluid max-height" id="main">
+  <div class="span8 scrollable max-height leftcol">
+  	<div class="below-nav">
+ 
+      <h1>Question: A-level/B-status</h1>
+      <p>
+  		What output will the following code fragment produce?     	
+      </p>
+<pre lang="text/x-java">
+public void fn()
+{
+    int grade = 91;
+    int level = -1;
+    if (grade >= 90)
+        if (level <= -2)
+            System.out.println("A-level");
+    else
+        System.out.println("B-status");
+}
+</pre>
+
+<h2>Select your answer:</h2>
+<form>
+<div class="answers well well-small">
+<label class="radio">
+  <input type="radio" name="answers" value="a"/>
+  A-level</label>
+<label class="radio">
+  <input type="radio" name="answers" value="b">
+  B-status</label>
+<label class="radio">
+  <input type="radio" name="answers" value="a"/>
+  "A-level"</label>
+<label class="radio">
+  <input type="radio" name="answers" value="b">
+  "B-status"</label>
+<label class="radio">
+  <input type="radio" name="answers" value="b">
+  no output is produced</label>
+</div>
+<button class="btn btn-default" type="button">Check my answer!</button>
+</form>
+<!--
+<hr/>  		
+  		<h1>H1 Text Goes Here</h1>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit <a href="#">amet risus</a>. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+    <p><a href="#" class="btn btn-default">Button</a></p>
+    <p><button class="btn">Button</button></p>
+    <p><a href="#" class="btn btn-warning">Button</a></p>
+    <p><a href="#" class="btn btn-primary">Button</a></p>
+    <p><a href="#" class="btn btn-success">Button</a></p>
+  		<h2>H2 Text Goes Here</h2>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  		<h3>H3 Text Goes Here</h3>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+   </p>-->
+ </div>
+  </div>
+  <div class="span4 scrollable max-height rightcol">
+  	<div class="below-nav">
+
+      <form class="form-search">
+        <input type="text" class="input-medium search-query" placeholder="find topics ...">
+        <button type="submit" class="btn btn-default">Search</button>
+      </form>
+
+      <h2>Assigned</h2>
+      <article>
+        <time>July 30</time>
+        <h3><a href="#">A-level/B-status</a>
+          <span class="difficulty">(difficulty: 8)</span></h3>
+        <p>What output will the following code fragment produce? ...<br/>
+        	<a href="#" class="tag">tag1</a>
+        	<a href="#" class="tag">tag2</a>
+        	<a href="#" class="tag">tag3</a>
+        	<a href="#" class="tag">tag4</a>
+        	<a href="#" class="tag">tag5</a>
+        </p>
+      </article>
+      <article>
+        <time>July 30</time>
+        <h3><a href="#">A-level/B-status</a>
+          <span class="difficulty">(difficulty: 8)</span></h3>
+        <p>What output will the following code fragment produce? ...<br/>
+        	<a href="#" class="tag">tag1</a>
+        	<a href="#" class="tag">tag2</a>
+        	<a href="#" class="tag">tag3</a>
+        	<a href="#" class="tag">tag4</a>
+        	<a href="#" class="tag">tag5</a>
+        </p>
+      </article>
+      <article>
+        <time>July 30</time>
+        <h3><a href="#">A-level/B-status</a>
+          <span class="difficulty">(difficulty: 8)</span></h3>
+        <p>What output will the following code fragment produce? ...<br/>
+        	<a href="#" class="tag">tag1</a>
+        	<a href="#" class="tag">tag2</a>
+        	<a href="#" class="tag">tag3</a>
+        	<a href="#" class="tag">tag4</a>
+        	<a href="#" class="tag">tag5</a>
+        </p>
+      </article>
+  		
+      <h2>Attempted</h2>
+      <article>
+        <time>July 30</time>
+        <h3><a href="#">A-level/B-status</a>
+          <span class="difficulty">(difficulty: 8)</span></h3>
+        <p>What output will the following code fragment produce? ...<br/>
+        	<a href="#" class="tag">tag1</a>
+        	<a href="#" class="tag">tag2</a>
+        	<a href="#" class="tag">tag3</a>
+        	<a href="#" class="tag">tag4</a>
+        	<a href="#" class="tag">tag5</a>
+        </p>
+      </article>
+      <article>
+        <h3><a href="#">A-level/B-status</a>
+          <span class="difficulty">(difficulty: 8)</span></h3>
+        <p>What output will the following code fragment produce? ...<br/>
+        	<a href="#" class="tag">tag1</a>
+        	<a href="#" class="tag">tag2</a>
+        	<a href="#" class="tag">tag3</a>
+        	<a href="#" class="tag">tag4</a>
+        	<a href="#" class="tag">tag5</a>
+        </p>
+      </article>
+      <article>
+        <h3><a href="#">A-level/B-status</a>
+          <span class="difficulty">(difficulty: 8)</span></h3>
+        <p>What output will the following code fragment produce? ...<br/>
+        	<a href="#" class="tag">tag1</a>
+        	<a href="#" class="tag">tag2</a>
+        	<a href="#" class="tag">tag3</a>
+        	<a href="#" class="tag">tag4</a>
+        	<a href="#" class="tag">tag5</a>
+        </p>
+      </article>
+
+      <h2>Recommended</h2>
+      <article>
+        <h3><a href="#">A-level/B-status</a>
+          <span class="difficulty">(difficulty: 8)</span></h3>
+        <p>What output will the following code fragment produce? ...<br/>
+        	<a href="#" class="tag">tag1</a>
+        	<a href="#" class="tag">tag2</a>
+        	<a href="#" class="tag">tag3</a>
+        	<a href="#" class="tag">tag4</a>
+        	<a href="#" class="tag">tag5</a>
+        </p>
+      </article>
+      <article>
+        <h3><a href="#">A-level/B-status</a>
+          <span class="difficulty">(difficulty: 8)</span></h3>
+        <p>What output will the following code fragment produce? ...<br/>
+        	<a href="#" class="tag">tag1</a>
+        	<a href="#" class="tag">tag2</a>
+        	<a href="#" class="tag">tag3</a>
+        	<a href="#" class="tag">tag4</a>
+        	<a href="#" class="tag">tag5</a>
+        </p>
+      </article>
+      <article>
+        <h3><a href="#">A-level/B-status</a>
+          <span class="difficulty">(difficulty: 8)</span></h3>
+        <p>What output will the following code fragment produce? ...<br/>
+        	<a href="#" class="tag">tag1</a>
+        	<a href="#" class="tag">tag2</a>
+        	<a href="#" class="tag">tag3</a>
+        	<a href="#" class="tag">tag4</a>
+        	<a href="#" class="tag">tag5</a>
+        </p>
+      </article>
+    </div>
+  </div>
+</div>
+
+<!-- ><div class="row-fluid max-height">
+  <div class="span3 scrollable max-height">
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+    <p>Sections:</p>
+    <ul>
+      <li>Assigned</li>
+      <li>Unanswered/Unfinished</li>
+      <li>Related</li>
+      <li>Recommended</li>
+      <li>Recently completed</li>
+      <li>Badges?</li>
+    </ul>
+    <p>Info:</p>
+    <ul>
+      <li>Question name</li>
+      <li>Due date (optional?)</li>
+      <li>First line of question text?</li>
+      <li>Topics/Tags</li>
+      <li>Difficulty?</li>
+      <li>Answered correctly yet?</li>
+    </ul>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  </div>
+  <div class="span9 scrollable max-height">
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  	<p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus,
+      tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum
+      massa justo sit amet risus. Etiam porta sem malesuada magna mollis
+      euismod. Donec sed odio dui.
+    </p>
+  </div>
+</div> -->

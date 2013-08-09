@@ -2,6 +2,8 @@
 <html>
 <head>
   <title>CodePractice</title>
+  <link href="http://fonts.googleapis.com/css?family=PT+Sans" rel="stylesheet" type="text/css">
+  <link href='http://fonts.googleapis.com/css?family=Rokkitt:400,700' rel='stylesheet' type='text/css'>
   <%= stylesheet_link_tag    "application", media: "all", "data-turbolinks-track" => true %>
   <%= javascript_include_tag "application", "data-turbolinks-track" => true %>
   <%= csrf_meta_tags %>
@@ -10,6 +12,7 @@
   <![endif]-->
 </head>
 <body>
+<!--
   <header class="navbar navbar-inverse navbar-fixed-top">
     <div class="navbar-inner">
       <div class="container-fluid">
@@ -26,8 +29,23 @@
       </div>
     </div>
   </header>
-  <div class="container">
+
+  <div class="container-fluid max-height" foo="main"> -->
     <%= yield %>
-  </div>
+
+<!--  <div id="push"></div>
+  <footer class="footer navbar navbar-inverse"><div class="navbar-inner">
+  	<div class="container-fluid">
+    <nav class="nav-collapse collapse">
+      <ul class="nav">
+      	<li><a href="http://codepractice.org/">CodePractice
+          &copy; Virginia Tech</a></li>
+        <li><%= link_to "About",   '#' %></li>
+        <li><%= link_to "Contact", '#' %></li>
+      </ul>
+    </nav>
+    </div>
+  </div></footer>
+  </div> -->
 </body>
 </html>
