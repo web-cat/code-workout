@@ -10,5 +10,6 @@
  *
  *= require_self
  *= require codemirror
+ *= require formtastic-bootstrap
  *= require_tree .
  */

@@ -1,6 +1,11 @@
-CodePractice::Application.routes.draw do
+CodeWorkout::Application.routes.draw do
+  root 'static_pages#home'
+
   get "static_pages/home"
   get "static_pages/help"
+  get "static_pages/mockup1"
+  get "static_pages/mockup2"
+
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".
 

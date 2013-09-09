@@ -24,4 +24,4 @@ def secure_token
   end
 end
 
-CodePractice::Application.config.secret_key_base = secure_token
+CodeWorkout::Application.config.secret_key_base = secure_token
