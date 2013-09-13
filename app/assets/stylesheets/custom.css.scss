@@ -72,9 +72,12 @@ body {
 }
 
 /* Main nav links in navbar */
-.navbar-inverse .nav > li > a, .navbar-inverse .navbar-link { color: white; }
+.navbar-inverse .nav > li > a, .navbar-inverse .navbar-link,
+.navbar-inverse .nav-text { color: white; }
 .navbar .nav > li > a, .navbar-inverse .navbar-link { padding: 2px 6px; }
 .navbar .nav > li { padding: 8px 9px; }
+.navbar .nav > li.nav-text { padding: 10px 9px 0 0; }
+footer.navbar, footer.navbar .navbar-inner { min-height: 44px; }
 
 /* logo in navbar */
 .navbar-inverse .brand {

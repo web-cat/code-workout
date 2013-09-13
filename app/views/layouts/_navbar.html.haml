@@ -1,0 +1,14 @@
+%header.navbar.navbar-inverse.navbar-fixed-top
+  .navbar-inner
+    .container-fluid
+      = link_to 'CodeWorkout', root_path, class: 'brand'
+      %nav.nav-collapse.collapse
+        %p.navbar-text.pull-right
+          %a.navbar-link{ href: '#' } Joe Hokie
+        %ul.nav
+          %li.active
+            = link_to 'The Gym', '#'
+          %li
+            = link_to 'Assignments', '#'
+          %li
+            = link_to 'Help', '#'
