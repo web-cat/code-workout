@@ -1,0 +1,28 @@
+%p#notice= notice
+
+%p
+  %strong Course:
+  = @course_offering.course_id
+
+%p
+  %strong Term:
+  = @course_offering.term_id
+
+%p
+  %strong Name:
+  = @course_offering.name
+
+%p
+  %strong Label:
+  = @course_offering.label
+
+%p
+  %strong URL:
+  = @course_offering.url
+
+%p
+  %strong Self enrollment allowed:
+  = @course_offering.self_enrollment_allowed
+
+= link_to 'Edit', edit_course_offering_path(@course_offering), class: 'btn'
+= link_to 'Back', course_offerings_path, class: 'btn'

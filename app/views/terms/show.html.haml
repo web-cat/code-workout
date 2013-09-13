@@ -1,0 +1,20 @@
+%p#notice= notice
+
+%p
+  %strong Season:
+  = @term.season
+
+%p
+  %strong Starts on:
+  = @term.starts_on
+
+%p
+  %strong Ends on:
+  = @term.ends_on
+
+%p
+  %strong Year:
+  = @term.year
+
+= link_to 'Edit', edit_term_path(@term), class: 'btn'
+= link_to 'Back', terms_path, class: 'btn'

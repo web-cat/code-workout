@@ -1,0 +1,25 @@
+%h1 Listing Terms
+
+%table.table.table-striped.table-bordered
+  %thead
+    %tr
+      %th Season
+      %th Starts on
+      %th Ends on
+      %th Year
+      %th Actions
+
+  %tbody
+    - @terms.each do |term|
+      %tr
+        %td= term.season
+        %td= term.starts_on
+        %td= term.ends_on
+        %td= term.year
+        %td
+          = link_to 'Show', term, class: 'btn btn-mini'
+          = link_to 'Edit', edit_term_path(term), class: 'btn btn-mini'
+          = link_to 'Destroy', term, method: :delete,                    |
+            data: { confirm: 'Are you sure?' }, class: 'btn btn-mini'    |
+
+= link_to 'New Term', new_term_path, class: 'btn'

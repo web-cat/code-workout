@@ -14,5 +14,4 @@
 //= require jquery_ujs
 //= require codemirror
 //= require codemirror/modes/clike
-//= require turbolinks
 //= require_tree .

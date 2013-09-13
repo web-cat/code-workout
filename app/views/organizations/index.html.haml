@@ -1,0 +1,22 @@
+%h1 Listing Organizations
+
+%table.table.table-striped.table-bordered
+  %thead
+    %tr
+      %th Display name
+      %th URL part
+      %th Actions
+
+  %tbody
+    - @organizations.each do |organization|
+      %tr
+        %td= organization.display_name
+        %td= organization.url_part
+        %td
+          = link_to 'Show', organization, class: 'btn btn-mini'
+          = link_to 'Edit', edit_organization_path(organization), class: 'btn btn-mini'
+
+          = link_to 'Destroy', organization, method: :delete,         |
+            data: { confirm: 'Are you sure?' }, class: 'btn btn-mini' |
+
+= link_to 'New Organization', new_organization_path, class: 'btn'

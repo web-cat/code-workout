@@ -14,15 +14,17 @@ body {
 .no-overflow { overflow-y: hidden; }
 .below-nav { padding-top: 60px; }
 
-.leftcol {
+.leftcol, .maincol {
   padding-left: 20px;
   padding-right: 20px;
   background: #f8eedf;
-  border-right: 2px solid #fff7ea;
   background: -webkit-gradient(linear, left top, right top,
     from(#f8eedf), color-stop(90.0%,#f8eedf), to(#fff7ea));  
   background: -moz-linear-gradient(left, #f8eedf 90.0%, #fff7ea);
   background: linear-gradient(left, #f8eedf 90.0%, #fff7ea);
+}
+.leftcol {
+  border-right: 2px solid #fff7ea;
 }
 .row-fluid .span4.rightcol { margin-left: 0; width: 34.04255%; }
 .rightcol {
@@ -193,3 +195,14 @@ a:hover, a:focus { color: #247184; }
 }
 
 .rightcol article p { margin: 0; }
+
+.form-actions {
+  padding: 0;
+  margin: 0;
+  background-color: inherit;
+  border-top: none;
+}
+.inputs .control-label abbr[title] { color: #d00; border-bottom: none; }
+.table.table-striped { background-color: white; }
+
+form.formtastic { @extend .form-horizontal; }

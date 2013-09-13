@@ -1,4 +1,7 @@
 class StaticPagesController < ApplicationController
+
+  layout 'two_columns'  
+
   def home
   end
 
@@ -9,5 +12,8 @@ class StaticPagesController < ApplicationController
   end
 
   def mockup2
+  end
+
+  def mockup3
   end
 end

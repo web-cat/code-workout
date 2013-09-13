@@ -1,0 +1,25 @@
+%h1 Listing Courses
+
+%table.table.table-striped.table-bordered
+  %thead
+    %tr
+      %th Name
+      %th Number
+      %th Organization
+      %th Url part
+      %th Actions
+
+  %tbody
+    - @courses.each do |course|
+      %tr
+        %td= course.name
+        %td= course.number
+        %td= course.organization_id
+        %td= course.url_part
+        %td
+          = link_to 'Show', course, class: 'btn btn-mini'
+          = link_to 'Edit', edit_course_path(course), class: 'btn btn-mini'
+          = link_to 'Destroy', course, method: :delete,                  |
+            data: { confirm: 'Are you sure?' }, class: 'btn btn-mini'    |
+
+= link_to 'New Course', new_course_path, class: 'btn'

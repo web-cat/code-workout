@@ -1,0 +1,36 @@
+class Organization < ActiveRecord::Base
+
+  #~ Relationships ............................................................
+
+  has_many :courses
+
+
+  #~ Hooks ....................................................................
+
+  before_validation :set_url_part
+
+
+  #~ Validation ...............................................................
+
+  validates :display_name, presence: true
+  validates :url_part,
+    format: {
+      with: /[a-z0-9\-_.]+/,
+      message: 'must consist only of letters, digits, hyphens (-), ' \
+        'underscores (_), and periods (.).'
+    },
+    uniqueness: { case_sensitive: false }
+
+
+  #~ Private instance methods .................................................
+
+  private
+
+  # -------------------------------------------------------------
+  def set_url_part
+    if url_part
+      self.url_part = url_part.downcase
+    end
+  end
+
+end

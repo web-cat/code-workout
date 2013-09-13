@@ -7,8 +7,9 @@ gem 'jquery-rails'
 gem 'codemirror-rails'
 gem 'formtastic'
 gem 'formtastic-bootstrap'
-gem 'turbolinks'
 # gem 'jbuilder', '~> 1.2'
+gem 'haml', '>= 3.1.4'
+gem 'haml-rails'
 
 group :assets do
   gem 'sass-rails', '~> 4.0.0'
@@ -25,7 +26,7 @@ end
 group :test do
   gem 'capybara'
   gem 'factory_girl_rails'
-  # gem 'faker'
+  gem 'faker'
 end
 
 group :doc do

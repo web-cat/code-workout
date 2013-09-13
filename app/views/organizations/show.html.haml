@@ -1,0 +1,12 @@
+%p#notice= notice
+
+%p
+  %strong Display name:
+  = @organization.display_name
+
+%p
+  %strong Url part:
+  = @organization.url_part
+
+= link_to 'Edit', edit_organization_path(@organization), class: 'btn'
+= link_to 'Back', organizations_path, class: 'btn'

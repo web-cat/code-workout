@@ -1,0 +1,8 @@
+%h1 Editing Course
+
+= render 'form'
+
+.form-horizontal
+  .controls
+    = link_to 'Show', @course, class: 'btn'
+    = link_to 'Back', courses_path, class: 'btn'
