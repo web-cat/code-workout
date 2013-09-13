@@ -1,4 +1,6 @@
 @import "bootstrap";
+@import "bootstrap/responsive";
+@import "font-awesome";
 
 /* Main two-column layout tweaks */
 
@@ -77,7 +79,7 @@ body {
 .navbar .nav > li > a, .navbar-inverse .navbar-link { padding: 2px 6px; }
 .navbar .nav > li { padding: 8px 9px; }
 .navbar .nav > li.nav-text { padding: 10px 9px 0 0; }
-footer.navbar, footer.navbar .navbar-inner { min-height: 44px; }
+.navbar, .navbar .navbar-inner { min-height: 44px; }
 
 /* logo in navbar */
 .navbar-inverse .brand {
@@ -209,3 +211,18 @@ a:hover, a:focus { color: #247184; }
 .table.table-striped { background-color: white; }
 
 form.formtastic { @extend .form-horizontal; }
+
+/* for consistent font awesome icons */
+[class^="icon-"]::before, [class*=" icon-"]::before {
+  font-weight: 400;
+}
+
+/* improve icon display on bootstrap buttons */
+.btn i { padding-right: 5px; }
+.btn i:last-child { padding-right: 0; }
+
+.label-info[href] { background-color: #3a87ad; }
+.label-info[href]:hover, .label-info[href]:active, .label-info[href]:focus {
+  background-color: #247184;
+}
+.tag { @extend .label; @extend .label-info; }

@@ -17,9 +17,18 @@
         %td= course.organization_id
         %td= course.url_part
         %td
-          = link_to 'Show', course, class: 'btn btn-mini'
-          = link_to 'Edit', edit_course_path(course), class: 'btn btn-mini'
-          = link_to 'Destroy', course, method: :delete,                  |
-            data: { confirm: 'Are you sure?' }, class: 'btn btn-mini'    |
+          = link_to course, class: 'btn btn-mini' do
+            %i.icon-zoom-in
+            Show
+          = link_to edit_course_path(course), class: 'btn btn-mini' do
+            %i.icon-edit
+            Edit
+          = link_to course, method: :delete, class: 'btn btn-mini',     |
+            data: { confirm: 'Are you sure?' } do                       |
+            %i.icon-trash
+            Destroy
 
-= link_to 'New Course', new_course_path, class: 'btn'
+= link_to new_course_path, class: 'btn' do
+  %i.icon-plus
+  New Course
+  

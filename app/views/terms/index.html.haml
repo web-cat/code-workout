@@ -17,9 +17,17 @@
         %td= term.ends_on
         %td= term.year
         %td
-          = link_to 'Show', term, class: 'btn btn-mini'
-          = link_to 'Edit', edit_term_path(term), class: 'btn btn-mini'
-          = link_to 'Destroy', term, method: :delete,                    |
-            data: { confirm: 'Are you sure?' }, class: 'btn btn-mini'    |
+          = link_to term, class: 'btn btn-mini' do
+            %i.icon-zoom-in
+            Show
+          = link_to edit_term_path(term), class: 'btn btn-mini' do
+            %i.icon-edit
+            Edit
+          = link_to term, method: :delete, class: 'btn btn-mini',            |
+            data: { confirm: 'Are you sure?' } do                            |
+            %i.icon-trash
+            Destroy
 
-= link_to 'New Term', new_term_path, class: 'btn'
+= link_to new_term_path, class: 'btn' do
+  %i.icon-plus
+  New Term

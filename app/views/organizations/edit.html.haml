@@ -4,5 +4,9 @@
 
 .form-horizontal
   .controls
-    = link_to 'Show', @organization, class: 'btn'
-    = link_to 'Back', organizations_path, class: 'btn'
+    = link_to @organization, class: 'btn' do
+      %i.icon-zoom-in
+      Show
+    = link_to organizations_path, class: 'btn' do
+      %i.icon-reply
+      Back

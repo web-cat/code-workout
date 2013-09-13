@@ -12,6 +12,7 @@
 //
 //= require jquery
 //= require jquery_ujs
+//= require bootstrap-dropdown.js
 //= require codemirror
 //= require codemirror/modes/clike
 //= require_tree .

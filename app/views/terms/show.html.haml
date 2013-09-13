@@ -16,5 +16,9 @@
   %strong Year:
   = @term.year
 
-= link_to 'Edit', edit_term_path(@term), class: 'btn'
-= link_to 'Back', terms_path, class: 'btn'
+= link_to edit_term_path(@term), class: 'btn' do
+  %i.icon-edit
+  Edit
+= link_to terms_path, class: 'btn' do
+  %i.icon-reply
+  Back
