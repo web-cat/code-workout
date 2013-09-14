@@ -22,15 +22,26 @@ group :development, :test do
   gem 'sqlite3'
   gem 'rspec-rails'
   gem 'annotate'
+  gem 'factory_girl_rails'
+  gem 'faker'
 end
 
 group :test do
   gem 'capybara'
-  gem 'factory_girl_rails'
-  gem 'faker'
+end
+
+group :production, :staging do
+  gem 'mysql2'
 end
 
 group :doc do
   # bundle exec rake doc:rails generates the API under doc/api.
   gem 'sdoc', require: false
+  gem 'rails-erd', require: false
 end
+
+# Gems for authentication and authorization.
+gem 'devise'
+gem 'omniauth'
+gem 'omniauth-facebook'
+gem 'cancan', '1.6.9' # 1.6.10 broke shallow routes

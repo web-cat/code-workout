@@ -1,3 +1,6 @@
+- if Rails.env.development?
+  .debug
+    = debug(params)
 %footer.footer.navbar.navbar-inverse.navbar-fixed-bottom
   .navbar-inner
     .container-fluid

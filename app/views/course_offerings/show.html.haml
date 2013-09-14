@@ -24,9 +24,5 @@
   %strong Self enrollment allowed:
   = @course_offering.self_enrollment_allowed
 
-= link_to edit_course_offering_path(@course_offering), class: 'btn' do
-  %i.icon-edit
-  Edit
-= link_to course_offerings_path, class: 'btn' do
-  %i.icon-reply
-  Back
+= button_link 'Edit', edit_course_offering_path(@course_offering), 'edit'
+= button_link 'Back', course_offerings_path, 'reply'

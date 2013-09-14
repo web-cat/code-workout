@@ -35,4 +35,22 @@ module ApplicationHelper
     FLASH_CLASS[level] || level.to_s
   end
 
+  # -------------------------------------------------------------
+  # Creates a Bootstrap close button, for alerts and such.
+  #
+  # Options:
+  #   dismiss: the surrounding element to dismiss, such as 'alert'
+  #
+  def button_link(label, destination = '#', icon = nil, options = {})
+    options[:class] = options[:class] || 'btn'
+    if options[:btn]
+      options[:class] = options[:class] + ' btn-' + options[:btn]
+      options.delete(:btn)
+    end
+    text = label
+    if !icon.nil?
+      text = content_tag(:i, nil, class: "icon-#{icon}") + ' ' + text
+    end
+    link_to text, destination, options       
+  end
 end

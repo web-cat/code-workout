@@ -21,18 +21,10 @@
         %td= course_offering.url
         %td= course_offering.self_enrollment_allowed
         %td
-          = link_to course_offering, class: 'btn btn-mini' do
-            %i.icon-zoom-in
-            Show
-          = link_to edit_course_offering_path(course_offering), class: 'btn btn-mini' do
-            %i.icon-edit
-            Edit
-          = link_to course_offering, method: :delete, class: 'btn btn-mini', |
-            data: { confirm: 'Are you sure?' } do                            |
-            %i.icon-trash
-            Destroy
+          = button_link 'Show', course_offering, 'zoom-in', btn: 'mini'
+          = button_link 'Edit', edit_course_offering_path(course_offering), 'edit', btn: 'mini'
+          = button_link 'Destroy', course_offering, 'trash', method: :delete, |
+            btn: 'mini', data: { confirm: 'Are you sure?' }                   |
 
-= link_to new_course_offering_path, class: 'btn' do
-  %i.icon-plus
-  New Course Offering
+= button_link 'New Course Offering', new_course_offering_path, 'plus'
   

@@ -226,3 +226,14 @@ form.formtastic { @extend .form-horizontal; }
   background-color: #247184;
 }
 .tag { @extend .label; @extend .label-info; }
+.debug {
+  @extend .well;
+  @extend .well-small;
+  position: fixed;
+  bottom: 45px;
+  left: 0;
+  right: 0;
+  margin-bottom: 0;
+  z-index: 1030;
+}
+.debug .CodeMirror { margin-bottom: 0; }
