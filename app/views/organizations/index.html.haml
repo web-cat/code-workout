@@ -13,9 +13,9 @@
         %td= organization.display_name
         %td= organization.url_part
         %td
-          = button_link 'Show', organization, 'zoom-in', btn: 'mini'
-          = button_link 'Edit', edit_organization_path(organization), 'edit', btn: 'mini'
-          = button_link 'Destroy', organization, 'trash', method: :delete,   |
-            btn: 'mini', data: { confirm: 'Are you sure?' }                  |
+          = button_link 'Show', organization, btn: 'mini'
+          = button_link 'Edit', edit_organization_path(organization), btn: 'mini'
+          = button_link 'Destroy', organization, method: :delete,       |
+            btn: 'mini', data: { confirm: 'Are you sure?' }             |
 
-= button_link 'New Organization', new_organization_path, 'plus'
+= button_link 'New Organization', new_organization_path

@@ -17,9 +17,9 @@
         %td= course.organization_id
         %td= course.url_part
         %td
-          = button_link 'Show', course, 'zoom-in', btn: 'mini'
-          = button_link 'Edit', edit_course_path(course), 'edit', btn: 'mini'
-          = button_link 'Destroy', course, 'trash', method: :delete,    |
-            btn: 'mini', data: { confirm: 'Are you sure?' }             |
+          = button_link 'Show', course, btn: 'mini'
+          = button_link 'Edit', edit_course_path(course), btn: 'mini'
+          = button_link 'Destroy', course, method: :delete, btn: 'mini',  |
+            data: { confirm: 'Are you sure?' }                            |
 
-= button_link 'New Course', new_course_path, 'plus'
+= button_link 'New Course', new_course_path

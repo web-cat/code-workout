@@ -108,6 +108,7 @@ h1, h2, h3, h4, h5, h6 {
 
 a { color: #3da2b4; font-weight: bold; }
 a:hover, a:focus { color: #247184; }
+.navbar a { font-weight: inherit; }
 
 .btn-default {
   color: white;
@@ -237,3 +238,4 @@ form.formtastic { @extend .form-horizontal; }
   z-index: 1030;
 }
 .debug .CodeMirror { margin-bottom: 0; }
+.navbar .badge { vertical-align: text-top; }

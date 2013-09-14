@@ -6,7 +6,7 @@ module DeviseHelper
 
     messages = resource.errors.full_messages.map do |msg|
         content_tag :li,
-          content_tag(:i, nil, class: 'icon-li icon-remove-sign') + msg
+          icon_tag_for(:error, class: 'icon-li') + msg
     end
     messages = messages.join
     sentence = I18n.t("errors.messages.not_saved",
