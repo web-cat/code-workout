@@ -1,0 +1,14 @@
+%p#notice= notice
+
+%p
+  %b User:
+  = @course_enrollment.user
+%p
+  %b Course offering:
+  = @course_enrollment.course_offering
+%p
+  %b Course role:
+  = @course_enrollment.course_role
+
+= button_link 'Edit', edit_course_enrollment_path(@course_enrollment)
+= button_link 'Back', course_enrollments_path

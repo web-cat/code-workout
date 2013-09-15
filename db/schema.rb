@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20130913163500) do
+ActiveRecord::Schema.define(version: 20130915012131) do
 
   create_table "course_offerings", force: true do |t|
     t.integer  "course_id"
@@ -22,6 +22,15 @@ ActiveRecord::Schema.define(version: 20130913163500) do
     t.boolean  "self_enrollment_allowed"
     t.datetime "created_at"
     t.datetime "updated_at"
+  end
+
+  create_table "course_roles", force: true do |t|
+    t.string  "name",                                       null: false
+    t.boolean "can_manage_course",          default: false, null: false
+    t.boolean "can_manage_assignments",     default: false, null: false
+    t.boolean "can_grade_submissions",      default: false, null: false
+    t.boolean "can_view_other_submissions", default: false, null: false
+    t.boolean "builtin",                    default: false, null: false
   end
 
   create_table "courses", force: true do |t|

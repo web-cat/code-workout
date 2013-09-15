@@ -8,5 +8,7 @@ class CreateTerms < ActiveRecord::Migration
 
       t.timestamps
     end
+
+    add_index :terms, :starts_on
   end
 end

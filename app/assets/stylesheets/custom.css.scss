@@ -226,7 +226,7 @@ form.formtastic { @extend .form-horizontal; }
 .label-info[href]:hover, .label-info[href]:active, .label-info[href]:focus {
   background-color: #247184;
 }
-.tag { @extend .label; @extend .label-info; }
+.tag { @extend .label; @extend .label-info; font-weight: inherit; }
 .debug {
   @extend .well;
   @extend .well-small;

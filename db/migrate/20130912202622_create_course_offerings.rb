@@ -1,8 +1,8 @@
 class CreateCourseOfferings < ActiveRecord::Migration
   def change
     create_table :course_offerings do |t|
-      t.integer :course_id, null: false
-      t.integer :term_id, null: false
+      t.references :course, null: false, index: true
+      t.references :term, null: false, index: true
       t.string :name, null: false
       t.string :label
       t.string :url
