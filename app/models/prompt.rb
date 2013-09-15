@@ -7,26 +7,40 @@ class Prompt < ActiveRecord::Base
   # different types of incorrect attempts
   has_one :prompt_type
   has_one :language
+  has_many :choices
+
+  # Hard-coded prompt types. Add others as functionality extends to
+  #  support other prompt types (free response, etc)
+  TYPES = {
+    'Multiple Choice' => 1
+  }
+
 
   #~ Hooks ....................................................................
 
   #~ Validation ...............................................................
   validates :exercise_id, presence: true, numericality: true
-  validates :prompt_type_id, presence: true, numericality: true
   validates :language_id, numericality: true
-  
   
   validates :instruction, presence: true
   validates :order, presence: true, numericality: true
-  validates :max_attempts, numericality: true
+  validates :max_user_attempts, numericality: true
   validates :attempts, numericality: true, presence: true
   validates :correct, numericality: true, presence: true
   #no validation for feedback
   validates :difficulty, presence: true, numericality: true
   validates :discrimination, presence: true, numericality: true
+  validates :type, presence: true, numericality: true
+
+
 
   #~ Class methods.............................................................
+  
+  # -------------------------------------------------------------
+  def self.type_name(type)
+    TYPES.rassoc(type).first
+  end
 
-  #~ Instance methods .................................................
-  #TODO methods for calculating score and correctness
+  #~ Instance methods .........................................................
+  #TODO methods for calculating scores, difficulty, and discrimination
 end

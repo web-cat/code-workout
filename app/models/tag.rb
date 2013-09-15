@@ -17,13 +17,15 @@ class Tag < ActiveRecord::Base
       with: /[a-z0-9\-_]+/,
       message: 'title must consist only of letters, digits, hyphens (-), ' \
         'and underscores (_).'
-    }
+    },
     uniqueness: true
   #~ Private instance methods .................................................
   private
 
   # -------------------------------------------------------------
   def set_name_case
-    self.name = name.downcase
+    if !self.name.empty?
+      self.name = name.downcase
+    end
   end
 end
