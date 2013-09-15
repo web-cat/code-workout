@@ -14,9 +14,9 @@
 ActiveRecord::Schema.define(version: 20130912202622) do
 
   create_table "course_offerings", force: true do |t|
-    t.integer  "course_id"
-    t.integer  "term_id"
-    t.string   "name"
+    t.integer  "course_id",               null: false
+    t.integer  "term_id",                 null: false
+    t.string   "name",                    null: false
     t.string   "label"
     t.string   "url"
     t.boolean  "self_enrollment_allowed"
@@ -25,26 +25,26 @@ ActiveRecord::Schema.define(version: 20130912202622) do
   end
 
   create_table "courses", force: true do |t|
-    t.string   "name"
-    t.string   "number"
-    t.integer  "organization_id"
-    t.string   "url_part"
+    t.string   "name",            null: false
+    t.string   "number",          null: false
+    t.integer  "organization_id", null: false
+    t.string   "url_part",        null: false
     t.datetime "created_at"
     t.datetime "updated_at"
   end
 
   create_table "organizations", force: true do |t|
-    t.string   "display_name"
-    t.string   "url_part"
+    t.string   "display_name", null: false
+    t.string   "url_part",     null: false
     t.datetime "created_at"
     t.datetime "updated_at"
   end
 
   create_table "terms", force: true do |t|
-    t.integer  "season"
-    t.date     "starts_on"
-    t.date     "ends_on"
-    t.integer  "year"
+    t.integer  "season",     null: false
+    t.date     "starts_on",  null: false
+    t.date     "ends_on",    null: false
+    t.integer  "year",       null: false
     t.datetime "created_at"
     t.datetime "updated_at"
   end

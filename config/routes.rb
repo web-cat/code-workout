@@ -1,5 +1,15 @@
 CodeWorkout::Application.routes.draw do
 
+  resources :choices
+
+  resources :languages
+
+  resources :prompts
+
+  resources :tags
+
+  resources :exercises
+
   root 'static_pages#home'
 
   get "static_pages/home"
