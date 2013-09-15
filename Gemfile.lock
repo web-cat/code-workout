@@ -70,7 +70,7 @@ GEM
       multipart-post (~> 1.2.0)
     font-awesome-rails (3.2.0.0)
       railties (>= 3.2, < 5.0)
-    formtastic (2.2.1)
+    formtastic (2.3.0.rc2)
       actionpack (>= 3.0)
     formtastic-bootstrap (2.1.3)
       formtastic (~> 2.2)
@@ -202,7 +202,7 @@ DEPENDENCIES
   factory_girl_rails
   faker
   font-awesome-rails
-  formtastic
+  formtastic (~> 2.3.0.rc2)
   formtastic-bootstrap
   haml (>= 3.1.4)
   haml-rails
