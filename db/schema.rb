@@ -11,18 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20130912202622) do
-
-  create_table "course_offerings", force: true do |t|
-    t.integer  "course_id",               null: false
-    t.integer  "term_id",                 null: false
-    t.string   "name",                    null: false
-    t.string   "label"
-    t.string   "url"
-    t.boolean  "self_enrollment_allowed"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-  end
+ActiveRecord::Schema.define(version: 20130912200825) do
 
   create_table "courses", force: true do |t|
     t.string   "name",            null: false
