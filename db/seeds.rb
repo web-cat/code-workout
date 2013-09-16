@@ -3,6 +3,29 @@
 # the rake db:seed (or created alongside the db with db:setup).
 
 # ---------------------------------------------------------------
+# Create the default built-in roles. The order of these must match the
+# order of the IDs in models/global_role.rb.
+#
+GlobalRole.delete_all
+
+GlobalRole.create!(
+  name:                          'Administrator',
+  builtin:                       true,
+  can_edit_system_configuration: true,
+  can_manage_all_courses:        true)
+
+GlobalRole.create!(name:         'Instructor',
+  builtin:                       true,
+  can_edit_system_configuration: false,
+  can_manage_all_courses:        false)
+
+GlobalRole.create!(name:         'Regular User',
+  builtin:                       true,
+  can_edit_system_configuration: false,
+  can_manage_all_courses:        false)
+
+
+# ---------------------------------------------------------------
 # Create the default course roles. The order of these must match the
 # order of the IDs in models/course_role.rb.
 #
