@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20130915030206) do
+ActiveRecord::Schema.define(version: 20130916142010) do
 
   create_table "course_enrollments", force: true do |t|
     t.integer "user_id"
@@ -51,6 +51,13 @@ ActiveRecord::Schema.define(version: 20130915030206) do
     t.string   "url_part"
     t.datetime "created_at"
     t.datetime "updated_at"
+  end
+
+  create_table "global_roles", force: true do |t|
+    t.string  "name",                                          null: false
+    t.boolean "can_manage_all_courses",        default: false, null: false
+    t.boolean "can_edit_system_configuration", default: false, null: false
+    t.boolean "builtin",                       default: false, null: false
   end
 
   create_table "organizations", force: true do |t|

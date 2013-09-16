@@ -1,5 +1,7 @@
 CodeWorkout::Application.routes.draw do
 
+  resources :global_roles
+
   resources :course_enrollments
 
   resources :course_roles
