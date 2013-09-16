@@ -13,6 +13,10 @@ class ExercisesController < ApplicationController
   # GET /exercises/new
   def new
     @exercise = Exercise.new
+    @prompt = Prompt.new
+    @choice = Choice.new
+    @tag = Tag.new
+    @lang = Language.new
   end
 
   # GET /exercises/1/edit

@@ -1,3 +1,5 @@
+-#TODO fix the field entry forms and make creating a new exercise form
+-# clean and functional, tying it to the multi-table model
 = form_for @exercise do |f|
   - if @exercise.errors.any?
     #error_explanation
@@ -5,18 +7,71 @@
       %ul
         - @exercise.errors.full_messages.each do |msg|
           %li= msg
+  .form-horizontal
+    .field
+      = f.label "Exercise title*"
+      = f.text_field :title, :placeholder => "Title", :required => true
+    .field
+      = f.label "Preamble"
+      = f.text_area :preamble, :placeholder => "Consider...", :cols => 80, :rows => 10
+    .field
+      %p
+        = f.label :preamble
+        = f.text_field :preamble
+    .field
+      %p
+        = f.label "Share with CodeWorkout community"
+        = f.check_box :is_public, :checked => true
+
+= form_for @prompt do |f|
+  - if @prompt.errors.any?
+    #error_explanation
+      %h2= "#{pluralize(@prompt.errors.count, "error")} prohibited this prompt from being saved:"
+      %ul
+        - @prompt.errors.full_messages.each do |msg|
+          %li= msg
 
   .field
-    = f.label :title
-    = f.text_field :title
+    = f.label :instruction
+    = f.text_area :instruction
   .field
-    = f.label :preamble
-    = f.text_field :preamble
+    = f.label :language
+    -#    = f.select :language, @lang.all
   .field
-    = f.label :user
-    = f.number_field :user
+    = f.label :max_user_attempts
+    = f.number_field :max_user_attempts
   .field
-    = f.label :is_public
-    = f.check_box :is_public
+    = f.label :feedback
+    = f.text_area :feedback
+  .field
+    = f.label :difficulty
+    = f.text_field :difficulty
+  .field
+    = f.label :discrimination
+    = f.text_field :discrimination
+
+= form_for @choice do |f|
+  - if @choice.errors.any?
+    #error_explanation
+      %h2= "#{pluralize(@choice.errors.count, "error")} prohibited this choice from being saved:"
+      %ul
+        - @choice.errors.full_messages.each do |msg|
+          %li= msg
+
+  .field
+    = f.label :prompt
+    = f.text_field :prompt
+  .field
+    = f.label :answer
+    = f.text_field :answer
+  .field
+    = f.label :order
+    = f.number_field :order
+  .field
+    = f.label :feedback
+    = f.text_area :feedback
+  .field
+    = f.label :value
+    = f.text_field :value
   .actions
     = f.submit 'Save'
