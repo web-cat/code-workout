@@ -18,21 +18,26 @@
           %li= link_to 'Your Achievements'
           %li= link_to 'CS 1114', '#'
         %ul.nav.pull-right
-          %li.hidden-phone
-            = link_to '#' do
-              %span.badge.badge-info 3
-              Alerts
-          %li.dropdown
-            %a.dropdown-toggle{ href: '#', data: { toggle: 'dropdown' } }
-              %i.icon-wrench
-              %i.icon-caret-down.hidden-phone
-            %ul.dropdown-menu
-              %li.nav-header Manage
-              %li= link_to 'Organizations', organizations_path
-              %li= link_to 'Terms', terms_path
-              %li= link_to 'Courses', courses_path
-              %li= link_to 'Course offerings', course_offerings_path
-          %li= link_to 'Joe Hokie', '#'
-          %li
-            = link_to '#' do
-              %i.icon-signout
+          - if user_signed_in?
+            %li.hidden-phone
+              = link_to '#' do
+                %span.badge.badge-info 3
+                Alerts
+            %li.dropdown
+              %a.dropdown-toggle{ href: '#', data: { toggle: 'dropdown' } }
+                %i.icon-wrench
+                %i.icon-caret-down.hidden-phone
+              %ul.dropdown-menu
+                %li.nav-header Manage
+                %li= link_to 'Organizations', organizations_path
+                %li= link_to 'Terms', terms_path
+                %li= link_to 'Courses', courses_path
+                %li= link_to 'Course offerings', course_offerings_path
+            %li= link_to current_user.email, edit_user_registration_path
+            %li
+              = link_to destroy_user_session_path, method: :delete do
+                %i.icon-signout
+          - else
+            %li= link_to 'Sign Up', new_user_registration_path
+            %li= link_to 'Sign In', new_user_session_path
+          

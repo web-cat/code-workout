@@ -1,4 +1,4 @@
-%h1 Listing Terms
+%h1 Terms
 
 %table.table.table-striped.table-bordered
   %thead
@@ -17,17 +17,9 @@
         %td= term.ends_on
         %td= term.year
         %td
-          = link_to term, class: 'btn btn-mini' do
-            %i.icon-zoom-in
-            Show
-          = link_to edit_term_path(term), class: 'btn btn-mini' do
-            %i.icon-edit
-            Edit
-          = link_to term, method: :delete, class: 'btn btn-mini',            |
-            data: { confirm: 'Are you sure?' } do                            |
-            %i.icon-trash
-            Destroy
+          = button_link 'Show', term, btn: 'mini'
+          = button_link 'Edit', edit_term_path(term), btn: 'mini'
+          = button_link 'Destroy', term, method: :delete, btn: 'mini',    |
+            data: { confirm: 'Are you sure?' }                            |
 
-= link_to new_term_path, class: 'btn' do
-  %i.icon-plus
-  New Term
+= button_link 'New Term', new_term_path

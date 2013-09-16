@@ -1,0 +1,23 @@
+%h1 Course Enrollments
+
+%table.table.table-striped.table-bordered
+  %thead
+    %tr
+      %th User
+      %th Course offering
+      %th Course role
+      %th Actions
+
+  %tbody
+    - @course_enrollments.each do |course_enrollment|
+      %tr
+        %td= course_enrollment.user
+        %td= course_enrollment.course_offering
+        %td= course_enrollment.course_role
+        %td
+          = button_link 'Show', course_enrollment, btn: 'mini'
+          = button_link 'Edit', edit_course_enrollment_path(course_enrollment), btn: 'mini'
+          = button_link 'Destroy', course_enrollment, :method => :delete,   |
+            btn: 'mini', :data => { :confirm => 'Are you sure?' }           |
+
+= button_link 'New Course enrollment', new_course_enrollment_path

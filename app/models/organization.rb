@@ -1,3 +1,14 @@
+# == Schema Information
+#
+# Table name: organizations
+#
+#  id           :integer          not null, primary key
+#  display_name :string(255)
+#  url_part     :string(255)
+#  created_at   :datetime
+#  updated_at   :datetime
+#
+
 class Organization < ActiveRecord::Base
 
   #~ Relationships ............................................................

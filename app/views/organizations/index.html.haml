@@ -1,4 +1,4 @@
-%h1 Listing Organizations
+%h1 Organizations
 
 %table.table.table-striped.table-bordered
   %thead
@@ -13,17 +13,9 @@
         %td= organization.display_name
         %td= organization.url_part
         %td
-          = link_to organization, class: 'btn btn-mini' do
-            %i.icon-zoom-in
-            Show
-          = link_to edit_organization_path(organization), class: 'btn btn-mini' do
-            %i.icon-edit
-            Edit
-          = link_to organization, method: :delete, class: 'btn btn-mini',    |
-            data: { confirm: 'Are you sure?' } do                            |
-            %i.icon-trash
-            Destroy
+          = button_link 'Show', organization, btn: 'mini'
+          = button_link 'Edit', edit_organization_path(organization), btn: 'mini'
+          = button_link 'Destroy', organization, method: :delete,       |
+            btn: 'mini', data: { confirm: 'Are you sure?' }             |
 
-= link_to new_organization_path, class: 'btn' do
-  %i.icon-plus
-  New Organization
+= button_link 'New Organization', new_organization_path

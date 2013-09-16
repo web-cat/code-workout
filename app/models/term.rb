@@ -1,3 +1,16 @@
+# == Schema Information
+#
+# Table name: terms
+#
+#  id         :integer          not null, primary key
+#  season     :integer
+#  starts_on  :date
+#  ends_on    :date
+#  year       :integer
+#  created_at :datetime
+#  updated_at :datetime
+#
+
 class Term < ActiveRecord::Base
 
   # Hard-coded season names. It is assumed that these names contain

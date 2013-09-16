@@ -8,9 +8,5 @@
   %strong Url part:
   = @organization.url_part
 
-= link_to edit_organization_path(@organization), class: 'btn' do
-  %i.icon-edit
-  Edit
-= link_to organizations_path, class: 'btn' do
-  %i.icon-reply
-  Back
+= button_link 'Edit', edit_organization_path(@organization)
+= button_link 'Back', organizations_path

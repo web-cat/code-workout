@@ -1,0 +1,2 @@
+module CourseRolesHelper
+end

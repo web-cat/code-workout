@@ -16,9 +16,5 @@
   %strong URL part:
   = @course.url_part
 
-= link_to edit_course_path(@course), class: 'btn' do
-  %i.icon-edit
-  Edit
-= link_to courses_path, class: 'btn' do
-  %i.icon-reply
-  Back
+= button_link 'Edit', edit_course_path(@course)
+= button_link 'Back', courses_path

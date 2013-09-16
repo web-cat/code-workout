@@ -108,6 +108,7 @@ h1, h2, h3, h4, h5, h6 {
 
 a { color: #3da2b4; font-weight: bold; }
 a:hover, a:focus { color: #247184; }
+.navbar a { font-weight: inherit; }
 
 .btn-default {
   color: white;
@@ -225,4 +226,16 @@ form.formtastic { @extend .form-horizontal; }
 .label-info[href]:hover, .label-info[href]:active, .label-info[href]:focus {
   background-color: #247184;
 }
-.tag { @extend .label; @extend .label-info; }
+.tag { @extend .label; @extend .label-info; font-weight: inherit; }
+.debug {
+  @extend .well;
+  @extend .well-small;
+  position: fixed;
+  bottom: 45px;
+  left: 0;
+  right: 0;
+  margin-bottom: 0;
+  z-index: 1030;
+}
+.debug .CodeMirror { margin-bottom: 0; }
+.navbar .badge { vertical-align: text-top; }

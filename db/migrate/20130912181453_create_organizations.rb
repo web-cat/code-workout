@@ -6,5 +6,8 @@ class CreateOrganizations < ActiveRecord::Migration
 
       t.timestamps
     end
+
+    add_index :organizations, :display_name, unique: true
+    add_index :organizations, :url_part,     unique: true
   end
 end

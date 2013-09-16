@@ -25,6 +25,19 @@ ActiveRecord::Schema.define(version: 20130915203004) do
 
   add_index "choices", ["prompt_id"], name: "index_choices_on_prompt_id"
 
+ActiveRecord::Schema.define(version: 20130915030206) do
+
+  create_table "course_enrollments", force: true do |t|
+    t.integer "user_id"
+    t.integer "course_offering_id"
+    t.integer "course_role_id"
+  end
+
+  add_index "course_enrollments", ["course_offering_id"], name: "index_course_enrollments_on_course_offering_id"
+  add_index "course_enrollments", ["course_role_id"], name: "index_course_enrollments_on_course_role_id"
+  add_index "course_enrollments", ["user_id", "course_offering_id"], name: "index_course_enrollments_on_user_id_and_course_offering_id", unique: true
+  add_index "course_enrollments", ["user_id"], name: "index_course_enrollments_on_user_id"
+
   create_table "course_offerings", force: true do |t|
     t.integer  "course_id",               null: false
     t.integer  "term_id",                 null: false
@@ -34,6 +47,15 @@ ActiveRecord::Schema.define(version: 20130915203004) do
     t.boolean  "self_enrollment_allowed"
     t.datetime "created_at"
     t.datetime "updated_at"
+  end
+
+  create_table "course_roles", force: true do |t|
+    t.string  "name",                                       null: false
+    t.boolean "can_manage_course",          default: false, null: false
+    t.boolean "can_manage_assignments",     default: false, null: false
+    t.boolean "can_grade_submissions",      default: false, null: false
+    t.boolean "can_view_other_submissions", default: false, null: false
+    t.boolean "builtin",                    default: false, null: false
   end
 
   create_table "courses", force: true do |t|
@@ -107,5 +129,23 @@ ActiveRecord::Schema.define(version: 20130915203004) do
     t.datetime "created_at"
     t.datetime "updated_at"
   end
+
+  create_table "users", force: true do |t|
+    t.string   "email",                  default: "", null: false
+    t.string   "encrypted_password",     default: "", null: false
+    t.string   "reset_password_token"
+    t.datetime "reset_password_sent_at"
+    t.datetime "remember_created_at"
+    t.integer  "sign_in_count",          default: 0,  null: false
+    t.datetime "current_sign_in_at"
+    t.datetime "last_sign_in_at"
+    t.string   "current_sign_in_ip"
+    t.string   "last_sign_in_ip"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "users", ["email"], name: "index_users_on_email", unique: true
+  add_index "users", ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
 
 end
