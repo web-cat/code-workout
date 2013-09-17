@@ -2,8 +2,7 @@
 
 FactoryGirl.define do
   factory :course_enrollment do
-    user ""
-    course_offering ""
-    course_role ""
+    course_offering_id 1
+    course_role        CourseRole.student
   end
 end

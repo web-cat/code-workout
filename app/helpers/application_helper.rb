@@ -69,7 +69,7 @@ module ApplicationHelper
       tag = tag.to_s
       if !tag.start_with?('icon-')
         tag = tag.downcase.sub(/[^a-zA-Z0-9_-].*$/, '')
-        name = ICON_NAME[tag]
+        name = ICON_NAME[tag] || tag
         if name.nil?
           name
         else
@@ -86,7 +86,7 @@ module ApplicationHelper
 
   # -------------------------------------------------------------
   def icon_tag_for(name, options = {})
-    cls = icon_name_for(name)
+    cls = icon_name_for(name) + ' icon-fixed-width'
     if cls.nil?
       ''
     else

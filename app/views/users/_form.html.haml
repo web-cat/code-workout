@@ -1,0 +1,5 @@
+= semantic_form_for @user do |f|
+  = f.semantic_errors
+  = f.inputs
+  = f.actions do
+    = f.action :submit, as: :button, button_html: { class: 'btn btn-primary' }

@@ -1,0 +1,21 @@
+%p#notice= notice
+
+%p
+  %strong Gravatar:
+  = image_tag @user.gravatar_url
+
+%p
+  %strong First name:
+  = @user.first_name
+
+%p
+  %strong Last name:
+  = @user.last_name
+
+%p
+  %strong Email:
+  = @user.email
+
+- if can? :update, @user
+  = button_link 'Edit', edit_user_path(@user)
+= button_link 'Back', users_path

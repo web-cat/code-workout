@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20130916142010) do
+ActiveRecord::Schema.define(version: 20130916203844) do
 
   create_table "choices", force: true do |t|
     t.integer  "prompt_id",  null: false
@@ -37,9 +37,9 @@ ActiveRecord::Schema.define(version: 20130916142010) do
   add_index "course_enrollments", ["user_id"], name: "index_course_enrollments_on_user_id"
 
   create_table "course_offerings", force: true do |t|
-    t.integer  "course_id",               null: false
-    t.integer  "term_id",                 null: false
-    t.string   "name",                    null: false
+    t.integer  "course_id"
+    t.integer  "term_id"
+    t.string   "name"
     t.string   "label"
     t.string   "url"
     t.boolean  "self_enrollment_allowed"
@@ -57,10 +57,10 @@ ActiveRecord::Schema.define(version: 20130916142010) do
   end
 
   create_table "courses", force: true do |t|
-    t.string   "name",            null: false
-    t.string   "number",          null: false
-    t.integer  "organization_id", null: false
-    t.string   "url_part",        null: false
+    t.string   "name"
+    t.string   "number"
+    t.integer  "organization_id"
+    t.string   "url_part"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -93,8 +93,8 @@ ActiveRecord::Schema.define(version: 20130916142010) do
   end
 
   create_table "organizations", force: true do |t|
-    t.string   "display_name", null: false
-    t.string   "url_part",     null: false
+    t.string   "display_name"
+    t.string   "url_part"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -127,10 +127,10 @@ ActiveRecord::Schema.define(version: 20130916142010) do
   end
 
   create_table "terms", force: true do |t|
-    t.integer  "season",     null: false
-    t.date     "starts_on",  null: false
-    t.date     "ends_on",    null: false
-    t.integer  "year",       null: false
+    t.integer  "season"
+    t.date     "starts_on"
+    t.date     "ends_on"
+    t.integer  "year"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -151,10 +151,14 @@ ActiveRecord::Schema.define(version: 20130916142010) do
     t.datetime "confirmation_sent_at"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.string   "first_name"
+    t.string   "last_name"
+    t.integer  "global_role_id"
   end
 
   add_index "users", ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
   add_index "users", ["email"], name: "index_users_on_email", unique: true
+  add_index "users", ["global_role_id"], name: "index_users_on_global_role_id"
   add_index "users", ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
 
 end
