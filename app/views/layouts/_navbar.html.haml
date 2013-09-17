@@ -23,21 +23,22 @@
               = link_to '#' do
                 %span.badge.badge-info 3
                 Alerts
-            %li.dropdown
-              %a.dropdown-toggle{ href: '#', data: { toggle: 'dropdown' } }
-                %i.icon-wrench
-                %i.icon-caret-down.hidden-phone
-              %ul.dropdown-menu
-                %li.nav-header Manage
-                %li= link_to 'Organizations', organizations_path
-                %li= link_to 'Terms', terms_path
-                %li= link_to 'Courses', courses_path
-                %li= link_to 'Course offerings', course_offerings_path
-            %li= link_to current_user.email, edit_user_registration_path
+            - if current_user.global_role.can_edit_system_configuration?
+              %li.dropdown
+                %a.dropdown-toggle{ href: '#', data: { toggle: 'dropdown' } }
+                  %i.icon-wrench
+                  %i.icon-caret-down.hidden-phone
+                %ul.dropdown-menu
+                  %li.nav-header Manage
+                  %li= link_to 'Organizations', organizations_path
+                  %li= link_to 'Terms', terms_path
+                  %li= link_to 'Courses', courses_path
+                  %li= link_to 'Course offerings', course_offerings_path
+            %li= link_to current_user.email, current_user
             %li
               = link_to destroy_user_session_path, method: :delete do
                 %i.icon-signout
           - else
-            %li= link_to 'Sign Up', new_user_registration_path
+            %li= link_to 'Sign Up', new_user_path
             %li= link_to 'Sign In', new_user_session_path
           

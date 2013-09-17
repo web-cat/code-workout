@@ -22,8 +22,14 @@ CodeWorkout::Application.routes.draw do
   resources :global_roles
   resources :course_enrollments
   resources :course_roles
-  devise_for :users
-  devise_for :users
+  resources :users
+
+  devise_for :users, :skip => [:registrations, :sessions]
+  as :user do
+    get "/login" => "devise/sessions#new", :as => :new_user_session
+    post "/login" => "devise/sessions#create", :as => :user_session
+    delete "/logout" => "devise/sessions#destroy", :as => :destroy_user_session
+  end
 
 end
 #== Route Map

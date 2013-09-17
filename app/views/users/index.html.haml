@@ -1,0 +1,27 @@
+%h1 Users
+
+%table.table.table-striped.table-bordered
+  %thead
+    %tr
+      %th Gravatar
+      %th Last name
+      %th First name
+      %th Email
+      %th Role
+      %th Actions
+
+  %tbody
+    - @users.each do |user|
+      %tr
+        %td= image_tag user.gravatar_url size: 40
+        %td= user.last_name
+        %td= user.first_name
+        %td= user.email
+        %td= user.global_role.name
+        %td
+          = button_link 'Show', user, btn: 'mini'
+          = button_link 'Edit', edit_user_path(user), btn: 'mini'
+          = button_link 'Destroy', user, method: :delete, btn: 'mini',    |
+            data: { confirm: 'Are you sure?' }                            |
+
+= button_link 'New User', new_user_path
