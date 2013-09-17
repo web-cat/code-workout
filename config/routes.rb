@@ -20,9 +20,7 @@ CodeWorkout::Application.routes.draw do
   resources :course_enrollments
   resources :course_roles
   resources :global_roles
-  resources :course_enrollments
-  resources :course_roles
-  devise_for :users
+
   devise_for :users
 
 end
