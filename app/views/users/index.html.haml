@@ -7,8 +7,9 @@
       %th Last name
       %th First name
       %th Email
-      %th Role
-      %th Actions
+      - if user_signed_in?
+        %th Role
+        %th Actions
 
   %tbody
     - @users.each do |user|
@@ -17,11 +18,15 @@
         %td= user.last_name
         %td= user.first_name
         %td= user.email
-        %td= user.global_role.name
-        %td
-          = button_link 'Show', user, btn: 'mini'
-          = button_link 'Edit', edit_user_path(user), btn: 'mini'
-          = button_link 'Destroy', user, method: :delete, btn: 'mini',    |
-            data: { confirm: 'Are you sure?' }                            |
+        - if user_signed_in?
+          %td= user.global_role.name
+          %td
+            = button_link 'Show', user, btn: 'mini'
+            - if can? :update, user
+              = button_link 'Edit', edit_user_path(user), btn: 'mini'
+            - if can? :manage, User
+              = button_link 'Destroy', user, method: :delete, btn: 'mini',    |
+                data: { confirm: 'Are you sure?' }                            |
 
-= button_link 'New User', new_user_path
+- if user_signed_in? && can?(:manage, User)
+  = button_link 'New User', new_user_path

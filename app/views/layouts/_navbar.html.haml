@@ -30,15 +30,16 @@
                   %i.icon-caret-down.hidden-phone
                 %ul.dropdown-menu
                   %li.nav-header Manage
-                  %li= link_to 'Organizations', organizations_path
-                  %li= link_to 'Terms', terms_path
-                  %li= link_to 'Courses', courses_path
-                  %li= link_to 'Course offerings', course_offerings_path
+                  %li= link_to icon_tag_for('user') + ' Users', users_path
+                  %li= link_to icon_tag_for('sitemap') + ' Organizations', organizations_path
+                  %li= link_to icon_tag_for('calendar') + ' Terms', terms_path
+                  %li= link_to icon_tag_for('book') + ' Courses', courses_path
+                  %li= link_to icon_tag_for('group') + ' Course offerings', course_offerings_path
             %li= link_to current_user.email, current_user
             %li
               = link_to destroy_user_session_path, method: :delete do
                 %i.icon-signout
           - else
-            %li= link_to 'Sign Up', new_user_path
+            %li= link_to 'Sign Up', new_user_registration_path
             %li= link_to 'Sign In', new_user_session_path
           

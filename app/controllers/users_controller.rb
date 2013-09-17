@@ -1,5 +1,6 @@
 class UsersController < ApplicationController
   before_action :set_user, only: [:show, :edit, :update, :destroy]
+  authorize_resource except: [:show, :index]
 
   # GET /users
   def index
@@ -53,6 +54,9 @@ class UsersController < ApplicationController
 
     # Only allow a trusted parameter "white list" through.
     def user_params
+#      if !can? :manage, User
+#        params.delete(...)
+#      end
       params.require(:user).permit(:first_name, :last_name, :email)
     end
 end
