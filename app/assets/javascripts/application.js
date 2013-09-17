@@ -12,7 +12,11 @@
 //
 //= require jquery
 //= require jquery_ujs
+//= require js-routes
 //= require bootstrap-dropdown.js
 //= require codemirror
 //= require codemirror/modes/clike
 //= require_tree .
+
+// Add the route helpers directly into the window object for easy access.
+$.extend(window, Routes)
