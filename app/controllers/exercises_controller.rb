@@ -13,10 +13,6 @@ class ExercisesController < ApplicationController
   # GET /exercises/new
   def new
     @exercise = Exercise.new
-    @prompt = Prompt.new
-    @choice = Choice.new
-    @tag = Tag.new
-    @lang = Language.new
   end
 
   # GET /exercises/1/edit
@@ -57,6 +53,6 @@ class ExercisesController < ApplicationController
 
     # Only allow a trusted parameter "white list" through.
     def exercise_params
-      params.require(:exercise).permit(:title, :preamble, :user, :is_public)
+      params[:exercise]
     end
 end

@@ -24,7 +24,7 @@ class Tag < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def set_name_case
-    if !self.name.empty?
+    if !self.name.nil?
       self.name = name.downcase
     end
   end

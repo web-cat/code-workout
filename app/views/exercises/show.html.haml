@@ -1,17 +1,5 @@
 %p#notice= notice
 
-%p
-  %b Title:
-  = @exercise.title
-%p
-  %b Preamble:
-  = @exercise.preamble
-%p
-  %b User:
-  = @exercise.user
-%p
-  %b Is public:
-  = @exercise.is_public
 
 = link_to 'Edit', edit_exercise_path(@exercise)
 \|

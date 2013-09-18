@@ -1,7 +1,7 @@
 class Choice < ActiveRecord::Base
   #~ Relationships ............................................................
 
-  belongs_to :prompt
+  belongs_to :exercise
 
   #~ Hooks ....................................................................
 

@@ -23,7 +23,7 @@ describe ExercisesController do
   # This should return the minimal set of attributes required to create a valid
   # Exercise. As you add validations to Exercise, be sure to
   # adjust the attributes here as well.
-  let(:valid_attributes) { { "title" => "MyString" } }
+  let(:valid_attributes) { {  } }
 
   # This should return the minimal set of values that should be in the session
   # in order to pass any filters (e.g. authentication) defined in
@@ -85,14 +85,14 @@ describe ExercisesController do
       it "assigns a newly created but unsaved exercise as @exercise" do
         # Trigger the behavior that occurs when invalid params are submitted
         Exercise.any_instance.stub(:save).and_return(false)
-        post :create, {:exercise => { "title" => "invalid value" }}, valid_session
+        post :create, {:exercise => {  }}, valid_session
         assigns(:exercise).should be_a_new(Exercise)
       end
 
       it "re-renders the 'new' template" do
         # Trigger the behavior that occurs when invalid params are submitted
         Exercise.any_instance.stub(:save).and_return(false)
-        post :create, {:exercise => { "title" => "invalid value" }}, valid_session
+        post :create, {:exercise => {  }}, valid_session
         response.should render_template("new")
       end
     end
@@ -106,8 +106,8 @@ describe ExercisesController do
         # specifies that the Exercise created on the previous line
         # receives the :update_attributes message with whatever params are
         # submitted in the request.
-        Exercise.any_instance.should_receive(:update).with({ "title" => "MyString" })
-        put :update, {:id => exercise.to_param, :exercise => { "title" => "MyString" }}, valid_session
+        Exercise.any_instance.should_receive(:update).with({ "these" => "params" })
+        put :update, {:id => exercise.to_param, :exercise => { "these" => "params" }}, valid_session
       end
 
       it "assigns the requested exercise as @exercise" do
@@ -128,7 +128,7 @@ describe ExercisesController do
         exercise = Exercise.create! valid_attributes
         # Trigger the behavior that occurs when invalid params are submitted
         Exercise.any_instance.stub(:save).and_return(false)
-        put :update, {:id => exercise.to_param, :exercise => { "title" => "invalid value" }}, valid_session
+        put :update, {:id => exercise.to_param, :exercise => {  }}, valid_session
         assigns(:exercise).should eq(exercise)
       end
 
@@ -136,7 +136,7 @@ describe ExercisesController do
         exercise = Exercise.create! valid_attributes
         # Trigger the behavior that occurs when invalid params are submitted
         Exercise.any_instance.stub(:save).and_return(false)
-        put :update, {:id => exercise.to_param, :exercise => { "title" => "invalid value" }}, valid_session
+        put :update, {:id => exercise.to_param, :exercise => {  }}, valid_session
         response.should render_template("edit")
       end
     end

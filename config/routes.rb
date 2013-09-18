@@ -1,5 +1,9 @@
 CodeWorkout::Application.routes.draw do
 
+  resources :exercises
+
+  resources :stems
+
   root 'static_pages#home'
 
   get "static_pages/home"
@@ -13,10 +17,8 @@ CodeWorkout::Application.routes.draw do
   resources :courses
   resources :organizations
   resources :choices
-  resources :languages
-  resources :prompts
-  resources :tags
-  resources :exercises
+  resources :languages  
+  resources :tags  
   resources :course_enrollments
   resources :course_roles
   resources :global_roles

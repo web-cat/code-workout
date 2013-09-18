@@ -11,10 +11,10 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20130916203844) do
+ActiveRecord::Schema.define(version: 20130918190714) do
 
   create_table "choices", force: true do |t|
-    t.integer  "prompt_id",  null: false
+    t.integer  "exercise_id", null: false
     t.string   "answer"
     t.integer  "order"
     t.text     "feedback"
@@ -23,7 +23,7 @@ ActiveRecord::Schema.define(version: 20130916203844) do
     t.datetime "updated_at"
   end
 
-  add_index "choices", ["prompt_id"], name: "index_choices_on_prompt_id"
+  add_index "choices", ["exercise_id"], name: "index_choices_on_exercise_id"
 
   create_table "course_enrollments", force: true do |t|
     t.integer "user_id"
@@ -66,13 +66,28 @@ ActiveRecord::Schema.define(version: 20130916203844) do
   end
 
   create_table "exercises", force: true do |t|
-    t.string   "title",      null: false
-    t.text     "preamble"
-    t.integer  "user",       null: false
-    t.boolean  "is_public",  null: false
+    t.integer  "user_id",            null: false
+    t.integer  "stem_id"
+    t.integer  "language_id"
+    t.string   "title",              null: false
+    t.text     "question",           null: false
+    t.text     "feedback"
+    t.boolean  "is_public",          null: false
+    t.integer  "priority",           null: false
+    t.integer  "count_attempts",     null: false
+    t.float    "count_correct",      null: false
+    t.float    "difficulty",         null: false
+    t.float    "discrimination",     null: false
+    t.integer  "type",               null: false
+    t.boolean  "mcq_allow_multiple"
+    t.boolean  "mcq_is_scrambled"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
+
+  add_index "exercises", ["language_id"], name: "index_exercises_on_language_id"
+  add_index "exercises", ["stem_id"], name: "index_exercises_on_stem_id"
+  add_index "exercises", ["user_id"], name: "index_exercises_on_user_id"
 
   create_table "exercises_tags", force: true do |t|
     t.integer "exercise_id"
@@ -99,26 +114,11 @@ ActiveRecord::Schema.define(version: 20130916203844) do
     t.datetime "updated_at"
   end
 
-  create_table "prompts", force: true do |t|
-    t.integer  "exercise_id",       null: false
-    t.integer  "language_id",       null: false
-    t.text     "instruction",       null: false
-    t.integer  "order",             null: false
-    t.integer  "max_user_attempts"
-    t.integer  "attempts"
-    t.float    "correct"
-    t.text     "feedback"
-    t.float    "difficulty",        null: false
-    t.float    "discrimination",    null: false
-    t.integer  "type",              null: false
-    t.boolean  "allow_multiple"
-    t.boolean  "is_scrambled"
+  create_table "stems", force: true do |t|
+    t.text     "preamble"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
-
-  add_index "prompts", ["exercise_id"], name: "index_prompts_on_exercise_id"
-  add_index "prompts", ["language_id"], name: "index_prompts_on_language_id"
 
   create_table "tags", force: true do |t|
     t.string   "name",       null: false
