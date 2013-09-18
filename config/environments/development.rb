@@ -29,4 +29,30 @@ CodeWorkout::Application.configure do
   config.assets.debug = true
   config.assets.initialize_on_precompile = true
 
+#  config.log_level = :info
+  config.log_formatter = proc do |severity, datetime, progname, msg|
+    if severity == 'DEBUG' && msg.blank?
+      ''
+    else
+      case severity
+      when 'DEBUG'
+        severity_colored = "\033[36;40m[DEBUG]\033[0m" # cyan
+      when 'INFO'
+        severity_colored = "\033[32;40m[INFO]\033[0m" # green
+      when 'WARN'
+        severity_colored = "\033[35;40m[WARNING]\033[0m" # magenta
+      when 'ERROR'
+        severity_colored = "\033[31;40m[ERROR]\033[0m" # red
+      when 'FATAL'
+        severity_colored = "\033[7;31;40m[FATAL]\033[0m" # black, red bg
+      else
+        severity_colored = "[#{severity}]" # none
+      end
+      "%s %s %s\n" % [
+        datetime.strftime('%Y-%m-%d %H:%M:%S'),
+        severity_colored,
+        String === msg ? msg : msg.inspect
+        ]
+    end
+  end
 end
