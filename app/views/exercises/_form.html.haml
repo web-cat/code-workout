@@ -1,10 +1,60 @@
 = form_for @exercise do |f|
   - if @exercise.errors.any?
-    #error_explanation
+    -# #error_explanation
+    -#.field_with_errors
       %h2= "#{pluralize(@exercise.errors.count, "error")} prohibited this exercise from being saved:"
       %ul
         - @exercise.errors.full_messages.each do |msg|
           %li= msg
+  .field
+    = f.label :title
+    = f.text_field :title, maxlength: 30,
+      placeholder: "Enter question title"
+  -#%script
+  -#  $(document).ready(function() {
+  -#  $("exercise_question").wysihtml5();};
+    
+  = f.label :question
+  = f.text_area :question, class: "richtext", 
+    placeholder: "Enter question text"
+  .field
+    = f.label :feedback
+    = f.text_area :feedback, class: "richtext",
+      placeholder: "(optional) Feedback after answer"
+  .field
+    = f.label "Share with CodeWorkout community" 
+    = f.check_box :is_public, checked: "checked",
+      value: "true"
+  .field
+    = f.label "Programming Language"
+    = f.text_field :language
+  -#TODO set priority for "grouping" ordered, multi-part questions
+  -#.field
+  -#  = f.label :priority
+  -#  = f.select :priority, choices: [0, 1, 2, 3]
+  .field
+    = f.label :difficulty
+    = f.select :difficulty, choices: ["Novice", "Easy", "Moderate", 
+      "Difficult", "Expert"]
+    = f.label "Randomize order of answers"
+    = f.check_box :mcq_is_scrambled, checked: "checked"
+    = f.label "Allow more than one selection"
+    = f.check_box :mcq_allow_multiple, checked: "checked"
+  -#= f.fields_for :choices do |choice_fields|
+  = f.fields_for :choices, @pick5 do |choice_fields|
+    = choice_fields.label :answer
+    = choice_fields.text_field :answer
+    = choice_fields.label :value
+    = choice_fields.number_field :value
+    = choice_fields.label :feedback
+    = choice_fields.text_area :feedback, class: "richtext"
 
   .actions
-    = f.submit 'Save'
+    = f.submit
+-#      t.integer   :count_attempts, null: false
+-#      t.float   :count_correct, null: false
+-#      t.float   :difficulty, null: false
+-#      t.float   :discrimination, null: false
+-#      t.integer   :type, null: false
+-#      t.boolean   :mcq_allow_multiple
+-#      t.boolean   :mcq_is_scrambled

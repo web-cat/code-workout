@@ -13,6 +13,11 @@ class ExercisesController < ApplicationController
   # GET /exercises/new
   def new
     @exercise = Exercise.new
+    @pick5 = Array.new(5, Choice.new)
+    @pick5.each do |choice|
+      @exercise.choices << choice
+    end
+    #@exercise.choices << choice
   end
 
   # GET /exercises/1/edit
@@ -21,12 +26,76 @@ class ExercisesController < ApplicationController
 
   # POST /exercises
   def create
-    @exercise = Exercise.new(exercise_params)
+    @exercise = Exercise.new
+    msg = params[:exercise]
+    @exercise.question_type = 1
+    @exercise.title = msg[:title]
+    @exercise.question = msg[:question]
+    @exercise.is_public = true
+    if msg[:is_public] == 0
+      @exercise.is_public = false
+    end
+    @exercise.mcq_allow_multiple = true
+    if msg[:mcq_allow_multiple] == 0
+      @exercise.mcq_allow_multiple = false
+    end
+    @exercise.mcq_is_scrambled = true
+    if msg[:mcq_is_scrambled] == 0
+      @exercise.mcq_is_scrambled = false
+    end
+    @exercise.priority = 0
+    @exercise.count_attempts = 0
+    @exercise.count_correct = 0
+    lang = msg[:language].downcase
+    lid = Language.where(:name => lang)
+    if lid.empty?
+      l = Language.create
+      l.name = lang
+      l.save
+      @exercise.language << l
+    else
+      @exercise.language = lid.first
+    end
 
-    if @exercise.save
+    #TODO get user id from session data
+    @exercise.user_id = 1
+
+    if msg[:difficulty] == "Novice"
+      @exercise.difficulty = 1
+    elsif msg[:difficulty] == "Easy"
+      @exercise.difficulty = 2
+    elsif msg[:difficulty] == "Moderate"
+      @exercise.difficulty = 3
+    elsif msg[:difficulty] == "Difficult"
+      @exercise.difficulty = 4
+    elsif msg[:difficulty] == "Expert"
+      @exercise.difficulty = 5
+    else
+      @exercise.difficulty = 1
+    end
+
+    @exercise.discrimination = 0
+
+    @exercise.save!
+    i = 0
+    msg[:choices_attributes].each do |c|
+      tmp = Choice.create
+      tmp.answer = c.second[:answer]
+      tmp.value = c.second[:value]
+      tmp.feedback = c.second[:feedback]
+      tmp.order = i
+      @exercise.choices << tmp
+      #tmp.exercise << @exercise
+      tmp.save!
+      
+      i=i+1
+    end
+
+    if @exercise.save!
       redirect_to @exercise, notice: 'Exercise was successfully created.'
     else
-      render action: 'new'
+      #render action: 'new'
+      redirect_to @exercise, notice: "Exercise was NOT created for #{msg} #{@exercise.errors.messages}"
     end
   end
 
@@ -53,6 +122,11 @@ class ExercisesController < ApplicationController
 
     # Only allow a trusted parameter "white list" through.
     def exercise_params
-      params[:exercise]
+      #params[:exercise]
+      params.permit(:title, :question, :feedback, :is_public, :priority, :type,
+        :mcq_allow_multiple, :mcq_is_scrambled, :choices)
     end
+#      #MCQ-specific columns, using single-table inheritance:
+#      t.boolean   :mcq_allow_multiple
+#      t.boolean   :mcq_is_scrambled
 end

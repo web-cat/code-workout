@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20130918190714) do
+ActiveRecord::Schema.define(version: 20130923164556) do
 
   create_table "choices", force: true do |t|
     t.integer  "exercise_id", null: false
@@ -78,7 +78,7 @@ ActiveRecord::Schema.define(version: 20130918190714) do
     t.float    "count_correct",      null: false
     t.float    "difficulty",         null: false
     t.float    "discrimination",     null: false
-    t.integer  "type",               null: false
+    t.integer  "question_type",      null: false
     t.boolean  "mcq_allow_multiple"
     t.boolean  "mcq_is_scrambled"
     t.datetime "created_at"

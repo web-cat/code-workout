@@ -10,7 +10,7 @@
 #      t.text    :question, null: false
 #      t.text    :feedback
 #      t.boolean   :is_public, null: false
-#      t.integer   :prioriy, null: false
+#      t.integer   :priority, null: false
 #      t.integer   :count_attempts, null: false
 #      t.float   :count_correct, null: false
 #      t.float   :difficulty, null: false
@@ -33,6 +33,8 @@ class Exercise < ActiveRecord::Base
   #has_many :tags, :through => :exercises_tags
   has_and_belongs_to_many :tags
   has_many :exercises_tags
+  has_many :choices
+  accepts_nested_attributes_for :choices
   
   
   #~ Hooks ....................................................................
@@ -56,7 +58,7 @@ class Exercise < ActiveRecord::Base
   validates :count_correct, presence: true, numericality: true
   validates :difficulty, presence: true, numericality: true
   validates :discrimination, presence: true, numericality: true
-  validates :type, presence: true, numericality: true
+  validates :question_type, presence: true, numericality: true
 
 
   TYPES = {

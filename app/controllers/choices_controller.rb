@@ -15,6 +15,10 @@ class ChoicesController < ApplicationController
     @choice = Choice.new
   end
 
+  def _entry
+    @choice = Choice.new
+  end
+
   # GET /choices/1/edit
   def edit
   end

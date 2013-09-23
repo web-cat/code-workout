@@ -239,3 +239,17 @@ form.formtastic { @extend .form-horizontal; }
 }
 .debug .CodeMirror { margin-bottom: 0; }
 .navbar .badge { vertical-align: text-top; }
+
+/* Form entry styles... */
+
+textarea.richtext {
+  cols: 100;
+  rows: 6;
+}
+textarea.read {
+  readonly: readonly;
+}
+
+.showme {
+  color: ff0000;
+}

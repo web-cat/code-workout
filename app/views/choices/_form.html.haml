@@ -1,25 +1,15 @@
 = form_for @choice do |f|
   - if @choice.errors.any?
-    #error_explanation
-      %h2= "#{pluralize(@choice.errors.count, "error")} prohibited this choice from being saved:"
+    -# #error_explanation
+    -#.field_with_errors
+      %h2= "#{pluralize(@exercise.errors.count, "error")} prohibited this exercise from being saved:"
       %ul
-        - @choice.errors.full_messages.each do |msg|
+        - @exercise.errors.full_messages.each do |msg|
           %li= msg
-
-  .field
-    = f.label :prompt
-    = f.text_field :prompt
   .field
     = f.label :answer
-    = f.text_field :answer
-  .field
-    = f.label :order
-    = f.number_field :order
-  .field
-    = f.label :feedback
-    = f.text_area :feedback
-  .field
+    = f.text_field :answer, placeholder: "Enter answer"
     = f.label :value
-    = f.text_field :value
-  .actions
-    = f.submit 'Save'
+    = f.text_field :value, placeholder: "0 - 100"
+-#  .actions
+-#   = f.submit 'Save'
