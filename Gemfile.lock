@@ -208,6 +208,7 @@ DEPENDENCIES
   capybara
   codemirror-rails
   coffee-rails (~> 4.0.0)
+  coffee-script-source
   devise
   factory_girl_rails
   faker

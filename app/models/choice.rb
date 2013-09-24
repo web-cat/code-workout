@@ -1,3 +1,17 @@
+# == Schema Information
+#
+# Table name: choices
+#
+#  id         :integer          not null, primary key
+#  prompt_id  :integer          not null
+#  answer     :string(255)
+#  order      :integer
+#  feedback   :text
+#  value      :float
+#  created_at :datetime
+#  updated_at :datetime
+#
+
 class Choice < ActiveRecord::Base
   #~ Relationships ............................................................
 

@@ -80,4 +80,16 @@ CodeWorkout::Application.configure do
 
   config.action_mailer.default_url_options = { :host => 'http://codeworks.org/' }
 
+#  config.log_level = :warn
+  config.log_formatter = proc do |severity, datetime, progname, msg|
+    if severity == 'DEBUG' && msg.blank?
+      ''
+    else
+      "%s [%s] %s\n" % [
+        datetime.strftime('%Y-%m-%d %H:%M:%S'),
+        severity,
+        String === msg ? msg : msg.inspect
+        ]
+    end
+  end
 end

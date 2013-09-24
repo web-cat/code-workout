@@ -11,10 +11,11 @@ gem 'formtastic-bootstrap'
 # gem 'jbuilder', '~> 1.2'
 gem 'haml', '>= 3.1.4'
 gem 'haml-rails'
+gem 'coffee-rails', '~> 4.0.0'
+gem 'coffee-script-source'
 
 group :assets do
   gem 'sass-rails', '~> 4.0.0'
-  gem 'coffee-rails', '~> 4.0.0'
   gem 'uglifier', '>= 1.3.0'
 end
 
@@ -24,6 +25,7 @@ group :development, :test do
   gem 'annotate'
   gem 'factory_girl_rails'
   gem 'faker'
+  gem 'rails-erd'
 end
 
 group :test do
@@ -37,7 +39,6 @@ end
 group :doc do
   # bundle exec rake doc:rails generates the API under doc/api.
   gem 'sdoc', require: false
-  gem 'rails-erd', require: false
 end
 
 # Gems for authentication and authorization.
