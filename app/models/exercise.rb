@@ -1,3 +1,16 @@
+# == Schema Information
+#
+# Table name: exercises
+#
+#  id         :integer          not null, primary key
+#  title      :string(255)      not null
+#  preamble   :text
+#  user       :integer          not null
+#  is_public  :boolean          not null
+#  created_at :datetime
+#  updated_at :datetime
+#
+
 class Exercise < ActiveRecord::Base
 
   #~ Relationships ............................................................
