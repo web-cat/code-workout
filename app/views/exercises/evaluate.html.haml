@@ -1,2 +1,8 @@
-%h1 Exercises#evaluate
-%p Find me in app/views/exercises/evaluate.html.haml
+%h2= @exercise.title + " results"
+%p= CGI.unescapeHTML(@exercise.serve_question_stem).html_safe
+%p= CGI.unescapeHTML(@exercise.question).html_safe
+- @responses.each do |resp|
+  %p= resp.answer
+%h2= "Score: " + @score.to_s
+- @explain.each do |ex|
+  %p= CGI.unescapeHTML(ex).html_safe

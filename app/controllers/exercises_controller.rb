@@ -123,6 +123,18 @@ class ExercisesController < ApplicationController
         redirect_to exercises_url, notice: "Exercise #{params[:id]} not found"
       else
         @exercise = found.first
+        response_ids = params[:exercise][:choice_ids]
+        @responses = Array.new
+        if( @exercise.mcq_allow_multiple )
+          response_ids.each do |r|
+            @responses.push(Choice.where(:id => r).first)
+          end
+        else
+          @responses.push(Choice.where(:id => response_ids).first)
+        end
+        @responses = @responses.compact
+        @score = @exercise.score(@responses)
+        @explain = @exercise.collate_feedback(@responses)
       end
     else
       redirect_to exercises_url, notice: 'Choose an exercise to practice!'

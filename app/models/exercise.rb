@@ -106,14 +106,29 @@ class Exercise < ActiveRecord::Base
     end
   end
 
-  def calculate_score_array(answered)
+  def score(answered)
     score = 0
     answered.each do |a|
-      if !self.choices.nil? && !self.choices.where(:answer => a).empty?
-        score = score + self.choices.where(:answer => a).first.value
+      score = score + a.value
+    end
+    #answered.each do |a|
+    #  if !self.choices.nil? && !self.choices.where(:answer => a).empty?
+    #    score = score + self.choices.where(:answer => a).first.value
+    #  end
+    return score
+  end
+
+  def collate_feedback(answered)
+    feed = Array.new
+    if( !self.feedback.nil? && !self.feedback.empty? )
+      feed.push(self.feedback)
+    end
+    answered.each do |a|
+      if !a.feedback.nil? && !a.feedback.empty?
+        feed.push(a.feedback)
       end
     end
-    return score
+    return feed
   end
 
   private

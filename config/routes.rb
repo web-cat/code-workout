@@ -34,7 +34,7 @@ CodeWorkout::Application.routes.draw do
     post "/login" => "devise/sessions#create", as: :user_session
     delete "/logout" => "devise/sessions#destroy", as: :destroy_user_session
     get '/practice/:id' => 'exercises#practice', as: :practice
-    post '/practice/:id' => 'exercises#evaluate', as: :evaluate
+    patch '/practice/:id' => 'exercises#evaluate', as: :evaluate
   end
 
 end
