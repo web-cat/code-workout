@@ -168,7 +168,5 @@ class ExercisesController < ApplicationController
       params.permit(:title, :question, :feedback, :is_public, :priority, :type,
         :mcq_allow_multiple, :mcq_is_scrambled, :choices)
     end
-#      #MCQ-specific columns, using single-table inheritance:
-#      t.boolean   :mcq_allow_multiple
-#      t.boolean   :mcq_is_scrambled
+
 end
