@@ -30,17 +30,18 @@ class ExercisesController < ApplicationController
     msg = params[:exercise]
     @exercise.question_type = 1
     @exercise.title = msg[:title]
-    @exercise.question = msg[:question]
+    @exercise.question = ERB::Util.html_escape(msg[:question])
+    @exercise.feedback = ERB::Util.html_escape(msg[:feedback])
     @exercise.is_public = true
     if msg[:is_public] == 0
       @exercise.is_public = false
     end
     @exercise.mcq_allow_multiple = true
-    if msg[:mcq_allow_multiple] == 0
+    if msg[:mcq_allow_multiple].nil?
       @exercise.mcq_allow_multiple = false
     end
     @exercise.mcq_is_scrambled = true
-    if msg[:mcq_is_scrambled] == 0
+    if msg[:mcq_is_scrambled].nil?
       @exercise.mcq_is_scrambled = false
     end
     @exercise.priority = 0
@@ -80,9 +81,9 @@ class ExercisesController < ApplicationController
     i = 0
     msg[:choices_attributes].each do |c|
       tmp = Choice.create
-      tmp.answer = c.second[:answer]
+      tmp.answer = ERB::Util.html_escape(c.second[:answer])
       tmp.value = c.second[:value]
-      tmp.feedback = c.second[:feedback]
+      tmp.feedback = ERB::Util.html_escape(c.second[:feedback])
       tmp.order = i
       @exercise.choices << tmp
       #tmp.exercise << @exercise
@@ -96,6 +97,35 @@ class ExercisesController < ApplicationController
     else
       #render action: 'new'
       redirect_to @exercise, notice: "Exercise was NOT created for #{msg} #{@exercise.errors.messages}"
+    end
+  end
+
+  # GET/POST /practice/1
+  def practice
+    if( params[:id] )
+      found = Exercise.where(:id => params[:id])
+      if( found.empty? )
+        redirect_to exercises_url, notice: "Exercise #{params[:id]} not found"
+      else
+        @exercise = found.first
+        @answers = @exercise.serve_choice_array
+      end
+    else
+      redirect_to exercises_url, notice: 'Choose an exercise to practice!'
+    end
+  end
+
+  #GET /practice/1
+  def evaluate
+    if( params[:id] )
+      found = Exercise.where(:id => params[:id])
+      if( found.empty? )
+        redirect_to exercises_url, notice: "Exercise #{params[:id]} not found"
+      else
+        @exercise = found.first
+      end
+    else
+      redirect_to exercises_url, notice: 'Choose an exercise to practice!'
     end
   end
 

@@ -66,15 +66,58 @@ class Exercise < ActiveRecord::Base
   }
 
   #~ Class methods ............................................................
+  
+
+  #~ Public instance methods ..................................................
+  def serve_choice_array
+    if self.choices.nil?
+      return ["No answers available"]
+    else
+      answers = Array.new
+      raw = self.choices.sort_by{|a| a[:order]}
+      raw.each do |c|
+        answers.push( c )
+      end
+      if self.mcq_is_scrambled
+        scrambled = Array.new
+        until answers.empty?
+          rand = Random.rand(answers.length)
+          scrambled.push(answers.delete_at(rand))
+        end
+        answers = scrambled
+      end
+      return answers
+    end
+  end
+
+  def select_many?
+    self.mcq_allow_multiple
+  end
+
+  def type_name
+    Exercise.type_name(self.question_type)
+  end
+
+  def serve_question_stem
+    if self.stem.nil?
+      return ""
+    else
+      return self.stem.preamble
+    end
+  end
+
+  def calculate_score_array(answered)
+    score = 0
+    answered.each do |a|
+      if !self.choices.nil? && !self.choices.where(:answer => a).empty?
+        score = score + self.choices.where(:answer => a).first.value
+      end
+    end
+    return score
+  end
+
+  private
   def self.type_name(type_num)
     TYPES.rassoc(type_num).first
   end
-
-  #~ Private instance methods .................................................
-  private
-
-  def get_stem
-
-  end
-
 end

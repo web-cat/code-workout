@@ -1,8 +1,6 @@
 CodeWorkout::Application.routes.draw do
 
-  resources :exercises
-
-  resources :stems
+  
 
   root 'static_pages#home'
 
@@ -12,6 +10,8 @@ CodeWorkout::Application.routes.draw do
   get "static_pages/mockup2"
   get "static_pages/mockup3"
 
+  resources :exercises
+  resources :stems
   resources :course_offerings
   resources :terms
   resources :courses
@@ -33,6 +33,8 @@ CodeWorkout::Application.routes.draw do
     get "/login" => "devise/sessions#new", as: :new_user_session
     post "/login" => "devise/sessions#create", as: :user_session
     delete "/logout" => "devise/sessions#destroy", as: :destroy_user_session
+    get '/practice/:id' => 'exercises#practice', as: :practice
+    post '/practice/:id' => 'exercises#evaluate', as: :evaluate
   end
 
 end

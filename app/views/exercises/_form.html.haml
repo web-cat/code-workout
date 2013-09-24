@@ -42,12 +42,15 @@
     = f.check_box :mcq_allow_multiple, checked: "checked"
   -#= f.fields_for :choices do |choice_fields|
   = f.fields_for :choices, @pick5 do |choice_fields|
-    = choice_fields.label :answer
-    = choice_fields.text_field :answer
-    = choice_fields.label :value
-    = choice_fields.number_field :value
-    = choice_fields.label :feedback
-    = choice_fields.text_area :feedback, class: "richtext"
+    .field
+      = choice_fields.label :answer
+      = choice_fields.text_field :answer
+    .field
+      = choice_fields.label :value
+      = choice_fields.number_field :value
+    .field
+      = choice_fields.label :feedback
+      = choice_fields.text_area :feedback, class: "richtext"
 
   .actions
     = f.submit
