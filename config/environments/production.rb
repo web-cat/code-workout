@@ -43,7 +43,19 @@ CodeWorkout::Application.configure do
   # config.force_ssl = true
 
   # Set to :debug to see everything in the log.
-  config.log_level = :info
+  config.log_level = :warn
+
+  config.log_formatter = proc do |severity, datetime, progname, msg|
+    if severity == 'DEBUG' && msg.blank?
+      ''
+    else
+      "%s [%s] %s\n" % [
+        datetime.strftime('%Y-%m-%d %H:%M:%S'),
+        severity,
+        String === msg ? msg : msg.inspect
+        ]
+    end
+  end
 
   # Prepend all log lines with the following tags.
   # config.log_tags = [ :subdomain, :uuid ]
@@ -75,21 +87,6 @@ CodeWorkout::Application.configure do
   # Disable automatic flushing of the log to improve performance.
   # config.autoflush_log = false
 
-  # Use default logging formatter so that PID and timestamp are not suppressed.
-  config.log_formatter = ::Logger::Formatter.new
-
   config.action_mailer.default_url_options = { :host => 'http://codeworks.org/' }
 
-  config.log_level = :warn
-  config.log_formatter = proc do |severity, datetime, progname, msg|
-    if severity == 'DEBUG' && msg.blank?
-      ''
-    else
-      "%s [%s] %s\n" % [
-        datetime.strftime('%Y-%m-%d %H:%M:%S'),
-        severity,
-        String === msg ? msg : msg.inspect
-        ]
-    end
-  end
 end
