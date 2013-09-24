@@ -1,4 +1,4 @@
-class CreateExercises < ActiveRecord::Migration
+class RenameExercisesTypeToQuestionType < ActiveRecord::Migration
   def change
   	#create_table :exercises do |t|
     #	t.belongs_to  :user, index: true, null: false
