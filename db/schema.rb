@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20130923164556) do
+ActiveRecord::Schema.define(version: 20131001051705) do
 
   create_table "choices", force: true do |t|
     t.integer  "exercise_id", null: false
@@ -83,6 +83,7 @@ ActiveRecord::Schema.define(version: 20130923164556) do
     t.boolean  "mcq_is_scrambled"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer  "experience"
   end
 
   add_index "exercises", ["language_id"], name: "index_exercises_on_language_id"

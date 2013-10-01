@@ -44,10 +44,10 @@ class Exercise < ActiveRecord::Base
   #validates :user, presence: true
   validates :title,
     presence: true,
-    length: {:minimum => 1, :maximum => 80},
+    length: {:minimum => 1, :maximum => 50},
     format: {
       with: /[a-zA-Z0-9\-_ .]+/,
-      message: 'Title must be 80 characters or less and consist only of ' \
+      message: 'Title must be 50 characters or less and consist only of ' \
         'letters, digits, hyphens (-), underscores (_), spaces ( ), and ' \
         'periods (.).'
     }
@@ -56,6 +56,7 @@ class Exercise < ActiveRecord::Base
   validates :priority, presence: true, numericality: true
   validates :count_attempts, presence: true, numericality: true
   validates :count_correct, presence: true, numericality: true
+  validates :experience, presence: true, numericality: true
   validates :difficulty, presence: true, numericality: true
   validates :discrimination, presence: true, numericality: true
   validates :question_type, presence: true, numericality: true

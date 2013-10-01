@@ -240,16 +240,24 @@ form.formtastic { @extend .form-horizontal; }
 .debug .CodeMirror { margin-bottom: 0; }
 .navbar .badge { vertical-align: text-top; }
 
-/* Form entry styles... */
+/* Authoring form */
 
-textarea.richtext {
-  cols: 100;
-  rows: 6;
-}
-textarea.read {
-  readonly: readonly;
+.darker-bkg  {
+  background: -webkit-gradient(linear, left top, right top,
+    from(#dfcdb2), to(#e8d8c0));  
+  background: -moz-linear-gradient(left, #dfcdb2, #e8d8c0);
+  background: linear-gradient(left, #dfcdb2, #e8d8c0);
 }
 
-.showme {
-  color: ff0000;
+.nested-section { font-weight: normal; font-size: 13px; }
+
+ul.wysihtml5-toolbar {
+  padding: 0;
+  margin: 0;
+}
+ul.wysihtml5-toolbar li {
+  display:inline;
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
 }

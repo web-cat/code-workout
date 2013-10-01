@@ -13,11 +13,10 @@ class ExercisesController < ApplicationController
   # GET /exercises/new
   def new
     @exercise = Exercise.new
-    @pick5 = Array.new(5, Choice.new)
-    @pick5.each do |choice|
+    @pick = Array.new(2, Choice.new) #start with 2 choices by default
+    @pick.each do |choice|
       @exercise.choices << choice
     end
-    #@exercise.choices << choice
   end
 
   # GET /exercises/1/edit
@@ -47,42 +46,42 @@ class ExercisesController < ApplicationController
     @exercise.priority = 0
     @exercise.count_attempts = 0
     @exercise.count_correct = 0
-    lang = msg[:language].downcase
-    lid = Language.where(:name => lang)
-    if lid.empty?
-      l = Language.create
-      l.name = lang
-      l.save
-      @exercise.language << l
-    else
-      @exercise.language = lid.first
+    if msg[:language_id]
+      @exercise.language_id = msg[:language_id].to_i
     end
 
     #TODO get user id from session data
     @exercise.user_id = 1
 
-    if msg[:difficulty] == "Novice"
-      @exercise.difficulty = 1
-    elsif msg[:difficulty] == "Easy"
-      @exercise.difficulty = 2
-    elsif msg[:difficulty] == "Moderate"
-      @exercise.difficulty = 3
-    elsif msg[:difficulty] == "Difficult"
-      @exercise.difficulty = 4
-    elsif msg[:difficulty] == "Expert"
-      @exercise.difficulty = 5
+    if( msg[:experience] )
+      @exercise.experience = msg[:experience]
     else
-      @exercise.difficulty = 1
+      @exercise.experience = 10
     end
-
+    
+    #default IRT statistics
+    @exercise.difficulty = 0
     @exercise.discrimination = 0
 
     @exercise.save!
     i = 0
+    right = 0.0
+    total = 0.0
+    msg[:choices_attributes].each do |c|
+      if c.second[:value] == 1
+        right = right + 1
+      end
+      total = total + 1
+    end
     msg[:choices_attributes].each do |c|
       tmp = Choice.create
       tmp.answer = ERB::Util.html_escape(c.second[:answer])
-      tmp.value = c.second[:value]
+      if( c.second[:value] )
+        tmp.value = right/total
+      else
+        tmp.value = -(total-right)/total
+      end
+
       tmp.feedback = ERB::Util.html_escape(c.second[:feedback])
       tmp.order = i
       @exercise.choices << tmp
@@ -113,6 +112,10 @@ class ExercisesController < ApplicationController
     else
       redirect_to exercises_url, notice: 'Choose an exercise to practice!'
     end
+  end
+
+  def something
+    @rand100 = Random.rand(100)
   end
 
   #GET /practice/1

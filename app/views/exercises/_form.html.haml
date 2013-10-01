@@ -1,57 +1,68 @@
-= form_for @exercise do |f|
-  - if @exercise.errors.any?
-    -# #error_explanation
-    -#.field_with_errors
-      %h2= "#{pluralize(@exercise.errors.count, "error")} prohibited this exercise from being saved:"
-      %ul
-        - @exercise.errors.full_messages.each do |msg|
-          %li= msg
+= semantic_form_for @exercise do |f|
+  = f.semantic_errors
+  .row-fluid
+    .span10
+      = f.input :title, maxlength: 50,
+        placeholder: "Enter question title"
+  .row-fluid
+    .span10
+      = f.input :question, 
+        placeholder: "Enter question text",
+        :input_html => { :class => 'richtexteditor autogrow span10', :rows => 5 }
+  .row-fluid
+    .span10
+      = f.input :is_public, :label=> "Share with CodeWorkout community", 
+        :input_html => { checked: 'checked', value: true }  
+  .row-fluid
+    .span4
+      = f.input :language, :as => :select, 
+        :collection => Language.all,
+        :label => "Programming Language"
+    .span4
+      = f.input :experience, :as => :select,
+        :collection => (10..100).step(10).to_a,
+        :label => "Experience Points",
+        :hint => "Amount gained for a correct answer"
+  -#%a.btn.btn-success.btn-small{:id => "add_ans", :href => "#"}
+  -#  %i.icon-white.icon-plus
+  -#  click
+  %h2 Answers
+  .row-fluid.darker-bkg
+    .span4
+      = f.input :mcq_is_scrambled, 
+        :label => "Randomize answers",
+        :input_html => { checked: 'checked', value: true}
+    .span4
+      = f.input :mcq_allow_multiple, 
+        :label => "Allow multiple selections",
+        :input_html => { checked: 'checked', value: true}
   .field
-    = f.label :title
-    = f.text_field :title, maxlength: 30,
-      placeholder: "Enter question title"
-  -#%script
-  -#  $(document).ready(function() {
-  -#  $("exercise_question").wysihtml5();};
+  = f.fields_for :choices, @pick do |choice_fields|
+    .row-fluid.darker-bkg
+      .row-fluid
+        .span3
+          = choice_fields.input :value, :as => :boolean,
+            :label => "Correct"
+      .row-fluid
+        .span10
+          = choice_fields.input :answer, :as => :text,
+            placeholder: "Enter answer text",
+            :input_html => { :class => 'richtexteditor autogrow span10', :rows =>1 }
+      .row-fluid
+        .span10
+          = choice_fields.input :feedback,
+            label: "Explanation",
+            placeholder: "(optional) Answer explanation, given after submission",
+            input_html: { :class => 'richtexteditor autogrow span10', :rows => 2}
+    .field
+  .field
     
-  = f.label :question
-  = f.text_area :question, class: "richtext", 
-    placeholder: "Enter question text"
   .field
-    = f.label :feedback
-    = f.text_area :feedback, class: "richtext",
-      placeholder: "(optional) Feedback after answer"
+    
   .field
-    = f.label "Share with CodeWorkout community" 
-    = f.check_box :is_public, checked: "checked",
-      value: "true"
-  .field
-    = f.label "Programming Language"
-    = f.text_field :language
-  -#TODO set priority for "grouping" ordered, multi-part questions
-  -#.field
-  -#  = f.label :priority
-  -#  = f.select :priority, choices: [0, 1, 2, 3]
-  .field
-    = f.label :difficulty
-    = f.select :difficulty, choices: ["Novice", "Easy", "Moderate", 
-      "Difficult", "Expert"]
-    = f.label "Randomize order of answers"
-    = f.check_box :mcq_is_scrambled, checked: "checked"
-    = f.label "Allow more than one selection"
-    = f.check_box :mcq_allow_multiple, checked: "checked"
-  -#= f.fields_for :choices do |choice_fields|
-  = f.fields_for :choices, @pick5 do |choice_fields|
-    .field
-      = choice_fields.label :answer
-      = choice_fields.text_field :answer
-    .field
-      = choice_fields.label :value
-      = choice_fields.number_field :value
-    .field
-      = choice_fields.label :feedback
-      = choice_fields.text_area :feedback, class: "richtext"
-
+    = f.input :feedback, label: "Question Explanation",
+      placeholder: "(optional) Exercise explanation, given after submission",
+      input_html: { :class => 'richtexteditor span10', :rows => 2 }
   .actions
     = f.submit
 -#      t.integer   :count_attempts, null: false
