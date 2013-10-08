@@ -10,13 +10,16 @@ CodeWorkout::Application.routes.draw do
   get "static_pages/mockup2"
   get "static_pages/mockup3"
 
+  #resources :exercises, shallow: true do
+  #  resources :choices  
+  #end  
   resources :exercises
+  resources :choices
   resources :stems
   resources :course_offerings
   resources :terms
   resources :courses
   resources :organizations
-  resources :choices
   resources :languages  
   resources :tags  
   resources :course_enrollments

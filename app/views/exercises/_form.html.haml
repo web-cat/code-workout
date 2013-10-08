@@ -23,7 +23,12 @@
         :collection => (10..100).step(10).to_a,
         :label => "Experience Points",
         :hint => "Amount gained for a correct answer"
-  -#%a.btn.btn-success.btn-small{:id => "add_ans", :href => "#"}
+  .row-fluid
+    .span10
+      = f.input :feedback, label: "Question Explanation",
+        placeholder: "(optional) Exercise explanation, given after submission",
+        input_html: { :class => 'richtexteditor span10', :rows => 2 }
+  -#%a.btn.btn-success.btn-small{:id => "add_answer", :href => "#"}
   -#  %i.icon-white.icon-plus
   -#  click
   %h2 Answers
@@ -36,8 +41,9 @@
       = f.input :mcq_allow_multiple, 
         :label => "Allow multiple selections",
         :input_html => { checked: 'checked', value: true}
+  
   .field
-  = f.fields_for :choices, @pick do |choice_fields|
+  = f.semantic_fields_for :choices, @pick do |choice_fields|
     .row-fluid.darker-bkg
       .row-fluid
         .span3
@@ -55,20 +61,10 @@
             placeholder: "(optional) Answer explanation, given after submission",
             input_html: { :class => 'richtexteditor autogrow span10', :rows => 2}
     .field
-  .field
-    
-  .field
-    
-  .field
-    = f.input :feedback, label: "Question Explanation",
-      placeholder: "(optional) Exercise explanation, given after submission",
-      input_html: { :class => 'richtexteditor span10', :rows => 2 }
+  -##answer-append
+  -#%a.btn.btn-mini{:id => "add_answer", :href => "#"}
+  -#  %i.icon-plus
+  -#    Add Answer...
+  = render :partial => "choices/form"
   .actions
     = f.submit
--#      t.integer   :count_attempts, null: false
--#      t.float   :count_correct, null: false
--#      t.float   :difficulty, null: false
--#      t.float   :discrimination, null: false
--#      t.integer   :type, null: false
--#      t.boolean   :mcq_allow_multiple
--#      t.boolean   :mcq_is_scrambled

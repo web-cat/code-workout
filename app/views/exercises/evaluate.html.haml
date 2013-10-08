@@ -1,8 +1,15 @@
-%h2= @exercise.title + " results"
-%p= CGI.unescapeHTML(@exercise.serve_question_stem).html_safe
-%p= CGI.unescapeHTML(@exercise.question).html_safe
-- @responses.each do |resp|
-  %p= resp.answer
-%h2= "Score: " + @score.to_s
+%h2= @exercise.title + ": " + @score.to_s + "% Correct"
+-#%p= @exercise.serve_question_html
+-#- @responses.each do |resp|
+-#  %p= resp.answer
 - @explain.each do |ex|
   %p= CGI.unescapeHTML(ex).html_safe
+%h2= @xp.to_s + " XP earned"
+%hr
+%h3 Session
+%p 
+  Exercise ID:
+  = session[:exercise_id]
+%p 
+  Attempt #:
+  = session[:submit_num]

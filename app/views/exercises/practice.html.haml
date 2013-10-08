@@ -1,20 +1,28 @@
-%p.showme "this should be red text"
-= form_for @exercise, :url => evaluate_path(@exercise) do |f|
-  - if @exercise.errors.any?
-    -# #error_explanation
-    -#.field_with_errors
-      %h2= "#{pluralize(@exercise.errors.count, "error")} prohibited this exercise from being saved:"
-      %ul
-        - @exercise.errors.full_messages.each do |msg|
-          %li= msg
+= semantic_form_for @exercise, :url => evaluate_path(@exercise) do |f|
+  = f.semantic_errors
   %h2= @exercise.title
-  %p= CGI.unescapeHTML(@exercise.serve_question_stem).html_safe
-  %p= CGI.unescapeHTML(@exercise.question).html_safe
+  %p= @exercise.serve_question_html
   - if @exercise.type_name == 'Multiple Choice Question'
     - if @exercise.select_many?
-      = collection_check_boxes(:exercise, :choice_ids, @answers, :id, :answer)
+      %p Choose ALL that apply:
+      = f.input :choice_ids, 
+        :as => :check_boxes, 
+        :collection => @answers,
+        :member_value => :id, 
+        :member_label => :answer,
+        :label => "&nbsp;",
+        :input_html => {:checked => false}
     - else
-      = collection_radio_buttons(:exercise, :choice_ids, @answers, :id, :answer)
-
+      %p Select one answer:
+      = f.input :choice_ids,
+        :as => :select,
+        :collection => @answers,
+        :member_value => :id,
+        :member_label => :answer,
+        :label => "&nbsp;"
+    -#  = collection_radio_buttons(:exercise, :choice_ids, @answers, :id, :answer)
   .actions
     = f.submit 'Submit'
+  -#= link_to "Submit", evaluate_path, data: {toggle: "modal", target: "#evaluation_modal"}
+  
+  = render "exercises/evaluation_modal"

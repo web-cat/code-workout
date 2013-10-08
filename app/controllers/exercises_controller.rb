@@ -16,6 +16,7 @@ class ExercisesController < ApplicationController
     @pick = Array.new(2, Choice.new) #start with 2 choices by default
     @pick.each do |choice|
       @exercise.choices << choice
+    @ans = Choice.new
     end
   end
 
@@ -25,45 +26,45 @@ class ExercisesController < ApplicationController
 
   # POST /exercises
   def create
-    @exercise = Exercise.new
+    ex = Exercise.new
     msg = params[:exercise]
-    @exercise.question_type = 1
-    @exercise.title = msg[:title]
-    @exercise.question = ERB::Util.html_escape(msg[:question])
-    @exercise.feedback = ERB::Util.html_escape(msg[:feedback])
-    @exercise.is_public = true
+    ex.question_type = 1
+    ex.title = msg[:title]
+    ex.question = ERB::Util.html_escape(msg[:question])
+    ex.feedback = ERB::Util.html_escape(msg[:feedback])
+    ex.is_public = true
     if msg[:is_public] == 0
-      @exercise.is_public = false
+      ex.is_public = false
     end
-    @exercise.mcq_allow_multiple = true
+    ex.mcq_allow_multiple = true
     if msg[:mcq_allow_multiple].nil?
-      @exercise.mcq_allow_multiple = false
+      ex.mcq_allow_multiple = false
     end
-    @exercise.mcq_is_scrambled = true
+    ex.mcq_is_scrambled = true
     if msg[:mcq_is_scrambled].nil?
-      @exercise.mcq_is_scrambled = false
+      ex.mcq_is_scrambled = false
     end
-    @exercise.priority = 0
-    @exercise.count_attempts = 0
-    @exercise.count_correct = 0
+    ex.priority = 0
+    ex.count_attempts = 0
+    ex.count_correct = 0
     if msg[:language_id]
-      @exercise.language_id = msg[:language_id].to_i
+      ex.language_id = msg[:language_id].to_i
     end
 
     #TODO get user id from session data
-    @exercise.user_id = 1
+    ex.user_id = 1
 
     if( msg[:experience] )
-      @exercise.experience = msg[:experience]
+      ex.experience = msg[:experience]
     else
-      @exercise.experience = 10
+      ex.experience = 10
     end
     
     #default IRT statistics
-    @exercise.difficulty = 0
-    @exercise.discrimination = 0
+    ex.difficulty = 0
+    ex.discrimination = 0
 
-    @exercise.save!
+    ex.save!
     i = 0
     right = 0.0
     total = 0.0
@@ -84,18 +85,18 @@ class ExercisesController < ApplicationController
 
       tmp.feedback = ERB::Util.html_escape(c.second[:feedback])
       tmp.order = i
-      @exercise.choices << tmp
+      ex.choices << tmp
       #tmp.exercise << @exercise
       tmp.save!
       
       i=i+1
     end
 
-    if @exercise.save!
-      redirect_to @exercise, notice: 'Exercise was successfully created.'
+    if ex.save!
+      redirect_to ex, notice: 'Exercise was successfully created.'
     else
       #render action: 'new'
-      redirect_to @exercise, notice: "Exercise was NOT created for #{msg} #{@exercise.errors.messages}"
+      redirect_to ex, notice: "Exercise was NOT created for #{msg} #{@exercise.errors.messages}"
     end
   end
 
@@ -114,8 +115,9 @@ class ExercisesController < ApplicationController
     end
   end
 
-  def something
-    @rand100 = Random.rand(100)
+  def create_choice
+    @ans = Choice.create
+    @pick.push()
   end
 
   #GET /practice/1
@@ -130,14 +132,22 @@ class ExercisesController < ApplicationController
         @responses = Array.new
         if( @exercise.mcq_allow_multiple )
           response_ids.each do |r|
-            @responses.push(Choice.where(:id => r).first)
+            @responses.push( Choice.where(:id => r).first )
           end
         else
-          @responses.push(Choice.where(:id => response_ids).first)
+          @responses.push( Choice.where(:id => response_ids).first )
         end
         @responses = @responses.compact
+        @responses.each do |answer|
+          answer[:answer] = CGI::unescapeHTML(answer[:answer]).html_safe
+        end
+
         @score = @exercise.score(@responses)
         @explain = @exercise.collate_feedback(@responses)
+        #TODO calculate experience based on correctness and how many submissions
+        count_submission()
+        @xp = @exercise.experience_on(@responses,session[:submit_num])
+        record_attempt(@score,@xp)
       end
     else
       redirect_to exercises_url, notice: 'Choose an exercise to practice!'
@@ -172,4 +182,44 @@ class ExercisesController < ApplicationController
         :mcq_allow_multiple, :mcq_is_scrambled, :choices)
     end
 
+    def make_html(unescaped)
+      return CGI::unescapeHTML(unescaped.to_s).html_safe
+    end
+
+    #~ should call count_submission before calling this method
+    def record_attempt(score,exp)
+      attempt = Attempt.create
+      if( !session[:exercise_id] || 
+          session[:exercise_id] != params[:id] ||
+          !session[:submit_num] )
+        session[:exercise_id] = params[:id]
+      end
+      attempt.submit_num = session[:submit_num]
+      attempt.submit_time = Time.now
+      attempt.answer = params[:exercise][:choice_ids].compact.delete_if{|x| x.empty?}
+      attempt.answer = attempt.answer.join(",")
+      attempt.score = score
+      attempt.experience_earned = exp
+      #TO DO tie attempt to current user session
+      attempt.user_id = 1
+      ex = Exercise.find(params[:id])
+      ex.attempts << attempt
+      attempt.save!      
+    end
+
+    def count_submission
+      if( !session[:exercise_id] || 
+          session[:exercise_id] != params[:id] ||
+          !session[:submit_num] )
+        #TO DO look up only current user
+        recent = Attempt.where(:user_id => 1).where(:exercise_id => params[:id]).sort_by{|a| a[:submit_num]}
+        if( !recent.empty? )
+          session[:submit_num] = recent.last[:submit_num] + 1
+        else
+          session[:submit_num] = 1
+        end
+      else
+        session[:submit_num] = session[:submit_num] + 1
+      end
+    end
 end

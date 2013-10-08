@@ -1,27 +1,27 @@
 #table/schema migration for exercise........................
 #
-# create_table :exercises do |t|
-#      t.belongs_to  :user, index: true, null: false
-#      t.belongs_to  :stem, index: true
-#      t.belongs_to  :language, index: true
-#      t.has_and_belongs_to_many :tags
-#
-#      t.string    :title, null: false
-#      t.text    :question, null: false
-#      t.text    :feedback
-#      t.boolean   :is_public, null: false
-#      t.integer   :priority, null: false
-#      t.integer   :count_attempts, null: false
-#      t.float   :count_correct, null: false
-#      t.float   :difficulty, null: false
-#      t.float   :discrimination, null: false
-#      t.integer   :type, null: false
-#
-#      #MCQ-specific columns, using single-table inheritance:
-#      t.boolean   :mcq_allow_multiple
-#      t.boolean   :mcq_is_scrambled
-#
-#      t.timestamps
+#create_table "exercises", force: true do |t|
+#    t.integer  "user_id",            null: false
+#    t.integer  "stem_id"
+#    t.integer  "language_id"
+#    t.string   "title",              null: false
+#    t.text     "question",           null: false
+#    t.text     "feedback"
+#    t.boolean  "is_public",          null: false
+#    t.integer  "priority",           null: false
+#    t.integer  "count_attempts",     null: false
+#    t.float    "count_correct",      null: false
+#    t.float    "difficulty",         null: false
+#    t.float    "discrimination",     null: false
+#    t.integer  "question_type",      null: false
+#    t.boolean  "mcq_allow_multiple"
+#    t.boolean  "mcq_is_scrambled"
+#    t.datetime "created_at"
+#    t.datetime "updated_at"
+#    t.integer  "experience"
+#  end
+
+require "cgi"
 
 class Exercise < ActiveRecord::Base
 
@@ -30,11 +30,11 @@ class Exercise < ActiveRecord::Base
   belongs_to  :user
   belongs_to  :stem
   belongs_to  :language
-  #has_many :tags, :through => :exercises_tags
   has_and_belongs_to_many :tags
   has_many :exercises_tags
   has_many :choices
-  accepts_nested_attributes_for :choices
+  has_many :attempts
+  accepts_nested_attributes_for :choices, :attempts
   
   
   #~ Hooks ....................................................................
@@ -77,7 +77,9 @@ class Exercise < ActiveRecord::Base
       answers = Array.new
       raw = self.choices.sort_by{|a| a[:order]}
       raw.each do |c|
-        answers.push( c )
+        formatted = c
+        formatted[:answer] = make_html(c[:answer])
+        answers.push( formatted )
       end
       if self.mcq_is_scrambled
         scrambled = Array.new
@@ -99,12 +101,13 @@ class Exercise < ActiveRecord::Base
     Exercise.type_name(self.question_type)
   end
 
-  def serve_question_stem
-    if self.stem.nil?
-      return ""
-    else
-      return self.stem.preamble
+  def serve_question_html
+    source = ""
+    if stem
+      source = stem.preamble
     end
+    source = source + "<br>" + question
+    return make_html(source)
   end
 
   def score(answered)
@@ -112,24 +115,51 @@ class Exercise < ActiveRecord::Base
     answered.each do |a|
       score = score + a.value
     end
-    #answered.each do |a|
-    #  if !self.choices.nil? && !self.choices.where(:answer => a).empty?
-    #    score = score + self.choices.where(:answer => a).first.value
-    #  end
+    if( score < 0 )
+      score = 0
+    end
     return score
   end
 
+  #~Grab all feedback for choices either selected when wrong 
+  #  or not selected when (at least partially) right
   def collate_feedback(answered)
+    total = score(answered)
     feed = Array.new
-    if( !self.feedback.nil? && !self.feedback.empty? )
-      feed.push(self.feedback)
-    end
-    answered.each do |a|
-      if !a.feedback.nil? && !a.feedback.empty?
-        feed.push(a.feedback)
+    all = self.choices.sort_by{|a| a[:order]}
+    all.each do |choice|
+      found = answered.select {|x| x["id"] == choice.id}
+      if( (choice.value > 0 && (found.nil? || found.empty?) ) ||
+          ( choice.value <= 0 && (!found.nil? && !found.empty?) ) )
+        feed.push( make_html(choice.feedback) )
       end
     end
+    #if 100% correct, or no other feedback provided, give general feedback
+    if( feed.empty? || total>= 100 && (!self.feedback.nil? && !self.feedback.empty?) )
+      feed.push(self.feedback)
+    end
     return feed
+  end
+
+  def experience_on(answered,attempt)
+    total = score(answered)
+    options = self.choices.size
+
+    if( options == 0 || attempt == 0)
+      return 0
+    elsif( total >= 100 && attempt == 1 )
+      return self.experience
+    elsif( attempt >= options )
+      return 0
+    elsif( total >= 100 )
+      return self.experience - self.experience * (attempt-1)/options
+    else
+      return self.experience / options / 4
+    end
+  end
+
+  def make_html(unescaped)
+    return CGI::unescapeHTML(unescaped.to_s).html_safe
   end
 
   private

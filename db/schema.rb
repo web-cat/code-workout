@@ -11,7 +11,10 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20131001051705) do
+ActiveRecord::Schema.define(version: 20131003025313) do
+
+# Could not dump table "attempts" because of following NoMethodError
+#   undefined method `[]' for nil:NilClass
 
   create_table "choices", force: true do |t|
     t.integer  "exercise_id", null: false

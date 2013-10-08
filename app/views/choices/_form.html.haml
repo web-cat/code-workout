@@ -1,15 +1,18 @@
-= form_for @choice do |f|
-  - if @choice.errors.any?
-    -# #error_explanation
-    -#.field_with_errors
-      %h2= "#{pluralize(@exercise.errors.count, "error")} prohibited this exercise from being saved:"
-      %ul
-        - @exercise.errors.full_messages.each do |msg|
-          %li= msg
-  .field
-    = f.label :answer
-    = f.text_field :answer, placeholder: "Enter answer"
-    = f.label :value
-    = f.text_field :value, placeholder: "0 - 100"
--#  .actions
--#   = f.submit 'Save'
+= semantic_fields_for Choice.new do |choice_fields|
+  = choice_fields.semantic_errors
+  .row-fluid.darker-bkg
+    .row-fluid
+      .span3
+        = choice_fields.input :value, :as => :boolean,
+          :label => "Correct"
+    .row-fluid
+      .span10
+        = choice_fields.input :answer, :as => :text,
+          placeholder: "Enter answer text",
+          :input_html => { :class => 'richtexteditor autogrow span10', :rows =>1 }
+    .row-fluid
+      .span10
+        = choice_fields.input :feedback,
+          label: "Explanation",
+          placeholder: "(optional) Answer explanation, given after submission",
+          input_html: { :class => 'richtexteditor autogrow span10', :rows => 2}
