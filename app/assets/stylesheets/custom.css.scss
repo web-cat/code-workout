@@ -13,6 +13,7 @@ body {
 
 .scrollable { overflow-y: auto; }
 .max-height { height: 100%; }
+.full-height { min-height: 100%; }
 .no-overflow { overflow-y: hidden; }
 .below-nav { padding-top: 60px; }
 
