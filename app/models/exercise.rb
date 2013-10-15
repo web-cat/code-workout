@@ -29,7 +29,8 @@ class Exercise < ActiveRecord::Base
 
   belongs_to  :user
   belongs_to  :stem
-  belongs_to  :language
+  #belongs_to  :language #language is now a tag with tagtype=2
+
   has_and_belongs_to_many :tags
   has_many :exercises_tags
   has_many :choices
@@ -119,6 +120,23 @@ class Exercise < ActiveRecord::Base
       score = 0
     end
     return score
+  end
+
+  def tag_with(tag_name, tag_type)
+    duplicate = self.tags.bsearch{|t| t.name == tag_name}
+    if( duplicate.nil? )
+      #create temp tag to standardize tag name convention
+      temp = Tag.new
+      temp.name = tag_name
+      temp.tagtype = tag_type
+      tagged = Tag.where(:name => temp.name, 
+        :tagtype => temp.tagtype).first_or_create
+      tagged.total_exercises = tagged.total_exercises + 1
+      tagged.total_experience += self.experience
+      tagged.save
+      self.tags << tagged
+      tagged.exercises << self
+    end
   end
 
   #~Grab all feedback for choices either selected when wrong 

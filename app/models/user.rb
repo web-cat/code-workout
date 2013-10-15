@@ -32,6 +32,8 @@ class User < ActiveRecord::Base
 #  has_many    :activity_logs
   has_many    :course_enrollments
   has_many    :course_offerings, through: :course_enrollments
+  has_many    :attempts
+  has_many    :tag_user_scores
 #  has_many    :assignment_offerings, through: :course_offerings
 
 

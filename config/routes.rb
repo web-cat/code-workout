@@ -13,7 +13,7 @@ CodeWorkout::Application.routes.draw do
   #resources :exercises, shallow: true do
   #  resources :choices  
   #end  
-  resources :exercises
+  resources :exercises 
   resources :choices
   resources :stems
   resources :course_offerings
@@ -38,6 +38,7 @@ CodeWorkout::Application.routes.draw do
     delete "/logout" => "devise/sessions#destroy", as: :destroy_user_session
     get '/practice/:id' => 'exercises#practice', as: :practice
     patch '/practice/:id' => 'exercises#evaluate', as: :evaluate
+    get '/users/:id/performance' => 'users#calc_performance', as: :calc_performance
   end
 
 end

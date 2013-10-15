@@ -6,26 +6,9 @@
 
     .modal-body
       #flashbar-placeholder
+      %h2= @exercise.title + ": " + @score.to_s + "% Correct"
+      - @explain.each do |ex|
+        %p= CGI.unescapeHTML(ex).html_safe
+      %h2= @xp.to_s + " XP earned"
 
-      This is where I show the results of the answer to the exercise
-      -#= f.fields_for :assignment do |assignment|
-      -#  = assignment.text_field :short_name, class: 'input-large' do
-      -#    .help-block A brief name for the assignment, such as "Project 1".
-      -#  = assignment.text_field :long_name, class: 'input-xxlarge' do
-      -#    .help-block
-      -#      A more descriptive name for the assignment. The short name and long name will be combined as
-      -#      %strong "Short Name: Long Name"
-      -#      in many displays.
-
-      -#.control-group
-      -#  .controls
-      -#    %label.checkbox
-      -#      = check_box_tag :add_to_all_offerings
-      -#      Create assignment in all course offerings in the current term
-      -#    .help-block
-      -#      If unchecked, the assignment will only be created in the offering with CRN
-      -#      = succeed '.' do
-      -#        %strong= @assignment_offering.course_offering.short_label
-
-    .modal-footer
-      = f.submit
+      -#TO DO buttons for Try Again (dismiss), See Answer, Next Question

@@ -109,6 +109,8 @@ class ExercisesController < ApplicationController
       else
         @exercise = found.first
         @answers = @exercise.serve_choice_array
+        @responses = ["There are no responses yet!"]
+        @explain = ["There are no explanations yet!"]
       end
     else
       redirect_to exercises_url, notice: 'Choose an exercise to practice!'
@@ -151,6 +153,11 @@ class ExercisesController < ApplicationController
       end
     else
       redirect_to exercises_url, notice: 'Choose an exercise to practice!'
+    end
+    
+    respond_to do |format|
+      format.js
+      format.html
     end
   end
 

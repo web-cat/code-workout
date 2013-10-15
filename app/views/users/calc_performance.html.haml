@@ -1,0 +1,25 @@
+%h2= @user.display_name + "'s Performance"
+%table.table.table-striped.table-bordered
+  %thead
+    %tr
+      %th Tag
+      %th Experience Points
+      %th Questions Available
+  %tbody#tag_scores
+    - if @tag_scores.empty?
+      %td{ colspan: 4 }
+        .alert You have not attempted any tagged exercises.
+    - else
+      - @tag_scores.each do |t|
+        %tr
+          %td= t[:tag_name]
+          -#%td#progressBar= 
+          %td#progressBar
+            = javascript_tag "progress(#{t[:percent_experience]},$('#progressBar'))"
+            %p=t[:percent_experience].to_s + "%"
+          %td= t[:total_exercises]
+
+
+#progressBar= javascript_tag "progress(45,$('#progressBar'))"
+.selector
+  &nbsp;

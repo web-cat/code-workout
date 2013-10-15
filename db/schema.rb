@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20131003025313) do
+ActiveRecord::Schema.define(version: 20131015083558) do
 
 # Could not dump table "attempts" because of following NoMethodError
 #   undefined method `[]' for nil:NilClass
@@ -124,10 +124,24 @@ ActiveRecord::Schema.define(version: 20131003025313) do
     t.datetime "updated_at"
   end
 
-  create_table "tags", force: true do |t|
-    t.string   "name",       null: false
+  create_table "tag_user_scores", force: true do |t|
+    t.integer  "user_id",                null: false
+    t.integer  "tag_id",                 null: false
+    t.integer  "experience", default: 0
     t.datetime "created_at"
     t.datetime "updated_at"
+  end
+
+  add_index "tag_user_scores", ["tag_id"], name: "index_tag_user_scores_on_tag_id"
+  add_index "tag_user_scores", ["user_id"], name: "index_tag_user_scores_on_user_id"
+
+  create_table "tags", force: true do |t|
+    t.string   "tag_name",                     null: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
+    t.integer  "tagtype",          default: 0
+    t.integer  "total_exercises",  default: 0
+    t.integer  "total_experience", default: 0
   end
 
   create_table "terms", force: true do |t|

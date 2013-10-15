@@ -2,12 +2,12 @@
 
 FactoryGirl.define do
   factory :attempt do
-    user nil
-    exercise nil
+    user 1
+    exercise 1
     submit_time "2013-10-02 22:53:14"
     submit_num 1
-    answer "MyText"
-    score 1.5
-    experience_earned 1
+    answer "2"
+    score 0
+    experience_earned 5
   end
 end
