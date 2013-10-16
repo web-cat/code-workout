@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20131016023405) do
+ActiveRecord::Schema.define(version: 20131016175805) do
 
 # Could not dump table "attempts" because of following NoMethodError
 #   undefined method `[]' for nil:NilClass
@@ -137,6 +137,14 @@ ActiveRecord::Schema.define(version: 20131016023405) do
     t.integer  "total_experience", default: 0
   end
 
+  create_table "tags_workouts", force: true do |t|
+    t.integer "tag_id"
+    t.integer "workout_id"
+  end
+
+  add_index "tags_workouts", ["tag_id"], name: "index_tags_workouts_on_tag_id"
+  add_index "tags_workouts", ["workout_id"], name: "index_tags_workouts_on_workout_id"
+
   create_table "terms", force: true do |t|
     t.integer  "season"
     t.date     "starts_on"
@@ -171,5 +179,24 @@ ActiveRecord::Schema.define(version: 20131016023405) do
   add_index "users", ["email"], name: "index_users_on_email", unique: true
   add_index "users", ["global_role_id"], name: "index_users_on_global_role_id"
   add_index "users", ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
+
+  create_table "workouts", force: true do |t|
+    t.string   "name",                       null: false
+    t.boolean  "scrambled",  default: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  create_table "workouts_exercises", force: true do |t|
+    t.integer  "workout_id",  null: false
+    t.integer  "exercise_id", null: false
+    t.integer  "points"
+    t.integer  "order"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "workouts_exercises", ["exercise_id"], name: "index_workouts_exercises_on_exercise_id"
+  add_index "workouts_exercises", ["workout_id"], name: "index_workouts_exercises_on_workout_id"
 
 end

@@ -12,13 +12,14 @@ class Tag < ActiveRecord::Base
   #~ Relationships ............................................................
 
   has_and_belongs_to_many :exercises
+  has_and_belongs_to_many :workouts
   has_many :tag_user_scores
 
   #~ Hooks ....................................................................
   before_validation :standardize_tag, :standardize_tagtype
 
   #~ Validation ...............................................................
-  validates :name,
+  validates :tag_name,
     presence: true,
     length: {:minimum => 1},
     uniqueness: true
@@ -38,6 +39,26 @@ class Tag < ActiveRecord::Base
     TYPES.rassoc(type).first
   end
 
+  def self.tag_name_convention(name)
+    return name.strip.gsub(/[\s]/,"_").downcase
+  end
+
+  def self.tag_this_with(obj, t_name, t_type)
+    convention = self.tag_name_convention(t_name)
+    duplicate = obj.tags.bsearch{|t| t.tag_name == convention}
+    if( duplicate.nil? )
+      tagged = Tag.where(:tag_name => convention,
+        :tagtype => t_type).first_or_create
+      if( obj.class.name == "Exercise" )
+        tagged.total_exercises = tagged.total_exercises + 1
+        tagged.total_experience += obj.experience
+      end
+      tagged.save
+      obj.tags << tagged
+      tagged.workouts << obj
+    end
+  end
+
   def self.misc
     return TYPES["Misc"]
   end
@@ -50,16 +71,16 @@ class Tag < ActiveRecord::Base
     return TYPES["Language"]
   end
 
-  def self.Skill
+  def self.skill
     return TYPES["Skill"]
   end
 
   #~ Private instance methods .................................................
   private
   def standardize_tag
-    if( !self.name.nil? )
+    if( !self.tag_name.nil? )
       #remove pre-/post- and replace in-whitespace make lower-case only 
-      self.name = self.name.strip.gsub(/[\s]/,"_").downcase
+      self.tag_name = self.class.tag_name_convention(self.tag_name)
     end
   end
 

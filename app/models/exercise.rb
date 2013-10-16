@@ -122,22 +122,22 @@ class Exercise < ActiveRecord::Base
     return score
   end
 
-  def tag_with(tag_name, tag_type)
-    duplicate = self.tags.bsearch{|t| t.name == tag_name}
-    if( duplicate.nil? )
-      #create temp tag to standardize tag name convention
-      temp = Tag.new
-      temp.name = tag_name
-      temp.tagtype = tag_type
-      tagged = Tag.where(:name => temp.name, 
-        :tagtype => temp.tagtype).first_or_create
-      tagged.total_exercises = tagged.total_exercises + 1
-      tagged.total_experience += self.experience
-      tagged.save
-      self.tags << tagged
-      tagged.exercises << self
-    end
-  end
+#  def tag_with(tag_name, tag_type)
+#    duplicate = self.tags.bsearch{|t| t.tag_name == tag_name}
+#    if( duplicate.nil? )
+#      #create temp tag to standardize tag name convention
+#      temp = Tag.new
+#      temp.tag_name = tag_name
+#      temp.tagtype = tag_type
+#      tagged = Tag.where(:tag_name => temp.tag_name, 
+#        :tagtype => temp.tagtype).first_or_create
+#      tagged.total_exercises = tagged.total_exercises + 1
+#      tagged.total_experience += self.experience
+#      tagged.save
+#      self.tags << tagged
+#      tagged.exercises << self
+#    end
+#  end
 
   #~Grab all feedback for choices either selected when wrong 
   #  or not selected when (at least partially) right
