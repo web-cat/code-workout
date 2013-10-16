@@ -39,10 +39,11 @@ class UsersController < ApplicationController
       info = Hash.new
       tag = Tag.find(t.tag_id)
       info[:tag_name] = tag.tag_name
-      info[:percent_experience] = t.experience*100/tag.total_experience
-      #info[:tag_experience] = t.experience
-      #info[:total_experience] = tag.total_experience
+      tag.total_experience != 0 ? 
+        info[:percent_experience] = t.experience*100/tag.total_experience :
+        info[:percent_experience] = 0 
       info[:total_exercises] = tag.total_exercises
+      info[:completed_exercises] = t.completed_exercises
       @tag_scores.push info
     end
     respond_to do |format|

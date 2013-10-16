@@ -264,7 +264,7 @@ ul.wysihtml5-toolbar li {
 
 /* jQuery Progress Bar */
 #progressBar {
-  width: 400px;
+  width: 500px;
   height: 22px;
   border: 1px solid #111;
   background-color: #292929;
@@ -272,9 +272,14 @@ ul.wysihtml5-toolbar li {
 
 #progressBar div {
   height: 100%;
-  color: #fff;
+  color: #000;
   text-align: right;
   line-height: 22px; /* same as #progressBar height if we want text middle aligned */
   width: 0;
   background-color: #009900;
+}
+.progress-bar{
+  background-color: #009900;
+  color: #00FF00;
+  text-align: right;
 }

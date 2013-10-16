@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20131015083558) do
+ActiveRecord::Schema.define(version: 20131016023405) do
 
 # Could not dump table "attempts" because of following NoMethodError
 #   undefined method `[]' for nil:NilClass
@@ -71,7 +71,6 @@ ActiveRecord::Schema.define(version: 20131015083558) do
   create_table "exercises", force: true do |t|
     t.integer  "user_id",            null: false
     t.integer  "stem_id"
-    t.integer  "language_id"
     t.string   "title",              null: false
     t.text     "question",           null: false
     t.text     "feedback"
@@ -89,7 +88,6 @@ ActiveRecord::Schema.define(version: 20131015083558) do
     t.integer  "experience"
   end
 
-  add_index "exercises", ["language_id"], name: "index_exercises_on_language_id"
   add_index "exercises", ["stem_id"], name: "index_exercises_on_stem_id"
   add_index "exercises", ["user_id"], name: "index_exercises_on_user_id"
 
@@ -103,12 +101,6 @@ ActiveRecord::Schema.define(version: 20131015083558) do
     t.boolean "can_manage_all_courses",        default: false, null: false
     t.boolean "can_edit_system_configuration", default: false, null: false
     t.boolean "builtin",                       default: false, null: false
-  end
-
-  create_table "languages", force: true do |t|
-    t.string   "name"
-    t.datetime "created_at"
-    t.datetime "updated_at"
   end
 
   create_table "organizations", force: true do |t|
@@ -125,11 +117,12 @@ ActiveRecord::Schema.define(version: 20131015083558) do
   end
 
   create_table "tag_user_scores", force: true do |t|
-    t.integer  "user_id",                null: false
-    t.integer  "tag_id",                 null: false
-    t.integer  "experience", default: 0
+    t.integer  "user_id",                         null: false
+    t.integer  "tag_id",                          null: false
+    t.integer  "experience",          default: 0
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer  "completed_exercises", default: 0
   end
 
   add_index "tag_user_scores", ["tag_id"], name: "index_tag_user_scores_on_tag_id"
