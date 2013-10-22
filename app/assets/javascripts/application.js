@@ -19,4 +19,4 @@
 //= require_tree .
 
 // Add the route helpers directly into the window object for easy access.
-$.extend(window, Routes)
+$.extend(window, Routes);
