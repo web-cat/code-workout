@@ -51,7 +51,7 @@ class CourseRole < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def self.student
-    find(STUDENT_ID)
+  #  find(STUDENT_ID)
   end
 
 

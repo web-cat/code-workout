@@ -34,7 +34,7 @@ end
 
 group :production, :staging do
   gem 'mysql2'
-end
+ end
 
 group :doc do
   # bundle exec rake doc:rails generates the API under doc/api.

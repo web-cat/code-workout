@@ -10,7 +10,7 @@ a simple starter state we can all use:
 
 The initial database population is defined by lib/tasks/sample_data.rake.
 It uses the factories defined in spec/factories/* to generate entities.
-If you add new model classes and want to generate test data in the
+If you add new modael classes and want to generate test data in the
 database, please add to the sample_data.rake file so that this population
 will happen automatically for everyone.  The sample_data.rake contains
 only "sample/try out" data for use during development, and it won't

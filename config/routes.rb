@@ -23,10 +23,17 @@ CodeWorkout::Application.routes.draw do
   resources :course_enrollments
   resources :course_roles
   resources :users
+  resources :about
+  resources :license
+  resources :contact
 
   devise_for :users, :skip => [:registrations, :sessions]
   as :user do
     get "/signup" => "devise/registrations#new", as: :new_user_registration
+    get "/about" => "devise/about#new", as: :about_page
+    get "/license" => "devise/license#new", as: :license_page
+    get "/contact" => "devise/contact#new", as: :contact_page
+    
     post "/signup" => "devise/registrations#create", as: :user_registration
     get "/login" => "devise/sessions#new", as: :new_user_session
     post "/login" => "devise/sessions#create", as: :user_session
