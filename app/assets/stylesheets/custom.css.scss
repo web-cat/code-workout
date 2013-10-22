@@ -283,3 +283,16 @@ ul.wysihtml5-toolbar li {
   color: #00FF00;
   text-align: right;
 }
+
+/* Search results */
+.teaser-title p {
+  color: #3da2b4;
+  text-shadow: 0 -1px 0 #231914;
+  font-size: 20px;
+  line-height: 26px;
+  background: -webkit-gradient(linear, left top, right top,
+    from(#dfcdb2), to(#e8d8c0));  
+  background: -moz-linear-gradient(left, #dfcdb2, #e8d8c0);
+  background: linear-gradient(left, #dfcdb2, #e8d8c0);
+  padding-left: 4px;
+}

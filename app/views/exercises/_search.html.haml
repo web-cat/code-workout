@@ -1,0 +1,10 @@
+-#%form.form-search
+-#  %input.input-medium.search-query{ type: 'text', placeholder: 'find topics ...' }
+-#  %button.btn.btn-default{ type: 'submit' }
+-#    %i.icon-search
+-#    Search
+
+= form_tag :controller => "exercises", :action => "search", :method => "get"  do
+    = text_field_tag :search, params[:search], :id => "search_field",
+	  :class => "input.input-medium", :placeholder => "find exercises with tag..."
+    = submit_tag "Search", :name => nil, :class => "button.btn.btn-default"

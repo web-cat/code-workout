@@ -6,6 +6,10 @@ class ExercisesController < ApplicationController
     @exercises = Exercise.all
   end
 
+  def search
+    @results = Exercise.search params[:search]
+  end
+
   # GET /exercises/1
   def show
   end
@@ -179,7 +183,9 @@ class ExercisesController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_exercise
-      @exercise = Exercise.find(params[:id])
+      if( params[:id] )
+        @exercise = Exercise.find(params[:id])
+      end
     end
 
     # Only allow a trusted parameter "white list" through.

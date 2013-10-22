@@ -1,0 +1,10 @@
+- if @results.empty?
+  .alert No exercises found
+- else
+  - @results.each do |x|
+    %p.teaster-title.span6
+      = link_to x.title, practice_path(:id => x[:id])
+      - x.tags.each do |t|
+        %a.tag{ href: '#' }= t[:tag_name]
+    %p.span12= x.teaser_text
+            

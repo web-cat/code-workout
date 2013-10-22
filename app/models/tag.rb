@@ -43,6 +43,7 @@ class Tag < ActiveRecord::Base
     return name.strip.gsub(/[\s]/,"_").downcase
   end
 
+  #~ pass in an object (Exercise or Workout) 
   def self.tag_this_with(obj, t_name, t_type)
     convention = self.tag_name_convention(t_name)
     duplicate = obj.tags.bsearch{|t| t.tag_name == convention}

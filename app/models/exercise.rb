@@ -68,7 +68,13 @@ class Exercise < ActiveRecord::Base
   }
 
   #~ Class methods ............................................................
-  
+  def self.search(terms)
+    term_array = terms.split
+    term_array.each do |term|
+      term = "%" + term + "%"
+    end
+    return Exercise.joins(:tags).where{tags.tag_name.like_any term_array}
+  end
 
   #~ Public instance methods ..................................................
   def serve_choice_array
@@ -91,6 +97,15 @@ class Exercise < ActiveRecord::Base
         answers = scrambled
       end
       return answers
+    end
+  end
+
+  def teaser_text
+    plain = ActionController::Base.helpers.strip_tags(make_html(self.question))
+    if( plain.size > 80 )
+      return plain
+    else
+      return (plain[0..79])
     end
   end
 
@@ -179,6 +194,8 @@ class Exercise < ActiveRecord::Base
   def make_html(unescaped)
     return CGI::unescapeHTML(unescaped.to_s).html_safe
   end
+
+
 
   private
   def self.type_name(type_num)
