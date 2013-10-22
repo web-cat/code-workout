@@ -2,20 +2,12 @@
 
 %table
   %tr
-    %th Title
-    %th Preamble
-    %th User
-    %th Is public
     %th
     %th
     %th
 
   - @exercises.each do |exercise|
     %tr
-      %td= exercise.title
-      %td= exercise.preamble
-      %td= exercise.user
-      %td= exercise.is_public
       %td= link_to 'Show', exercise
       %td= link_to 'Edit', edit_exercise_path(exercise)
       %td= link_to 'Destroy', exercise, :method => :delete, :data => { :confirm => 'Are you sure?' }

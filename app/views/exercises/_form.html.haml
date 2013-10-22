@@ -1,77 +1,70 @@
--#TODO fix the field entry forms and make creating a new exercise form
--# clean and functional, tying it to the multi-table model
-= form_for @exercise do |f|
-  - if @exercise.errors.any?
-    #error_explanation
-      %h2= "#{pluralize(@exercise.errors.count, "error")} prohibited this exercise from being saved:"
-      %ul
-        - @exercise.errors.full_messages.each do |msg|
-          %li= msg
-  .form-horizontal
+= semantic_form_for @exercise do |f|
+  = f.semantic_errors
+  .row-fluid
+    .span10
+      = f.input :title, maxlength: 50,
+        placeholder: "Enter question title"
+  .row-fluid
+    .span10
+      = f.input :question, 
+        placeholder: "Enter question text",
+        :input_html => { :class => 'richtexteditor autogrow span10', :rows => 5 }
+  .row-fluid
+    .span10
+      = f.input :is_public, :label=> "Share with CodeWorkout community", 
+        :input_html => { checked: 'checked', value: true }  
+  .row-fluid
+    .span4
+      = f.input :language, :as => :select, 
+        :collection => Language.all,
+        :label => "Programming Language"
+    .span4
+      = f.input :experience, :as => :select,
+        :collection => (10..100).step(10).to_a,
+        :label => "Experience Points",
+        :hint => "Amount gained for a correct answer"
+  .row-fluid
+    .span10
+      = f.input :feedback, label: "Question Explanation",
+        placeholder: "(optional) Exercise explanation, given after submission",
+        input_html: { :class => 'richtexteditor span10', :rows => 2 }
+  -#%a.btn.btn-success.btn-small{:id => "add_answer", :href => "#"}
+  -#  %i.icon-white.icon-plus
+  -#  click
+  %h2 Answers
+  .row-fluid.darker-bkg
+    .span4
+      = f.input :mcq_is_scrambled, 
+        :label => "Randomize answers",
+        :input_html => { checked: 'checked', value: true}
+    .span4
+      = f.input :mcq_allow_multiple, 
+        :label => "Allow multiple selections",
+        :input_html => { checked: 'checked', value: true}
+  
+  .field
+  = f.semantic_fields_for :choices, @pick do |choice_fields|
+    .row-fluid.darker-bkg
+      .row-fluid
+        .span3
+          = choice_fields.input :value, :as => :boolean,
+            :label => "Correct"
+      .row-fluid
+        .span10
+          = choice_fields.input :answer, :as => :text,
+            placeholder: "Enter answer text",
+            :input_html => { :class => 'richtexteditor autogrow span10', :rows =>1 }
+      .row-fluid
+        .span10
+          = choice_fields.input :feedback,
+            label: "Explanation",
+            placeholder: "(optional) Answer explanation, given after submission",
+            input_html: { :class => 'richtexteditor autogrow span10', :rows => 2}
     .field
-      = f.label "Exercise title*"
-      = f.text_field :title, :placeholder => "Title", :required => true
-    .field
-      = f.label "Preamble"
-      = f.text_area :preamble, :placeholder => "Consider...", :cols => 80, :rows => 10
-    .field
-      %p
-        = f.label :preamble
-        = f.text_field :preamble
-    .field
-      %p
-        = f.label "Share with CodeWorkout community"
-        = f.check_box :is_public, :checked => true
-
-= form_for @prompt do |f|
-  - if @prompt.errors.any?
-    #error_explanation
-      %h2= "#{pluralize(@prompt.errors.count, "error")} prohibited this prompt from being saved:"
-      %ul
-        - @prompt.errors.full_messages.each do |msg|
-          %li= msg
-
-  .field
-    = f.label :instruction
-    = f.text_area :instruction
-  .field
-    = f.label :language
-    -#    = f.select :language, @lang.all
-  .field
-    = f.label :max_user_attempts
-    = f.number_field :max_user_attempts
-  .field
-    = f.label :feedback
-    = f.text_area :feedback
-  .field
-    = f.label :difficulty
-    = f.text_field :difficulty
-  .field
-    = f.label :discrimination
-    = f.text_field :discrimination
-
-= form_for @choice do |f|
-  - if @choice.errors.any?
-    #error_explanation
-      %h2= "#{pluralize(@choice.errors.count, "error")} prohibited this choice from being saved:"
-      %ul
-        - @choice.errors.full_messages.each do |msg|
-          %li= msg
-
-  .field
-    = f.label :prompt
-    = f.text_field :prompt
-  .field
-    = f.label :answer
-    = f.text_field :answer
-  .field
-    = f.label :order
-    = f.number_field :order
-  .field
-    = f.label :feedback
-    = f.text_area :feedback
-  .field
-    = f.label :value
-    = f.text_field :value
+  -##answer-append
+  -#%a.btn.btn-mini{:id => "add_answer", :href => "#"}
+  -#  %i.icon-plus
+  -#    Add Answer...
+  = render :partial => "choices/form"
   .actions
-    = f.submit 'Save'
+    = f.submit

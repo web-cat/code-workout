@@ -11,10 +11,13 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20130916203844) do
+ActiveRecord::Schema.define(version: 20131016175805) do
+
+# Could not dump table "attempts" because of following NoMethodError
+#   undefined method `[]' for nil:NilClass
 
   create_table "choices", force: true do |t|
-    t.integer  "prompt_id",  null: false
+    t.integer  "exercise_id", null: false
     t.string   "answer"
     t.integer  "order"
     t.text     "feedback"
@@ -23,7 +26,7 @@ ActiveRecord::Schema.define(version: 20130916203844) do
     t.datetime "updated_at"
   end
 
-  add_index "choices", ["prompt_id"], name: "index_choices_on_prompt_id"
+  add_index "choices", ["exercise_id"], name: "index_choices_on_exercise_id"
 
   create_table "course_enrollments", force: true do |t|
     t.integer "user_id"
@@ -66,13 +69,27 @@ ActiveRecord::Schema.define(version: 20130916203844) do
   end
 
   create_table "exercises", force: true do |t|
-    t.string   "title",      null: false
-    t.text     "preamble"
-    t.integer  "user",       null: false
-    t.boolean  "is_public",  null: false
+    t.integer  "user_id",            null: false
+    t.integer  "stem_id"
+    t.string   "title",              null: false
+    t.text     "question",           null: false
+    t.text     "feedback"
+    t.boolean  "is_public",          null: false
+    t.integer  "priority",           null: false
+    t.integer  "count_attempts",     null: false
+    t.float    "count_correct",      null: false
+    t.float    "difficulty",         null: false
+    t.float    "discrimination",     null: false
+    t.integer  "question_type",      null: false
+    t.boolean  "mcq_allow_multiple"
+    t.boolean  "mcq_is_scrambled"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer  "experience"
   end
+
+  add_index "exercises", ["stem_id"], name: "index_exercises_on_stem_id"
+  add_index "exercises", ["user_id"], name: "index_exercises_on_user_id"
 
   create_table "exercises_tags", force: true do |t|
     t.integer "exercise_id"
@@ -86,12 +103,6 @@ ActiveRecord::Schema.define(version: 20130916203844) do
     t.boolean "builtin",                       default: false, null: false
   end
 
-  create_table "languages", force: true do |t|
-    t.string   "name"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-  end
-
   create_table "organizations", force: true do |t|
     t.string   "display_name"
     t.string   "url_part"
@@ -99,32 +110,40 @@ ActiveRecord::Schema.define(version: 20130916203844) do
     t.datetime "updated_at"
   end
 
-  create_table "prompts", force: true do |t|
-    t.integer  "exercise_id",       null: false
-    t.integer  "language_id",       null: false
-    t.text     "instruction",       null: false
-    t.integer  "order",             null: false
-    t.integer  "max_user_attempts"
-    t.integer  "attempts"
-    t.float    "correct"
-    t.text     "feedback"
-    t.float    "difficulty",        null: false
-    t.float    "discrimination",    null: false
-    t.integer  "type",              null: false
-    t.boolean  "allow_multiple"
-    t.boolean  "is_scrambled"
+  create_table "stems", force: true do |t|
+    t.text     "preamble"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
 
-  add_index "prompts", ["exercise_id"], name: "index_prompts_on_exercise_id"
-  add_index "prompts", ["language_id"], name: "index_prompts_on_language_id"
+  create_table "tag_user_scores", force: true do |t|
+    t.integer  "user_id",                         null: false
+    t.integer  "tag_id",                          null: false
+    t.integer  "experience",          default: 0
+    t.datetime "created_at"
+    t.datetime "updated_at"
+    t.integer  "completed_exercises", default: 0
+  end
+
+  add_index "tag_user_scores", ["tag_id"], name: "index_tag_user_scores_on_tag_id"
+  add_index "tag_user_scores", ["user_id"], name: "index_tag_user_scores_on_user_id"
 
   create_table "tags", force: true do |t|
-    t.string   "name",       null: false
+    t.string   "tag_name",                     null: false
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer  "tagtype",          default: 0
+    t.integer  "total_exercises",  default: 0
+    t.integer  "total_experience", default: 0
   end
+
+  create_table "tags_workouts", force: true do |t|
+    t.integer "tag_id"
+    t.integer "workout_id"
+  end
+
+  add_index "tags_workouts", ["tag_id"], name: "index_tags_workouts_on_tag_id"
+  add_index "tags_workouts", ["workout_id"], name: "index_tags_workouts_on_workout_id"
 
   create_table "terms", force: true do |t|
     t.integer  "season"
@@ -160,5 +179,24 @@ ActiveRecord::Schema.define(version: 20130916203844) do
   add_index "users", ["email"], name: "index_users_on_email", unique: true
   add_index "users", ["global_role_id"], name: "index_users_on_global_role_id"
   add_index "users", ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
+
+  create_table "workouts", force: true do |t|
+    t.string   "name",                       null: false
+    t.boolean  "scrambled",  default: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  create_table "workouts_exercises", force: true do |t|
+    t.integer  "workout_id",  null: false
+    t.integer  "exercise_id", null: false
+    t.integer  "points"
+    t.integer  "order"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "workouts_exercises", ["exercise_id"], name: "index_workouts_exercises_on_exercise_id"
+  add_index "workouts_exercises", ["workout_id"], name: "index_workouts_exercises_on_workout_id"
 
 end

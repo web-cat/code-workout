@@ -1,0 +1,19 @@
+%h1 Listing stems
+
+%table
+  %tr
+    %th Preamble
+    %th
+    %th
+    %th
+
+  - @stems.each do |stem|
+    %tr
+      %td= stem.preamble
+      %td= link_to 'Show', stem
+      %td= link_to 'Edit', edit_stem_path(stem)
+      %td= link_to 'Destroy', stem, :method => :delete, :data => { :confirm => 'Are you sure?' }
+
+%br
+
+= link_to 'New Stem', new_stem_path

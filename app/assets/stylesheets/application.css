@@ -13,3 +13,4 @@
  *= require formtastic-bootstrap
  *= require_tree .
  */
+*= require bootstrap-wysihtml5

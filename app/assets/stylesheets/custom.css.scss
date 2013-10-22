@@ -240,3 +240,60 @@ form.formtastic { @extend .form-horizontal; }
 }
 .debug .CodeMirror { margin-bottom: 0; }
 .navbar .badge { vertical-align: text-top; }
+
+/* Authoring form */
+
+.darker-bkg  {
+  background: -webkit-gradient(linear, left top, right top,
+    from(#dfcdb2), to(#e8d8c0));  
+  background: -moz-linear-gradient(left, #dfcdb2, #e8d8c0);
+  background: linear-gradient(left, #dfcdb2, #e8d8c0);
+}
+
+.nested-section { font-weight: normal; font-size: 13px; }
+
+ul.wysihtml5-toolbar {
+  padding: 0;
+  margin: 0;
+}
+ul.wysihtml5-toolbar li {
+  display:inline;
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* jQuery Progress Bar */
+#progressBar {
+  width: 500px;
+  height: 22px;
+  border: 1px solid #111;
+  background-color: #292929;
+}
+
+#progressBar div {
+  height: 100%;
+  color: #000;
+  text-align: right;
+  line-height: 22px; /* same as #progressBar height if we want text middle aligned */
+  width: 0;
+  background-color: #009900;
+}
+.progress-bar{
+  background-color: #009900;
+  color: #00FF00;
+  text-align: right;
+}
+
+/* Search results */
+.teaser-title p {
+  color: #3da2b4;
+  text-shadow: 0 -1px 0 #231914;
+  font-size: 20px;
+  line-height: 26px;
+  background: -webkit-gradient(linear, left top, right top,
+    from(#dfcdb2), to(#e8d8c0));  
+  background: -moz-linear-gradient(left, #dfcdb2, #e8d8c0);
+  background: linear-gradient(left, #dfcdb2, #e8d8c0);
+  padding-left: 4px;
+}

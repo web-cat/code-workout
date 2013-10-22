@@ -3,6 +3,6 @@
 FactoryGirl.define do
   factory :course_enrollment do
     course_offering_id 1
-    course_role        CourseRole.student
+    #course_role        CourseRole.student
   end
 end

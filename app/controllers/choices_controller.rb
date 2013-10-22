@@ -13,6 +13,14 @@ class ChoicesController < ApplicationController
   # GET /choices/new
   def new
     @choice = Choice.new
+    respond_to do |format|
+      format.html { render partial: "form"} # _form.html.erb
+      format.json { render json: @choice }
+    end
+  end
+
+  def _entry
+    @choice = Choice.new
   end
 
   # GET /choices/1/edit

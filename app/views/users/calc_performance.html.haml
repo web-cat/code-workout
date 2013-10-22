@@ -1,0 +1,22 @@
+%h3= @user.display_name + "'s Performance"
+%table.table.table-striped.table-condensed.span6
+  %thead
+    %tr
+      %th Tag
+      %th Experience Points
+      %th Exercises Completed
+  %tbody
+    - if @tag_scores.empty?
+      %td{ colspan: 4 }
+        .alert You have not attempted any tagged exercises.
+    - else
+      - @tag_scores.each do |t|
+        %tr
+          %td
+            %a.tag{ href: '#' }=t[:tag_name]
+          %td
+            .progress#progressBar
+              .progress-bar{:style => "width: #{t[:percent_experience]}%;"}
+                %span{:class => "sr-only"}
+                  = t[:percent_experience].to_s + '%'
+          %td= t[:completed_exercises].to_s + " of " + t[:total_exercises].to_s

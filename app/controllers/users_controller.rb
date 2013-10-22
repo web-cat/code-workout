@@ -1,5 +1,5 @@
 class UsersController < ApplicationController
-  before_action :set_user, only: [:show, :edit, :update, :destroy]
+  before_action :set_user, only: [:show, :edit, :update, :destroy, :calc_performance]
   authorize_resource except: [:show, :index]
 
   # GET /users
@@ -23,6 +23,34 @@ class UsersController < ApplicationController
 
   # GET /users/1/edit
   def edit
+  end
+
+  # GET /users/1/performance
+  def calc_performance
+    #tries = @user.attempts
+    #exs = Array.new
+    #tries.each do |t|
+    #  exs.push t.exercise_id
+    #end
+
+    tags = TagUserScore.where(:user_id => params[:id]).order("updated_at DESC")
+    @tag_scores = Array.new
+    tags.each do |t|
+      info = Hash.new
+      tag = Tag.find(t.tag_id)
+      info[:tag_name] = tag.tag_name
+      tag.total_experience != 0 ? 
+        info[:percent_experience] = t.experience*100/tag.total_experience :
+        info[:percent_experience] = 0 
+      info[:total_exercises] = tag.total_exercises
+      info[:completed_exercises] = t.completed_exercises
+      @tag_scores.push info
+    end
+    respond_to do |format|
+      format.html # index.html.erb
+      format.js
+      format.json { render json: @tag_Scores }
+    end
   end
 
   # POST /users

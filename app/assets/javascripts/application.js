@@ -17,6 +17,27 @@
 //= require codemirror
 //= require codemirror/modes/clike
 //= require_tree .
+//= require bootstrap-wysihtml5
 
 // Add the route helpers directly into the window object for easy access.
 $.extend(window, Routes);
+
+//use wysihtml5 rich text editor
+$(document).ready(function(){
+
+    $('.richtexteditor').each(function(i, elem) {
+      $(elem).wysihtml5({
+      		"font-styles": false,
+      		"emphasis": true,
+      		"lists": true,
+      		"link": false,
+      		"html": true,
+      		"image": false
+      	});
+    });
+});
+
+function progress(percent, $element) {
+    var progressBarWidth = percent * $element.width() / 100;
+    $element.find('div').animate({ width: progressBarWidth }, 200).html(percent + "%&nbsp;");
+}
