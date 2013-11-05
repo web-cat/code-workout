@@ -35,7 +35,9 @@ class Exercise < ActiveRecord::Base
   has_many :exercises_tags
   has_many :choices
   has_many :attempts
-  accepts_nested_attributes_for :choices, :attempts
+  accepts_nested_attributes_for :attempts
+  accepts_nested_attributes_for :choices, :allow_destroy => true
+  accepts_nested_attributes_for :tags, :allow_destroy => true
   
   
   #~ Hooks ....................................................................
@@ -199,6 +201,10 @@ class Exercise < ActiveRecord::Base
 
   private
   def self.type_name(type_num)
-    TYPES.rassoc(type_num).first
+    if( type_num.nil? || type_num <= 0 || type_num > TYPES.size )
+      return ""
+    else
+      return TYPES.rassoc(type_num).first
+    end
   end
 end

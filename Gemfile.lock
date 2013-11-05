@@ -44,6 +44,7 @@ GEM
       rack-test (>= 0.5.4)
       xpath (~> 2.0)
     choice (0.1.6)
+    cocoon (1.2.1)
     codemirror-rails (3.16)
       railties (>= 3.0, < 5)
     coffee-rails (4.0.0)
@@ -215,6 +216,7 @@ DEPENDENCIES
   bootstrap-wysihtml5-rails (~> 0.3.1.23)
   cancan (= 1.6.9)
   capybara
+  cocoon
   codemirror-rails
   coffee-rails (~> 4.0.0)
   coffee-script-source

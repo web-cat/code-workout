@@ -8,6 +8,8 @@ class ExercisesController < ApplicationController
 
   def search
     @results = Exercise.search params[:search]
+
+    render layout: 'two_columns'
   end
 
   # GET /exercises/1
@@ -17,11 +19,13 @@ class ExercisesController < ApplicationController
   # GET /exercises/new
   def new
     @exercise = Exercise.new
-    @pick = Array.new(2, Choice.new) #start with 2 choices by default
-    @pick.each do |choice|
-      @exercise.choices << choice
-    @ans = Choice.new
-    end
+    #@pick = Array.new(2, Choice.new) #start with 2 choices by default
+    #@pick.each do |choice|
+    #  @exercise.choices << choice
+    #@ans = Choice.new
+    @languages = Tag.where(:tagtype => Tag.language).pluck(:tag_name)
+    @areas = Tag.where(:tagtype => Tag.area).pluck(:tag_name)
+    #end
   end
 
   # GET /exercises/1/edit
@@ -72,8 +76,20 @@ class ExercisesController < ApplicationController
     i = 0
     right = 0.0
     total = 0.0
+
+    #typed in tags
+    msg[:tags_attributes].each do |t|
+      Tag.tag_this_with(ex, t.second["tag_name"].to_s, Tag.skill)
+    end
+
+    #selected tags
+    msg[:tag_ids].delete_if(&:empty?)
+    msg[:tag_ids].each do |tag_name|
+      Tag.tag_this_with(ex, tag_name.to_s, Tag.misc)
+    end
+
     msg[:choices_attributes].each do |c|
-      if c.second[:value] == 1
+      if c.second["value"] == "1"
         right = right + 1
       end
       total = total + 1
@@ -81,10 +97,10 @@ class ExercisesController < ApplicationController
     msg[:choices_attributes].each do |c|
       tmp = Choice.create
       tmp.answer = ERB::Util.html_escape(c.second[:answer])
-      if( c.second[:value] )
-        tmp.value = right/total
+      if( c.second["value"] == "1" )
+        tmp.value = right/total*100
       else
-        tmp.value = -(total-right)/total
+        tmp.value = -(total-right)/total*100
       end
 
       tmp.feedback = ERB::Util.html_escape(c.second[:feedback])
@@ -119,6 +135,7 @@ class ExercisesController < ApplicationController
     else
       redirect_to exercises_url, notice: 'Choose an exercise to practice!'
     end
+    render layout: 'two_columns'
   end
 
   def create_choice
@@ -154,14 +171,11 @@ class ExercisesController < ApplicationController
         count_submission()
         @xp = @exercise.experience_on(@responses,session[:submit_num])
         record_attempt(@score,@xp)
+
+        render layout: 'two_columns'
       end
     else
       redirect_to exercises_url, notice: 'Choose an exercise to practice!'
-    end
-    
-    respond_to do |format|
-      format.js
-      format.html
     end
   end
 
@@ -192,7 +206,9 @@ class ExercisesController < ApplicationController
     def exercise_params
       #params[:exercise]
       params.permit(:title, :question, :feedback, :is_public, :priority, :type,
-        :mcq_allow_multiple, :mcq_is_scrambled, :choices)
+        :mcq_allow_multiple, :mcq_is_scrambled, :language, :area,
+        choices_attributes: [:answer,:order,:value,:_destroy],
+        tags_attributes: [:tag_name,:tagtype,:_destroy])
     end
 
     def make_html(unescaped)

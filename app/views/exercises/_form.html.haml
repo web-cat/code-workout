@@ -15,9 +15,21 @@
         :input_html => { checked: 'checked', value: true }  
   .row-fluid
     .span4
-      = f.input :language, :as => :select, 
-        :collection => Language.all,
-        :label => "Programming Language"
+      = f.input :tags, :as => :select,
+        :collection => @languages,
+        :label => "Programming language"
+    .span4
+      = f.input :tags, :as => :select,
+        :collection => @areas,
+        :label => "Subject area"
+  .row-fluid
+    .span10
+      #tags
+        = f.semantic_fields_for :tags do |t|
+          = render 'tag_fields', :f => t
+        .links
+          = link_to_add_association "Add Tag...", f, :tags
+  .row-fluid
     .span4
       = f.input :experience, :as => :select,
         :collection => (10..100).step(10).to_a,
@@ -28,9 +40,6 @@
       = f.input :feedback, label: "Question Explanation",
         placeholder: "(optional) Exercise explanation, given after submission",
         input_html: { :class => 'richtexteditor span10', :rows => 2 }
-  -#%a.btn.btn-success.btn-small{:id => "add_answer", :href => "#"}
-  -#  %i.icon-white.icon-plus
-  -#  click
   %h2 Answers
   .row-fluid.darker-bkg
     .span4
@@ -41,30 +50,11 @@
       = f.input :mcq_allow_multiple, 
         :label => "Allow multiple selections",
         :input_html => { checked: 'checked', value: true}
-  
+  #choices
+    = f.semantic_fields_for :choices do |choice|
+      = render 'choice_fields', :f => choice
+    .links
+      = link_to_add_association "Add Answer...", f, :choices
   .field
-  = f.semantic_fields_for :choices, @pick do |choice_fields|
-    .row-fluid.darker-bkg
-      .row-fluid
-        .span3
-          = choice_fields.input :value, :as => :boolean,
-            :label => "Correct"
-      .row-fluid
-        .span10
-          = choice_fields.input :answer, :as => :text,
-            placeholder: "Enter answer text",
-            :input_html => { :class => 'richtexteditor autogrow span10', :rows =>1 }
-      .row-fluid
-        .span10
-          = choice_fields.input :feedback,
-            label: "Explanation",
-            placeholder: "(optional) Answer explanation, given after submission",
-            input_html: { :class => 'richtexteditor autogrow span10', :rows => 2}
-    .field
-  -##answer-append
-  -#%a.btn.btn-mini{:id => "add_answer", :href => "#"}
-  -#  %i.icon-plus
-  -#    Add Answer...
-  = render :partial => "choices/form"
   .actions
     = f.submit

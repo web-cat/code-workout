@@ -1,0 +1,20 @@
+.nested-fields
+  = f.inputs do
+    .row-fluid.darker-bkg
+      .row-fluid
+        .span3
+          = f.input :value, :as => :boolean,
+            :label => "Correct"
+        .span6
+          = link_to_remove_association "Remove answer...", f
+      .row-fluid
+        .span10
+          = f.input :answer, :as => :text,
+            placeholder: "Enter answer text",
+            :input_html => { :class => 'richtexteditor autogrow span10', :rows =>1 }
+      .row-fluid
+        .span10
+          = f.input :feedback,
+            label: "Explanation",
+            placeholder: "(optional) Answer explanation, given after submission",
+            input_html: { :class => 'richtexteditor autogrow span10', :rows => 2}

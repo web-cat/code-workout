@@ -6,10 +6,13 @@
   %p= CGI.unescapeHTML(ex).html_safe
 %h2= @xp.to_s + " XP earned"
 %hr
-%h3 Session
-%p 
-  Exercise ID:
-  = session[:exercise_id]
-%p 
-  Attempt #:
-  = session[:submit_num]
+-#%h3 Session
+-#%p 
+-#  Exercise ID:
+-#  = session[:exercise_id]
+-#%p 
+-#  Attempt #:
+-#  = session[:submit_num]
+-if @score < 100
+  %p.span6
+    =link_to :back

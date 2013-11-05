@@ -3,7 +3,8 @@
 # Table name: tags
 #
 #  id         :integer          not null, primary key
-#  name       :string(255)      not null
+#  tag_name   :string(255)      not null
+#  tag_type   :integer
 #  created_at :datetime
 #  updated_at :datetime
 #
@@ -48,15 +49,28 @@ class Tag < ActiveRecord::Base
     convention = self.tag_name_convention(t_name)
     duplicate = obj.tags.bsearch{|t| t.tag_name == convention}
     if( duplicate.nil? )
-      tagged = Tag.where(:tag_name => convention,
-        :tagtype => t_type).first_or_create
+      tagged = Tag.where(:tag_name => convention)
+
+      if( tagged.nil? || tagged.empty? )
+        tagged = Tag.new
+        tagged.tag_name = convention
+        tagged.tagtype = t_type
+      else
+        tagged = tagged.first
+      end
+
       if( obj.class.name == "Exercise" )
         tagged.total_exercises = tagged.total_exercises + 1
         tagged.total_experience += obj.experience
       end
       tagged.save
       obj.tags << tagged
-      tagged.workouts << obj
+
+      if( obj.class.name == "Exercise" )
+        tagged.exercises << obj
+      elsif( obj.class.name == "Workout" )
+        tagged.workouts << obj
+      end
     end
   end
 
