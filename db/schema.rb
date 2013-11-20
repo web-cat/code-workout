@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20131016175805) do
+ActiveRecord::Schema.define(version: 20131119032619) do
 
 # Could not dump table "attempts" because of following NoMethodError
 #   undefined method `[]' for nil:NilClass
@@ -96,6 +96,18 @@ ActiveRecord::Schema.define(version: 20131016175805) do
     t.integer "tag_id"
   end
 
+  create_table "exercises_workouts", force: true do |t|
+    t.integer  "workout_id",  null: false
+    t.integer  "exercise_id", null: false
+    t.integer  "points"
+    t.integer  "order"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "exercises_workouts", ["exercise_id"], name: "index_exercises_workouts_on_exercise_id"
+  add_index "exercises_workouts", ["workout_id"], name: "index_exercises_workouts_on_workout_id"
+
   create_table "global_roles", force: true do |t|
     t.string  "name",                                          null: false
     t.boolean "can_manage_all_courses",        default: false, null: false
@@ -109,6 +121,27 @@ ActiveRecord::Schema.define(version: 20131016175805) do
     t.datetime "created_at"
     t.datetime "updated_at"
   end
+
+  create_table "prompts", force: true do |t|
+    t.integer  "exercise_id",       null: false
+    t.integer  "language_id",       null: false
+    t.text     "instruction",       null: false
+    t.integer  "order",             null: false
+    t.integer  "max_user_attempts"
+    t.integer  "attempts"
+    t.float    "correct"
+    t.text     "feedback"
+    t.float    "difficulty",        null: false
+    t.float    "discrimination",    null: false
+    t.integer  "type",              null: false
+    t.boolean  "allow_multiple"
+    t.boolean  "is_scrambled"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "prompts", ["exercise_id"], name: "index_prompts_on_exercise_id"
+  add_index "prompts", ["language_id"], name: "index_prompts_on_language_id"
 
   create_table "stems", force: true do |t|
     t.text     "preamble"
@@ -186,17 +219,5 @@ ActiveRecord::Schema.define(version: 20131016175805) do
     t.datetime "created_at"
     t.datetime "updated_at"
   end
-
-  create_table "workouts_exercises", force: true do |t|
-    t.integer  "workout_id",  null: false
-    t.integer  "exercise_id", null: false
-    t.integer  "points"
-    t.integer  "order"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-  end
-
-  add_index "workouts_exercises", ["exercise_id"], name: "index_workouts_exercises_on_exercise_id"
-  add_index "workouts_exercises", ["workout_id"], name: "index_workouts_exercises_on_workout_id"
 
 end

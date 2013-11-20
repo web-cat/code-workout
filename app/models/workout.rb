@@ -1,24 +1,3 @@
-#~ Migration for workouts.........
-# create_table "workouts", force: true do |t|
-#    t.string   "name",                       null: false
-#    t.boolean  "scrambled",  default: false
-#    t.datetime "created_at"
-#    t.datetime "updated_at"
-#  end
-#
-#  create_table "workouts_exercises", force: true do |t|
-#    t.integer  "workout_id",  null: false
-#    t.integer  "exercise_id", null: false
-#    t.integer  "points"
-#    t.integer  "order"
-#    t.datetime "created_at"
-#    t.datetime "updated_at"
-#  end
-#
-#  add_index "workouts_exercises", ["exercise_id"], name: "index_workouts_exercises_on_exercise_id"
-#  add_index "workouts_exercises", ["workout_id"], name: "index_workouts_exercises_on_workout_id"
-
-
 class Workout < ActiveRecord::Base
 	has_and_belongs_to_many :exercises
 	has_and_belongs_to_many :tags
@@ -44,6 +23,48 @@ class Workout < ActiveRecord::Base
         self.order = self.exercises.size
       end
     end
+  end
+
+  # returns a hash of exercise experience points (XP) with {:scored => ___, :total => ___, :percent => ____}
+  def xp(u_id)
+    xp = Hash.new
+    xp[:scored] = 0
+    xp[:total] = 0
+    exs = self.exercises
+    exs.each do |x|
+      x_attempt = x.attempts.where(:user_id => u_id).pluck(:experience_earned)
+      x_attempt.each do |a|
+        xp[:scored] = xp[:scored] + a
+      end
+      xp[:total] = xp[:total] + x.experience
+    end
+    xp[:total] > 0 ? xp[:percent] = xp[:scored].to_f/xp[:total].to_f*100 : xp[:percent] = 0
+    return xp
+  end
+
+  def all_tags
+    coll = self.tags.pluck(:tag_name).uniq
+    exs = self.exercises
+    exs.each do |x|
+      x_tags = x.tags.pluck(:tag_name).uniq
+      x_tags.each do |another|
+        if( coll.index(another).nil? )
+          coll.push(another)
+        end
+      end
+    end
+    return coll
+  end
+
+  def highest_difficulty
+    diff = 0
+    exs = self.exercises
+    exs.each do |x|
+      if( !x.difficulty.nil? && x.difficulty > diff )
+        diff = x.difficulty
+      end
+    end
+    return diff
   end
 
 end

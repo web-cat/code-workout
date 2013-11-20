@@ -1,17 +1,26 @@
-%h1 Listing workouts
+%h1 Workouts
 
-%table
-  %tr
-    %th
-    %th
-    %th
-
-  - @workouts.each do |workout|
-    %tr
-      %td= link_to 'Show', workout
-      %td= link_to 'Edit', edit_workout_path(workout)
-      %td= link_to 'Destroy', workout, :method => :delete, :data => { :confirm => 'Are you sure?' }
-
-%br
-
-= link_to 'New Workout', new_workout_path
+- if @workouts.empty?
+  .alert No workouts found
+- else
+  - @workouts.each do |w|
+    .row-fluid
+      %p.span8.teaser-title
+        = link_to w.name, workout_path(:id => w[:id])
+        %span.badge.badge-inverse
+          = w.exercises.count.to_s
+        - w.all_tags.each do |t|
+          %a.tag{ href: '#' }= t
+        
+    .row-fluid
+      .container.span4
+        .progress#progressBar{:style => "width: 100%"}
+          -#TODO replace with logged in user id session data
+          .progress-bar{:style => "width: #{w.xp(1)[:percent]}%;"}
+            %span{:class => "sr-only"}
+              = w.xp(1)[:percent].to_i.to_s + '%'
+      %p.span4
+        = " Difficulty: " + w.highest_difficulty.to_s
+      
+      
+       

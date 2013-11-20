@@ -32,6 +32,7 @@ class Exercise < ActiveRecord::Base
   #belongs_to  :language #language is now a tag with tagtype=2
 
   has_and_belongs_to_many :tags
+  has_and_belongs_to_many :workouts
   has_many :exercises_tags
   has_many :choices
   has_many :attempts

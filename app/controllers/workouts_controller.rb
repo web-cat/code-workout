@@ -8,6 +8,17 @@ class WorkoutsController < ApplicationController
 
   # GET /workouts/1
   def show
+    if( params[:id] )
+      found = Workout.where(:id => params[:id])
+      if( found.empty? )
+        redirect_to workouts_url, notice: "Workout #{params[:id]} not found"
+      else
+        @workout = found.first
+      end
+    else
+      redirect_to workouts_url, notice: 'Choose a workout for practice!'
+    end
+    render layout: 'two_columns'
   end
 
   # GET /workouts/new
