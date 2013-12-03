@@ -36,8 +36,9 @@ group :test do
 end
 
 group :production, :staging do
-  gem 'mysql2'
- end
+  gem 'sqlite3'
+  # gem 'mysql2'
+end
 
 group :doc do
   # bundle exec rake doc:rails generates the API under doc/api.
