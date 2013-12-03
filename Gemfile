@@ -23,10 +23,13 @@ group :development, :test do
   gem 'sqlite3'
   gem 'rspec-rails'
   gem 'annotate'
-  gem 'factory_girl_rails'
-  gem 'faker'
   gem 'rails-erd'
 end
+# These two should be in :development, :test above, but are temporarily
+# being added to production too, for db population on the deployed site
+# during testing.
+gem 'factory_girl_rails'
+gem 'faker'
 
 group :test do
   gem 'capybara'
