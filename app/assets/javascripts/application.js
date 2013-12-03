@@ -13,7 +13,7 @@
 //= require jquery
 //= require jquery_ujs
 //= require js-routes
-//= require bootstrap-dropdown.js
+// /////// require bootstrap-dropdown.js // Commenting this out probably breaks nav menu dropdowns
 //= require codemirror
 //= require codemirror/modes/clike
 //= require_tree .
