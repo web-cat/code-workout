@@ -15,4 +15,8 @@
 /log/*.log
 /tmp
 .secret
-public/codemirror/
+public/codemirror/test-language.txt
+test-language-advanced.txt
+test-language-examples.txt
+test-language-newlines.txt
+test-language.txt
