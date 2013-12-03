@@ -62,3 +62,8 @@ gem "squeel"
 
 #for nested forms
 gem "cocoon"
+
+# Gems for deployment.
+gem 'capistrano'
+gem 'capistrano-bundler'
+gem 'capistrano-rails'
