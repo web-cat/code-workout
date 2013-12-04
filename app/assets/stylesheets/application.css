@@ -11,6 +11,6 @@
  *= require_self
  *= require codemirror
  *= require formtastic-bootstrap
+ *= require bootstrap-wysihtml5
  *= require_tree .
  */
-*= require bootstrap-wysihtml5
