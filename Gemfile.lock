@@ -31,7 +31,7 @@ GEM
     atomic (1.1.14)
     awesome_print (1.2.0)
     bcrypt-ruby (3.1.2)
-    bootstrap-sass (3.0.2.1)
+    bootstrap-sass (2.3.2.2)
       sass (~> 3.2)
     bootstrap-wysihtml5-rails (0.3.1.23)
       railties (>= 3.0)
@@ -230,7 +230,7 @@ PLATFORMS
 DEPENDENCIES
   annotate
   awesome_print
-  bootstrap-sass
+  bootstrap-sass (~> 2.3.2.2)
   bootstrap-wysihtml5-rails (~> 0.3.1.23)
   cancan (= 1.6.9)
   capistrano
