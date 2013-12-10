@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20131119032619) do
+ActiveRecord::Schema.define(version: 20131210061217) do
 
 # Could not dump table "attempts" because of following NoMethodError
 #   undefined method `[]' for nil:NilClass
@@ -86,6 +86,7 @@ ActiveRecord::Schema.define(version: 20131119032619) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "experience"
+    t.text     "starter_code"
   end
 
   add_index "exercises", ["stem_id"], name: "index_exercises_on_stem_id"
@@ -186,6 +187,15 @@ ActiveRecord::Schema.define(version: 20131119032619) do
     t.datetime "created_at"
     t.datetime "updated_at"
   end
+
+  create_table "test_cases", force: true do |t|
+    t.string   "test_script", null: false
+    t.integer  "exercise_id", null: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "test_cases", ["exercise_id"], name: "index_test_cases_on_exercise_id"
 
   create_table "users", force: true do |t|
     t.string   "email",                  default: "", null: false
