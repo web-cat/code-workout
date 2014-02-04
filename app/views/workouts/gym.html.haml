@@ -1,0 +1,6 @@
+%h1 The Gym
+
+- if @gym.empty?
+  .alert No workouts found
+- else
+  = render partial: "thumblg", collection: @gym, as: :w

@@ -67,3 +67,6 @@ gem "cocoon"
 gem 'capistrano'
 gem 'capistrano-bundler'
 gem 'capistrano-rails'
+
+#for multi-color progress bar
+gem 'css3-progress-bar-rails'

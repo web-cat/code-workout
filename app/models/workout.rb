@@ -67,4 +67,32 @@ class Workout < ActiveRecord::Base
     return diff
   end
 
+  #~ Class methods ............................................................
+  def self.search(terms)
+    term_array = terms.split
+    term_array.each do |term|
+      term = "%" + term + "%"
+    end
+    return Workout.joins(:tags).where{tags.tag_name.like_any term_array}
+  end
+
+  def self.xp_distribution(u_id, w_id)
+    w = Workout.find(w_id)
+    results = w.xp(u_id)
+    earned = results[:percent]
+    total = results[:total]
+    remaining = 0
+    exs = w.exercises
+    exs.each do |x|
+      x_attempt = x.attempts.where(:user_id => u_id).pluck(:experience_earned)
+      x_earned = 0
+      x_attempt.each do |a|
+        x_earned += a
+      end
+      remaining += x.experience-x_earned
+    end
+    remaining = remaining/total.to_f*100
+    gap = 100-earned-remaining
+    return [earned,remaining,gap]
+  end
 end

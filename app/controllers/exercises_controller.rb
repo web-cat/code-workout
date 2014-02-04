@@ -1,4 +1,7 @@
 class ExercisesController < ApplicationController
+  require 'action_view/helpers/javascript_helper'
+  include ActionView::Helpers::JavaScriptHelper
+
   before_action :set_exercise, only: [:show, :edit, :update, :destroy]
 
   # GET /exercises
@@ -7,8 +10,16 @@ class ExercisesController < ApplicationController
   end
 
   def search
-    @results = Exercise.search params[:search]
-
+    searched = escape_javascript(params[:search])
+    @wos = Workout.search searched
+    @exs = Exercise.search searched
+    if(@wos.length + @exs.length > 0)
+      @msg = ""
+    else
+      @msg = "No " + searched + " exercises found. Try these instead..."
+      @wos = Workout.order("RANDOM()").limit(4)
+      @exs = Exercise.order("RANDOM()").limit(16)
+    end
     render layout: 'two_columns'
   end
 

@@ -105,10 +105,10 @@ class Exercise < ActiveRecord::Base
 
   def teaser_text
     plain = ActionController::Base.helpers.strip_tags(make_html(self.question))
-    if( plain.size > 80 )
+    if( plain.size < 80 )
       return plain
     else
-      return (plain[0..79])
+      return (plain[0..79]+"...")
     end
   end
 

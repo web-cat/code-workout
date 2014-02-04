@@ -1,0 +1,13 @@
+-#TODO: replace with session data for user
+- workouts.each do |w|
+  %h2=w.name
+  = combo_progress_bar(Workout.xp_distribution(1,w.id))
+  - w.all_tags.each do |t|
+    %a.tag{ href: '#' }= t
+.row-fluid
+  %br
+.row-fluid
+- if exs.empty?
+  .alert No exercises remaining
+- else
+  = render partial: "exercises/thumbsm", collection: exs, as: :x

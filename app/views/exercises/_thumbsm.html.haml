@@ -1,0 +1,9 @@
+%article
+  .well.well-small.teaser-title.span12
+    .row-fluid
+      .span10
+        = link_to x.title, practice_path(:id => x[:id])
+      .span2
+        = difficulty_image(x.difficulty.to_i)
+    .row-fluid
+      = x.teaser_text

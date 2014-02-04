@@ -1,0 +1,16 @@
+.well.well-small.span6
+  .row-fluid
+    %p.teaser-title.span10
+      = link_to w.name, workout_path(:id => w[:id])
+      %span.badge.badge-inverse
+        = w.exercises.count.to_s
+    .span2
+      = difficulty_image(w.highest_difficulty.to_i)
+  .row-fluid
+    .container.span12
+      = combo_progress_bar(Workout.xp_distribution(1,w.id))
+  .row-fluid
+    %p.span12.teaser-tags
+      - w.all_tags.each do |t|
+        %a.tag{ href: '#' }= t
+-#TODO replace with logged in user id session data

@@ -1,6 +1,11 @@
-%p#notice= notice
-
-
-= link_to 'Edit', edit_workout_path(@workout)
-\|
-= link_to 'Back', workouts_path
+.row-fluid
+  - @workouts.each do |w|
+    .container.span4
+      %h1=w.name
+      %br
+      = combo_progress_bar(Workout.xp_distribution(1,w.id))
+.row-fluid
+- if @exs.empty?
+  .alert No exercises found
+- else
+  = render partial: "exercises/thumblg", collection: @exs, as: :x

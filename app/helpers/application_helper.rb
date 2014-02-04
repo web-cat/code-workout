@@ -1,4 +1,6 @@
 module ApplicationHelper
+  include ActionView::Helpers::JavaScriptHelper
+
 
   # -------------------------------------------------------------
   # For using nested layouts
@@ -138,5 +140,36 @@ module ApplicationHelper
     end
     link_to text, destination, options       
   end
-
+  # -------------------------------------------------------------
+  # Creates a difficulty belt image.
+  #
+  def difficulty_image(val)
+    levels = 8
+    increments = 100.0/8
+    if( val <= 0 )
+      num = 1
+    elsif( val > 100)
+      num = 8
+    else
+      num = val/(100.0/8).round
+    end
+    if( num == 1 )
+      color = "White"
+    elsif( num == 2 )
+      color = "Yellow"
+    elsif( num == 3 )
+      color = "Orange"
+    elsif( num == 4 )
+      color = "Green"
+    elsif( num == 5 )
+      color = "Blue"
+    elsif( num == 6 )
+      color = "Violet"
+    elsif( num == 3 )
+      color = "Brown"
+    else
+      color = "Black"
+    end
+    image_tag("belt"+num.to_s+".png", alt: color+" Belt")
+  end
 end

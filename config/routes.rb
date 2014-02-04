@@ -46,6 +46,7 @@ CodeWorkout::Application.routes.draw do
     patch '/practice/:id' => 'exercises#evaluate', as: :evaluate
     get '/users/:id/performance' => 'users#calc_performance', as: :calc_performance
     post '/exercises/search' => 'exercises#search', as: :search
+    get '/gym' => 'workouts#gym', as: :gym
   end
 
 end

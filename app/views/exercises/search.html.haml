@@ -1,10 +1,9 @@
-- if @results.empty?
-  .alert No exercises found
-- else
-  - @results.each do |x|
-    %p.teaser-title.span6
-      = link_to x.title, practice_path(:id => x[:id])
-      - x.tags.each do |t|
-        %a.tag{ href: '#' }= t[:tag_name]
-    %p.span12= x.teaser_text
-            
+- if not(@msg.empty?)
+  .alert=@msg
+
+.row-fluid
+  %h2 Workouts
+  = render partial: "workouts/thumblg", collection: @wos, as: :w
+.row-fluid
+  %h2 Individual Exercises
+  = render partial: "exercises/thumblg", collection: @exs, as: :x            

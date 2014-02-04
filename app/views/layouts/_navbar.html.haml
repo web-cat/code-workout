@@ -4,17 +4,18 @@
       = link_to 'CodeWorkout', root_path, class: 'brand'
       %nav.nav-collapse.collapse
         %ul.nav
-          %li.dropdown
-            %a.dropdown-toggle{ href: '#', data: { toggle: 'dropdown' } }
-              The Gym
-              %i.icon-caret-down.hidden-phone
-            %ul.dropdown-menu
-              %li= link_to 'Trending now', '#'
-              %li= link_to 'Assigned exercises', '#'
-              %li= link_to 'Attempted exercises', '#'
-              %li= link_to 'Newest exercises', '#'
-              %li= link_to 'Challenging exercises', '#'
-              %li= link_to 'Recommended for you', '#'
+          %li= link_to 'The Gym', '/gym'
+-#          %li.dropdown
+-#            %a.dropdown-toggle{ href: '#', data: { toggle: 'dropdown' } }
+-#              The Gym
+-#              %i.icon-caret-down.hidden-phone
+-#            %ul.dropdown-menu
+-#              %li= link_to 'Trending now', '#'
+-#              %li= link_to 'Assigned exercises', '#'
+-#              %li= link_to 'Attempted exercises', '#'
+-#              %li= link_to 'Newest exercises', '#'
+-#              %li= link_to 'Challenging exercises', '#'
+-#              %li= link_to 'Recommended for you', '#'
           %li= link_to 'Your Achievements'
           %li= link_to 'CS 1114', '#'
         %ul.nav.pull-right

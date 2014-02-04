@@ -13,12 +13,18 @@ class WorkoutsController < ApplicationController
       if( found.empty? )
         redirect_to workouts_url, notice: "Workout #{params[:id]} not found"
       else
-        @workout = found.first
+        @workouts = found #.first
+        @exs = found.first.exercises.sort_by{|a| a[:order]}
       end
     else
       redirect_to workouts_url, notice: 'Choose a workout for practice!'
     end
-    render layout: 'two_columns'
+    # render layout: 'two_columns'
+  end
+
+  # GET /gym
+  def gym
+    @gym = Workout.order("created_at DESC").limit(12)
   end
 
   # GET /workouts/new
@@ -60,6 +66,9 @@ class WorkoutsController < ApplicationController
     # Use callbacks to share common setup or constraints between actions.
     def set_workout
       @workout = Workout.find(params[:id])
+      @xp = 30
+      @xptogo = 60
+      @remain = 10
     end
 
     # Only allow a trusted parameter "white list" through.

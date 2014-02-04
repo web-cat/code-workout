@@ -63,6 +63,8 @@ GEM
       coffee-script-source
       execjs
     coffee-script-source (1.6.3)
+    css3-progress-bar-rails (0.5.0)
+      rails (>= 3.1)
     devise (3.2.1)
       bcrypt-ruby (~> 3.0)
       orm_adapter (~> 0.1)
@@ -242,6 +244,7 @@ DEPENDENCIES
   codemirror-rails
   coffee-rails (~> 4.0.0)
   coffee-script-source
+  css3-progress-bar-rails
   devise
   factory_girl_rails
   faker

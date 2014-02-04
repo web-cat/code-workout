@@ -12,5 +12,6 @@
  *= require codemirror
  *= require formtastic-bootstrap
  *= require_tree .
+ *= require 'css3-progress-bar'
  */
 *= require bootstrap-wysihtml5
