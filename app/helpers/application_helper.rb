@@ -170,6 +170,6 @@ module ApplicationHelper
     else
       color = "Black"
     end
-    image_tag("belt"+num.to_s+".png", alt: color+" Belt")
+    image_tag("belt"+num.to_s+".png", alt: color+" Belt ("+val.to_s+")")
   end
 end

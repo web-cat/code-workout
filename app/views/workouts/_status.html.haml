@@ -1,9 +1,15 @@
 -#TODO: replace with session data for user
-- workouts.each do |w|
-  %h2=w.name
-  = combo_progress_bar(Workout.xp_distribution(1,w.id))
+.row-fluid
+  %h2
+    .span8
+      =w.name
+    .span4
+      - xp_data = Workout.xp_distribution(1,w.id)
+      = render :partial => 'workouts/progress', 
+        :locals => {:xp_data => Workout.xp_distribution(1,w.id)}
+.row-fluid
   - w.all_tags.each do |t|
-    %a.tag{ href: '#' }= t
+    =link_to(t, search_path(:search => t), method: :post, class: "tag")
 .row-fluid
   %br
 .row-fluid

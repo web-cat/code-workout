@@ -1,16 +1,20 @@
-.well.well-small.span6
+.well.well-small.span4
   .row-fluid
-    %p.teaser-title.span10
+    %p.teaser-title.span10.slim
       = link_to w.name, workout_path(:id => w[:id])
-      %span.badge.badge-inverse
+      %span.badge.badge-info
         = w.exercises.count.to_s
+        %i.icon-bolt
     .span2
       = difficulty_image(w.highest_difficulty.to_i)
   .row-fluid
-    .container.span12
-      = combo_progress_bar(Workout.xp_distribution(1,w.id))
+    .span12
+      - xp_data = Workout.xp_distribution(1,w.id)
+      = render :partial => 'workouts/progress', 
+        :locals => {:xp_data => Workout.xp_distribution(1,w.id)}
   .row-fluid
-    %p.span12.teaser-tags
-      - w.all_tags.each do |t|
-        %a.tag{ href: '#' }= t
+    .span12
+      %p.span12.teaser-tags.slim
+        - w.all_tags.each do |t|
+          =link_to(t, search_path(:search => t), method: :post, class: "tag")
 -#TODO replace with logged in user id session data

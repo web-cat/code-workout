@@ -13,7 +13,7 @@
       - @tag_scores.each do |t|
         %tr
           %td
-            %a.tag{ href: '#' }=t[:tag_name]
+            =link_to(t[:tag_name], search_path(:search => t[:tag_name]), method: :post, class: "tag")
           %td
             .progress#progressBar
               .progress-bar{:style => "width: #{t[:percent_experience]}%;"}

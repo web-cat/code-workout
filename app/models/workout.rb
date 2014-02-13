@@ -64,7 +64,7 @@ class Workout < ActiveRecord::Base
         diff = x.difficulty
       end
     end
-    return diff
+    return diff.to_i
   end
 
   #~ Class methods ............................................................
@@ -79,7 +79,8 @@ class Workout < ActiveRecord::Base
   def self.xp_distribution(u_id, w_id)
     w = Workout.find(w_id)
     results = w.xp(u_id)
-    earned = results[:percent]
+    earned = results[:scored]
+    earned_per = results[:percent]
     total = results[:total]
     remaining = 0
     exs = w.exercises
@@ -91,8 +92,9 @@ class Workout < ActiveRecord::Base
       end
       remaining += x.experience-x_earned
     end
-    remaining = remaining/total.to_f*100
-    gap = 100-earned-remaining
-    return [earned,remaining,gap]
+    remaining_per = remaining/total.to_f*100
+    gap = total-earned-remaining
+    gap_per = 100-earned_per-remaining_per
+    return [earned,remaining,gap,earned_per,remaining_per,gap_per]
   end
 end

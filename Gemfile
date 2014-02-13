@@ -2,10 +2,10 @@ source 'https://rubygems.org'
 
 gem 'rails', '4.0.0'
 
-gem 'bootstrap-sass'
+gem 'bootstrap-sass', '2.3.2.0'
 gem 'jquery-rails'
 gem 'codemirror-rails'
-gem 'font-awesome-rails'
+gem 'font-awesome-rails', '3.2.1.3'
 gem 'formtastic', '~> 2.3.0.rc2'
 gem 'formtastic-bootstrap'
 # gem 'jbuilder', '~> 1.2'

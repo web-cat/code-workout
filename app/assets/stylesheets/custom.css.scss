@@ -23,13 +23,13 @@ body {
   background: #f8eedf;
   background: -webkit-gradient(linear, left top, right top,
     from(#f8eedf), color-stop(90.0%,#f8eedf), to(#fff7ea));  
-  background: -moz-linear-gradient(left, #f8eedf 90.0%, #fff7ea);
-  background: linear-gradient(left, #f8eedf 90.0%, #fff7ea);
+  background: -moz-linear-gradient(left, #f8eedf 100.0%, #fff7ea);
+  background: linear-gradient(left, #f8eedf 100.0%, #fff7ea);
 }
 .leftcol {
   border-right: 2px solid #fff7ea;
 }
-.row-fluid .span4.rightcol { margin-left: 0; width: 34.04255%; }
+.row-fluid .span3.rightcol { margin-left: 0; width: 25%; }
 .rightcol {
   padding-left: 10px;
   border-left: 4px solid #dfcdb2;
@@ -105,6 +105,7 @@ h1 {
 h1, h2, h3, h4, h5, h6 {
   font-family: "Rokkitt", "PT Sans", "Helvetica Neue",
     Helvetica, Arial, sans-serif;
+  margin-top: 0px;
 }
 
 a { color: #3da2b4; font-weight: bold; }
@@ -263,28 +264,6 @@ ul.wysihtml5-toolbar li {
   margin: 0;
 }
 
-/* jQuery Progress Bar */
-#progressBar {
-  width: 500px;
-  height: 22px;
-  border: 1px solid #111;
-  background-color: #292929;
-}
-
-#progressBar div {
-  height: 100%;
-  color: #000;
-  text-align: right;
-  line-height: 22px; /* same as #progressBar height if we want text middle aligned */
-  width: 0;
-  background-color: #009900;
-}
-.progress-bar{
-  background-color: #009900;
-  color: #00FF00;
-  text-align: right;
-}
-
 /* Search results */
 .teaser-title p {
   color: #3da2b4;
@@ -296,4 +275,9 @@ ul.wysihtml5-toolbar li {
   background: -moz-linear-gradient(left, #dfcdb2, #e8d8c0);
   background: linear-gradient(left, #dfcdb2, #e8d8c0);
   padding-left: 4px;
+  padding-bottom: 0px;
+}
+
+.slim {
+  margin: 0;
 }

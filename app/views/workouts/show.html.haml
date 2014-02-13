@@ -1,11 +1,12 @@
 .row-fluid
-  - @workouts.each do |w|
-    .container.span4
-      %h1=w.name
-      %br
-      = combo_progress_bar(Workout.xp_distribution(1,w.id))
+  .span12
+    - @workouts.each do |w|
+      %h1.span6=w.name
+      .span6= render :partial => 'workouts/progress', 
+              :locals => {:xp_data => Workout.xp_distribution(1,w.id)}
 .row-fluid
-- if @exs.empty?
-  .alert No exercises found
-- else
-  = render partial: "exercises/thumblg", collection: @exs, as: :x
+  .span12
+    - if @exs.empty?
+      .alert No exercises found
+    - else
+      = render partial: "exercises/thumblg", collection: @exs, as: :x

@@ -1,11 +1,13 @@
-.well.well-small.span6
+.well.well-small.span4
   .row-fluid
-    %p.teaser-title.span10
+    %p.teaser-title.span10.slim
+      %span.badge.badge-info
+        %i.icon-bolt
       = link_to x.title, practice_path(:id => x[:id])
     .span2
       = difficulty_image(x.difficulty.to_i)
   .row-fluid
     - x.tags.each do |t|
-      %a.tag{ href: '#' }= t[:tag_name]
+      =link_to(t[:tag_name], search_path(:search => t[:tag_name]), method: :post, class: "tag")
   .row-fluid
     = x.teaser_text

@@ -13,5 +13,6 @@
  *= require formtastic-bootstrap
  *= require_tree .
  *= require 'css3-progress-bar'
+ *= require bootstrap-wysihtml5
+ *= require font-awesome
  */
-*= require bootstrap-wysihtml5
