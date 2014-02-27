@@ -16,9 +16,9 @@
 
 //= require codemirror
 //= require codemirror/modes/clike
-//= require_tree .
 //= require bootstrap-wysihtml5
 //= require cocoon
+//= require_tree .
 
 // Add the route helpers directly into the window object for easy access.
 $.extend(window, Routes);

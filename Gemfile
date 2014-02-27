@@ -1,8 +1,7 @@
 source 'https://rubygems.org'
 
 gem 'rails', '4.0.0'
-
-gem 'bootstrap-sass', '2.3.2.0'
+gem 'bootstrap-sass', '~> 2.3.2.2'
 gem 'jquery-rails'
 gem 'codemirror-rails'
 gem 'font-awesome-rails', '3.2.1.3'
@@ -23,18 +22,22 @@ group :development, :test do
   gem 'sqlite3'
   gem 'rspec-rails'
   gem 'annotate'
-  gem 'factory_girl_rails'
-  gem 'faker'
   gem 'rails-erd'
 end
+# These two should be in :development, :test above, but are temporarily
+# being added to production too, for db population on the deployed site
+# during testing.
+gem 'factory_girl_rails'
+gem 'faker'
 
 group :test do
   gem 'capybara'
 end
 
 group :production, :staging do
-  gem 'mysql2'
- end
+  gem 'sqlite3'
+  # gem 'mysql2'
+end
 
 group :doc do
   # bundle exec rake doc:rails generates the API under doc/api.

@@ -31,7 +31,7 @@ GEM
     atomic (1.1.14)
     awesome_print (1.2.0)
     bcrypt-ruby (3.1.2)
-    bootstrap-sass (2.3.2.0)
+    bootstrap-sass (2.3.2.2)
       sass (~> 3.2)
     bootstrap-wysihtml5-rails (0.3.1.23)
       railties (>= 3.0)
@@ -121,7 +121,6 @@ GEM
     minitest (4.7.5)
     multi_json (1.8.2)
     multipart-post (1.2.0)
-    mysql2 (0.3.14)
     net-scp (1.1.2)
       net-ssh (>= 2.6.5)
     net-ssh (2.7.0)
@@ -233,7 +232,7 @@ PLATFORMS
 DEPENDENCIES
   annotate
   awesome_print
-  bootstrap-sass (= 2.3.2.0)
+  bootstrap-sass (~> 2.3.2.2)
   bootstrap-wysihtml5-rails (~> 0.3.1.23)
   cancan (= 1.6.9)
   capistrano
@@ -258,7 +257,6 @@ DEPENDENCIES
   jquery-rails
   js-routes
   kaminari
-  mysql2
   omniauth
   omniauth-facebook
   rails (= 4.0.0)
