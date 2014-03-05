@@ -5,8 +5,10 @@
       .span6= render :partial => 'workouts/progress', 
               :locals => {:xp_data => Workout.xp_distribution(1,w.id)}
 .row-fluid
-  .span12
+  .container-fluid.span12
     - if @exs.empty?
-      .alert No exercises found
+      .alert No exercises in this workout
     - else
-      = render partial: "exercises/thumblg", collection: @exs, as: :x
+      - @exs.in_groups_of(2, false) do |ex_row|
+        .clearfix
+        = render partial: "exercises/thumblg", collection: ex_row, as: :x

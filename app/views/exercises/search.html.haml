@@ -1,9 +1,11 @@
 - if not(@msg.empty?)
   .alert=@msg
 
-.row-fluid
-  %h2 Workouts
-  = render partial: "workouts/thumblg", collection: @wos, as: :w
-.row-fluid
-  %h2 Individual Exercises
-  = render partial: "exercises/thumblg", collection: @exs, as: :x            
+- if not(@wos.empty?)
+  .row-fluid
+    %h2 Workouts
+    = render partial: "workouts/thumblg", collection: @wos, as: :w
+- if not(@exs.empty?)
+  .row-fluid
+    %h2 Individual Exercises
+    = render partial: "exercises/thumblg", collection: @exs, as: :x            

@@ -70,7 +70,7 @@ class Exercise < ActiveRecord::Base
     'Multiple Choice Question' => 1
   }
 
-  TEASER_LENGTH = 45
+  TEASER_LENGTH = 40
 
   #~ Class methods ............................................................
   def self.search(terms)
@@ -112,7 +112,11 @@ class Exercise < ActiveRecord::Base
     else
       shorten = plain[0..TEASER_LENGTH]
       space = shorten.rindex(/\s/)
-      shorten = shorten[0..space]+"..."
+      if space.nil?
+        shorten = shorten.to_s+"..."
+      else
+        shorten = shorten[0..space].to_s+"..."
+      end
       return shorten
     end
   end

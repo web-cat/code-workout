@@ -1,6 +1,6 @@
 %h1 The Gym
-
 - if @gym.empty?
   .alert No workouts found
 - else
+  %h2 Popular Workouts
   = render partial: "thumblg", collection: @gym, as: :w

@@ -143,6 +143,7 @@ module ApplicationHelper
   # -------------------------------------------------------------
   # Creates a difficulty belt image.
   #
+  BELT_COLOR = ["White", "Yellow", "Orange", "Green", "Blue", "Violet", "Brown", "Black"]
   def difficulty_image(val)
     levels = 8
     increments = 100.0/8
@@ -153,23 +154,11 @@ module ApplicationHelper
     else
       num = val/(increments).round
     end
-    if( num == 1 )
+    if( num == 0 )
       color = "White"
-    elsif( num == 2 )
-      color = "Yellow"
-    elsif( num == 3 )
-      color = "Orange"
-    elsif( num == 4 )
-      color = "Green"
-    elsif( num == 5 )
-      color = "Blue"
-    elsif( num == 6 )
-      color = "Violet"
-    elsif( num == 7 )
-      color = "Brown"
     else
-      color = "Black"
+      color = BELT_COLOR[num]
     end
-    image_tag("belt"+num.to_s+".png", alt: color+" Belt ("+val.to_s+")")
+    image_tag("belt"+num.to_s+".png", alt: color.to_s+" Belt ("+val.to_s+")")
   end
 end
