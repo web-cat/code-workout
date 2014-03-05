@@ -151,7 +151,7 @@ module ApplicationHelper
     elsif( val > 100)
       num = 8
     else
-      num = val/(100.0/8).round
+      num = val/(increments).round
     end
     if( num == 1 )
       color = "White"
@@ -165,7 +165,7 @@ module ApplicationHelper
       color = "Blue"
     elsif( num == 6 )
       color = "Violet"
-    elsif( num == 3 )
+    elsif( num == 7 )
       color = "Brown"
     else
       color = "Black"

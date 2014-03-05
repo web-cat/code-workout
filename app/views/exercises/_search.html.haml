@@ -5,6 +5,12 @@
 -#    Search
 
 = form_tag :controller => "exercises", :action => "search", :method => "get"  do
+  .span
     = text_field_tag :search, params[:search], :id => "search_field",
-	  :class => "input.input-medium", :placeholder => "find exercises with tag..."
-    = submit_tag "Search", :name => nil, :class => "button.btn.btn-default"
+      :class => "input.input-medium", :placeholder => "find exercises with tag...",
+      :style => "vertical-align: top;"
+    = content_tag :button, :type => :submit, :class => "btn btn-inverse",
+      :style => "vertical-align: top;" do
+      %i.icon-search
+      Search
+  -# = submit_tag "Search", :name => nil, :class => "button.btn.btn-default"

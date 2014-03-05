@@ -70,6 +70,8 @@ class Exercise < ActiveRecord::Base
     'Multiple Choice Question' => 1
   }
 
+  TEASER_LENGTH = 45
+
   #~ Class methods ............................................................
   def self.search(terms)
     term_array = terms.split
@@ -105,10 +107,13 @@ class Exercise < ActiveRecord::Base
 
   def teaser_text
     plain = ActionController::Base.helpers.strip_tags(make_html(self.question))
-    if( plain.size < 80 )
+    if( plain.size < TEASER_LENGTH )
       return plain
     else
-      return (plain[0..79]+"...")
+      shorten = plain[0..TEASER_LENGTH]
+      space = shorten.rindex(/\s/)
+      shorten = shorten[0..space]+"..."
+      return shorten
     end
   end
 

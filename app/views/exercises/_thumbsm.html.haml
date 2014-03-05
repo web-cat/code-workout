@@ -4,6 +4,6 @@
       .span10
         = link_to x.title, practice_path(:id => x[:id])
       .span2
-        = difficulty_image(x.difficulty.to_i)
+        = difficulty_image(x.experience.to_i)
     .row-fluid
       = x.teaser_text

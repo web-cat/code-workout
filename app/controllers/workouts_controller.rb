@@ -19,7 +19,7 @@ class WorkoutsController < ApplicationController
     else
       redirect_to workouts_url, notice: 'Choose a workout for practice!'
     end
-    render layout: 'two_columns'
+    # render layout: 'two_columns'
   end
 
   # GET /gym
