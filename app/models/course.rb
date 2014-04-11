@@ -18,7 +18,8 @@ class Course < ActiveRecord::Base
   belongs_to  :organization
   has_many    :course_offerings
 
-
+  accepts_nested_attributes_for :course_offerings, :allow_destroy => true
+  
   #~ Hooks ....................................................................
 
   before_validation :set_url_part

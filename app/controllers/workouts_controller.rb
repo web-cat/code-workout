@@ -25,6 +25,7 @@ class WorkoutsController < ApplicationController
   # GET /gym
   def gym
     @gym = Workout.order("created_at DESC").limit(12)
+    render layout: 'two_columns'
   end
 
   # GET /workouts/new

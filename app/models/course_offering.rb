@@ -19,13 +19,14 @@ class CourseOffering < ActiveRecord::Base
 
   belongs_to  :course
   belongs_to  :term
-
+  accepts_nested_attributes_for :term
 
   #~ Validation ...............................................................
 
   validates :name, presence: true
   validates :course, presence: true
   validates :term, presence: true
+  
 
 
   #~ Public instance methods ..................................................

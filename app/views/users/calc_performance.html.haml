@@ -15,8 +15,29 @@
           %td
             =link_to(t[:tag_name], search_path(:search => t[:tag_name]), method: :post, class: "tag")
           %td
-            .progress#progressBar
-              .progress-bar{:style => "width: #{t[:percent_experience]}%;"}
-                %span{:class => "sr-only"}
-                  = t[:percent_experience].to_s + '%'
+            - earned = rand(500)
+            - possible = rand(500)
+            - gone = rand(500)
+            - tot = earned+possible+gone
+            - per_earned = earned*100.0/tot
+            - per_possible = possible*100.0/tot
+            - per_gone = gone*100.0/tot
+            .progress.span4.slim
+              .bar.bar-success{:style => "width: #{per_earned}%;"}
+                -if per_earned >= 10
+                  ="#{earned}"
+                  %i.icon-star
+              .bar.bar-warning{:style => "width: #{per_possible}%;"}
+                -if per_possible >= 10
+                  ="#{possible}"
+                  %i.icon-star-empty
+              .bar.bar-danger{:style => "width: #{per_gone}%;"}
+                -if per_gone >= 10
+                  ="#{gone}"
+                  %i.icon-remove
           %td= t[:completed_exercises].to_s + " of " + t[:total_exercises].to_s
+-#TODO replace dummy progress bars for tag performance
+          -#.progress#progressBar
+          -#    .progress-bar{:style => "width: #{t[:percent_experience]}%;"}
+          -#      %span{:class => "sr-only"}
+          -#        = t[:percent_experience].to_s + '%'

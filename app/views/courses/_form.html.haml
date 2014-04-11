@@ -1,5 +1,23 @@
 = semantic_form_for(@course) do |f|
   = f.semantic_errors
-  = f.inputs
+  .row-fluid
+    .span4
+      = f.input :organization, :as => :select
+  .row-fluid
+    .span4
+      = f.input :name, :as => :string,
+        placeholder: "Intro to Java"
+  .row-fluid
+    .span4
+      = f.input :number, :as=> :string,
+        placeholder: "CS101"
+  .row-fluid
+    .span10
+      %h2 Offerings
+      #course_offerings
+        = f.semantic_fields_for :course_offerings do |o|
+          = render 'course_offering_fields', :f => o
+        .links
+          = link_to_add_association "Add Offering...", f, :course_offerings
   = f.actions do
     = f.action :submit, as: :button, button_html: { class: 'btn btn-primary' }

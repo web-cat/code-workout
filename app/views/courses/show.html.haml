@@ -1,20 +1,18 @@
 %p#notice= notice
 
-%p
-  %strong Name:
-  = @course.name
+.row-fluid
+  .span12
+    %strong
+    =@course.name + "(" + @course.number + ")"
+.row-fluid
+  .span12
+    %strong Offerings:
+    -@course.course_offerings.each do |off|
+      .row-fluid
+        .span12
+          =off.name
+          =off.label
 
-%p
-  %strong Number:
-  = @course.number
-
-%p
-  %strong Organization:
-  = @course.organization_id
-
-%p
-  %strong URL part:
-  = @course.url_part
 
 = button_link 'Edit', edit_course_path(@course)
 = button_link 'Back', courses_path

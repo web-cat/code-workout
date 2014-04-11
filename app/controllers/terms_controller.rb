@@ -23,6 +23,7 @@ class TermsController < ApplicationController
   def create
     @term = Term.new(term_params)
 
+
     if @term.save
       redirect_to @term, notice: 'Term was successfully created.'
     else
