@@ -145,6 +145,18 @@ class UploadedRoster
           password = Devise.friendly_token.first(20)
         end
 
+        if columns[COLUMN_FIRST_NAME] && columns[COLUMN_LAST_NAME]
+          first_name = row[columns[COLUMN_FIRST_NAME]]
+          last_name = row[columns[COLUMN_LAST_NAME]]
+        elsif not(full_name.nil?)
+          # needs a first and last name so extract it from full name if non-existant
+          first_name = full_name.split(" ").first
+          last_name = full_name.split(" ").second
+        else
+          first_name = "No"
+          last_name = "Name"
+        end
+
         user = User.where(email: email).first
 
         if !user
@@ -152,7 +164,8 @@ class UploadedRoster
           # course.
           user = User.create(
             email: email,
-            full_name: full_name,
+            first_name: first_name,
+            last_name: last_name,
             password: password)
 
           enrollment = CourseEnrollment.create(
