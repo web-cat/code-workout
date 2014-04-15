@@ -49,6 +49,9 @@ CodeWorkout::Application.routes.draw do
     get '/gym' => 'workouts#gym', as: :gym
   end
 
+  match 'course_offering/:course_offering_id/upload_roster/:action',
+    controller: 'upload_roster', as: 'upload_roster', via: [:get, :post]
+
 end
 #== Route Map
 =begin
