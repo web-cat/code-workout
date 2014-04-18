@@ -1,6 +1,5 @@
 #upload_roster_modal.modal.modal-wide.hide.fade
   .modal-header
-    = close_button_tag dismiss: 'modal'
     %h3 Upload Roster
 
   = form_tag upload_roster_path(@course_offering, action: :upload),
@@ -25,7 +24,7 @@
           This CSV file has a header row
 
         #roster-preview-wrapper
-          = render partial: 'table'
+          = render partial: 'upload_roster/table'
 
     .modal-footer
       = submit_tag 'Enroll Users', class: 'btn btn-primary',

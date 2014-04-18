@@ -1,5 +1,16 @@
 = semantic_form_for(@course_offering) do |f|
   = f.semantic_errors
   = f.inputs
+  = link_to 'Upload a roster...', upload_roster_path(@course_offering), remote: true
+  %a.btn{"data-toggle" => "modal", :href => "#upload_roster_modal", :role => "button"} Modal
   = f.actions do
     = f.action :submit, as: :button, button_html: { class: 'btn btn-primary' }
+#upload_roster_modal.modal.hide.fade{"aria-hidden" => "true", "aria-labelledby" => "myModalLabel", :role => "dialog", :tabindex => "-1"}
+  .modal-header
+    %button.close{"aria-hidden" => "true", "data-dismiss" => "modal", :type => "button"} ×
+    %h3#upload_roster_modal Modal header
+  .modal-body
+    %p One fine body…
+  .modal-footer
+    %button.btn{"aria-hidden" => "true", "data-dismiss" => "modal"} Close
+    %button.btn.btn-primary Save changes

@@ -10,10 +10,10 @@ class UploadRosterController < ApplicationController
   # GET /course_offering/[id]/upload_roster.js
   def index
     @uploaded_roster = UploadedRoster.new
-
-    respond_to do |format|
-      format.js
-    end
+    
+    #respond_to do |format|
+    #  format.js
+    #end
   end
 
 

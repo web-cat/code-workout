@@ -17,6 +17,8 @@ class CourseOfferingsController < ApplicationController
 
   # GET /course_offerings/1/edit
   def edit
+    set_course_offering
+    @uploaded_roster = UploadedRoster.new
   end
 
   # POST /course_offerings

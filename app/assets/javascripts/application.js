@@ -17,6 +17,7 @@
 //= require codemirror
 //= require codemirror/modes/clike
 //= require bootstrap-wysihtml5
+//= require bootstrap-modal
 //= require cocoon
 //= require_tree .
 
