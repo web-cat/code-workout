@@ -15,7 +15,7 @@
       .control-group
         = label_tag :role, 'Add users with role', class: 'control-label'
         .controls
-          = select_tag :course_role_id, options_from_collection_for_select(CourseRole.all, :id, :name)
+          = select_tag "CourseRole", options_for_select(CourseRole.all_roles)
 
       #roster-section2.hide
         %hr

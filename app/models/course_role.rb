@@ -34,6 +34,12 @@ class CourseRole < ActiveRecord::Base
   GRADER_ID          = 2
   STUDENT_ID         = 3
 
+  ROLES = {
+    'Instructor' => INSTRUCTOR_ID,
+    'Grader' => GRADER_ID,
+    'Student' => STUDENT_ID
+  }
+
 
   #~ Class methods ............................................................
 
@@ -51,9 +57,8 @@ class CourseRole < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def self.student
-  #  find(STUDENT_ID)
+    find(STUDENT_ID)
   end
-
 
   # -------------------------------------------------------------
   def staff?
@@ -63,6 +68,10 @@ class CourseRole < ActiveRecord::Base
     can_view_other_submissions
   end
 
+  # -------------------------------------------------------------
+  def self.all_roles
+    ROLES
+  end
 
   # -------------------------------------------------------------
   def order_number

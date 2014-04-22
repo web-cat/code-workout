@@ -42,12 +42,11 @@ class Exercise < ActiveRecord::Base
   
   
   #~ Hooks ....................................................................
-
+  before_validation :set_defaults
   #~ Validation ...............................................................
 
   #validates :user, presence: true
   validates :title,
-    presence: true,
     length: {:minimum => 1, :maximum => 50},
     format: {
       with: /[a-zA-Z0-9\-_ .]+/,
@@ -79,6 +78,10 @@ class Exercise < ActiveRecord::Base
       term = "%" + term + "%"
     end
     return Exercise.joins(:tags).where{tags.tag_name.like_any term_array}
+  end
+
+  def self.type_mc
+    TYPES['Multiple Choice Question']
   end
 
   #~ Public instance methods ..................................................
@@ -149,23 +152,7 @@ class Exercise < ActiveRecord::Base
     return score
   end
 
-#  def tag_with(tag_name, tag_type)
-#    duplicate = self.tags.bsearch{|t| t.tag_name == tag_name}
-#    if( duplicate.nil? )
-#      #create temp tag to standardize tag name convention
-#      temp = Tag.new
-#      temp.tag_name = tag_name
-#      temp.tagtype = tag_type
-#      tagged = Tag.where(:tag_name => temp.tag_name, 
-#        :tagtype => temp.tagtype).first_or_create
-#      tagged.total_exercises = tagged.total_exercises + 1
-#      tagged.total_experience += self.experience
-#      tagged.save
-#      self.tags << tagged
-#      tagged.exercises << self
-#    end
-#  end
-
+  
   #~Grab all feedback for choices either selected when wrong 
   #  or not selected when (at least partially) right
   def collate_feedback(answered)
@@ -207,7 +194,16 @@ class Exercise < ActiveRecord::Base
     return CGI::unescapeHTML(unescaped.to_s).html_safe
   end
 
-
+  #getter override for title
+  def title
+    temp = "X"+read_attribute(:id).to_s
+    if not read_attribute(:title).nil? 
+      temp += ": " + read_attribute(:title).to_s
+    elsif not read_attribute(:tags).nil?
+      temp += ": " + read_attribute(:tags).first.tag_name
+    end
+    return temp
+  end
 
   private
   def self.type_name(type_num)
@@ -216,5 +212,18 @@ class Exercise < ActiveRecord::Base
     else
       return TYPES.rassoc(type_num).first
     end
+  end
+
+  def set_defaults
+    self.user_id ||= 1
+    self.title ||= " "
+    self.is_public ||= true
+    self.priority ||= 0
+    self.count_attempts ||= 0
+    self.count_correct ||= 0
+    self.difficulty ||= 50
+    self.experience ||= 100
+    self.discrimination ||= 0
+    self.question_type ||= TYPES['Multiple Choice Question']
   end
 end
