@@ -199,8 +199,8 @@ class Exercise < ActiveRecord::Base
     temp = "X"+read_attribute(:id).to_s
     if not read_attribute(:title).nil? 
       temp += ": " + read_attribute(:title).to_s
-    elsif not read_attribute(:tags).nil?
-      temp += ": " + read_attribute(:tags).first.tag_name
+    elsif( !self.tags.nil? && !self.tags.first.nil? )
+      temp += ": " + self.tags.first.tag_name
     end
     return temp
   end
