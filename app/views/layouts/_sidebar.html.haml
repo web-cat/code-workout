@@ -7,5 +7,5 @@
 = render :partial => 'exercises/search'
 
 -#TODO fetch the workout num from current session
-= render :partial => 'workouts/status', 
-  :locals => {:w => Workout.where(:id => 2).first, :exs => Exercise.includes(:workouts).where(["workouts.id = ?",2]).references(:workouts).limit(10)}
+-#= render :partial => 'workouts/status', 
+-#  :locals => {:w => Workout.where(:id => 2).first, :exs => Exercise.includes(:workouts).where(["workouts.id = ?",2]).references(:workouts).limit(10)}
