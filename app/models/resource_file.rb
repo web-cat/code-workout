@@ -3,7 +3,9 @@ class ResourceFile < ActiveRecord::Base
   
   has_and_belongs_to_many :exercises
   belongs_to :user
-  
+
+  before_validation :token
+
   STORAGE_DIR = "public/resource"
 
   #for pretty URLs
@@ -11,10 +13,15 @@ class ResourceFile < ActiveRecord::Base
   	"#{token}"
   end
 
-  def self.save(upload)
-  	ext = File.extname(upload['file'].original_filename)
+  def url
+   STORAGE_DIR +  self.filename.to_s
+  end
+
+  def save_file(upload)
+    ext = File.extname(upload['file'].original_filename) || ""
   	renamed = self.token + ext
   	path = File.join(STORAGE_DIR, renamed)
-  	File.open(path, "wb") { |f| f.write(upload['file'].resourcefile) }
+  	self.filename = renamed
+  	File.open(path, "wb") { |f| f.write(upload['file'].resourcefile) }  
   end
 end

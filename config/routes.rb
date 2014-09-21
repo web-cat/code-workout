@@ -2,6 +2,8 @@ CodeWorkout::Application.routes.draw do
 
   
 
+  resources :resource_files
+
   resources :workouts
 
   root 'static_pages#home'
@@ -51,6 +53,7 @@ CodeWorkout::Application.routes.draw do
 
   match 'course_offering/:course_offering_id/upload_roster/:action',
     controller: 'upload_roster', as: 'upload_roster', via: [:get, :post]
+
 
 end
 #== Route Map

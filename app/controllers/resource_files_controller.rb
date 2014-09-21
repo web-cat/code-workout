@@ -1,14 +1,13 @@
-class ResourceFileController < ApplicationController
-  before_action :set_resource_file, only: [:show, :uploadFile]
+class ResourceFilesController < ApplicationController
+   before_action :set_resource_file, only: [:show]
 
   # GET /resource_files/16325fe32
   def show
   end
 
   def uploadFile
-    post = ResourceFile.save_file(params[:upload])
+    post = ResourceFile.write_file(params[:upload])
     render :text => "File uploaded."
-    post.save!
   end
 
   private

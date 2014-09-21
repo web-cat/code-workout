@@ -1,0 +1,17 @@
+%h1 Listing resource_files
+
+%table
+  %tr
+    %th
+    %th
+    %th
+
+  - @resource_files.each do |resource_file|
+    %tr
+      %td= link_to 'Show', resource_file
+      %td= link_to 'Edit', edit_resource_file_path(resource_file)
+      %td= link_to 'Destroy', resource_file, :method => :delete, :data => { :confirm => 'Are you sure?' }
+
+%br
+
+= link_to 'New Resource file', new_resource_file_path
