@@ -1,19 +1,9 @@
--#%form.form-search
--#  %input.input-medium.search-query{ type: 'text', placeholder: 'find topics ...' }
--#  %button.btn.btn-default{ type: 'submit' }
--#    %i.icon-search
--#    Search
-
-= form_tag :controller => "exercises", :action => "search", :method => "get"  do
-  .span12
-    .span6
+= form_tag({:controller => "exercises", :action => "search", :method => "get"}, {:class =>"navbar-search"})  do
+  #input-append
+    .span5
       = text_field_tag :search, params[:search], :id => "search_field",
-        :class => "input.input-medium", :placeholder => "find exercises with tag...",
-        :style => "vertical-align: top;"
-    .span4.offset2
-      = content_tag :button, :type => :submit, :class => "btn btn-inverse",
-        :style => "vertical-align: top;" do
+        :class => "search-query", 
+        :placeholder => "search exercises...",
+        :size => "5"
+      = content_tag :button, :type => :submit, :class => "btn btn-inverse" do
         %i.icon-search
-        Search
-
-  -# = submit_tag "Search", :name => nil, :class => "button.btn.btn-default"

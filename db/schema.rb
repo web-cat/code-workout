@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20140422205525) do
+ActiveRecord::Schema.define(version: 20140428202518) do
 
 # Could not dump table "attempts" because of following NoMethodError
 #   undefined method `[]' for nil:NilClass
@@ -92,6 +92,11 @@ ActiveRecord::Schema.define(version: 20140422205525) do
   add_index "exercises", ["stem_id"], name: "index_exercises_on_stem_id"
   add_index "exercises", ["user_id"], name: "index_exercises_on_user_id"
 
+  create_table "exercises_resource_files", id: false, force: true do |t|
+    t.integer "exercise_id",      null: false
+    t.integer "resource_file_id", null: false
+  end
+
   create_table "exercises_tags", force: true do |t|
     t.integer "exercise_id"
     t.integer "tag_id"
@@ -143,6 +148,15 @@ ActiveRecord::Schema.define(version: 20140422205525) do
 
   add_index "prompts", ["exercise_id"], name: "index_prompts_on_exercise_id"
   add_index "prompts", ["language_id"], name: "index_prompts_on_language_id"
+
+  create_table "resource_files", force: true do |t|
+    t.string   "filename"
+    t.string   "token"
+    t.integer  "user_id"
+    t.boolean  "public",     default: true
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
 
   create_table "stems", force: true do |t|
     t.text     "preamble"

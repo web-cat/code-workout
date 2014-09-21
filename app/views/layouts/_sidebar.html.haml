@@ -1,11 +1,3 @@
--#%form.form-search
--#  = form_for :exercise, :url =>{:controller => "exercises", :action =>"search", :id => @exercises}  do |f|
--#    %input.input-medium.search-query{ type: 'text', placeholder: 'find topics ...' }
--#    %button.btn.btn-default{ type: 'submit' }
--#      %i.icon-search
--#      Search
-= render :partial => 'exercises/search'
-
 -#TODO fetch the workout num from current session
 = render :partial => 'workouts/status', 
   :locals => {:w => Workout.where(:id => 2).first, :exs => Exercise.includes(:workouts).where(["workouts.id = ?",2]).references(:workouts).limit(10)}

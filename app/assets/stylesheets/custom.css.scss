@@ -83,13 +83,12 @@ body {
 .navbar, .navbar .navbar-inner { min-height: 44px; }
 
 /* logo in navbar */
-.navbar-inverse .brand {
+.navbar-inverse .brandname {
   color: #3da2b4;
   text-shadow: 0 -1px 0 #2b1f1a;
   font-family: "Rokkitt", "PT Sans", "Helvetica Neue",
     Helvetica, Arial, sans-serif;
   font-size: 28px;
-  padding-bottom: 6px;
 }
 
 .navbar-inverse .brand:hover, .navbar-inverse .brand:focus {
