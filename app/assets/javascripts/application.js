@@ -13,7 +13,7 @@
 //= require jquery
 //= require jquery_ujs
 //= require js-routes
-
+//= require bootstrap-dropdown.js
 //= require codemirror
 //= require codemirror/modes/clike
 //= require bootstrap-wysihtml5

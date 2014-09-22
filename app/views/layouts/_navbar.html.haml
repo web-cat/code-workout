@@ -6,6 +6,16 @@
         %li= link_to 'The Gym', '/gym'
         %li= link_to 'CS 1114', '#'
         %li= render :partial => 'exercises/search'
+        %li.dropdown
+          %a.dropdown-toggle{href: '#', data: { toggle: 'dropdown' } }
+            %i.icon-wrench
+            %i.icon-caret-down.hidden-phone
+          %ul.dropdown-menu
+            %li.nav-header Example
+            %li
+              Thing
+            %li 
+              Another thing
       %ul.nav.pull-right
         - if user_signed_in?
           %li.hidden-phone
