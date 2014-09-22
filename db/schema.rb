@@ -13,9 +13,6 @@
 
 ActiveRecord::Schema.define(version: 20140428202518) do
 
-# Could not dump table "attempts" because of following NoMethodError
-#   undefined method `[]' for nil:NilClass
-
   create_table "choices", force: true do |t|
     t.integer  "exercise_id", null: false
     t.string   "answer"
