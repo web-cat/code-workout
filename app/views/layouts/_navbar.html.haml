@@ -5,7 +5,6 @@
       %ul.nav
         %li= link_to 'The Gym', '/gym'
         %li= link_to 'CS 1114', '#'
-        %li= render :partial => 'exercises/search'
       %ul.nav.pull-right
         - if user_signed_in?
           %li.hidden-phone
@@ -30,4 +29,5 @@
               %i.icon-signout
         - else
           %li= link_to 'Sign Up', new_user_registration_path
-          %li= link_to 'Sign In', new_user_session_path          
+          %li= link_to 'Sign In', new_user_session_path     
+    = render :partial => 'exercises/search'     
