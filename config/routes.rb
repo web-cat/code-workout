@@ -34,6 +34,8 @@ CodeWorkout::Application.routes.draw do
   devise_for :users, :skip => [:registrations, :sessions]
   as :user do
     get "/signup" => "devise/registrations#new", as: :new_user_registration
+    
+    # TODO: These routes are broken and need to be fixed!
     get "/about" => "devise/about#new", as: :about_page
     get "/license" => "devise/license#new", as: :license_page
     get "/contact" => "devise/contact#new", as: :contact_page

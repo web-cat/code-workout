@@ -35,19 +35,19 @@ class GlobalRole < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def self.administrator
- #   find(ADMINISTRATOR_ID)
+    find(ADMINISTRATOR_ID)
   end
 
 
   # -------------------------------------------------------------
   def self.instructor
-  #  find(INSTRUCTOR_ID)
+    find(INSTRUCTOR_ID)
   end
 
 
   # -------------------------------------------------------------
   def self.regular_user
-   # find(REGULAR_USER_ID)
+    find(REGULAR_USER_ID)
   end
 
 
