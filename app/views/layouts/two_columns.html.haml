@@ -1,11 +1,11 @@
 = inside_layout do
-  .row-fluid.max-height#main
-    .span9.scrollable.max-height.leftcol
+  .row.max-height#main
+    .col-md-9.scrollable.max-height.leftcol
       .below-nav
         = render partial: 'layouts/flash'
         = yield
 
-    .span3.scrollable.max-height.rightcol
+    .col-md-3.scrollable.max-height.rightcol
       .below-nav
 
         = render partial: 'layouts/sidebar'

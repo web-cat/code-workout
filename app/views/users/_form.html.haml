@@ -1,4 +1,4 @@
-= semantic_form_for @user do |f|
+= semantic_form_for @user, html: { method: :post, class: "form-horizontal" } do |f|
   = f.semantic_errors
   = f.inputs
   = f.actions do

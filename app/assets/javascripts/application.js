@@ -12,12 +12,11 @@
 //
 //= require jquery
 //= require jquery_ujs
+//= require bootstrap-sprockets
 //= require js-routes
-//= require bootstrap-dropdown.js
 //= require codemirror
 //= require codemirror/modes/clike
 //= require bootstrap-wysihtml5
-//= require bootstrap-modal
 //= require cocoon
 //= require_tree .
 

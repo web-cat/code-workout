@@ -1,7 +1,3 @@
-@import "bootstrap";
-@import "bootstrap/responsive";
-@import "font-awesome";
-
 /* Main two-column layout tweaks */
 
 html, body { height: 100%; }
@@ -29,7 +25,7 @@ body {
 .leftcol {
   border-right: 2px solid #fff7ea;
 }
-.row-fluid .span3.rightcol { margin-left: 0; width: 25%; }
+.row .col-md-3.rightcol { margin-left: 0; width: 25%; }
 .rightcol {
   padding-left: 10px;
   border-left: 4px solid #dfcdb2;
@@ -48,7 +44,7 @@ body {
 
 /* Navbar custom colors and highlighting */
 
-.navbar-inverse .navbar-inner {
+.navbar-inverse {
   background-color: #40312a;
   background-image: none;
 }
@@ -79,20 +75,20 @@ body {
 .navbar-inverse .nav-text { color: white; }
 .navbar .nav > li > a, .navbar-inverse .navbar-link { padding: 2px 6px; }
 .navbar .nav > li { padding: 8px 9px; }
-.navbar .nav > li.nav-text { padding: 10px 9px 0 0; }
-.navbar, .navbar .navbar-inner { min-height: 44px; }
+.navbar .nav > li.nav-text { padding: 8px 9px 0 0; }
+.navbar { min-height: 44px; }
+.navbar .nav-top { margin-top: 4px; }
 
 /* logo in navbar */
-.navbar-inverse .brand {
+.navbar-inverse .navbar-brand {
   color: #3da2b4;
   text-shadow: 0 -1px 0 #2b1f1a;
   font-family: "Rokkitt", "PT Sans", "Helvetica Neue",
     Helvetica, Arial, sans-serif;
   font-size: 28px;
-  padding-bottom: 6px;
 }
 
-.navbar-inverse .brand:hover, .navbar-inverse .brand:focus {
+.navbar-inverse .navbar-brand:hover, .navbar-inverse .navbar-brand:focus {
   color: #efb04f;
 }
 
@@ -112,7 +108,7 @@ a { color: #3da2b4; font-weight: bold; }
 a:hover, a:focus { color: #247184; }
 .navbar a { font-weight: inherit; }
 
-.btn-default {
+.btn-primary {
   color: white;
   text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
   background-color: #f9a732;
@@ -213,7 +209,22 @@ a:hover, a:focus { color: #247184; }
 .inputs .control-label abbr[title] { color: #d00; border-bottom: none; }
 .table.table-striped { background-color: white; }
 
-form.formtastic { @extend .form-horizontal; }
+.form-horizontal .form-group label.control-label {
+  width: 16.6666666667%;
+}
+.form-horizontal .form-group .form-wrapper {
+  width: 83.3333333333%;
+  display: inline-block;
+}
+.form-horizontal .form-group label.control-label,
+.form-horizontal .form-group .form-wrapper {
+  float: left;
+  position: relative;
+  min-height: 1px;
+  padding-left: 15px;
+  padding-right: 15px;
+}
+.form-actions { margin-bottom: 15px; }
 
 /* for consistent font awesome icons */
 [class^="icon-"]::before, [class*=" icon-"]::before {
@@ -228,10 +239,12 @@ form.formtastic { @extend .form-horizontal; }
 .label-info[href]:hover, .label-info[href]:active, .label-info[href]:focus {
   background-color: #247184;
 }
+label { font-weight: inherit; }
+.answers .radio { margin-left: 20px; margin-top: 0; margin-bottom: 0; }
 .tag { @extend .label; @extend .label-info; font-weight: inherit; }
 .debug {
   @extend .well;
-  @extend .well-small;
+  @extend .well-sm;
   position: fixed;
   bottom: 45px;
   left: 0;

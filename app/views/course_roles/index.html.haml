@@ -21,9 +21,9 @@
         %td= course_role.can_view_other_submissions
         %td= course_role.builtin
         %td
-          = button_link 'Show', course_role, btn: 'mini'
-          = button_link 'Edit', edit_course_role_path(course_role), btn: 'mini'
+          = button_link 'Show', course_role, size: 'sm'
+          = button_link 'Edit', edit_course_role_path(course_role), size: 'sm'
           = button_link 'Destroy', course_role, :method => :delete,       |
-            btn: 'mini', :data => { :confirm => 'Are you sure?' }         |
+            size: 'sm', :data => { :confirm => 'Are you sure?' }         |
 
 = button_link 'New Course role', new_course_role_path

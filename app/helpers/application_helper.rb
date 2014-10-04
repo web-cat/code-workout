@@ -69,13 +69,13 @@ module ApplicationHelper
   def icon_name_for(tag)
     if !tag.nil?
       tag = tag.to_s
-      if !tag.start_with?('icon-')
+      if !tag.start_with?('glyphicon-') && !tag.start_with?('fa-')
         tag = tag.downcase.sub(/[^a-zA-Z0-9_-].*$/, '')
         name = ICON_NAME[tag] || tag
         if name.nil?
           name
         else
-          'icon-' + name
+          'glyphicon-' + name
         end
       else
         tag
@@ -92,6 +92,11 @@ module ApplicationHelper
     if cls.nil?
       ''
     else
+      if cls.start_with?('glyphicon-')
+        cls = 'glyphicon ' + cls
+      elsif cls.start_with?('fa-')
+        cls = 'fa ' + cls
+      end
       if options[:class]
         cls = options[:class] + ' ' + cls
       else
@@ -133,6 +138,16 @@ module ApplicationHelper
       options[:class] = options[:class] + ' btn-' + options[:btn]
       options.delete(:btn)
     end
+    if options[:size]
+      options[:class] = options[:class] + ' btn-' + options[:size]
+      options.delete(:size)
+    end
+    if options[:color]
+      options[:class] = options[:class] + ' btn-' + options[:color]
+      options.delete(:color)
+    else
+      options[:class] = options[:class] + ' btn-default'
+    end
     text = label
     icon = options[:icon] ||= label
     if !icon.nil?
@@ -140,6 +155,8 @@ module ApplicationHelper
     end
     link_to text, destination, options       
   end
+
+
   # -------------------------------------------------------------
   # Creates a difficulty belt image.
   #

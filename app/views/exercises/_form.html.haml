@@ -1,52 +1,52 @@
-= semantic_form_for @exercise do |f|
+= semantic_form_for @exercise, html: { class: "form-horizontal" } do |f|
   = f.semantic_errors
-  .row-fluid
-    .span10
+  .row
+    .col-md-10
       = f.input :title, maxlength: 50,
         placeholder: "Enter question title"
-  .row-fluid
-    .span10
+  .row
+    .col-md-10
       = f.input :question, 
         placeholder: "Enter question text",
         :input_html => { :class => 'richtexteditor autogrow span10', :rows => 5 }
-  .row-fluid
-    .span10
+  .row
+    .col-md-10
       = f.input :is_public, :label=> "Share with CodeWorkout community", 
         :input_html => { checked: 'checked', value: true }  
-  .row-fluid
-    .span4
+  .row
+    .col-md-4
       = f.input :tags, :as => :select,
         :collection => @languages,
         :label => "Programming language"
-    .span4
+    .col-md-4
       = f.input :tags, :as => :select,
         :collection => @areas,
         :label => "Subject area"
-  .row-fluid
-    .span10
+  .row
+    .col-md-10
       #tags
         = f.semantic_fields_for :tags do |t|
           = render 'tag_fields', :f => t
         .links
           = link_to_add_association "Add Tag...", f, :tags
-  .row-fluid
-    .span4
+  .row
+    .col-md-4
       = f.input :experience, :as => :select,
         :collection => (10..100).step(10).to_a,
         :label => "Experience Points",
         :hint => "Amount gained for a correct answer"
-  .row-fluid
-    .span10
+  .row
+    .col-md-10
       = f.input :feedback, label: "Question Explanation",
         placeholder: "(optional) Exercise explanation, given after submission",
         input_html: { :class => 'richtexteditor span10', :rows => 2 }
   %h2 Answers
-  .row-fluid.darker-bkg
-    .span4
+  .row.darker-bkg
+    .col-md-4
       = f.input :mcq_is_scrambled, 
         :label => "Randomize answers",
         :input_html => { checked: 'checked', value: true}
-    .span4
+    .col-md-4
       = f.input :mcq_allow_multiple, 
         :label => "Allow multiple selections",
         :input_html => { checked: 'checked', value: true}
@@ -57,4 +57,4 @@
       = link_to_add_association "Add Answer...", f, :choices
   .field
   .actions
-    = f.submit
+    = f.submit class: 'btn btn-primary'

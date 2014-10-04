@@ -7,8 +7,8 @@
   - if user_signed_in?
     %td= user.global_role.name
     %td
-      = button_link 'Show', user, btn: 'mini'
+      = button_link 'Show', user, size: 'sm'
       - if can? :update, user
-        = button_link 'Edit', edit_user_path(user), btn: 'mini'
+        = button_link 'Edit', edit_user_path(user), size: 'sm'
       - if can? :manage, User
-        = button_link 'Destroy', user, method: :delete, btn: 'mini', data: { confirm: 'Are you sure?' }
+        = button_link 'Destroy', user, method: :delete, size: 'sm', data: { confirm: 'Are you sure?' }
