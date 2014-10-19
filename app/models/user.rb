@@ -39,7 +39,7 @@ class User < ActiveRecord::Base
 
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, :timeoutable and :omniauthable
-  devise :database_authenticatable, :registerable,
+  devise :database_authenticatable, :omniauthable, :registerable,
     :recoverable, :rememberable, :trackable, :validatable
 #    ,
 #    :confirmable, :omniauthable
@@ -123,7 +123,43 @@ class User < ActiveRecord::Base
     end
   end
 
+ # Omniauth for Facebook users
+   def self.find_for_facebook_oauth(auth, signed_in_resource=nil)
+    user = User.where(:provider => auth.provider, :uid => auth.uid).first
+    if user
+      return user
+    else
+      registered_user = User.where(:email => auth.info.email).first
+        if registered_user
+          return registered_user
+        else
+          user = User.create(name:auth.extra.raw_info.name,
+                            provider:auth.provider,
+                            uid:auth.uid,
+                            email:auth.info.email,
+                            password:Devise.friendly_token[0,20],
+                          )
+        end    
+      end
+    end 
 
+  # Omni auth for Google Users
+   def self.from_omniauth(auth)
+     if user = User.find_by_email(auth.info.email)
+       user.provider = auth.provider
+       user.uid = auth.uid
+       user
+     else
+       where(auth.slice(:provider, :uid)).first_or_create do |user|
+         user.provider = auth.provider
+         user.uid = auth.uid
+         user.username = auth.info.name
+         user.email = auth.info.email
+         user.avatar = auth.info.image
+       end
+     end
+   end
+  
   private
 
   # -------------------------------------------------------------

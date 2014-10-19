@@ -21,18 +21,24 @@ class CoursesController < ApplicationController
 
   # POST /courses
   def create
-    @course = Course.new
     form = params[:course]
-    @course.name = form[:name].to_s
-    @course.number = form[:number].to_s
-    @course.save
-
-    #establish relationships
-    org = Organization.find(form[:organization_id])
-    unless org.nil?
-      org.courses << @course
-      org.save
-    end
+    @course = Course.find_by number: form[:number]
+    if @course.nil?
+      @course = Course.new
+      @course.name = form[:name].to_s
+      @course.number = form[:number].to_s
+      @course.save
+    
+      #establish relationships
+      org = Organization.find(form[:organization_id])
+    
+      unless org.nil?
+        org.courses << @course
+        org.save
+      end
+     else
+       redirect_to new_course_path, alert: 'Course offering with this number for this term already exists' and return
+     end
     form[:course_offerings_attributes].each do |offering|
       tmp = CourseOffering.create
       tmp.name = offering.second[:name].to_s

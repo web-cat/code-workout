@@ -1,0 +1,6 @@
+<%= form_tag('/exercises/upload_create', multipart: true) do -%>
+  Upload file: <%= file_field( "form", "xmlfile" ) %>
+  <br />
+  <br />
+ <%= submit_tag "Submit File" =%>
+<% end -%>

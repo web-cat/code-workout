@@ -49,6 +49,7 @@ end
 gem 'devise'
 gem 'omniauth'
 gem 'omniauth-facebook'
+gem 'omniauth-google-oauth2'
 gem 'cancan', '1.6.9' # 1.6.10 broke shallow routes
 
 gem 'fastercsv'       # CSV reading/writing

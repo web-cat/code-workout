@@ -1,5 +1,7 @@
 class ExercisesController < ApplicationController
   require 'action_view/helpers/javascript_helper'
+  require 'nokogiri'
+  require 'csv'
   include ActionView::Helpers::JavaScriptHelper
 
   before_action :set_exercise, only: [:show, :edit, :update, :destroy]
@@ -70,8 +72,7 @@ class ExercisesController < ApplicationController
       ex.language_id = msg[:language_id].to_i
     end
 
-    #TODO get user id from session data
-    ex.user_id = 1
+    ex.user_id = current_user.id
 
     if( msg[:experience] )
       ex.experience = msg[:experience]
@@ -131,6 +132,202 @@ class ExercisesController < ApplicationController
     end
   end
 
+def create_mcqs
+  csvfile = params[:form]  
+  puts csvfile.fetch(:xmlfile).path
+  puts "HINTER"
+  CSV.foreach(csvfile.fetch(:xmlfile).path) do |question|
+    if $INPUT_LINE_NUMBER > 1
+      puts "Line Number ",  $INPUT_LINE_NUMBER
+      title_ex=question[1]
+      puts "TITLE",title_ex
+    #priority_ex=question[2]
+      question_ex=question[3][3..-5]
+
+      if (!question[15].nil? && question[15].include?("p"))
+      gradertext_ex=question[15][3..-5]
+      else
+      gradertext_ex=""
+      end
+
+
+            
+      if ( !question[5].nil? && !question[6].nil? &&  !question[5][3..-5].nil? && !question[6][3..-5].nil?)
+        ex = Exercise.new
+   
+        ex.question_type = 1
+        ex.title = title_ex
+        ex.question = question_ex 
+        ex.feedback = gradertext_ex 
+        ex.is_public = true
+        
+        #if msg[:is_public] == 0
+         # ex.is_public = false
+        #end
+        
+        ex.mcq_allow_multiple = true
+        
+        #if msg[:mcq_allow_multiple].nil?
+         # ex.mcq_allow_multiple = false
+        #end
+        
+        ex.mcq_is_scrambled = true
+        #if msg[:mcq_is_scrambled].nil?
+         # ex.mcq_is_scrambled = false
+        #end
+        ex.priority = 1
+        ex.count_attempts = 5
+        ex.count_correct = 1
+        #ex.language_id=1
+      
+
+
+        ex.user_id = current_user.id
+
+        ex.experience = 10
+      
+    
+        #default IRT statistics
+        ex.difficulty = 0
+        ex.discrimination = 0
+        ex.save!
+        
+     #   i = 0
+      #  right = 0.0
+       # total = 0.0
+        alphanum = {"A"=>1,"B"=>2,"C"=>3,"D"=>4,"E"=>5,"F"=>6,"G"=>7,"H"=>8,"I"=>9,"J"=>10}  
+        choices=[]        
+        choice1=question[5][3..-5]
+        choices<<choice1
+        choice2=question[6][3..-5]
+        choices<<choice2        
+        if (!question[7].nil? && question[7].include?("p"))
+          choice3=question[7][3..-5]
+          choices<<choice3
+        end
+        if (!question[8].nil? && question[8].include?("p"))
+          choice4=question[8][3..-5]
+          choices<<choice4
+        end
+        if (!question[9].nil? && question[9].include?("p"))
+          choice5=question[9][3..-5]
+          choices<<choice5
+        end
+        if (!question[10].nil? && question[10].include?("p"))
+          choice6=question[10][3..-5]
+          choices<<choice6
+        end
+        if (!question[11].nil? && question[11].include?("p"))
+          choice7=question[11][3..-5]
+          choices<<choice7
+        end
+        if (!question[12].nil? && question[12].include?("p"))
+          choice8=question[12][3..-5]
+          choices<<choice8
+        end
+        if (!question[13].nil? && question[13].include?("p"))
+          choice9=question[13][3..-5]
+          choices<<choice9
+        end
+        if (!question[14].nil? && question[14].include?("p"))
+          choice10=question[14][3..-5]
+          choices<<choice10
+        end
+        cnt=0;
+        choices.each do |choiceitem|
+          ch = Choice.create
+          ch.answer = choiceitem
+          cnt=cnt+1
+          puts "CHOICE",choiceitem,ch
+          if( alphanum[question[5]] == cnt )
+            ch.value = 1
+          else
+            ch.value = -1
+          end
+
+          ch.feedback = gradertext_ex
+          ch.order = cnt
+          ex.choices << ch
+          #ch.exercise << @exercise
+          ch.save!
+        end
+      
+      else
+      puts "INVALID Question"
+      puts "INVALID choice",choice1
+      puts "INVALID choice",choice2
+      end
+    end
+  end
+  redirect_to exercises_url, notice: "Uploaded!"
+end
+  
+  
+def upload_mcqs  
+end
+
+def upload_exercises
+end
+# POST /exercises/upload_create
+  def upload_create
+    
+    questionfile = params[:form]
+      
+  doc=Nokogiri::XML(File.open(questionfile.fetch(:xmlfile).path));
+  questions=doc.xpath('/quiz/question');
+
+  questions.each do |question|
+  ex = Exercise.new
+  title_ex    = question.xpath('./name/text')[0].content
+  question_ex = question.xpath('./questiontext/text')[0].content
+  if !question.xpath('.//generalfeedback/text').empty?
+     feedback_ex = question.xpath('.//generalfeedback/text')[0].content
+  else 
+     feedback_ex = ""
+  end  
+  
+  if !question.xpath('.//defaultgrade').empty?
+     priority_ex = question.xpath('.//defaultgrade')[0].content
+  else 
+     priority_ex = 1.to_s
+  end
+
+  if !question.xpath('.//penalty').empty?
+    discrimination_ex = question.xpath('.//penalty')[0].content
+  else 
+     discrimination_ex = 0.to_s
+  end
+
+  if !question.xpath('.//graderinfo').empty?
+    gradertext_ex=question.xpath('.//graderinfo/text')[0].content
+  else 
+     gradertext_ex = ""
+  end
+    
+    
+    ex.question_type = 2
+    ex.title = title_ex
+    ex.question = question_ex
+    ex.feedback = feedback_ex
+    ex.is_public = true
+    ex.mcq_allow_multiple = false
+    ex.mcq_is_scrambled = false
+    ex.priority =  priority_ex
+    ex.count_attempts = 1
+    ex.count_correct = 1
+
+    ex.user_id = current_user.id
+   
+    ex.experience = 20
+          
+    #default IRT statistics
+    ex.difficulty = 5
+    ex.discrimination = discrimination_ex
+
+    ex.save!
+    end
+    redirect_to exercises_url, notice: "Uploaded!"
+end
   # GET/POST /practice/1
   def practice
     if( params[:id] )

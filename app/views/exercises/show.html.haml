@@ -1,6 +1,25 @@
 %p#notice= notice
-
-
 = link_to 'Edit', edit_exercise_path(@exercise)
-\|
-= link_to 'Back', exercises_path
+%p
+  %strong Title:
+  = image_tag @exercise.title
+
+%p
+  %strong Question:
+  = @exercise.question
+
+%p
+  %strong Feedback:
+  = @exercise.feedback
+
+%p
+  %strong Created:
+  = @exercise.created_at
+
+%p
+  %strong Experience:
+  = @exercise.experience
+  
+
+
+= button_link'Back', exercises_path

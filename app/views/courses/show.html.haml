@@ -10,7 +10,10 @@
     -@course.course_offerings.each do |off|
       .row
         .col-md-12
-          =off.name
+          -#%a{ href: edit_course_offering_path(off), data: { toggle: 'dropdown' } }
+          =link_to off.name, edit_course_offering_path(off)
+            
+        .span12
           =off.label
 
 
