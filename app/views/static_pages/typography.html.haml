@@ -1,0 +1,110 @@
+%h1 Typography/Theme Elements
+
+%h1 Example (h1)
+%p
+  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
+  tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
+  veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
+  commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
+  velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint
+  occaecat cupidatat non proident, sunt in culpa qui officia deserunt
+  mollit anim id est laborum.
+%p
+  %strong This is strong text.
+  %em This is emphasized.
+  %code This is in-line code.
+
+%h2 Example (h2)
+%p
+  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
+  tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
+  veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
+  commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
+  velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint
+  occaecat cupidatat non proident, sunt in culpa qui officia deserunt
+  mollit anim id est laborum.
+
+%h3 Example (h3)
+%p
+  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
+  tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
+  veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
+  commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
+  velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint
+  occaecat cupidatat non proident, sunt in culpa qui officia deserunt
+  mollit anim id est laborum.
+
+%h4 Example (h4)
+%p
+  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
+  tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
+  veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
+  commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
+  velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint
+  occaecat cupidatat non proident, sunt in culpa qui officia deserunt
+  mollit anim id est laborum.
+
+%h5 Example (h5)
+%p
+  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
+  tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
+  veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
+  commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
+  velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint
+  occaecat cupidatat non proident, sunt in culpa qui officia deserunt
+  mollit anim id est laborum.
+
+%h6 Example (h6)
+%p
+  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
+  tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
+  veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
+  commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
+  velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint
+  occaecat cupidatat non proident, sunt in culpa qui officia deserunt
+  mollit anim id est laborum.
+
+%h1 Buttons
+
+%p
+  Primary:
+  %button.btn.btn-primary.btn-sm
+    Sign in
+  %button.btn.btn-primary
+    Sign in
+  %button.btn.btn-primary.btn-lg
+    Sign in
+%p
+  Default:
+  %button.btn.btn-default.btn-sm
+    Sign in
+  %button.btn.btn-default
+    Sign in
+  %button.btn.btn-default.btn-lg
+    Sign in
+
+%h1 Forms
+
+%form.form-horizontal.formtastic
+  %fieldset.inputs
+    .string.input.optional.stringish.form-group
+      %label.control-label{ for: 'name' }
+        Name
+      %span.form-wrapper
+        %input.form-control{ id: 'name', type: 'text',
+          placeholder: 'Enter your name ...' }
+    .email.input.required.stringish.form-group
+      %label.control-label{ for: 'email' }
+        E-mail
+        %abbr{ title: 'required' } *
+      %span.form-wrapper
+        %input.form-control{ id: 'name', type: 'email',
+          placeholder: 'E-mail address ...' }
+  %fieldset.form-actions
+    %button.btn.btn-primary{ type: 'submit' }
+      Save
+    %button.btn.btn-default{ type: 'submit' }
+      Cancel
+
+%p
+  More goes here.

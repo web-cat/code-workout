@@ -11,6 +11,7 @@ CodeWorkout::Application.routes.draw do
   get "static_pages/mockup1"
   get "static_pages/mockup2"
   get "static_pages/mockup3"
+  get "static_pages/typography"
 
   resources :exercises
   resources :choices

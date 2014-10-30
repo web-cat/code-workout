@@ -2,10 +2,13 @@
 #
 # Table name: tags
 #
-#  id         :integer          not null, primary key
-#  name       :string(255)      not null
-#  created_at :datetime
-#  updated_at :datetime
+#  id               :integer          not null, primary key
+#  tag_name         :string(255)      not null
+#  created_at       :datetime
+#  updated_at       :datetime
+#  tagtype          :integer          default(0)
+#  total_exercises  :integer          default(0)
+#  total_experience :integer          default(0)
 #
 
 require 'spec_helper'

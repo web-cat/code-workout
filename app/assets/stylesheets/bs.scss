@@ -1,2 +1,5 @@
 @import "bootstrap-sprockets";
 @import "bootstrap";
+
+.tag { @extend .label; @extend .label-info; }
+.debug { @extend .well; @extend .well-sm; }

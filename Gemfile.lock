@@ -1,3 +1,13 @@
+GIT
+  remote: git://github.com/voormedia/rails-erd.git
+  revision: dafc8d8f78cd90e7d6761f6b37a1561d661c85ef
+  specs:
+    rails-erd (1.1.0)
+      activerecord (>= 3.0)
+      activesupport (>= 3.0)
+      choice (~> 0.1.6)
+      ruby-graphviz (~> 1.0.4)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -164,11 +174,6 @@ GEM
       bundler (>= 1.3.0, < 2.0)
       railties (= 4.1.6)
       sprockets-rails (~> 2.0)
-    rails-erd (1.1.0)
-      activerecord (>= 3.0)
-      activesupport (>= 3.0)
-      choice (~> 0.1.6)
-      ruby-graphviz (~> 1.0.4)
     railties (4.1.6)
       actionpack (= 4.1.6)
       activesupport (= 4.1.6)
@@ -272,7 +277,7 @@ DEPENDENCIES
   omniauth
   omniauth-facebook
   rails
-  rails-erd
+  rails-erd!
   remotipart
   rspec-rails
   sass-rails
