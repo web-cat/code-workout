@@ -2,14 +2,18 @@
 #
 # Table name: choices
 #
-#  id         :integer          not null, primary key
-#  prompt_id  :integer          not null
-#  answer     :string(255)
-#  order      :integer
-#  feedback   :text
-#  value      :float
-#  created_at :datetime
-#  updated_at :datetime
+#  id          :integer          not null, primary key
+#  exercise_id :integer          not null
+#  answer      :string(255)
+#  order       :integer
+#  feedback    :text
+#  value       :float
+#  created_at  :datetime
+#  updated_at  :datetime
+#
+# Indexes
+#
+#  index_choices_on_exercise_id  (exercise_id)
 #
 
 class Choice < ActiveRecord::Base

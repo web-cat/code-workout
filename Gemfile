@@ -23,7 +23,7 @@ group :development, :test do
   gem 'sqlite3'
   gem 'rspec-rails'
   gem 'annotate'
-  gem 'rails-erd'
+  gem 'rails-erd', github: 'voormedia/rails-erd'
 end
 # These two should be in :development, :test above, but are temporarily
 # being added to production too, for db population on the deployed site

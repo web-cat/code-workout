@@ -21,4 +21,10 @@ test-language-examples.txt
 test-language-newlines.txt
 test-language.txt
 public/assets
-app/assets/stylesheets/yamm.css
+lib/assets/stylesheets/theme/dark/*.scss
+lib/assets/stylesheets/theme/dark/css
+lib/assets/stylesheets/theme/dark/fonts
+lib/assets/stylesheets/theme/dark/images
+lib/assets/javascripts/theme/dark/libs
+lib/assets/javascripts/theme/dark/*.js
+lib/assets/javascripts/theme/dark/*.swf

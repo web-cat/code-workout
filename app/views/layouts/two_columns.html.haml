@@ -1,11 +1,9 @@
 = inside_layout do
   .row.max-height#main
-    .col-md-9.scrollable.max-height.leftcol
+    .col-md-3.scrollable.max-height.sidebar
+      .below-nav
+        = render partial: 'layouts/sidebar'
+    .col-md-9.scrollable.max-height.content
       .below-nav
         = render partial: 'layouts/flash'
         = yield
-
-    .col-md-3.scrollable.max-height.rightcol
-      .below-nav
-
-        = render partial: 'layouts/sidebar'
