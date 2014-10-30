@@ -1,7 +1,5 @@
 CodeWorkout::Application.routes.draw do
 
-  
-
   resources :workouts
 
   root 'static_pages#home'
