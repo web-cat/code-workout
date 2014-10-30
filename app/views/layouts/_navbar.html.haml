@@ -1,9 +1,9 @@
-%header.navbar.yamm.navbar-default.navbar-fixed-top
+%header.navbar.yamm.navbar-inverse.navbar-fixed-top
   .container-fluid
     .navbar-header
       = link_to 'CodeWorkout', root_path, class: 'navbar-brand'      
     .navbar-collapse.collapse
-      %ul.nav.navbar-nav
+      %ul.nav.navbar-nav.nav-top
         %li.dropdown 
           %a.dropdown-toggle{ href: '/gym', data: { toggle: 'dropdown' },value: 'Gym' }
             Gym        
@@ -55,7 +55,6 @@
                         Manage Courses
                     %li= link_to 'Edit Course', '/courses/'
                     %li= link_to 'Create Course', '/courses/new'
-          = render :partial => 'exercises/search'
 
       -#= f.actions do
         -#= f.submit 'Sign up', class: 'btn btn-primary'
@@ -63,6 +62,8 @@
 
 
       %ul.nav.navbar-nav.navbar-right.nav-top
+        %li
+          = render :partial => 'exercises/search'
         - if user_signed_in?
           %li.hidden-phone
             = link_to '#' do
