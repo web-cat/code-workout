@@ -1,6 +1,6 @@
 class CodeError
 
-# Class variables 
+# Class variables
 @@WARNING = 0
 @@SYNTAX = 1
 @@RUNTIME = 2
@@ -30,6 +30,6 @@ TYPES = {
   def summary
     readable = TYPES.key(@error_type) || ""
     return "#{readable}. #{message}"
-  ends
+  end
 
 end
