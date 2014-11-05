@@ -29,7 +29,7 @@ module ApplicationHelper
   # 
   FLASH_CLASS = {
       success: 'alert-success',
-      error:   'alert-error',
+      error:   'alert-danger',
       alert:   'alert-block',
       block:   'alert-block',
       notice:  'alert-info',
@@ -47,6 +47,7 @@ module ApplicationHelper
   ICON_NAME = {
       'success' => 'ok-sign',
       'error'   => 'exclamation-sign',
+      'danger'  => 'exclamation-sign',
       'alert'   => 'warning-sign',
       'block'   => 'warning-sign',
       'notice'  => 'info-sign',
@@ -69,13 +70,13 @@ module ApplicationHelper
   def icon_name_for(tag)
     if !tag.nil?
       tag = tag.to_s
-      if !tag.start_with?('icon-')
+      if !tag.start_with?('glyphicon-', 'fa-')
         tag = tag.downcase.sub(/[^a-zA-Z0-9_-].*$/, '')
         name = ICON_NAME[tag] || tag
         if name.nil?
           name
         else
-          'icon-' + name
+          'glyphicon-' + name
         end
       else
         tag
@@ -92,6 +93,11 @@ module ApplicationHelper
     if cls.nil?
       ''
     else
+      if cls.start_with?('glyphicon-')
+        cls = 'glyphicon ' + cls
+      elsif cls.start_with?('fa-')
+        cls = 'fa ' + cls
+      end
       if options[:class]
         cls = options[:class] + ' ' + cls
       else
@@ -133,13 +139,24 @@ module ApplicationHelper
       options[:class] = options[:class] + ' btn-' + options[:btn]
       options.delete(:btn)
     end
+    if options[:size]
+      options[:class] = options[:class] + ' btn-' + options[:size]
+      options.delete(:size)
+    end
+    if options[:color]
+      options[:class] = options[:class] + ' btn-' + options[:color]
+      options.delete(:color)
+    else
+      options[:class] = options[:class] + ' btn-default'
+    end
     text = label
-    icon = options[:icon] ||= label
-    if !icon.nil?
-      text = icon_tag_for(icon) + ' ' + text
+    if options[:icon]
+      text = icon_tag_for(options[:icon]) + ' ' + text
     end
     link_to text, destination, options       
   end
+
+
   # -------------------------------------------------------------
   # Creates a difficulty belt image.
   #

@@ -1,33 +1,102 @@
-%header.navbar.navbar-inverse.navbar-fixed-top
-  .navbar-inner
-    %nav.navbar-header.brand= link_to 'CodeWorkout', root_path, class: 'brandname'
-    %nav.nav-collapse.collapse
-      %ul.nav
-        %li= link_to 'The Gym', '/gym'
-        %li= link_to 'CS 1114', '#'
-      %ul.nav.pull-right
+%header.navbar.yamm.navbar-inverse.navbar-fixed-top
+  .container-fluid
+    .navbar-header
+      = link_to 'CodeWorkout', root_path, class: 'navbar-brand'      
+    .navbar-collapse.collapse
+      %ul.nav.navbar-nav.nav-top
+        %li.dropdown 
+          %a.dropdown-toggle{ href: '/gym', data: { toggle: 'dropdown' },value: 'Gym' }
+            Gym        
+          %ul.dropdown-menu
+            %li
+              .yamm-content
+                .row
+                  %ul.col-sm-6.list-unstyled
+                    %li
+                      %strong
+                        Workouts
+                    %li= link_to 'Workout 1', '/workouts/1'
+                    %li= link_to 'Workout 3', '/workouts/3'
+                  %ul.col-sm-6.list-unstyled
+                    %li
+                      %strong
+                        Manage Workouts
+                    %li= link_to 'Edit Workout', '/workouts/'
+                    %li= link_to 'Create Workout', '/workouts/new'
+                .row
+                  %ul.col-sm-6.list-unstyled
+                    %li
+                      %strong
+                        = link_to 'Exercises','/exercises' 
+                    %li= link_to 'Upload Exercises - CSV', 'exercises/upload_exercises'
+                    %li= link_to 'Upload Exercises - MCQ', 'exercises/upload_mcqs'
+                  %ul.col-sm-6.list-unstyled
+                    %li
+                      %strong
+                        Manage Exercises
+                    %li= link_to 'Edit Exercise', '/exercises/edit'
+                    %li= link_to 'Create Exercise', '/exercises/new'
+        %li.dropdown 
+          %a.dropdown-toggle{ href: '/courses', data: { toggle: 'dropdown' },value: 'Gym' }
+            Course        
+          %ul.dropdown-menu
+            %li
+              .yamm-content
+                .row
+                  %ul.col-sm-6.list-unstyled
+                    %li
+                      %strong
+                        Courses
+                    %li= link_to 'CS 1114', '/courses/1'
+                    %li= link_to 'CS 3114', '/courses/2'
+                  %ul.col-sm-6.list-unstyled
+                    %li
+                      %strong
+                        Manage Courses
+                    %li= link_to 'Edit Course', '/courses/'
+                    %li= link_to 'Create Course', '/courses/new'
+
+      -#= f.actions do
+        -#= f.submit 'Sign up', class: 'btn btn-primary'
+        -#= render 'devise/shared/links'
+
+
+      %ul.nav.navbar-nav.navbar-right.nav-top
+        %li
+          = render :partial => 'exercises/search'
         - if user_signed_in?
           %li.hidden-phone
             = link_to '#' do
               %span.badge.badge-info 3
-          %li= link_to 'Achievements'
+              Alerts
           - if current_user.global_role.can_edit_system_configuration?
             %li.dropdown
               %a.dropdown-toggle{ href: '#', data: { toggle: 'dropdown' } }
-                %i.icon-wrench
-                %i.icon-caret-down.hidden-phone
+                %i.glyphicon.glyphicon-wrench
+                %i.fa.fa-caret-down.hidden-phone
               %ul.dropdown-menu
-                %li.nav-header Manage
+                %li.dropdown-header Manage
                 %li= link_to icon_tag_for('user') + ' Users', users_path
-                %li= link_to icon_tag_for('sitemap') + ' Organizations', organizations_path
+                %li= link_to icon_tag_for('fa-sitemap') + ' Organizations', organizations_path
                 %li= link_to icon_tag_for('calendar') + ' Terms', terms_path
                 %li= link_to icon_tag_for('book') + ' Courses', courses_path
-                %li= link_to icon_tag_for('group') + ' Course offerings', course_offerings_path
+                %li= link_to icon_tag_for('fa-group') + ' Course offerings', course_offerings_path
           %li= link_to current_user.email, current_user
           %li
             = link_to destroy_user_session_path, method: :delete do
-              %i.icon-signout
+              %i.fa.fa-sign-out
         - else
+          %li.dropdown 
+            %a.dropdown-toggle{ href: '/signin', data: { toggle: 'dropdown' },value: 'Gym' }
+              Sign in        
+            %ul.dropdown-menu
+              %li
+                %li= link_to image_tag('FacebookButton_post-image.jpg'), user_omniauth_authorize_path(:facebook)
+              %li
+                %li= link_to image_tag('google-plus-sign-in.jpg'), user_omniauth_authorize_path(:google_oauth2)
+              %li
+                %div
+                  .yamm-content
+                    = render '/devise/sessions/new'
           %li= link_to 'Sign Up', new_user_registration_path
-          %li= link_to 'Sign In', new_user_session_path     
-    = render :partial => 'exercises/search'     
+          -#%li= link_to 'Sign In', new_user_session_path

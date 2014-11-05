@@ -1,3 +1,14 @@
+# == Schema Information
+#
+# Table name: workouts
+#
+#  id         :integer          not null, primary key
+#  name       :string(255)      not null
+#  scrambled  :boolean          default(FALSE)
+#  created_at :datetime
+#  updated_at :datetime
+#
+
 class Workout < ActiveRecord::Base
 	has_and_belongs_to_many :exercises
 	has_and_belongs_to_many :tags

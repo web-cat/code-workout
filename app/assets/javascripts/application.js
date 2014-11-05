@@ -10,16 +10,19 @@
 // Read Sprockets README (https://github.com/sstephenson/sprockets#sprockets-directives) for details
 // about supported directives.
 //
+//= require modernizr.min.js
 //= require jquery
 //= require jquery_ujs
+//= require bootstrap-sprockets
 //= require js-routes
-//= require bootstrap-dropdown.js
 //= require codemirror
 //= require codemirror/modes/clike
 //= require bootstrap-wysihtml5
-//= require bootstrap-modal
 //= require cocoon
-//= require_tree .
+//= require cm
+//= require exercises
+//= require workouts
+
 
 // Add the route helpers directly into the window object for easy access.
 $.extend(window, Routes);

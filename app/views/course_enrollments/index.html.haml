@@ -15,9 +15,9 @@
         %td= course_enrollment.course_offering
         %td= course_enrollment.course_role
         %td
-          = button_link 'Show', course_enrollment, btn: 'mini'
-          = button_link 'Edit', edit_course_enrollment_path(course_enrollment), btn: 'mini'
+          = button_link 'Show', course_enrollment, size: 'sm'
+          = button_link 'Edit', edit_course_enrollment_path(course_enrollment), size: 'sm'
           = button_link 'Destroy', course_enrollment, :method => :delete,   |
-            btn: 'mini', :data => { :confirm => 'Are you sure?' }           |
+            size: 'sm', :data => { :confirm => 'Are you sure?' }            |
 
 = button_link 'New Course enrollment', new_course_enrollment_path

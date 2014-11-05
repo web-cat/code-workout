@@ -1,11 +1,5 @@
 CodeWorkout::Application.routes.draw do
 
-  
-
-  resources :resource_files
-
-  resources :workouts
-
   root 'static_pages#home'
 
   get "static_pages/home"
@@ -13,6 +7,15 @@ CodeWorkout::Application.routes.draw do
   get "static_pages/mockup1"
   get "static_pages/mockup2"
   get "static_pages/mockup3"
+  get "static_pages/typography"
+
+  get 'exercises/upload_exercises' => 'exercises#upload_exercises',
+    as: :upload_exercises
+  post 'exercises/upload_create' => 'exercises#upload_create'
+  get 'exercises/upload_mcqs' => 'exercises#upload_mcqs', as: :upload_mcqs
+  post 'exercises/create_mcqs' => 'exercises#create_mcqs'
+  get 'workouts/:id/add_exercises' => 'workouts#add_exercises'
+  post 'workouts/link_exercises'  => 'workouts#link_exercises'
 
   resources :exercises
   resources :choices
@@ -32,14 +35,22 @@ CodeWorkout::Application.routes.draw do
   resources :about
   resources :license
   resources :contact
+  resources :resource_files
+  resources :workouts
+
+  
+  #OmniAuth for Facebook
+  devise_for :controllers => { :omniauth_callbacks => "omniauth_callbacks" }
 
   devise_for :users, :skip => [:registrations, :sessions]
   as :user do
     get "/signup" => "devise/registrations#new", as: :new_user_registration
+    
+    # TODO: These routes are broken and need to be fixed!
     get "/about" => "devise/about#new", as: :about_page
     get "/license" => "devise/license#new", as: :license_page
     get "/contact" => "devise/contact#new", as: :contact_page
-    
+      
     post "/signup" => "devise/registrations#create", as: :user_registration
     get "/login" => "devise/sessions#new", as: :new_user_session
     post "/login" => "devise/sessions#create", as: :user_session
@@ -53,7 +64,6 @@ CodeWorkout::Application.routes.draw do
 
   match 'course_offering/:course_offering_id/upload_roster/:action',
     controller: 'upload_roster', as: 'upload_roster', via: [:get, :post]
-
 
 end
 #== Route Map

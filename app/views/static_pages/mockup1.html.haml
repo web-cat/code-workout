@@ -17,7 +17,7 @@
 
 %h2 Select your answer:
 %form
-  .answers.well.well-small
+  .answers.well.well-sm
     %label.radio
       %input{ type: 'radio', name: 'answers', value: 'a' }
       A-level
@@ -34,6 +34,9 @@
       %input{ type: 'radio', name: 'answers', value: 'e' }
       no output is produced
 
-  %button.btn.btn-default{ type: 'button' }
-    %i.icon-expand
+  %button.btn.btn-primary{ type: 'button' }
+    %i.glyphicon.glyphicon-expand
     Check my answer!
+
+  .btn
+    %input{ type: 'submit', value: 'Check my answer!' }

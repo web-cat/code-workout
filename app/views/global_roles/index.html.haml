@@ -17,9 +17,9 @@
         %td= global_role.can_edit_system_configuration
         %td= global_role.builtin
         %td
-          = button_link 'Show', global_role, btn: 'mini'
-          = button_link 'Edit', edit_global_role_path(global_role), btn: 'mini'
+          = button_link 'Show', global_role, size: 'sm'
+          = button_link 'Edit', edit_global_role_path(global_role), size: 'sm'
           = button_link 'Destroy', global_role, :method => :delete,        |
-            btn: 'mini', :data => { :confirm => 'Are you sure?' }          |
+            size: 'sm', :data => { :confirm => 'Are you sure?' }          |
 
 = button_link 'New Global role', new_global_role_path

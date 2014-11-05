@@ -19,6 +19,11 @@
 #  created_at        :datetime
 #  updated_at        :datetime
 #
+# Indexes
+#
+#  index_prompts_on_exercise_id  (exercise_id)
+#  index_prompts_on_language_id  (language_id)
+#
 
 require 'spec_helper'
 

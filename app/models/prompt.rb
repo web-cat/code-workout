@@ -19,6 +19,11 @@
 #  created_at        :datetime
 #  updated_at        :datetime
 #
+# Indexes
+#
+#  index_prompts_on_exercise_id  (exercise_id)
+#  index_prompts_on_language_id  (language_id)
+#
 
 class Prompt < ActiveRecord::Base
   #~ Relationships ............................................................
@@ -27,9 +32,10 @@ class Prompt < ActiveRecord::Base
   belongs_to :exercise
   #TODO define Hint model and decide how a hint determines how it maps to 
   # different types of incorrect attempts
-  has_one :prompt_type
-  has_one :language
   has_many :choices
+
+  # has_one :prompt_type
+  # has_one :language
 
   # Hard-coded prompt types. Add others as functionality extends to
   #  support other prompt types (free response, etc)

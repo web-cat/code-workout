@@ -1,0 +1,105 @@
+@import "yamm";
+
+/* Main two-column layout tweaks */
+
+html, body { height: 100%; }
+
+.scrollable { overflow-y: auto; }
+.max-height { height: 100%; }
+.full-height { min-height: 100%; }
+.no-overflow { overflow-y: hidden; }
+.below-nav { padding-top: 60px; }
+
+.content, .maincol {
+  padding-left: 20px;
+  padding-right: 20px;
+}
+.row .col-md-3.sidebar { margin-left: 0; }
+.sidebar { padding-left: 25px; }
+
+.navbar .nav > li > a, .navbar-inverse .navbar-link { padding: 2px 6px; }
+.navbar .nav > li { padding: 8px 9px; }
+.navbar .nav > li.nav-text { padding: 8px 9px 0 0; }
+.navbar { min-height: 44px; }
+.navbar .nav-top { margin-top: 4px; }
+
+
+/* Codemirror */
+
+.CodeMirror {
+  height: auto;
+  margin-bottom: 9px;
+}
+
+
+/* Right sidebar text */
+
+.sidebar h2 {
+  padding-left: 4px;
+}
+.sidebar h3, .sidebar h3 a {
+  margin-bottom: 0;
+}
+
+.sidebar article time { float: right; margin-right: 10px; }
+.sidebar article p { margin: 0; }
+.sidebar article { margin-bottom: 15px; }
+
+.form-actions { padding: 0; margin: 0; }
+
+.form-horizontal .form-group label.control-label {
+  width: 16.6666666667%;
+}
+.form-horizontal .form-group .form-wrapper {
+  width: 83.3333333333%;
+  display: inline-block;
+}
+.form-horizontal .form-group label.control-label,
+.form-horizontal .form-group .form-wrapper {
+  float: left;
+  position: relative;
+  min-height: 1px;
+  padding-left: 15px;
+  padding-right: 15px;
+}
+.form-actions {
+  margin-bottom: 15px;
+  margin-left: 16.666666666666664%;
+  padding-left: 8px;
+}
+
+/* for consistent font awesome icons */
+[class^="icon-"]::before, [class*=" icon-"]::before {
+  font-weight: 400;
+}
+
+/* improve icon display on bootstrap buttons */
+.btn i { padding-right: 5px; }
+.btn i:last-child { padding-right: 0; }
+.answers .radio { margin-left: 20px; margin-top: 0; margin-bottom: 0; }
+.tag { @extend .label; @extend .label-info; font-weight: inherit; }
+.debug {
+  position: fixed;
+  bottom: 45px;
+  left: 0;
+  right: 0;
+  margin-bottom: 0;
+  z-index: 1030;
+}
+.debug .CodeMirror { margin-bottom: 0; }
+.navbar .badge { vertical-align: text-top; }
+
+/* Authoring form */
+
+ul.wysihtml5-toolbar { padding: 0; margin: 0; }
+ul.wysihtml5-toolbar li {
+  display:inline;
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* Search results */
+.teaser-title p { padding-left: 4px; padding-bottom: 0px; }
+.slim { margin: 0; }
+.one-line{ overflow: hidden; white-space: nowrap; }

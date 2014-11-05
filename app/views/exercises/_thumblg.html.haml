@@ -1,15 +1,15 @@
-.well.well-small.span4
-  .row-fluid.one-line
-    %p.teaser-title.span10.slim
+.well.well-sm.col-md-4
+  .row.one-line
+    %p.teaser-title.col-md-10.slim
       %span.badge.badge-info
-        %i.icon-bolt
+        %i.fa.fa-bolt
       = link_to x.title, practice_path(:id => x[:id])
-    .span2
+    .col-md-2
       = difficulty_image(x.experience.to_i)
-  .row-fluid.one-line
+  .row.one-line
     -if x.tags.empty?
       &nbsp; &nbsp;
     - x.tags.each do |t|
       =link_to(t[:tag_name], search_path(:search => t[:tag_name]), method: :post, class: "tag")
-  .row-fluid.one-line
+  .row.one-line
     = x.teaser_text

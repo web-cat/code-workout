@@ -7,6 +7,13 @@
 #  course_offering_id :integer
 #  course_role_id     :integer
 #
+# Indexes
+#
+#  index_course_enrollments_on_course_offering_id              (course_offering_id)
+#  index_course_enrollments_on_course_role_id                  (course_role_id)
+#  index_course_enrollments_on_user_id                         (user_id)
+#  index_course_enrollments_on_user_id_and_course_offering_id  (user_id,course_offering_id) UNIQUE
+#
 
 class CourseEnrollment < ActiveRecord::Base
 

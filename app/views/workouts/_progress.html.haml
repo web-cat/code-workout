@@ -1,13 +1,13 @@
-.progress.span12.slim
+.progress.col-md-12.slim
   .bar.bar-success{:style => "width: #{xp_data[3]}%;"}
     -if xp_data[3] >= 20
       ="#{xp_data[0]}"
-      %i.icon-star
+      %i.fa.fa-star
   .bar.bar-warning{:style => "width: #{xp_data[4]}%;"}
     -if xp_data[4] >= 20
       ="#{xp_data[1]}"
-      %i.icon-star-empty
+      %i.fa.fa-star-o
   .bar.bar-danger{:style => "width: #{xp_data[5]}%;"}
     -if xp_data[5] >= 20
       ="#{xp_data[2]}"
-      %i.icon-remove
+      %i.fa.fa-remove

@@ -1,11 +1,11 @@
 source 'https://rubygems.org'
 
-gem 'rails', '4.0.0'
-gem 'bootstrap-sass', '~> 2.3.2.2'
+gem 'rails'
+gem 'bootstrap-sass', '~> 3.2.0'
 gem 'jquery-rails'
 gem 'codemirror-rails'
-gem 'font-awesome-rails', '3.2.1.3'
-gem 'formtastic', '~> 2.3.0.rc2'
+gem 'font-awesome-rails'
+gem 'formtastic', '~> 2.3.1'
 gem 'formtastic-bootstrap'
 # gem 'jbuilder', '~> 1.2'
 gem 'haml', '>= 3.1.4'
@@ -14,15 +14,16 @@ gem 'coffee-rails', '~> 4.0.0'
 gem 'coffee-script-source'
 
 group :assets do
-  gem 'sass-rails', '~> 4.0.0'
+  gem 'sass-rails'
   gem 'uglifier', '>= 1.3.0'
+  gem 'autoprefixer-rails'
 end
 
 group :development, :test do
   gem 'sqlite3'
   gem 'rspec-rails'
   gem 'annotate'
-  gem 'rails-erd'
+  gem 'rails-erd', github: 'voormedia/rails-erd'
 end
 # These two should be in :development, :test above, but are temporarily
 # being added to production too, for db population on the deployed site
@@ -48,6 +49,7 @@ end
 gem 'devise'
 gem 'omniauth'
 gem 'omniauth-facebook'
+gem 'omniauth-google-oauth2'
 gem 'cancan', '1.6.9' # 1.6.10 broke shallow routes
 
 gem 'fastercsv'       # CSV reading/writing
@@ -58,7 +60,7 @@ gem 'js-routes'       # Route helpers in Javascript
 gem 'awesome_print'   # For debugging/logging output
 
 #gems for rich text editing
-gem "bootstrap-wysihtml5-rails", "~> 0.3.1.23"
+gem "bootstrap-wysihtml5-rails"
 
 #gem for improved WHERE querying
 gem "squeel"

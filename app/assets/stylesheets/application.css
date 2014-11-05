@@ -8,13 +8,12 @@
  * You're free to add application-wide styles to this file and they'll appear at the top of the
  * compiled file, but it's generally better to create a new file per style scope.
  *
- *= require_self
+ *= require bs
  *= require codemirror
  *= require formtastic-bootstrap
  *= require bootstrap-wysihtml5
- *= require_tree .
- *= require 'css3-progress-bar'
- *= require bootstrap-wysihtml5
+ *= require css3-progress-bar
  *= require font-awesome
- *= require bootstrap
+ *= require custom
+ *= require scaffolds
  */

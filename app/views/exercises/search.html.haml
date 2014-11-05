@@ -2,10 +2,10 @@
   .alert=@msg
 
 - if not(@wos.empty?)
-  .row-fluid
+  .row
     %h2 Workouts
     = render partial: "workouts/thumblg", collection: @wos, as: :w
 - if not(@exs.empty?)
-  .row-fluid
+  .row
     %h2 Individual Exercises
     = render partial: "exercises/thumblg", collection: @exs, as: :x            

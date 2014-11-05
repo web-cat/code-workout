@@ -1,4 +1,4 @@
-= semantic_form_for @exercise, :url => evaluate_path(@exercise) do |f|
+= semantic_form_for @exercise, :url => evaluate_path(@exercise), html: { class: "form-horizontal" } do |f|
   = f.semantic_errors
   %h1= @exercise.title
   %p= @exercise.serve_question_html
@@ -20,7 +20,7 @@
         :member_label => :answer,
         :label => "&nbsp;"
   .actions
-    = f.submit 'Submit'
+    = f.submit 'Submit', class: 'btn btn-primary'
   -#=link_to "Submit", {:controller => :exercises, :action => :evaluate},
   -# {:method => :post }
   -#= f.actions do

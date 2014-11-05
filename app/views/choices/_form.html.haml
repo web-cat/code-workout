@@ -1,18 +1,18 @@
-= semantic_fields_for Choice.new do |choice_fields|
+= semantic_fields_for Choice.new, html: { method: :post, class: "form-horizontal" } do |choice_fields|
   = choice_fields.semantic_errors
-  .row-fluid.darker-bkg
-    .row-fluid
-      .span3
+  .row.darker-bkg
+    .row
+      .col-md-3
         = choice_fields.input :value, :as => :boolean,
           :label => "Correct"
-    .row-fluid
-      .span10
+    .row
+      .col-md-10
         = choice_fields.input :answer, :as => :text,
           placeholder: "Enter answer text",
-          :input_html => { :class => 'richtexteditor autogrow span10', :rows =>1 }
-    .row-fluid
-      .span10
+          :input_html => { :class => 'richtexteditor autogrow span10', :rows => 1 }
+    .row
+      .col-md-10
         = choice_fields.input :feedback,
           label: "Explanation",
           placeholder: "(optional) Answer explanation, given after submission",
-          input_html: { :class => 'richtexteditor autogrow span10', :rows => 2}
+          input_html: { :class => 'richtexteditor autogrow span10', :rows => 2 }

@@ -1,4 +1,4 @@
-= semantic_form_for(@course_offering) do |f|
+= semantic_form_for @course_offering, html: { class: "form-horizontal" } do |f|
   = f.semantic_errors
   = f.inputs
   = link_to "<i class=\"icon-upload\"> Upload Roster</i>".html_safe,

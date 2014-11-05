@@ -1,9 +1,9 @@
 %article
-  .well.well-small.teaser-title.span12
-    .row-fluid
-      .span10
+  .well.well-small.teaser-title.col-md-12
+    .row
+      .col-md-10
         = link_to x.title, practice_path(:id => x[:id])
-      .span2
+      .col-md-2
         = difficulty_image(x.experience.to_i)
-    .row-fluid
+    .row
       = x.teaser_text
