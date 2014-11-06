@@ -1,6 +1,6 @@
 = form_tag controller: "exercises", action: "search", method: "get",
   class: "search" do
-  .row
+  .row.search
     %div{ style: "width: 65%; float: left; padding-left: 25px;" }
       = text_field_tag :search, params[:search], id: "search_field",
         class: "input input-medium form-control col-md-8 search-query",
