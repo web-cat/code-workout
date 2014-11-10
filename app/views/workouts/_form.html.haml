@@ -1,10 +1,37 @@
-= form_for @workout do |f|
-  - if @workout.errors.any?
-    #error_explanation
-      %h2= "#{pluralize(@workout.errors.count, "error")} prohibited this workout from being saved:"
-      %ul
-        - @workout.errors.full_messages.each do |msg|
-          %li= msg
-
+= semantic_form_for @workout, html: { class: "form-horizontal" } do |f|
+  = f.semantic_errors
+  .row
+    .col-md-10
+      = f.input :name, maxlength: 50,
+        placeholder: "Enter Workout title"
+  .row
+    .col-md-4
+      = f.input :exercises, :as => :select,
+        :collection => @exers,
+        :label => "Related Exercises"
+  .row
+    .col-md-4
+      
+    .col-md-4
+      = f.input :target_group, :as => :select,
+        :collection => ['Public','Class','Group','Instructor'],
+        :label => "Audience"
+  .row
+    .col-md-4
+      = f.input :points_multiplier, :as => :select,
+        :collection => (1..10).step(1).to_a,
+        :label => "Experience Points",
+        :hint => "Workout question points multiplier"
+  .row
+    .col-md-10
+      = f.input :description, label: "Workout description",
+        placeholder: "(optional) Exercise explanation, given after submission",
+        input_html: { :class => 'richtexteditor span10', :rows => 2 }
+  .row
+    .col-md-4
+      = f.input :scrambled, 
+        :label => "Randomize?",
+        :input_html => { checked: 'checked', value: true}
+    
   .actions
     = f.submit 'Save'
