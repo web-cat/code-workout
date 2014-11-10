@@ -62,7 +62,10 @@ class Exercise < ActiveRecord::Base
   #belongs_to  :language #language is now a tag with tagtype=2
 
   has_and_belongs_to_many :tags
-  has_and_belongs_to_many :workouts
+  #Converting the 'has_and_belongs_to_many' relationship to a 'has_many through' relationship 
+  #rhas_and_belongs_to_many :workouts
+  has_many :workouts, through:  :exercise_workouts
+  has_many :exercise_workouts
   has_many :choices
   has_many :attempts
   accepts_nested_attributes_for :attempts
@@ -233,7 +236,12 @@ class Exercise < ActiveRecord::Base
     end
     return temp
   end
-
+  
+  #method to return whether user has attempted exercise or not
+  def user_attempted?(u_id)
+    self.attempts.where(:user_id => u_id).any?
+  end
+  
   private
   def self.type_name(type_num)
     if( type_num.nil? || type_num <= 0 || type_num > TYPES.size )
