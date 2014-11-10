@@ -2,8 +2,16 @@
   .well.well-small.teaser-title.col-md-12
     .row
       .col-md-10
-        = link_to x.title, practice_path(:id => x[:id])
+        = link_to x.title, exercise_practice_path(:id => x[:id])
       .col-md-2
         = difficulty_image(x.experience.to_i)
     .row
+    - if x.user_attempted?(current_user.id)
+      %div{:style=>'color: green !important;'}
+        %div
+          You have completed this exercise
+        %br
+        %div
+          = x.teaser_text
+    - else
       = x.teaser_text

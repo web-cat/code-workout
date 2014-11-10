@@ -3,7 +3,7 @@
     %p.teaser-title.col-md-10.slim
       %span.badge.badge-info
         %i.fa.fa-bolt
-      = link_to x.title, practice_path(:id => x[:id])
+      = link_to x.title, exercise_practice_path(:id => x[:id])
     .col-md-2
       = difficulty_image(x.experience.to_i)
   .row.one-line

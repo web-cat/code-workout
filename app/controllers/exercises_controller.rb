@@ -32,13 +32,8 @@ class ExercisesController < ApplicationController
   # GET /exercises/new
   def new
     @exercise = Exercise.new
-    #@pick = Array.new(2, Choice.new) #start with 2 choices by default
-    #@pick.each do |choice|
-    #  @exercise.choices << choice
-    #@ans = Choice.new
     @languages = Tag.where(:tagtype => Tag.language).pluck(:tag_name)
     @areas = Tag.where(:tagtype => Tag.area).pluck(:tag_name)
-    #end
   end
 
   # GET /exercises/1/edit
@@ -66,6 +61,7 @@ class ExercisesController < ApplicationController
       ex.mcq_is_scrambled = false
     end
     ex.priority = 0
+    #TODO Get the count of attempts from the session
     ex.count_attempts = 0
     ex.count_correct = 0
     if msg[:language_id]
@@ -132,29 +128,24 @@ class ExercisesController < ApplicationController
     end
   end
 
+# POST exercises/create_mcqs
 def create_mcqs
   csvfile = params[:form]  
   puts csvfile.fetch(:xmlfile).path
-  puts "HINTER"
   CSV.foreach(csvfile.fetch(:xmlfile).path) do |question|
     if $INPUT_LINE_NUMBER > 1
-      puts "Line Number ",  $INPUT_LINE_NUMBER
       title_ex=question[1]
-      puts "TITLE",title_ex
-    #priority_ex=question[2]
+      #priority_ex=question[2]
       question_ex=question[3][3..-5]
 
       if (!question[15].nil? && question[15].include?("p"))
-      gradertext_ex=question[15][3..-5]
+        gradertext_ex=question[15][3..-5]
       else
-      gradertext_ex=""
+        gradertext_ex=""
       end
-
-
-            
+                  
       if ( !question[5].nil? && !question[6].nil? &&  !question[5][3..-5].nil? && !question[6][3..-5].nil?)
         ex = Exercise.new
-   
         ex.question_type = 1
         ex.title = title_ex
         ex.question = question_ex 
@@ -176,14 +167,12 @@ def create_mcqs
          # ex.mcq_is_scrambled = false
         #end
         ex.priority = 1
+        #TODO Get the count of attempts from the session
         ex.count_attempts = 5
         ex.count_correct = 1
-        #ex.language_id=1
-      
 
 
         ex.user_id = current_user.id
-
         ex.experience = 10
       
     
@@ -192,9 +181,9 @@ def create_mcqs
         ex.discrimination = 0
         ex.save!
         
-     #   i = 0
-      #  right = 0.0
-       # total = 0.0
+        #   i = 0
+        #  right = 0.0
+        # total = 0.0
         alphanum = {"A"=>1,"B"=>2,"C"=>3,"D"=>4,"E"=>5,"F"=>6,"G"=>7,"H"=>8,"I"=>9,"J"=>10}  
         choices=[]        
         choice1=question[5][3..-5]
@@ -238,7 +227,6 @@ def create_mcqs
           ch = Choice.create
           ch.answer = choiceitem
           cnt=cnt+1
-          puts "CHOICE",choiceitem,ch
           if( alphanum[question[5]] == cnt )
             ch.value = 1
           else
@@ -253,58 +241,57 @@ def create_mcqs
         end
       
       else
-      puts "INVALID Question"
-      puts "INVALID choice",choice1
-      puts "INVALID choice",choice2
+        puts "INVALID Question"
+        puts "INVALID choice",choice1
+        puts "INVALID choice",choice2
       end
     end
   end
   redirect_to exercises_url, notice: "Uploaded!"
 end
   
-  
+# GET exercises/upload_mcqs  
 def upload_mcqs  
 end
 
+# GET exercises/upload_exercises
 def upload_exercises
 end
+
 # POST /exercises/upload_create
-  def upload_create
+def upload_create
     
-    questionfile = params[:form]
-      
+  questionfile = params[:form]
   doc=Nokogiri::XML(File.open(questionfile.fetch(:xmlfile).path));
   questions=doc.xpath('/quiz/question');
-
   questions.each do |question|
-  ex = Exercise.new
-  title_ex    = question.xpath('./name/text')[0].content
-  question_ex = question.xpath('./questiontext/text')[0].content
-  if !question.xpath('.//generalfeedback/text').empty?
-     feedback_ex = question.xpath('.//generalfeedback/text')[0].content
-  else 
-     feedback_ex = ""
-  end  
+    ex = Exercise.new
+    title_ex    = question.xpath('./name/text')[0].content
+    question_ex = question.xpath('./questiontext/text')[0].content
+    if !question.xpath('.//generalfeedback/text').empty?
+      feedback_ex = question.xpath('.//generalfeedback/text')[0].content
+    else 
+      feedback_ex = ""
+    end  
   
-  if !question.xpath('.//defaultgrade').empty?
-     priority_ex = question.xpath('.//defaultgrade')[0].content
-  else 
-     priority_ex = 1.to_s
-  end
+    if !question.xpath('.//defaultgrade').empty?
+      priority_ex = question.xpath('.//defaultgrade')[0].content
+    else 
+      priority_ex = 1.to_s
+    end
 
-  if !question.xpath('.//penalty').empty?
-    discrimination_ex = question.xpath('.//penalty')[0].content
-  else 
-     discrimination_ex = 0.to_s
-  end
+    if !question.xpath('.//penalty').empty?
+      discrimination_ex = question.xpath('.//penalty')[0].content
+    else 
+      discrimination_ex = 0.to_s
+    end
 
-  if !question.xpath('.//graderinfo').empty?
-    gradertext_ex=question.xpath('.//graderinfo/text')[0].content
-  else 
-     gradertext_ex = ""
-  end
-    
-    
+    if !question.xpath('.//graderinfo').empty?
+      gradertext_ex=question.xpath('.//graderinfo/text')[0].content
+    else 
+      gradertext_ex = ""
+    end
+      
     ex.question_type = 2
     ex.title = title_ex
     ex.question = question_ex
@@ -313,20 +300,18 @@ end
     ex.mcq_allow_multiple = false
     ex.mcq_is_scrambled = false
     ex.priority =  priority_ex
+    #TODO Get the count of attempts from the session
     ex.count_attempts = 1
     ex.count_correct = 1
-
     ex.user_id = current_user.id
-   
     ex.experience = 20
           
     #default IRT statistics
     ex.difficulty = 5
     ex.discrimination = discrimination_ex
-
     ex.save!
-    end
-    redirect_to exercises_url, notice: "Uploaded!"
+  end
+  redirect_to exercises_url, notice: "Uploaded!"
 end
   # GET/POST /practice/1
   def practice
@@ -339,6 +324,14 @@ end
         @answers = @exercise.serve_choice_array
         @responses = ["There are no responses yet!"]
         @explain = ["There are no explanations yet!"]
+        
+        # EOL stands for end of line
+        # @wexs is the variable to hold the list of exercises of this workout yet to be attempted by the user apart from the current exercise
+        if params[:wexes] != "EOL" 
+          @wexs = params[:wexes] || session[:remaining_wexes]
+        else
+          @wexs = nil
+        end
       end
     else
       redirect_to exercises_url, notice: 'Choose an exercise to practice!'
@@ -379,8 +372,20 @@ end
         count_submission()
         @xp = @exercise.experience_on(@responses,session[:submit_num])
         record_attempt(@score,@xp)
-
-        render layout: 'two_columns'
+        if !params[:wexes].nil?
+          session[:remaining_wexes]=params[:wexes]
+          if params[:wexes][1..-1].count<1
+            # @wexs set to EOL if it has reached the last exercise in the workout. Its is set to EOL instead of null to distinguish from the latter
+            @wexs = String.new("EOL")
+          else
+            @wexs = params[:wexes][1..-1]
+          end
+          redirect_to exercise_practice_path(:id => params[:wexes].first, :wexes => @wexs) and return
+        else 
+          session[:wexes]=nil
+          session[:remaining_wexes]=nil
+          render layout: 'two_columns'
+        end
       end
     else
       redirect_to exercises_url, notice: 'Choose an exercise to practice!'
@@ -412,7 +417,6 @@ end
 
     # Only allow a trusted parameter "white list" through.
     def exercise_params
-      #params[:exercise]
       params.permit(:title, :question, :feedback, :is_public, :priority, :type,
         :mcq_allow_multiple, :mcq_is_scrambled, :language, :area,
         choices_attributes: [:answer,:order,:value,:_destroy],
@@ -437,9 +441,9 @@ end
       attempt.answer = attempt.answer.join(",")
       attempt.score = score
       attempt.experience_earned = exp
-      #TO DO tie attempt to current user session
-      attempt.user_id = 1
+      attempt.user_id = current_user.id
       ex = Exercise.find(params[:id])
+      wkt= Workout.find_by_sql(" SELECT * FROM workouts INNER JOIN exercises_workouts ON workouts.id = exercises_workouts.workout_id and exercises_workouts.exercise_id = #{session[:exercise_id]}")
       ex.attempts << attempt
       attempt.save!      
     end

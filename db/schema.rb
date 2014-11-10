@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20141019134233) do
+ActiveRecord::Schema.define(version: 20141110023518) do
 
   create_table "attempts", force: true do |t|
     t.integer  "user_id",           null: false
@@ -23,6 +23,7 @@ ActiveRecord::Schema.define(version: 20141019134233) do
     t.integer  "experience_earned"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer  "workout_id"
   end
 
   add_index "attempts", ["exercise_id"], name: "index_attempts_on_exercise_id"
@@ -50,6 +51,13 @@ ActiveRecord::Schema.define(version: 20141019134233) do
   add_index "course_enrollments", ["course_role_id"], name: "index_course_enrollments_on_course_role_id"
   add_index "course_enrollments", ["user_id", "course_offering_id"], name: "index_course_enrollments_on_user_id_and_course_offering_id", unique: true
   add_index "course_enrollments", ["user_id"], name: "index_course_enrollments_on_user_id"
+
+  create_table "course_exercises", force: true do |t|
+    t.integer  "course_id"
+    t.integer  "exercise_id"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
 
   create_table "course_offerings", force: true do |t|
     t.integer  "course_id",               null: false
@@ -85,6 +93,7 @@ ActiveRecord::Schema.define(version: 20141019134233) do
 
   add_index "courses", ["organization_id"], name: "index_courses_on_organization_id"
   add_index "courses", ["url_part"], name: "index_courses_on_url_part", unique: true
+
 
   create_table "exercises", force: true do |t|
     t.integer  "user_id",            null: false
@@ -273,11 +282,24 @@ ActiveRecord::Schema.define(version: 20141019134233) do
   add_index "users", ["global_role_id"], name: "index_users_on_global_role_id"
   add_index "users", ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
 
-  create_table "workouts", force: true do |t|
-    t.string   "name",                       null: false
-    t.boolean  "scrambled",  default: false
+  create_table "workout_offerings", force: true do |t|
+    t.integer  "course_offering_id"
+    t.integer  "workout_id"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.date     "opening_date"
+    t.date     "soft_deadline"
+    t.date     "hard_deadline"
+  end
+
+  create_table "workouts", force: true do |t|
+    t.string   "name",              null: false
+    t.boolean  "scrambled",         default: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
+    t.text     "description"
+    t.string   "target_group"
+    t.integer  "points_multiplier"
   end
 
 end

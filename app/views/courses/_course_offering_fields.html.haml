@@ -10,11 +10,6 @@
           = f.input :self_enrollment_allowed, :as => :boolean, 
             :label => "Self enrollment allowed",
             :input_html => { :checked => true }
-      .row
-        .col-md-3
-          = f.input :name, :as => :string,
-            placeholder: "#12345",
-            :input_html => { :class => 'span12', :rows => 1 }
         .col-md-3
           = f.input :label, :as => :string, :required => false,
             placeholder: "MWF 9am",

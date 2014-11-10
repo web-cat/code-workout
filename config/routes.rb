@@ -9,8 +9,7 @@ CodeWorkout::Application.routes.draw do
   get "static_pages/mockup3"
   get "static_pages/typography"
 
-  get 'exercises/upload_exercises' => 'exercises#upload_exercises',
-    as: :upload_exercises
+  get 'exercises/upload_exercises' => 'exercises#upload_exercises',     as: :upload_exercises
   post 'exercises/upload_create' => 'exercises#upload_create'
   get 'exercises/upload_mcqs' => 'exercises#upload_mcqs', as: :upload_mcqs
   post 'exercises/create_mcqs' => 'exercises#create_mcqs'
@@ -50,13 +49,17 @@ CodeWorkout::Application.routes.draw do
     get "/about" => "devise/about#new", as: :about_page
     get "/license" => "devise/license#new", as: :license_page
     get "/contact" => "devise/contact#new", as: :contact_page
-      
+    get "/workouts/new_with_search/:searchkey"  => "workouts#new_with_search", as: :workouts_with_search
+    post "/workouts/new_with_search"  => "workouts#new_with_search", as: :workouts_exercise_search
     post "/signup" => "devise/registrations#create", as: :user_registration
     get "/login" => "devise/sessions#new", as: :new_user_session
     post "/login" => "devise/sessions#create", as: :user_session
     delete "/logout" => "devise/sessions#destroy", as: :destroy_user_session
-    get '/practice/:id' => 'exercises#practice', as: :practice
-    patch '/practice/:id' => 'exercises#evaluate', as: :evaluate
+    get '/practice_workout/:id' => 'workouts#practice_workout', as: :practice_workout
+    get '/practice/:id' => 'exercises#practice', as: :exercise_practice
+    get '/course_offerings/:id/add_workout' => 'course_offerings#add_workout', as: :course_offering_add_workout
+    post "/course_offerings/store_workout/:id" => "course_offerings#store_workout", as: :course_offering_store_workout
+    patch '/practice/:id' => 'exercises#evaluate', as: :exercise_evaluate
     get '/users/:id/performance' => 'users#calc_performance', as: :calc_performance
     post '/exercises/search' => 'exercises#search', as: :search
     get '/gym' => 'workouts#gym', as: :gym

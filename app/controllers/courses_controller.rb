@@ -27,7 +27,7 @@ class CoursesController < ApplicationController
       @course = Course.new
       @course.name = form[:name].to_s
       @course.number = form[:number].to_s
-      @course.save
+      #@course.save
     
       #establish relationships
       org = Organization.find(form[:organization_id])
@@ -37,29 +37,33 @@ class CoursesController < ApplicationController
         org.save
       end
      else
-       redirect_to new_course_path, alert: 'Course offering with this number for this term already exists' and return
+       @course.each do |c|
+         if c.term == offering[:term].to_s
+           redirect_to new_course_path, alert: 'Course offering with this number for this term already exists' and return
+         end
+       end
      end
-    form[:course_offerings_attributes].each do |offering|
+      offering=form[:course_offering]
       tmp = CourseOffering.create
-      tmp.name = offering.second[:name].to_s
-      unless offering.second[:label].nil?
-        tmp.label = offering.second[:label].to_s
+      tmp.name = form[:name].to_s
+      unless offering[:label].nil?
+        tmp.label = offering[:label].to_s
       end
-      unless offering.second[:url].nil?
-        tmp.url = offering.second[:url].to_s
+      unless offering[:url].nil?
+        tmp.url = offering[:url].to_s
       end
-      unless offering.second[:self_enrollment_allowed].nil?
-        tmp.self_enrollment_allowed = offering.second[:self_enrollment_allowed] == "1"
+      unless offering[:self_enrollment_allowed].nil?
+        tmp.self_enrollment_allowed = offering[:self_enrollment_allowed] == "1"
       end
-      unless offering.second[:term_id].nil?
-        tmp.term_id = offering.second[:term_id]
+      unless offering[:term].nil?
+        tmp.term_id = offering[:term].to_i
+        p tmp.term_id
       end
-      tmp.save
       @course.course_offerings << tmp
-    end
-    @course.save!
+    
+      @course.save
 
-    if @course.save
+    if @course.save!
       redirect_to @course, notice: 'Course was successfully created.'
     else
       render action: 'new'
