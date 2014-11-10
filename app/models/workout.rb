@@ -10,9 +10,13 @@
 #
 
 class Workout < ActiveRecord::Base
-	has_and_belongs_to_many :exercises
+  #Converting the 'has_and_belongs_to_many' relationship to a 'has_many through' relationship 
+	#has_and_belongs_to_many :exercises
+	has_many :exercises, through:  :exercise_workouts
+	has_many :exercise_workouts
 	has_and_belongs_to_many :tags
-
+  has_many :course_offerings, through:  :workout_offerings
+  has_many :workout_offerings
 	validates :name,
     presence: true,
     length: {:minimum => 1, :maximum => 50},
