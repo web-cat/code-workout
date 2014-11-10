@@ -25,7 +25,8 @@ class CourseOffering < ActiveRecord::Base
   belongs_to  :course
   belongs_to  :term
   accepts_nested_attributes_for :term
-
+  has_many :workouts, through: :workout_offerings
+  has_many :workout_offerings
   #~ Validation ...............................................................
 
   validates :name, presence: true
