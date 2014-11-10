@@ -6,16 +6,75 @@
     =@course.name + "(" + @course.number + ")"
 .row
   .col-md-12
-    %strong Offerings:
-    -@course.course_offerings.each do |off|
-      .row
-        .col-md-12
-          -#%a{ href: edit_course_offering_path(off), data: { toggle: 'dropdown' } }
-          =link_to off.name, edit_course_offering_path(off)
-            
-        .span12
-          =off.label
+    %div
+      %strong Offerings:
+      %table{border: 1}
+        - @course.course_offerings.each do |off|
+          %tr
+            %td
+              .col-md-12
+                =link_to off.name, course_offering_path(off)
+            %td                
+              .span12
+                =off.label
+            %td                
+              .span12
+                = off.term.display_name                
+            %td    
+              .container-fluid  
+                .navbar-collapse.collapse
+                  %ul.nav.navbar-nav.nav-top
+                    %li.dropdown 
+                      %a.dropdown-toggle{ href: '/workouts', data: { toggle: 'dropdown' },value: 'Workouts' }
+                        Workouts       
+                      %ul.dropdown-menu
+                        %li
+                          .yamm-content
+                            .row
+                              %ul.col-sm-6.list-unstyled
+                                - off.workouts.each do |wkt|
+                                  %div
+                                    %strong
+                                      %li= link_to wkt.name, '/workouts/'+wkt.id.to_s
+                    %li.dropdown 
+                      %a.dropdown-toggle{ href: '/exercises', data: { toggle: 'dropdown' },value: 'Exercises' }
+                        Exercises       
+                      %ul.dropdown-menu
+                        %li
+                          .yamm-content
+                            .row
+                              %ul.col-sm-6.list-unstyled
+                                - @course.exercises.each do |ex|
+                                  %div
+                                    %strong
+                                      %li= link_to ex.title, '/exercises/'+ex.id.to_s
+                    %li.dropdown 
+                      %a.dropdown-toggle{ href: '/exercises', data: { toggle: 'dropdown' },value: 'Exercises' }
+                        Grades       
+                      %ul.dropdown-menu
+                        %li
+                          .yamm-content
+                            .row
+                              %ul.col-sm-6.list-unstyled
+                                
+                    %li.dropdown 
+                      %a.dropdown-toggle{ href: '/exercises', data: { toggle: 'dropdown' },value: 'Exercises' }
+                        Roster       
+                      %ul.dropdown-menu
+                        %li
+                          .yamm-content
+                            .row
+                              %ul.col-sm-6.list-unstyled
+%br
+%br
+%br
+%br
+%br
 
 
+= link_to 'Add an offering', '/courses/new'
+%br   
+%br
+%br     
 = button_link 'Edit', edit_course_path(@course)
 = button_link 'Back', courses_path
