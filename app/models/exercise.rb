@@ -66,6 +66,9 @@ class Exercise < ActiveRecord::Base
   #rhas_and_belongs_to_many :workouts
   has_many :workouts, through:  :exercise_workouts
   has_many :exercise_workouts
+  # Associating with courses through course_exercises
+  has_many    :courses, through: :course_exercises
+  has_many    :course_exercises
   has_many :choices
   has_many :attempts
   accepts_nested_attributes_for :attempts
