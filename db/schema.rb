@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20141019134233) do
+ActiveRecord::Schema.define(version: 20141110023518) do
 
   create_table "attempts", force: true do |t|
     t.integer  "user_id",           null: false
@@ -23,6 +23,7 @@ ActiveRecord::Schema.define(version: 20141019134233) do
     t.integer  "experience_earned"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer  "workout_id"
   end
 
   add_index "attempts", ["exercise_id"], name: "index_attempts_on_exercise_id"
@@ -51,19 +52,23 @@ ActiveRecord::Schema.define(version: 20141019134233) do
   add_index "course_enrollments", ["user_id", "course_offering_id"], name: "index_course_enrollments_on_user_id_and_course_offering_id", unique: true
   add_index "course_enrollments", ["user_id"], name: "index_course_enrollments_on_user_id"
 
+  create_table "course_exercises", force: true do |t|
+    t.integer  "course_id"
+    t.integer  "exercise_id"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
   create_table "course_offerings", force: true do |t|
-    t.integer  "course_id",               null: false
-    t.integer  "term_id",                 null: false
-    t.string   "name",                    null: false
+    t.integer  "course_id"
+    t.integer  "term_id"
+    t.string   "name"
     t.string   "label"
     t.string   "url"
     t.boolean  "self_enrollment_allowed"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
-
-  add_index "course_offerings", ["course_id"], name: "index_course_offerings_on_course_id"
-  add_index "course_offerings", ["term_id"], name: "index_course_offerings_on_term_id"
 
   create_table "course_roles", force: true do |t|
     t.string  "name",                                       null: false
@@ -75,16 +80,22 @@ ActiveRecord::Schema.define(version: 20141019134233) do
   end
 
   create_table "courses", force: true do |t|
-    t.string   "name",            null: false
-    t.string   "number",          null: false
-    t.integer  "organization_id", null: false
-    t.string   "url_part",        null: false
+    t.string   "name"
+    t.string   "number"
+    t.integer  "organization_id"
+    t.string   "url_part"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
 
-  add_index "courses", ["organization_id"], name: "index_courses_on_organization_id"
-  add_index "courses", ["url_part"], name: "index_courses_on_url_part", unique: true
+  create_table "exercise_workouts", force: true do |t|
+    t.integer  "exercise_id"
+    t.integer  "workout_id"
+    t.integer  "ordering"
+    t.float    "points"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
 
   create_table "exercises", force: true do |t|
     t.integer  "user_id",            null: false
@@ -110,24 +121,10 @@ ActiveRecord::Schema.define(version: 20141019134233) do
   add_index "exercises", ["stem_id"], name: "index_exercises_on_stem_id"
   add_index "exercises", ["user_id"], name: "index_exercises_on_user_id"
 
-  create_table "exercises_tags", id: false, force: true do |t|
+  create_table "exercises_tags", force: true do |t|
     t.integer "exercise_id"
     t.integer "tag_id"
   end
-
-  add_index "exercises_tags", ["exercise_id", "tag_id"], name: "index_exercises_tags_on_exercise_id_and_tag_id", unique: true
-
-  create_table "exercises_workouts", force: true do |t|
-    t.integer  "workout_id",  null: false
-    t.integer  "exercise_id", null: false
-    t.integer  "points"
-    t.integer  "order"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-  end
-
-  add_index "exercises_workouts", ["exercise_id"], name: "index_exercises_workouts_on_exercise_id"
-  add_index "exercises_workouts", ["workout_id"], name: "index_exercises_workouts_on_workout_id"
 
   create_table "global_roles", force: true do |t|
     t.string  "name",                                          null: false
@@ -147,14 +144,11 @@ ActiveRecord::Schema.define(version: 20141019134233) do
   add_index "identities", ["user_id"], name: "index_identities_on_user_id"
 
   create_table "organizations", force: true do |t|
-    t.string   "display_name", null: false
-    t.string   "url_part",     null: false
+    t.string   "display_name"
+    t.string   "url_part"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
-
-  add_index "organizations", ["display_name"], name: "index_organizations_on_display_name", unique: true
-  add_index "organizations", ["url_part"], name: "index_organizations_on_url_part", unique: true
 
   create_table "prompts", force: true do |t|
     t.integer  "exercise_id",       null: false
@@ -213,15 +207,13 @@ ActiveRecord::Schema.define(version: 20141019134233) do
   add_index "tags_workouts", ["workout_id"], name: "index_tags_workouts_on_workout_id"
 
   create_table "terms", force: true do |t|
-    t.integer  "season",     null: false
-    t.date     "starts_on",  null: false
-    t.date     "ends_on",    null: false
-    t.integer  "year",       null: false
+    t.integer  "season"
+    t.date     "starts_on"
+    t.date     "ends_on"
+    t.integer  "year"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
-
-  add_index "terms", ["starts_on"], name: "index_terms_on_starts_on"
 
   create_table "test_cases", force: true do |t|
     t.string   "test_script", null: false
@@ -259,11 +251,24 @@ ActiveRecord::Schema.define(version: 20141019134233) do
   add_index "users", ["global_role_id"], name: "index_users_on_global_role_id"
   add_index "users", ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
 
-  create_table "workouts", force: true do |t|
-    t.string   "name",                       null: false
-    t.boolean  "scrambled",  default: false
+  create_table "workout_offerings", force: true do |t|
+    t.integer  "course_offering_id"
+    t.integer  "workout_id"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.date     "opening_date"
+    t.date     "soft_deadline"
+    t.date     "hard_deadline"
+  end
+
+  create_table "workouts", force: true do |t|
+    t.string   "name",                              null: false
+    t.boolean  "scrambled",         default: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
+    t.text     "description"
+    t.string   "target_group"
+    t.integer  "points_multiplier"
   end
 
 end
