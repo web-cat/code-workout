@@ -14,7 +14,7 @@
                   %ul.col-sm-6.list-unstyled
                     %li
                       %strong
-                        Workouts
+                        = link_to 'Workouts','/workouts'
                     %li= link_to 'Workout 1', '/workouts/1'
                     %li= link_to 'Workout 3', '/workouts/3'
                   %ul.col-sm-6.list-unstyled
@@ -28,8 +28,8 @@
                     %li
                       %strong
                         = link_to 'Exercises','/exercises' 
-                    %li= link_to 'Upload Exercises - CSV', 'exercises/upload_exercises'
-                    %li= link_to 'Upload Exercises - MCQ', 'exercises/upload_mcqs'
+                    %li= link_to 'Upload Exercises-CSV', '/exercises/upload_mcqs'
+                    %li= link_to 'Upload Exercises-XML', '/exercises/upload_exercises'
                   %ul.col-sm-6.list-unstyled
                     %li
                       %strong
