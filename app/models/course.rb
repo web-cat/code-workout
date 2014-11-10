@@ -22,6 +22,9 @@ class Course < ActiveRecord::Base
 
   belongs_to  :organization
   has_many    :course_offerings
+  # Associating with exercises through course_exercises
+  has_many    :exercises, through: :course_exercises
+  has_many    :course_exercises
 
   accepts_nested_attributes_for :course_offerings, :allow_destroy => true
   

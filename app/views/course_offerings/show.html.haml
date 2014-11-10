@@ -5,9 +5,9 @@
   = @course_offering.course_id
 
 %p
-  %strong Term:
-  = @course_offering.term_id
-
+  %strong Term -
+  = Term.find(@course_offering.term_id).display_name
+  
 %p
   %strong Name:
   = @course_offering.name
@@ -23,6 +23,73 @@
 %p
   %strong Self enrollment allowed:
   = @course_offering.self_enrollment_allowed
+  %p
+  %strong 
+  = link_to 'Add workouts', course_offering_add_workout_path(@course_offering)
+  
+%div
+  .container-fluid  
+    .navbar-collapse.collapse
+      %ul.nav.navbar-nav.nav-top
+        %li.dropdown 
+          %a.dropdown-toggle{ href: '/workouts', data: { toggle: 'dropdown' },value: 'Workouts' }
+            Workouts       
+          %ul.dropdown-menu
+            %li
+              .yamm-content
+                .row
+                  %ul.col-sm-6.list-unstyled
+                    - @course_offering.workouts.each do |wkt|
+                      %div
+                        %strong
+                          %li= link_to wkt.name, '/workouts/#{wkt.id}'
+        -#%li.dropdown 
+          -#%a.dropdown-toggle{ href: '/exercises', data: { toggle: 'dropdown' },value: 'Exercises' }
+            -#Exercises       
+          -#%ul.dropdown-menu
+            -#%li
+              -#.yamm-content
+                -#.row
+                  -#%ul.col-sm-6.list-unstyled
+                    -#- @course_offering.exercises.each do |ex|
+                      -#%div
+                        -#%strong
+                          -#%li= link_to ex.title, '/exercises/#{ex.id}'
+        %li.dropdown 
+          %a.dropdown-toggle{ href: '/exercises', data: { toggle: 'dropdown' },value: 'Exercises' }
+            Grades       
+          %ul.dropdown-menu
+            %li
+              .yamm-content
+                .row
+                  %ul.col-sm-6.list-unstyled
+                      
+        %li.dropdown 
+          %a.dropdown-toggle{ href: '/exercises', data: { toggle: 'dropdown' },value: 'Exercises' }
+            Roster       
+          %ul.dropdown-menu
+            %li
+              .yamm-content
+                .row
+                  %ul.col-sm-6.list-unstyled
 
+%br
+%br
+
+%br
+%br
+%br
+%br
+%br
+%br
+%br
+%br
+
+%br
+%br
+%br
+%br
+%br
+%br
 = button_link 'Edit', edit_course_offering_path(@course_offering)
 = button_link 'Back', course_offerings_path
