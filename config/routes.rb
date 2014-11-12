@@ -1,7 +1,5 @@
 CodeWorkout::Application.routes.draw do
 
-  resources :workouts
-
   root 'static_pages#home'
 
   get "static_pages/home"
@@ -36,6 +34,8 @@ CodeWorkout::Application.routes.draw do
   resources :about
   resources :license
   resources :contact
+  resources :resource_files
+  resources :workouts
 
   
   #OmniAuth for Facebook

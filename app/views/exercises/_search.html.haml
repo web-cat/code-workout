@@ -1,19 +1,12 @@
--#%form.form-search
--#  %input.input-medium.search-query{ type: 'text', placeholder: 'find topics ...' }
--#  %button.btn.btn-default{ type: 'submit' }
--#    %i.fa.fa-search
--#    Search
-
-= form_tag controller: "exercises", action: "search", method: "get"  do
-  .row
+= form_tag controller: "exercises", action: "search", method: "get",
+  class: "search" do
+  .row.search
     %div{ style: "width: 65%; float: left; padding-left: 25px;" }
       = text_field_tag :search, params[:search], id: "search_field",
-        class: "input input-medium form-control col-md-8",
-        placeholder: "find exercises with tag...",
+        class: "input input-medium form-control col-md-8 search-query",
+        placeholder: "search exercises...",
         style: "vertical-align: top;"
     %div{ style: "float: left;" }
       = content_tag :button, type: :submit, class: "btn btn-inverse btn-sm" do
         %i.fa.fa-search
         Search
-
-  -# = submit_tag "Search", :name => nil, :class => "button.btn.btn-default"

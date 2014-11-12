@@ -44,6 +44,7 @@ class User < ActiveRecord::Base
   has_many    :course_offerings, through: :course_enrollments
   has_many    :attempts
   has_many    :tag_user_scores
+  has_many    :resource_files
 #  has_many    :assignment_offerings, through: :course_offerings
 
 

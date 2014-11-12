@@ -22,7 +22,8 @@ html, body { height: 100%; }
 .navbar .nav > li.nav-text { padding: 8px 9px 0 0; }
 .navbar { min-height: 44px; }
 .navbar .nav-top { margin-top: 4px; }
-
+.navbar .form-control.search-query { padding: 0 6px; }
+.navbar .search .btn-sm {  padding: 7px 10px; }
 
 /* Codemirror */
 

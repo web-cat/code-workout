@@ -60,15 +60,18 @@ ActiveRecord::Schema.define(version: 20141110023518) do
   end
 
   create_table "course_offerings", force: true do |t|
-    t.integer  "course_id"
-    t.integer  "term_id"
-    t.string   "name"
+    t.integer  "course_id",               null: false
+    t.integer  "term_id",                 null: false
+    t.string   "name",                    null: false
     t.string   "label"
     t.string   "url"
     t.boolean  "self_enrollment_allowed"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
+
+  add_index "course_offerings", ["course_id"], name: "index_course_offerings_on_course_id"
+  add_index "course_offerings", ["term_id"], name: "index_course_offerings_on_term_id"
 
   create_table "course_roles", force: true do |t|
     t.string  "name",                                       null: false
@@ -80,22 +83,17 @@ ActiveRecord::Schema.define(version: 20141110023518) do
   end
 
   create_table "courses", force: true do |t|
-    t.string   "name"
-    t.string   "number"
-    t.integer  "organization_id"
-    t.string   "url_part"
+    t.string   "name",            null: false
+    t.string   "number",          null: false
+    t.integer  "organization_id", null: false
+    t.string   "url_part",        null: false
     t.datetime "created_at"
     t.datetime "updated_at"
   end
 
-  create_table "exercise_workouts", force: true do |t|
-    t.integer  "exercise_id"
-    t.integer  "workout_id"
-    t.integer  "ordering"
-    t.float    "points"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-  end
+  add_index "courses", ["organization_id"], name: "index_courses_on_organization_id"
+  add_index "courses", ["url_part"], name: "index_courses_on_url_part", unique: true
+
 
   create_table "exercises", force: true do |t|
     t.integer  "user_id",            null: false
@@ -121,10 +119,29 @@ ActiveRecord::Schema.define(version: 20141110023518) do
   add_index "exercises", ["stem_id"], name: "index_exercises_on_stem_id"
   add_index "exercises", ["user_id"], name: "index_exercises_on_user_id"
 
-  create_table "exercises_tags", force: true do |t|
+  create_table "exercises_resource_files", id: false, force: true do |t|
+    t.integer "exercise_id",      null: false
+    t.integer "resource_file_id", null: false
+  end
+
+  create_table "exercises_tags", id: false, force: true do |t|
     t.integer "exercise_id"
     t.integer "tag_id"
   end
+
+  add_index "exercises_tags", ["exercise_id", "tag_id"], name: "index_exercises_tags_on_exercise_id_and_tag_id", unique: true
+
+  create_table "exercises_workouts", force: true do |t|
+    t.integer  "workout_id",  null: false
+    t.integer  "exercise_id", null: false
+    t.integer  "points"
+    t.integer  "order"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "exercises_workouts", ["exercise_id"], name: "index_exercises_workouts_on_exercise_id"
+  add_index "exercises_workouts", ["workout_id"], name: "index_exercises_workouts_on_workout_id"
 
   create_table "global_roles", force: true do |t|
     t.string  "name",                                          null: false
@@ -144,11 +161,14 @@ ActiveRecord::Schema.define(version: 20141110023518) do
   add_index "identities", ["user_id"], name: "index_identities_on_user_id"
 
   create_table "organizations", force: true do |t|
-    t.string   "display_name"
-    t.string   "url_part"
+    t.string   "display_name", null: false
+    t.string   "url_part",     null: false
     t.datetime "created_at"
     t.datetime "updated_at"
   end
+
+  add_index "organizations", ["display_name"], name: "index_organizations_on_display_name", unique: true
+  add_index "organizations", ["url_part"], name: "index_organizations_on_url_part", unique: true
 
   create_table "prompts", force: true do |t|
     t.integer  "exercise_id",       null: false
@@ -170,6 +190,15 @@ ActiveRecord::Schema.define(version: 20141110023518) do
 
   add_index "prompts", ["exercise_id"], name: "index_prompts_on_exercise_id"
   add_index "prompts", ["language_id"], name: "index_prompts_on_language_id"
+
+  create_table "resource_files", force: true do |t|
+    t.string   "filename"
+    t.string   "token"
+    t.integer  "user_id"
+    t.boolean  "public",     default: true
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
 
   create_table "stems", force: true do |t|
     t.text     "preamble"
@@ -207,13 +236,15 @@ ActiveRecord::Schema.define(version: 20141110023518) do
   add_index "tags_workouts", ["workout_id"], name: "index_tags_workouts_on_workout_id"
 
   create_table "terms", force: true do |t|
-    t.integer  "season"
-    t.date     "starts_on"
-    t.date     "ends_on"
-    t.integer  "year"
+    t.integer  "season",     null: false
+    t.date     "starts_on",  null: false
+    t.date     "ends_on",    null: false
+    t.integer  "year",       null: false
     t.datetime "created_at"
     t.datetime "updated_at"
   end
+
+  add_index "terms", ["starts_on"], name: "index_terms_on_starts_on"
 
   create_table "test_cases", force: true do |t|
     t.string   "test_script", null: false
@@ -262,7 +293,7 @@ ActiveRecord::Schema.define(version: 20141110023518) do
   end
 
   create_table "workouts", force: true do |t|
-    t.string   "name",                              null: false
+    t.string   "name",              null: false
     t.boolean  "scrambled",         default: false
     t.datetime "created_at"
     t.datetime "updated_at"

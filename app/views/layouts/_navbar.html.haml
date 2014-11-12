@@ -1,12 +1,12 @@
 %header.navbar.yamm.navbar-inverse.navbar-fixed-top
   .container-fluid
     .navbar-header
-      = link_to 'CodeWorkout', root_path, class: 'navbar-brand'      
+      = link_to 'CodeWorkout', root_path, class: 'navbar-brand'
     .navbar-collapse.collapse
       %ul.nav.navbar-nav.nav-top
-        %li.dropdown 
+        %li.dropdown
           %a.dropdown-toggle{ href: '/gym', data: { toggle: 'dropdown' },value: 'Gym' }
-            Gym        
+            Gym
           %ul.dropdown-menu
             %li
               .yamm-content
@@ -14,7 +14,7 @@
                   %ul.col-sm-6.list-unstyled
                     %li
                       %strong
-                        = link_to 'Workouts','/workouts'
+                        Workouts
                     %li= link_to 'Workout 1', '/workouts/1'
                     %li= link_to 'Workout 3', '/workouts/3'
                   %ul.col-sm-6.list-unstyled
@@ -27,18 +27,18 @@
                   %ul.col-sm-6.list-unstyled
                     %li
                       %strong
-                        = link_to 'Exercises','/exercises' 
-                    %li= link_to 'Upload Exercises-CSV', '/exercises/upload_mcqs'
-                    %li= link_to 'Upload Exercises-XML', '/exercises/upload_exercises'
+                        = link_to 'Exercises','/exercises'
+                    %li= link_to 'Upload Exercises - CSV', 'exercises/upload_exercises'
+                    %li= link_to 'Upload Exercises - MCQ', 'exercises/upload_mcqs'
                   %ul.col-sm-6.list-unstyled
                     %li
                       %strong
                         Manage Exercises
                     %li= link_to 'Edit Exercise', '/exercises/edit'
                     %li= link_to 'Create Exercise', '/exercises/new'
-        %li.dropdown 
+        %li.dropdown
           %a.dropdown-toggle{ href: '/courses', data: { toggle: 'dropdown' },value: 'Gym' }
-            Course        
+            Course
           %ul.dropdown-menu
             %li
               .yamm-content
@@ -65,10 +65,6 @@
         %li
           = render :partial => 'exercises/search'
         - if user_signed_in?
-          %li.hidden-phone
-            = link_to '#' do
-              %span.badge.badge-info 3
-              Alerts
           - if current_user.global_role.can_edit_system_configuration?
             %li.dropdown
               %a.dropdown-toggle{ href: '#', data: { toggle: 'dropdown' } }
@@ -86,9 +82,9 @@
             = link_to destroy_user_session_path, method: :delete do
               %i.fa.fa-sign-out
         - else
-          %li.dropdown 
+          %li.dropdown
             %a.dropdown-toggle{ href: '/signin', data: { toggle: 'dropdown' },value: 'Gym' }
-              Sign in        
+              Sign in
             %ul.dropdown-menu
               %li
                 %li= link_to image_tag('FacebookButton_post-image.jpg'), user_omniauth_authorize_path(:facebook)
