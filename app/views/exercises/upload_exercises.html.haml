@@ -1,0 +1,3 @@
+= form_tag '/exercises/upload_create', multipart: true do
+  = file_field( "form", "xmlfile" )
+  = submit_tag "Submit File"
