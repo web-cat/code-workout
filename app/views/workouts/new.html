@@ -1,0 +1,363 @@
+<style type="text/css">
+
+	.course-date {
+
+		float: left;
+		width:47%;
+		padding-left:0px;
+		padding-right:0px;
+	}
+
+	.course-time {
+
+		float: right;
+		width:47%;
+		padding-left:0px;
+		padding-right:0px;
+	}
+
+	.title, .title.checkbox.label {
+
+		font-weight: bold;
+		font-size:14pt;
+		font-family:Times;
+	}
+	
+	.spacer{
+		padding-top:30px;
+	}
+
+</style>
+
+<h1>Add A New Workout</h1>
+<form class="form-horizontal">
+
+	<div class="form-group title spacer">
+		<label for="wkoutname" class="col-lg-2 title"> Workout Name </label>
+		<div class="col-lg-10">
+			<input class="form-control" name='wkoutname' type='text' placeholder='Name of Workout'>
+		</div>
+	</div>
+
+	<div class="form-group title spacer">
+		<label for="wkoutdes" class="col-lg-2 title"> Workout Description </label>
+		<div class="col-lg-10">
+			<input class="form-control" name='wkoutdes' type='text' placeholder='Workout Description'>
+		</div>
+	</div>
+	<div class="row col-lg-12 title spacer" >
+		Select Workout Dates
+	</div>
+
+	<div class="row">
+		<div class="col-lg-2"></div>
+		<div class="col-lg-10" style="padding-left: 0px; padding-right: 0px;">
+			<div class="row-fluid" style="padding-bottom: 5px;">
+				<div class="col-lg-4 text-center">
+					Active
+				</div>
+				<div class="col-lg-4 text-center">
+					Due
+				</div>
+				<div class="col-lg-4 text-center">
+					Close
+				</div>
+			</div>
+
+		</div>
+
+	</div>
+
+	<div class="row">
+		<div class="col-lg-2 text-left">
+			CRN12345
+		</div>
+
+		<div class="col-lg-10" style="padding-left: 0px; padding-right: 0px;">
+			<div class="row-fluid">
+
+				<div class="col-lg-4">
+					<input class="course-date form-control" name='date' type='text' placeholder='mm/dd/yyyy'>
+					<input class="course-time form-control" name='time' type='text' placeholder='hh:mm'>
+				</div>
+
+				<div class="col-lg-4">
+					<input class="course-date form-control" name='date' type='text' placeholder='mm/dd/yyyy'>
+					<input class="course-time form-control" name='time' type='text' placeholder='hh:mm'>
+				</div>
+
+				<div class="col-lg-4">
+					<input class="course-date form-control" name='date' type='text' placeholder='mm/dd/yyyy'>
+					<input class="course-time form-control" name='time' type='text' placeholder='hh:mm'>
+				</div>
+
+			</div>
+
+		</div>
+
+	</div>
+	
+		<div class="row spacer">
+		<div class="col-lg-2 text-left">
+			CRN56789
+		</div>
+
+		<div class="col-lg-10" style="padding-left: 0px; padding-right: 0px;">
+			<div class="row-fluid">
+
+				<div class="col-lg-4">
+					<input class="course-date form-control" name='date' type='text' placeholder='mm/dd/yyyy'>
+					<input class="course-time form-control" name='time' type='text' placeholder='hh:mm'>
+				</div>
+
+				<div class="col-lg-4">
+					<input class="course-date form-control" name='date' type='text' placeholder='mm/dd/yyyy'>
+					<input class="course-time form-control" name='time' type='text' placeholder='hh:mm'>
+				</div>
+
+				<div class="col-lg-4">
+					<input class="course-date form-control" name='date' type='text' placeholder='mm/dd/yyyy'>
+					<input class="course-time form-control" name='time' type='text' placeholder='hh:mm'>
+				</div>
+
+			</div>
+
+		</div>
+
+	</div>
+</form>
+
+<div class="form-inline">
+	<div class="row spacer" style="padding-left: 0px; padding-right: 0px;">
+		<div class="col-lg-6">
+
+			<div style="float:left;">
+
+				<div class="checkbox" style="padding-right: 30px;">
+					<label for="randomizeq">
+						<input type="checkbox" id="randomizeq">
+						Randomize </label>
+				</div>
+
+				<div class="checkbox">
+					<label for="visibility">
+						<input type="checkbox" id="visibility">
+						Visible </label>
+				</div>
+
+			</div>
+		</div>
+
+		<div class="col-lg-6" >
+			<div class="form-group" style="float:right;">
+				<label for="randomizeq"> Workout Policy </label>
+
+				<select class="form-control">
+					<option value="test">Test</option>
+					<option value="homework">Homework</option>
+					<option value="practice">Practice Test</option>
+					<option value="sample">Sample Test</option>
+				</select>
+			</div>
+		</div>
+
+	</div>
+</div>
+
+<div id="exlist" class="row col-lg-12 title spacer">
+	Excercises in Workout
+</div>
+
+<div class="row spacer" style="border-bottom: 1px solid black; ">
+	<div class="col-lg-6 text-left ">
+		3 Excercises
+	</div>
+
+	<div class="col-lg-6 text-right">
+		30 Pts
+	</div>
+</div>
+
+<style type="text/css">
+	.excercise-row {
+
+	}
+</style>
+<div class="row row-1" style="padding-top: 20px;">
+	<div class="col-lg-10 excercise-row">
+
+		<div style="width: 100%; padding-left: 70px; padding-right: 25px;">
+
+			<div style="position: absolute; left: 0px;">
+				<span class="glyphicon glyphicon-chevron-up" ></span>
+			</div>
+
+			<div style="position:absolute; bottom: 0px; left: 0px;">
+				<span class="glyphicon glyphicon-chevron-down" ></span>
+			</div>
+
+			<div style="position:absolute; left:28px; top:50%; margin-top:-11px;">
+				<input type="text" style="width:30px; height:25px;" />
+			</div>
+
+			<div style="position: absolute; left:32px;" class="text-center">
+				1.
+			</div>
+			<div style="position:absolute; right:0px;">
+				<span class="glyphicon glyphicon-plus-sign add-new-excercise-toggle" 
+					data-toggle="collapse" data-target=".row-1 .add-new-excercise"></span>
+			</div>
+
+			<div style="position:absolute; right:0px; top:50%;">
+				<span class="glyphicon glyphicon-remove-circle" title="Remove this Excercise" style="top:-11px"></span>
+			</div>
+
+			<div style="position:absolute; bottom: 0px; right: 0px;">
+				<span class="glyphicon glyphicon-plus-sign add-new-excercise-toggle"
+					data-toggle="collapse" data-target=".row-1 .add-new-excercise"></span>
+			</div>
+
+			<h3>Excercise One</h3>
+			<p>
+				Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the
+				industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and
+				scrambled it to make a type specimen book. It has survived not only five centuries
+			</p>
+
+		</div>
+
+	</div>
+
+	<div class="col-lg-2">
+		<div class="list-group add-new-excercise collapse">
+				<a class="list-group-item" href="#">Search for an Excercise</a>
+				<a class="list-group-item" href="#">Create a New Excercise</a>
+			
+		</div>
+	</div>
+</div>
+
+<div style="width: 100%; height: 20px; clear: both"></div>
+<div class="row row-2" >
+	<div class="col-lg-10 excercise-row">
+
+		<div style="width: 100%; padding-left: 70px; padding-right: 25px;">
+
+			<div style="position: absolute; left: 0px;">
+				<span class="glyphicon glyphicon-chevron-up" ></span>
+			</div>
+
+			<div style="position:absolute; bottom: 0px; left: 0px;">
+				<span class="glyphicon glyphicon-chevron-down" ></span>
+			</div>
+
+			<div style="position:absolute; left:28px; top:50%; margin-top:-11px;">
+				<input type="text" style="width:30px; height:25px;" />
+			</div>
+
+			<div style="position: absolute; left:32px;" class="text-center">
+				2.
+			</div>
+			<div style="position:absolute; right:0px;">
+				<span class="glyphicon glyphicon-plus-sign add-new-excercise-toggle"
+					data-toggle="collapse" data-target=".row-2 .add-new-excercise"></span>
+			</div>
+
+			<div style="position:absolute; right:0px; top:50%;">
+				<span class="glyphicon glyphicon-remove-circle" title="Remove this Excercise" style="top:-11px"></span>
+			</div>
+
+			<div style="position:absolute; bottom: 0px; right: 0px;">
+				<span class="glyphicon glyphicon-plus-sign add-new-excercise-toggle"
+					data-toggle="collapse" data-target=".row-2 .add-new-excercise"></span>
+			</div>
+
+			<h3>Excercise Two</h3>
+			<p>
+				Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the
+				industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and
+				scrambled it to make a type specimen book. It has survived not only five centuries
+			</p>
+
+		</div>
+
+	</div>
+
+	<div class="col-lg-2">
+
+		<div class="list-group add-new-excercise collapse">
+			<a class="list-group-item" href="#">Search for an Excercise</a>
+			<a class="list-group-item" href="#">Create a New Excercise</a>
+			
+		</div>
+	</div>
+</div>
+
+<div style="width: 100%; height: 20px; clear: both"></div>
+<div class="row row-3" style="padding-top: 20px;">
+	<div class="col-lg-10 excercise-row">
+
+		<div style="width: 100%; padding-left: 70px; padding-right: 25px; ">
+
+			<div style="position: absolute; left: 0px;">
+				<span class="glyphicon glyphicon-chevron-up" ></span>
+			</div>
+
+			<div style="position:absolute; bottom: 0px; left: 0px;">
+				<span class="glyphicon glyphicon-chevron-down" ></span>
+			</div>
+
+			<div style="position:absolute; left:28px; top:50%; margin-top:-11px;">
+				<input type="text" style="width:30px; height:25px;" />
+			</div>
+
+			<div style="position: absolute; left:32px;" class="text-center">
+				3.
+			</div>
+			<div style="position:absolute; right:0px;">
+				<span class="glyphicon glyphicon-plus-sign add-new-excercise-toggle"
+					data-toggle="collapse" data-target=".row-3 .add-new-excercise"></span>
+			</div>
+
+			<div style="position:absolute; right:0px; top:50%;">
+				<span class="glyphicon glyphicon-remove-circle"  title="Remove this Excercise" style="top:-11px"></span>
+			</div>
+
+			<div style="position:absolute; bottom: 0px; right: 0px;">
+				<span class="glyphicon glyphicon-plus-sign add-new-excercise-toggle"
+					data-toggle="collapse" data-target=".row-3 .add-new-excercise"></span>
+			</div>
+
+			<h3>Excercise Three</h3>
+			<p>
+				Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the
+				industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and
+				scrambled it to make a type specimen book. It has survived not only five centuries
+			</p>
+
+		</div>
+
+	</div>
+
+	<div class="col-lg-2">
+		
+		<div class="list-group add-new-excercise collapse">
+			<a class="list-group-item" href="#">Search for an Excercise</a>
+			<a class="list-group-item" href="#">Create a New Excercise</a>
+			
+		</div>
+
+	</div>
+</div>
+
+<div class="row">
+	<br>
+	</br>
+</div>
+<div style="height: 60px;"></div>
+
+<script type="text/javascript">
+	$(function() {
+		$('.add-new-excercise-toggle').collapse({ toggle: true });
+	});
+</script>

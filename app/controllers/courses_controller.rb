@@ -1,5 +1,5 @@
 class CoursesController < ApplicationController
-  before_action :set_course, only: [:show, :edit, :update, :destroy]
+  before_action :set_course, only: [:show, :show2, :edit, :update, :destroy]
 
   # GET /courses
   def index
@@ -8,6 +8,10 @@ class CoursesController < ApplicationController
 
   # GET /courses/1
   def show
+  end
+  
+  # GET /courses/show2
+  def show2
   end
 
   # GET /courses/new
