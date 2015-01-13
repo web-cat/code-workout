@@ -1,0 +1,106 @@
+<script type="text/javascript">
+		$(function() {
+	$('#create-new-post').click(function() {
+	$('.create-post').toggle();
+	})
+
+	$('#reply-post').click(function() {
+	$(this).parents('.discussion-post').find('.reply-post').toggle();
+	})
+	$('.post-reply').click(function() {
+	    var form = $(this).parents('form');
+	    form.hide();
+	var text = form.find('textarea').val();
+	var discussionSummary = form.parent().find('.discussion-summary');
+	$('<div>' + text + '</div>').insertAfter(discussionSummary)
+	});
+
+	$('.post-reply-cancel').click(function() {
+	$(this).parents('form').hide();
+	});
+	})</script>
+
+<div class="discussion-wrapper">
+	<div class="discussion-spacer">
+		<h1>Discussion</h1>
+	</div>
+
+	<div class="discussion-post">
+		<div class="discussion-title discussion-spacer">
+			Post Title
+		</div>
+		<div class="discussion-summary">
+			This is the summary for this discussion. It will be truncated...
+		</div>
+		<div>
+			<button type="button" class="btn btn-xs btn-primary" id="reply-post">
+				Reply
+			</button>
+		</div>
+
+		<form class="reply-post" style="display: none;">
+			<div class="form-group">
+				<textarea class="form-control discussion-spacer" rows="5"></textarea>
+			</div>
+			<div>
+				<button type="button" class="btn btn-primary post-reply">
+					Post my Reply
+				</button>
+				<button type="button" class="btn btn-primary post-reply-cancel">
+					Cancel
+				</button>
+			</div>
+		</form>
+
+	</div>
+	<div class="discussion-post">
+		<div class="discussion-title discussion-spacer">
+			Post Title
+		</div>
+		<div class="discussion-summary">
+			This is the summary for this discussion....
+		</div>
+		<div>
+			<button type="button" class="btn btn-xs btn-primary">
+				Reply
+			</button>
+		</div>
+		<form class="reply-post" style="display: none;">
+			<div class="form-group">
+				<textarea class="form-control discussion-spacer" rows="5"></textarea>
+			</div>
+			<div>
+				<button type="button" class="btn btn-primary">
+					Post my Reply
+				</button>
+				<button type="button" class="btn btn-primary">
+					Cancel
+				</button>
+			</div>
+		</form>
+	</div>
+	<div>
+		<button type="button" class="btn btn-primary" id="create-new-post" style="margin-top: 10px;">
+			Create a New Post
+		</button>
+	</div>
+
+	<form class="create-post" style="display: none;">
+		<div class="form-group" style="padding-top: 10px;">
+			<label for="posttitle">Post Title</label>
+			<textarea class="form-control discussion-spacer" id="posttitle" rows="1"></textarea>
+		</div>
+		<div class="form-group">
+			<label for="postbody">Summary</label>
+			<textarea class="form-control discussion-spacer" id="postbody" rows="5"></textarea>
+		</div>
+		<div style="padding-bottom: 10px;">
+			<button type="button" class="btn btn-primary">
+				Post my Question
+			</button>
+			<button type="button" class="btn btn-primary">
+				Cancel
+			</button>
+		</div>
+	</form>
+</div>

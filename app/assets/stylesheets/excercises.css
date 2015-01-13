@@ -1,0 +1,66 @@
+.sidebar {
+	padding-left: 0px;
+	padding-right: 0px;
+	margin: 0px;
+	border-right-width: 2px;
+}
+
+.sidebar .excercise-text {
+	font-size: 10pt;
+}
+.sidebar .spacer {
+	padding-top: 10px;
+}
+.sidebar .excercise-thumbnail-wrapper {
+	line-height: 16px;
+	display: block;
+}
+
+
+.excercise-thumbnail {
+	margin-top: 20px;
+	background-color: #FFFBF5;
+	padding-bottom: 2px;
+	padding-top: 10px;
+}
+
+.excercise-title .glyphicon {
+	margin-left: 33px; 
+	margin-right: 13px;
+	margin-top: 1px;
+}
+
+.spacer {
+	padding-top: 20px;
+}
+
+.excercise-title {
+	font-size: 13pt;
+}
+
+.excercise-text {
+	font-size: 12pt;
+	margin-left: 70px;
+	margin-right: 70px;
+}
+.excercise-tagandpoints {
+	font-size: 11pt;
+	margin-left: 70px;
+}
+.excercise-thumbnail-progress {
+	width: 100%;
+	height: 12px;
+}
+
+.progress-complete{
+	background-color: #9d968d;
+}
+
+.progress-graded{
+	background-color: #78be20;
+}
+
+.excercise-points {
+	float: right; 
+	margin-right: 7px;
+}

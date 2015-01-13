@@ -1,42 +1,52 @@
-%h1 Question: A-level/B-status
-%p
-  What output will the following code fragment produce?     	
+.row  
+  .col-lg-8
+    %h1 Question: A-level/B-status
+    %p
+      What output will the following code fragment produce?     	
+    
+    %pre{ lang: 'text/x-java' }
+      :preserve
+        public void fn()
+        {
+            int grade = 91;
+            int level = -1;
+            if (grade >= 90)
+                if (level <= -2)
+                    System.out.println("A-level");
+            else
+                System.out.println("B-status");
+        }
+    
+    %h2 Select your answer:
+    %form
+      .answers.well.well-sm
+        %label.radio
+          %input{ type: 'radio', name: 'answers', value: 'a' }
+          A-level
+        %label.radio
+          %input{ type: 'radio', name: 'answers', value: 'b' }
+          B-status
+        %label.radio
+          %input{ type: 'radio', name: 'answers', value: 'c' }
+          "A-level"
+        %label.radio
+          %input{ type: 'radio', name: 'answers', value: 'd' }
+          "B-status"
+        %label.radio
+          %input{ type: 'radio', name: 'answers', value: 'e' }
+          no output is produced
+    
+      %button.btn.btn-primary{ type: 'button' }
+        %i.glyphicon.glyphicon-expand
+        Submit
 
-%pre{ lang: 'text/x-java' }
-  :preserve
-    public void fn()
-    {
-        int grade = 91;
-        int level = -1;
-        if (grade >= 90)
-            if (level <= -2)
-                System.out.println("A-level");
-        else
-            System.out.println("B-status");
-    }
+      %button.btn.btn-primary#addhints{ type: 'button' }
+        %i.glyphicon.glyphicon-expand
+        Get a Hint
+    
+     
 
-%h2 Select your answer:
-%form
-  .answers.well.well-sm
-    %label.radio
-      %input{ type: 'radio', name: 'answers', value: 'a' }
-      A-level
-    %label.radio
-      %input{ type: 'radio', name: 'answers', value: 'b' }
-      B-status
-    %label.radio
-      %input{ type: 'radio', name: 'answers', value: 'c' }
-      "A-level"
-    %label.radio
-      %input{ type: 'radio', name: 'answers', value: 'd' }
-      "B-status"
-    %label.radio
-      %input{ type: 'radio', name: 'answers', value: 'e' }
-      no output is produced
-
-  %button.btn.btn-primary{ type: 'button' }
-    %i.glyphicon.glyphicon-expand
-    Check my answer!
-
-  .btn
-    %input{ type: 'submit', value: 'Check my answer!' }
+  .col-lg-4
+    = render partial: 'static_pages/hints'
+   
+= render partial: 'static_pages/discussion_new'

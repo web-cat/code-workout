@@ -13,6 +13,7 @@ html, body { height: 100%; }
 .content, .maincol {
   padding-left: 20px;
   padding-right: 20px;
+  padding-bottom: 40px;
 }
 .row .col-md-3.sidebar { margin-left: 0; }
 .sidebar { padding-left: 25px; }
@@ -104,3 +105,7 @@ ul.wysihtml5-toolbar li {
 .teaser-title p { padding-left: 4px; padding-bottom: 0px; }
 .slim { margin: 0; }
 .one-line{ overflow: hidden; white-space: nowrap; }
+
+#main {
+  margin-bottom: 42px;
+}
