@@ -79,8 +79,18 @@ class WorkoutsController < ApplicationController
     else
       render action: 'new'
     end
-    
-
+  end
+  
+  def evaluate
+    @workout_feedback=session[:workout_feedback].values
+    @current_workout=Workout.find(session[:current_workout])
+    @user_workout_score=WorkoutScore.find_by!(current_user.id,session[:current_workout]).score
+    @max_workout_score=@current_workout.returnTotalWorkoutPoints
+    session[:current_workout]=nil
+    session[:workout_feedback]=nil
+    session[:wexes]=nil
+    session[:remaining_wexes]=nil
+    render layout: 'two_columns'
   end
 
   # PATCH/PUT /workouts/1
@@ -103,6 +113,8 @@ class WorkoutsController < ApplicationController
     wkt = Workout.find(wid)
     ex1 = wkt.exercises.first    
     session[:current_workout]=wid
+    session[:workout_feedback]=Hash.new
+    session[:workout_feedback]['workout']="You have attempted Workout #{wkt.name}"
     session[:wexes]=session[:remaining_wexes]=wkt.exercises.ids[1..-1]
     redirect_to exercise_practice_path(:id => ex1.id, :wexes => wkt.exercises.ids[1..-1])
   end
