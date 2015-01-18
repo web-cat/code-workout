@@ -10,12 +10,12 @@ class CodeError
 
 # constants....
 TYPES = {
-    "warning" => WARNING,
-    "syntax" => SYNTAX,
-    "runtime" => RUNTIME,
-    "exception" => EXCEPTION,
-    "timeout" => TIMEOUT,
-    "failure" => FAILURE,
+    "warning" => @@WARNING,
+    "syntax" => @@SYNTAX,
+    "runtime" => @@RUNTIME,
+    "exception" => @@EXCEPTION,
+    "timeout" => @@TIMEOUT,
+    "failure" => @@FAILURE,
     "other" => 6
 }
 
