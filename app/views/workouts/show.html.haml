@@ -2,11 +2,29 @@
   .col-md-12
     - @workouts.each do |w|
       %h1.col-md-6= link_to w.name, workout_path(:id => w[:id])
-      .col-md-12
+      .col-md-6
         = button_to 'Practice', practice_workout_path(:id => w[:id]), method: :get
       %p.col-md-12.teaser-tags.slim
         - w.all_tags.each do |t|
           =link_to(t, search_path(:search => t), method: :post, class: "tag")
+.row
+  .tabpane
+    %table{border: 1}
+      %tr
+        %td Course Offering
+        %td Active
+        %td Due
+        %td Close
+      - @workouts.first.workout_offerings.each do |woff|
+        %tr
+          %td= CourseOffering.find(woff.course_offering_id).name
+          %td.xeditable{id: 'opening_date', :data => {:type => 'text', :url => '/workout_offerings/'+woff.id.to_s, :resource => 'workout_offering', :name => 'opening_date', :xeditable => "true", :pk => woff.id.to_s, :model => 'workout_offering'}}= woff.opening_date
+          %td.xeditable{id: 'soft_deadline', :data => {:type => 'text', :url => '/workout_offerings/'+woff.id.to_s, :resource => 'workout_offering', :name => 'soft_deadline', :xeditable => "true", :pk => woff.id.to_s, :model => 'workout_offering'}}= woff.soft_deadline
+          %td.xeditable{id: 'hard_deadline', :data => {:type => 'text', :url => '/workout_offerings/'+woff.id.to_s, :resource => 'workout_offering', :name => 'hard_deadline', :xeditable => "true", :pk => woff.id.to_s, :model => 'workout_offering'}}= woff.hard_deadline           
+    %br
+    %br
+    
+%b Workout exercises              
 .row
   .container-fluid.col-md-12
     - if @exs.empty?
