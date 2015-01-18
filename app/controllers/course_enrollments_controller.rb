@@ -8,6 +8,7 @@ class CourseEnrollmentsController < ApplicationController
 
   # GET /course_enrollments/1
   def show
+    @role_text =  CourseRole.find(@course_enrollment.course_role_id).name
   end
 
   # GET /course_enrollments/new
@@ -22,7 +23,6 @@ class CourseEnrollmentsController < ApplicationController
   # POST /course_enrollments
   def create
     @course_enrollment = CourseEnrollment.new(course_enrollment_params)
-
     if @course_enrollment.save
       redirect_to @course_enrollment, notice: 'Course enrollment was successfully created.'
     else
@@ -53,6 +53,6 @@ class CourseEnrollmentsController < ApplicationController
 
     # Only allow a trusted parameter "white list" through.
     def course_enrollment_params
-      params.require(:course_enrollment).permit(:user, :course_offering, :course_role)
+      params.require(:course_enrollment).permit(:user_id, :course_offering_id, :course_role_id)
     end
 end
