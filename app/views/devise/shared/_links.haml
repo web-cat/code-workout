@@ -15,4 +15,4 @@
 
 - if devise_mapping.omniauthable?
   - resource_class.omniauth_providers.each do |provider|
-    = button_link 'Sign in with #{provider.to_s.titleize}', omniauth_authorize_path(resource_name, provider)
+    = button_link 'Sign in with '+provider.to_s.titleize , omniauth_authorize_path(resource_name, provider)
