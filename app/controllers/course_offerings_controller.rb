@@ -1,5 +1,6 @@
 class CourseOfferingsController < ApplicationController
-  before_action :set_course_offering, only: [:show, :edit, :update, :destroy, :add_workout, :store_workout]
+  require 'csv'
+  before_action :set_course_offering, only: [:show, :edit, :update, :destroy, :generate_gradebook, :add_workout, :store_workout]
 
   # GET /course_offerings
   def index
@@ -47,9 +48,19 @@ class CourseOfferingsController < ApplicationController
     redirect_to course_offerings_url, notice: 'Course offering was successfully destroyed.'
   end
   
+  #
+  def generate_gradebook
+    respond_to do |format|
+      format.csv do
+        headers['Content-Disposition']="attachment; filename=\"#{@course_offering.name} Gradebook.csv\""
+        headers['Content-Type']||='text-csv'        
+      end
+    end
+  end
+  
   # GET /course_offerings/:id/add_workout
   def add_workout
-    @workouts=Workout.take(10)
+    @workouts=Workout.all
     @wkts=[]
     @course_offering.workouts.each do |wks|
       @wkts<<wks
