@@ -5,66 +5,107 @@
     %strong
     =@course.name + "(" + @course.number + ")"
 .row
-  .col-md-12
+  .col
     %div
       %strong Offerings:
-      %table{border: 1}
+      %table{:border => 1}
+        %tr
+          %td Section
+          %td Label
+          %td Term
+          %td Instructors
+          %td Graders
         - @course.course_offerings.each do |off|
           %tr
             %td
-              .col-md-12
+              .col
                 =link_to off.name, course_offering_path(off)
             %td                
-              .span12
+              .span
                 =off.label
             %td                
-              .span12
-                = off.term.display_name                
-            %td    
-              .container-fluid  
-                .navbar-collapse.collapse
-                  %ul.nav.navbar-nav.nav-top
-                    %li.dropdown 
-                      %a.dropdown-toggle{ href: '/workouts', data: { toggle: 'dropdown' },value: 'Workouts' }
-                        Workouts       
-                      %ul.dropdown-menu
-                        %li
-                          .yamm-content
-                            .row
-                              %ul.col-sm-6.list-unstyled
-                                - off.workouts.each do |wkt|
-                                  %div
-                                    %strong
-                                      %li= link_to wkt.name, '/workouts/'+wkt.id.to_s
-                    %li.dropdown 
-                      %a.dropdown-toggle{ href: '/exercises', data: { toggle: 'dropdown' },value: 'Exercises' }
-                        Exercises       
-                      %ul.dropdown-menu
-                        %li
-                          .yamm-content
-                            .row
-                              %ul.col-sm-6.list-unstyled
-                                - @course.exercises.each do |ex|
-                                  %div
-                                    %strong
-                                      %li= link_to ex.title, '/exercises/'+ex.id.to_s
-                    %li.dropdown 
-                      %a.dropdown-toggle{ href: '/exercises', data: { toggle: 'dropdown' },value: 'Exercises' }
-                        Grades       
-                      %ul.dropdown-menu
-                        %li
-                          .yamm-content
-                            .row
-                              %ul.col-sm-6.list-unstyled
-                                
-                    %li.dropdown 
-                      %a.dropdown-toggle{ href: '/exercises', data: { toggle: 'dropdown' },value: 'Exercises' }
-                        Roster       
-                      %ul.dropdown-menu
-                        %li
-                          .yamm-content
-                            .row
-                              %ul.col-sm-6.list-unstyled
+              .span
+                = off.term.display_name 
+            %td
+              %ul{ style: 'list-style-type: none; padding: 0; margin: 0;' }
+                - CourseEnrollment.where(course_offering_id: off.id).each do |ce|
+                  - if ce.course_role_id == CourseRole.find_by(name: 'Instructor').id 
+                    %li= User.find(ce.user_id).first_name + " " + User.find(ce.user_id).last_name 
+            %td
+              %ul{ style: 'list-style-type: none; padding: 0; margin: 0;' }
+                - CourseEnrollment.where(course_offering_id: off.id).each do |ce|
+                  - if ce.course_role_id == CourseRole.find_by(name: 'Grader').id 
+                    %li= User.find(ce.user_id).first_name + " " + User.find(ce.user_id).last_name 
+
+
+.container-fluid  
+  .navbar-collapse.collapse
+    %ul.nav.nav-tabs
+      %li.active 
+        %a{ href: '#wkts', data: { toggle: "tab" },value: 'Workout' }
+          Workout
+      %li
+        %a{ href: '#exers', data: { toggle: "tab" },value: 'Exercises' }
+          Exercises
+      %li 
+        %a{ href: '#grdes', data: { toggle: "tab" },value: 'Exercises' }
+          Grades       
+      %li 
+        %a{ href: '#rostr', data: { toggle: 'tab' },value: 'Exercises' }
+          Roster
+        
+%div.tab-content
+  .tab-pane.fade.in.active{:id => 'wkts'}
+    %ul
+    - @course.course_offerings.each do |off|
+      - off.workouts.each do |wkt|
+        %li= link_to wkt.name, '/workouts/'+wkt.id.to_s         
+  .tab-pane.fade{:id => 'exers'}
+    %ul
+    - @course.exercises.each do |ex|
+      %div
+        %strong
+          %li= link_to ex.title, '/exercises/'+ex.id.to_s
+  .tab-pane.fade{:id => 'grdes'}
+    = button_to 'Download entire course gradebook', course_gradebook_path(@course,format: :csv)
+    - @course.course_offerings.each do |off|
+      %br
+      %b= off.name
+      %table{border: 1}
+        %tr
+          %td First name
+          %td Last name         
+          - CourseOffering.find(off.id).workouts.each do |wkt|
+            %td= wkt.name
+          %td Total        
+        - CourseEnrollment.where(course_offering_id: off.id).each do |ce|
+          - if ce.course_role_id == CourseRole.find_by(name: 'Student').id 
+            %tr
+              %td= User.find(ce.user_id).first_name   
+              %td= User.find(ce.user_id).last_name
+              - grand_total = 0.0
+              - CourseOffering.find(off.id).workouts.each do |wkt|
+                - if !WorkoutOffering.find_by(course_offering_id: off.id, workout_id: wkt.id).nil?
+                  - if !Attempt.where(user_id: ce.user_id, workout_offering_id: WorkoutOffering.find_by(course_offering_id: off.id, workout_id: wkt.id).id).blank?
+                    - tot = WorkoutScore.find_by!(user_id: ce.user_id, workout_id: wkt.id).score
+                    %td= tot
+                    - grand_total += tot    
+                  - else
+                    %td -/-
+              %td= grand_total
+      %p= button_to 'Download class gradebook', course_offering_gradebook_path(off,format: :csv)       
+      
+  .tab-pane.fade{:id => 'rostr'}
+    - @course.course_offerings.each do |off|
+      %b= off.name  
+      %ul
+        - @sec = CourseEnrollment.where(course_offering_id: off.id).page(params[:page]).per(params[:per]) 
+        #rosterer
+          = render 'roster', sec: @sec
+        #roster_paginator
+          = paginate @sec
+      %br               
+              
 %br
 %br
 %br
