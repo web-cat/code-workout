@@ -14,6 +14,8 @@ class Workout < ActiveRecord::Base
 	#has_and_belongs_to_many :exercises
 	has_many :exercises, through:  :exercise_workouts
 	has_many :exercise_workouts
+	has_many :users, through: :workout_scores
+	has_many :workout_scores
 	has_and_belongs_to_many :tags
   has_many :course_offerings, through:  :workout_offerings
   has_many :workout_offerings
@@ -26,7 +28,7 @@ class Workout < ActiveRecord::Base
         'letters, digits, hyphens (-), underscores (_), spaces ( ), colons (:) ' \
         ' and periods (.).'
     }
-
+  paginates_per 1
 
   def add_exercise(ex_id)
     duplicate = self.exercises.bsearch{|x| x.id == ex_id}
@@ -38,6 +40,16 @@ class Workout < ActiveRecord::Base
         self.order = self.exercises.size
       end
     end
+  end
+  
+  #return the totals points of the exercises in the current workout.
+  def returnTotalWorkoutPoints
+    total_points=0.0
+    exers=self.exercises
+    exers.each do |ex|
+      total_points+=ExerciseWorkout.findExercisePoints(ex.id,self.id)  
+    end
+    return total_points 
   end
 
   # returns a hash of exercise experience points (XP) with {:scored => ___, :total => ___, :percent => ____}
