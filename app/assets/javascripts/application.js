@@ -14,6 +14,8 @@
 //= require jquery
 //= require jquery_ujs
 //= require bootstrap-sprockets
+//= require bootstrap-editable
+//= require bootstrap-editable-rails
 //= require js-routes
 //= require codemirror
 //= require codemirror/modes/clike
@@ -61,7 +63,7 @@ function percentBar(filled, capacity, id) {
   gradient.addColorStop(0,"#3da2b4");
   gradient.addColorStop(1,"white");
 
-  text.textBaseline="middle"
+  text.textBaseline="middle";
   text.fillText("Text is here to stay",0,myCanvas.height/2);
 
   back.fillStyle="#000000";
@@ -72,3 +74,12 @@ function percentBar(filled, capacity, id) {
   back.fillRect(0,0,fillW,h);
   
 }
+$.fn.editable.defaults.mode = 'inline';
+
+$(function(){
+	$('input:checked').removeAttr('checked');	
+});
+
+$(document).ready(function() {
+  $('.xeditable').editable();
+});
