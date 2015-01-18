@@ -4,6 +4,7 @@ class ExercisesController < ApplicationController
   require 'csv'
   include ActionView::Helpers::JavaScriptHelper
 
+
   before_action :set_exercise, only: [:show, :edit, :update, :destroy]
 
   # GET /exercises
@@ -42,23 +43,33 @@ class ExercisesController < ApplicationController
 
   # POST /exercises
   def create
+    basex=BaseExercise.new
     ex = Exercise.new
-    msg = params[:exercise]
-    ex.question_type = 1
+    msg = params[:exercise]    
+    basex.user_id=current_user.id
+    basex.question_type = msg[:question_type] || 1
+    basex.versions=1    
     ex.title = msg[:title]
-    ex.question = ERB::Util.html_escape(msg[:question])
-    ex.feedback = ERB::Util.html_escape(msg[:feedback])
+    #ex.question = ERB::Util.html_escape(msg[:question])
+    #ex.feedback = ERB::Util.html_escape(msg[:feedback])
+    ex.question = msg[:question]
+    ex.feedback = msg[:feedback]
+    
     ex.is_public = true
     if msg[:is_public] == 0
       ex.is_public = false
     end
-    ex.mcq_allow_multiple = true
+    
     if msg[:mcq_allow_multiple].nil?
       ex.mcq_allow_multiple = false
+    else
+      ex.mcq_allow_multiple = msg[:mcq_allow_multiple]
     end
-    ex.mcq_is_scrambled = true
+    
     if msg[:mcq_is_scrambled].nil?
       ex.mcq_is_scrambled = false
+    else
+      ex.mcq_is_scrambled = msg[:mcq_is_scrambled]
     end
     ex.priority = 0
     #TODO Get the count of attempts from the session
@@ -68,7 +79,7 @@ class ExercisesController < ApplicationController
       ex.language_id = msg[:language_id].to_i
     end
 
-    ex.user_id = current_user.id
+   
 
     if( msg[:experience] )
       ex.experience = msg[:experience]
@@ -79,15 +90,20 @@ class ExercisesController < ApplicationController
     #default IRT statistics
     ex.difficulty = 0
     ex.discrimination = 0
-
+    ex.version=1
+    basex.exercises<<ex    
     ex.save!
+    basex.current_version=ex.id    
+    basex.save
     i = 0
     right = 0.0
     total = 0.0
 
     #typed in tags
-    msg[:tags_attributes].each do |t|
-      Tag.tag_this_with(ex, t.second["tag_name"].to_s, Tag.skill)
+    if( msg[:tags_attributes] )
+      msg[:tags_attributes].each do |t|
+        Tag.tag_this_with(ex, t.second["tag_name"].to_s, Tag.skill)
+      end
     end
 
     #selected tags
@@ -106,9 +122,9 @@ class ExercisesController < ApplicationController
       tmp = Choice.create
       tmp.answer = ERB::Util.html_escape(c.second[:answer])
       if( c.second["value"] == "1" )
-        tmp.value = right/total*100
+        tmp.value = 1/right
       else
-        tmp.value = -(total-right)/total*100
+        tmp.value = 0
       end
 
       tmp.feedback = ERB::Util.html_escape(c.second[:feedback])
@@ -130,6 +146,11 @@ class ExercisesController < ApplicationController
 
 # POST exercises/create_mcqs
 def create_mcqs
+    
+  basex=BaseExercise.new    
+  basex.user_id=current_user.id
+  basex.question_type = msg[:question_type] || 1
+  basex.versions=1   
   csvfile = params[:form]  
   puts csvfile.fetch(:xmlfile).path
   CSV.foreach(csvfile.fetch(:xmlfile).path) do |question|
@@ -146,7 +167,6 @@ def create_mcqs
                   
       if ( !question[5].nil? && !question[6].nil? &&  !question[5][3..-5].nil? && !question[6][3..-5].nil?)
         ex = Exercise.new
-        ex.question_type = 1
         ex.title = title_ex
         ex.question = question_ex 
         ex.feedback = gradertext_ex 
@@ -179,7 +199,11 @@ def create_mcqs
         #default IRT statistics
         ex.difficulty = 0
         ex.discrimination = 0
+        ex.version=1
+        basex.exercises<<ex    
         ex.save!
+        basex.current_version=ex.id    
+        basex.save
         
         #   i = 0
         #  right = 0.0
@@ -260,7 +284,11 @@ end
 
 # POST /exercises/upload_create
 def upload_create
-    
+  
+  basex=BaseExercise.new    
+  basex.user_id=current_user.id
+  basex.question_type = msg[:question_type] || 1
+  basex.versions=1    
   questionfile = params[:form]
   doc=Nokogiri::XML(File.open(questionfile.fetch(:xmlfile).path));
   questions=doc.xpath('/quiz/question');
@@ -291,8 +319,7 @@ def upload_create
     else 
       gradertext_ex = ""
     end
-      
-    ex.question_type = 2
+    #TODO Sanitize the uploads  
     ex.title = title_ex
     ex.question = question_ex
     ex.feedback = feedback_ex
@@ -309,7 +336,11 @@ def upload_create
     #default IRT statistics
     ex.difficulty = 5
     ex.discrimination = discrimination_ex
+    ex.version=1
+    basex.exercises<<ex    
     ex.save!
+    basex.current_version=ex.id    
+    basex.save
   end
   redirect_to exercises_url, notice: "Uploaded!"
 end
@@ -336,7 +367,11 @@ end
     else
       redirect_to exercises_url, notice: 'Choose an exercise to practice!'
     end
-    render layout: 'two_columns'
+    if params[:feedback_return]
+      render layout: 'three_columns'
+    else
+      render layout: 'two_columns'
+    end
   end
 
   def create_choice
@@ -344,7 +379,7 @@ end
     @pick.push()
   end
 
-  #GET /practice/1
+  #GET /evaluate/1
   def evaluate
     if( params[:id] )
       found = Exercise.where(:id => params[:id])
@@ -365,9 +400,16 @@ end
         @responses.each do |answer|
           answer[:answer] = CGI::unescapeHTML(answer[:answer]).html_safe
         end
-
         @score = @exercise.score(@responses)
+        if !session[:current_workout].nil?
+          @score=@score*ExerciseWorkout.findExercisePoints(@exercise.id,session[:current_workout])  
+        end
         @explain = @exercise.collate_feedback(@responses)
+        @exercise_feedback="You have attempted exercise #{@exercise.id}:#{@exercise.title} and its feedback for you: "+@explain.to_sentence 
+        if !session[:current_workout].nil?
+          record_workout_score(@score,@exercise.id,session[:current_workout])
+          session[:workout_feedback][@exercise.id]=@exercise_feedback
+        end
         #TODO calculate experience based on correctness and how many submissions
         count_submission()
         @xp = @exercise.experience_on(@responses,session[:submit_num])
@@ -380,11 +422,18 @@ end
           else
             @wexs = params[:wexes][1..-1]
           end
-          redirect_to exercise_practice_path(:id => params[:wexes].first, :wexes => @wexs) and return
+          if params[:feedback_return]
+            redirect_to exercise_practice_path(@exercise, :wexes => params[:wexes], :feedback_return => true) and return
+          else  
+            redirect_to exercise_practice_path(:id => params[:wexes].first, :wexes => @wexs) and return
+          end
         else 
-          session[:wexes]=nil
-          session[:remaining_wexes]=nil
-          render layout: 'two_columns'
+          #Move as to display the exercise submission feedback
+          if !session[:current_workout].nil?
+            redirect_to exercise_practice_path(@exercise, :feedback_return => true) and return
+          else  
+            render layout: 'two_columns'
+          end 
         end
       end
     else
@@ -394,12 +443,43 @@ end
 
   # PATCH/PUT /exercises/1
   def update
-    if @exercise.update(exercise_params)
-      redirect_to @exercise, notice: 'Exercise was successfully updated.'
-    else
-      render action: 'edit'
+    @exercise = Exercise.find(params[:id])
+    new_exercise = Exercise.new
+    new_exercise.title = @exercise.title
+    new_exercise.question = @exercise.question
+    new_exercise.feedback = @exercise.feedback
+    new_exercise.is_public = @exercise.is_public
+    new_exercise.mcq_allow_multiple = @exercise.mcq_allow_multiple
+    new_exercise.mcq_is_scrambled = @exercise.mcq_is_scrambled
+    new_exercise.priority =  @exercise.priority
+    #TODO Get the count of attempts from the session
+    new_exercise.count_attempts = 0
+    new_exercise.count_correct = 0
+    new_exercise.experience = @exercise.experience
+    new_exercise.version=  @exercise.base_exercise.versions = @exercise.version+1   
+    #default IRT statistics
+    new_exercise.difficulty = 5
+    new_exercise.discrimination = @exercise.discrimination
+    @exercise.base_exercise.exercises<<new_exercise;
+    new_exercise.save
+    @exercise.base_exercise.current_version=new_exercise.id
+    @exercise.base_exercise.save
+    respond_to do |format|
+      if new_exercise.update_attributes(exercise_params)
+        format.html { redirect_to new_exercise, notice: 'Exercise was successfully updated.' }
+        format.json { head :no_content } # 204 No Content
+      else
+        format.html { render action: "edit" }
+        format.json { render json: new_exercise.errors, status: :unprocessable_entity }
+      end
     end
-  end
+    
+      #if @exercise.update(exercise_params)
+       # redirect_to @exercise, notice: 'Exercise was successfully updated.'
+      #else
+       # render action: 'edit'
+      #end
+    end
 
   # DELETE /exercises/1
   def destroy
@@ -417,7 +497,7 @@ end
 
     # Only allow a trusted parameter "white list" through.
     def exercise_params
-      params.permit(:title, :question, :feedback, :is_public, :priority, :type,
+      params.require(:exercise).permit(:title, :question, :feedback, :experience, :id,:is_public, :priority, :type,
         :mcq_allow_multiple, :mcq_is_scrambled, :language, :area,
         choices_attributes: [:answer,:order,:value,:_destroy],
         tags_attributes: [:tag_name,:tagtype,:_destroy])
@@ -429,6 +509,7 @@ end
 
     #~ should call count_submission before calling this method
     def record_attempt(score,exp)
+      ex = Exercise.find(params[:id])
       attempt = Attempt.create
       if( !session[:exercise_id] || 
           session[:exercise_id] != params[:id] ||
@@ -437,22 +518,60 @@ end
       end
       attempt.submit_num = session[:submit_num]
       attempt.submit_time = Time.now
-      attempt.answer = params[:exercise][:choice_ids].compact.delete_if{|x| x.empty?}
-      attempt.answer = attempt.answer.join(",")
+      if ex.mcq_allow_multiple
+        attempt.answer = params[:exercise][:choice_ids].compact.delete_if{|x| x.empty?}
+        attempt.answer = attempt.answer.join(",")
+      else
+        attempt.answer = params[:exercise][:choice_ids]
+      end
       attempt.score = score
       attempt.experience_earned = exp
       attempt.user_id = current_user.id
-      ex = Exercise.find(params[:id])
-      wkt= Workout.find_by_sql(" SELECT * FROM workouts INNER JOIN exercises_workouts ON workouts.id = exercises_workouts.workout_id and exercises_workouts.exercise_id = #{session[:exercise_id]}")
+      
+      #wkt= Workout.find_by_sql(" SELECT * FROM workouts INNER JOIN exercise_workouts ON workouts.id = exercise_workouts.workout_id and exercise_workouts.exercise_id = #{session[:exercise_id]}")
+      wkt=Workout.find(session[:current_workout])
+      wo=WorkoutOffering.find_by! workout_id: wkt.id
+      attempt.workout_offering_id=wo.id
       ex.attempts << attempt
       attempt.save!      
+    end
+    
+    def record_workout_score(score,exer_id,wkt_id)
+      scoring = WorkoutScore.find_by(user_id: current_user.id, workout_id: wkt_id)
+      @current_workout=Workout.find(wkt_id)
+      if scoring.nil?
+        scoring=WorkoutScore.new
+        scoring.score=score
+        scoring.last_attempted_at = Time.now
+        scoring.exercises_completed=1
+        scoring.exercises_remaining=@current_workout.exercises.length-1
+        @current_workout.workout_scores<<scoring
+        current_user.workout_scores<<scoring
+
+      else #Atleast one exercise has been attempted as a part of the workout         
+        user_exercise_score=Attempt.user_attempt(current_user.id, exer_id)
+        scoring.score += score       
+        scoring.last_attempted_at = Time.now            
+        if user_exercise_score 
+          scoring.score -= user_exercise_score
+        else
+          scoring.exercises_completed += 1
+          scoring.exercises_remaining -= 1
+          if scoring.exercises_remaining == 0
+            scoring.completed=true
+            scoring.completed_at = Time.now
+          end
+        end 
+             
+      end      
+      scoring.save!
     end
 
     def count_submission
       if( !session[:exercise_id] || 
           session[:exercise_id] != params[:id] ||
           !session[:submit_num] )
-        #TO DO look up only current user
+        #TODO look up only current user
         recent = Attempt.where(:user_id => 1).where(:exercise_id => params[:id]).sort_by{|a| a[:submit_num]}
         if( !recent.empty? )
           session[:submit_num] = recent.last[:submit_num] + 1
