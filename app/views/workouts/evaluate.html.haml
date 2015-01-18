@@ -1,0 +1,16 @@
+%p= "Your score is "+ @user_workout_score.to_s+" out of total possible "+@max_workout_score.to_s
+%table{border: 3}
+  %tr
+    %td Exercise Name
+    %td Your score
+    %td Maximum score
+  - @current_workout.exercises.each do |exer|
+    %tr
+      %td=exer.title
+      %td=Attempt.where(exercise_id: exer.id).last.score
+      %td=ExerciseWorkout.findExercisePoints(exer.id,@current_workout.id)
+%br
+- @workout_feedback.each do |line|
+  %br
+  %p=line
+
