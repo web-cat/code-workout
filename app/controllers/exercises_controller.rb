@@ -530,8 +530,10 @@ end
       
       #wkt= Workout.find_by_sql(" SELECT * FROM workouts INNER JOIN exercise_workouts ON workouts.id = exercise_workouts.workout_id and exercise_workouts.exercise_id = #{session[:exercise_id]}")
       wkt=Workout.find(session[:current_workout])
-      wo=WorkoutOffering.find_by! workout_id: wkt.id
-      attempt.workout_offering_id=wo.id
+      wo=WorkoutOffering.find_by workout_id: wkt.id
+      if wo
+        attempt.workout_offering_id=wo.id
+      end
       ex.attempts << attempt
       attempt.save!      
     end
