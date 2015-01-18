@@ -5,18 +5,18 @@
     %tr
       %th Course
       %th Term
-      %th Name
+      %th Course Number
       %th Label
       %th URL
-      %th Self enrollment allowed
+      %th Self enrollment?
       %th Actions
 
   %tbody
     - @course_offerings.each do |course_offering|
       %tr
-        %td= course_offering.course_id
-        %td= course_offering.term_id
         %td= course_offering.name
+        %td= course_offering.term.display_name
+        %td= course_offering.course.number
         %td= course_offering.label
         %td= course_offering.url
         %td= course_offering.self_enrollment_allowed
