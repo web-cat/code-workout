@@ -3,7 +3,8 @@
 %table.table.table-striped.table-bordered
   %thead
     %tr
-      %th User
+      %th User (first name)
+      %th User (last name)
       %th Course offering
       %th Course role
       %th Actions
@@ -11,9 +12,10 @@
   %tbody
     - @course_enrollments.each do |course_enrollment|
       %tr
-        %td= course_enrollment.user
-        %td= course_enrollment.course_offering
-        %td= course_enrollment.course_role
+        %td= course_enrollment.user.first_name
+        %td= course_enrollment.user.last_name 
+        %td= course_enrollment.course_offering.name
+        %td= course_enrollment.course_role.name
         %td
           = button_link 'Show', course_enrollment, size: 'sm'
           = button_link 'Edit', edit_course_enrollment_path(course_enrollment), size: 'sm'
