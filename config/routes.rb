@@ -49,6 +49,9 @@ CodeWorkout::Application.routes.draw do
     get "/about" => "devise/about#new", as: :about_page
     get "/license" => "devise/license#new", as: :license_page
     get "/contact" => "devise/contact#new", as: :contact_page
+    post "/courses/:id/generate_gradebook" => "courses#generate_gradebook", as: :course_gradebook
+    post "/course_offerings/:id/generate_gradebook" => "course_offerings#generate_gradebook", as: :course_offering_gradebook
+    #post "/exercises/:id/update" => "exercise#update", as: :exercise_update
     get "/workouts/new_with_search/:searchkey"  => "workouts#new_with_search", as: :workouts_with_search
     post "/workouts/new_with_search"  => "workouts#new_with_search", as: :workouts_exercise_search
     post "/signup" => "devise/registrations#create", as: :user_registration
@@ -60,6 +63,7 @@ CodeWorkout::Application.routes.draw do
     get '/course_offerings/:id/add_workout' => 'course_offerings#add_workout', as: :course_offering_add_workout
     post "/course_offerings/store_workout/:id" => "course_offerings#store_workout", as: :course_offering_store_workout
     patch '/practice/:id' => 'exercises#evaluate', as: :exercise_evaluate
+    get '/workouts/:id/evaluate' => 'workouts#evaluate', as: :workout_evaluate
     get '/users/:id/performance' => 'users#calc_performance', as: :calc_performance
     post '/exercises/search' => 'exercises#search', as: :search
     get '/gym' => 'workouts#gym', as: :gym
