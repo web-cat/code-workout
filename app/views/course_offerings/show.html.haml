@@ -26,6 +26,9 @@
   %p
   %strong 
   = link_to 'Add workouts', course_offering_add_workout_path(@course_offering)
+  %br
+  %strong 
+  = link_to 'Enroll', '/course_enrollments?'+ {:course_enrollment => ActionController::Parameters.new({:user_id => User.find(current_user.id), :course_offering_id => @course_offering, :course_role_id => CourseRole.find(3)})}.to_param, method: :post
   
 
 = button_link 'Edit', edit_course_offering_path(@course_offering)
