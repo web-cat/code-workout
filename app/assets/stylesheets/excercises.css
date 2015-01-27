@@ -16,7 +16,6 @@
 	display: block;
 }
 
-
 .excercise-thumbnail {
 	margin-top: 20px;
 	background-color: #FFFBF5;
@@ -25,7 +24,7 @@
 }
 
 .excercise-title .glyphicon {
-	margin-left: 33px; 
+	margin-left: 33px;
 	margin-right: 13px;
 	margin-top: 1px;
 }
@@ -52,15 +51,27 @@
 	height: 12px;
 }
 
-.progress-complete{
+.progress-complete {
 	background-color: #9d968d;
 }
 
-.progress-graded{
+.progress-graded {
 	background-color: #78be20;
 }
 
 .excercise-points {
-	float: right; 
-	margin-right: 7px;
+	float: right;
+	margin-right: 15px;
+}
+
+.breadcrumb {
+	background-color: transparent;
+	border-radius: 0px;
+	margin-bottom: 0px;
+	font-size:10pt;
+}
+.breadcrumb > li + li:before {
+	color: #CCCCCC;
+	content: "> ";
+	padding: 0 5px;
 }
