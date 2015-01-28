@@ -2,12 +2,26 @@
   .well.well-small.teaser-title.col-md-12
     .row
       .col-md-10
-        = link_to x.title, exercise_practice_path(:id => x[:id])
+        = link_to x.title, exercise_practice_path(:id => x[:id]) 
       .col-md-2
         = difficulty_image(x.experience.to_i)
     .row
+      .col-md-12
+        - if !session[:current_workout].nil?
+          - if Attempt.where(user_id: current_user.id, exercise_id: x.id).any?
+            .row
+              .col-md-5
+                Points earned
+              .col-md-2
+                = Attempt.where(user_id: current_user.id, exercise_id: x.id).last.score.to_s + "/" + ExerciseWorkout.find_by(workout_id: session[:current_workout], exercise_id: x.id).points.to_s
+              .col-md-5 
+                %progress{value: Attempt.where(user_id: current_user.id, exercise_id: x.id).last.score, max: ExerciseWorkout.find_by(workout_id: session[:current_workout], exercise_id: x.id).points}
+          - else
+            %progress{value: 0.0} 
+      
+    .row
     - if x.user_attempted?(current_user.id)
-      %div{:style=>'color: green !important;'}
+      %div{:style=>'color: grey !important;'}
         %div
           You have completed this exercise
         %br

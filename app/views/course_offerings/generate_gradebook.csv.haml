@@ -1,0 +1,21 @@
+- headers = ['First Name','Second Name']
+- @course_offering.workouts.each do |wkt|
+  - headers<<wkt.name
+- headers<<'Total'
+= CSV.generate_line headers
+- CourseEnrollment.where(course_offering_id: @course_offering.id).each do |ce|
+  - body = Array.new
+  - if ce.course_role_id == CourseRole.find_by(name: 'Student').id 
+    - body<<User.find(ce.user_id).first_name   
+    - body<<User.find(ce.user_id).last_name
+    - grand_total = 0.0
+    - CourseOffering.find(@course_offering.id).workouts.each do |wkt|
+      - if !WorkoutOffering.find_by(course_offering_id: @course_offering.id, workout_id: wkt.id).nil?
+        - if ! Attempt.where(user_id: ce.user_id, workout_offering_id: WorkoutOffering.find_by(course_offering_id: @course_offering.id, workout_id: wkt.id).id).blank?
+          - tot = WorkoutScore.find_by!(user_id: ce.user_id, workout_id: wkt.id).score
+          - body<<tot.to_s
+          - grand_total += tot    
+        - else
+          - body<<'Not attempted'
+    - body<<grand_total.to_s
+    = CSV.generate_line body

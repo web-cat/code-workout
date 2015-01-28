@@ -2,24 +2,23 @@
 = link_to 'Edit', edit_exercise_path(@exercise)
 %p
   %strong Title:
-  = image_tag @exercise.title
+  %p.xeditable{id: 'title', :data => {:type => 'text', :url => '/exercises/'+@exercise.id.to_s, :resource => 'exercise', :name => 'title', :xeditable => "true", :pk => @exercise.id.to_s, :model => 'exercise'}}= image_tag @exercise.title
 
 %p
   %strong Question:
-  = @exercise.question
+  %p.xeditable{id: 'question', :data => {:type => 'text', :url => '/exercises/'+@exercise.id.to_s, :resource => 'exercise', :name => 'question', :xeditable => "true", :pk => @exercise.id.to_s, :model => 'exercise'}}= @exercise.question
 
 %p
-  %strong Feedback:
-  = @exercise.feedback
+  %strong Feedback
+  %p.xeditable{id: 'feedback', :data => {:type => 'text', :url => '/exercises/'+@exercise.id.to_s, :resource => 'exercise', :name => 'feedback', :xeditable => "true", :pk => @exercise.id.to_s, :model => 'exercise'}}= @exercise.feedback
 
 %p
   %strong Created:
-  = @exercise.created_at
+  %p= @exercise.created_at
 
 %p
-  %strong Experience:
-  = @exercise.experience
-  
+  %a.xeditable{href: '#', id: 'xeditable', :data => {:type => 'text', :url => '/exercises/'+@exercise.id.to_s, :resource => 'exercise', :name => 'experience', :xeditable => "true", :pk => @exercise.id.to_s, :model => 'exercise'}} 
+    = @exercise.experience  
 
 
 = button_link'Back', exercises_path

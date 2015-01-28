@@ -14,7 +14,6 @@
 #  count_correct      :float            not null
 #  difficulty         :float            not null
 #  discrimination     :float            not null
-#  question_type      :integer          not null
 #  mcq_allow_multiple :boolean
 #  mcq_is_scrambled   :boolean
 #  created_at         :datetime
@@ -59,6 +58,7 @@ class Exercise < ActiveRecord::Base
 
   belongs_to  :user
   belongs_to  :stem
+  belongs_to  :base_exercise
   #belongs_to  :language #language is now a tag with tagtype=2
 
   has_and_belongs_to_many :tags
@@ -82,7 +82,7 @@ class Exercise < ActiveRecord::Base
 
   #validates :user, presence: true
   validates :title,
-    length: {:minimum => 1, :maximum => 50},
+    length: {:minimum => 1},
     format: {
       with: /[a-zA-Z0-9\-_ .]+/,
       message: 'Title must be 50 characters or less and consist only of ' \
@@ -97,7 +97,6 @@ class Exercise < ActiveRecord::Base
   validates :experience, presence: true, numericality: true
   validates :difficulty, presence: true, numericality: true
   validates :discrimination, presence: true, numericality: true
-  validates :question_type, presence: true, numericality: true
 
 
   TYPES = {
@@ -161,10 +160,6 @@ class Exercise < ActiveRecord::Base
 
   def select_many?
     self.mcq_allow_multiple
-  end
-
-  def type_name
-    Exercise.type_name(self.question_type)
   end
 
   def serve_question_html
@@ -255,7 +250,6 @@ class Exercise < ActiveRecord::Base
   end
 
   def set_defaults
-    self.user_id ||= 1
     self.title ||= " "
     self.is_public ||= true
     self.priority ||= 0
@@ -264,6 +258,5 @@ class Exercise < ActiveRecord::Base
     self.difficulty ||= 50
     self.experience ||= 100
     self.discrimination ||= 0
-    self.question_type ||= TYPES['Multiple Choice Question']
   end
 end

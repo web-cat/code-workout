@@ -1,8 +1,8 @@
-= semantic_form_for @exercise, :url => exercise_evaluate_path(@exercise, :wexes => @wexs), html: { class: "form-horizontal" } do |f|
+= semantic_form_for @exercise ,:url => exercise_evaluate_path(@exercise, :wexes => params[:wexes], :feedback_return => true), html: { class: "form-horizontal" } do |f|
   = f.semantic_errors
   %h1= @exercise.title
   %p= @exercise.serve_question_html
-  - if @exercise.type_name == 'Multiple Choice Question'
+  - if @exercise.base_exercise.question_type == 1
     - if @exercise.select_many?
       %p Choose ALL that apply:
       = f.input :choice_ids, 

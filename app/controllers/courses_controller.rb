@@ -1,5 +1,5 @@
 class CoursesController < ApplicationController
-  before_action :set_course, only: [:show, :show2, :edit, :update, :destroy]
+  before_action :set_course, only: [:show, :edit, :generate_gradebook,:update, :destroy]
 
   # GET /courses
   def index
@@ -8,10 +8,10 @@ class CoursesController < ApplicationController
 
   # GET /courses/1
   def show
-  end
-  
-  # GET /courses/show2
-  def show2
+    respond_to do |format|
+      format.js
+      format.html      
+    end
   end
 
   # GET /courses/new
@@ -25,6 +25,7 @@ class CoursesController < ApplicationController
 
   # POST /courses
   def create
+    
     form = params[:course]
     @course = Course.find_by number: form[:number]
     if @course.nil?
@@ -87,6 +88,17 @@ class CoursesController < ApplicationController
   def destroy
     @course.destroy
     redirect_to courses_url, notice: 'Course was successfully destroyed.'
+  end
+  
+  # POST /courses/:id/generate_gradebook
+  def generate_gradebook
+    respond_to do |format|
+      format.html
+      format.csv do
+        headers['Content-Disposition']="attachment; filename=\"#{@course.name} course gradebook.csv\""
+        headers['Content-Type']||="text-csv"
+      end
+    end
   end
 
   private

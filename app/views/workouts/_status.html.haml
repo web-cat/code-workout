@@ -1,13 +1,13 @@
--#TODO: replace with session data for user
+-#TODO replace with session data for user
 .row
   %h2
     %article
-      .col-md-8
+      .col-md-2
         - w.name
-      .col-md-4
+      .col-md-10
         - xp_data = Workout.xp_distribution(current_user.id||1,w.id)
         = render :partial => 'workouts/progress', 
-          :locals => {:xp_data => Workout.xp_distribution(current_user.id||1,w.id)}
+          :locals => {:xp_data => xp_data}
 .row
   - w.all_tags.each do |t|
     =link_to(t, search_path(:search => t), method: :post, class: "tag")
