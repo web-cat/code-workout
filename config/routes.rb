@@ -7,7 +7,9 @@ CodeWorkout::Application.routes.draw do
   get "static_pages/mockup1"
   get "static_pages/mockup2"
   get "static_pages/mockup3"
+  get "static_pages/home2"
   get "static_pages/typography"
+  get "static_pages/excercises_in_workout"
 
   get 'exercises/upload_exercises' => 'exercises#upload_exercises',     as: :upload_exercises
   post 'exercises/upload_create' => 'exercises#upload_create'

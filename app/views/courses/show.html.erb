@@ -1,0 +1,144 @@
+<div class="container">
+	<div id="heading">
+		<div class="row col-lg-9">
+			<h1>Course Title</h1>
+		</div>
+	</div>
+
+	<br>
+	</br>
+
+	<div id="sections">
+
+		<div class="row">
+
+			<div class="col-lg-3 text-center">
+				<strong>Sections</strong>
+			</div>
+			<div class="col-lg-3 text-center">
+				<strong>Teachers</strong>
+			</div>
+			<div class="col-lg-3 text-center">
+				<strong>Graders</strong>
+			</div>
+
+		</div>
+
+		<div class="row">
+
+			<div class="col-lg-3 text-center">
+				CRN 12345
+			</div>
+
+			<div class="col-lg-3 text-center">
+				Abcde
+			</div>
+			<div class="col-lg-3 text-center">
+				Al,Go
+			</div>
+
+		</div>
+
+		<div class="row">
+
+			<div class="col-lg-3 text-center">
+				CRN 56789
+			</div>
+			<div class="col-lg-3 text-center">
+				Pyth
+			</div>
+			<div class="col-lg-3 text-center">
+				Styl
+			</div>
+
+		</div>
+
+	</div>
+	<br>
+	</br>
+
+	<div id="tabs">
+
+		<ul class="nav nav-tabs">
+			<li class="active col-lg-3">
+				<a href="#workouts">Workouts</a>
+			</li>
+			<li class="col-lg-3">
+				<a href="#excercises">Excercises</a>
+			</li>
+			<li class="col-lg-3">
+				<a href="#grades">Grades</a>
+			</li>
+			<li class="col-lg-3">
+				<a href="#roster">Roster</a>
+			</li>
+		</ul>
+
+		<div class="tab-content">
+			<div class="tab-pane active" id="workouts">
+				<%= render "courses/workouts" %>
+			</div>
+			<div class="tab-pane" id="excercises">
+				<%= render "courses/exercises" %>
+			</div>
+			<div class="tab-pane" id="grades">
+				<%= render "courses/filter" %>
+			</div>
+			<div class="tab-pane" id="roster">
+				<%= render "courses/filter" %>
+			</div>
+		</div>
+	</div>
+	
+	<div class="row">
+		<div class="checkbox" style="margin-left:25px;">
+			<label for="unenrollme">
+				<input type="checkbox" id="unerollme" />
+				Unenroll from this Course</label>
+
+		</div>
+	</div>
+</div>
+<div style="width: 100%; height: 60px; clear: both;"></div>
+<div onclick="$(this).hide();">
+<div class="tab-overlay" style="opacity: .5; background-color: gray"></div>
+<div class="tab-overlay">
+	<div class="enrollNow">
+		<p> Already Enrolled? <a href="#" >Sign In</a></p>
+		<p> Otherwise  <a href="#">Sign Up</a> and enroll today!
+		</p>
+	</div>
+</div>
+</div>
+<style type="text/css">
+	.tab-overlay {
+		position: absolute;
+		width: 100%; 
+		height: 999px; 
+		left: 0;
+		text-align: center;
+	}
+	
+	.enrollNow {
+		display: inline-block;
+		width: 300px;
+		margin-top: 50px;
+		padding: 10px;
+		background-color: #63666A;
+		color: white;
+	}
+</style>
+<script type="text/javascript">
+	$(function() {
+		$('#tabs a').click(function(e) {
+			e.preventDefault();
+			$(this).tab('show');
+		});
+		var div = $('.tab-overlay')
+		var tabContent = $('.tab-content')
+		div.css({ 
+			top: tabContent.position().top
+		})
+
+	}); 
+</script>

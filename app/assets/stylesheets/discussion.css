@@ -1,0 +1,29 @@
+.discussion-createpost {
+	float: right;
+}
+
+.discussion-spacer {
+	margin-top: 10px;
+}
+
+.discussion-title {
+	font-family: Times;
+	font-size: 16pt;
+	padding-bottom: 12px;
+}
+.discussion-wrapper {
+	border-top: 1px solid #6e6259;
+	margin-top: 30px;
+}
+
+.discussion-post {
+	border-radius: 5px;
+	border: 1px solid #6e6259;
+	background-color: #FFFBF5;
+	margin-top: 10px;
+	padding: 5px;
+	line-height: 16px;
+	margin-top:10px;
+}
+
+
