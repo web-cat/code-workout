@@ -48,6 +48,9 @@ class User < ActiveRecord::Base
   has_many    :tag_user_scores
   has_many    :resource_files
 #  has_many    :assignment_offerings, through: :course_offerings
+#   Below two relationships deemed unnecessary for the time being
+#  has_many :test_case_results
+#  has_many :test_cases, through: :test_case_results
 
 
   # Include default devise modules. Others available are:
