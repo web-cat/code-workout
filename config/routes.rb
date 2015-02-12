@@ -15,8 +15,10 @@ CodeWorkout::Application.routes.draw do
   post 'exercises/create_mcqs' => 'exercises#create_mcqs'
   get 'workouts/:id/add_exercises' => 'workouts#add_exercises'
   post 'workouts/link_exercises'  => 'workouts#link_exercises'
+  post "/coding_questions" => "exercises#create" 
 
   resources :exercises
+  resources :coding_problems
   resources :choices
   resources :stems
   resources :course_offerings
