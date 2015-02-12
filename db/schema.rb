@@ -11,15 +11,15 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150117190855) do
+ActiveRecord::Schema.define(version: 20150210012044) do
 
   create_table "attempts", force: true do |t|
-    t.integer  "user_id",             null: false
-    t.integer  "exercise_id",         null: false
-    t.datetime "submit_time",         null: false
-    t.integer  "submit_num",          null: false
+    t.integer  "user_id",                           null: false
+    t.integer  "exercise_id",                       null: false
+    t.datetime "submit_time",                       null: false
+    t.integer  "submit_num",                        null: false
     t.text     "answer"
-    t.float    "score"
+    t.decimal  "score",               default: 0.0
     t.integer  "experience_earned"
     t.datetime "created_at"
     t.datetime "updated_at"
@@ -50,6 +50,18 @@ ActiveRecord::Schema.define(version: 20150117190855) do
   end
 
   add_index "choices", ["exercise_id"], name: "index_choices_on_exercise_id"
+
+  create_table "coding_questions", force: true do |t|
+    t.datetime "created_at"
+    t.datetime "updated_at"
+    t.integer  "exercise_id"
+    t.string   "base_class"
+    t.text     "wrapper_code"
+    t.text     "test_script"
+    t.string   "test_method"
+  end
+
+  add_index "coding_questions", ["exercise_id"], name: "index_coding_questions_on_exercise_id"
 
   create_table "course_enrollments", force: true do |t|
     t.integer "user_id"
@@ -102,7 +114,7 @@ ActiveRecord::Schema.define(version: 20150117190855) do
     t.integer  "exercise_id"
     t.integer  "workout_id"
     t.integer  "ordering"
-    t.float    "points"
+    t.float    "points",      default: 1.0
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -123,7 +135,6 @@ ActiveRecord::Schema.define(version: 20150117190855) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "experience"
-    t.text     "starter_code"
     t.integer  "base_exercise_id"
     t.integer  "version"
   end
@@ -239,14 +250,28 @@ ActiveRecord::Schema.define(version: 20150117190855) do
     t.datetime "updated_at"
   end
 
-  create_table "test_cases", force: true do |t|
-    t.string   "test_script", null: false
-    t.integer  "exercise_id", null: false
+  create_table "test_case_results", force: true do |t|
+    t.integer  "test_case_id"
+    t.integer  "user_id"
+    t.text     "execution_feedback"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.boolean  "pass"
   end
 
-  add_index "test_cases", ["exercise_id"], name: "index_test_cases_on_exercise_id"
+  create_table "test_cases", force: true do |t|
+    t.string   "test_script"
+    t.text     "negative_feedback"
+    t.float    "weight"
+    t.text     "description"
+    t.string   "input"
+    t.string   "expected_output"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+    t.integer  "coding_question_id"
+  end
+
+  add_index "test_cases", ["coding_question_id"], name: "index_test_cases_on_coding_question_id"
 
   create_table "users", force: true do |t|
     t.string   "email",                  default: "", null: false
