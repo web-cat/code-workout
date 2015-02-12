@@ -53,7 +53,11 @@
 require "cgi"
 
 class Exercise < ActiveRecord::Base
+ 
+  #~ Accessor
+  attr_accessor :answer_code
 
+  
   #~ Relationships ............................................................
 
   belongs_to  :user
@@ -69,9 +73,11 @@ class Exercise < ActiveRecord::Base
   # Associating with courses through course_exercises
   has_many    :courses, through: :course_exercises
   has_many    :course_exercises
+  has_one     :coding_question
   has_many :choices
   has_many :attempts
   accepts_nested_attributes_for :attempts
+  accepts_nested_attributes_for :coding_question, :allow_destroy => true
   accepts_nested_attributes_for :choices, :allow_destroy => true
   accepts_nested_attributes_for :tags, :allow_destroy => true
   
@@ -104,7 +110,12 @@ class Exercise < ActiveRecord::Base
   }
 
   TEASER_LENGTH = 40
-
+  LANGUAGE_EXTENSION={
+    'Ruby' => 'rb',
+    'Java' => 'java',
+    'Python' => 'py',
+    'Shell' => 'sh'
+  }
   #~ Class methods ............................................................
   def self.search(terms)
     term_array = terms.split
@@ -234,7 +245,11 @@ class Exercise < ActiveRecord::Base
     end
     return temp
   end
-  
+  #return the extension of a given language
+  def self.get_language_extension(lang)
+    LANGUAGE_EXTENSION[lang]
+  end
+
   #method to return whether user has attempted exercise or not
   def user_attempted?(u_id)
     self.attempts.where(:user_id => u_id).any?
