@@ -11,14 +11,15 @@
         :input_html => { :class => 'richtexteditor autogrow span10', :rows => 5 }
   .row
     .col-md-10
-      = f.input :is_public, :label=> "Share with CodeWorkout community", 
+      = f.input :is_public, :label=> "Share with CodeWorkout community?", 
         :input_html => { checked: 'checked', value: true }  
   .row
-    .col-md-4
+    .col-md-10
       = f.input :tags, :as => :select,
         :collection => @languages,
-        :label => "Programming language"
-    .col-md-4
+        :label => "Language"
+  .row      
+    .col-md-10
       = f.input :tags, :as => :select,
         :collection => @areas,
         :label => "Subject area"
@@ -52,9 +53,9 @@
         :input_html => { checked: 'checked', value: true}
   #choices
     = f.semantic_fields_for :choices do |choice|
-      = render 'choice_fields', :f => choice
+      = render 'choice_fields', f: choice
     .links
-      = link_to_add_association "Add Answer...", f, :choices
+      = link_to_add_association "Add Choice", f, :choices
   .field
   .actions
     = f.submit class: 'btn btn-primary'
