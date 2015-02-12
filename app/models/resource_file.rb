@@ -18,10 +18,11 @@ class ResourceFile < ActiveRecord::Base
   end
 
   def save_file(upload)
-    ext = File.extname(upload['file'].original_filename) || ""
+    ext = File.extname(upload.original_filename) || ""
   	renamed = self.token + ext
   	path = File.join(STORAGE_DIR, renamed)
   	self.filename = renamed
-  	File.open(path, "wb") { |f| f.write(upload['file'].resourcefile) }  
+  	File.open(path, "wb") { |f| f.write(upload.tempfile.read) }
+  	self  
   end
 end
