@@ -1,23 +1,33 @@
-= semantic_form_for @exercise ,:url => exercise_evaluate_path(@exercise, :wexes => params[:wexes], :feedback_return => true), html: { class: "form-horizontal" } do |f|
-  = f.semantic_errors
-  %h1= @exercise.title
-  %p= @exercise.serve_question_html
-  - if @exercise.base_exercise.question_type == 1
-    - if @exercise.select_many?
-      %p Choose ALL that apply:
-      = f.input :choice_ids, 
-        :as => :check_boxes, 
-        :collection => @answers,
-        :member_value => :id, 
-        :member_label => :answer,
-        :label => "&nbsp;"
-    - else
-      %p Select one answer:
-      = f.input :choice_ids,
-        :as => :radio,
-        :collection => @answers,
-        :member_value => :id,
-        :member_label => :answer,
-        :label => "&nbsp;"
-  .actions
-    = f.submit 'Submit Answer', class: 'btn btn-primary'
+%table
+  %tr
+    %td
+      = semantic_form_for @exercise ,url: exercise_evaluate_path(@exercise, wexes: params[:wexes], feedback_return: true),remote: true , html: { class: "form-horizontal" } do |f|
+        = f.semantic_errors
+        %h1= @exercise.title
+        %p= @exercise.serve_question_html
+        - if @exercise.base_exercise.question_type == 1
+          - if @exercise.select_many?
+            %p Choose ALL that apply:
+            = f.input :choice_ids, 
+              :as => :check_boxes, 
+              :collection => @answers,
+              :member_value => :id, 
+              :member_label => :answer,
+              :label => "&nbsp;"
+          - else
+            %p Select one answer:
+            = f.input :choice_ids,
+              :as => :radio,
+              :collection => @answers,
+              :member_value => :id,
+              :member_label => :answer,
+              :label => "&nbsp;"
+        - elsif @exercise.base_exercise.question_type == 2
+          = f.input :answer_code,
+            as: :text
+        .actions
+          = f.submit 'Submit Answer', class: 'btn btn-primary'
+    %td
+      #exercisefeedback{style: "display: none;"} WINTER CANNOT BE SEEN
+
+  
