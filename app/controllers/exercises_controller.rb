@@ -464,9 +464,8 @@ end
           @xp = @exercise.experience_on(@responses,session[:submit_num])
           record_attempt(@score,@xp)
         elsif @exercise.base_exercise.question_type == 2
-          puts "WARNING","WARNING"
           CodeWorker.perform_async(@exercise.coding_question.base_class,@exercise.id,current_user.id,params[:exercise][:answer_code],session[:current_workout])
-          sleep(2.0)
+          
         end
         if params[:wexes]
           session[:remaining_wexes]=params[:wexes]
