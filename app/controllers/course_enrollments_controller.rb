@@ -3,6 +3,11 @@ class CourseEnrollmentsController < ApplicationController
 
   # GET /course_enrollments
   def index
+    if cannot? :index, CourseEnrollment
+      print "CANNOT ACCESS"
+      redirect_to root_path, notice: 'Unauthorized to view course enrollments' and return
+    end
+    print "CAN ACCESS"
     @course_enrollments = CourseEnrollment.all
   end
 
