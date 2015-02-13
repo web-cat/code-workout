@@ -20,14 +20,19 @@ class Ability
       # A user should only be able to update himself or herself (assuming no
       # other permissions granted below by the global role).
       can [:show, :update], User do |target_user|
-        target_user == user
+        target_user.id == user.id
       end
-
-      can :index, User if user.global_role.can_edit_system_configuration?
       
-      # All users can create these, Piazza-style
-      can :create, Course
-      can :create, CourseOffering
+
+
+      cannot :index, User unless user.global_role.can_edit_system_configuration?
+      cannot :index, Workout unless user.global_role.can_edit_system_configuration?
+      cannot :index, Exercise unless user.global_role.can_edit_system_configuration?
+      cannot :index, CourseEnrollment unless user.global_role.can_edit_system_configuration?
+      
+      # All users cannot create these, this is not Piazza-style
+      cannot :create, Course unless user.global_role.can_edit_system_configuration?
+      cannot :create, CourseOffering unless user.global_role.can_edit_system_configuration?
 
       process_global_role user
       process_courses user
@@ -57,11 +62,15 @@ class Ability
 #      can :manage, ActivityLog
       can :manage, CourseRole
 #      can :manage, Environment
+       print "ADMINISTRATOR","ADMINSTRATOR"
       can :manage, GlobalRole
       can :manage, Organization
       can :manage, Term
-#      can :manage, SystemConfiguration
-      can :manage, User
+      can :index, User
+      can :index, Workout
+      can :index, Exercise
+      can :index, CourseEnrollment
+      
     end
 
     # Grant broad course management access through the
