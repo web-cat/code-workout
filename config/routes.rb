@@ -1,6 +1,9 @@
 CodeWorkout::Application.routes.draw do
 
-  root 'static_pages#home'
+  root 'home#index'
+
+  get "home" => 'home#index'
+  get "main" => 'home#index'
 
   get "static_pages/home"
   get "static_pages/help"
@@ -23,8 +26,8 @@ CodeWorkout::Application.routes.draw do
   resources :terms
   resources :courses
   resources :organizations
-  resources :languages  
-  resources :tags  
+  resources :languages
+  resources :tags
   resources :course_enrollments
   resources :course_roles
   resources :global_roles
@@ -37,14 +40,14 @@ CodeWorkout::Application.routes.draw do
   resources :resource_files
   resources :workouts
 
-  
+
   #OmniAuth for Facebook
   devise_for :controllers => { :omniauth_callbacks => "omniauth_callbacks" }
 
   devise_for :users, :skip => [:registrations, :sessions]
   as :user do
     get "/signup" => "devise/registrations#new", as: :new_user_registration
-    
+
     # TODO: These routes are broken and need to be fixed!
     get "/about" => "devise/about#new", as: :about_page
     get "/license" => "devise/license#new", as: :license_page
