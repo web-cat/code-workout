@@ -4,6 +4,10 @@ class UsersController < ApplicationController
 
   # GET /users
   def index
+    if cannot? :index, User
+      redirect_to root_path, notice: 'Unauthorized to view users' and return
+    end
+    
     @users = User.all.page(params[:page])
     respond_to do |format|
       format.html # index.html.erb
@@ -14,6 +18,11 @@ class UsersController < ApplicationController
 
   # GET /users/1
   def show
+    if can? :show, @user
+      puts "PASS"
+    else
+      redirect_to root_path, notice: 'Unauthorized to view user' and return
+    end
   end
 
   # GET /users/new
