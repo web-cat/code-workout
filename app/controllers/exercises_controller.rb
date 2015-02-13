@@ -11,6 +11,9 @@ class ExercisesController < ApplicationController
 
   # GET /exercises
   def index
+    if cannot? :index, Exercise
+      redirect_to root_path, notice: 'Unauthorized to view all exercises' and return
+    end
     @exercises = Exercise.all
   end
 
@@ -388,7 +391,7 @@ end
       found = Exercise.where(:id => params[:id])
       if( found.empty? )
         redirect_to exercises_url, notice: "Exercise #{params[:id]} not found"
-      else
+      elsif user_signed_in?
         @exercise = found.first
         @answers = @exercise.serve_choice_array
         @responses = ["There are no responses yet!"]
@@ -401,6 +404,8 @@ end
         else
           @wexs = nil
         end
+      else
+        redirect_to exercise_path(found.first), notice: "Need to login to practice" and return
       end
     else
       redirect_to exercises_url, notice: 'Choose an exercise to practice!'
@@ -461,7 +466,7 @@ end
         elsif @exercise.base_exercise.question_type == 2
           puts "WARNING","WARNING"
           CodeWorker.perform_async(@exercise.coding_question.base_class,@exercise.id,current_user.id,params[:exercise][:answer_code],session[:current_workout])
-          sleep(1.0)
+          sleep(2.0)
         end
         if params[:wexes]
           session[:remaining_wexes]=params[:wexes]
@@ -478,11 +483,7 @@ end
           end
         else 
           #Move as to display the exercise submission feedback
-          if !session[:current_workout].nil?
-            redirect_to exercise_practice_path(@exercise, :feedback_return => true) and return
-          else  
-            render layout: 'two_columns'
-          end 
+          redirect_to exercise_practice_path(@exercise, :feedback_return => true), format: :js and return
         end        
       end
     else
