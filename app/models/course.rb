@@ -25,13 +25,16 @@ class Course < ActiveRecord::Base
   # Associating with exercises through course_exercises
   has_many    :exercises, through: :course_exercises
   has_many    :course_exercises
-
+  
+  #Kaminari for the show method
+  paginates_per 2
+  
   accepts_nested_attributes_for :course_offerings, :allow_destroy => true
   
   #~ Hooks ....................................................................
 
   before_validation :set_url_part
-
+  
 
   #~ Validation ...............................................................
 

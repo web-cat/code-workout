@@ -84,7 +84,7 @@ class WorkoutsController < ApplicationController
   def evaluate
     @workout_feedback=session[:workout_feedback].values
     @current_workout=Workout.find(session[:current_workout])
-    @user_workout_score=WorkoutScore.find_by!(current_user.id,session[:current_workout]).score
+    @user_workout_score=WorkoutScore.find_by!(user_id: current_user.id,workout_id: session[:current_workout]).score
     @max_workout_score=@current_workout.returnTotalWorkoutPoints
     session[:current_workout]=nil
     session[:workout_feedback]=nil

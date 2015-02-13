@@ -1,0 +1,19 @@
+.nested-fields
+  = f.inputs do
+    .row.darker-bkg
+      .row
+        .col-md-10
+          = f.input :input,
+            label: "Input"
+      .row
+        .col-md-10
+          = f.input :expected_output,
+            label: "Expected Output"
+      .row
+        .col-md-10
+          = f.input :description, as: :text,
+            label: "Test Description"
+      .row
+        .col-md-10
+          = f.input :negative_feedback, as: :text,
+            label: "Failure Feedback"            

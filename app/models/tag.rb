@@ -43,7 +43,7 @@ class Tag < ActiveRecord::Base
   end
 
   def self.tag_name_convention(name)
-    return name.strip.gsub(/[\s]/,"_").downcase
+    return name.strip.gsub(/[\s]/,"_").downcase.titleize
   end
 
   #~ pass in an object (Exercise or Workout) 
@@ -66,7 +66,7 @@ class Tag < ActiveRecord::Base
         tagged.total_experience += obj.experience
       end
       tagged.save
-      obj.tags << tagged
+      #obj.tags << tagged
 
       if( obj.class.name == "Exercise" )
         tagged.exercises << obj

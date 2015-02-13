@@ -1,5 +1,9 @@
 %h1 New exercise
-
-= render 'form'
-
+- if params[:question_type] == 'Multiple Choice Question' || params[:question_type] == 'MCQ' || params[:question_type] == 'mcq'
+  = render 'form'
+- elsif params[:question_type] == 'Coding Question' || params[:question_type] == 'coding' || params[:question_type] == 'coding problem'  
+  = render 'coding_form'
+- else
+  = render 'new'
+%br  
 = link_to 'Back', exercises_path

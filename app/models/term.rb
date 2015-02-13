@@ -95,6 +95,25 @@ class Term < ActiveRecord::Base
     "#{season_name} #{year}"
   end
 
+  # -----------------------------------------
+  def self.time_heuristic(date_string)
+    if date_string.nil?
+      puts "INVALID Use of time_heuristic"
+      return 0
+    else
+      date_split = date_string.split("-")
+      if date_split[1]       
+        date_year = date_split[0]
+        date_month = date_split[1]
+        date_day = date_split[2]
+        return date_year * 100.0 + date_month * 1.0 + date_day*0.01    
+      else
+        puts "INVALID date_string format"
+        return 0
+      end  
+    end
+  end  
+   
 
   # -------------------------------------------------------------
   def url_part
