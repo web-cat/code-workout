@@ -130,6 +130,58 @@ class ExercisesController < ApplicationController
         puts "LANGUAGE","LANGUAGE",language,"LANGUAGE","LANGUAGE"
         base_test_file = File.open("#{language}BaseTestFile.#{Exercise.get_language_extension(language)}","rb").read
         test_base = base_test_file.gsub('baseclassclass',msg[:coding_questions][:base_class])
+        
+        if language == 'Java'          
+          first_input = ex.coding_question.test_cases[0].input 
+          first_expected_output = ex.coding_question.test_cases[0].expected_output
+          if first_input == 'true' || first_input == 'false'  
+            puts "BOOLEAN TYPE","BOOLEAN TYPE"
+            input_type = 'boolean'
+          elsif first_input.include?('"')
+            puts "STRING TYPE","STRING TYPE"
+            input_type = 'String'
+          elsif first_input.include?("'")  
+             puts "CHAR TYPE","CHAR TYPE"
+             input_type = 'char'
+          elsif first_input.to_i.to_s == first_input
+             puts "INT TYPE"
+             input_type = 'int'
+          elsif first_input.to_f.to_s == first_input
+             puts "FLOAT TYPE","FLOAT TYPE"
+             input_type = 'float'
+          else
+             puts "TYPE ERROR","TYPE ERROR"
+             input_type = 'ERR'
+          end   
+          if first_expected_output == 'true' || first_expected_output == 'false'  
+            puts "BOOLEAN TYPE","BOOLEAN TYPE"
+            output_type = 'boolean'
+          elsif first_expected_output.include?('"')
+            puts "STRING TYPE","STRING TYPE"
+            output_type = 'String'
+          elsif first_expected_output.include?("'")  
+            puts "CHAR TYPE","CHAR TYPE"
+            output_type = 'char'
+          elsif first_expected_output.to_i.to_s == first_expected_output
+            puts "INT TYPE","INT TYPE"
+            output_type = 'int'
+          elsif first_expected_output.to_f.to_s == first_expected_output
+            puts "FLOAT TYPE","FLOAT TYPE"
+            output_type = 'float'
+          else
+            puts "TYPE ERROR","TYPE ERROR"
+            output_type = 'ERR'
+          end  
+          if input_type != 'ERR' && output_type != 'ERR'
+            test_base  = test_base.gsub('methodnameemandohtem',msg[:coding_questions][:test_method])
+            test_base  = test_base.gsub('input_type',input_type)
+            test_base  = test_base.gsub('output_type',output_type) 
+                                        
+            base_runner_file = File.open("JavaBaseTestRunner.java","rb").read
+            base_runner_code = base_runner_file.gsub('baseclassclass',msg[:coding_questions][:base_class])
+            File.open(msg[:coding_questions][:base_class]+'TestRunner.java', "wb") { |f| f.write( base_runner_code ) }
+          end # !ERR IF
+        end # JAVA IF
         testing_code = test_base.gsub('TTTTT',test_end_code)
         File.open(msg[:coding_questions][:base_class]+'Test.'+Exercise.get_language_extension(language), "wb") { |f| f.write( testing_code ) }
       end
@@ -465,7 +517,7 @@ end
           record_attempt(@score,@xp)
         elsif @exercise.base_exercise.question_type == 2
           CodeWorker.perform_async(@exercise.coding_question.base_class,@exercise.id,current_user.id,params[:exercise][:answer_code],session[:current_workout])
-          
+          sleep(3.0)          
         end
         if params[:wexes]
           session[:remaining_wexes]=params[:wexes]
