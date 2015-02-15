@@ -3,6 +3,9 @@ class WorkoutsController < ApplicationController
 
   # GET /workouts
   def index
+    if cannot? :index, Workout
+      redirect_to root_path, notice: 'Unauthorized to view all workouts' and return
+    end
     @workouts = Workout.all
     @gym = Workout.order("created_at DESC").limit(12)
     #render layout: 'two_columns'
@@ -111,12 +114,19 @@ class WorkoutsController < ApplicationController
   def practice_workout
     wid = params[:id]
     wkt = Workout.find(wid)
-    ex1 = wkt.exercises.first    
-    session[:current_workout]=wid
-    session[:workout_feedback]=Hash.new
-    session[:workout_feedback]['workout']="You have attempted Workout #{wkt.name}"
-    session[:wexes]=session[:remaining_wexes]=wkt.exercises.ids[1..-1]
-    redirect_to exercise_practice_path(:id => ex1.id, :wexes => wkt.exercises.ids[1..-1])
+    if wkt
+      if !user_signed_in? 
+        redirect_to workout_path(wkt), notice: "Need to login to practice" and return
+      end  
+      ex1 = wkt.exercises.first    
+      session[:current_workout]=wid
+      session[:workout_feedback]=Hash.new
+      session[:workout_feedback]['workout']="You have attempted Workout #{wkt.name}"
+      session[:wexes]=session[:remaining_wexes]=wkt.exercises.ids[1..-1]
+      redirect_to exercise_practice_path(:id => ex1.id, :wexes => wkt.exercises.ids[1..-1])
+    else
+      redirect_to workouts, notice: "Workout not found" and return
+    end
   end
 
   private

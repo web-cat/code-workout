@@ -6,14 +6,17 @@
       = 'Test case '
       - i+=1
       - tcr = TestCaseResult.all.order('id desc').find_by(test_case_id: test_case.id, user_id: current_user.id)
+      - if tcr.execution_feedback.include?("CODE-ERROR-CODE-ERROR")
+        = "CODE EXECUTION ERROR"+tcr.execution_feedback
+        - break
       - if tcr.pass
         = i.to_s + '. Test Case successfully passed'
       - else
         = i.to_s + '. ' + tcr.execution_feedback
       %br
   %br
-  - if params[:wexes].nil?
+  - if (session[:current_workout] && params[:wexes].nil?)
     = link_to 'Finish Workout', workout_evaluate_path(:uid => current_user.id,:wid => session[:current_workout])
-  - elsif params[:wexes][1..-1].count>=0
+  - elsif (session[:current_workout] && params[:wexes][1..-1].count>=0)
     = link_to 'Next question', exercise_practice_path(:id => params[:wexes].first, :wexes => params[:wexes][1..-1]), method: :get
       

@@ -19,25 +19,27 @@
                     %li= link_to 'Workout 13', '/workouts/13'
                     %li= link_to 'Workout 14', '/workouts/14'
                     %li= link_to 'Workout 15', '/workouts/15'
-                  %ul.col-sm-6.list-unstyled
-                    %li
-                      %strong
-                        Manage Workouts
-                    %li= link_to 'Edit Workout', '/workouts/'
-                    %li= link_to 'Create Workout', '/workouts/new'
-                .row
-                  %ul.col-sm-6.list-unstyled
-                    %li
-                      %strong
-                        = link_to 'Exercises','/exercises'
-                    %li= link_to 'Upload Exercises - CSV', 'exercises/upload_exercises'
-                    %li= link_to 'Upload Exercises - MCQ', 'exercises/upload_mcqs'
-                  %ul.col-sm-6.list-unstyled
-                    %li
-                      %strong
-                        Manage Exercises
-                    %li= link_to 'Edit Exercise', '/exercises/edit'
-                    %li= link_to 'Create Exercise', '/exercises/new'
+                  - if user_signed_in?  
+                    %ul.col-sm-6.list-unstyled
+                      %li
+                        %strong
+                          Manage Workouts
+                      %li= link_to 'Edit Workout', '/workouts/'
+                      %li= link_to 'Create Workout', '/workouts/new'
+                - if user_signed_in?      
+                  .row
+                    %ul.col-sm-6.list-unstyled
+                      %li
+                        %strong
+                          = link_to 'Exercises','/exercises'
+                      %li= link_to 'Upload Exercises - CSV', 'exercises/upload_exercises'
+                      %li= link_to 'Upload Exercises - MCQ', 'exercises/upload_mcqs'
+                    %ul.col-sm-6.list-unstyled
+                      %li
+                        %strong
+                          Manage Exercises
+                      %li= link_to 'Edit Exercise', '/exercises/edit'
+                      %li= link_to 'Create Exercise', '/exercises/new'
         %li.dropdown
           %a.dropdown-toggle{ href: '/courses', data: { toggle: 'dropdown' },value: 'Gym' }
             Course
@@ -51,12 +53,13 @@
                         Courses
                     %li= link_to 'CS 10', '/courses/10'
                     %li= link_to 'CS 12', '/courses/12'
-                  %ul.col-sm-6.list-unstyled
-                    %li
-                      %strong
-                        Manage Courses
-                    %li= link_to 'Edit Course', '/courses/'
-                    %li= link_to 'Create Course', '/courses/new'
+                  - if user_signed_in?
+                    %ul.col-sm-6.list-unstyled
+                      %li
+                        %strong
+                          Manage Courses
+                      %li= link_to 'Edit Course', '/courses/'
+                      %li= link_to 'Create Course', '/courses/new'
 
       -#= f.actions do
         -#= f.submit 'Sign up', class: 'btn btn-primary'

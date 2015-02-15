@@ -40,31 +40,44 @@ class CodeWorker
         if term.now?
           current_term_name = term.display_name
           Dir.chdir(current_term_name) do
-            if Dir[current_attempt].empty? 
-              Dir.mkdir(current_attempt)
-            else
+            if !Dir[current_attempt].empty?
               puts "WARNING, OVERWRITING EXISTING DIRECTORY"
-            end  
+              system "yes | rm -rf #{current_attempt}/"
+            end
+            Dir.mkdir(current_attempt)  
             puts "SIDEKIQ current working directory is #{Dir.pwd}"
             system "yes | cp -rf ../#{base_class}*.#{lang} #{current_attempt}"
             Dir.chdir(current_attempt) do              
               puts "SIDEKIQ current working directory is #{Dir.pwd}"
               if language == "Java"
-                execute_javatest(base_class)
+                result = execute_javatest(base_class)
               elsif language == "Ruby"
-                execute_rubytest(base_class)
+                result = execute_rubytest(base_class)
               elsif language == "Python" 
-                execute_pythontest(base_class)
+                result = execute_pythontest(base_class)
               end # IF INNERMOST
               correct=total=0.0
-              CSV.foreach(base_class+"_#{language}_results.csv") do |line|
-                weight   = @excercise.coding_question.test_cases[line[2].to_i-1].weight
-                test_case_negative_feedback=@excercise.coding_question.test_cases[line[2].to_i-1].negative_feedback
-                correct+=line[0].to_f * weight
-                line[0].to_f >= 1.0 ? feedback = '' : line[1] ? feedback = line[1]+ ' '+ test_case_negative_feedback : feedback = 'Test case not completely passed' + test_case_negative_feedback    
-                record_test_case_result(uid,line[0].to_f,exid,feedback,line[2].to_i-1)
-                total+=weight
-              end  # CSV end
+              #print "RESULT",result,"RESULT"
+              puts "FILE SIZE",File.size?(base_class+"_#{language}_results.csv").class
+              if (File.size?(base_class+"_#{language}_results.csv").nil?)
+                feedback=result.split("#{base_class}Test")[2]
+                puts "CODE-ERROR-FEEDBACK","CODE-ERROR-FEEDBACK"
+                @excercise.coding_question.test_cases.each_with_index do |tc,i|
+                  record_test_case_result(uid,0.0,exid,"CODE-ERROR-CODE-ERROR "+feedback.to_s,i)  
+                end
+                correct=0.0
+                total=1.0
+              else
+                puts "ASSERTIONS-FEEDBACK","ASSERTIONS-FEEDBACK"
+                CSV.foreach(base_class+"_#{language}_results.csv") do |line|
+                  weight   = @excercise.coding_question.test_cases[line[2].to_i-1].weight
+                  test_case_negative_feedback=@excercise.coding_question.test_cases[line[2].to_i-1].negative_feedback
+                  correct+=line[0].to_f * weight
+                  line[0].to_f >= 1.0 ? feedback = '' : line[1] ? feedback = line[1]+ ' '+ test_case_negative_feedback : feedback = 'Test case not completely passed' + test_case_negative_feedback    
+                  record_test_case_result(uid,line[0].to_f,exid,feedback,line[2].to_i-1)
+                  total+=weight
+                end  # CSV end
+              end
               record_attempt(exid,uid,user_code,wktid,correct,total)                            
             end    # CHDIR LAST
           end # CHDIR TERM
@@ -163,15 +176,25 @@ class CodeWorker
   end  
   
   def execute_javatest(base_class)
-      system "javac #{base_class}.java #{base_class}Test.java #{base_class}TestRunner.java"
-      system "java #{base_class}TestRunner"    
+    output =  `javac #{base_class}.java #{base_class}Test.java #{base_class}TestRunner.java`
+    output += `java #{base_class}TestRunner`    
   end
   
   def execute_rubytest(base_class)
-    system "ruby #{base_class}Test.rb"
+    if system("ruby #{base_class}Test.rb >> rubyerr.log 2>>rubyerr.log")
+      puts "FINE","RUBY FINE"
+      return nil
+    else
+      puts "ERROR","RUBY ERROR"
+      return output=`cat rubyerr.log`
+    end
   end
   
   def execute_pythontest(base_class)
-    system "python #{base_class}Test.py"
+    if system ("python #{base_class}Test.py > pythonerr.log 2>>pythonerr.log")
+      return nil
+    else
+      return output=`cat pythonerr.log`  
+    end
   end
 end
