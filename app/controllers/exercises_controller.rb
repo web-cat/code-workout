@@ -55,7 +55,7 @@ class ExercisesController < ApplicationController
     basex.user_id=current_user.id
     basex.question_type = msg[:question_type] || 1
     basex.versions=1    
-    ex.title = msg[:title]
+    ex.title = msg[:title].chomp.strip
     #ex.question = ERB::Util.html_escape(msg[:question])
     #ex.feedback = ERB::Util.html_escape(msg[:feedback])
     ex.question = msg[:question]
