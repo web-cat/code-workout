@@ -1,6 +1,6 @@
 %h1 Question: A-level/B-status
 %p
-  What output will the following code fragment produce?     	
+  What output will the following code fragment produce?
 
 %pre{ lang: 'text/x-java' }
   :preserve
@@ -17,7 +17,7 @@
 
 %h2 Select your answer:
 %form
-  .answers.well.well-sm
+  .answers
     %label.radio
       %input{ type: 'radio', name: 'answers', value: 'a' }
       A-level
@@ -37,6 +37,3 @@
   %button.btn.btn-primary{ type: 'button' }
     %i.glyphicon.glyphicon-expand
     Check my answer!
-
-  .btn
-    %input{ type: 'submit', value: 'Check my answer!' }

@@ -13,7 +13,9 @@ html, body { height: 100%; }
 .content, .maincol {
   padding-left: 20px;
   padding-right: 20px;
+  padding-bottom: 40px;
 }
+#main { margin-bottom: 40px; }
 .row .col-md-3.sidebar { margin-left: 0; }
 .sidebar { padding-left: 25px; }
 
@@ -78,7 +80,7 @@ html, body { height: 100%; }
 .btn i { padding-right: 5px; }
 .btn i:last-child { padding-right: 0; }
 .answers .radio { margin-left: 20px; margin-top: 0; margin-bottom: 0; }
-.tag { @extend .label; @extend .label-info; font-weight: inherit; }
+.tag { font-weight: inherit; }
 .debug {
   position: fixed;
   bottom: 45px;
@@ -104,3 +106,49 @@ ul.wysihtml5-toolbar li {
 .teaser-title p { padding-left: 4px; padding-bottom: 0px; }
 .slim { margin: 0; }
 .one-line{ overflow: hidden; white-space: nowrap; }
+
+/* home page */
+.home .cta {
+  background-image: image-url('bg1.jpg');
+  background-repeat: no-repeat;
+  background-position: top right;
+  background-size: cover;
+  margin: 0 -22px 40px;
+}
+.home .row.blurb { margin-top: 40px; margin-bottom: 40px; text-align: center; }
+
+.home .cta .row { margin-left: 0; margin-right: 0; }
+.home .cta .pitch {
+  color: white;
+  background-image: image-url('black-30.png');
+  padding-top: 8px;
+  padding-bottom: 8px;
+  margin-top: 15px;
+  margin-bottom: 15px;
+  margin-right: 15px;
+  font-size: x-large;
+  text-align: center;
+}
+.home .cta .pitch strong {
+  font-size: larger;
+  color: #efb04f;
+}
+
+.home .cta .pitch p a {
+  font-weight: bold;
+  color: #efb04f;
+}
+
+.home.contact .form-wrapper { margin-top: 7px; }
+.exercise .info { width: 100%; }
+.exercise .info .taglist { width: 75%; @extend .one-line; min-height: 17px; }
+.exercise .info .pts { float: right; }
+.thumbnail .progress {
+  width: 100%;
+  height: 10px;
+}
+.thumbnail { padding-left: 0; padding-right: 0; }
+.thumbnail .text { padding: 0 9px 5px; }
+
+.answers .control-label { display: none; }
+.form-horizontal .answers .form-group { margin-left: 0; margin-right: 0; }

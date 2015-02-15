@@ -1,0 +1,102 @@
+%p
+  Build your
+  %strong programming skills
+  through practice!
+
+.cta
+  .row
+    .pitch.col-md-4.col-md-offset-4
+      %p
+        = succeed ',' do
+          %strong Students
+        is your course using CodeWorkout?
+      = button_link 'Find your course', '#', color: 'primary', size: 'lg',
+        data: { confirm: 'Unimplemented: needs to go to Piazza-style pop-up for finding/enrolling in course.' }
+
+  .row
+    .pitch.col-md-4
+      %p
+        = succeed ',' do
+          %strong Teachers
+        want to use CodeWorkout in your course?
+      = button_link 'Create your course', '#', color: 'primary', size: 'lg',
+        data: { confirm: 'Unimplemented: needs to go to a Piazza-style pop-up for creating a new course, with smart resolution when the course already exists.' }
+
+  .row
+    .pitch.col-md-4.col-md-offset-8
+      %p
+        Want to
+        %strong try
+        CodeWorkout?
+      = button_link 'Try a question now', '#', color: 'primary', size: 'lg',
+        data: { confirm: 'Unimplemented: needs to go to a randomly selected question practice page.' }
+      %p{ style: 'margin-top: 10px;' }
+        Or try a specific kind of question:
+        = succeed ',' do
+          = link_to 'multiple choice', '#',
+        data: { confirm: 'Unimplemented: needs to go to a randomly selected MC question practice page.' }
+        = succeed ',' do
+          = link_to 'Java', '#',
+        data: { confirm: 'Unimplemented: needs to go to a randomly selected Java question practice page.' }
+        = succeed ', or ' do
+          = link_to 'Ruby', '#',
+        data: { confirm: 'Unimplemented: needs to go to a randomly selected Ruby question practice page.' }
+        = succeed '.' do
+          = link_to 'Python', '#',
+        data: { confirm: 'Unimplemented: needs to go to a randomly selected Python question practice page.' }
+
+.row.blurb
+  .col-md-4
+    %i.fa.fa-pencil.fa-5x{ style: 'color: #efb04f;' }
+    %h1 Practice Your Skills
+    %p
+      For learners of any age, CodeWorkout provides a place for you
+      to practice your skills and develop your knowledge, both through
+      code writing activities and questions about programming knowledge.
+    %p
+      Practice using our existing bank of questions, or
+      %strong write your own!
+
+  .col-md-4
+    %i.fa.fa-graduation-cap.fa-5x{ style: 'color: darkblue;' }
+    %h1 Use in a Course
+    %p
+      For teachers, CodeWorkout allows you to create your own custom
+      assignments using exercises from our question bank, or exercises
+      =succeed '.' do
+        %strong you write yourself
+      Use CodeWorkout for homework, for quizzes, or even for on-line
+      testing.
+    %p
+      When you write your own questions, you can share them with others,
+      or limit them to your own assignments with your own students.
+
+  .col-md-4
+    %i.fa.fa-line-chart.fa-5x{ style: 'color: black;' }
+    %h1 Track Progress
+    %p
+      CodeWorkout tracks each learner's efforts and progress, letting you
+      know what skills you've mastered and which need more work.  CodeWorkout
+      can even suggest what exercises you should try next so you can
+      keep improving your skills.
+
+.row.blurb
+  .col-md-8.col-md-offset-2
+    %h1 CodeWorkout is Free to Use
+    %p
+      CodeWorkout is open-source software that is free to use.  All publicly
+      shared questions here carry a Creative Commons license.  If you write
+      your own questions, you are welcome to share them under the same license
+      here, or use them privately without licensing them for sharing.
+    %p
+      We welcome community contributions, both in the form of questions
+      (you can write them yourself, or
+      %strong send them to us
+      at
+      %a{ href: 'mailto:questionbank@vt.edu' }
+        questionbank@vt.edu
+      and we'll convert them for you!), and in the form of source code.
+      You can find us on github at
+      = succeed '.' do
+        %a{ href: 'https://github.com/web-cat/code-workout' }
+          https://github.com/web-cat/code-workout

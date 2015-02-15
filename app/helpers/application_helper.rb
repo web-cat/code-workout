@@ -26,7 +26,7 @@ module ApplicationHelper
   # -------------------------------------------------------------
   # Returns the correct twitter bootstrap class mapping for different
   # types of flash messages
-  # 
+  #
   FLASH_CLASS = {
       success: 'alert-success',
       error:   'alert-danger',
@@ -43,7 +43,7 @@ module ApplicationHelper
   # -------------------------------------------------------------
   # Returns a FontAwesome icon name (without the prefix), if there
   # is one associated with the tag provided
-  # 
+  #
   ICON_NAME = {
       'success' => 'ok-sign',
       'error'   => 'exclamation-sign',
@@ -153,7 +153,7 @@ module ApplicationHelper
     if options[:icon]
       text = icon_tag_for(options[:icon]) + ' ' + text
     end
-    link_to text, destination, options       
+    link_to text, destination, options
   end
 
 
@@ -178,4 +178,14 @@ module ApplicationHelper
     end
     image_tag("belt"+num.to_s+".png", alt: color.to_s+" Belt ("+val.to_s+")")
   end
+
+  # -------------------------------------------------------------
+  def n_to_s(val)
+    if val == val.to_i
+      val.to_i.to_s
+    else
+      val.to_s
+    end
+  end
+
 end

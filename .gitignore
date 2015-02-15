@@ -28,3 +28,4 @@ lib/assets/stylesheets/theme/dark/images
 lib/assets/javascripts/theme/dark/libs
 lib/assets/javascripts/theme/dark/*.js
 lib/assets/javascripts/theme/dark/*.swf
+.DS_Store
