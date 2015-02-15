@@ -99,18 +99,18 @@ class ExercisesController < ApplicationController
     #Populate coding question's test case
     if (msg[:coding_questions])
       codingquestion = CodingQuestion.new
-      codingquestion.base_class=msg[:coding_questions][:base_class]
-      codingquestion.test_method=msg[:coding_questions][:test_method]
-      codingquestion.wrapper_code=msg[:coding_questions][:wrapper_code]      
-      codingquestion.test_script=msg[:coding_questions][:test_script]
+      codingquestion.base_class=msg[:coding_questions][:base_class].chomp.strip
+      codingquestion.test_method=msg[:coding_questions][:test_method].chomp.strip
+      codingquestion.wrapper_code=msg[:coding_questions][:wrapper_code].chomp.strip  
+      codingquestion.test_script=msg[:coding_questions][:test_script].chomp.strip
       ex.coding_question=codingquestion
-      extests=msg[:coding_questions][:test_script].split("\n")
+      extests=msg[:coding_questions][:test_script].strip.chomp.split("\n")
       extests.each do |tc|
         test_case=TestCase.new
         test_case.test_script='NONE for now'
         case_splits = tc.split(",")
-        test_case.input=case_splits[0]
-        test_case.expected_output=case_splits[1]
+        test_case.input=case_splits[0].strip.gsub(";",",")
+        test_case.expected_output=case_splits[1].strip
         test_case.weight=1.0
         test_case.description = case_splits[2] unless case_splits[2].nil? 
         test_case.negative_feedback= case_splits[3]
@@ -126,10 +126,10 @@ class ExercisesController < ApplicationController
       msg[:tag_ids].delete_if(&:empty?)
       language=msg[:tag_ids][0]
       Dir.chdir('usr/resources') do
-        test_end_code = generate_tests(ex.id,language,msg[:coding_questions][:base_class],msg[:coding_questions][:test_method])
+        test_end_code = generate_tests(ex.id,language,msg[:coding_questions][:base_class].chomp.strip,msg[:coding_questions][:test_method].chomp.strip)
         puts "LANGUAGE","LANGUAGE",language,"LANGUAGE","LANGUAGE"
         base_test_file = File.open("#{language}BaseTestFile.#{Exercise.get_language_extension(language)}","rb").read
-        test_base = base_test_file.gsub('baseclassclass',msg[:coding_questions][:base_class])
+        test_base = base_test_file.gsub('baseclassclass',msg[:coding_questions][:base_class].chomp.strip)
         
         if language == 'Java'          
           first_input = ex.coding_question.test_cases[0].input 
@@ -172,18 +172,18 @@ class ExercisesController < ApplicationController
             puts "TYPE ERROR","TYPE ERROR"
             output_type = 'ERR'
           end  
-          if input_type != 'ERR' && output_type != 'ERR'
-            test_base  = test_base.gsub('methodnameemandohtem',msg[:coding_questions][:test_method])
+          if output_type != 'ERR'
+            test_base  = test_base.gsub('methodnameemandohtem',msg[:coding_questions][:test_method].chomp.strip)
             test_base  = test_base.gsub('input_type',input_type)
             test_base  = test_base.gsub('output_type',output_type) 
                                         
             base_runner_file = File.open("JavaBaseTestRunner.java","rb").read
-            base_runner_code = base_runner_file.gsub('baseclassclass',msg[:coding_questions][:base_class])
-            File.open(msg[:coding_questions][:base_class]+'TestRunner.java', "wb") { |f| f.write( base_runner_code ) }
+            base_runner_code = base_runner_file.gsub('baseclassclass',msg[:coding_questions][:base_class].chomp.strip)
+            File.open(msg[:coding_questions][:base_class].chomp.strip+'TestRunner.java', "wb") { |f| f.write( base_runner_code ) }
           end # !ERR IF
         end # JAVA IF
         testing_code = test_base.gsub('TTTTT',test_end_code)
-        File.open(msg[:coding_questions][:base_class]+'Test.'+Exercise.get_language_extension(language), "wb") { |f| f.write( testing_code ) }
+        File.open(msg[:coding_questions][:base_class].chomp.strip+'Test.'+Exercise.get_language_extension(language), "wb") { |f| f.write( testing_code ) }
       end
     end
     
