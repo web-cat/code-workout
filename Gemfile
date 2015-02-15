@@ -15,6 +15,7 @@ gem 'haml-rails'
 gem 'coffee-rails', '~> 4.0.0'
 gem 'coffee-script-source'
 gem 'test-unit', '~> 3.0.9'
+
 group :assets do
   gem 'sass-rails'
   gem 'uglifier', '>= 1.3.0'

@@ -4,6 +4,9 @@ CodeWorkout::Application.routes.draw do
 
   get "home" => 'home#index'
   get "main" => 'home#index'
+  get "home/about"
+  get "home/license"
+  get "home/contact"
 
   get "static_pages/home"
   get "static_pages/help"
@@ -18,7 +21,7 @@ CodeWorkout::Application.routes.draw do
   post 'exercises/create_mcqs' => 'exercises#create_mcqs'
   get 'workouts/:id/add_exercises' => 'workouts#add_exercises'
   post 'workouts/link_exercises'  => 'workouts#link_exercises'
-  post "/coding_questions" => "exercises#create" 
+  post "/coding_questions" => "exercises#create"
 
   resources :exercises
   resources :coding_problems
@@ -36,9 +39,6 @@ CodeWorkout::Application.routes.draw do
   resources :course_enrollments
   resources :course_roles
   resources :users
-  resources :about
-  resources :license
-  resources :contact
   resources :resource_files
   resources :workouts
 
