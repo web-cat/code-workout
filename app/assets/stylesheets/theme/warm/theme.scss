@@ -5,7 +5,7 @@
 .content {
   background: #f8eedf;
   background: -webkit-gradient(linear, left top, right top,
-    from(#fff7ea), color-stop(90.0%,#fff7ea), to(#f8eedf));  
+    from(#fff7ea), color-stop(90.0%,#fff7ea), to(#f8eedf));
   background: -moz-linear-gradient(left, #fff7ea 100.0%, #f8eedf);
   background: linear-gradient(left, #fff7ea 100.0%, #f8eedf);
 }
@@ -15,11 +15,14 @@
 .sidebar {
   border-right: 4px solid #dfcdb2;
   background: -webkit-gradient(linear, left top, right top,
-    from(#f8eedf), to(#e8d8c0));  
+    from(#f8eedf), to(#e8d8c0));
   background: -moz-linear-gradient(left, #f8eedf, #e8d8c0);
   background: linear-gradient(left, #f8eedf, #e8d8c0);
 }
-.content .well {
+.content .well,
+.content .answers,
+.exercise.thumbnail,
+.exercise.thumbnail {
   background-color: #fcf2e3;
   border-color: #dfcdb2;
 }
@@ -143,7 +146,7 @@ a:hover, a:focus { color: #247184; }
   color: #3da2b4;
   text-shadow: 0 -1px 0 #231914;
   background: -webkit-gradient(linear, left top, right top,
-    from(#dfcdb2), to(#e8d8c0));  
+    from(#dfcdb2), to(#e8d8c0));
   background: -moz-linear-gradient(left, #dfcdb2, #e8d8c0);
   background: linear-gradient(left, #dfcdb2, #e8d8c0);
 }
@@ -167,7 +170,7 @@ a:hover, a:focus { color: #247184; }
 
 .darker-bkg  {
   background: -webkit-gradient(linear, left top, right top,
-    from(#dfcdb2), to(#e8d8c0));  
+    from(#dfcdb2), to(#e8d8c0));
   background: -moz-linear-gradient(left, #dfcdb2, #e8d8c0);
   background: linear-gradient(left, #dfcdb2, #e8d8c0);
 }
@@ -177,7 +180,7 @@ a:hover, a:focus { color: #247184; }
   color: #3da2b4;
   text-shadow: 0 -1px 0 #231914;
   background: -webkit-gradient(linear, left top, right top,
-    from(#dfcdb2), to(#e8d8c0));  
+    from(#dfcdb2), to(#e8d8c0));
   background: -moz-linear-gradient(left, #dfcdb2, #e8d8c0);
   background: linear-gradient(left, #dfcdb2, #e8d8c0);
 }

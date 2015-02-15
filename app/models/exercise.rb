@@ -53,11 +53,11 @@
 require "cgi"
 
 class Exercise < ActiveRecord::Base
- 
+
   #~ Accessor
   attr_accessor :answer_code
 
-  
+
   #~ Relationships ............................................................
 
   belongs_to  :user
@@ -66,7 +66,7 @@ class Exercise < ActiveRecord::Base
   #belongs_to  :language #language is now a tag with tagtype=2
 
   has_and_belongs_to_many :tags
-  #Converting the 'has_and_belongs_to_many' relationship to a 'has_many through' relationship 
+  #Converting the 'has_and_belongs_to_many' relationship to a 'has_many through' relationship
   #rhas_and_belongs_to_many :workouts
   has_many :workouts, through:  :exercise_workouts
   has_many :exercise_workouts
@@ -80,8 +80,8 @@ class Exercise < ActiveRecord::Base
   accepts_nested_attributes_for :coding_question, :allow_destroy => true
   accepts_nested_attributes_for :choices, :allow_destroy => true
   accepts_nested_attributes_for :tags, :allow_destroy => true
-  
-  
+
+
   #~ Hooks ....................................................................
   before_validation :set_defaults
   #~ Validation ...............................................................
@@ -178,7 +178,12 @@ class Exercise < ActiveRecord::Base
     if stem
       source = stem.preamble
     end
-    source = source + "<br>" + question
+    if !question.blank?
+      if !source.blank?
+        source += "</p><p>"
+      end
+      source += question
+    end
     return make_html(source)
   end
 
@@ -193,8 +198,8 @@ class Exercise < ActiveRecord::Base
     return score
   end
 
-  
-  #~Grab all feedback for choices either selected when wrong 
+
+  #~Grab all feedback for choices either selected when wrong
   #  or not selected when (at least partially) right
   def collate_feedback(answered)
     total = score(answered)
@@ -238,7 +243,7 @@ class Exercise < ActiveRecord::Base
   #getter override for title
   def title
     temp = "X"+read_attribute(:id).to_s
-    if not read_attribute(:title).nil? 
+    if not read_attribute(:title).nil?
       temp += ": " + read_attribute(:title).to_s
     elsif( !self.tags.nil? && !self.tags.first.nil? )
       temp += ": " + self.tags.first.tag_name
@@ -254,7 +259,7 @@ class Exercise < ActiveRecord::Base
   def user_attempted?(u_id)
     self.attempts.where(:user_id => u_id).any?
   end
-  
+
   private
   def self.type_name(type_num)
     if( type_num.nil? || type_num <= 0 || type_num > TYPES.size )

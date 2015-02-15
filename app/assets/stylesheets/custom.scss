@@ -13,7 +13,9 @@ html, body { height: 100%; }
 .content, .maincol {
   padding-left: 20px;
   padding-right: 20px;
+  padding-bottom: 40px;
 }
+#main { margin-bottom: 40px; }
 .row .col-md-3.sidebar { margin-left: 0; }
 .sidebar { padding-left: 25px; }
 
@@ -138,3 +140,15 @@ ul.wysihtml5-toolbar li {
 }
 
 .home.contact .form-wrapper { margin-top: 7px; }
+.exercise .info { width: 100%; }
+.exercise .info .taglist { width: 75%; @extend .one-line; min-height: 17px; }
+.exercise .info .pts { float: right; }
+.thumbnail .progress {
+  width: 100%;
+  height: 10px;
+}
+.thumbnail { padding-left: 0; padding-right: 0; }
+.thumbnail .text { padding: 0 9px 5px; }
+
+.answers .control-label { display: none; }
+.form-horizontal .answers .form-group { margin-left: 0; margin-right: 0; }
