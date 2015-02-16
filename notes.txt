@@ -31,6 +31,7 @@ in db/seeds.rb instead.
       - one course offering is set up with the admin and instructor
         as instructors, and all other sample accounts as students
 
+
 Git Practices
 -------------
 Do all work in your own branch, then merge into master when features
@@ -47,3 +48,28 @@ up to speed:
 
     rake db:reset
     rake db:populate
+
+
+Issues to Resolve
+-----------------
++   Java coding question support needs to be completed.
+
++   Cancan security implementation needs to be completed.
+
++   The "Find your course" button on the home page needs to be implemented.
+
++   The "Create your course" button on the home page needs to be implemented.
+
++   The "Try a question now" button on the home page needs to be implemented.
+    +   The auxiliary links in that same box on the home page should go
+        to random representatives of specific types of questions, but they
+        aren't implemented, either.
+
++   model/exercises.rb needs a method to return the language for a coding
+    exercise.
+    +   In app/views/exercises/practice.html.haml, for coding exercises, use
+        this new method to add the programming language as an attribute on
+        the textarea, so that codemirror will use the correct syntax
+        highlighting.  The attribute should look like: 'lang="text/x-java"'.
+        It can be added using an extra parameter to the f.input command
+        like this: 'input_html: { lang: ("text/x-" + @exercise.language) }'
