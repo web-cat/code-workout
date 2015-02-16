@@ -44,7 +44,7 @@
 
 .cm-s-aptana .CodeMirror-gutter {
   background: #3D3D3D;
-}  
+}
 
 .cm-s-aptana .CodeMirror-gutter .CodeMirror-gutter-text {
   color: #222;
@@ -57,6 +57,8 @@
 .cm-s-aptana .activeline {
   background: none repeat scroll 0% 0% #222;
 }
+
+.cm-s-aptana .CodeMirror-gutters { min-height: 46px; }
 
 /*
 .cm-s-aptana {
@@ -85,7 +87,7 @@
 }
 
 .cm-s-aptana .CodeMirror-lines {
-  
+
 }
 
 .cm-s-aptana .CodeMirror-lines .CodeMirror-cursor {

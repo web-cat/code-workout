@@ -9,10 +9,10 @@
   background: -moz-linear-gradient(left, #fff7ea 100.0%, #f8eedf);
   background: linear-gradient(left, #fff7ea 100.0%, #f8eedf);
 }
-.content {
+.content .inner {
   border-left: 2px solid #fff7ea;
 }
-.sidebar {
+.sidebar .inner {
   border-right: 4px solid #dfcdb2;
   background: -webkit-gradient(linear, left top, right top,
     from(#f8eedf), to(#e8d8c0));

@@ -8,16 +8,18 @@ html, body { height: 100%; }
 .max-height { height: 100%; }
 .full-height { min-height: 100%; }
 .no-overflow { overflow-y: hidden; }
-.below-nav { padding-top: 60px; }
+.below-nav { padding: 60px 10px 0; }
 
+.sidebar, .content, .maincol {
+  padding-left: 0px;
+  padding-right: 0px;
+}
 .content, .maincol {
-  padding-left: 20px;
-  padding-right: 20px;
   padding-bottom: 40px;
 }
-#main { margin-bottom: 40px; }
-.row .col-md-3.sidebar { margin-left: 0; }
-.sidebar { padding-left: 25px; }
+.content .below-nav {}
+
+#main { margin: 0 0 40px; }
 
 .navbar .nav > li > a, .navbar-inverse .navbar-link { padding: 2px 6px; }
 .navbar .nav > li { padding: 8px 9px; }
@@ -29,10 +31,8 @@ html, body { height: 100%; }
 
 /* Codemirror */
 
-.CodeMirror {
-  height: auto;
-  margin-bottom: 9px;
-}
+.CodeMirror { height: auto; margin-bottom: 9px; }
+.practice .CodeMirror { min-height: 18px * 15; }
 
 
 /* Right sidebar text */
@@ -150,5 +150,5 @@ ul.wysihtml5-toolbar li {
 .thumbnail { padding-left: 0; padding-right: 0; }
 .thumbnail .text { padding: 0 9px 5px; }
 
-.answers .control-label { display: none; }
+.practice .control-label { display: none; }
 .form-horizontal .answers .form-group { margin-left: 0; margin-right: 0; }

@@ -1,5 +1,6 @@
 .col-md-7
-  = semantic_form_for @exercise ,url: exercise_evaluate_path(@exercise, wexes: params[:wexes], feedback_return: true),remote: true , html: { class: "form-horizontal" } do |f|
+  = semantic_form_for @exercise, url: exercise_evaluate_path(@exercise,
+    wexes: params[:wexes], feedback_return: true), remote: true do |f|
     = f.semantic_errors
     %h1= @exercise.title
     %p= @exercise.serve_question_html
@@ -23,7 +24,7 @@
             member_label: :answer,
             label: "&nbsp;"
     - elsif @exercise.base_exercise.question_type == 2
-      = f.input :answer_code, as: :text
+      = f.input :answer_code, as: :text, class: 'code'
     .actions
       = f.submit 'Check my answer!', class: 'btn btn-primary'
 .col-md-5
