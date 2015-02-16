@@ -10,7 +10,8 @@
     %tr
       %td= link_to 'Show', resource_file
       %td= link_to 'Edit', edit_resource_file_path(resource_file)
-      %td= link_to 'Destroy', resource_file, :method => :delete, :data => { :confirm => 'Are you sure?' }
+      %td= link_to 'Destroy', resource_file, method: :delete,
+        data: { confirm: 'Are you sure?' }
 
 %br
 

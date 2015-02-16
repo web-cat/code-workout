@@ -7,7 +7,7 @@
 %p
   %strong Term -
   = Term.find(@course_offering.term_id).display_name
-  
+
 %p
   %strong Name:
   = @course_offering.name
@@ -24,13 +24,16 @@
   %strong Self enrollment allowed:
   = @course_offering.self_enrollment_allowed
   %p
-  %strong 
+  %strong
   = link_to 'Add workouts', course_offering_add_workout_path(@course_offering)
   %br
-  %strong 
-  - if user_signed_in?  
-    = link_to 'Enroll', '/course_enrollments?'+ {:course_enrollment => ActionController::Parameters.new({:user_id => User.find(current_user.id), :course_offering_id => @course_offering, :course_role_id => CourseRole.find(3)})}.to_param, method: :post
-  
+  %strong
+  - if user_signed_in?
+    = link_to 'Enroll',
+      '/course_enrollments?'+ { course_enrollment: ActionController::Parameters.new({ user_id: User.find(current_user.id),
+      course_offering_id: @course_offering,
+      course_role_id: CourseRole.find(3) }) }.to_param,
+      method: :post
 
 = button_link 'Edit', edit_course_offering_path(@course_offering)
 = button_link 'Back', course_offerings_path

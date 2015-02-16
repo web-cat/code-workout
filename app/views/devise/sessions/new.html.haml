@@ -1,6 +1,8 @@
 %h2 Sign in
 
-= semantic_form_for(resource, as: resource_name, url: session_path(resource_name), html: { class: "form-horizontal" }) do |f|
+= semantic_form_for resource, as: resource_name,
+  url: session_path(resource_name),
+  html: { class: "form-horizontal" } do |f|
 
   = f.inputs do
     = f.input :email, input_html:{ autofocus: true }

@@ -5,6 +5,6 @@
     upload_roster_path(@course_offering),
     class: "btn btn-inverse",
     remote: true
-  %a.btn{"data-toggle" => "modal", :href => "#upload_roster_modal", :role => "button"} Modal
+  %a.btn{"data-toggle" => "modal", href: "#upload_roster_modal", role: "button"} Modal
   = f.actions do
     = f.action :submit, as: :button, button_html: { class: 'btn btn-primary' }

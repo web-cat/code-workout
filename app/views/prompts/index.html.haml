@@ -26,7 +26,8 @@
       %td= prompt.discrimination
       %td= link_to 'Show', prompt
       %td= link_to 'Edit', edit_prompt_path(prompt)
-      %td= link_to 'Destroy', prompt, :method => :delete, :data => { :confirm => 'Are you sure?' }
+      %td= link_to 'Destroy', prompt, method: :delete,
+        data: { confirm: 'Are you sure?' }
 
 %br
 

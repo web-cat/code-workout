@@ -5,7 +5,8 @@
     .navbar-collapse.collapse
       %ul.nav.navbar-nav.nav-top
         %li.dropdown
-          %a.dropdown-toggle{ href: '/gym', data: { toggle: 'dropdown' },value: 'Gym' }
+          %a.dropdown-toggle{ href: '/gym',
+            data: { toggle: 'dropdown' }, value: 'Gym' }
             Gym
           %ul.dropdown-menu
             %li
@@ -19,21 +20,23 @@
                     %li= link_to 'Workout 13', '/workouts/13'
                     %li= link_to 'Workout 14', '/workouts/14'
                     %li= link_to 'Workout 15', '/workouts/15'
-                  - if user_signed_in?  
+                  - if user_signed_in?
                     %ul.col-sm-6.list-unstyled
                       %li
                         %strong
                           Manage Workouts
                       %li= link_to 'Edit Workout', '/workouts/'
                       %li= link_to 'Create Workout', '/workouts/new'
-                - if user_signed_in?      
+                - if user_signed_in?
                   .row
                     %ul.col-sm-6.list-unstyled
                       %li
                         %strong
                           = link_to 'Exercises','/exercises'
-                      %li= link_to 'Upload Exercises - CSV', 'exercises/upload_exercises'
-                      %li= link_to 'Upload Exercises - MCQ', 'exercises/upload_mcqs'
+                      %li= link_to 'Upload Exercises - CSV',
+                        'exercises/upload_exercises'
+                      %li= link_to 'Upload Exercises - MCQ',
+                        'exercises/upload_mcqs'
                     %ul.col-sm-6.list-unstyled
                       %li
                         %strong
@@ -41,7 +44,8 @@
                       %li= link_to 'Edit Exercise', '/exercises/edit'
                       %li= link_to 'Create Exercise', '/exercises/new'
         %li.dropdown
-          %a.dropdown-toggle{ href: '/courses', data: { toggle: 'dropdown' },value: 'Gym' }
+          %a.dropdown-toggle{ href: '/courses',
+            data: { toggle: 'dropdown' }, value: 'Course' }
             Course
           %ul.dropdown-menu
             %li
@@ -78,23 +82,28 @@
               %ul.dropdown-menu
                 %li.dropdown-header Manage
                 %li= link_to icon_tag_for('user') + ' Users', users_path
-                %li= link_to icon_tag_for('fa-sitemap') + ' Organizations', organizations_path
+                %li= link_to icon_tag_for('fa-sitemap') + ' Organizations',
+                  organizations_path
                 %li= link_to icon_tag_for('calendar') + ' Terms', terms_path
                 %li= link_to icon_tag_for('book') + ' Courses', courses_path
-                %li= link_to icon_tag_for('fa-group') + ' Course offerings', course_offerings_path
+                %li= link_to icon_tag_for('fa-group') + ' Course offerings',
+                  course_offerings_path
           %li= link_to current_user.email, current_user
           %li
             = link_to destroy_user_session_path, method: :delete do
               %i.fa.fa-sign-out
         - else
           %li.dropdown
-            %a.dropdown-toggle{ href: '/signin', data: { toggle: 'dropdown' },value: 'Gym' }
+            %a.dropdown-toggle{ href: '/signin',
+              data: { toggle: 'dropdown' }, value: 'Sign in' }
               Sign in
             %ul.dropdown-menu
               %li
-                %li= link_to image_tag('FacebookButton_post-image.jpg'), user_omniauth_authorize_path(:facebook)
+                %li= link_to image_tag('FacebookButton_post-image.jpg'),
+                  user_omniauth_authorize_path(:facebook)
               %li
-                %li= link_to image_tag('google-plus-sign-in.jpg'), user_omniauth_authorize_path(:google_oauth2)
+                %li= link_to image_tag('google-plus-sign-in.jpg'),
+                  user_omniauth_authorize_path(:google_oauth2)
               %li
                 %div
                   .yamm-content

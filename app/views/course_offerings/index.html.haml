@@ -22,9 +22,9 @@
         %td= course_offering.self_enrollment_allowed
         %td
           = button_link 'Show', course_offering, size: 'sm'
-          = button_link 'Edit', edit_course_offering_path(course_offering), size: 'sm'
-          = button_link 'Destroy', course_offering, method: :delete,      |
-            size: 'sm', data: { confirm: 'Are you sure?' }               |
+          = button_link 'Edit', edit_course_offering_path(course_offering),
+            size: 'sm'
+          = button_link 'Destroy', course_offering, method: :delete,
+            size: 'sm', data: { confirm: 'Are you sure?' }
 
 = button_link 'New Course Offering', new_course_offering_path
-  

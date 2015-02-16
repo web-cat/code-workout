@@ -19,7 +19,7 @@
         %td
           = button_link 'Show', course, size: 'sm'
           = button_link 'Edit', edit_course_path(course), size: 'sm'
-          = button_link 'Destroy', course, method: :delete, size: 'sm',  |
-            data: { confirm: 'Are you sure?' }                            |
+          = button_link 'Destroy', course, method: :delete, size: 'sm',
+            data: { confirm: 'Are you sure?' }
 
 = button_link 'New Course', new_course_path

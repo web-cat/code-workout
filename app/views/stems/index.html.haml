@@ -12,7 +12,8 @@
       %td= stem.preamble
       %td= link_to 'Show', stem
       %td= link_to 'Edit', edit_stem_path(stem)
-      %td= link_to 'Destroy', stem, :method => :delete, :data => { :confirm => 'Are you sure?' }
+      %td= link_to 'Destroy', stem, method: :delete,
+      data: { confirm: 'Are you sure?' }
 
 %br
 

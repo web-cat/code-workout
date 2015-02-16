@@ -13,7 +13,8 @@
       - @tag_scores.each do |t|
         %tr
           %td
-            =link_to(t[:tag_name], search_path(:search => t[:tag_name]), method: :post, class: "tag")
+            =link_to t[:tag_name], search_path(:search => t[:tag_name]),
+              method: :post, class: 'tag'
           %td
             - earned = rand(500)
             - possible = rand(500)
