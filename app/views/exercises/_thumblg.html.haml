@@ -1,15 +1,49 @@
-.well.well-sm.col-md-4
-  .row.one-line
-    %p.teaser-title.col-md-10.slim
-      %span.badge.badge-info
-        %i.fa.fa-bolt
+%article.exercise.thumbnail.lg
+  .text
+    .title
+      %i.glyphicon.glyphicon-th-list
       = link_to x.title, exercise_practice_path(:id => x[:id])
-    .col-md-2
-      = difficulty_image(x.experience.to_i)
-  .row.one-line
-    -if x.tags.empty?
-      &nbsp; &nbsp;
-    - x.tags.each do |t|
-      =link_to(t[:tag_name], search_path(:search => t[:tag_name]), method: :post, class: "tag")
-  .row.one-line
+      -#= difficulty_image(x.experience.to_i)
     = x.teaser_text
+    .info
+      - attempt = nil
+      - attempt_pct = 0
+      - ex_workout = nil
+      - if uid && uid != 0
+        - attempt = Attempt.where(user_id: uid, exercise_id: x.id).last
+        - if attempt && attempt.score > 0
+          - attempt_pct = 100
+        - if session[:current_workout]
+          - ex_workout = ExerciseWorkout.find_by(exercise_id: x.id,
+            workout_id: session[:current_workout])
+          - if ex_workout && attempt
+            - attempt_pct = number_to_percentage(attempt.score / ex_workout.points)
+      .pts
+        - if attempt
+          = n_to_s attempt.score
+          - plural = (attempt.score != 1)
+          - if ex_workout
+            /
+            = n_to_s ex_workout.points
+            - plural = (ex_workout.points != 1)
+          - if plural
+            pts
+          - else
+            pt
+      .taglist
+        - x.tags.each do |t|
+          =link_to t[:tag_name], search_path(:search => t[:tag_name]),
+            method: :post, class: "tag"
+  .progress
+    - if ex_workout
+      .progress-bar{ role: 'progressbar',
+        'aria-valuenow' => attempt_pct,
+        'aria-valuemax' => 100,
+        'aria-valuemin' => 0,
+        style: 'width: ' + attempt_pct.to_s + '%;' }
+    - else
+      .progress-bar{ role: 'progressbar',
+        'aria-valuenow' => 0,
+        'aria-valuemax' => 100,
+        'aria-valuemin' => 0,
+        style: 'width: 0%;' }

@@ -73,3 +73,14 @@ Issues to Resolve
         highlighting.  The attribute should look like: 'lang="text/x-java"'.
         It can be added using an extra parameter to the f.input command
         like this: 'input_html: { lang: ("text/x-" + @exercise.language) }'
+
++   Exercise thumbnails currently include an icon, but the icon should
+    be based on the exercise type (MC = glyphicon-th-list, Coding =
+    fa-file-code-o or fa-keyboard-o?) instead.
+
++   Exercise thumbnails need to include meaningful point displays even
+    when the exercise is not associated with the current workout, and
+    need to include meaningful points earned info if the current user
+    has completed (or attempted) it.  At present, the logic for displaying
+    points earned + total points in thumbnails is incomplete and needs to
+    be redone.

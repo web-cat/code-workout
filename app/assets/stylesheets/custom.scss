@@ -141,7 +141,13 @@ ul.wysihtml5-toolbar li {
 
 .home.contact .form-wrapper { margin-top: 7px; }
 .exercise .info { width: 100%; }
-.exercise .info .taglist { width: 75%; @extend .one-line; min-height: 17px; }
+.thumbnail .info .taglist {
+  @extend .one-line;
+  width: 75%;
+  min-height: 17px;
+  text-overflow: ellipsis;
+}
+.thumbnail .title { @extend .one-line; text-overflow: ellipsis; }
 .exercise .info .pts { float: right; }
 .thumbnail .progress {
   width: 100%;
@@ -152,3 +158,12 @@ ul.wysihtml5-toolbar li {
 
 .practice .control-label { display: none; }
 .form-horizontal .answers .form-group { margin-left: 0; margin-right: 0; }
+
+.thumbnail.lg {
+  width: 45%;
+  margin-right: 4%;
+  padding-bottom: 0;
+  display: block;
+  float: left;
+}
+.thumbnail.lg .progress { margin-bottom: 0; }

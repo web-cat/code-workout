@@ -1,11 +1,11 @@
+- uid = user_signed_in? ? current_user.id : 0
 - if not(@msg.empty?)
   .alert=@msg
-
 - if not(@wos.empty?)
-  .row
-    %h2 Workouts
-    = render partial: "workouts/thumblg", collection: @wos, as: :w
+  %h2 Workouts
+  = render partial: "workouts/thumblg", collection: @wos, as: :w,
+    locals: { uid: uid }
 - if not(@exs.empty?)
-  .row
-    %h2 Individual Exercises
-    = render partial: "exercises/thumblg", collection: @exs, as: :x            
+  %h2 Individual Exercises
+  = render partial: "exercises/thumblg", collection: @exs, as: :x,
+    locals: { uid: uid }
