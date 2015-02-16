@@ -176,8 +176,16 @@ class CodeWorker
   end  
   
   def execute_javatest(base_class)
-    output =  `javac #{base_class}.java #{base_class}Test.java #{base_class}TestRunner.java`
-    output += `java #{base_class}TestRunner`    
+    if system("javac #{base_class}.java #{base_class}Test.java #{base_class}TestRunner.java  >> javaerr.log 2>>javaerr.log")
+      if system("java #{base_class}TestRunner")
+        puts "JAVA","JAVA FINE"    
+        return nil
+      else
+        return output=`cat javaerr.log`  
+      end
+    else
+      return output=`cat javaerr.log`
+    end  
   end
   
   def execute_rubytest(base_class)
