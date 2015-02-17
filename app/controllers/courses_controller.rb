@@ -1,6 +1,8 @@
 class CoursesController < ApplicationController
   before_action :set_course, only: [:show, :edit, :generate_gradebook,:update, :destroy]
-
+  require 'action_view/helpers/javascript_helper'
+  include ActionView::Helpers::JavaScriptHelper
+  respond_to :html, :js, :json  
   # GET /courses
   def index
     @courses = Course.all
@@ -27,7 +29,9 @@ class CoursesController < ApplicationController
   def create
     
     form = params[:course]
+    offering=form[:course_offering]
     @course = Course.find_by number: form[:number]
+    
     if @course.nil?
       @course = Course.new
       @course.name = form[:name].to_s
@@ -42,13 +46,13 @@ class CoursesController < ApplicationController
         org.save
       end
      else
-       @course.each do |c|
+       @course.course_offerings do |c|
          if c.term == offering[:term].to_s
            redirect_to new_course_path, alert: 'Course offering with this number for this term already exists' and return
          end
        end
      end
-      offering=form[:course_offering]
+      
       tmp = CourseOffering.create
       tmp.name = form[:name].to_s
       unless offering[:label].nil?
@@ -88,6 +92,14 @@ class CoursesController < ApplicationController
   def destroy
     @course.destroy
     redirect_to courses_url, notice: 'Course was successfully destroyed.'
+  end
+  
+  def search    
+  end
+  
+  def find
+    @courses = Course.search(params[:search])
+    redirect_to courses_search_path(courses: @courses,listing: true), format: :js, remote: true    
   end
   
   # POST /courses/:id/generate_gradebook
