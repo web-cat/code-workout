@@ -1,3 +1,7 @@
+%br
+%b Code test results:
+%br
+%br
 - if !Attempt.where(user_id: current_user.id,exercise_id: @exercise.id).blank?
   - if @exercise.base_exercise.question_type == 1
     = Choice.find(Attempt.where(user_id: current_user.id,exercise_id: @exercise.id).last.answer.to_i).feedback
@@ -18,5 +22,5 @@
   - if (session[:current_workout] && params[:wexes].nil?)
     = link_to 'Finish Workout', workout_evaluate_path(:uid => current_user.id,:wid => session[:current_workout])
   - elsif (session[:current_workout] && params[:wexes][1..-1].count>=0)
-    = link_to 'Next question', exercise_practice_path(:id => params[:wexes].first, :wexes => params[:wexes][1..-1]), method: :get
+    = button_to 'Next question', exercise_practice_path(:id => params[:wexes].first, :wexes => params[:wexes][1..-1]), method: :get
       
