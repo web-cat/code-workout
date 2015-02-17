@@ -4,7 +4,9 @@
       %tr
         - (0...@uploaded_roster.column_count).each do |index|
           %th
-            = select_tag "columns[#{index}]", options_for_select(UploadedRoster::COLUMNS, @uploaded_roster.column_mapping[index])
+            = select_tag "columns[#{index}]",
+              options_for_select(UploadedRoster::COLUMNS,
+              @uploaded_roster.column_mapping[index])
     %tbody
       - @uploaded_roster.preview_rows.each do |row|
         %tr

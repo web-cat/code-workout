@@ -11,4 +11,5 @@
       - if can? :update, user
         = button_link 'Edit', edit_user_path(user), size: 'sm'
       - if can? :manage, User
-        = button_link 'Destroy', user, method: :delete, size: 'sm', data: { confirm: 'Are you sure?' }
+        = button_link 'Destroy', user, method: :delete, size: 'sm',
+          data: { confirm: 'Are you sure?' }

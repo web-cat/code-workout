@@ -6,20 +6,23 @@
       -#= difficulty_image(x.experience.to_i)
     = x.teaser_text
     .info
-      - if !uid.nil?
+      - attempt = nil
+      - attempt_pct = 0
+      - ex_workout = nil
+      - if uid && uid != 0
         - attempt = Attempt.where(user_id: uid, exercise_id: x.id).last
-        - attempt_pct = 0
-        - if !attempt.nil? && attempt.score > 0
+        -if !attempt && attempt.score > 0
           - attempt_pct = 100
-        - if !session[:current_workout].nil?
-          - ex_workout = ExerciseWorkout.find_by(workout_id: session[:current_workout], exercise_id: x.id)
-          - if !ex_workout.nil? && !attempt.nil?
+        - if session[:current_workout]
+          - ex_workout = ExerciseWorkout.find_by(exercise_id: x.id,
+            workout_id: session[:current_workout])
+          - if ex_workout && attempt
             - attempt_pct = number_to_percentage(attempt.score / ex_workout.points)
       .pts
-        - if !attempt.nil?
+        - if attempt
           = n_to_s attempt.score
           - plural = (attempt.score != 1)
-          - if !ex_workout.nil?
+          - if ex_workout
             /
             = n_to_s ex_workout.points
             - plural = (ex_workout.points != 1)
@@ -29,10 +32,18 @@
             pt
       .taglist
         - x.tags.each do |t|
-          =link_to t[:tag_name], search_path(:search => t[:tag_name]),
+          =link_to t[:tag_name], search_path(search: t[:tag_name]),
             method: :post, class: "tag"
   .progress
-    - if !ex_workout.nil?
-      .progress-bar{ role: 'progressbar', 'aria-valuenow' => attempt_pct, 'aria-valuemax' => 100, 'aria-valuemin' => 0, style: 'width: ' + attempt_pct.to_s + '%;' }
+    - if ex_workout
+      .progress-bar{ role: 'progressbar',
+        'aria-valuenow' => attempt_pct,
+        'aria-valuemax' => 100,
+        'aria-valuemin' => 0,
+        style: 'width: ' + attempt_pct.to_s + '%;' }
     - else
-      .progress-bar{ role: 'progressbar', 'aria-valuenow' => 50, 'aria-valuemax' => 100, 'aria-valuemin' => 0, style: 'width: 0%;' }
+      .progress-bar{ role: 'progressbar',
+        'aria-valuenow' => 0,
+        'aria-valuemax' => 100,
+        'aria-valuemin' => 0,
+        style: 'width: 0%;' }

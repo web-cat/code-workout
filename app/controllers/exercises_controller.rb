@@ -51,27 +51,27 @@ class ExercisesController < ApplicationController
   def create
     basex=BaseExercise.new
     ex=Exercise.new
-    msg = params[:exercise] || params[:coding_question]   
+    msg = params[:exercise] || params[:coding_question]
     basex.user_id=current_user.id
     basex.question_type = msg[:question_type] || 1
-    basex.versions=1    
+    basex.versions=1
     ex.title = msg[:title].chomp.strip
     #ex.question = ERB::Util.html_escape(msg[:question])
     #ex.feedback = ERB::Util.html_escape(msg[:feedback])
     ex.question = msg[:question]
     ex.feedback = msg[:feedback]
-    
+
     ex.is_public = true
     if msg[:is_public] == 0
       ex.is_public = false
     end
-    
+
     if msg[:mcq_allow_multiple].nil?
       ex.mcq_allow_multiple = false
     else
       ex.mcq_allow_multiple = msg[:mcq_allow_multiple]
     end
-    
+
     if msg[:mcq_is_scrambled].nil?
       ex.mcq_is_scrambled = false
     else
@@ -90,18 +90,18 @@ class ExercisesController < ApplicationController
     else
       ex.experience = 10
     end
-    
+
     #default IRT statistics
     ex.difficulty = 0
     ex.discrimination = 0
     ex.version=1
-    
+
     #Populate coding question's test case
     if (msg[:coding_questions])
       codingquestion = CodingQuestion.new
       codingquestion.base_class=msg[:coding_questions][:base_class].chomp.strip
       codingquestion.test_method=msg[:coding_questions][:test_method].chomp.strip
-      codingquestion.wrapper_code=msg[:coding_questions][:wrapper_code].chomp.strip  
+      codingquestion.wrapper_code=msg[:coding_questions][:wrapper_code].chomp.strip
       codingquestion.test_script=msg[:coding_questions][:test_script].chomp.strip
       ex.coding_question=codingquestion
       extests=msg[:coding_questions][:test_script].strip.chomp.split("\n")
@@ -112,15 +112,15 @@ class ExercisesController < ApplicationController
         test_case.input=case_splits[0].strip.gsub(";",",")
         test_case.expected_output=case_splits[1].strip
         test_case.weight=1.0
-        test_case.description = case_splits[2] unless case_splits[2].nil? 
+        test_case.description = case_splits[2] unless case_splits[2].nil?
         test_case.negative_feedback= case_splits[3]
         ex.coding_question.test_cases<<test_case
       end
     end
-        
-    basex.exercises<<ex    
+
+    basex.exercises<<ex
     ex.save!
-    basex.current_version=ex.id    
+    basex.current_version=ex.id
     basex.save
     if (msg[:coding_questions])
       msg[:tag_ids].delete_if(&:empty?)
@@ -128,19 +128,19 @@ class ExercisesController < ApplicationController
       Dir.chdir('usr/resources') do
         test_end_code = generate_tests(ex.id,language,msg[:coding_questions][:base_class].chomp.strip,msg[:coding_questions][:test_method].chomp.strip)
         puts "LANGUAGE","LANGUAGE",language,"LANGUAGE","LANGUAGE"
-        base_test_file = File.open("#{language}BaseTestFile.#{Exercise.get_language_extension(language)}","rb").read
+        base_test_file = File.open("#{language}BaseTestFile.#{Exercise.extension_of(language)}","rb").read
         test_base = base_test_file.gsub('baseclassclass',msg[:coding_questions][:base_class].chomp.strip)
-        
-        if language == 'Java'          
-          first_input = ex.coding_question.test_cases[0].input 
+
+        if language == 'Java'
+          first_input = ex.coding_question.test_cases[0].input
           first_expected_output = ex.coding_question.test_cases[0].expected_output
-          if first_input == 'true' || first_input == 'false'  
+          if first_input == 'true' || first_input == 'false'
             puts "BOOLEAN TYPE","BOOLEAN TYPE"
             input_type = 'boolean'
           elsif first_input.include?('"')
             puts "STRING TYPE","STRING TYPE"
             input_type = 'String'
-          elsif first_input.include?("'")  
+          elsif first_input.include?("'")
              puts "CHAR TYPE","CHAR TYPE"
              input_type = 'char'
           elsif first_input.to_i.to_s == first_input
@@ -152,14 +152,14 @@ class ExercisesController < ApplicationController
           else
              puts "TYPE ERROR","TYPE ERROR"
              input_type = 'ERR'
-          end   
-          if first_expected_output == 'true' || first_expected_output == 'false'  
+          end
+          if first_expected_output == 'true' || first_expected_output == 'false'
             puts "BOOLEAN TYPE","BOOLEAN TYPE"
             output_type = 'boolean'
           elsif first_expected_output.include?('"')
             puts "STRING TYPE","STRING TYPE"
             output_type = 'String'
-          elsif first_expected_output.include?("'")  
+          elsif first_expected_output.include?("'")
             puts "CHAR TYPE","CHAR TYPE"
             output_type = 'char'
           elsif first_expected_output.to_i.to_s == first_expected_output
@@ -171,22 +171,22 @@ class ExercisesController < ApplicationController
           else
             puts "TYPE ERROR","TYPE ERROR"
             output_type = 'ERR'
-          end  
+          end
           if output_type != 'ERR'
             test_base  = test_base.gsub('methodnameemandohtem',msg[:coding_questions][:test_method].chomp.strip)
             test_base  = test_base.gsub('input_type',input_type)
-            test_base  = test_base.gsub('output_type',output_type) 
-                                        
+            test_base  = test_base.gsub('output_type',output_type)
+
             base_runner_file = File.open("JavaBaseTestRunner.java","rb").read
             base_runner_code = base_runner_file.gsub('baseclassclass',msg[:coding_questions][:base_class].chomp.strip)
             File.open(msg[:coding_questions][:base_class].chomp.strip+'TestRunner.java', "wb") { |f| f.write( base_runner_code ) }
           end # !ERR IF
         end # JAVA IF
         testing_code = test_base.gsub('TTTTT',test_end_code)
-        File.open(msg[:coding_questions][:base_class].chomp.strip+'Test.'+Exercise.get_language_extension(language), "wb") { |f| f.write( testing_code ) }
+        File.open(msg[:coding_questions][:base_class].chomp.strip+'Test.'+Exercise.extension_of(language), "wb") { |f| f.write( testing_code ) }
       end
     end
-    
+
     i = 0
     right = 0.0
     total = 0.0
@@ -225,7 +225,7 @@ class ExercisesController < ApplicationController
         ex.choices << tmp
         #tmp.exercise << @exercise
         tmp.save!
-        
+
         i=i+1
       end
     end
@@ -268,12 +268,12 @@ class ExercisesController < ApplicationController
 
 # POST exercises/create_mcqs
 def create_mcqs
-    
-  basex=BaseExercise.new    
+
+  basex=BaseExercise.new
   basex.user_id=current_user.id
   basex.question_type = msg[:question_type] || 1
-  basex.versions=1   
-  csvfile = params[:form]  
+  basex.versions=1
+  csvfile = params[:form]
   puts csvfile.fetch(:xmlfile).path
   CSV.foreach(csvfile.fetch(:xmlfile).path) do |question|
     if $INPUT_LINE_NUMBER > 1
@@ -286,24 +286,24 @@ def create_mcqs
       else
         gradertext_ex=""
       end
-                  
+
       if ( !question[5].nil? && !question[6].nil? &&  !question[5][3..-5].nil? && !question[6][3..-5].nil?)
         ex = Exercise.new
         ex.title = title_ex
-        ex.question = question_ex 
-        ex.feedback = gradertext_ex 
+        ex.question = question_ex
+        ex.feedback = gradertext_ex
         ex.is_public = true
-        
+
         #if msg[:is_public] == 0
          # ex.is_public = false
         #end
-        
+
         ex.mcq_allow_multiple = true
-        
+
         #if msg[:mcq_allow_multiple].nil?
          # ex.mcq_allow_multiple = false
         #end
-        
+
         ex.mcq_is_scrambled = true
         #if msg[:mcq_is_scrambled].nil?
          # ex.mcq_is_scrambled = false
@@ -316,26 +316,26 @@ def create_mcqs
 
         ex.user_id = current_user.id
         ex.experience = 10
-      
-    
+
+
         #default IRT statistics
         ex.difficulty = 0
         ex.discrimination = 0
         ex.version=1
-        basex.exercises<<ex    
+        basex.exercises<<ex
         ex.save!
-        basex.current_version=ex.id    
+        basex.current_version=ex.id
         basex.save
-        
+
         #   i = 0
         #  right = 0.0
         # total = 0.0
-        alphanum = {"A"=>1,"B"=>2,"C"=>3,"D"=>4,"E"=>5,"F"=>6,"G"=>7,"H"=>8,"I"=>9,"J"=>10}  
-        choices=[]        
+        alphanum = {"A"=>1,"B"=>2,"C"=>3,"D"=>4,"E"=>5,"F"=>6,"G"=>7,"H"=>8,"I"=>9,"J"=>10}
+        choices=[]
         choice1=question[5][3..-5]
         choices<<choice1
         choice2=question[6][3..-5]
-        choices<<choice2        
+        choices<<choice2
         if (!question[7].nil? && question[7].include?("p"))
           choice3=question[7][3..-5]
           choices<<choice3
@@ -385,7 +385,7 @@ def create_mcqs
           #ch.exercise << @exercise
           ch.save!
         end
-      
+
       else
         puts "INVALID Question"
         puts "INVALID choice",choice1
@@ -395,9 +395,9 @@ def create_mcqs
   end
   redirect_to exercises_url, notice: "Uploaded!"
 end
-  
-# GET exercises/upload_mcqs  
-def upload_mcqs  
+
+# GET exercises/upload_mcqs
+def upload_mcqs
 end
 
 # GET exercises/upload_exercises
@@ -406,11 +406,11 @@ end
 
 # POST /exercises/upload_create
 def upload_create
-  
-  basex=BaseExercise.new    
+
+  basex=BaseExercise.new
   basex.user_id=current_user.id
   basex.question_type = msg[:question_type] || 1
-  basex.versions=1    
+  basex.versions=1
   questionfile = params[:form]
   doc=Nokogiri::XML(File.open(questionfile.fetch(:xmlfile).path));
   questions=doc.xpath('/quiz/question');
@@ -420,28 +420,28 @@ def upload_create
     question_ex = question.xpath('./questiontext/text')[0].content
     if !question.xpath('.//generalfeedback/text').empty?
       feedback_ex = question.xpath('.//generalfeedback/text')[0].content
-    else 
+    else
       feedback_ex = ""
-    end  
-  
+    end
+
     if !question.xpath('.//defaultgrade').empty?
       priority_ex = question.xpath('.//defaultgrade')[0].content
-    else 
+    else
       priority_ex = 1.to_s
     end
 
     if !question.xpath('.//penalty').empty?
       discrimination_ex = question.xpath('.//penalty')[0].content
-    else 
+    else
       discrimination_ex = 0.to_s
     end
 
     if !question.xpath('.//graderinfo').empty?
       gradertext_ex=question.xpath('.//graderinfo/text')[0].content
-    else 
+    else
       gradertext_ex = ""
     end
-    #TODO Sanitize the uploads  
+    #TODO Sanitize the uploads
     ex.title = title_ex
     ex.question = question_ex
     ex.feedback = feedback_ex
@@ -454,14 +454,14 @@ def upload_create
     ex.count_correct = 1
     ex.user_id = current_user.id
     ex.experience = 20
-          
+
     #default IRT statistics
     ex.difficulty = 5
     ex.discrimination = discrimination_ex
     ex.version=1
-    basex.exercises<<ex    
+    basex.exercises<<ex
     ex.save!
-    basex.current_version=ex.id    
+    basex.current_version=ex.id
     basex.save
   end
   redirect_to exercises_url, notice: "Uploaded!"
@@ -477,10 +477,10 @@ end
         @answers = @exercise.serve_choice_array
         @responses = ["There are no responses yet!"]
         @explain = ["There are no explanations yet!"]
-        
+
         # EOL stands for end of line
         # @wexs is the variable to hold the list of exercises of this workout yet to be attempted by the user apart from the current exercise
-        if params[:wexes] != "EOL" 
+        if params[:wexes] != "EOL"
           @wexs = params[:wexes] || session[:remaining_wexes]
         else
           @wexs = nil
@@ -532,10 +532,10 @@ end
           end
           @score = @exercise.score(@responses)
           if !session[:current_workout].nil?
-            @score=@score*ExerciseWorkout.findExercisePoints(@exercise.id,session[:current_workout])  
+            @score=@score*ExerciseWorkout.findExercisePoints(@exercise.id,session[:current_workout])
           end
           @explain = @exercise.collate_feedback(@responses)
-          @exercise_feedback="You have attempted exercise #{@exercise.id}:#{@exercise.title} and its feedback for you: "+@explain.to_sentence 
+          @exercise_feedback="You have attempted exercise #{@exercise.id}:#{@exercise.title} and its feedback for you: "+@explain.to_sentence
           if session[:current_workout]
             record_workout_score(@score,@exercise.id,session[:current_workout])
             session[:workout_feedback][@exercise.id]=@exercise_feedback
@@ -546,7 +546,7 @@ end
           record_attempt(@score,@xp)
         elsif @exercise.base_exercise.question_type == 2
           CodeWorker.perform_async(@exercise.coding_question.base_class,@exercise.id,current_user.id,params[:exercise][:answer_code],session[:current_workout])
-          sleep(3.0)          
+          sleep(3.0)
         end
         if params[:wexes]
           session[:remaining_wexes]=params[:wexes]
@@ -558,13 +558,13 @@ end
           end
           if params[:feedback_return]
             redirect_to exercise_practice_path(@exercise, :wexes => params[:wexes], :feedback_return => true), format: :js # and return
-          else  
+          else
             redirect_to exercise_practice_path(:id => params[:wexes].first, :wexes => @wexs) and return
           end
-        else 
+        else
           #Move as to display the exercise submission feedback
           redirect_to exercise_practice_path(@exercise, :feedback_return => true), format: :js and return
-        end        
+        end
       end
     else
       redirect_to exercises_url, notice: 'Choose an exercise to practice!'
@@ -587,7 +587,7 @@ end
         format.html { render action: "edit" }
         format.json { render json: new_exercise.errors, status: :unprocessable_entity }
       end
-    end    
+    end
   end
 
   # DELETE /exercises/1
@@ -603,7 +603,7 @@ end
         @exercise = Exercise.find(params[:id])
       end
     end
-    
+
     def create_new_version
       newexercise = Exercise.new
       newexercise.title = @exercise.title
@@ -617,13 +617,13 @@ end
       newexercise.count_attempts = 0
       newexercise.count_correct = 0
       newexercise.experience = @exercise.experience
-      newexercise.version=  @exercise.base_exercise.versions = @exercise.version+1   
+      newexercise.version=  @exercise.base_exercise.versions = @exercise.version+1
       #default IRT statistics
       newexercise.difficulty = 5
       newexercise.discrimination = @exercise.discrimination
       return newexercise
-    end 
-      
+    end
+
 
     # Only allow a trusted parameter "white list" through.
     def exercise_params
@@ -641,7 +641,7 @@ end
     def record_attempt(score,exp)
       ex = Exercise.find(params[:id])
       attempt = Attempt.new
-      if( !session[:exercise_id] || 
+      if( !session[:exercise_id] ||
           session[:exercise_id] != params[:id] ||
           !session[:submit_num] )
         session[:exercise_id] = params[:id]
@@ -657,9 +657,9 @@ end
       attempt.score = score
       attempt.experience_earned = exp
       attempt.user_id = current_user.id
-      
+
       #wkt= Workout.find_by_sql(" SELECT * FROM workouts INNER JOIN exercise_workouts ON workouts.id = exercise_workouts.workout_id and exercise_workouts.exercise_id = #{session[:exercise_id]}")
-      if session[:current_workout]      
+      if session[:current_workout]
         wkt=Workout.find(session[:current_workout])
         wo=WorkoutOffering.find_by workout_id: wkt.id
         if wo
@@ -667,9 +667,9 @@ end
         end
       end
       ex.attempts << attempt
-      attempt.save!      
+      attempt.save!
     end
-    
+
     def record_workout_score(score,exer_id,wkt_id)
       scoring = WorkoutScore.find_by(user_id: current_user.id, workout_id: wkt_id)
       @current_workout=Workout.find(wkt_id)
@@ -682,35 +682,35 @@ end
         @current_workout.workout_scores<<scoring
         current_user.workout_scores<<scoring
 
-      else #Atleast one exercise has been attempted as a part of the workout         
+      else #Atleast one exercise has been attempted as a part of the workout
         user_exercise_score=Attempt.user_attempt(current_user.id, exer_id)
-        scoring.score += score       
-        scoring.last_attempted_at = Time.now            
-        if user_exercise_score 
+        scoring.score += score
+        scoring.last_attempted_at = Time.now
+        if user_exercise_score
           scoring.score -= user_exercise_score
         else
           scoring.exercises_completed += 1
           scoring.exercises_remaining -= 1
-          # Compensate if overshoots          
-          if scoring.exercises_completed > @current_workout.exercises.length    
+          # Compensate if overshoots
+          if scoring.exercises_completed > @current_workout.exercises.length
             scoring.exercises_completed       = @current_workout.exercises.length
           end
-          if scoring.exercises_remaining < 0 
+          if scoring.exercises_remaining < 0
             scoring.exercises_remaining = 0
           end
           if scoring.exercises_remaining == 0
             scoring.completed=true
             scoring.completed_at = Time.now
           end
-        end 
-             
-      end      
+        end
+
+      end
       scoring.save!
     end
 
 
     def count_submission
-      if( !session[:exercise_id] || 
+      if( !session[:exercise_id] ||
           session[:exercise_id] != params[:id] ||
           !session[:submit_num] )
         #TODO look up only current user

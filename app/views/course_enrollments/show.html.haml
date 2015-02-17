@@ -2,12 +2,13 @@
 
 %p
   %b User:
-  = link_to @course_enrollment.user.display_name, user_path(@course_enrollment.user)
+  = link_to @course_enrollment.user.display_name,
+    user_path(@course_enrollment.user)
 %p
   %b Course offering:
   = @course_enrollment.course_offering.name
 %p
-  %b Course role: 
+  %b Course role:
   = @role_text
 
 = button_link 'Edit', edit_course_enrollment_path(@course_enrollment)

@@ -77,18 +77,21 @@ class Exercise < ActiveRecord::Base
   has_many :choices
   has_many :attempts
   accepts_nested_attributes_for :attempts
-  accepts_nested_attributes_for :coding_question, :allow_destroy => true
-  accepts_nested_attributes_for :choices, :allow_destroy => true
-  accepts_nested_attributes_for :tags, :allow_destroy => true
+  accepts_nested_attributes_for :coding_question, allow_destroy: true
+  accepts_nested_attributes_for :choices, allow_destroy: true
+  accepts_nested_attributes_for :tags, allow_destroy: true
 
 
   #~ Hooks ....................................................................
+
   before_validation :set_defaults
+
+
   #~ Validation ...............................................................
 
   #validates :user, presence: true
   validates :title,
-    length: {:minimum => 1},
+    length: { minimum: 1 },
     format: {
       with: /[a-zA-Z0-9\-_ .]+/,
       message: 'Title must be 50 characters or less and consist only of ' \
@@ -106,40 +109,46 @@ class Exercise < ActiveRecord::Base
 
 
   TYPES = {
-    'Multiple Choice Question' => 1
+    'Multiple Choice Question' => 1,
+    'Coding Question' => 2
   }
 
   TEASER_LENGTH = 40
-  LANGUAGE_EXTENSION={
+  LANGUAGE_EXTENSION = {
     'Ruby' => 'rb',
     'Java' => 'java',
     'Python' => 'py',
     'Shell' => 'sh'
   }
+
+
   #~ Class methods ............................................................
+
   def self.search(terms)
     term_array = terms.split
     term_array.each do |term|
       term = "%" + term + "%"
     end
-    return Exercise.joins(:tags).where{tags.tag_name.like_any term_array}
+    return Exercise.joins(:tags).where{ tags.tag_name.like_any term_array }
   end
 
   def self.type_mc
     TYPES['Multiple Choice Question']
   end
 
+
   #~ Public instance methods ..................................................
+
   def serve_choice_array
     if self.choices.nil?
       return ["No answers available"]
     else
       answers = Array.new
-      raw = self.choices.sort_by{|a| a[:order]}
+      raw = self.choices.sort_by{ |a| a[:order] }
       raw.each do |c|
         formatted = c
         formatted[:answer] = make_html(c[:answer])
-        answers.push( formatted )
+        answers.push(formatted)
       end
       if self.mcq_is_scrambled
         scrambled = Array.new
@@ -155,15 +164,15 @@ class Exercise < ActiveRecord::Base
 
   def teaser_text
     plain = ActionController::Base.helpers.strip_tags(make_html(self.question))
-    if( plain.size < TEASER_LENGTH )
+    if (plain.size < TEASER_LENGTH)
       return plain
     else
       shorten = plain[0..TEASER_LENGTH]
       space = shorten.rindex(/\s/)
       if space.nil?
-        shorten = shorten.to_s+"..."
+        shorten = shorten.to_s + "..."
       else
-        shorten = shorten[0..space].to_s+"..."
+        shorten = shorten[0..space].to_s + "..."
       end
       return shorten
     end
@@ -192,45 +201,46 @@ class Exercise < ActiveRecord::Base
     answered.each do |a|
       score = score + a.value
     end
-    if( score < 0 )
+    if (score < 0)
       score = 0
     end
     return score
   end
 
 
-  #~Grab all feedback for choices either selected when wrong
+  # Grab all feedback for choices either selected when wrong
   #  or not selected when (at least partially) right
   def collate_feedback(answered)
     total = score(answered)
     feed = Array.new
-    all = self.choices.sort_by{|a| a[:order]}
+    all = self.choices.sort_by{ |a| a[:order] }
     all.each do |choice|
-      found = answered.select {|x| x["id"] == choice.id}
-      if( (choice.value > 0 && (found.nil? || found.empty?) ) ||
-          ( choice.value <= 0 && (!found.nil? && !found.empty?) ) )
-        feed.push( make_html(choice.feedback) )
+      found = answered.select { |x| x["id"] == choice.id }
+      if ((choice.value > 0 && (found.nil? || found.empty?)) ||
+          (choice.value <= 0 && (!found.nil? && !found.empty?)))
+        feed.push(make_html(choice.feedback))
       end
     end
-    #if 100% correct, or no other feedback provided, give general feedback
-    if( feed.empty? || total>= 100 && (!self.feedback.nil? && !self.feedback.empty?) )
+    # if 100% correct, or no other feedback provided, give general feedback
+    if (feed.empty? || total>= 100 &&
+      (!self.feedback.nil? && !self.feedback.empty?))
       feed.push(self.feedback)
     end
     return feed
   end
 
-  def experience_on(answered,attempt)
+  def experience_on(answered, attempt)
     total = score(answered)
     options = self.choices.size
 
-    if( options == 0 || attempt == 0)
+    if (options == 0 || attempt == 0)
       return 0
-    elsif( total >= 100 && attempt == 1 )
+    elsif (total >= 100 && attempt == 1)
       return self.experience
-    elsif( attempt >= options )
+    elsif (attempt >= options)
       return 0
-    elsif( total >= 100 )
-      return self.experience - self.experience * (attempt-1)/options
+    elsif (total >= 100)
+      return self.experience - self.experience * (attempt - 1) / options
     else
       return self.experience / options / 4
     end
@@ -240,18 +250,29 @@ class Exercise < ActiveRecord::Base
     return CGI::unescapeHTML(unescaped.to_s).html_safe
   end
 
-  #getter override for title
+  # getter override for title
   def title
-    temp = "X"+read_attribute(:id).to_s
+    temp = "X" + read_attribute(:id).to_s
     if not read_attribute(:title).nil?
       temp += ": " + read_attribute(:title).to_s
-    elsif( !self.tags.nil? && !self.tags.first.nil? )
+    elsif (!self.tags.nil? && !self.tags.first.nil?)
       temp += ": " + self.tags.first.tag_name
     end
     return temp
   end
-  #return the extension of a given language
-  def self.get_language_extension(lang)
+
+  # Determine the programming language of the exercise from its language tag
+  def language
+    self.tags.to_ary.each do |tag|
+      if tag.tagtype == Tag.language
+        return tag.tag_name
+      end
+    end
+    return nil
+  end
+
+  # return the extension of a given language
+  def self.extension_of(lang)
     LANGUAGE_EXTENSION[lang]
   end
 
@@ -267,12 +288,12 @@ class Exercise < ActiveRecord::Base
 
   #method to return whether user has attempted exercise or not
   def user_attempted?(u_id)
-    self.attempts.where(:user_id => u_id).any?
+    self.attempts.where(user_id: u_id).any?
   end
 
   private
   def self.type_name(type_num)
-    if( type_num.nil? || type_num <= 0 || type_num > TYPES.size )
+    if (type_num.nil? || type_num <= 0 || type_num > TYPES.size)
       return ""
     else
       return TYPES.rassoc(type_num).first
@@ -289,4 +310,5 @@ class Exercise < ActiveRecord::Base
     self.experience ||= 100
     self.discrimination ||= 0
   end
+
 end

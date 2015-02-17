@@ -1,17 +1,17 @@
 %h1 Listing exercises
 
 %table
-  %tr
-    %th
-    %th
-    %th
+  %thead
+    %tr
+      %th
+      %th
+      %th
 
   - @exercises.each do |exercise|
     %tr
       %td= link_to 'Show', exercise
       %td= link_to 'Edit', edit_exercise_path(exercise)
-      %td= link_to 'Destroy', exercise, :method => :delete, :data => { :confirm => 'Are you sure?' }
+      %td= link_to 'Destroy', exercise, method: :delete,
+        data: { confirm: 'Are you sure?' }
 
-%br
-
-= link_to 'New Exercise', new_exercise_path
+%p= link_to 'New Exercise', new_exercise_path

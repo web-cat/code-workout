@@ -1,8 +1,8 @@
 .row
   .col-md-12
     - @workouts.each_with_index do |w,index|
-      %h1.col-md-6= link_to (index+1).to_s+") "+w.name, workout_path(:id => w[:id])
-      .col-md-12
+      %h1.col-md-6= link_to (index + 1).to_s + ') ' + w.name,
+        workout_path(id: w[:id])
       %p.col-md-12.teaser-tags.slim
         - w.all_tags.each do |t|
-          =link_to(t, search_path(:search => t), method: :post, class: "tag")
+          = link_to t, search_path(search: t), method: :post, class: 'tag'

@@ -1,12 +1,9 @@
 class StaticPagesController < ApplicationController
 
-  layout 'two_columns'  
+  layout 'two_columns'
 
   def home
     @user=User.new
-  end
-
-  def help
   end
 
   def mockup1
@@ -17,4 +14,5 @@ class StaticPagesController < ApplicationController
 
   def mockup3
   end
+
 end
