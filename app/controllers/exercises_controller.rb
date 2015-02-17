@@ -237,6 +237,35 @@ class ExercisesController < ApplicationController
     end
   end
 
+  def random_exercise
+    exercise_dump = []
+    if params[:language]
+      BaseExercise.all.each do |baseexercise|
+        candidate_exercise = Exercise.find(baseexercise.current_version)
+        if candidate_exercise.language == params[:language] && candidate_exercise.id >= 200    
+          exercise_dump<<candidate_exercise
+        end # INNER IF
+      end   # DO WHILE     
+        
+    elsif params[:question_type]
+      BaseExercise.where(question_type: params[:question_type].to_i).find_each do |baseexercise|
+        print "BASE EXERCISE",baseexercise.id,"BASE EXERCISE"
+        candidate_exercise = Exercise.find(baseexercise.current_version)
+        if candidate_exercise.id >=0    
+          exercise_dump<<candidate_exercise
+        end # INNER IF
+      end   # DO WHILE             
+    else  
+      BaseExercise.all.each do |baseexercise|
+        candidate_exercise = Exercise.find(baseexercise.current_version)
+        if candidate_exercise.id >= 200   
+          exercise_dump<<candidate_exercise
+        end # INNER IF
+      end   # DO WHILE        
+    end #OUTER IF
+    redirect_to exercise_practice_path(exercise_dump.sample) and return
+  end
+
 # POST exercises/create_mcqs
 def create_mcqs
     
@@ -678,6 +707,7 @@ end
       end      
       scoring.save!
     end
+
 
     def count_submission
       if( !session[:exercise_id] || 
