@@ -11,7 +11,7 @@
       - ex_workout = nil
       - if uid && uid != 0
         - attempt = Attempt.where(user_id: uid, exercise_id: x.id).last
-        -if !attempt && attempt.score > 0
+        -if attempt && attempt.score > 0
           - attempt_pct = 100
         - if session[:current_workout]
           - ex_workout = ExerciseWorkout.find_by(exercise_id: x.id,
