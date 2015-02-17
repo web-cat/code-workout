@@ -12,7 +12,7 @@
   %tbody
     - @courses.each do |course|
       %tr
-        %td= course.name
+        %td=link_to course.name, course_path(course)
         %td= course.number
         %td= course.organization_id
         %td= course.url_part
