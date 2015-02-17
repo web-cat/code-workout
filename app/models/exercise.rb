@@ -255,6 +255,16 @@ class Exercise < ActiveRecord::Base
     LANGUAGE_EXTENSION[lang]
   end
 
+  def language
+    exercise_tags = self.tags.to_ary    
+    exercise_tags.each do |tag|
+      if tag.tagtype == Tag.language
+        return tag.tag_name        
+      end
+    end
+    return nil
+  end
+
   #method to return whether user has attempted exercise or not
   def user_attempted?(u_id)
     self.attempts.where(:user_id => u_id).any?
