@@ -57,6 +57,9 @@ CodeWorkout::Application.routes.draw do
     post "/courses/:id/generate_gradebook" => "courses#generate_gradebook", as: :course_gradebook
     post "/course_offerings/:id/generate_gradebook" => "course_offerings#generate_gradebook", as: :course_offering_gradebook
     #post "/exercises/:id/update" => "exercise#update", as: :exercise_update
+    get "/exercises_random_exercise" => "exercises#random_exercise", as: :random_exercise
+    get "/courses_search" => "courses#search", as: :courses_search
+    post "/courses_find" => "courses#find", as: :course_find
     get "/workouts/new_with_search/:searchkey"  => "workouts#new_with_search", as: :workouts_with_search
     post "/workouts/new_with_search"  => "workouts#new_with_search", as: :workouts_exercise_search
     post "/signup" => "devise/registrations#create", as: :user_registration
