@@ -18,16 +18,10 @@ class CodeWorker
     current_attempt = Attempt.maximum("id")+1
     current_attempt = current_attempt.to_s
     #Determine the programming language of the exercise from its main language tag
-    exercise_tags = @excercise.tags.to_ary
-    language = ''
-    exercise_tags.each do |tag|
-      if tag.tagtype == Tag.language
-        language = tag.tag_name
-        break
-      end
-    end
+    language = @excercise.language
     
-    code_body = @excercise.coding_question.wrapper_code.sub('___',user_code)
+    #code_body = @excercise.coding_question.wrapper_code.sub('___',user_code)
+    code_body = user_code
     lang =  LANGUAGE_EXTENSION[language]
     #codeworkout_home=`echo $CODEWORKOUT`
     
