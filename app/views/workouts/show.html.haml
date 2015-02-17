@@ -2,11 +2,17 @@
   .col-md-12
     - @workouts.each do |w|
       %h1.col-md-6= link_to w.name, workout_path(:id => w[:id])
-      .col-md-6
-        = button_to 'Practice', practice_workout_path(:id => w[:id]), method: :get
       %p.col-md-12.teaser-tags.slim
+        %span Tags: 
         - w.all_tags.each do |t|
           =link_to(t, search_path(:search => t), method: :post, class: "tag")
+%br          
+.row
+  .col-md-6
+    = button_to 'Practice Workout', practice_workout_path(params[:id]), method: :get
+
+%br
+          
 .row
   .tabpane
     %table{border: 1}
