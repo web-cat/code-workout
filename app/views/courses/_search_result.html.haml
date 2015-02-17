@@ -1,0 +1,9 @@
+- if params[:courses]
+  Matching courses:
+  %br
+  - params[:courses].each do |course_id|
+    - course = Course.find(course_id)
+    = link_to course.name, course_path(course_id) 
+    %br
+- else
+  No matching courses found
