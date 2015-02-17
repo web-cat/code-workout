@@ -65,15 +65,6 @@ Issues to Resolve
         to random representatives of specific types of questions, but they
         aren't implemented, either.
 
-+   model/exercises.rb needs a method to return the language for a coding
-    exercise.
-    +   In app/views/exercises/practice.html.haml, for coding exercises, use
-        this new method to add the programming language as an attribute on
-        the textarea, so that codemirror will use the correct syntax
-        highlighting.  The attribute should look like: 'lang="text/x-java"'.
-        It can be added using an extra parameter to the f.input command
-        like this: 'input_html: { lang: ("text/x-" + @exercise.language) }'
-
 +   Exercise thumbnails currently include an icon, but the icon should
     be based on the exercise type (MC = glyphicon-th-list, Coding =
     fa-file-code-o or fa-keyboard-o?) instead.
@@ -84,3 +75,34 @@ Issues to Resolve
     has completed (or attempted) it.  At present, the logic for displaying
     points earned + total points in thumbnails is incomplete and needs to
     be redone.
+
+
+Basic Code Formatting
+---------------------
++   Please use spaces around operators (e.g., "a = 10" instead of "a=10",
+    or "a + b" instead of "a+b").
+
++   Please use spaces after commas (e.g., "function(a, b)" instead of
+    "function(a,b)".
+
++   In comments, please use a space after the comment character, separating
+    it from the first word of the comment.
+
++   In Ruby control constructs, use a space after Ruby keywords like "if"
+    (i.e., "if x == 0", not "if( x == 0 )").  Parentheses are OK, but are
+    not required in conditions.
+
++   Set your editor to automatically trim white space at the ends of lines,
+    and to use only spaces for indentation (indentation step size = 2), and
+    to ensure files end in a newline (i.e., no EOF on a meaningful line of
+    text).
+    --  In Eclipse, go to the Preferences dialog.  Under Aptana Studio->
+        Editors->Ruby, then set tab policy to "use spaces" with a tab size of
+        2.  Then go to Aptana Studio->Editors and check to "remove trailing
+        whitespace characters".
+
++   Keep lines under 80 columns where possible.  Break long lines when possible
+    to do this.
+    --  In Eclipse, go to the Preferences dialog.  Then go to General->
+        Editors->Text Editors, check to show the print margin and set the
+        print margin to 80 columns.
