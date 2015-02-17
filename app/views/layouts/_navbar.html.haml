@@ -24,7 +24,7 @@
                       %li
                         %strong
                           Manage Workouts
-                      %li= link_to 'Edit Workout', '/workouts/'
+                      %li= link_to 'Workouts', '/workouts/'
                       %li= link_to 'Create Workout', '/workouts/new'
                 - if user_signed_in?      
                   .row
@@ -42,18 +42,25 @@
                       %li= link_to 'Create Exercise', '/exercises/new'
         %li.dropdown
           %a.dropdown-toggle{ href: '/courses', data: { toggle: 'dropdown' },value: 'Gym' }
-            Course
+            Courses
           %ul.dropdown-menu
             %li
               .yamm-content
                 .row
+                  - if user_signed_in? && current_user.course_enrollments.any?
+                    %ul.col-sm-6.list-unstyled
+                      %li
+                        %strong
+                          My Courses
+                      - current_user.course_enrollments.each do |ce|
+                        %li= link_to CourseOffering.find(ce.course_offering_id).name, course_offering_path(ce.course_offering_id)
                   %ul.col-sm-6.list-unstyled
                     %li
                       %strong
-                        Courses
+                        =link_to 'Other Courses', courses_path
                     %li= link_to 'CS 10', '/courses/10'
                     %li= link_to 'CS 12', '/courses/12'
-                  - if user_signed_in?
+                  - if user_signed_in? && current_user.global_role_id==2
                     %ul.col-sm-6.list-unstyled
                       %li
                         %strong
