@@ -35,7 +35,7 @@
               %ul{ style: 'list-style-type: none; padding: 0; margin: 0;' }
                 - CourseEnrollment.where(course_offering_id: off.id).each do |ce|
                   - if ce.course_role_id == CourseRole.find_by(name: 'Grader').id 
-                    %li= User.find(ce.user_id).first_name + " " + User.find(ce.user_id).last_name 
+                    %li= link_to User.find(ce.user_id).first_name + " " + User.find(ce.user_id).last_name, 'mailto:'+User.find(ce.user_id).email 
 
 
 .container-fluid  
@@ -67,7 +67,8 @@
         %strong
           %li= link_to ex.title, '/exercises/'+ex.id.to_s
   .tab-pane.fade{:id => 'grdes'}
-    = button_to 'Download entire course gradebook', course_gradebook_path(@course,format: :csv)
+    - if user_signed_in? && current_user.global_role_id == 2
+      = button_to 'Download entire course gradebook', course_gradebook_path(@course,format: :csv)
     - @course.course_offerings.each do |off|
       %br
       %b= off.name
@@ -93,7 +94,8 @@
                   - else
                     %td -/-
               %td= grand_total
-      %p= button_to 'Download class gradebook', course_offering_gradebook_path(off,format: :csv)       
+      - if user_signed_in? && current_user.global_role_id == 2        
+        %p= button_to 'Download class gradebook', course_offering_gradebook_path(off,format: :csv)       
       
   .tab-pane.fade{:id => 'rostr'}
     - @course.course_offerings.each do |off|
