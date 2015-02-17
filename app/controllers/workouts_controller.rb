@@ -116,7 +116,7 @@ class WorkoutsController < ApplicationController
     wkt = Workout.find(wid)
     if wkt
       if !user_signed_in? 
-        redirect_to workout_path(wkt), notice: "Need to login to practice" and return
+        redirect_to workout_path(wkt), notice: "Need to Sign in to practice" and return
       end  
       ex1 = wkt.exercises.first    
       session[:current_workout]=wid
