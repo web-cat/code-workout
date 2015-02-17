@@ -47,6 +47,20 @@ class Course < ActiveRecord::Base
 
 
   #~ Private instance methods .................................................
+  
+  #~ Class methods
+  def self.search(terms)
+    resultant = []
+    term_array = terms.split
+    term_array.each do |term|
+      term = "%" + term + "%"
+      Course.where("name LIKE ?",term).find_each do |course|
+        resultant<<course.id
+      end
+    end    
+     
+    return resultant 
+  end
 
   private
 
