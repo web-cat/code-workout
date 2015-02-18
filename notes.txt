@@ -50,6 +50,22 @@ up to speed:
     rake db:populate
 
 
+Updating Documentation
+----------------------
+Some documentation is auto-generated.  In model classes, schema comments
+in the model source files show the table structure.  To update those
+comments, use:
+
+    bundle exect annotate
+
+In the root of the project, the erd.pdf file presents an entity relationship
+diagram (ERD) showing the relationships between the model entities.  Diagram
+generation requires graphviz to be installed.  If you have it installed,
+you can update the erd.pdf diagram using:
+
+    rake erd notation=bachman polymporphism=true
+
+
 Issues to Resolve
 -----------------
 +   Java coding question support needs to be completed.
