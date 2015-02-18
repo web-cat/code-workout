@@ -1,4 +1,4 @@
-.col-md-12
+.col-md-7
   = semantic_form_for @exercise, url: exercise_evaluate_path(@exercise,
     wexes: params[:wexes], feedback_return: true), remote: true do |f|
     = f.semantic_errors
@@ -24,13 +24,14 @@
             member_label: :answer,
             label: "&nbsp;"
     - elsif @exercise.base_exercise.question_type == 2
-      = f.input :answer_code, as: :text, class: 'code', 
-      input_html: {lang: 'text/x-'+@exercise.language.downcase, value: @exercise.coding_question.wrapper_code}
+      = f.input :answer_code, as: :text, class: 'code',
+        input_html: { lang: 'text/x-' + (@exercise.language || 'java').downcase }
     .actions
       = f.submit 'Check my answer!', class: 'btn btn-primary'
     - if session[:current_workout].nil?
       %br
-      = link_to "Practice a different #{@exercise.language} exercise", '/exercises_random_exercise?language='+@exercise.language
-#exercisefeedback{style: "display: none;"} WINTER CANNOT BE SEEN
-  
-
+      = link_to "Practice a different #{@exercise.language} exercise",     |
+        '/exercises_random_exercise' +                                     |
+        (@exercise.language ? ('?language=' + @exercise.language) : '')    |
+.col-md-5
+  #exercisefeedback{style: 'display: none;'}
