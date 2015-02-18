@@ -3,16 +3,12 @@
 # Table name: terms
 #
 #  id         :integer          not null, primary key
-#  season     :integer          not null
-#  starts_on  :date             not null
-#  ends_on    :date             not null
-#  year       :integer          not null
+#  season     :integer
+#  starts_on  :date
+#  ends_on    :date
+#  year       :integer
 #  created_at :datetime
 #  updated_at :datetime
-#
-# Indexes
-#
-#  index_terms_on_starts_on  (starts_on)
 #
 
 class Term < ActiveRecord::Base

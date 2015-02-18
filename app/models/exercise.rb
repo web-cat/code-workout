@@ -3,7 +3,6 @@
 # Table name: exercises
 #
 #  id                 :integer          not null, primary key
-#  user_id            :integer          not null
 #  stem_id            :integer
 #  title              :string(255)
 #  question           :text             not null
@@ -19,12 +18,13 @@
 #  created_at         :datetime
 #  updated_at         :datetime
 #  experience         :integer
-#  starter_code       :text
+#  base_exercise_id   :integer
+#  version            :integer
 #
 # Indexes
 #
-#  index_exercises_on_stem_id  (stem_id)
-#  index_exercises_on_user_id  (user_id)
+#  index_exercises_on_base_exercise_id  (base_exercise_id)
+#  index_exercises_on_stem_id           (stem_id)
 #
 
 #table/schema migration for exercise........................

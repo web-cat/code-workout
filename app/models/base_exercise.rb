@@ -1,3 +1,17 @@
+# == Schema Information
+#
+# Table name: base_exercises
+#
+#  id                 :integer          not null, primary key
+#  user_id            :integer
+#  question_type      :integer
+#  current_version    :integer
+#  created_at         :datetime
+#  updated_at         :datetime
+#  versions           :integer
+#  variation_group_id :integer
+#
+
 class BaseExercise < ActiveRecord::Base
   #Relationships
   has_many :exercises
