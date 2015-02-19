@@ -1,30 +1,28 @@
-.nested-fields
-  = f.inputs do
-    .row.darker-bkg
-      .row
-        .col-md-10
-          = f.input :base_class,
-            label: "Base Class",
-            placeholder: "Enter coding question's base class (used in the wrapper)"
-      .row
-        .col-md-10
-          = f.input :test_method,
-            label: "Test method",
-            placeholder: "Name of method to be tested"            
-      .row
-        .col-md-10
-          = f.input :wrapper_code, as: :text,
-            placeholder: "Specify '___'(three underscores) to denote whether the answer code should be wrapped around",
-            label: "Coding Wrapper"  
-      .row
-        .col-md-10
-          = f.input :test_script, as: :text,
-            placeholder: "Enter as CSV",
-            label: "Test Cases"
-      -#.row
-        -#.col-md-10
-          -##testcases
-            -#= f.semantic_fields_for :test_cases do |test_case|
-              -#= render 'test_case_fields', f: test_case
-            -#.links
-              -#= link_to_add_association "Add a Test Case", f, :test_cases  
+= f.inputs name: 'Coding Question Settings' do
+
+  = f.input :class_name,                                                |
+    label: 'Class Name',                                                |
+    placeholder: 'Enter the answer\'s class name (the class name ' +    |
+    'used for the wrapper)'                                             |
+
+  = f.input :test_method,
+    label: 'Method Name',
+    placeholder: 'The name of method written as the answer'
+
+  = f.input :starter_code, as: :text,
+    placeholder: 'Use "___" (three underscores) to denote where ' + 'the cursor should initially be placed',
+    label: 'Initial Editor Contents'
+
+  = f.input :wrapper_code, as: :text,                                   |
+    placeholder: 'Specify "___" (three underscores) to denote where ' + |
+    'the answer code/method should be placed within the wrapper',       |
+    label: 'Testing Wrapper'                                            |
+
+  = f.input :test_script, as: :text,
+    placeholder: 'Enter as CSV',
+    label: 'Test Cases'
+
+  -#= f.semantic_fields_for :test_cases do |test_case|
+    = render 'test_case_fields', f: test_case
+  -#.links
+    -#= link_to_add_association 'Add a Test Case', f, :test_cases

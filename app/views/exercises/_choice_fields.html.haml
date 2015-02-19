@@ -1,20 +1,22 @@
-.nested-fields
-  = f.inputs do
-    .row.darker-bkg
-      .row
-        .col-md-3
-          = f.input :value, :as => :boolean,
-            :label => "Correct"
-        .col-md-6
-          = link_to_remove_association "Remove answer...", f
-      .row
-        .col-md-10
-          = f.input :answer, :as => :text,
-            placeholder: "Enter answer text",
-            :input_html => { :class => 'richtexteditor autogrow span10', :rows =>1 }
-      .row
-        .col-md-10
-          = f.input :feedback,
-            label: "Explanation",
-            placeholder: "(optional) Answer explanation, given after submission",
-            input_html: { :class => 'richtexteditor autogrow span10', :rows => 2}
+= f.inputs name: 'Multiple Choice Settings' do
+  = f.input :mcq_is_scrambled,
+    label: 'Randomize answers'
+
+  = f.input :mcq_allow_multiple,
+    label: 'Allow multiple selections'
+
+  = f.semantic_fields_for :choices do |choice|
+    = choice.inputs do
+      = choice.input :value, as: :boolean,
+        label: 'Correct'
+      = choice.input :answer, as: :text,
+        placeholder: 'Enter answer text',
+        input_html: { class: 'richtexteditor autogrow span10', rows: 1 }
+      .form-group
+        %span.form-wrapper
+          = link_to_remove_association 'Remove answer...', choice
+
+  -# The link below is commented out since it does not work correctly
+  -# when included in this partial.
+  -#.links
+    = link_to_add_association 'Add Choice', f, :choices

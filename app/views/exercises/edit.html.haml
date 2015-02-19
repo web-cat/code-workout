@@ -1,6 +1,6 @@
-%h1 Editing exercise
+%h1 Edit Exercise
 
-= render 'form'
+= render 'form', qtype: @exercise.base_exercise.question_type
 
 = link_to 'Show', @exercise
 \|
