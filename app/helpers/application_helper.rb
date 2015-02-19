@@ -28,14 +28,21 @@ module ApplicationHelper
   # types of flash messages
   #
   FLASH_CLASS = {
-      success: 'alert-success',
-      error:   'alert-danger',
-      alert:   'alert-block',
-      block:   'alert-block',
-      notice:  'alert-info',
-      info:    'alert-info'
+      success:     'alert-success',
+      'success' => 'alert-success',
+      error:       'alert-danger',
+      'error'   => 'alert-danger',
+      alert:       'alert-block',
+      'alert'   => 'alert-block',
+      block:       'alert-block',
+      'block'   => 'alert-block',
+      notice:      'alert-info',
+      'notice'  => 'alert-info',
+      info:        'alert-info',
+      'info'    => 'alert-info'
   }
   def flash_class_for(level)
+    puts "level = #{level}, class = #{FLASH_CLASS[level]}"
     FLASH_CLASS[level] || level.to_s
   end
 
