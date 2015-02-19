@@ -264,10 +264,15 @@ class ExercisesController < ApplicationController
     exercise_dump = []
     if params[:language]
       BaseExercise.all.each do |baseexercise|
-        candidate_exercise = Exercise.find(baseexercise.current_version)
-        if candidate_exercise.language == params[:language] &&
+        candidate_exercise = Exercise.find_by_id(baseexercise.current_version)
+        if candidate_exercise &&
+          candidate_exercise.language == params[:language] &&
           candidate_exercise.id >= 200
           exercise_dump << candidate_exercise
+        elsif !candidate_exercise
+          puts "ERROR: base exercise #{baseexercise.id} with current " +
+            "version #{baseexercise.current_version} does not refer to " +
+            "an existing exercise."
         end # INNER IF
       end   # DO WHILE
 
@@ -275,16 +280,24 @@ class ExercisesController < ApplicationController
       BaseExercise.where(question_type: params[:question_type].to_i).
         find_each do |baseexercise|
         print 'BASE EXERCISE', baseexercise.id, 'BASE EXERCISE'
-        candidate_exercise = Exercise.find(baseexercise.current_version)
-        if candidate_exercise.id >=0
+        candidate_exercise = Exercise.find_by_id(baseexercise.current_version)
+        if candidate_exercise && candidate_exercise.id >= 0
           exercise_dump << candidate_exercise
+        elsif !candidate_exercise
+          puts "ERROR: base exercise #{baseexercise.id} with current " +
+            "version #{baseexercise.current_version} does not refer to " +
+            "an existing exercise."
         end # INNER IF
       end   # DO WHILE
     else
       BaseExercise.all.each do |baseexercise|
-        candidate_exercise = Exercise.find(baseexercise.current_version)
-        if candidate_exercise.id >= 200
+        candidate_exercise = Exercise.find_by_id(baseexercise.current_version)
+        if candidate_exercise && candidate_exercise.id >= 200
           exercise_dump << candidate_exercise
+        elsif !candidate_exercise
+          puts "ERROR: base exercise #{baseexercise.id} with current " +
+            "version #{baseexercise.current_version} does not refer to " +
+            "an existing exercise."
         end # INNER IF
       end   # DO WHILE
     end #OUTER IF
