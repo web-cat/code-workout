@@ -101,7 +101,7 @@ class CodeWorker
   private
 
   def record_attempt(ex, uid, user_code, wktid, correct, total_weight)
-    exWorkout = ExerciseWorkout.find_by(exercise_id: exid,workout_id: wktid)
+    exWorkout = ExerciseWorkout.find_by(exercise_id: ex.id, workout_id: wktid)
     multiplier = exWorkout ? exWorkout.points : 1.0
     scr = correct * multiplier / total_weight
     if wktid
