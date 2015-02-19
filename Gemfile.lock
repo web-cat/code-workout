@@ -1,4 +1,10 @@
 GIT
+  remote: git://github.com/raganwald/andand.git
+  revision: d1e9029e9eae09783a99114d7d23372d4883b265
+  specs:
+    andand (1.3.3)
+
+GIT
   remote: git://github.com/voormedia/rails-erd.git
   revision: dafc8d8f78cd90e7d6761f6b37a1561d661c85ef
   specs:
@@ -261,6 +267,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  andand!
   annotate
   autoprefixer-rails
   awesome_print
