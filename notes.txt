@@ -72,6 +72,21 @@ Issues to Resolve
 
 +   Cancan security implementation needs to be completed.
 
++   Boolean checkboxes for attributes in formtastic forms don't seem to
+    work correctly.  Is there javascript missing, or is it some other
+    problem?
+
++   The add/remove links in subforms for things like the exercise editing
+    page don't work.  I think this is because the link construction is
+    incorrect and doesn't follow formtastic conventions.  We need to
+    fix this so that full editing can be achieved.
+
++   The exercise edit page does not correctly work with the current
+    exercise versioning scheme.  It would probably be better to make
+    BaseExercise the center for editing exercises, and not have an
+    edit page/form for exercises.  This would require some refactoring,
+    however.
+
 +   The "Find your course" button on the home page needs to be implemented.
 
 +   The "Create your course" button on the home page needs to be implemented.

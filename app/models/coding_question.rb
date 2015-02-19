@@ -6,10 +6,11 @@
 #  created_at   :datetime
 #  updated_at   :datetime
 #  exercise_id  :integer
-#  base_class   :string(255)
+#  class_name   :string(255)
 #  wrapper_code :text
 #  test_script  :text
-#  test_method  :string(255)
+#  method_name  :string(255)
+#  starter_code :text
 #
 # Indexes
 #

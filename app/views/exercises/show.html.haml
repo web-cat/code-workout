@@ -2,32 +2,62 @@
 = link_to 'Edit', edit_exercise_path(@exercise)
 %p
   %strong Title:
-  %p.xeditable{id: 'title', :data => {:type => 'text', :url => '/exercises/'+@exercise.id.to_s, :resource => 'exercise', :name => 'title', :xeditable => "true", :pk => @exercise.id.to_s, :model => 'exercise'}}= image_tag @exercise.title
+  %p.xeditable{ id: 'title',
+    data: { type: 'text',
+    url: '/exercises/' + @exercise.id.to_s,
+    resource: 'exercise',
+    name: 'title',
+    xeditable: "true",
+    pk: @exercise.id.to_s,
+    model: 'exercise' } }= image_tag @exercise.title
 
 %p
   %strong Question:
-  %p.xeditable{id: 'question', :data => {:type => 'text', :url => '/exercises/'+@exercise.id.to_s, :resource => 'exercise', :name => 'question', :xeditable => "true", :pk => @exercise.id.to_s, :model => 'exercise'}}= @exercise.question
+  %p.xeditable{ id: 'question',
+    data: { type: 'text',
+    url: '/exercises/' + @exercise.id.to_s,
+    resource: 'exercise',
+    name: 'question',
+    xeditable: "true",
+    pk => @exercise.id.to_s,
+    model: 'exercise' } }= @exercise.question
 
 %p
   %strong Feedback
-  %p.xeditable{id: 'feedback', :data => {:type => 'text', :url => '/exercises/'+@exercise.id.to_s, :resource => 'exercise', :name => 'feedback', :xeditable => "true", :pk => @exercise.id.to_s, :model => 'exercise'}}= @exercise.feedback
+  %p.xeditable{ id: 'feedback',
+    data: { type: 'text',
+    url: '/exercises/' + @exercise.id.to_s,
+    resource: 'exercise',
+    name: 'feedback',
+    xeditable: "true",
+    pk: @exercise.id.to_s,
+    model: 'exercise' } }= @exercise.feedback
 
 %p
   %strong Created:
   %p= @exercise.created_at
-%br  
+%br
 - if @exercise.base_exercise.question_type == 2
-  - language = @exercise.tags[0].tag_name
-  - test_end_code = generate_tests(@exercise.id,language,@exercise.coding_question.base_class,@exercise.coding_question.test_method)  
+  - language = @exercise.language || 'Java'
+  - test_end_code = generate_tests(@exercise.id,
+    language,
+    @exercise.coding_question.class_name,
+    @exercise.coding_question.method_name)
   - puts "\nTEST CODE"
-  - Dir.chdir('usr/resources') do
-    - base_test_file = File.open("#{language}BaseTestFile.#{Exercise.get_language_extension(language)}","rb").read
-    - test_base = base_test_file.gsub('baseclassclass',@exercise.coding_question.base_class)
-    - testing_code = test_base.gsub('TTTTT', test_end_code)
-    - puts testing_code 
+  - base_test_file = File.open("usr/resources/#{language}/#{language}BaseTestFile.#{Exercise.extension_of(language)}", 'rb').read
+  - test_base = base_test_file.gsub('baseclassclass', @exercise.coding_question.class_name)
+  - testing_code = test_base.gsub('TTTTT', test_end_code)
+  - puts testing_code
 %p
-  %a.xeditable{href: '#', id: 'xeditable', :data => {:type => 'text', :url => '/exercises/'+@exercise.id.to_s, :resource => 'exercise', :name => 'experience', :xeditable => "true", :pk => @exercise.id.to_s, :model => 'exercise'}} 
-    = @exercise.experience  
+  %a.xeditable{ href: '#',
+    id: 'xeditable',
+    data: { type: 'text',
+    url: '/exercises/' + @exercise.id.to_s,
+    resource: 'exercise',
+    name: 'experience',
+    xeditable: "true",
+    pk: @exercise.id.to_s,
+    model: 'exercise' } }= @exercise.experience
 
 
 = button_link'Back', exercises_path

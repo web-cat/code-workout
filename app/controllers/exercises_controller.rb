@@ -105,10 +105,10 @@ class ExercisesController < ApplicationController
     # Populate coding question's test case
     if msg[:coding_questions]
       codingquestion = CodingQuestion.new
-      codingquestion.base_class =
-        msg[:coding_questions][:base_class].chomp.strip
-      codingquestion.test_method =
-        msg[:coding_questions][:test_method].chomp.strip
+      codingquestion.class_name =
+        msg[:coding_questions][:class_name].chomp.strip
+      codingquestion.method_name =
+        msg[:coding_questions][:method_name].chomp.strip
       codingquestion.wrapper_code =
         msg[:coding_questions][:wrapper_code].chomp.strip
       codingquestion.test_script =
@@ -137,14 +137,14 @@ class ExercisesController < ApplicationController
       language = msg[:tag_ids][0]
       Dir.chdir('usr/resources') do
         test_end_code = generate_tests(ex.id, language,
-          msg[:coding_questions][:base_class].chomp.strip,
-          msg[:coding_questions][:test_method].chomp.strip)
+          msg[:coding_questions][:class_name].chomp.strip,
+          msg[:coding_questions][:method_name].chomp.strip)
         puts 'LANGUAGE', 'LANGUAGE', language, 'LANGUAGE', 'LANGUAGE'
         base_test_file = File.open(
           "#{language}BaseTestFile.#{Exercise.extension_of(language)}",
           'rb').read
         test_base = base_test_file.gsub('baseclassclass',
-          msg[:coding_questions][:base_class].chomp.strip)
+          msg[:coding_questions][:class_name].chomp.strip)
 
         if language == 'Java'
           first_input = ex.coding_question.test_cases[0].input
@@ -191,19 +191,19 @@ class ExercisesController < ApplicationController
           end
           if output_type != 'ERR'
             test_base = test_base.gsub('methodnameemandohtem',
-              msg[:coding_questions][:test_method].chomp.strip)
+              msg[:coding_questions][:method_name].chomp.strip)
             test_base = test_base.gsub('input_type',input_type)
             test_base = test_base.gsub('output_type',output_type)
 
             base_runner_file = File.open("JavaBaseTestRunner.java","rb").read
             base_runner_code = base_runner_file.gsub('baseclassclass',
-              msg[:coding_questions][:base_class].chomp.strip)
-            File.open(msg[:coding_questions][:base_class].chomp.strip +
+              msg[:coding_questions][:class_name].chomp.strip)
+            File.open(msg[:coding_questions][:class_name].chomp.strip +
               'TestRunner.java', "wb") { |f| f.write( base_runner_code ) }
           end # !ERR IF
         end # JAVA IF
         testing_code = test_base.gsub('TTTTT', test_end_code)
-        File.open(msg[:coding_questions][:base_class].chomp.strip + 'Test.' +
+        File.open(msg[:coding_questions][:class_name].chomp.strip + 'Test.' +
           Exercise.extension_of(language), 'wb') { |f| f.write(testing_code) }
       end
     end
@@ -578,7 +578,7 @@ class ExercisesController < ApplicationController
           @xp = @exercise.experience_on(@responses, session[:submit_num])
           record_attempt(@score, @xp)
         elsif @exercise.base_exercise.question_type == 2
-          CodeWorker.new.async.perform(@exercise.coding_question.base_class,
+          CodeWorker.new.async.perform(@exercise.coding_question.class_name,
             @exercise.id,
             current_user.id,
             params[:exercise][:answer_code],
@@ -623,11 +623,13 @@ class ExercisesController < ApplicationController
     new_exercise.save
     @exercise.base_exercise.current_version=new_exercise.id
     @exercise.base_exercise.save
-    respond_to do |format|
-      if new_exercise.update_attributes(exercise_params)
+    if new_exercise.update_attributes(exercise_params)
+      respond_to do |format|
         format.html { redirect_to new_exercise, notice: 'Exercise was successfully updated.' }
         format.json { head :no_content } # 204 No Content
-      else
+      end
+    else
+      respond_to do |format|
         format.html { render action: "edit" }
         format.json { render json: new_exercise.errors, status: :unprocessable_entity }
       end

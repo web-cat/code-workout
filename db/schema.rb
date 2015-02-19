@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150210012044) do
+ActiveRecord::Schema.define(version: 20150219054901) do
 
   create_table "attempts", force: true do |t|
     t.integer  "user_id",                           null: false
@@ -55,10 +55,11 @@ ActiveRecord::Schema.define(version: 20150210012044) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "exercise_id"
-    t.string   "base_class"
+    t.string   "class_name"
     t.text     "wrapper_code"
     t.text     "test_script"
-    t.string   "test_method"
+    t.string   "method_name"
+    t.text     "starter_code"
   end
 
   add_index "coding_questions", ["exercise_id"], name: "index_coding_questions_on_exercise_id"

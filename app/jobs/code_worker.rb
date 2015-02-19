@@ -7,93 +7,91 @@ class CodeWorker
   workers 20
   # sidekiq_options retry: false, backtrace: true
 
-  def perform(base_class, exid, uid, user_code, wktid)
+  def perform(class_name, exid, uid, user_code, wktid)
     ActiveRecord::Base.connection_pool.with_connection do
-      @excercise=Exercise.find(exid)
+      ex = Exercise.find(exid)
+      if !ex.coding_question.wrapper_code.blank?
+        user_code = ex.coding_question.wrapper_code.sub(/___/, user_code)
+      end
       current_attempt = Attempt.maximum("id") + 1
       current_attempt = current_attempt.to_s
-      language = @excercise.language
+      language = ex.language
 
-      # code_body = @excercise.coding_question.wrapper_code.sub('___',user_code)
+      # code_body = ex.coding_question.wrapper_code.sub('___',user_code)
       code_body = user_code
       lang =  Exercise.extension_of(language)
       # codeworkout_home=`echo $CODEWORKOUT`
 
       puts "CodeWorker current working directory is #{Dir.pwd}"
 
-      File.open('usr/resources/' + base_class + '.' + lang, 'wb') do |f|
+      term = Term.where("starts_on <= :now and :now < ends_on",
+        now: DateTime.now).first
+      term_name = term ? term.display_name : 'no-term'
+      term_name.gsub!(/\W/, '-')
+      term_dir = 'usr/attempts/' + term_name
+      if !Dir.exist?(term_dir)
+        Dir.mkdir(term_dir)
+      end
+      attempt_dir = term_dir + '/' + current_attempt
+      if !Dir.exist?(attempt_dir)
+        Dir.mkdir(attempt_dir)
+      end
+      if !Dir[current_attempt].empty?
+        puts 'WARNING, OVERWRITING EXISTING DIRECTORY'
+        system "yes | rm -rf #{current_attempt}"
+      end
+
+      File.open(attempt_dir + '/' + class_name + '.' + lang, 'w') do |f|
         f.write(code_body)
       end
-      current_term = nil
-      Dir.chdir('usr/resources') do
-        Term.all.each do |term|
-          if term.now?
-            current_term_name = term.display_name
-            if !Dir.exist?(current_term_name)
-              Dir.mkdir(current_term_name)
-            end
-            Dir.chdir(current_term_name) do
-              if !Dir[current_attempt].empty?
-                puts 'WARNING, OVERWRITING EXISTING DIRECTORY'
-                system "yes | rm -rf #{current_attempt}/"
-              end
-              Dir.mkdir(current_attempt)
-              puts "CodeWorker current working directory is #{Dir.pwd}"
-              system "yes | cp -rf ../#{base_class}*.#{lang} #{current_attempt}"
-              Dir.chdir(current_attempt) do
-                puts "CodeWorker current working directory is #{Dir.pwd}"
+      system "yes | cp -rf usr/resources/#{language}/#{class_name}*.#{lang} " +
+        "#{attempt_dir}"
 
-                # This "switch" based on language type needs to be refactored
-                # to be more OO
-                if language == "Java"
-                  result = execute_javatest(base_class)
-                elsif language == "Ruby"
-                  result = execute_rubytest(base_class)
-                elsif language == "Python"
-                  result = execute_pythontest(base_class)
-                end # IF INNERMOST
+      # This "switch" based on language type needs to be refactored
+      # to be more OO
+      if language == "Java"
+        result = execute_javatest(class_name, attempt_dir)
+      elsif language == "Ruby"
+        result = execute_rubytest(class_name, attempt_dir)
+      elsif language == "Python"
+        result = execute_pythontest(class_name, attempt_dir)
+      end # IF INNERMOST
 
-                correct = 0.0
-                total = 0.0
-                # print "RESULT",result,"RESULT"
-                puts "FILE SIZE",
-                  File.size?(base_class + "_#{language}_results.csv").class
-                if (File.size?(base_class + "_#{language}_results.csv").nil?)
-                  feedback = result.split("#{base_class}Test")[2]
-                  puts "CODE-ERROR-FEEDBACK", "CODE-ERROR-FEEDBACK"
-                  @excercise.coding_question.test_cases.
-                    each_with_index do |tc,i|
-                    record_test_case_result(uid, 0.0, exid,
-                      "CODE-ERROR-CODE-ERROR " + feedback.to_s, i)
-                  end
-                  correct = 0.0
-                  total = 1.0
-                else
-                  puts "ASSERTIONS-FEEDBACK","ASSERTIONS-FEEDBACK"
-                  CSV.foreach(base_class + "_#{language}_results.csv") do |line|
-                    weight = @excercise.coding_question.
-                      test_cases[line[2].to_i - 1].weight
-                    test_case_negative_feedback = @excercise.coding_question.
-                      test_cases[line[2].to_i - 1].negative_feedback
-                    correct += line[0].to_f * weight
-                    line[0].to_f >= 1.0 ?
-                      feedback = '' :
-                      line[1] ?
-                      feedback = line[1] + ' ' + test_case_negative_feedback :
-                      feedback = 'Test case not completely passed' +
-                      test_case_negative_feedback
-                    record_test_case_result(
-                      uid, line[0].to_f, exid, feedback, line[2].to_i - 1)
-                    total += weight
-                  end  # CSV end
-                end
-                record_attempt(exid, uid, user_code, wktid, correct, total)
-              end    # CHDIR LAST
-            end # CHDIR TERM
-          end # IF
+      correct = 0.0
+      total = 0.0
+      # print "RESULT",result,"RESULT"
+      puts "FILE SIZE",
+        File.size?(class_name + "_#{language}_results.csv").class
+      if File.size?(class_name + "_#{language}_results.csv").nil?
+        feedback = result.split("#{class_name}Test")[2]
+        puts "CODE-ERROR-FEEDBACK", "CODE-ERROR-FEEDBACK"
+        ex.coding_question.test_cases.each_with_index do |tc,i|
+          record_test_case_result(uid, 0.0, ex,
+            "CODE-ERROR-CODE-ERROR " + feedback.to_s, i)
+        end
+        correct = 0.0
+        total = 1.0
+      else
+        puts "ASSERTIONS-FEEDBACK","ASSERTIONS-FEEDBACK"
+        CSV.foreach(class_name + "_#{language}_results.csv") do |line|
+          weight = ex.coding_question.
+            test_cases[line[2].to_i - 1].weight
+          test_case_negative_feedback = ex.coding_question.
+            test_cases[line[2].to_i - 1].negative_feedback
+          correct += line[0].to_f * weight
+          line[0].to_f >= 1.0 ?
+            feedback = '' :
+            line[1] ?
+            feedback = line[1] + ' ' + test_case_negative_feedback :
+            feedback = 'Test case not completely passed' +
+            test_case_negative_feedback
+          record_test_case_result(
+            uid, line[0].to_f, ex, feedback, line[2].to_i - 1)
+          total += weight
+        end  # CSV end
+      end
 
-        end # Term loop
-      end   # CHDIR usr/resources
+      record_attempt(ex, uid, user_code, wktid, correct, total)
     end
   end
 
@@ -102,15 +100,12 @@ class CodeWorker
 
   private
 
-  def record_attempt(exid, uid, user_code, wktid, correct, total_weight)
-    ex = Exercise.find(exid)
-    ExerciseWorkout.find_by(exercise_id: exid,workout_id: wktid) ?
-      multiplier = ExerciseWorkout.find_by(
-      exercise_id: exid,workout_id: wktid).points :
-      multiplier = 1.0
+  def record_attempt(ex, uid, user_code, wktid, correct, total_weight)
+    exWorkout = ExerciseWorkout.find_by(exercise_id: exid,workout_id: wktid)
+    multiplier = exWorkout ? exWorkout.points : 1.0
     scr = correct * multiplier / total_weight
     if wktid
-      record_workout_score(uid,scr,exid,wktid)
+      record_workout_score(uid, scr, exid, wktid)
     end
     attempt = Attempt.new
     # TODO Make the submission count dynamic
@@ -137,8 +132,7 @@ class CodeWorker
   end
 
 
-  def record_test_case_result(uid, score, exer_id, feedback, index)
-    ex = Exercise.find(exer_id)
+  def record_test_case_result(uid, score, ex, feedback, index)
     testcaseid = ex.coding_question.test_cases[index].id
     tcr = TestCaseResult.new
     tcr.user_id = uid
@@ -188,36 +182,48 @@ class CodeWorker
     scoring.save!
   end
 
-  def execute_javatest(base_class)
-    if system("javac #{base_class}.java #{base_class}Test.java #{base_class}" +
-      "TestRunner.java  >> javaerr.log 2>>javaerr.log")
-      if system("java #{base_class}TestRunner")
-        puts "JAVA","JAVA FINE"
+  def execute_javatest(class_name, attempt_dir)
+    classpath = Dir['usr/resources/Java/*.jar'].join(':')
+    cmd = "javac -cp #{classpath} #{attempt_dir}/*.java " +
+      ">> #{attempt_dir}/compile.log " +
+      "2>> #{attempt_dir}/compile.log"
+    puts "javac command = ", cmd
+    if system(cmd)
+      cmd = "java -cp #{classpath}:#{attempt_dir} #{class_name}TestRunner " +
+        ">> #{attempt_dir}/run.log " +
+        "2>> #{attempt_dir}/run.log"
+      puts "java command = ", cmd
+      if system(cmd)
+        puts 'JAVA', 'JAVA FINE'
         return nil
       else
-        return output = `cat javaerr.log`
+        return output = `cat #{attempt_dir}/run.log`
       end
     else
-      return output = `cat javaerr.log`
+      return output = `cat #{attempt_dir}/compile.log`
     end
   end
 
-  def execute_rubytest(base_class)
-    if system("ruby #{base_class}Test.rb >> rubyerr.log 2>>rubyerr.log")
-      puts "FINE","RUBY FINE"
+  def execute_rubytest(class_name, attempt_dir)
+    if system("ruby #{class_name}Test.rb",
+      [:out, :err] => 'rubyerr.log',
+      chdir: attempt_dir)
+      puts 'FINE', 'RUBY FINE'
       return nil
     else
-      puts "ERROR","RUBY ERROR"
-      return output = `cat rubyerr.log`
+      puts 'ERROR', 'RUBY ERROR'
+      return output = `cat #{attempt_dir}/rubyerr.log`
     end
   end
 
 
-  def execute_pythontest(base_class)
-    if system ("python #{base_class}Test.py > pythonerr.log 2>>pythonerr.log")
+  def execute_pythontest(class_name, attempt_dir)
+    if system("python #{class_name}Test.py",
+      [:out, :err] => 'pythonerr.log',
+      chdir: attempt_dir)
       return nil
     else
-      return output = `cat pythonerr.log`
+      return output = `cat #{attempt_dir}/pythonerr.log`
     end
   end
 
