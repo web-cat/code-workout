@@ -87,6 +87,9 @@ Issues to Resolve
     edit page/form for exercises.  This would require some refactoring,
     however.
 
++   Why does the exercises_controller#random_exercise method limit
+    results to id numbers >= 200?  Is this correct?
+
 +   The "Find your course" button on the home page needs to be implemented.
 
 +   The "Create your course" button on the home page needs to be implemented.
