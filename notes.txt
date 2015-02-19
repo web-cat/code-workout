@@ -113,6 +113,10 @@ Issues to Resolve
 
 Basic Code Formatting
 ---------------------
++   Read the Ruby style guide:
+
+        https://github.com/bbatsov/ruby-style-guide
+
 +   Please use spaces around operators (e.g., "a = 10" instead of "a=10",
     or "a + b" instead of "a+b").
 
