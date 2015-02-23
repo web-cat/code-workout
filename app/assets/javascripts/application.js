@@ -72,13 +72,9 @@ function percentBar(filled, capacity, id) {
   back.fillRect(0,0,capW,h);
   back.fillStyle=gradient;
   back.fillRect(0,0,fillW,h);
-  
+
 }
 $.fn.editable.defaults.mode = 'inline';
-
-$(function(){
-	$('input:checked').removeAttr('checked');	
-});
 
 $(document).ready(function() {
   $('.xeditable').editable();

@@ -8,12 +8,14 @@
       - if @exercise.select_many?
         %h2 Choose ALL that apply:
         .answers
-          = f.input :choice_ids,
-            as: :check_boxes,
-            collection: @answers,
-            member_value: :id,
-            member_label: :answer,
-            label: "&nbsp;"
+          = f.semantic_fields_for @ex_attempt do |exa|
+            = exa.input :choice_ids,
+              as: :check_boxes,
+              collection: @answers,
+              member_value: :id,
+              member_label: :answer,
+              selected: false,
+              label: "&nbsp;"
       - else
         %h2 Select one answer:
         .answers

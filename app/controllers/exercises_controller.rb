@@ -519,6 +519,7 @@ class ExercisesController < ApplicationController
         @answers = @exercise.serve_choice_array
         @responses = ["There are no responses yet!"]
         @explain = ["There are no explanations yet!"]
+        @ex_attempt = Exercise.new
 
         # EOL stands for end of line
         # @wexs is the variable to hold the list of exercises of this workout yet to be attempted by the user apart from the current exercise
@@ -561,7 +562,8 @@ class ExercisesController < ApplicationController
       else
         @exercise = found.first
         if @exercise.base_exercise.question_type == 1
-          response_ids = params[:exercise][:choice_ids]
+          response_ids = params[:exercise][:exercise][:choice_ids]
+          p params
           @responses = Array.new
           if @exercise.mcq_allow_multiple
             response_ids.each do |r|
@@ -718,10 +720,10 @@ class ExercisesController < ApplicationController
       attempt.submit_time = Time.now
       if ex.mcq_allow_multiple
         attempt.answer =
-          params[:exercise][:choice_ids].compact.delete_if{ |x| x.empty? }
+          params[:exercise][:exercise][:choice_ids].compact.delete_if{ |x| x.empty? }
         attempt.answer = attempt.answer.join(',')
       else
-        attempt.answer = params[:exercise][:choice_ids] ||
+        attempt.answer = params[:exercise][:exercise][:choice_ids] ||
           params[:exercise][:answer_code]
       end
       attempt.score = score
