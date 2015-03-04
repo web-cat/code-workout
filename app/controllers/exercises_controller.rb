@@ -117,11 +117,13 @@ class ExercisesController < ApplicationController
       extests = msg[:coding_questions][:test_script].strip.chomp.split("\n")
       extests.each do |tc|
         test_case = TestCase.new
+        # FIXME:
         test_case.test_script = 'NONE for now'
         case_splits = tc.split(',')
         test_case.input = case_splits[0].strip.gsub(';', ',')
         test_case.expected_output = case_splits[1].strip
         test_case.weight = 1.0
+        # FIXME:
         test_case.description = case_splits[2] unless case_splits[2].nil?
         test_case.negative_feedback = case_splits[3]
         ex.coding_question.test_cases << test_case
@@ -510,9 +512,9 @@ class ExercisesController < ApplicationController
 
   # GET/POST /practice/1
   def practice
-    if( params[:id] )
+    if params[:id]
       found = Exercise.where(:id => params[:id])
-      if( found.empty? )
+      if found.empty?
         redirect_to exercises_url, notice: "Exercise #{params[:id]} not found"
       elsif user_signed_in?
         @exercise = found.first
@@ -529,7 +531,8 @@ class ExercisesController < ApplicationController
           @wexs = nil
         end
       else
-        redirect_to exercise_path(found.first), notice: "Need to login to practice" and return
+        redirect_to exercise_path(found.first),
+          notice: "Need to login to practice" and return
       end
     else
       redirect_to exercises_url, notice: 'Choose an exercise to practice!'
@@ -582,7 +585,10 @@ class ExercisesController < ApplicationController
               @exercise.id, session[:current_workout])
           end
           @explain = @exercise.collate_feedback(@responses)
-          @exercise_feedback = "You have attempted exercise #{@exercise.id}:#{@exercise.title} and its feedback for you: " + @explain.to_sentence
+          @exercise_feedback = 'You have attempted exercise ' +
+            "#{@exercise.id}:#{@exercise.title}" +
+            ' and its feedback for you: ' +
+            @explain.to_sentence
           if session[:current_workout]
             record_workout_score(@score, @exercise.id,
               session[:current_workout])
@@ -598,7 +604,12 @@ class ExercisesController < ApplicationController
             current_user.id,
             params[:exercise][:answer_code],
             session[:current_workout])
-          sleep(3.0) # FIXME: why?
+          # TODO: This sleep call is a broken approach to turning the
+          # async processing into a synchronous call, since feedback is
+          # pulled from the client via an ajax call.  This needs to be
+          # removed, and instead feedback results need to be sent using
+          # HTML5 server-side push
+          sleep(3.0)
         end
         if params[:wexes]
           session[:remaining_wexes] = params[:wexes]
@@ -707,7 +718,7 @@ class ExercisesController < ApplicationController
 
 
     # should call count_submission before calling this method
-    def record_attempt(score,exp)
+    def record_attempt(score, exp)
       ex = Exercise.find(params[:id])
       attempt = Attempt.new
       if !session[:exercise_id] ||
@@ -719,8 +730,8 @@ class ExercisesController < ApplicationController
       attempt.submit_num = session[:submit_num]
       attempt.submit_time = Time.now
       if ex.mcq_allow_multiple
-        attempt.answer =
-          params[:exercise][:exercise][:choice_ids].compact.delete_if{ |x| x.empty? }
+        attempt.answer = params[:exercise][:exercise][:choice_ids].
+          compact.delete_if{ |x| x.empty? }
         attempt.answer = attempt.answer.join(',')
       else
         attempt.answer = params[:exercise][:exercise][:choice_ids] ||
@@ -749,6 +760,9 @@ class ExercisesController < ApplicationController
       scoring = WorkoutScore.find_by(
         user_id: current_user.id, workout_id: wkt_id)
       @current_workout = Workout.find(wkt_id)
+
+      # FIXME: This code repeats code in code_worker.rb and needs to be
+      # refactored, probably as a method (or constructor?) in WorkoutScore.
       if scoring.nil?
         scoring = WorkoutScore.new
         scoring.score = score
@@ -759,7 +773,8 @@ class ExercisesController < ApplicationController
         current_user.workout_scores << scoring
 
       else # At least one exercise has been attempted as a part of the workout
-        user_exercise_score = Attempt.user_attempt(current_user.id, exer_id)
+        user_exercise_score =
+          Attempt.user_attempt(current_user.id, exer_id).andand.score
         scoring.score += score
         scoring.last_attempted_at = Time.now
         if user_exercise_score

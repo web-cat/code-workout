@@ -13,28 +13,45 @@
 #
 
 class BaseExercise < ActiveRecord::Base
-  #Relationships
+
+  #~ Relationships ............................................................
+
   has_many :exercises
   belongs_to :validation_group
-  #Hooks
+
+
+  #~ Hooks ....................................................................
+
   before_validation :set_defaults
-  
-  #Validations
+
+
+  #~ Validation ...............................................................
+
   validates :current_version, presence: true, numericality: true
-  
-  TYPES = {
-    'Multiple Choice Question' => 1,
-    'Coding Question' => 2,
-    'Fill in the blanks' => 3
+
+  Q_MC     = 1
+  Q_CODING = 2
+  Q_BLANKS = 3
+
+  TYPE_NAMES = {
+    Q_MC     => 'Multiple Choice Question',
+    Q_CODING => 'Coding Question',
+    Q_BLANKS => 'Fill in the blanks'
   }
-  
+
+
+  #~ Public instance methods ..................................................
+
   def type_name
-    BaseExercise.type_name(self.question_type)
+    TYPES[self.question_type]
   end
-  
+
+
+  #~ Private instance methods .................................................
   private
+
   def set_defaults
-    self.question_type ||= TYPES['Multiple Choice Question']
+    self.question_type ||= Q_MC
   end
-   
+
 end

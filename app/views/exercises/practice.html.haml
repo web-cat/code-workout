@@ -5,7 +5,7 @@
     %h1= @exercise.title
     %p= @exercise.serve_question_html
     - if @exercise.base_exercise.question_type == 1
-      - if @exercise.select_many?
+      - if @exercise.mcq_allow_multiple
         %h2 Choose ALL that apply:
         .answers
           = f.semantic_fields_for @ex_attempt do |exa|

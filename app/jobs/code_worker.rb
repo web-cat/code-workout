@@ -124,7 +124,7 @@ class CodeWorker
       wkt = Workout.find(wktid)
       wo = WorkoutOffering.find_by workout_id: wkt.id
       if wo
-        attempt.workout_offering_id=wo.id
+        attempt.workout_offering_id = wo.id
       end
     end
     ex.attempts << attempt
@@ -146,9 +146,13 @@ class CodeWorker
     tcr.save!
   end
 
+
   def record_workout_score(uid, score, exer_id, wkt_id)
     scoring = WorkoutScore.find_by(user_id: uid, workout_id: wkt_id)
     current_workout = Workout.find(wkt_id)
+
+    # FIXME: This code repeats code in code_worker.rb and needs to be
+    # refactored, probably as a method (or constructor?) in WorkoutScore.
     if scoring.nil?
       scoring = WorkoutScore.new
       scoring.score = score
@@ -158,7 +162,7 @@ class CodeWorker
       current_workout.workout_scores << scoring
       User.find(uid).workout_scores << scoring
     else # At least one exercise has been attempted as a part of the workout
-      user_exercise_score = Attempt.user_attempt(uid, exer_id)
+      user_exercise_score = Attempt.user_attempt(uid, exer_id).andand.score
       scoring.score += score
       scoring.last_attempted_at = Time.now
       if user_exercise_score
@@ -182,6 +186,7 @@ class CodeWorker
     scoring.save!
   end
 
+
   def execute_javatest(class_name, attempt_dir)
     classpath = Dir['usr/resources/Java/*.jar'].join(':')
     cmd = "javac -cp #{classpath} #{attempt_dir}/*.java " +
@@ -203,6 +208,7 @@ class CodeWorker
       return output = `cat #{attempt_dir}/compile.log`
     end
   end
+
 
   def execute_rubytest(class_name, attempt_dir)
     if system("ruby #{class_name}Test.rb",

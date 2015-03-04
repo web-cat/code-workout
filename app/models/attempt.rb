@@ -34,44 +34,48 @@
 #    end
 
 class Attempt < ActiveRecord::Base
-  
+
   belongs_to :exercise
 
   #TODO tie attempt to current user session
   #validates :user, presence: true
   #belongs_to :user
   validates :exercise, presence: true
-  
-  # Returns whether an user has attempted an exercise or not, if attempted returns the latest score
-  def self.user_attempt(uid,ex_id)
-    last_attempt=Attempt.where(user_id: uid, exercise_id: ex_id).where.not(workout_offering_id: nil).last
-    if last_attempt.nil?
-      return false
-    else
-      return last_attempt.score
-    end
+
+  # Returns the latest attempt of the given exercise by the given user
+  def self.user_attempt(uid, ex_id)
+    return Attempt.where(user_id: uid, exercise_id: ex_id).
+      where.not(workout_offering_id: nil).andand.last
   end
-  
-  # Returns the user's score for a particular worked by combing through attempts
-  def self.getUserScore(uid,wktid)
-    wkt_len=Workout.find(wktid).exercises.length;
-    relevant_workout_offerings=WorkoutOffering.where(workout_id: wktid).to_a
-    workouts_offering_ids=Array.new
+
+
+  # Returns the user's score for a particular workout by combing through
+  # attempts
+  # TODO: why is this even a method in this class?  Shouldn't this
+  # behavior come from the Workout class?
+  def self.get_workout_score(uid, wktid)
+    # TODO: this is completely broken, since it assumes attempts in one
+    # workout are stored sequentially and contiguously, which is wrong.
+    wkt_len = Workout.find(wktid).exercises.length
+    relevant_workout_offerings = WorkoutOffering.where(workout_id: wktid).to_a
+    workouts_offering_ids = Array.new
     relevant_workout_offerings.each do |wkt|
-      workouts_offering_ids<<wkt.id
+      workouts_offering_ids << wkt.id
     end
-    user_attempts=Attempt.where(user_id: uid,workout_offering_id: workouts_offering_ids);
-    user_attempts_array=user_attempts.to_a
-    user_end = user_attempts_array.last.id;
+    user_attempts = Attempt.where(user_id: uid,
+      workout_offering_id: workouts_offering_ids)
+    user_attempts_array = user_attempts.to_a
+    user_end = user_attempts_array.last.id
     puts "GOSHIEN user end"
     puts user_end
     puts "Ghoshien"
-    user_wkt_attempts=Attempt.where("id<=? and id>?",user_end,user_end-wkt_len ).to_a;
-    final_score=0
+    user_wkt_attempts = Attempt.where("id <= ? and id > ?",
+      user_end, user_end - wkt_len).to_a
+    final_score = 0
     user_wkt_attempts.each do |attempt|
-      final_score+=attempt.score
+      final_score += attempt.score
     end
     return final_score
   end
-  
+
 end
