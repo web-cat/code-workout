@@ -297,6 +297,7 @@ DEPENDENCIES
   jquery-rails
   js-routes
   kaminari
+  nokogiri
   omniauth
   omniauth-facebook
   omniauth-google-oauth2
