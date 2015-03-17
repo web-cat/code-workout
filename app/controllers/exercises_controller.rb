@@ -19,6 +19,20 @@ class ExercisesController < ApplicationController
   end
 
 
+  # GET /exercises/download.csv
+  def download
+    if cannot? :index, Exercise
+      redirect_to root_path,
+        notice: 'Unauthorized to view all exercises' and return
+    end
+    @exercises = Exercise.all
+
+    respond_to do |format|
+      format.csv
+    end
+  end
+
+
   def search
     searched = escape_javascript(params[:search])
     @wos = Workout.search searched

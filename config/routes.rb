@@ -15,7 +15,9 @@ CodeWorkout::Application.routes.draw do
   get "static_pages/mockup3"
   get "static_pages/typography"
 
-  get 'exercises/upload_exercises' => 'exercises#upload_exercises',     as: :upload_exercises
+  get 'exercises/upload_exercises' => 'exercises#upload_exercises',
+    as: :upload_exercises
+  get 'exercises/download' => 'exercises#download', as: :download
   post 'exercises/upload_create' => 'exercises#upload_create'
   get 'exercises/upload_mcqs' => 'exercises#upload_mcqs', as: :upload_mcqs
   post 'exercises/create_mcqs' => 'exercises#create_mcqs'

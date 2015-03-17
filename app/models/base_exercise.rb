@@ -17,7 +17,8 @@ class BaseExercise < ActiveRecord::Base
   #~ Relationships ............................................................
 
   has_many :exercises
-  belongs_to :validation_group
+  belongs_to :variation_group
+  belongs_to :user
 
 
   #~ Hooks ....................................................................
@@ -43,7 +44,7 @@ class BaseExercise < ActiveRecord::Base
   #~ Public instance methods ..................................................
 
   def type_name
-    TYPES[self.question_type]
+    TYPE_NAMES[self.question_type]
   end
 
 
