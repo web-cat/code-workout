@@ -105,7 +105,7 @@ class CodeWorker
     multiplier = exWorkout ? exWorkout.points : 1.0
     scr = correct * multiplier / total_weight
     if wktid
-      record_workout_score(uid, scr, exid, wktid)
+      record_workout_score(uid, scr, ex.id, wktid)
     end
     attempt = Attempt.new
     # TODO Make the submission count dynamic

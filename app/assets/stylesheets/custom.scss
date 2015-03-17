@@ -113,9 +113,11 @@ ul.wysihtml5-toolbar li {
   background-repeat: no-repeat;
   background-position: top right;
   background-size: cover;
-  margin: 0 -22px 40px;
+  margin-bottom: 40px;
+  margin-top: -6px;
+  padding-top: 6px;
 }
-.home .row.blurb { margin-top: 40px; margin-bottom: 40px; text-align: center; }
+.home .row.blurb { margin: 40px 0; text-align: center; }
 
 .home .cta .row { margin-left: 0; margin-right: 0; }
 .home .cta .pitch {
