@@ -1,24 +1,24 @@
 %h2=  @exercise.title + ": " + @score.to_s + "% Correct"
--#%p= @exercise.serve_question_html
+-#%p= make_html(@exercise.serve_question_html)
 -#- @responses.each do |resp|
 -#  %p= resp.answer
 - @explain.each do |ex|
-  %p= CGI.unescapeHTML(ex).html_safe
+  %p= make_html(ex)
 %h2= @xp.to_s + " XP earned"
 %hr
 -#%h3 Session
--#%p 
+-#%p
 -#  Exercise ID:
 -#  = session[:exercise_id]
--#%p 
+-#%p
 -#  Attempt #:
 -#  = session[:submit_num]
 -#TODO remove this, demo purposes only...
--#%h3 Write a hint to earn more XP 
+-#%h3 Write a hint to earn more XP
 -#= form_tag :controller => "exercises"  do
   -#.col-md-12
     -#.col-md-8
-      -#= text_field_tag :hints, params[:search], 
+      -#= text_field_tag :hints, params[:search],
         -#:class => "input.input-large", :placeholder => "Write a short hint...",
         -#:style => "vertical-align: top; width: 500px;"
     -#.col-md-4

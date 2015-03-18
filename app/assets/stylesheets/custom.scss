@@ -29,6 +29,22 @@ html, body { height: 100%; }
 .navbar .form-control.search-query { padding: 0 6px; }
 .navbar .search .btn-sm {  padding: 7px 10px; }
 
+/* yamm */
+
+.dropdown-menu { border-radius: 6px; }
+.yamm .navbar-right .dropdown-menu { right: 0; }
+
+.dropdown-menu.signin { width: 30%; }
+.signin .yamm-content { padding: 5px 30px; }
+.signin .yamm-content .form-horizontal .form-group label.control-label {
+  width: 20%;
+}
+.signin .yamm-content .form-horizontal .form-group .form-wrapper {
+  width: 80%;
+}
+.signin .yamm-content .form-horizontal .form-group { margin-bottom: 5px; }
+.dropdown-menu.signin .btn { margin: 5px 15px; font-size: larger; }
+
 /* Codemirror */
 
 .CodeMirror { height: auto; margin-bottom: 9px; }

@@ -104,13 +104,17 @@
             %a.dropdown-toggle{ href: '/signin',
               data: { toggle: 'dropdown' }, value: 'Sign in' }
               Sign in
-            %ul.dropdown-menu
+            %ul.dropdown-menu.signin
               %li
-                %li= link_to image_tag('FacebookButton_post-image.jpg'),
-                  user_omniauth_authorize_path(:facebook)
+                = link_to user_omniauth_authorize_path(:facebook),
+                  class: 'btn btn-social btn-facebook' do
+                  %i.fa.fa-facebook
+                  Sign in with Facebook
               %li
-                %li= link_to image_tag('google-plus-sign-in.jpg'),
-                  user_omniauth_authorize_path(:google_oauth2)
+                = link_to user_omniauth_authorize_path(:google_oauth2),
+                  class: 'btn btn-social btn-google-plus' do
+                  %i.fa.fa-google
+                  Sign in with Google
               %li
                 %div
                   .yamm-content

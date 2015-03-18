@@ -9,6 +9,9 @@ class ExercisesController < ApplicationController
   before_action :set_exercise, only: [:show, :edit, :update, :destroy]
   respond_to :html, :js, :json
 
+
+  #~ Public instance methods ..................................................
+
   # GET /exercises
   def index
     if cannot? :index, Exercise
@@ -533,6 +536,9 @@ class ExercisesController < ApplicationController
       elsif user_signed_in?
         @exercise = found.first
         @answers = @exercise.serve_choice_array
+        @answers.each do |a|
+          a[:answer] = make_html(a[:answer])
+        end
         @responses = ["There are no responses yet!"]
         @explain = ["There are no explanations yet!"]
         @ex_attempt = Exercise.new
@@ -591,7 +597,7 @@ class ExercisesController < ApplicationController
           end
           @responses = @responses.compact
           @responses.each do |answer|
-            answer[:answer] = CGI::unescapeHTML(answer[:answer]).html_safe
+            answer[:answer] = make_html(answer[:answer])
           end
           @score = @exercise.score(@responses)
           if session[:current_workout]
@@ -723,11 +729,6 @@ class ExercisesController < ApplicationController
         :mcq_allow_multiple, :mcq_is_scrambled, :language, :area,
         choices_attributes: [:answer, :order, :value, :_destroy],
         tags_attributes: [:tag_name, :tagtype, :_destroy])
-    end
-
-
-    def make_html(unescaped)
-      return CGI::unescapeHTML(unescaped.to_s).html_safe
     end
 
 

@@ -24,6 +24,31 @@ module ApplicationHelper
 
 
   # -------------------------------------------------------------
+  def make_html(unescaped)
+    return CGI::unescapeHTML(unescaped.to_s).html_safe
+  end
+
+
+  # -------------------------------------------------------------
+  TEASER_LENGTH = 40
+  def teaser(text, length = TEASER_LENGTH)
+    plain = ActionController::Base.helpers.strip_tags(make_html(text))
+    if (plain.size < length)
+      return plain
+    else
+      shorten = plain[0..length]
+      space = shorten.rindex(/\s/)
+      if space.nil?
+        shorten = shorten.to_s + "..."
+      else
+        shorten = shorten[0..space].to_s + "..."
+      end
+      return shorten
+    end
+  end
+
+
+  # -------------------------------------------------------------
   # Returns the correct twitter bootstrap class mapping for different
   # types of flash messages
   #

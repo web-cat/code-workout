@@ -1,5 +1,5 @@
 # =============================================================================
-module PythyActiveRecordExtensions
+module CodeWorkoutActiveRecordExtensions
 
   extend ActiveSupport::Concern
 
@@ -10,10 +10,10 @@ module PythyActiveRecordExtensions
 
 end
 
-ActiveRecord::Base.send(:include, PythyActiveRecordExtensions)
+ActiveRecord::Base.send(:include, CodeWorkoutActiveRecordExtensions)
 
 # =============================================================================
-# Found at http://gist.github.com/3149393, modified for Pythy use
+# Found at http://gist.github.com/3149393, modified for use here
 class ChangeableValidator < ActiveModel::EachValidator
   # Enforce/prevent attribute change
   #
@@ -22,12 +22,12 @@ class ChangeableValidator < ActiveModel::EachValidator
   #
   # Example: Force attribute change on every save
   # validates :attribute, changeable: true
-  
+
   def initialize(options)
     options[:changeable] = !(options[:with] === false)
     super
   end
-  
+
   def validate_each(record, attribute, value)
     unless record.public_send(:"#{attribute}_changed?") == options[:changeable]
       record.errors.add(attribute,

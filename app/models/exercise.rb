@@ -109,7 +109,6 @@ class Exercise < ActiveRecord::Base
   validates :discrimination, presence: true, numericality: true
 
 
-  TEASER_LENGTH = 40
   LANGUAGE_EXTENSION = {
     'Ruby' => 'rb',
     'Java' => 'java',
@@ -149,7 +148,8 @@ class Exercise < ActiveRecord::Base
       raw = self.choices.sort_by{ |a| a[:order] }
       raw.each do |c|
         formatted = c
-        formatted[:answer] = make_html(c[:answer])
+        # moved to view controller:
+        # formatted[:answer] = make_html(c[:answer])
         answers.push(formatted)
       end
       if self.mcq_is_scrambled
@@ -165,23 +165,6 @@ class Exercise < ActiveRecord::Base
   end
 
 
-  def teaser_text
-    plain = ActionController::Base.helpers.strip_tags(make_html(self.question))
-    if (plain.size < TEASER_LENGTH)
-      return plain
-    else
-      shorten = plain[0..TEASER_LENGTH]
-      space = shorten.rindex(/\s/)
-      if space.nil?
-        shorten = shorten.to_s + "..."
-      else
-        shorten = shorten[0..space].to_s + "..."
-      end
-      return shorten
-    end
-  end
-
-
   def serve_question_html
     source = stem ? stem.preamble : ''
     if !question.blank?
@@ -190,7 +173,7 @@ class Exercise < ActiveRecord::Base
       end
       source += question
     end
-    return make_html(source)
+    return source
   end
 
 
@@ -216,7 +199,8 @@ class Exercise < ActiveRecord::Base
       found = answered.select { |x| x["id"] == choice.id }
       if ((choice.value > 0 && (found.nil? || found.empty?)) ||
           (choice.value <= 0 && (!found.nil? && !found.empty?)))
-        feed.push(make_html(choice.feedback))
+        # feed.push(make_html(choice.feedback))
+        feed.push(choice.feedback)
       end
     end
     # if 100% correct, or no other feedback provided, give general feedback
@@ -243,11 +227,6 @@ class Exercise < ActiveRecord::Base
     else
       return self.experience / options / 4
     end
-  end
-
-
-  def make_html(unescaped)
-    return CGI::unescapeHTML(unescaped.to_s).html_safe
   end
 
 

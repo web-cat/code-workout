@@ -31,3 +31,4 @@ lib/assets/javascripts/theme/dark/*.swf
 **/.DS_Store
 usr/attempts/
 *_results.csv
+download.csv

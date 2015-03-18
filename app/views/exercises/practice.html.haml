@@ -3,7 +3,7 @@
     wexes: params[:wexes], feedback_return: true), remote: true do |f|
     = f.semantic_errors
     %h1= @exercise.title
-    %p= @exercise.serve_question_html
+    %p= make_html(@exercise.serve_question_html)
     - if @exercise.base_exercise.question_type == 1
       - if @exercise.mcq_allow_multiple
         %h2 Choose ALL that apply:
