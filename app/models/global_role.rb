@@ -58,5 +58,9 @@ class GlobalRole < ActiveRecord::Base
     errors.add :base, "Cannot delete built-in roles." if builtin?
     errors.blank?
   end
+ 
+  def is_instructor?
+    id == INSTRUCTOR_ID
+  end
 
 end
