@@ -46,9 +46,9 @@ CodeWorkout::Application.routes.draw do
 
 
   #OmniAuth for Facebook
-  devise_for :controllers => { :omniauth_callbacks => "omniauth_callbacks" }
-
-  devise_for :users, :skip => [:registrations, :sessions]
+  devise_for :users,
+    controllers: { omniauth_callbacks: 'users/omniauth_callbacks' },
+    skip: [:registrations, :sessions]
   as :user do
     get "/signup" => "devise/registrations#new", as: :new_user_registration
 
