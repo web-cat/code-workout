@@ -14,7 +14,7 @@ class WorkoutsController < ApplicationController
   # GET /workouts/1
   def show
     if( params[:id] )
-      found = Workout.where(:id => params[:id])
+      found = Workout.where(id: params[:id])
       if( found.empty? )
         redirect_to workouts_url, notice: "Workout #{params[:id]} not found"
       else
@@ -35,6 +35,9 @@ class WorkoutsController < ApplicationController
 
   # GET /workouts/new
   def new
+    if cannot? :new, Workout
+      redirect_to root_path, notice: 'Unauthorized to create new workout' and return
+    end
     @workout = Workout.new
   end
 
@@ -46,6 +49,9 @@ class WorkoutsController < ApplicationController
   
   # GET /workouts/1/edit
   def edit
+    if cannot? :edit, @workout
+      redirect_to root_path, notice: 'Unauthorized to edit workout' and return
+    end
     @exs=[]
     @workout.exercises.each do |exer|
       @exs<<exer.id
@@ -63,7 +69,7 @@ class WorkoutsController < ApplicationController
     @workout = Workout.new(workout_params)
     msg      = params[:workout]
     exerciseids = msg[:exercise_ids]
-    
+    @workout.creator_id = current_user.id
     exerciseids.each_with_index do |ex, index|
       if index > 0
       exercise = Exercise.find(ex)
@@ -85,6 +91,9 @@ class WorkoutsController < ApplicationController
   end
   
   def evaluate
+    if session[:current_workout].nil?
+      redirect_to root_path, notice: 'Invalid action' and return
+    end
     @workout_feedback=session[:workout_feedback].values
     @current_workout=Workout.find(session[:current_workout])
     @user_workout_score=WorkoutScore.find_by!(user_id: current_user.id,workout_id: session[:current_workout]).score
@@ -98,6 +107,9 @@ class WorkoutsController < ApplicationController
 
   # PATCH/PUT /workouts/1
   def update
+    if cannot? :update, @workout
+      redirect_to root_path, notice: 'Unauthorized to update workout' and return
+    end
     if @workout.update(workout_params)
       redirect_to @workout, notice: 'Workout was successfully updated.'
     else
@@ -107,6 +119,9 @@ class WorkoutsController < ApplicationController
 
   # DELETE /workouts/1
   def destroy
+    if cannot? :destroy, @workout
+      redirect_to root_path, notice: 'Unauthorized to destroy workout' and return
+    end
     @workout.destroy
     redirect_to workouts_url, notice: 'Workout was successfully destroyed.'
   end
