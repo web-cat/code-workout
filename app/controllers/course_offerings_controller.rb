@@ -13,17 +13,26 @@ class CourseOfferingsController < ApplicationController
 
   # GET /course_offerings/new
   def new
+    if cannot? :new, CourseOffering
+      redirect_to root_path, notice: 'Unauthorized to create course offering' and return
+    end
     @course_offering = CourseOffering.new
   end
 
   # GET /course_offerings/1/edit
   def edit
     set_course_offering
+    if cannot? :edit, @course_offering
+      redirect_to root_path, notice: 'Unauthorized to edit course offering' and return
+    end
     @uploaded_roster = UploadedRoster.new
   end
 
   # POST /course_offerings
   def create
+    if cannot? :create, CourseOffering
+      redirect_to root_path, notice: 'Unauthorized to create course offering' and return
+    end    
     @course_offering = CourseOffering.new(course_offering_params)
 
     if @course_offering.save
@@ -35,6 +44,9 @@ class CourseOfferingsController < ApplicationController
 
   # PATCH/PUT /course_offerings/1
   def update
+    if cannot? :update, @course_offering
+      redirect_to root_path, notice: 'Unauthorized to edit course offering' and return
+    end
     if @course_offering.update(course_offering_params)
       redirect_to @course_offering, notice: 'Course offering was successfully updated.'
     else
@@ -44,12 +56,18 @@ class CourseOfferingsController < ApplicationController
 
   # DELETE /course_offerings/1
   def destroy
+    if cannot? :destroy, @course_offering
+      redirect_to root_path, notice: 'Unauthorized to destroy course offering' and return
+    end
     @course_offering.destroy
     redirect_to course_offerings_url, notice: 'Course offering was successfully destroyed.'
   end
   
   #
   def generate_gradebook
+    if cannot? :generate_gradebook, @course_offering
+      redirect_to root_path, notice: 'Unauthorized to generate gradebook for course offering' and return
+    end
     respond_to do |format|
       format.csv do
         headers['Content-Disposition']="attachment; filename=\"#{@course_offering.name} Gradebook.csv\""
@@ -60,6 +78,9 @@ class CourseOfferingsController < ApplicationController
   
   # GET /course_offerings/:id/add_workout
   def add_workout
+    if cannot? :add_workout, @course_offering
+      redirect_to root_path, notice: 'Unauthorized to add workout for course offering' and return
+    end
     @workouts=Workout.all
     @wkts=[]
     @course_offering.workouts.each do |wks|
