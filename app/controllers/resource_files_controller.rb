@@ -2,17 +2,29 @@ class ResourceFilesController < ApplicationController
    before_action :set_resource_file, only: [:show]
  
   def new
+    if cannot? :new, ResourceFile 
+      redirect_to root_path, notice: 'Unauthorized to create resource file' and return
+    end
   end
 
   # GET /resource_files/16325fe32
   def show
+    if cannot? :show, @resource_file 
+      redirect_to root_path, notice: 'Unauthorized to view resource file' and return
+    end
   end
   
   def index
+    if cannot? :index, ResourceFile 
+      redirect_to root_path, notice: 'Unauthorized to view all resource files' and return
+    end
     @resource_files = ResourceFile.all
   end
 
   def uploadFile
+    if cannot? :uploadFile, ResourceFile 
+      redirect_to root_path, notice: 'Unauthorized to upload resource file' and return
+    end
     puts "HINTER",params[:resource_file][:upload],"HINTER"
     post = ResourceFile.last.save_file(params[:resource_file][:upload])
     post.user_id=current_user.id  
@@ -22,6 +34,9 @@ class ResourceFilesController < ApplicationController
  
   # PATCH/PUT /update/1
   def update
+    if cannot? :update, ResourceFile 
+      redirect_to root_path, notice: 'Unauthorized to upload resource file' and return
+    end
     if uploadFile
       render action: 'show'
     else
