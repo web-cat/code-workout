@@ -37,6 +37,9 @@ class ExercisesController < ApplicationController
 
   # GET /exercises/new
   def new
+    if !user_signed_in? || (cannot? :new, Exercise)
+      redirect_to root_path, notice: 'Unauthorized to create new exercise' and return
+    end
     @exercise = Exercise.new
     @coding_exercise = CodingQuestion.new
     @languages = Tag.where(:tagtype => Tag.language).pluck(:tag_name)
@@ -45,10 +48,16 @@ class ExercisesController < ApplicationController
 
   # GET /exercises/1/edit
   def edit
+    if !user_signed_in? || (cannot? :edit, @exercise)
+      redirect_to root_path, notice: 'Unauthorized to edit exercise' and return
+    end
   end
 
   # POST /exercises
   def create
+    if !user_signed_in? || (cannot? :exercise, Exercise)
+      redirect_to root_path, notice: 'Unauthorized to create exercise' and return
+    end
     basex=BaseExercise.new
     ex=Exercise.new
     msg = params[:exercise] || params[:coding_question]
@@ -60,7 +69,7 @@ class ExercisesController < ApplicationController
     #ex.feedback = ERB::Util.html_escape(msg[:feedback])
     ex.question = msg[:question]
     ex.feedback = msg[:feedback]
-
+    ex.creator_id = current_user.id
     ex.is_public = true
     if msg[:is_public] == 0
       ex.is_public = false
@@ -242,25 +251,20 @@ class ExercisesController < ApplicationController
     if params[:language]
       BaseExercise.all.each do |baseexercise|
         candidate_exercise = Exercise.find(baseexercise.current_version)
-        if candidate_exercise.language == params[:language] && candidate_exercise.id >= 200    
-          exercise_dump<<candidate_exercise
+        if candidate_exercise.language == params[:language]    
+          exercise_dump<<candidate_exercise if candidate_exercise.is_public?
         end # INNER IF
       end   # DO WHILE     
         
     elsif params[:question_type]
       BaseExercise.where(question_type: params[:question_type].to_i).find_each do |baseexercise|
-        print "BASE EXERCISE",baseexercise.id,"BASE EXERCISE"
-        candidate_exercise = Exercise.find(baseexercise.current_version)
-        if candidate_exercise.id >=0    
-          exercise_dump<<candidate_exercise
-        end # INNER IF
+        candidate_exercise = Exercise.find(baseexercise.current_version)        
+        exercise_dump<<candidate_exercise if candidate_exercise.is_public?
       end   # DO WHILE             
     else  
       BaseExercise.all.each do |baseexercise|
-        candidate_exercise = Exercise.find(baseexercise.current_version)
-        if candidate_exercise.id >= 200   
-          exercise_dump<<candidate_exercise
-        end # INNER IF
+        candidate_exercise = Exercise.find(baseexercise.current_version)           
+        exercise_dump<<candidate_exercise if candidate_exercise.is_public?       
       end   # DO WHILE        
     end #OUTER IF
     redirect_to exercise_practice_path(exercise_dump.sample) and return
@@ -268,7 +272,9 @@ class ExercisesController < ApplicationController
 
 # POST exercises/create_mcqs
 def create_mcqs
-
+  if !user_signed_in?
+      redirect_to root_path, notice: 'Need to sign in first' and return
+  end
   basex=BaseExercise.new
   basex.user_id=current_user.id
   basex.question_type = msg[:question_type] || 1
@@ -293,7 +299,7 @@ def create_mcqs
         ex.question = question_ex
         ex.feedback = gradertext_ex
         ex.is_public = true
-
+        ex.creator_id = current_user.id
         #if msg[:is_public] == 0
          # ex.is_public = false
         #end
@@ -398,15 +404,23 @@ end
 
 # GET exercises/upload_mcqs
 def upload_mcqs
+  if !user_signed_in? || !current_user.global_role.is_instructor?
+      redirect_to root_path, notice: 'Need to sign as an instructor first' and return
+  end
 end
 
 # GET exercises/upload_exercises
 def upload_exercises
+  if !user_signed_in? || !current_user.global_role.is_instructor?
+      redirect_to root_path, notice: 'Need to sign as an instructor first' and return
+  end
 end
 
 # POST /exercises/upload_create
 def upload_create
-
+  if !user_signed_in? || !current_user.global_role.is_instructor?
+      redirect_to root_path, notice: 'Need to sign as an instructor first' and return
+  end
   basex=BaseExercise.new
   basex.user_id=current_user.id
   basex.question_type = msg[:question_type] || 1
@@ -468,16 +482,27 @@ def upload_create
 end
   # GET/POST /practice/1
   def practice
+    if !user_signed_in?
+      redirect_to exercise_path(params[:id]), notice: 'Need to sign in first' and return
+    end
     if( params[:id] )
-      found = Exercise.where(:id => params[:id])
-      if( found.empty? )
+      @found = Exercise.where(id: params[:id])
+      if( @found.empty? )
         redirect_to exercises_url, notice: "Exercise #{params[:id]} not found"
       elsif user_signed_in?
-        @exercise = found.first
+        @exercise = @found.first
+        # disabling non-Java coding questions for the time-being for the time-being
+        if @exercise.language != 'Java' && !current_user.global_role.can_edit_system_configuration?
+          redirect_to root_path, notice: 'Exercise practice not allowed' and return
+        end
         @answers = @exercise.serve_choice_array
         @responses = ["There are no responses yet!"]
         @explain = ["There are no explanations yet!"]
-
+        if session[:leaf_exercises] 
+          session[:leaf_exercises] << @exercise.id
+        else
+          session[:leaf_exercises] = [@exercise.id]
+        end 
         # EOL stands for end of line
         # @wexs is the variable to hold the list of exercises of this workout yet to be attempted by the user apart from the current exercise
         if params[:wexes] != "EOL"
@@ -486,7 +511,7 @@ end
           @wexs = nil
         end
       else
-        redirect_to exercise_path(found.first), notice: "Need to login to practice" and return
+        redirect_to exercise_path(@found.first), notice: "Need to login to practice" and return
       end
     else
       redirect_to exercises_url, notice: 'Choose an exercise to practice!'
@@ -510,8 +535,11 @@ end
 
   #GET /evaluate/1
   def evaluate
+    if !user_signed_in?
+      redirect_to root_path, notice: 'Need to sign in first' and return
+    end
     if( params[:id] )
-      found = Exercise.where(:id => params[:id])
+      found = Exercise.where(id: params[:id])
       if( found.empty? )
         redirect_to exercises_url, notice: "Exercise #{params[:id]} not found"
       else
@@ -573,6 +601,9 @@ end
 
   # PATCH/PUT /exercises/1
   def update
+    if !user_signed_in? || (cannot? :update, @exercise)
+      redirect_to root_path, notice: 'Unauthorized to update exercise' and return
+    end
     @exercise = Exercise.find(params[:id])
     new_exercise = create_new_version()
     @exercise.base_exercise.exercises<<new_exercise;
@@ -592,6 +623,9 @@ end
 
   # DELETE /exercises/1
   def destroy
+    if !user_signed_in? || (cannot? :destroy, @exercise)
+      redirect_to root_path, notice: 'Unauthorized to delete exercise' and return
+    end
     @exercise.destroy
     redirect_to exercises_url, notice: 'Exercise was successfully destroyed.'
   end
@@ -607,6 +641,7 @@ end
     def create_new_version
       newexercise = Exercise.new
       newexercise.title = @exercise.title
+      newexercise.creator_id = current_user.id
       newexercise.question = @exercise.question
       newexercise.feedback = @exercise.feedback
       newexercise.is_public = @exercise.is_public
