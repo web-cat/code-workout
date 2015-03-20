@@ -32,3 +32,9 @@ lib/assets/javascripts/theme/dark/*.swf
 app/controllers/signups_controller.rb
 app/views/signups
 app/models/signup.rb
+app/views/courses/show_ulti_bak.html.haml
+app/views/courses/show_try.html.haml
+app/views/courses/show_bak3.html.haml
+app/views/courses/show_bak2.html.haml
+app/views/courses/show_bak.html.haml
+usr
