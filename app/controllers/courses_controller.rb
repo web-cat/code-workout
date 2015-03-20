@@ -18,16 +18,24 @@ class CoursesController < ApplicationController
 
   # GET /courses/new
   def new
+    if cannot? :new, Course
+      redirect_to root_path, notice: 'Unauthorized to create new course' and return
+    end
     @course = Course.new
   end
 
   # GET /courses/1/edit
   def edit
+    if cannot? :edit, @course
+      redirect_to root_path, notice: 'Unauthorized to edit course' and return
+    end
   end
 
   # POST /courses
   def create
-    
+    if cannot? :create, Course
+      redirect_to root_path, notice: 'Unauthorized to create course' and return
+    end
     form = params[:course]
     offering=form[:course_offering]
     @course = Course.find_by number: form[:number]
@@ -36,6 +44,7 @@ class CoursesController < ApplicationController
       @course = Course.new
       @course.name = form[:name].to_s
       @course.number = form[:number].to_s
+      @course.creator_id = current_user.id
       #@course.save
     
       #establish relationships
@@ -81,6 +90,9 @@ class CoursesController < ApplicationController
 
   # PATCH/PUT /courses/1
   def update
+    if cannot? :update, @course
+      redirect_to root_path, notice: 'Unauthorized to update course' and return
+    end
     if @course.update(course_params)
       redirect_to @course, notice: 'Course was successfully updated.'
     else
@@ -90,6 +102,9 @@ class CoursesController < ApplicationController
 
   # DELETE /courses/1
   def destroy
+    if cannot? :destroy, @course
+      redirect_to root_path, notice: 'Unauthorized to delete course' and return
+    end
     @course.destroy
     redirect_to courses_url, notice: 'Course was successfully destroyed.'
   end
@@ -104,6 +119,9 @@ class CoursesController < ApplicationController
   
   # POST /courses/:id/generate_gradebook
   def generate_gradebook
+    if cannot? :generate_gradebook, @course
+      redirect_to root_path, notice: 'Unauthorized to generate gradebook for course' and return
+    end
     respond_to do |format|
       format.html
       format.csv do
