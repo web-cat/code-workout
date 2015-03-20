@@ -6,7 +6,7 @@ class ResourceFile < ActiveRecord::Base
 
   before_validation :token
 
-  STORAGE_DIR = "public/resource"
+  STORAGE_DIR = "usr/resources/resource_files"
 
   #for pretty URLs
   def to_param
