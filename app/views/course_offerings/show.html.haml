@@ -2,7 +2,7 @@
 
 %p
   %strong Course:
-  = @course_offering.course_id
+  = link_to @course_offering.course.name, course_path(@course_offering.course)
 
 %p
   %strong Term -
@@ -22,14 +22,14 @@
 %p
   %strong Instructor
   - instructor = @course_offering.course_enrollments.bsearch{|ce| ce.course_role_id == 1  }
-  - instructor  = User.find(instructor.user_id) 
+  - instructor  = User.find(instructor.user_id) unless instructor.nil?
   = link_to instructor.name, user_path(instructor) unless instructor.nil?
 
 %p
   %strong Graders/TA
   - assistants = @course_offering.course_enrollments.select{|ce| ce.course_role_id == 2  }
   - assistants.each do |a|
-    - asst = User.find(a.user_id)
+    - asst = User.find(a.user_id) unless a.nil?
     %br
     = link_to asst.name, 'mailto:'+asst.email unless assistants.nil?  
    
@@ -38,13 +38,17 @@
   = @course_offering.self_enrollment_allowed
   %p
   %strong
-  = link_to 'Add workouts', course_offering_add_workout_path(@course_offering)
+  - if user_signed_in?
+    - role = CourseEnrollment.find_by(user_id: current_user.id,course_offering_id: @course_offering.id)
+    - if role && role.course_role_id == 1    
+      = link_to 'Add workouts', course_offering_add_workout_path(@course_offering)
   %br
   %strong 
   - if user_signed_in?  
-    = link_to 'Enroll', 
-    '/course_enrollments?'+ {:course_enrollment => ActionController::Parameters.new({user_id: current_user.id,
-     course_offering_id: @course_offering, course_role_id: 3})}.to_param, method: :post
+    - if @course_offering.self_enrollment_allowed && CourseEnrollment.find_by(user_id: current_user.id,course_offering_id: @course_offering.id).nil? 
+      = link_to 'Enroll', 
+      '/course_enrollments?'+ {course_enrollment: ActionController::Parameters.new({user_id: current_user.id,
+      course_offering_id: @course_offering, course_role_id: 3})}.to_param, method: :post 
   - else
     = link_to 'Need to Sign in to enroll', new_user_session_path    
 
