@@ -17,25 +17,78 @@ class Ability
       # back to their original user.
       can :unimpersonate, User
 
+      # Creating an alias for CRUD operations
+      alias_action :create, :read, :update, :destroy, to: :crud
+
       # A user should only be able to update himself or herself (assuming no
       # other permissions granted below by the global role).
-      can [:show, :update], User do |target_user|
+      can [:show, :edit,:update], User do |target_user|
         target_user.id == user.id
       end
       
 
 
-      cannot :index, User unless user.global_role.can_edit_system_configuration?
-      cannot :index, Workout unless user.global_role.can_edit_system_configuration?
-      cannot :index, Exercise unless user.global_role.can_edit_system_configuration?
-      cannot :index, CourseEnrollment unless user.global_role.can_edit_system_configuration?
+      cannot :index, [User,Workout,Exercise,CourseEnrollment] unless user.global_role.can_edit_system_configuration?
       
-      # All users cannot create these, this is not Piazza-style
-      cannot :create, Course unless user.global_role.can_edit_system_configuration?
-      cannot :create, CourseOffering unless user.global_role.can_edit_system_configuration?
+      cannot :crud, [Organization,GlobalRole,CourseRole] unless user.global_role.can_edit_system_configuration?
 
+      cannot [:update, :edit, :destroy], [CourseEnrollment] do |ce|
+        role = CourseEnrollment.find_by(user_id: user.id, course_offering_id: ce.course_offering.id)
+        puts "ROLE",role,"ROLE"
+        role.nil? || !role.course_role.can_manage_course?
+      end
+      cannot :show, CourseEnrollment do |ce|
+        puts "HAIKU",ce.user_id.to_s,"HAIKU",user.id.to_s
+        ce.user_id != user.id
+      end  
+      cannot :new, CourseEnrollment unless user.global_role.is_instructor?      
+      
+      #~ CourseOffering and Course
+      cannot [:create, :new], [CourseOffering,Course] unless  (user.global_role.can_edit_system_configuration? || user.global_role.is_instructor?)
+      
+      cannot [:update, :generate_gradebook, :add_workout, :edit, :destroy], [CourseOffering] do |co|
+        role = CourseEnrollment.find_by(user_id: user.id, course_offering_id: co.id)
+        puts "ROLE2",role,"ROLE2"
+        role.nil? || !role.course_role.can_manage_course?
+      end
+      
+      cannot [:update, :generate_gradebook, :edit, :destroy], [Course] do |co|
+        co.creator_id != user.id
+      end      
+      
+      #~ Exercise and Workout
+      # Tighter permissions to remain till beginning of Fall 2015
+      cannot [:create, :new], Exercise unless  user.global_role.can_edit_system_configuration? || user.global_role.is_instructor?
+      cannot [:update, :edit, :destroy], [Exercise] do |ex|
+        ex.creator_id != user.id
+      end      
+      can [:update, :edit, :destroy], [Exercise] do |ex|
+        ex.creator_id == user.id
+      end
+      
+      cannot [:create, :new], Workout unless  user.global_role.can_edit_system_configuration? || user.global_role.is_instructor?
+      cannot [:update, :edit, :destroy], [Workout] do |wkt|
+        wkt.creator_id != user.id
+      end
+      can [:update, :edit, :destroy], [Workout] do |wkt|
+        wkt.creator_id == user.id
+      end
+      
+      #~ Resource files
+      cannot [:create, :new], ResourceFile unless user.global_role.can_edit_system_configuration?
+      cannot [:update, :edit, :show, :destroy], ResourceFile do |res|
+        res.user_id != user.id
+      end      
+      can [:update, :edit, :show, :destroy], [ResourceFile] do |res|
+        res.user_id == user.id
+      end
+      
+      #~ Signups
+      cannot [:update, :index, :edit, :show, :destroy], Signup unless user.global_role.can_edit_system_configuration?
+      
       process_global_role user
-      process_courses user
+      process_instructor user
+#      process_courses user
 #      process_assignments user
 #      process_repositories user
 #      process_assignment_checks user
@@ -62,14 +115,16 @@ class Ability
 #      can :manage, ActivityLog
       can :manage, CourseRole
 #      can :manage, Environment
-       print "ADMINISTRATOR","ADMINSTRATOR"
       can :manage, GlobalRole
       can :manage, Organization
       can :manage, Term
-      can :index, User
-      can :index, Workout
-      can :index, Exercise
-      can :index, CourseEnrollment
+      can :manage, Signup
+    # Extensive permission for System Admins till beginning of Fall 2015  
+      can :manage, User
+      can :manage, Workout
+      can :manage, Exercise
+      can :manage, ResourceFile
+      can :crud, CourseEnrollment
       
     end
 
@@ -83,6 +138,12 @@ class Ability
 
   end
 
+  def process_instructor(user)
+    if user.global_role.is_instructor?
+      can [:create, :new], [Course,CourseOffering,Exercise,ResourceFile,Workout]
+      can [:index], [Exercise,Workout] 
+    end
+  end
 
   # -------------------------------------------------------------
   # Private: Process course-related permissions.
