@@ -1,5 +1,5 @@
 %br
-%b Code test results:
+%b Test results:
 %br
 %br
 - if !Attempt.where(user_id: current_user.id,exercise_id: @exercise.id).blank?
@@ -7,11 +7,11 @@
     = Choice.find(Attempt.where(user_id: current_user.id,exercise_id: @exercise.id).last.answer.to_i).feedback
   - elsif @exercise.base_exercise.question_type == 2
     - @exercise.coding_question.test_cases.each_with_index do |test_case,i|
-      = 'Test case '
+      = 'Test '
       - i+=1
       - tcr = TestCaseResult.all.order('id desc').find_by(test_case_id: test_case.id, user_id: current_user.id)
       - if tcr.execution_feedback.include?("CODE-ERROR-CODE-ERROR")
-        = "CODE EXECUTION ERROR"+tcr.execution_feedback
+        = "CODING ERROR"#+tcr.execution_feedback
         - break
       - if tcr.pass
         = i.to_s + '. Test Case successfully passed'
