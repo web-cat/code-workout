@@ -32,6 +32,9 @@ class UsersController < ApplicationController
 
   # GET /users/1/edit
   def edit
+    if cannot? :index, User
+      redirect_to root_path, notice: 'Unauthorized to edit user' and return
+    end
   end
 
   # GET /users/1/performance
