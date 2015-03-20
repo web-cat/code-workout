@@ -13,16 +13,26 @@ class CourseEnrollmentsController < ApplicationController
 
   # GET /course_enrollments/1
   def show
+    if cannot? :show, @course_enrollment
+      redirect_to root_path, notice: 'Unauthorized to view course enrollment' and return
+    end
     @role_text =  CourseRole.find(@course_enrollment.course_role_id).name
   end
 
   # GET /course_enrollments/new
   def new
-    @course_enrollment = CourseEnrollment.new
+    if cannot? :new, CourseEnrollment || !user_signed_in? 
+      redirect_to root_path, notice: 'Unauthorized to create course enrollments' and return
+    else
+      @course_enrollment = CourseEnrollment.new
+    end
   end
 
   # GET /course_enrollments/1/edit
   def edit
+    if cannot? :edit, CourseEnrollment || !user_signed_in?
+      redirect_to root_path, notice: 'Unauthorized to edit course enrollments' and return
+    end
   end
 
   # POST /course_enrollments
@@ -37,6 +47,9 @@ class CourseEnrollmentsController < ApplicationController
 
   # PATCH/PUT /course_enrollments/1
   def update
+    if cannot? :update, CourseEnrollment || !user_signed_in? 
+      redirect_to root_path, notice: 'Unauthorized to update course enrollments' and return
+    end
     if @course_enrollment.update(course_enrollment_params)
       redirect_to @course_enrollment, notice: 'Course enrollment was successfully updated.'
     else
@@ -46,6 +59,9 @@ class CourseEnrollmentsController < ApplicationController
 
   # DELETE /course_enrollments/1
   def destroy
+    if cannot? :create, CourseEnrollment || !user_signed_in?
+      redirect_to root_path, notice: 'Unauthorized to create course enrollments' and return
+    end
     @course_enrollment.destroy
     redirect_to course_enrollments_url, notice: 'Course enrollment was successfully destroyed.'
   end
