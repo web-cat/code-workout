@@ -29,3 +29,6 @@ lib/assets/javascripts/theme/dark/libs
 lib/assets/javascripts/theme/dark/*.js
 lib/assets/javascripts/theme/dark/*.swf
 .DS_Store
+app/controllers/signups_controller.rb
+app/views/signups
+app/models/signup.rb
