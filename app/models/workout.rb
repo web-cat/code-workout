@@ -21,10 +21,10 @@ class Workout < ActiveRecord::Base
   has_many :workout_offerings
 	validates :name,
     presence: true,
-    length: {:minimum => 1, :maximum => 50},
+    length: {:minimum => 1, :maximum => 500},
     format: {
       with: /[a-zA-Z0-9\-_: .]+/,
-      message: 'Workout name must be 50 characters or less and consist only of ' \
+      message: 'Workout name must be 500 characters or less and consist only of ' \
         'letters, digits, hyphens (-), underscores (_), spaces ( ), colons (:) ' \
         ' and periods (.).'
     }
