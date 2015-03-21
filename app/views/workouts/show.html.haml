@@ -60,4 +60,4 @@
         - user_id = 1
         - if user_signed_in?
           - user_id = current_user.id
-        = render partial: "exercises/thumblg", collection: ex_row, as: :x, uid: user_id
+        = render partial: "exercises/thumblg", collection: ex_row, as: :x, locals: {uid: user_id, wid: @workouts.first.id}
