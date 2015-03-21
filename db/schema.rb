@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150210012044) do
+ActiveRecord::Schema.define(version: 20150312184659) do
 
   create_table "attempts", force: true do |t|
     t.integer  "user_id",                           null: false
@@ -108,6 +108,7 @@ ActiveRecord::Schema.define(version: 20150210012044) do
     t.string   "url_part"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer  "creator_id"
   end
 
   create_table "exercise_workouts", force: true do |t|
@@ -137,6 +138,7 @@ ActiveRecord::Schema.define(version: 20150210012044) do
     t.integer  "experience"
     t.integer  "base_exercise_id"
     t.integer  "version"
+    t.integer  "creator_id"
   end
 
   add_index "exercises", ["base_exercise_id"], name: "index_exercises_on_base_exercise_id"
@@ -202,6 +204,16 @@ ActiveRecord::Schema.define(version: 20150210012044) do
     t.string   "token"
     t.integer  "user_id"
     t.boolean  "public",     default: true
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  create_table "signups", force: true do |t|
+    t.string   "first_name"
+    t.string   "last_name_name"
+    t.string   "email"
+    t.string   "institution"
+    t.text     "comments"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -340,6 +352,7 @@ ActiveRecord::Schema.define(version: 20150210012044) do
     t.text     "description"
     t.string   "target_group"
     t.integer  "points_multiplier"
+    t.integer  "creator_id"
   end
 
 end
