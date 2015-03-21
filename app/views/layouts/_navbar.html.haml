@@ -16,18 +16,18 @@
                     %li
                       %strong
                         Workouts
-                    %li= link_to 'Workout 12', '/workouts/12'
-                    %li= link_to 'Workout 13', '/workouts/13'
-                    %li= link_to 'Workout 14', '/workouts/14'
-                    %li= link_to 'Workout 15', '/workouts/15'
-                  - if user_signed_in?
+                    %li= link_to 'Workout 18', '/workouts/18'
+                    %li= link_to 'Workout 19', '/workouts/19'
+                    %li= link_to 'Workout 20', '/workouts/20'
+                    %li= link_to 'Workout 21', '/workouts/21'
+                  - if user_signed_in? && current_user.global_role.can_edit_system_configuration?
                     %ul.col-sm-6.list-unstyled
                       %li
                         %strong
                           Manage Workouts
                       %li= link_to 'Workouts', '/workouts/'
                       %li= link_to 'Create Workout', '/workouts/new'
-                - if user_signed_in?
+                - if user_signed_in? && current_user.global_role.can_edit_system_configuration?
                   .row
                     %ul.col-sm-6.list-unstyled
                       %li
@@ -64,14 +64,14 @@
                         =link_to 'Other Courses', courses_path
                     %li= link_to 'CS 10', '/courses/10'
                     %li= link_to 'CS 12', '/courses/12'
-                  - if user_signed_in? && current_user.global_role_id==2
+                  - if user_signed_in? && current_user.global_role.is_instructor?
                     %ul.col-sm-6.list-unstyled
                       %li
                         %strong
                           Manage Courses
                       %li= link_to 'Edit Course', '/courses/'
                       %li= link_to 'Create Course', '/courses/new'
-
+        
       -#= f.actions do
         -#= f.submit 'Sign up', class: 'btn btn-primary'
         -#= render 'devise/shared/links'
