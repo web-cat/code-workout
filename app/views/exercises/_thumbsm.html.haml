@@ -17,19 +17,20 @@
           - ex_workout = ExerciseWorkout.find_by(exercise_id: x.id,
             workout_id: session[:current_workout])
           - if ex_workout && attempt
-            - attempt_pct = number_to_percentage(attempt.score / ex_workout.points)
+            - attempt_pct = number_to_percentage(attempt.score.round(2) / ex_workout.points)
       .pts
         - if attempt
-          = n_to_s attempt.score
+          = n_to_s attempt.score.round(2)
           - plural = (attempt.score != 1)
-          - if ex_workout
-            /
-            = n_to_s ex_workout.points
-            - plural = (ex_workout.points != 1)
+        - if ex_workout
+          = "/"
+          = n_to_s ex_workout.points
+          - plural = (ex_workout.points != 1)
           - if plural
             pts
           - else
             pt
+
       .taglist
         - x.tags.each do |t|
           =link_to t[:tag_name], search_path(search: t[:tag_name]),
