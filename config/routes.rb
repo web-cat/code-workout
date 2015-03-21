@@ -1,5 +1,7 @@
 CodeWorkout::Application.routes.draw do
 
+  
+
   root 'home#index'
 
   get "home" => 'home#index'
@@ -25,22 +27,32 @@ CodeWorkout::Application.routes.draw do
 
   resources :exercises
   resources :coding_problems
-  resources :choices
-  resources :stems
+  
+  
   resources :course_offerings
-  resources :terms
+  
   resources :courses
   resources :organizations
   resources :languages
   resources :tags
   resources :course_enrollments
+  
+  resources :organizations
   resources :course_roles
   resources :global_roles
+  resources :terms
+  # TODO: Might enable scaffolding pages later. Disabled till Fall. Being manually added till now.  
+  #resources :languages
+  #resources :tags
+  #resources :choices
+  #resources :stems
+  
+  
   resources :course_enrollments
-  resources :course_roles
   resources :users
   resources :resource_files
   resources :workouts
+  resources :signups
 
 
   #OmniAuth for Facebook
@@ -75,6 +87,7 @@ CodeWorkout::Application.routes.draw do
     get '/users/:id/performance' => 'users#calc_performance', as: :calc_performance
     post '/exercises/search' => 'exercises#search', as: :search
     get '/gym' => 'workouts#gym', as: :gym
+    post 'resource_files/uploadFile' => 'resource_files#uploadFile'
   end
 
   match 'course_offering/:course_offering_id/upload_roster/:action',
