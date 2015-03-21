@@ -6,12 +6,10 @@
 -#      Search
 -#= render :partial => 'exercises/search'
 - if session[:wexes]
-  =render partial: 'workouts/status',
+  = render partial: 'workouts/status',
     locals: { w: Workout.where(id: session[:current_workout]).first,
     exs: Exercise.includes(:workouts).where(["workouts.id = ?",
     session[:current_workout]]).references(:workouts).limit(10) }
 - elsif user_signed_in?
-  =render partial: 'workouts/status',
-    locals: { w: Workout.where(id: 2).first,
-    exs: Exercise.includes(:attempts).where(["attempts.user_id = ?",
-    current_user.id]).references(:attempts).limit(10) }
+  = render partial: "exercises/thumbsm", collection: Exercise.find(session[:leaf_exercises]), as: :x,
+    locals: { uid: current_user.id }
