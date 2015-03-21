@@ -66,7 +66,7 @@ class CodeWorker
                   weight = @excercise.coding_question.test_cases[line[2].to_i - 1].weight
                   test_case_negative_feedback = @excercise.coding_question.test_cases[line[2].to_i - 1].negative_feedback
                   correct += line[0].to_f * weight
-                  line[0].to_f >= 1.0 ? feedback = '' : line[1] ? feedback = line[1]+ ' '+ test_case_negative_feedback : feedback = 'Test case not completely passed' + test_case_negative_feedback
+                  line[0].to_f >= 1.0 ? feedback = '' : line[1] ? feedback = line[1] : feedback = 'Test case not completely passed' + test_case_negative_feedback
                   record_test_case_result(uid, line[0].to_f, exid, feedback, line[2].to_i - 1)
                   total += weight
                 end  # CSV end
