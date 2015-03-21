@@ -8,6 +8,8 @@
     .info
       - attempt = nil
       - uid = 0
+      - puts "USERID",uid,"USERID"
+      - puts "WORKOUTID",wid,"WORKOUTID"
       - if user_signed_in?
         - uid = current_user.id
       - attempt_pct = 0
@@ -20,13 +22,13 @@
           - ex_workout = ExerciseWorkout.find_by(exercise_id: x.id,
             workout_id: session[:current_workout])
           - if ex_workout && attempt
-            - attempt_pct = number_to_percentage(attempt.score / ex_workout.points)
+            - attempt_pct = number_to_percentage(attempt.score.round(2) / ex_workout.points)
       .pts
         - if attempt
           = n_to_s attempt.score
           - plural = (attempt.score != 1)
           - if ex_workout
-            /
+            = '/'
             = n_to_s ex_workout.points
             - plural = (ex_workout.points != 1)
           - if plural
@@ -38,15 +40,23 @@
           =link_to t[:tag_name], search_path(:search => t[:tag_name]),
             method: :post, class: "tag"
   .progress
-    - if ex_workout
+    - att = Attempt.where(user_id: uid, exercise_id: x.id).last
+    - ex_workout = nil
+    - if wid
+      - ex_workout = ExerciseWorkout.find_by(exercise_id: x.id, workout_id: wid)
+    - if att && ex_workout
+      - attemptp = attempt.score.round(2)
+      - puts "AP",attemptp,"AP" 
       .progress-bar{ role: 'progressbar',
         'aria-valuenow' => attempt_pct,
         'aria-valuemax' => 100,
         'aria-valuemin' => 0,
         style: 'width: ' + attempt_pct.to_s + '%;' }
+        %progress{value: attemptp,max: ex_workout.points }
     - else
       .progress-bar{ role: 'progressbar',
         'aria-valuenow' => 0,
         'aria-valuemax' => 100,
         'aria-valuemin' => 0,
         style: 'width: 0%;' }
+        %progress{value: 0,max: ex_workout.points }
