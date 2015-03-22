@@ -29,11 +29,11 @@ class Workout < ActiveRecord::Base
 
 	validates :name,
     presence: true,
-    length: {:minimum => 1},
+    length: { minimum: 1 },
     format: {
       with: /[a-zA-Z0-9\-_: .]+/,
-      message: 'Workout name must consist only of ' \
-        'letters, digits, hyphens (-), underscores (_), spaces ( ), colons (:) ' \
+      message: 'The workout name must consist only of letters, digits, ' \
+        'hyphens (-), underscores (_), spaces ( ), colons (:) ' \
         ' and periods (.).'
     }
 

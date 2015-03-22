@@ -209,16 +209,6 @@ ActiveRecord::Schema.define(version: 20150320002742) do
     t.datetime "updated_at"
   end
 
-  create_table "signups", force: true do |t|
-    t.string   "first_name"
-    t.string   "last_name_name"
-    t.string   "email"
-    t.string   "institution"
-    t.text     "comments"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-  end
-
   create_table "stems", force: true do |t|
     t.text     "preamble"
     t.datetime "created_at"

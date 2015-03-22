@@ -3,10 +3,10 @@
     - @workouts.each do |w|
       %h1.col-md-6= link_to w.name, workout_path(id: w[:id])
       %p.col-md-12.teaser-tags.slim
-        %span Tags: 
+        %span Tags:
         - w.all_tags.each do |t|
           =link_to t, search_path(search: t), method: :post, class: 'tag'
-%br          
+%br
 .row
   .col-md-6
     = button_to 'Practice Workout', practice_workout_path(params[:id]), method: :get
@@ -60,4 +60,5 @@
         - user_id = 1
         - if user_signed_in?
           - user_id = current_user.id
-        = render partial: "exercises/thumblg", collection: ex_row, as: :x, locals: {uid: user_id, wid: @workouts.first.id}
+        = render partial: "exercises/thumblg", collection: ex_row, as: :x,
+          locals: { uid: user_id, wid: @workouts.first.id }
