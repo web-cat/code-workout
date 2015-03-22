@@ -1,0 +1,21 @@
+%article.workout.thumbnail.sm
+  .text
+    .title
+      %i.fa.fa-folder-open
+      = link_to w.name, workout_path(:id => w[:id])
+      %span.badge.badge-info
+        = w.exercises.count.to_s
+        %i.fa.fa-bolt
+      -#= difficulty_image(w.highest_difficulty.to_i)
+    = teaser(w.description)
+    .info
+      .taglist
+        - w.all_tags.each do |t|
+          =link_to t, search_path(search: t), method: :post, class: "tag"
+
+-#.well.well-sm.col-md-5
+  .row
+    .col-md-12
+      - xp_data = Workout.xp_distribution(1, w.id)
+      = render :partial => 'workouts/progress',
+        :locals => { :xp_data => Workout.xp_distribution(1, w.id) }

@@ -24,18 +24,50 @@ module ApplicationHelper
 
 
   # -------------------------------------------------------------
+  def make_html(unescaped)
+    return CGI::unescapeHTML(unescaped.to_s).html_safe
+  end
+
+
+  # -------------------------------------------------------------
+  TEASER_LENGTH = 40
+  def teaser(text, length = TEASER_LENGTH)
+    plain = ActionController::Base.helpers.strip_tags(make_html(text))
+    if (plain.size < length)
+      return plain
+    else
+      shorten = plain[0..length]
+      space = shorten.rindex(/\s/)
+      if space.nil?
+        shorten = shorten.to_s + "..."
+      else
+        shorten = shorten[0..space].to_s + "..."
+      end
+      return shorten
+    end
+  end
+
+
+  # -------------------------------------------------------------
   # Returns the correct twitter bootstrap class mapping for different
   # types of flash messages
   #
   FLASH_CLASS = {
-      success: 'alert-success',
-      error:   'alert-danger',
-      alert:   'alert-block',
-      block:   'alert-block',
-      notice:  'alert-info',
-      info:    'alert-info'
+      success:     'alert-success',
+      'success' => 'alert-success',
+      error:       'alert-danger',
+      'error'   => 'alert-danger',
+      alert:       'alert-block',
+      'alert'   => 'alert-block',
+      block:       'alert-block',
+      'block'   => 'alert-block',
+      notice:      'alert-info',
+      'notice'  => 'alert-info',
+      info:        'alert-info',
+      'info'    => 'alert-info'
   }
   def flash_class_for(level)
+    puts "level = #{level}, class = #{FLASH_CLASS[level]}"
     FLASH_CLASS[level] || level.to_s
   end
 

@@ -2,16 +2,17 @@
 #
 # Table name: attempts
 #
-#  id                :integer          not null, primary key
-#  user_id           :integer          not null
-#  exercise_id       :integer          not null
-#  submit_time       :datetime         not null
-#  submit_num        :integer          not null
-#  answer            :text
-#  score             :float
-#  experience_earned :integer
-#  created_at        :datetime
-#  updated_at        :datetime
+#  id                  :integer          not null, primary key
+#  user_id             :integer          not null
+#  exercise_id         :integer          not null
+#  submit_time         :datetime         not null
+#  submit_num          :integer          not null
+#  answer              :text
+#  score               :decimal(, )      default(0.0)
+#  experience_earned   :integer
+#  created_at          :datetime
+#  updated_at          :datetime
+#  workout_offering_id :integer
 #
 # Indexes
 #

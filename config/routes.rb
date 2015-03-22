@@ -17,7 +17,9 @@ CodeWorkout::Application.routes.draw do
   get "static_pages/mockup3"
   get "static_pages/typography"
 
-  get 'exercises/upload_exercises' => 'exercises#upload_exercises',     as: :upload_exercises
+  get 'exercises/upload_exercises' => 'exercises#upload_exercises',
+    as: :upload_exercises
+  get 'exercises/download' => 'exercises#download', as: :download
   post 'exercises/upload_create' => 'exercises#upload_create'
   get 'exercises/upload_mcqs' => 'exercises#upload_mcqs', as: :upload_mcqs
   post 'exercises/create_mcqs' => 'exercises#create_mcqs'
@@ -56,9 +58,9 @@ CodeWorkout::Application.routes.draw do
 
 
   #OmniAuth for Facebook
-  devise_for :controllers => { :omniauth_callbacks => "omniauth_callbacks" }
-
-  devise_for :users, :skip => [:registrations, :sessions]
+  devise_for :users,
+    controllers: { omniauth_callbacks: 'users/omniauth_callbacks' },
+    skip: [:registrations, :sessions]
   as :user do
     get "/signup" => "devise/registrations#new", as: :new_user_registration
 

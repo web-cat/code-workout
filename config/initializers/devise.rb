@@ -4,7 +4,7 @@ Devise.setup do |config|
   # The secret key used by Devise. Devise uses this key to generate
   # random tokens. Changing this key will render invalid all existing
   # confirmation, reset password and unlock tokens in the database.
-  config.secret_key = 'c2b5d6a2199f9f045c6139bf8a0a05f253aaaa9275519f9e347a8041352a1c452dbdf79e8aa24c165c9c2f5214ff63c5c2fea693128c45f5cdd6c8be79da412a'
+  config.secret_key = Rails.application.secrets.secret_key_base
 
   # ==> Mailer Configuration
   # Configure the e-mail address which will be shown in Devise::Mailer,
@@ -244,10 +244,14 @@ Devise.setup do |config|
 
   # Omniauth authentication for Facebook, Gmail etc
   #
-    config.omniauth :facebook, "KEY", "PWD"
-    config.omniauth :google_oauth2, 'APP_ID', 'APP_SECRET'
+    config.omniauth :facebook,
+      Rails.application.secrets.facebook_id,
+      Rails.application.secrets.facebook_secret
+    config.omniauth :google_oauth2,
+      Rails.application.secrets.google_id,
+      Rails.application.secrets.google_secret
   #
-  
+
   # ==> Mountable engine configurations
   # When using Devise inside an engine, let's call it `MyEngine`, and this engine
   # is mountable, there are some extra configurations to be taken into account.

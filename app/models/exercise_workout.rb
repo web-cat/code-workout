@@ -1,3 +1,16 @@
+# == Schema Information
+#
+# Table name: exercise_workouts
+#
+#  id          :integer          not null, primary key
+#  exercise_id :integer
+#  workout_id  :integer
+#  ordering    :integer
+#  points      :float            default(1.0)
+#  created_at  :datetime
+#  updated_at  :datetime
+#
+
 class ExerciseWorkout < ActiveRecord::Base
   belongs_to :exercise
   belongs_to :workout

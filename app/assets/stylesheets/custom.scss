@@ -29,6 +29,22 @@ html, body { height: 100%; }
 .navbar .form-control.search-query { padding: 0 6px; }
 .navbar .search .btn-sm {  padding: 7px 10px; }
 
+/* yamm */
+
+.dropdown-menu { border-radius: 6px; }
+.yamm .navbar-right .dropdown-menu { right: 0; }
+
+.dropdown-menu.signin { width: 30%; }
+.signin .yamm-content { padding: 5px 30px; }
+.signin .yamm-content .form-horizontal .form-group label.control-label {
+  width: 20%;
+}
+.signin .yamm-content .form-horizontal .form-group .form-wrapper {
+  width: 80%;
+}
+.signin .yamm-content .form-horizontal .form-group { margin-bottom: 5px; }
+.dropdown-menu.signin .btn { margin: 5px 15px; font-size: larger; }
+
 /* Codemirror */
 
 .CodeMirror { height: auto; margin-bottom: 9px; }
@@ -113,9 +129,11 @@ ul.wysihtml5-toolbar li {
   background-repeat: no-repeat;
   background-position: top right;
   background-size: cover;
-  margin: 0 -22px 40px;
+  margin-bottom: 40px;
+  margin-top: -6px;
+  padding-top: 6px;
 }
-.home .row.blurb { margin-top: 40px; margin-bottom: 40px; text-align: center; }
+.home .row.blurb { margin: 40px 0; text-align: center; }
 
 .home .cta .row { margin-left: 0; margin-right: 0; }
 .home .cta .pitch {
@@ -167,3 +185,11 @@ ul.wysihtml5-toolbar li {
   float: left;
 }
 .thumbnail.lg .progress { margin-bottom: 0; }
+
+.tab-content { margin-top: 1em; }
+.tab-content.under-collapsible { padding-left: 15px; padding-right: 15px; }
+
+.feedback .pass, .feedback .fail { text-align: center; vertical-align: middle; }
+.feedback .pass { color: #468847; }
+.feedback .fail { color: #dd514c; }
+.feedback .out { font-style: italic; }

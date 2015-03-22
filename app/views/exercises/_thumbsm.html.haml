@@ -4,7 +4,7 @@
       %i.glyphicon.glyphicon-th-list
       = link_to x.title, exercise_practice_path(:id => x[:id])
       -#= difficulty_image(x.experience.to_i)
-    = x.teaser_text
+    = teaser(x.question)
     .info
       - attempt = nil
       - attempt_pct = 0
@@ -34,7 +34,7 @@
       .taglist
         - x.tags.each do |t|
           =link_to t[:tag_name], search_path(search: t[:tag_name]),
-            method: :post, class: "tag"
+            method: :post, class: 'tag'
   .progress
     - if ex_workout
       .progress-bar{ role: 'progressbar',

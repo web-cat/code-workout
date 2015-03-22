@@ -1,22 +1,10 @@
 -#TODO replace with session data for user
 - uid = user_signed_in? ? current_user.id : 0
-.row
-  %h2
-    %article
-      .col-md-2
-        - w.name
-      .col-md-10
-        = render partial: 'workouts/progress',
-          locals: { xp_data: Workout.xp_distribution(uid, w.id), uid: uid }
-.row
-  - w.all_tags.each do |t|
-    =link_to t, search_path(search: t), method: :post, class: 'tag'
-.row
-  %br
-.row
+- if w
+  = render partial: 'workouts/thumbsm', locals: { w: w }
 
 - if exs.empty?
   .alert No exercises remaining
 - else
-  = render partial: "exercises/thumbsm", collection: exs, as: :x,
+  = render partial: 'exercises/thumbsm', collection: exs, as: :x,
     locals: { uid: uid }

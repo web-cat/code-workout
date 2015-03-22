@@ -3,7 +3,6 @@
 # Table name: exercises
 #
 #  id                 :integer          not null, primary key
-#  user_id            :integer          not null
 #  stem_id            :integer
 #  title              :string(255)
 #  question           :text             not null
@@ -19,12 +18,13 @@
 #  created_at         :datetime
 #  updated_at         :datetime
 #  experience         :integer
-#  starter_code       :text
+#  base_exercise_id   :integer
+#  version            :integer
 #
 # Indexes
 #
-#  index_exercises_on_stem_id  (stem_id)
-#  index_exercises_on_user_id  (user_id)
+#  index_exercises_on_base_exercise_id  (base_exercise_id)
+#  index_exercises_on_stem_id           (stem_id)
 #
 
 #table/schema migration for exercise........................
@@ -63,11 +63,12 @@ class Exercise < ActiveRecord::Base
   belongs_to  :user
   belongs_to  :stem
   belongs_to  :base_exercise
-  #belongs_to  :language #language is now a tag with tagtype=2
+  # belongs_to  :language #language is now a tag with tagtype=2
 
   has_and_belongs_to_many :tags
-  #Converting the 'has_and_belongs_to_many' relationship to a 'has_many through' relationship
-  #rhas_and_belongs_to_many :workouts
+  # Converting the 'has_and_belongs_to_many' relationship to a
+  # 'has_many through' relationship
+  # has_and_belongs_to_many :workouts
   has_many :workouts, through:  :exercise_workouts
   has_many :exercise_workouts
   # Associating with courses through course_exercises
@@ -108,12 +109,6 @@ class Exercise < ActiveRecord::Base
   validates :discrimination, presence: true, numericality: true
 
 
-  TYPES = {
-    'Multiple Choice Question' => 1,
-    'Coding Question' => 2
-  }
-
-  TEASER_LENGTH = 40
   LANGUAGE_EXTENSION = {
     'Ruby' => 'rb',
     'Java' => 'java',
@@ -132,8 +127,14 @@ class Exercise < ActiveRecord::Base
     return Exercise.joins(:tags).where{ tags.tag_name.like_any term_array }
   end
 
+
   def self.type_mc
     TYPES['Multiple Choice Question']
+  end
+
+
+  def self.type_coding
+    TYPES['Coding Question']
   end
 
 
@@ -147,7 +148,8 @@ class Exercise < ActiveRecord::Base
       raw = self.choices.sort_by{ |a| a[:order] }
       raw.each do |c|
         formatted = c
-        formatted[:answer] = make_html(c[:answer])
+        # moved to view controller:
+        # formatted[:answer] = make_html(c[:answer])
         answers.push(formatted)
       end
       if self.mcq_is_scrambled
@@ -162,39 +164,18 @@ class Exercise < ActiveRecord::Base
     end
   end
 
-  def teaser_text
-    plain = ActionController::Base.helpers.strip_tags(make_html(self.question))
-    if (plain.size < TEASER_LENGTH)
-      return plain
-    else
-      shorten = plain[0..TEASER_LENGTH]
-      space = shorten.rindex(/\s/)
-      if space.nil?
-        shorten = shorten.to_s + "..."
-      else
-        shorten = shorten[0..space].to_s + "..."
-      end
-      return shorten
-    end
-  end
-
-  def select_many?
-    self.mcq_allow_multiple
-  end
 
   def serve_question_html
-    source = ""
-    if stem
-      source = stem.preamble
-    end
+    source = stem ? stem.preamble : ''
     if !question.blank?
       if !source.blank?
-        source += "</p><p>"
+        source += '</p><p>'
       end
       source += question
     end
-    return make_html(source)
+    return source
   end
+
 
   def score(answered)
     score = 0
@@ -218,16 +199,18 @@ class Exercise < ActiveRecord::Base
       found = answered.select { |x| x["id"] == choice.id }
       if ((choice.value > 0 && (found.nil? || found.empty?)) ||
           (choice.value <= 0 && (!found.nil? && !found.empty?)))
-        feed.push(make_html(choice.feedback))
+        # feed.push(make_html(choice.feedback))
+        feed.push(choice.feedback)
       end
     end
     # if 100% correct, or no other feedback provided, give general feedback
-    if (feed.empty? || total>= 100 &&
+    if (feed.empty? || total >= 100 &&
       (!self.feedback.nil? && !self.feedback.empty?))
       feed.push(self.feedback)
     end
     return feed
   end
+
 
   def experience_on(answered, attempt)
     total = score(answered)
@@ -246,9 +229,6 @@ class Exercise < ActiveRecord::Base
     end
   end
 
-  def make_html(unescaped)
-    return CGI::unescapeHTML(unescaped.to_s).html_safe
-  end
 
   # getter override for title
   def title
@@ -261,6 +241,7 @@ class Exercise < ActiveRecord::Base
     return temp
   end
 
+
   # Determine the programming language of the exercise from its language tag
   def language
     self.tags.to_ary.each do |tag|
@@ -271,37 +252,35 @@ class Exercise < ActiveRecord::Base
     return nil
   end
 
+
   # return the extension of a given language
   def self.extension_of(lang)
     LANGUAGE_EXTENSION[lang]
   end
 
+
   def language
-    exercise_tags = self.tags.to_ary    
+    exercise_tags = self.tags.to_ary
     exercise_tags.each do |tag|
       if tag.tagtype == Tag.language
-        return tag.tag_name        
+        return tag.tag_name
       end
     end
     return nil
   end
+
 
   #method to return whether user has attempted exercise or not
   def user_attempted?(u_id)
     self.attempts.where(user_id: u_id).any?
   end
 
+
+  #~ Private instance methods .................................................
   private
-  def self.type_name(type_num)
-    if (type_num.nil? || type_num <= 0 || type_num > TYPES.size)
-      return ""
-    else
-      return TYPES.rassoc(type_num).first
-    end
-  end
 
   def set_defaults
-    self.title ||= " "
+    self.title ||= ''
     self.is_public ||= true
     self.priority ||= 0
     self.count_attempts ||= 0

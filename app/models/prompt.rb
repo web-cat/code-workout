@@ -26,30 +26,27 @@
 #
 
 class Prompt < ActiveRecord::Base
+
   #~ Relationships ............................................................
 
-  #TODO define Attempt model and relate to prompt for each student attempt
+  # TODO: define Attempt model and relate to prompt for each student attempt
   belongs_to :exercise
-  #TODO define Hint model and decide how a hint determines how it maps to 
+  # TODO: define Hint model and decide how a hint determines how it maps to
   # different types of incorrect attempts
   has_many :choices
 
   # has_one :prompt_type
   # has_one :language
 
-  # Hard-coded prompt types. Add others as functionality extends to
-  #  support other prompt types (free response, etc)
-  TYPES = {
-    'Multiple Choice' => 1
-  }
-
 
   #~ Hooks ....................................................................
 
+
   #~ Validation ...............................................................
+
   validates :exercise_id, presence: true, numericality: true
   validates :language_id, numericality: true
-  
+
   validates :instruction, presence: true
   validates :order, presence: true, numericality: true
   validates :max_user_attempts, numericality: true
@@ -63,12 +60,9 @@ class Prompt < ActiveRecord::Base
 
 
   #~ Class methods.............................................................
-  
-  # -------------------------------------------------------------
-  def self.type_name(type)
-    TYPES.rassoc(type).first
-  end
 
   #~ Instance methods .........................................................
+
   #TODO methods for calculating scores, difficulty, and discrimination
+
 end

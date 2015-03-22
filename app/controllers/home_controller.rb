@@ -1,9 +1,8 @@
 class HomeController < ApplicationController
 
-  layout 'application'
+  layout 'application', except: [:index]
 
   def index
-    render layout: 'home'
   end
 
   def about

@@ -21,6 +21,7 @@
 #  first_name             :string(255)
 #  last_name              :string(255)
 #  global_role_id         :integer
+#  name                   :string(255)
 #
 # Indexes
 #
@@ -56,7 +57,8 @@ class User < ActiveRecord::Base
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, :timeoutable and :omniauthable
   devise :database_authenticatable, :omniauthable, :registerable,
-    :recoverable, :rememberable, :trackable, :validatable
+    :recoverable, :rememberable, :trackable, :validatable,
+    :omniauth_providers => [:facebook, :google_oauth2]
 #    ,
 #    :confirmable, :omniauthable
 
@@ -89,10 +91,10 @@ class User < ActiveRecord::Base
   #~ Instance methods .........................................................
 
   # -------------------------------------------------------------
-#  def storage_path
-#    File.join(
-#      SystemConfiguration.first.storage_path, 'users', email)
-#  end
+  #  def storage_path
+  #    File.join(
+  #    SystemConfiguration.first.storage_path, 'users', email)
+  #  end
 
 
   # -------------------------------------------------------------
@@ -139,43 +141,48 @@ class User < ActiveRecord::Base
     end
   end
 
- # Omniauth for Facebook users
-   def self.find_for_facebook_oauth(auth, signed_in_resource=nil)
-    user = User.where(:provider => auth.provider, :uid => auth.uid).first
+
+  # -------------------------------------------------------------
+  # Omniauth for Facebook users
+  def self.find_for_facebook_oauth(auth, signed_in_resource=nil)
+    user = User.where(provider: auth.provider, uid: auth.uid).first
     if user
       return user
     else
-      registered_user = User.where(:email => auth.info.email).first
-        if registered_user
-          return registered_user
-        else
-          user = User.create(name:auth.extra.raw_info.name,
-                            provider:auth.provider,
-                            uid:auth.uid,
-                            email:auth.info.email,
-                            password:Devise.friendly_token[0,20],
-                          )
-        end    
+      registered_user = User.where(email: auth.info.email).first
+      if registered_user
+        return registered_user
+      else
+        user = User.create(
+          name: auth.extra.raw_info.name,
+          provider: auth.provider,
+          uid: auth.uid,
+          email: auth.info.email,
+          password: Devise.friendly_token[0,20])
       end
-    end 
+    end
+  end
 
+
+  # -------------------------------------------------------------
   # Omni auth for Google Users
-   def self.from_omniauth(auth)
-     if user = User.find_by_email(auth.info.email)
-       user.provider = auth.provider
-       user.uid = auth.uid
-       user
-     else
-       where(auth.slice(:provider, :uid)).first_or_create do |user|
-         user.provider = auth.provider
-         user.uid = auth.uid
-         user.username = auth.info.name
-         user.email = auth.info.email
-         user.avatar = auth.info.image
-       end
-     end
-   end
-  
+  def self.from_omniauth(auth)
+    if user = User.find_by_email(auth.info.email)
+      user.provider = auth.provider
+      user.uid = auth.uid
+      user
+    else
+      where(auth.slice(:provider, :uid)).first_or_create do |user|
+        user.provider = auth.provider
+        user.uid = auth.uid
+        user.username = auth.info.name
+        user.email = auth.info.email
+        user.avatar = auth.info.image
+      end
+    end
+  end
+
+
   private
 
   # -------------------------------------------------------------
@@ -193,7 +200,8 @@ class User < ActiveRecord::Base
   # -------------------------------------------------------------
   # Overrides the built-in password required method to allow for users
   # to be updated without errors
-  # taken from: http://www.chicagoinformatics.com/index.php/2012/09/user-administration-for-devise/
+  # taken from: http://www.chicagoinformatics.com/index.php/2012/09/
+  # user-administration-for-devise/
   def password_required?
     (!password.blank? && !password_confirmation.blank?) || new_record?
   end

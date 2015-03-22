@@ -21,6 +21,7 @@
 #  first_name             :string(255)
 #  last_name              :string(255)
 #  global_role_id         :integer
+#  name                   :string(255)
 #
 # Indexes
 #

@@ -50,35 +50,28 @@ up to speed:
     rake db:populate
 
 
-Issues to Resolve
------------------
-+   Java coding question support needs to be completed.
+Updating Documentation
+----------------------
+Some documentation is auto-generated.  In model classes, schema comments
+in the model source files show the table structure.  To update those
+comments, use:
 
-+   Cancan security implementation needs to be completed.
+    bundle exect annotate
 
-+   The "Find your course" button on the home page needs to be implemented.
+In the root of the project, the erd.pdf file presents an entity relationship
+diagram (ERD) showing the relationships between the model entities.  Diagram
+generation requires graphviz to be installed.  If you have it installed,
+you can update the erd.pdf diagram using:
 
-+   The "Create your course" button on the home page needs to be implemented.
-
-+   The "Try a question now" button on the home page needs to be implemented.
-    +   The auxiliary links in that same box on the home page should go
-        to random representatives of specific types of questions, but they
-        aren't implemented, either.
-
-+   Exercise thumbnails currently include an icon, but the icon should
-    be based on the exercise type (MC = glyphicon-th-list, Coding =
-    fa-file-code-o or fa-keyboard-o?) instead.
-
-+   Exercise thumbnails need to include meaningful point displays even
-    when the exercise is not associated with the current workout, and
-    need to include meaningful points earned info if the current user
-    has completed (or attempted) it.  At present, the logic for displaying
-    points earned + total points in thumbnails is incomplete and needs to
-    be redone.
+    rake erd notation=bachman polymporphism=true
 
 
 Basic Code Formatting
 ---------------------
++   Read the Ruby style guide:
+
+        https://github.com/bbatsov/ruby-style-guide
+
 +   Please use spaces around operators (e.g., "a = 10" instead of "a=10",
     or "a + b" instead of "a+b").
 

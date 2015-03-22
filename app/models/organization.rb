@@ -3,15 +3,10 @@
 # Table name: organizations
 #
 #  id           :integer          not null, primary key
-#  display_name :string(255)      not null
-#  url_part     :string(255)      not null
+#  display_name :string(255)
+#  url_part     :string(255)
 #  created_at   :datetime
 #  updated_at   :datetime
-#
-# Indexes
-#
-#  index_organizations_on_display_name  (display_name) UNIQUE
-#  index_organizations_on_url_part      (url_part) UNIQUE
 #
 
 class Organization < ActiveRecord::Base

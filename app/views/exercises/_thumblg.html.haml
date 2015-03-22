@@ -1,10 +1,15 @@
 %article.exercise.thumbnail.lg
   .text
     .title
-      %i.glyphicon.glyphicon-th-list
-      = link_to x.title, exercise_practice_path(:id => x[:id])
+      - if x.base_exercise.is_mcq?
+        %i.glyphicon.glyphicon-th-list
+      - elsif x.base_exercise.is_coding?
+        %i.fa-file-code-o
+      - else
+        %i.fa-keyboard-o 
+          = link_to x.title, exercise_practice_path(:id => x[:id])
       -#= difficulty_image(x.experience.to_i)
-    = x.teaser_text
+    = teaser(x.question)
     .info
       - attempt = nil
       - uid = 0
@@ -18,9 +23,9 @@
         - attempt = Attempt.where(user_id: uid, exercise_id: x.id).last
         - if attempt && attempt.score > 0
           - attempt_pct = 100
-        - if session[:current_workout]
+        - if wid
           - ex_workout = ExerciseWorkout.find_by(exercise_id: x.id,
-            workout_id: session[:current_workout])
+            workout_id: wid)
           - if ex_workout && attempt
             - attempt_pct = number_to_percentage(attempt.score.round(2) / ex_workout.points)
       .pts
@@ -35,10 +40,16 @@
             pts
           - else
             pt
+        - else    
+          = ex_workout.points
+          - if ex_workout.points != 1
+            pts
+          - else
+            pt  
       .taglist
         - x.tags.each do |t|
-          =link_to t[:tag_name], search_path(:search => t[:tag_name]),
-            method: :post, class: "tag"
+          =link_to t[:tag_name], search_path(search: t[:tag_name]),
+            method: :post, class: 'tag'
   .progress
     - att = Attempt.where(user_id: uid, exercise_id: x.id).last
     - ex_workout = nil

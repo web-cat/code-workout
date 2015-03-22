@@ -14,22 +14,24 @@
   = '>'
 = link_to @exercise.title, exercise_path(@exercise)
               
-.col-md-12
+.col-md-7
   = semantic_form_for @exercise, url: exercise_evaluate_path(@exercise,
     wexes: params[:wexes], feedback_return: true), remote: true do |f|
     = f.semantic_errors
     %h1= @exercise.title
-    %p= @exercise.serve_question_html
-    - if @exercise.base_exercise.question_type == 1
-      - if @exercise.select_many?
+    %p= make_html(@exercise.serve_question_html)
+    - if @exercise.base_exercise.is_mcq?
+      - if @exercise.mcq_allow_multiple
         %h2 Choose ALL that apply:
         .answers
-          = f.input :choice_ids,
-            as: :check_boxes,
-            collection: @answers,
-            member_value: :id,
-            member_label: :answer,
-            label: "&nbsp;"
+          = f.semantic_fields_for @ex_attempt do |exa|
+            = exa.input :choice_ids,
+              as: :check_boxes,
+              collection: @answers,
+              member_value: :id,
+              member_label: :answer,
+              selected: false,
+              label: "&nbsp;"
       - else
         %h2 Select one answer:
         .answers
@@ -39,14 +41,18 @@
             member_value: :id,
             member_label: :answer,
             label: "&nbsp;"
-    - elsif @exercise.base_exercise.question_type == 2
-      = f.input :answer_code, as: :text, class: 'code', 
-      input_html: {lang: 'text/x-'+@exercise.language.downcase, value: @exercise.coding_question.wrapper_code}
+    - elsif @exercise.base_exercise.is_coding?
+      = f.input :answer_code, as: :text, class: 'code',                    |
+        input_html: {                                                      |
+          lang: 'text/x-' + (@exercise.language || 'java').downcase,       |
+          value: @exercise.coding_question.starter_code                    |
+        }                                                                  |
     .actions
       = f.submit 'Check my answer!', class: 'btn btn-primary'
     - if session[:current_workout].nil?
       %br
-      = link_to "Practice a different #{@exercise.language} exercise", '/exercises_random_exercise?language='+@exercise.language
-#exercisefeedback{style: "display: none;"} WINTER CANNOT BE SEEN
-  
-
+      = link_to "Practice a different #{@exercise.language} exercise",     |
+        '/exercises_random_exercise' +                                     |
+        (@exercise.language ? ('?language=' + @exercise.language) : '')    |
+.col-md-5
+  #exercisefeedback{style: 'display: none;'}

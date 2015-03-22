@@ -8,13 +8,17 @@ gem 'codemirror-rails'
 gem 'font-awesome-rails'
 gem 'formtastic', '~> 2.3.1'
 gem 'formtastic-bootstrap'
-gem 'sidekiq'
+#gem 'sidekiq'
+gem 'sucker_punch', '~> 1.0'
 # gem 'jbuilder', '~> 1.2'
 gem 'haml', '>= 3.1.4'
 gem 'haml-rails'
 gem 'coffee-rails', '~> 4.0.0'
 gem 'coffee-script-source'
 gem 'test-unit', '~> 3.0.9'
+gem 'nokogiri'
+gem 'csv_shaper'
+gem 'andand', github: 'raganwald/andand'
 
 group :assets do
   gem 'sass-rails'
@@ -55,7 +59,6 @@ gem 'omniauth-facebook'
 gem 'omniauth-google-oauth2'
 gem 'cancan', '1.6.9' # 1.6.10 broke shallow routes
 
-gem 'fastercsv'       # CSV reading/writing
 gem 'kaminari'        # Auto-paginated views
 gem 'remotipart'      # Adds support for remote mulitpart forms (file uploads)
 gem 'gravtastic'      # For Gravatar integration

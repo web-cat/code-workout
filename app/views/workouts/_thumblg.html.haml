@@ -1,20 +1,21 @@
-.well.well-sm.col-md-5
-  .row
-    %p.teaser-title.col-md-10.slim
+%article.workout.thumbnail.lg
+  .text
+    .title
+      %i.fa.fa-folder-open
       = link_to w.name, workout_path(:id => w[:id])
       %span.badge.badge-info
         = w.exercises.count.to_s
         %i.fa.fa-bolt
-    .col-md-2
-      = difficulty_image(w.highest_difficulty.to_i)
+      -#= difficulty_image(w.highest_difficulty.to_i)
+    = teaser(w.description)
+    .info
+      .taglist
+        - w.all_tags.each do |t|
+          =link_to t, search_path(search: t), method: :post, class: "tag"
+
+-#.well.well-sm.col-md-5
   .row
     .col-md-12
       - xp_data = Workout.xp_distribution(1, w.id)
-      = render :partial => 'workouts/progress', 
+      = render :partial => 'workouts/progress',
         :locals => { :xp_data => Workout.xp_distribution(1, w.id) }
-  .row
-    .col-md-12
-      %p.col-md-12.teaser-tags.slim
-        - w.all_tags.each do |t|
-          =link_to(t, search_path(:search => t), method: :post, class: "tag")
--#TODO replace with logged in user id session data

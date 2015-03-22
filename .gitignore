@@ -38,3 +38,7 @@ app/views/courses/show_bak3.html.haml
 app/views/courses/show_bak2.html.haml
 app/views/courses/show_bak.html.haml
 usr
+**/.DS_Store
+usr/attempts/
+*_results.csv
+download.csv

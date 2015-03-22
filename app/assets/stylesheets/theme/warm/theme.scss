@@ -21,10 +21,13 @@
 }
 .content .well,
 .content .answers,
-.exercise.thumbnail,
 .exercise.thumbnail {
   background-color: #fcf2e3;
   border-color: #dfcdb2;
+}
+.workout.thumbnail {
+  background-color: #dfcdb2;
+  border-color: #e8d8c0;
 }
 
 
@@ -76,6 +79,8 @@ h1 {
   color: #3da2b4;
   text-shadow: 0 -1px 0 #231914;
 }
+.thumbnail .title a { color: #247184; }
+
 h1, h2, h3, h4, h5, h6 {
   margin-top: 0px;
 }

@@ -8,7 +8,7 @@
       #flashbar-placeholder
       %h2= @exercise.title + ": " + @score.to_s + "% Correct"
       - @explain.each do |ex|
-        %p= CGI.unescapeHTML(ex).html_safe
+        %p= make_html(ex)
       %h2= @xp.to_s + " XP earned"
 
       -#TO DO buttons for Try Again (dismiss), See Answer, Next Question

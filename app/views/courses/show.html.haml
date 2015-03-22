@@ -1,74 +1,74 @@
-%p#notice= notice
+%h1= @course.number + (@course.name.blank? ? '' : (': ' + @course.name))
 
-.row
-  .col-md-12
-    %strong
-    =@course.name + "(" + @course.number + ")"
-.row
-  .col
-    %div
-      %strong Offerings:
-      %table{:border => 1}
-        %tr
-          %td Section
-          %td Label
-          %td Term
-          %td Instructors
-          %td Graders
-        - @course.course_offerings.each do |off|
-          %tr
-            %td
-              .col
-                =link_to off.name, course_offering_path(off)
-            %td                
-              .span
-                =off.label
-            %td                
-              .span
-                = off.term.display_name 
-            %td
-              %ul{ style: 'list-style-type: none; padding: 0; margin: 0;' }
-                - CourseEnrollment.where(course_offering_id: off.id).each do |ce|
-                  - if ce.course_role_id == CourseRole.find_by(name: 'Instructor').id 
-                    %li= User.find(ce.user_id).first_name + " " + User.find(ce.user_id).last_name 
-            %td
-              %ul{ style: 'list-style-type: none; padding: 0; margin: 0;' }
-                - CourseEnrollment.where(course_offering_id: off.id).each do |ce|
-                  - if ce.course_role_id == CourseRole.find_by(name: 'Grader').id 
-                    %li= link_to User.find(ce.user_id).first_name + " " + User.find(ce.user_id).last_name, 'mailto:'+User.find(ce.user_id).email 
+%h2 Offerings
 
+%p
+  here
+  = @course.andand.number
 
-.container-fluid  
+%table{ class: 'table table-striped', style: 'width: auto' }
+  %thead
+    %tr
+      %th Section
+      %th Label
+      %th Term
+      %th Instructors
+      %th Graders
+  %tbody
+    - @course.course_offerings.each do |off|
+      %tr
+        %td= link_to off.name, course_offering_path(off)
+        %td= off.label
+        %td= off.term.display_name
+        %td
+          %ul{ style: 'list-style-type: none; padding: 0; margin: 0;' }
+            - off.instructors.each do |u|
+              %li= link_to u.display_name, 'mailto:' + u.email
+        %td
+          %ul{ style: 'list-style-type: none; padding: 0; margin: 0;' }
+            - off.graders.each do |u|
+              %li= link_to u.display_name, 'mailto:' + u.email
+
+- if user_signed_in? &&                                      |
+  current_user.global_role_id >= GlobalRole::INSTRUCTOR_ID   |
+  %p
+    = button_link 'Edit Course Properties', edit_course_path(@course)
+    = button_link 'Add an offering', new_course_path
+
+.container-fluid
   .navbar-collapse.collapse
     %ul.nav.nav-tabs
-      %li.active 
-        %a{ href: '#wkts', data: { toggle: "tab" },value: 'Workout' }
-          Workout
+      %li.active
+        %a{ href: '#wkts', data: { toggle: "tab" } }
+          Workouts
       %li
-        %a{ href: '#exers', data: { toggle: "tab" },value: 'Exercises' }
+        %a{ href: '#exers', data: { toggle: "tab" } }
           Exercises
-      %li 
-        %a{ href: '#grdes', data: { toggle: "tab" },value: 'Exercises' }
-          Grades       
-      %li 
-        %a{ href: '#rostr', data: { toggle: 'tab' },value: 'Exercises' }
+      %li
+        %a{ href: '#grdes', data: { toggle: "tab" } }
+          Grades
+      %li
+        %a{ href: '#rostr', data: { toggle: 'tab' } }
           Roster
-        
-%div.tab-content
-  .tab-pane.fade.in.active{:id => 'wkts'}
+
+%div.tab-content.under-collapsible
+
+  .tab-pane.fade.in.active{ id: 'wkts' }
     %ul
-    - @course.course_offerings.each do |off|
-      - off.workouts.each do |wkt|
-        %li= link_to wkt.name, '/workouts/'+wkt.id.to_s         
-  .tab-pane.fade{:id => 'exers'}
+      - @course.course_offerings.each do |off|
+        - off.workouts.each do |wkt|
+          %li= link_to wkt.name, '/workouts/'+wkt.id.to_s
+
+  .tab-pane.fade{ id: 'exers' }
     %ul
-    - @course.exercises.each do |ex|
-      %div
-        %strong
-          %li= link_to ex.title, '/exercises/'+ex.id.to_s
-  .tab-pane.fade{:id => 'grdes'}
-    - if user_signed_in? && current_user.global_role_id == 2
-      = button_to 'Download entire course gradebook', course_gradebook_path(@course,format: :csv)
+      - @course.exercises.each do |ex|
+        %li= link_to ex.title, '/exercises/' + ex.id.to_s
+
+  .tab-pane.fade{ id: 'grdes' }
+    - if user_signed_in? &&                                      |
+      current_user.global_role_id >= GlobalRole::INSTRUCTOR_ID   |
+      = button_to 'Download entire course gradebook',
+        course_gradebook_path(@course, format: :csv)
     - @course.course_offerings.each do |off|
       %br
       - if !(cannot? :generate_gradebook, off)
@@ -114,25 +114,11 @@
       
   .tab-pane.fade{:id => 'rostr'}
     - @course.course_offerings.each do |off|
-      %b= off.name  
+      %h3= off.name
       %ul
-        - @sec = CourseEnrollment.where(course_offering_id: off.id).page(params[:page]).per(params[:per]) 
+        - @sec = CourseEnrollment.where(course_offering_id: off.id).   |
+          page(params[:page]).per(params[:per])                        |
         #rosterer
           = render 'roster', sec: @sec
         #roster_paginator
           = paginate @sec
-      %br               
-              
-%br
-%br
-%br
-%br
-%br
-
-
-= link_to 'Add an offering', '/courses/new'
-%br   
-%br
-%br     
-= button_link 'Edit', edit_course_path(@course)
-= button_link 'Back', courses_path
