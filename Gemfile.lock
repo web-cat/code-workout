@@ -141,6 +141,7 @@ GEM
     kaminari (0.16.1)
       actionpack (>= 3.0.0)
       activesupport (>= 3.0.0)
+    log_file (0.0.3)
     mail (2.6.1)
       mime-types (>= 1.16, < 3)
     mime-types (2.3)
@@ -298,6 +299,7 @@ DEPENDENCIES
   jquery-rails
   js-routes
   kaminari
+  log_file
   nokogiri
   omniauth
   omniauth-facebook

@@ -37,6 +37,7 @@ end
 # during testing.
 gem 'factory_girl_rails'
 gem 'faker'
+gem 'log_file'
 
 group :test do
   gem 'capybara'
