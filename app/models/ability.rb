@@ -26,65 +26,75 @@ class Ability
         target_user.id == user.id
       end
 
+      cannot :index, [User, Workout, Exercise, CourseEnrollment] unless
+        user.global_role.can_edit_system_configuration?
 
-
-      cannot :index, [User,Workout,Exercise,CourseEnrollment] unless user.global_role.can_edit_system_configuration?
-
-      cannot :crud, [Organization,GlobalRole,CourseRole] unless user.global_role.can_edit_system_configuration?
+      cannot :crud, [Organization, GlobalRole, CourseRole] unless
+        user.global_role.can_edit_system_configuration?
 
       cannot [:update, :edit, :destroy], [CourseEnrollment] do |ce|
-        role = CourseEnrollment.find_by(user_id: user.id, course_offering_id: ce.course_offering.id)
-        puts "ROLE",role,"ROLE"
+        role = CourseEnrollment.find_by(
+          user_id: user.id, course_offering_id: ce.course_offering.id)
         role.nil? || !role.course_role.can_manage_course?
       end
+
       cannot :show, CourseEnrollment do |ce|
-        puts "HAIKU",ce.user_id.to_s,"HAIKU",user.id.to_s
         ce.user_id != user.id
       end
+
       cannot :new, CourseEnrollment unless user.global_role.is_instructor?
 
       #~ CourseOffering and Course
-      cannot [:create, :new], [CourseOffering,Course] unless  (user.global_role.can_edit_system_configuration? || user.global_role.is_instructor?)
+      cannot [:create, :new], [CourseOffering, Course] unless
+        (user.global_role.can_edit_system_configuration? ||
+        user.global_role.is_instructor?)
 
-      cannot [:update, :generate_gradebook, :add_workout, :edit, :destroy], [CourseOffering] do |co|
-        role = CourseEnrollment.find_by(user_id: user.id, course_offering_id: co.id)
-        puts "ROLE2",role,"ROLE2"
+      cannot [:update, :generate_gradebook, :add_workout, :edit, :destroy],
+        CourseOffering do |co|
+        role = CourseEnrollment.find_by(
+          user_id: user.id, course_offering_id: co.id)
         role.nil? || !role.course_role.can_manage_course?
       end
 
-      cannot [:update, :generate_gradebook, :edit, :destroy], [Course] do |co|
+      cannot [:update, :generate_gradebook, :edit, :destroy], Course do |co|
         co.creator_id != user.id
       end
 
       #~ Exercise and Workout
       # Tighter permissions to remain till beginning of Fall 2015
-      cannot [:create, :new], Exercise unless  user.global_role.can_edit_system_configuration? || user.global_role.is_instructor?
-      cannot [:update, :edit, :destroy], [Exercise] do |ex|
+      cannot [:create, :new], Exercise unless
+        user.global_role.can_edit_system_configuration? ||
+        user.global_role.is_instructor?
+      cannot [:update, :edit, :destroy], Exercise do |ex|
         ex.creator_id != user.id
       end
-      can [:update, :edit, :destroy], [Exercise] do |ex|
+      can [:update, :edit, :destroy], Exercise do |ex|
         ex.creator_id == user.id
       end
 
-      cannot [:create, :new], Workout unless  user.global_role.can_edit_system_configuration? || user.global_role.is_instructor?
-      cannot [:update, :edit, :destroy], [Workout] do |wkt|
+      cannot [:create, :new], Workout unless
+        user.global_role.can_edit_system_configuration? ||
+        user.global_role.is_instructor?
+      cannot [:update, :edit, :destroy], Workout do |wkt|
         wkt.creator_id != user.id
       end
-      can [:update, :edit, :destroy], [Workout] do |wkt|
+      can [:update, :edit, :destroy], Workout do |wkt|
         wkt.creator_id == user.id
       end
 
       #~ Resource files
-      cannot [:create, :new], ResourceFile unless user.global_role.can_edit_system_configuration?
+      cannot [:create, :new], ResourceFile unless
+        user.global_role.can_edit_system_configuration?
       cannot [:update, :edit, :show, :destroy], ResourceFile do |res|
         res.user_id != user.id
       end
-      can [:update, :edit, :show, :destroy], [ResourceFile] do |res|
+      can [:update, :edit, :show, :destroy], ResourceFile do |res|
         res.user_id == user.id
       end
 
       #~ Signups
-      cannot [:update, :index, :edit, :show, :destroy], Signup unless user.global_role.can_edit_system_configuration?
+      cannot [:update, :index, :edit, :show, :destroy], Signup unless
+        user.global_role.can_edit_system_configuration?
 
       process_global_role user
       process_instructor user
@@ -137,12 +147,16 @@ class Ability
 
   end
 
+
+  # -------------------------------------------------------------
   def process_instructor(user)
     if user.global_role.is_instructor?
-      can [:create, :new], [Course,CourseOffering,Exercise,ResourceFile,Workout]
-      can [:index], [Exercise,Workout]
+      can [:create, :new],
+        [Course, CourseOffering, Exercise, ResourceFile, Workout]
+      can [:index], [Exercise, Workout]
     end
   end
+
 
   # -------------------------------------------------------------
   # Private: Process course-related permissions.
@@ -153,13 +167,8 @@ class Ability
     # A user can manage a CourseOffering if they are enrolled in that
     # offering and have a CourseRole where can_manage_course? is true.
 
-    can :read, CourseOffering, user.course_offerings do |offering|
-      true
-    end
-
-    can :manage, CourseOffering, user.managing_course_offerings do |offering|
-      true
-    end
+    can :read, CourseOffering, user.course_offerings { true }
+    can :manage, CourseOffering, user.managing_course_offerings { true }
 
     # Likewise, a user can only manage enrollments in a CourseOffering
     # that they have can_manage_courses? permission in.

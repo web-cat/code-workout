@@ -11,8 +11,10 @@
 
 class GlobalRole < ActiveRecord::Base
 
-  validates :name, presence: true, uniqueness: true
-  
+  #~ Validation ...............................................................
+
+  validates :name, presence: true, uniqueness: true, allow_blank: false
+
   with_options if: :builtin?, on: :update, changeable: false do |builtin|
     builtin.validates :can_edit_system_configuration
     builtin.validates :can_manage_all_courses
@@ -20,6 +22,8 @@ class GlobalRole < ActiveRecord::Base
 
   before_destroy :check_builtin?
 
+
+  #~ Constants ................................................................
 
   # Make sure to run rake db:seed after initial database creation
   # to ensure that the built-in roles with these IDs are created.
@@ -58,7 +62,7 @@ class GlobalRole < ActiveRecord::Base
     errors.add :base, "Cannot delete built-in roles." if builtin?
     errors.blank?
   end
- 
+
   def is_instructor?
     id == INSTRUCTOR_ID
   end

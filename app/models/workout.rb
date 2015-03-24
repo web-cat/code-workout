@@ -23,7 +23,7 @@ class Workout < ActiveRecord::Base
 	has_many :workout_scores, inverse_of: :workout
 	has_and_belongs_to_many :tags
   has_many :course_offerings, through:  :workout_offerings
-  has_many :workout_offerings
+  has_many :workout_offerings, inverse_of: :workout
 
 
   #~ Validation ...............................................................

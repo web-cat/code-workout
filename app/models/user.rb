@@ -43,7 +43,7 @@ class User < ActiveRecord::Base
   belongs_to  :global_role
 #  has_many    :authentications
 #  has_many    :activity_logs
-  has_many    :course_enrollments
+  has_many    :course_enrollments, inverse_of: :user
   has_many    :course_offerings, through: :course_enrollments
   has_many    :workouts, through: :workout_scores
   has_many    :workout_scores, inverse_of: :user
@@ -146,7 +146,7 @@ class User < ActiveRecord::Base
 
   # -------------------------------------------------------------
   # Omniauth for Facebook users
-  def self.find_for_facebook_oauth(auth, signed_in_resource=nil)
+  def self.find_for_facebook_oauth(auth, signed_in_resource = nil)
     user = User.where(provider: auth.provider, uid: auth.uid).first
     if user
       return user

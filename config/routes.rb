@@ -32,6 +32,7 @@ CodeWorkout::Application.routes.draw do
   resources :exercises
   resources :coding_problems
 
+  resources :choices
 
   resources :course_offerings
 

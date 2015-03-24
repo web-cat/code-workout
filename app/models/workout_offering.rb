@@ -13,6 +13,10 @@
 #
 
 class WorkoutOffering < ActiveRecord::Base
-  belongs_to :workout
-  belongs_to :course_offering
+
+  #~ Relationships ............................................................
+
+  belongs_to :workout, inverse_of: :workout_offerings
+  belongs_to :course_offering, inverse_of: :workout_offerings
+
 end

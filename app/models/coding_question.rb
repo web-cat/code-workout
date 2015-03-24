@@ -21,8 +21,8 @@ class CodingQuestion < ActiveRecord::Base
 
 
   #~ Validations
-  validates :wrapper_code, presence: true, length: { minimum: 1 }
-  validates :test_script, presence: true, length: { minimum: 1 }
+  validates :wrapper_code, presence: true, allow_blank: false
+  validates :test_script, presence: true, allow_blank: false
 
   #~ Relationships
   belongs_to :exercise

@@ -67,16 +67,14 @@ class Exercise < ActiveRecord::Base
   # belongs_to  :language #language is now a tag with tagtype=2
 
   has_and_belongs_to_many :tags
-  # Converting the 'has_and_belongs_to_many' relationship to a
-  # 'has_many through' relationship
-  # has_and_belongs_to_many :workouts
   has_many :workouts, through:  :exercise_workouts
   has_many :exercise_workouts
   # Associating with courses through course_exercises
   has_many    :courses, through: :course_exercises
   has_many    :course_exercises, inverse_of: :exercise
   has_one     :coding_question
-  has_many :choices
+  has_many :choices, inverse_of: :exercise
+  has_many :prompts, inverse_of: :exercise
   has_many :attempts
   accepts_nested_attributes_for :attempts
   accepts_nested_attributes_for :coding_question, allow_destroy: true

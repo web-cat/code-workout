@@ -30,7 +30,7 @@ class Prompt < ActiveRecord::Base
   #~ Relationships ............................................................
 
   # TODO: define Attempt model and relate to prompt for each student attempt
-  belongs_to :exercise
+  belongs_to :exercise, inverse_of: :prompts
   # TODO: define Hint model and decide how a hint determines how it maps to
   # different types of incorrect attempts
   has_many :choices

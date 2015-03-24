@@ -23,28 +23,29 @@ class Course < ActiveRecord::Base
   has_many    :course_exercises, inverse_of: :course
 
   #Kaminari for the show method
-  paginates_per 2
+  paginates_per 100
 
-  accepts_nested_attributes_for :course_offerings, :allow_destroy => true
-
-  #~ Hooks ....................................................................
-
-  before_validation :set_url_part
+  accepts_nested_attributes_for :course_offerings, allow_destroy: true
 
 
   #~ Validation ...............................................................
 
-  validates :name, presence: true
-  validates :number, presence: true
+  validates :name, presence: true, allows_blank: false
+  validates :number, presence: true, allows_blank: false
   validates :organization, presence: true
   validates :url_part,
     presence: true,
     uniqueness: { case_sensitive: false }
 
 
-  #~ Private instance methods .................................................
+  #~ Hooks ....................................................................
 
-  #~ Class methods
+  before_validation :set_url_part
+
+
+  #~ Class methods ............................................................
+
+  # -------------------------------------------------------------
   def self.search(terms)
     resultant = []
     term_array = terms.split
@@ -58,6 +59,8 @@ class Course < ActiveRecord::Base
     return resultant
   end
 
+
+  #~ Private instance methods .................................................
   private
 
   # -------------------------------------------------------------
