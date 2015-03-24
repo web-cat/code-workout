@@ -47,17 +47,30 @@ class BaseExercise < ActiveRecord::Base
     TYPE_NAMES[self.question_type]
   end
 
+
   def is_mcq?
     self.question_type == Q_MC
   end
 
+
   def is_coding?
     self.question_type == Q_CODING
   end
-  
+
+
   def is_fill_in_the_blanks?
     self.question_type == Q_BLANKS
   end
+
+
+  def exercise
+    ex = self.exercises.where(version: self.current_version).first
+    if !ex
+      ex = self.exercises(order: 'version DESC').first
+    end
+    return ex
+  end
+
 
   #~ Private instance methods .................................................
   private
@@ -65,5 +78,6 @@ class BaseExercise < ActiveRecord::Base
   def set_defaults
     self.question_type ||= Q_MC
   end
+
 
 end

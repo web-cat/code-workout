@@ -20,6 +20,11 @@ gem 'nokogiri'
 gem 'csv_shaper'
 gem 'andand', github: 'raganwald/andand'
 
+# For JSON support
+gem 'rabl'
+gem 'oj'
+gem 'oj_mimic_json'
+
 group :assets do
   gem 'sass-rails'
   gem 'uglifier', '>= 1.3.0'

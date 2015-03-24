@@ -23,14 +23,13 @@ csv.rows @exercises do |csv, exercise|
     csv.cell :tags, exercise.tags.map {|t| t.tag_name}.join(', ')
   end
   csv.cell :programming_language, exercise.language
-  if exercise.base_exercise.question_type == BaseExercise::Q_MC
+  if exercise.base_exercise.is_mcq?
     csv.cells :mcq_allow_multiple, :mcq_is_scrambled
     choice = 1
     exercise.choices.each do |choice|
       csv.cell ("choice_" + choice.to_s).to_sym, choice.answer
     end
-  elsif exercise.base_exercise.question_type == BaseExercise::Q_CODING &&
-    exercise.coding_question
+  elsif exercise.base_exercise.is_coding? && exercise.coding_question
     csv.cell :class_name, exercise.coding_question.class_name
     csv.cell :method_name, exercise.coding_question.method_name
     csv.cell :starter_code, exercise.coding_question.starter_code

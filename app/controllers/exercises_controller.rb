@@ -28,10 +28,16 @@ class ExercisesController < ApplicationController
       redirect_to root_path,
         notice: 'Unauthorized to view all exercises' and return
     end
-    @exercises = Exercise.all
+#    @exercises = Exercise.all
+#    p 'exercises = ' + @exercises.size.to_s
+#    p @exercises
+    @exercises = BaseExercise.all.map { |b| b.exercise }
+    p 'base filtered = ' + @exercises.size.to_s
+    p @exercises
 
     respond_to do |format|
       format.csv
+      format.json
     end
   end
 
@@ -305,7 +311,7 @@ class ExercisesController < ApplicationController
 
     elsif params[:question_type]
       BaseExercise.where(question_type: params[:question_type].to_i).
-        find_each do |baseexercise|        
+        find_each do |baseexercise|
         candidate_exercise = Exercise.find_by(id: baseexercise.current_version, is_public: true)
         if candidate_exercise
           exercise_dump << candidate_exercise
@@ -650,11 +656,11 @@ end
         end
         @responses = ["There are no responses yet!"]
         @explain = ["There are no explanations yet!"]
-        if session[:leaf_exercises] 
+        if session[:leaf_exercises]
           session[:leaf_exercises] << @exercise.id
         else
           session[:leaf_exercises] = [@exercise.id]
-        end 
+        end
 
         # EOL stands for end of line
         # @wexs is the variable to hold the list of exercises of this workout yet to be attempted by the user apart from the current exercise
