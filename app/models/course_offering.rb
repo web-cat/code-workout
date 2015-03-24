@@ -45,6 +45,7 @@ class CourseOffering < ActiveRecord::Base
     end
   end
 
+
   # -------------------------------------------------------------
   # Public: Gets a relation representing all Users who are associated
   # with this CourseOffering.

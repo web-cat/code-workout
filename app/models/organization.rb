@@ -13,7 +13,7 @@ class Organization < ActiveRecord::Base
 
   #~ Relationships ............................................................
 
-  has_many :courses
+  has_many :courses, inverse_of: :organization
 
 
   #~ Hooks ....................................................................

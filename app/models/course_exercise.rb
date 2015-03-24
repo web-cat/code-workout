@@ -10,6 +10,6 @@
 #
 
 class CourseExercise < ActiveRecord::Base
-  belongs_to :course
-  belongs_to :exercise
+  belongs_to :course, inverse_of: :course_exercises
+  belongs_to :exercise, inverse_of: :course_exercises
 end

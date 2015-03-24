@@ -22,6 +22,8 @@
 #  last_name              :string(255)
 #  global_role_id         :integer
 #  name                   :string(255)
+#  provider               :string(255)
+#  uid                    :string(255)
 #
 # Indexes
 #
@@ -44,7 +46,7 @@ class User < ActiveRecord::Base
   has_many    :course_enrollments
   has_many    :course_offerings, through: :course_enrollments
   has_many    :workouts, through: :workout_scores
-  has_many    :workout_scores
+  has_many    :workout_scores, inverse_of: :user
   has_many    :attempts
   has_many    :tag_user_scores
   has_many    :resource_files

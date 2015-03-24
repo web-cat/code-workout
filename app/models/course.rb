@@ -9,27 +9,28 @@
 #  url_part        :string(255)
 #  created_at      :datetime
 #  updated_at      :datetime
+#  creator_id      :integer
 #
 
 class Course < ActiveRecord::Base
 
   #~ Relationships ............................................................
 
-  belongs_to  :organization
-  has_many    :course_offerings
+  belongs_to  :organization, inverse_of: :courses
+  has_many    :course_offerings, inverse_of: :course
   # Associating with exercises through course_exercises
   has_many    :exercises, through: :course_exercises
-  has_many    :course_exercises
-  
+  has_many    :course_exercises, inverse_of: :course
+
   #Kaminari for the show method
   paginates_per 2
-  
+
   accepts_nested_attributes_for :course_offerings, :allow_destroy => true
-  
+
   #~ Hooks ....................................................................
 
   before_validation :set_url_part
-  
+
 
   #~ Validation ...............................................................
 
@@ -42,7 +43,7 @@ class Course < ActiveRecord::Base
 
 
   #~ Private instance methods .................................................
-  
+
   #~ Class methods
   def self.search(terms)
     resultant = []
@@ -52,9 +53,9 @@ class Course < ActiveRecord::Base
       Course.where("name LIKE ?",term).find_each do |course|
         resultant<<course.id
       end
-    end    
-     
-    return resultant 
+    end
+
+    return resultant
   end
 
   private

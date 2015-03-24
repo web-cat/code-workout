@@ -20,6 +20,7 @@
 #  experience         :integer
 #  base_exercise_id   :integer
 #  version            :integer
+#  creator_id         :integer
 #
 # Indexes
 #
@@ -73,7 +74,7 @@ class Exercise < ActiveRecord::Base
   has_many :exercise_workouts
   # Associating with courses through course_exercises
   has_many    :courses, through: :course_exercises
-  has_many    :course_exercises
+  has_many    :course_exercises, inverse_of: :exercise
   has_one     :coding_question
   has_many :choices
   has_many :attempts

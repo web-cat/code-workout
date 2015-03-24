@@ -1,4 +1,4 @@
-csv.headers :type, :id, :points, :question, :correct_answer,
+csv.headers :type, :exid, :points, :question, :correct_answer,
   :choice_1, :choice_2, :choice_3, :choice_4, :choice_5, :choice_6,
   :choice_7, :choice_8, :choice_9, :choice_10, :explanation,
   :programming_language, :tags,
@@ -9,7 +9,8 @@ csv.headers :type, :id, :points, :question, :correct_answer,
 
 csv.rows @exercises do |csv, exercise|
   csv.cell :type, exercise.base_exercise.type_name
-  csv.cells :id, :question, :is_public, :priority, :experience
+  csv.cell :exid, exercise.id
+  csv.cells :question, :is_public, :priority, :experience
   csv.cell :title, exercise.read_attribute(:title)
   csv.cell :user_id,
     exercise.user ? exercise.user.id : exercise.base_exercise.user.andand.id

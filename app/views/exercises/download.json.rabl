@@ -1,6 +1,7 @@
 collection @exercises
 
-attributes :id, :question, :is_public, :priority, :experience
+attribute :id => :exid
+attributes :question, :is_public, :priority, :experience
 node(:title) { |exercise| exercise.read_attribute(:title)  }
 child(:stem) { attributes :preamble }
 

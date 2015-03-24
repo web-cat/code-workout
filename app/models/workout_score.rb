@@ -21,4 +21,6 @@
 #
 
 class WorkoutScore < ActiveRecord::Base
+  belongs_to :workout, inverse_of: :workout_scores
+  belongs_to :user, inverse_of: :workout_scores
 end

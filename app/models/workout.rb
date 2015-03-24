@@ -10,6 +10,7 @@
 #  description       :text
 #  target_group      :string(255)
 #  points_multiplier :integer
+#  creator_id        :integer
 #
 
 class Workout < ActiveRecord::Base
@@ -19,7 +20,7 @@ class Workout < ActiveRecord::Base
 	has_many :exercises, through:  :exercise_workouts
 	has_many :exercise_workouts
 	has_many :users, through: :workout_scores
-	has_many :workout_scores
+	has_many :workout_scores, inverse_of: :workout
 	has_and_belongs_to_many :tags
   has_many :course_offerings, through:  :workout_offerings
   has_many :workout_offerings
