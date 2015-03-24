@@ -10,6 +10,7 @@
 #  description       :text
 #  target_group      :string(255)
 #  points_multiplier :integer
+#  creator_id        :integer
 #
 
 # Read about factories at https://github.com/thoughtbot/factory_girl

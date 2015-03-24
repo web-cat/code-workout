@@ -20,6 +20,7 @@
 #  experience         :integer
 #  base_exercise_id   :integer
 #  version            :integer
+#  creator_id         :integer
 #
 # Indexes
 #

@@ -9,6 +9,7 @@
 #  url_part        :string(255)
 #  created_at      :datetime
 #  updated_at      :datetime
+#  creator_id      :integer
 #
 
 require 'spec_helper'

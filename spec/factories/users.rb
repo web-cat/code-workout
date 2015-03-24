@@ -22,6 +22,8 @@
 #  last_name              :string(255)
 #  global_role_id         :integer
 #  name                   :string(255)
+#  provider               :string(255)
+#  uid                    :string(255)
 #
 # Indexes
 #

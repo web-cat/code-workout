@@ -10,6 +10,7 @@
 #  description       :text
 #  target_group      :string(255)
 #  points_multiplier :integer
+#  creator_id        :integer
 #
 
 require 'spec_helper'
