@@ -28,11 +28,10 @@ CodeWorkout::Application.routes.draw do
   post 'workouts/link_exercises'  => 'workouts#link_exercises'
   post "/coding_questions" => "exercises#create"
   get 'workouts/download' => 'workouts#download'
+  get '/gym' => 'workouts#gym'
 
   resources :exercises
   resources :coding_problems
-
-  resources :choices
 
   resources :course_offerings
 
@@ -91,7 +90,6 @@ CodeWorkout::Application.routes.draw do
     get '/workouts/:id/evaluate' => 'workouts#evaluate', as: :workout_evaluate
     get '/users/:id/performance' => 'users#calc_performance', as: :calc_performance
     post '/exercises/search' => 'exercises#search', as: :search
-    get '/gym' => 'workouts#gym', as: :gym
     post 'resource_files/uploadFile' => 'resource_files#uploadFile'
   end
 

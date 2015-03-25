@@ -43,13 +43,14 @@ class User < ActiveRecord::Base
   belongs_to  :global_role
 #  has_many    :authentications
 #  has_many    :activity_logs
-  has_many    :course_enrollments, inverse_of: :user
+  has_many    :course_enrollments, inverse_of: :user, dependent: :destroy
   has_many    :course_offerings, through: :course_enrollments
   has_many    :workouts, through: :workout_scores
-  has_many    :workout_scores, inverse_of: :user
+  has_many    :workout_scores, inverse_of: :user, dependent: :destroy
   has_many    :attempts
   has_many    :tag_user_scores
   has_many    :resource_files
+  has_many    :identities, inverse_of: :user, dependent: :destroy
 #  has_many    :assignment_offerings, through: :course_offerings
 #   Below two relationships deemed unnecessary for the time being
 #  has_many :test_case_results
@@ -145,46 +146,38 @@ class User < ActiveRecord::Base
 
 
   # -------------------------------------------------------------
-  # Omniauth for Facebook users
-  def self.find_for_facebook_oauth(auth, signed_in_resource = nil)
-    user = User.where(provider: auth.provider, uid: auth.uid).first
-    if user
-      return user
+  # Omni auth for Facebook and Google Users
+  def self.from_omniauth(auth, guest = nil)
+    user = nil
+    identity = Identity.where(provider: auth.provider, uid: auth.uid).first
+    if identity
+      user = identity.user
     else
-      registered_user = User.where(email: auth.info.email).first
-      if registered_user
-        return registered_user
-      else
+      user = User.where(email: auth.info.email).first
+      if !user
         user = User.create(
-          name: auth.extra.raw_info.name,
-          provider: auth.provider,
-          uid: auth.uid,
+          first_name: auth.info.first_name,
+          last_name: auth.info.last_name,
           email: auth.info.email,
-          password: Devise.friendly_token[0,20])
+          password: Devise.friendly_token[0, 20])
+      end
+      user.identity.create(provider: auth.provider, uid: auth.uid)
+    end
+
+    if user
+      user.first_name ||= auth.info.first_name
+      user.last_name ||= auth.info.last_name
+      user.email ||= auth.info.email
+      user.avatar ||= auth.info.image
+      if user.changed?
+        user.save
       end
     end
+    return user
   end
 
 
-  # -------------------------------------------------------------
-  # Omni auth for Google Users
-  def self.from_omniauth(auth)
-    if user = User.find_by_email(auth.info.email)
-      user.provider = auth.provider
-      user.uid = auth.uid
-      user
-    else
-      where(auth.slice(:provider, :uid)).first_or_create do |user|
-        user.provider = auth.provider
-        user.uid = auth.uid
-        user.username = auth.info.name
-        user.email = auth.info.email
-        user.avatar = auth.info.image
-      end
-    end
-  end
-
-
+  #~ Private instance methods .................................................
   private
 
   # -------------------------------------------------------------

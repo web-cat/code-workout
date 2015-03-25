@@ -15,5 +15,16 @@
 #
 
 class Identity < ActiveRecord::Base
-  belongs_to :user
+
+  #~ Relationships ............................................................
+
+  belongs_to :user, inverse_of: :identities
+
+
+  #~ Validation ...............................................................
+
+  validates :user, presence: true
+  validates :provider, presence: true, allows_blank: false
+  validates :uid, presence: true, allows_blank: false
+
 end

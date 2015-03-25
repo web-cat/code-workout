@@ -1,25 +1,36 @@
 class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
 
+  #~ Instance methods .........................................................
+
+  # -------------------------------------------------------------
   def facebook
-     @user = User.find_for_facebook_oauth(request.env["omniauth.auth"], current_user)
-     if @user.persisted?
-      sign_in_and_redirect @user, :event => :authentication #this will throw if @user is not activated
-      set_flash_message(:notice, :success, :kind => "Facebook") if is_navigational_format?
+    internal_auth('Facebook')
+  end
+
+
+  # -------------------------------------------------------------
+  def google_oauth2
+    internal_auth('Google')
+  end
+
+
+  #~ Private instance methods .................................................
+  private
+
+  # -------------------------------------------------------------
+  def internal_auth(kind)
+    @user = User.from_omniauth(
+      request.env['omniauth.auth'], current_user)
+    if @user.persisted?
+      set_flash_message(:notice, :success, kind: kind) if
+        is_navigational_format?
+      sign_in_and_redirect @user
     else
-      session["devise.facebook_data"] = request.env["omniauth.auth"]
+      session['devise.omniauth_data'] = request.env['omniauth.auth']
+      set_flash_message(:warning, :failure, kind: kind) if
+        is_navigational_format?
       redirect_to new_user_registration_url
     end
   end
 
-   def google_oauth2
-     user = User.from_omniauth(request.env["omniauth.auth"])
-     if user.persisted?
-       flash.notice = "Signed in Through Google!"
-       sign_in_and_redirect user
-     else
-       session["devise.user_attributes"] = user.attributes
-       flash.notice = "You are almost Done! Please provide a password to finish setting up your account"
-       redirect_to new_user_registration_url
-     end
-   end
 end

@@ -21,9 +21,10 @@ class CourseOffering < ActiveRecord::Base
   belongs_to :term, inverse_of: :course_offerings
   has_many :workout_offerings, inverse_of: :course_offering
   has_many :workouts, through: :workout_offerings
-  has_many :course_enrollments, inverse_of: :course_offering,
+  has_many :course_enrollments,
     -> { CourseEnrollment.includes(:course_role, :user).order(
-      'course_roles.id ASC', 'users.last_name ASC', 'users.first_name ASC') }
+      'course_roles.id ASC', 'users.last_name ASC', 'users.first_name ASC') },
+    inverse_of: :course_offering
 
   accepts_nested_attributes_for :term
 
