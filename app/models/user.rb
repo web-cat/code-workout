@@ -161,7 +161,7 @@ class User < ActiveRecord::Base
           email: auth.info.email,
           password: Devise.friendly_token[0, 20])
       end
-      user.identity.create(provider: auth.provider, uid: auth.uid)
+      user.identities.create(provider: auth.provider, uid: auth.uid)
     end
 
     if user
