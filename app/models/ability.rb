@@ -22,7 +22,7 @@ class Ability
 
       # A user should only be able to update himself or herself (assuming no
       # other permissions granted below by the global role).
-      can [:show, :edit,:update], User do |target_user|
+      can [:show, :edit, :update], User do |target_user|
         target_user.id == user.id
       end
 
@@ -49,16 +49,19 @@ class Ability
         (user.global_role.can_edit_system_configuration? ||
         user.global_role.is_instructor?)
 
-      cannot [:update, :generate_gradebook, :add_workout, :edit, :destroy],
-        CourseOffering do |co|
-        role = CourseEnrollment.find_by(
-          user_id: user.id, course_offering_id: co.id)
-        role.nil? || !role.course_role.can_manage_course?
-      end
+      # FIXME: These belong in process_courses, and they probably
+      # need to be rewritten and/or removed anyway:
 
-      cannot [:update, :generate_gradebook, :edit, :destroy], Course do |co|
-        co.creator_id != user.id
-      end
+#      cannot [:update, :generate_gradebook, :add_workout, :edit, :destroy],
+#        CourseOffering do |co|
+#        role = CourseEnrollment.find_by(
+#          user_id: user.id, course_offering_id: co.id)
+#        role.nil? || !role.course_role.can_manage_course?
+#      end
+
+#      cannot [:update, :generate_gradebook, :edit, :destroy], Course do |co|
+#        co.creator_id != user.id
+#      end
 
       #~ Exercise and Workout
       # Tighter permissions to remain till beginning of Fall 2015
@@ -93,12 +96,12 @@ class Ability
       end
 
       #~ Signups
-      cannot [:update, :index, :edit, :show, :destroy], Signup unless
-        user.global_role.can_edit_system_configuration?
+      # cannot [:update, :index, :edit, :show, :destroy], Signup unless
+      #   user.global_role.can_edit_system_configuration?
 
       process_global_role user
       process_instructor user
-#      process_courses user
+      process_courses user
 #      process_assignments user
 #      process_repositories user
 #      process_assignment_checks user
@@ -167,17 +170,17 @@ class Ability
     # A user can manage a CourseOffering if they are enrolled in that
     # offering and have a CourseRole where can_manage_course? is true.
 
-    can :read, CourseOffering, user.course_offerings { true }
-    can :manage, CourseOffering, user.managing_course_offerings { true }
+    can :read, CourseOffering do |co|
+      co.user_enrolled? user
+    end
+    can [:manage, :generate_gradebook], CourseOffering do |co|
+      co.user_can_manage? user
+    end
 
     # Likewise, a user can only manage enrollments in a CourseOffering
     # that they have can_manage_courses? permission in.
     can :manage, CourseEnrollment do |enrollment|
-      user_enrollment = CourseEnrollment.where(
-        user_id: user.id,
-        course_offering_id: enrollment.course_offering.id).first
-
-      user_enrollment && user_enrollment.course_role.can_manage_course?
+      enrollment.course_offering.user_can_manage? user
     end
   end
 
