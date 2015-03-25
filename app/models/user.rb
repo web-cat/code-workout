@@ -146,6 +146,12 @@ class User < ActiveRecord::Base
 
 
   # -------------------------------------------------------------
+  def avatar_url
+    avatar || gravatar_url
+  end
+
+
+  # -------------------------------------------------------------
   # Omni auth for Facebook and Google Users
   def self.from_omniauth(auth, guest = nil)
     user = nil
