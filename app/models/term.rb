@@ -3,15 +3,29 @@
 # Table name: terms
 #
 #  id         :integer          not null, primary key
-#  season     :integer
-#  starts_on  :date
-#  ends_on    :date
-#  year       :integer
+#  season     :integer          not null
+#  starts_on  :date             not null
+#  ends_on    :date             not null
+#  year       :integer          not null
 #  created_at :datetime
 #  updated_at :datetime
 #
+# Indexes
+#
+#  index_terms_on_year_and_season  (year,season)
+#
 
 class Term < ActiveRecord::Base
+
+  #~ Relationships ............................................................
+
+  has_many :course_offerings, inverse_of: :term, dependent: :destroy
+
+  # Orders terms in descending order (latest time first).
+  scope :latest_first, -> { order('year desc, season desc') }
+
+
+  #~ Constants ................................................................
 
   # Hard-coded season names. It is assumed that these names contain
   # letters and spaces only -- no numbers. For example, the Summer
@@ -32,14 +46,6 @@ class Term < ActiveRecord::Base
     new_key = k.downcase.gsub(/\s+/, '')
     hash[new_key] = v
   end
-
-
-  #~ Relationships ............................................................
-
-  has_many :course_offerings, inverse_of: :term
-
-  # Orders terms in descending order (latest time first).
-  scope :latest_first, -> { order('year desc, season desc') }
 
 
   #~ Validation ...............................................................
@@ -63,7 +69,7 @@ class Term < ActiveRecord::Base
     if path =~ /([a-z]+)-(\d+)/
       season = SEASON_PATH_NAMES[$1]
       year = $2
-      where(season: season, year: year)
+      where(year: year, season: season)
     else
       where('1 = 0')
     end

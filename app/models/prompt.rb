@@ -7,9 +7,9 @@
 #  language_id       :integer          not null
 #  instruction       :text             not null
 #  order             :integer          not null
-#  max_user_attempts :integer
-#  attempts          :integer
-#  correct           :float
+#  max_user_attempts :integer          not null
+#  attempts          :integer          not null
+#  correct           :float            not null
 #  feedback          :text
 #  difficulty        :float            not null
 #  discrimination    :float            not null

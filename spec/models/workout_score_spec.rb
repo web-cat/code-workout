@@ -3,8 +3,8 @@
 # Table name: workout_scores
 #
 #  id                  :integer          not null, primary key
-#  workout_id          :integer
-#  user_id             :integer
+#  workout_id          :integer          not null
+#  user_id             :integer          not null
 #  score               :float
 #  completed           :boolean
 #  completed_at        :datetime

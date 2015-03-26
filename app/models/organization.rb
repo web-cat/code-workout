@@ -3,17 +3,21 @@
 # Table name: organizations
 #
 #  id           :integer          not null, primary key
-#  display_name :string(255)
-#  url_part     :string(255)
+#  display_name :string(255)      not null
+#  url_part     :string(255)      not null
 #  created_at   :datetime
 #  updated_at   :datetime
+#
+# Indexes
+#
+#  index_organizations_on_url_part  (url_part)
 #
 
 class Organization < ActiveRecord::Base
 
   #~ Relationships ............................................................
 
-  has_many :courses, inverse_of: :organization
+  has_many :courses, inverse_of: :organization, dependent: :destroy
 
 
   #~ Hooks ....................................................................
@@ -24,7 +28,7 @@ class Organization < ActiveRecord::Base
   #~ Validation ...............................................................
 
   validates :display_name, presence: true
-  validates :url_part,
+  validates :url_part, presence: true,
     format: {
       with: /[a-z0-9\-_.]+/,
       message: 'must consist only of letters, digits, hyphens (-), ' \
@@ -39,9 +43,7 @@ class Organization < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def set_url_part
-    if url_part
-      self.url_part = url_part.downcase
-    end
+    self.url_part = url_part_safe(display_name)
   end
 
 end

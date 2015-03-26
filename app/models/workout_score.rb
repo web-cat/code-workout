@@ -3,8 +3,8 @@
 # Table name: workout_scores
 #
 #  id                  :integer          not null, primary key
-#  workout_id          :integer
-#  user_id             :integer
+#  workout_id          :integer          not null
+#  user_id             :integer          not null
 #  score               :float
 #  completed           :boolean
 #  completed_at        :datetime
@@ -21,6 +21,16 @@
 #
 
 class WorkoutScore < ActiveRecord::Base
+
+  #~ Relationships ............................................................
+
   belongs_to :workout, inverse_of: :workout_scores
   belongs_to :user, inverse_of: :workout_scores
+
+
+  #~ Validation ...............................................................
+
+  validates :workout, presence: true
+  validates :user, presence: true
+
 end

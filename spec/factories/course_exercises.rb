@@ -3,8 +3,8 @@
 # Table name: course_exercises
 #
 #  id          :integer          not null, primary key
-#  course_id   :integer
-#  exercise_id :integer
+#  course_id   :integer          not null
+#  exercise_id :integer          not null
 #  created_at  :datetime
 #  updated_at  :datetime
 #

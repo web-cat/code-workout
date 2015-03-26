@@ -4,10 +4,10 @@
 #
 #  id          :integer          not null, primary key
 #  exercise_id :integer          not null
-#  answer      :string(255)
-#  order       :integer
+#  answer      :string(255)      not null
+#  order       :integer          not null
 #  feedback    :text
-#  value       :float
+#  value       :float            not null
 #  created_at  :datetime
 #  updated_at  :datetime
 #

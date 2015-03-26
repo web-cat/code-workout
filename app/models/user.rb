@@ -20,7 +20,7 @@
 #  updated_at             :datetime
 #  first_name             :string(255)
 #  last_name              :string(255)
-#  global_role_id         :integer
+#  global_role_id         :integer          not null
 #  name                   :string(255)
 #  avatar                 :string(255)
 #
@@ -37,32 +37,33 @@ class User < ActiveRecord::Base
   include Gravtastic
   gravtastic secure: true, default: 'monsterid'
 
-  delegate    :can?, :cannot?, to: :ability
+  #~ Relationships ............................................................
 
   belongs_to  :global_role
 #  has_many    :authentications
 #  has_many    :activity_logs
   has_many    :course_enrollments, inverse_of: :user, dependent: :destroy
   has_many    :course_offerings, through: :course_enrollments
-  has_many    :workouts, through: :workout_scores
   has_many    :workout_scores, inverse_of: :user, dependent: :destroy
-  has_many    :attempts
-  has_many    :tag_user_scores
-  has_many    :resource_files
+  has_many    :workouts, through: :workout_scores
+  has_many    :attempts, dependent: :destroy
+  has_many    :tag_user_scores, inverse_of: :user, dependent: :destroy
+  has_many    :resource_files, inverse_of: :user
   has_many    :identities, inverse_of: :user, dependent: :destroy
-#  has_many    :assignment_offerings, through: :course_offerings
-#   Below two relationships deemed unnecessary for the time being
-#  has_many :test_case_results
-#  has_many :test_cases, through: :test_case_results
 
+  has_many    :test_case_results, inverse_of: :user, dependent: :destroy
+
+
+  #~ Hooks ....................................................................
+
+  delegate :can?, :cannot?, to: :ability
 
   # Include default devise modules. Others available are:
-  # :confirmable, :lockable, :timeoutable and :omniauthable
+  # :confirmable, :lockable, and :timeoutable
   devise :database_authenticatable, :omniauthable, :registerable,
     :recoverable, :rememberable, :trackable, :validatable,
     :omniauth_providers => [:facebook, :google_oauth2]
-#    ,
-#    :confirmable, :omniauthable
+#    , :confirmable
 
   before_create :set_default_role
 
@@ -154,7 +155,7 @@ class User < ActiveRecord::Base
   # Omni auth for Facebook and Google Users
   def self.from_omniauth(auth, guest = nil)
     user = nil
-    identity = Identity.where(provider: auth.provider, uid: auth.uid).first
+    identity = Identity.where(uid: auth.uid, provider: auth.provider).first
     if identity
       user = identity.user
     else
@@ -166,7 +167,7 @@ class User < ActiveRecord::Base
           email: auth.info.email,
           password: Devise.friendly_token[0, 20])
       end
-      user.identities.create(provider: auth.provider, uid: auth.uid)
+      user.identities.create(uid: auth.uid, provider: auth.provider)
     end
 
     if user

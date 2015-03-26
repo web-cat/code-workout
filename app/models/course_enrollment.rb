@@ -3,9 +3,9 @@
 # Table name: course_enrollments
 #
 #  id                 :integer          not null, primary key
-#  user_id            :integer
-#  course_offering_id :integer
-#  course_role_id     :integer
+#  user_id            :integer          not null
+#  course_offering_id :integer          not null
+#  course_role_id     :integer          not null
 #
 # Indexes
 #
@@ -24,5 +24,11 @@ class CourseEnrollment < ActiveRecord::Base
   belongs_to :course_role
 
   paginates_per 100
+
+  #~ Validation ...............................................................
+
+  validates :user, presence: true
+  validates :course_offering, presence: true
+  validates :course_role, presence: true
 
 end

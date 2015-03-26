@@ -35,13 +35,25 @@
 
 class Attempt < ActiveRecord::Base
 
-  belongs_to :exercise
+  #~ Relationships ............................................................
 
-  #TODO tie attempt to current user session
-  #validates :user, presence: true
-  #belongs_to :user
+  belongs_to :exercise, inverse_of: :attempts
+  belongs_to :user, inverse_of: :attempts
+  belongs_to :workout_offering, inverse_of: :attempts
+
+
+  #~ Validation ...............................................................
+
+  validates :user, presence: true
   validates :exercise, presence: true
+  validates :submit_time, presence: true
+  validates :submit_num, numericality: { greater_than: 0 }
+  validates :score, numericality: { greater_than_or_equal_to: 0 }
 
+
+  #~ Class methods ............................................................
+
+  # -------------------------------------------------------------
   # Returns the latest attempt of the given exercise by the given user
   def self.user_attempt(uid, ex_id)
     return Attempt.where(user_id: uid, exercise_id: ex_id).
@@ -49,6 +61,7 @@ class Attempt < ActiveRecord::Base
   end
 
 
+  # -------------------------------------------------------------
   # Returns the user's score for a particular workout by combing through
   # attempts
   # TODO: why is this even a method in this class?  Shouldn't this

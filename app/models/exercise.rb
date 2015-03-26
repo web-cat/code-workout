@@ -4,7 +4,7 @@
 #
 #  id                 :integer          not null, primary key
 #  stem_id            :integer
-#  title              :string(255)
+#  name               :string(255)      not null
 #  question           :text             not null
 #  feedback           :text
 #  is_public          :boolean          not null
@@ -17,9 +17,9 @@
 #  mcq_is_scrambled   :boolean
 #  created_at         :datetime
 #  updated_at         :datetime
-#  experience         :integer
-#  base_exercise_id   :integer
-#  version            :integer
+#  experience         :integer          not null
+#  base_exercise_id   :integer          not null
+#  version            :integer          not null
 #  creator_id         :integer
 #
 # Indexes
@@ -64,18 +64,17 @@ class Exercise < ActiveRecord::Base
   belongs_to  :user
   belongs_to  :stem, inverse_of: :exercises
   belongs_to  :base_exercise, inverse_of: :exercises
-  # belongs_to  :language #language is now a tag with tagtype=2
-
   has_and_belongs_to_many :tags
   has_many :workouts, through:  :exercise_workouts
-  has_many :exercise_workouts
-  # Associating with courses through course_exercises
-  has_many    :courses, through: :course_exercises
-  has_many    :course_exercises, inverse_of: :exercise
-  has_one     :coding_question, inverse_of: :exercise, dependent: :destroy
+  has_many :exercise_workouts,  inverse_of: :exercise, dependent: :destroy
+  has_many :course_exercises, inverse_of: :exercise
+  has_many :courses, through: :course_exercises
+  has_one :coding_question, inverse_of: :exercise, dependent: :destroy
   has_many :choices, inverse_of: :exercise, dependent: :destroy
   has_many :prompts, inverse_of: :exercise, dependent: :destroy
-  has_many :attempts
+  has_many :attempts, dependent: :destroy
+  has_and_belongs_to_many :resource_files
+
   accepts_nested_attributes_for :attempts
   accepts_nested_attributes_for :coding_question, allow_destroy: true
   accepts_nested_attributes_for :choices, allow_destroy: true
@@ -111,6 +110,8 @@ class Exercise < ActiveRecord::Base
   validates :difficulty, presence: true,
     numericality: { greater_than_or_equal_to: 0 }
   validates :discrimination, presence: true, numericality: true
+  validates :version, presence: true,
+    numericality: { greater_than_or_equal_to: 0 }
 
 
   LANGUAGE_EXTENSION = {
@@ -123,6 +124,7 @@ class Exercise < ActiveRecord::Base
 
   #~ Class methods ............................................................
 
+  # -------------------------------------------------------------
   def self.search(terms)
     term_array = terms.split
     term_array.each do |term|
@@ -132,11 +134,13 @@ class Exercise < ActiveRecord::Base
   end
 
 
+  # -------------------------------------------------------------
   def self.type_mc
     TYPES['Multiple Choice Question']
   end
 
 
+  # -------------------------------------------------------------
   def self.type_coding
     TYPES['Coding Question']
   end
@@ -144,6 +148,7 @@ class Exercise < ActiveRecord::Base
 
   #~ Public instance methods ..................................................
 
+  # -------------------------------------------------------------
   def serve_choice_array
     if self.choices.nil?
       return ["No answers available"]
@@ -169,6 +174,7 @@ class Exercise < ActiveRecord::Base
   end
 
 
+  # -------------------------------------------------------------
   def serve_question_html
     source = stem ? stem.preamble : ''
     if !question.blank?
@@ -181,6 +187,7 @@ class Exercise < ActiveRecord::Base
   end
 
 
+  # -------------------------------------------------------------
   def score(answered)
     score = 0
     answered.each do |a|
@@ -193,6 +200,7 @@ class Exercise < ActiveRecord::Base
   end
 
 
+  # -------------------------------------------------------------
   # Grab all feedback for choices either selected when wrong
   #  or not selected when (at least partially) right
   def collate_feedback(answered)
@@ -216,6 +224,7 @@ class Exercise < ActiveRecord::Base
   end
 
 
+  # -------------------------------------------------------------
   def experience_on(answered, attempt)
     total = score(answered)
     options = self.choices.size
@@ -234,6 +243,7 @@ class Exercise < ActiveRecord::Base
   end
 
 
+  # -------------------------------------------------------------
   # getter override for title
   def title
     temp = "X" + read_attribute(:id).to_s
@@ -246,6 +256,7 @@ class Exercise < ActiveRecord::Base
   end
 
 
+  # -------------------------------------------------------------
   # Determine the programming language of the exercise from its language tag
   def language
     self.tags.to_ary.each do |tag|
@@ -257,12 +268,14 @@ class Exercise < ActiveRecord::Base
   end
 
 
+  # -------------------------------------------------------------
   # return the extension of a given language
   def self.extension_of(lang)
     LANGUAGE_EXTENSION[lang]
   end
 
 
+  # -------------------------------------------------------------
   def language
     exercise_tags = self.tags.to_ary
     exercise_tags.each do |tag|
@@ -274,6 +287,7 @@ class Exercise < ActiveRecord::Base
   end
 
 
+  # -------------------------------------------------------------
   #method to return whether user has attempted exercise or not
   def user_attempted?(u_id)
     self.attempts.where(user_id: u_id).any?
@@ -283,6 +297,7 @@ class Exercise < ActiveRecord::Base
   #~ Private instance methods .................................................
   private
 
+  # -------------------------------------------------------------
   def set_defaults
     self.title ||= ''
     self.is_public ||= true

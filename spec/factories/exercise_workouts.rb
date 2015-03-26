@@ -3,9 +3,9 @@
 # Table name: exercise_workouts
 #
 #  id          :integer          not null, primary key
-#  exercise_id :integer
-#  workout_id  :integer
-#  ordering    :integer
+#  exercise_id :integer          not null
+#  workout_id  :integer          not null
+#  order       :integer          not null
 #  points      :float            default(1.0)
 #  created_at  :datetime
 #  updated_at  :datetime
