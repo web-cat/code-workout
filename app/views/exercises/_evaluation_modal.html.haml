@@ -6,7 +6,7 @@
 
     .modal-body
       #flashbar-placeholder
-      %h2= @exercise.title + ": " + @score.to_s + "% Correct"
+      %h2= @exercise.name + ": " + @score.to_s + "% Correct"
       - @explain.each do |ex|
         %p= make_html(ex)
       %h2= @xp.to_s + " XP earned"

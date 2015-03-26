@@ -4,21 +4,21 @@
       - if current_user.course_offerings.any?
         - current_user.course_offerings.each do |user_off|
           - if user_off.id == off.id
-            = link_to off.name, course_offerings_path(off) 
+            = link_to off.name, course_offerings_path(off)
             = '>'
-  - else 
-    = link_to 'Gym', gym_path 
+  - else
+    = link_to 'Gym', gym_path
     = '>'
-    
+
   = link_to Workout.find(session[:current_workout]).name, workout_path(session[:current_workout])
   = '>'
-= link_to @exercise.title, exercise_path(@exercise)
-              
+= link_to @exercise.name, exercise_path(@exercise)
+
 .col-md-7
   = semantic_form_for @exercise, url: exercise_evaluate_path(@exercise,
     wexes: params[:wexes], feedback_return: true), remote: true do |f|
     = f.semantic_errors
-    %h1= @exercise.title
+    %h1= @exercise.name
     %p= make_html(@exercise.serve_question_html)
     - if @exercise.base_exercise.is_mcq?
       - if @exercise.mcq_allow_multiple

@@ -2,7 +2,7 @@ collection @exercises
 
 attribute :id => :exid
 attributes :question, :is_public, :priority, :experience
-node(:title) { |exercise| exercise.read_attribute(:title)  }
+node(:name) { |exercise| exercise.read_attribute(:name)  }
 child(:stem) { attributes :preamble }
 
 node :user_id do |exercise|
@@ -10,7 +10,7 @@ node :user_id do |exercise|
 end
 
 node :variation_group do |exercise|
-  exercise.base_exercise.variation_group.andand.title
+  exercise.base_exercise.variation_group.andand.name
 end
 
 attribute :feedback => :explanation

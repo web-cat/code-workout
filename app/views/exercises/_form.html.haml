@@ -1,8 +1,8 @@
 = semantic_form_for @exercise, html: { class: 'form-horizontal' } do |f|
   = f.semantic_errors
 
-  = f.input :title, maxlength: 255,
-    placeholder: 'Enter question title'
+  = f.input :name, maxlength: 255,
+    placeholder: 'Enter question name'
 
   = f.input :is_public,
     label: 'Share with CodeWorkout community?'

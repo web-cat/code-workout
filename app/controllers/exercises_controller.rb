@@ -93,7 +93,7 @@ class ExercisesController < ApplicationController
     basex.user_id = current_user.id
     basex.question_type = msg[:question_type] || 1
     basex.versions = 1
-    ex.title = msg[:title].chomp.strip
+    ex.name = msg[:name].chomp.strip
     # ex.question = ERB::Util.html_escape(msg[:question])
     # ex.feedback = ERB::Util.html_escape(msg[:feedback])
     ex.question = msg[:question]
@@ -351,7 +351,7 @@ def create_mcqs
   puts csvfile.fetch(:xmlfile).path
   CSV.foreach(csvfile.fetch(:xmlfile).path) do |question|
     if $INPUT_LINE_NUMBER > 1
-      title_ex = question[1]
+      name_ex = question[1]
       #priority_ex=question[2]
       question_ex = question[3][3..-5]
 
@@ -367,7 +367,7 @@ def create_mcqs
         !question[6][3..-5].nil?
 
         ex = Exercise.new
-        ex.title = title_ex
+        ex.name = name_ex
         ex.question = question_ex
         ex.feedback = gradertext_ex
         ex.is_public = true
@@ -460,7 +460,7 @@ def create_mcqs
         if question[5] && question[6] &&
           question[5][3..-5] && question[6][3..-5]
           ex = Exercise.new
-          ex.title = title_ex
+          ex.name = name_ex
           ex.question = question_ex
           ex.feedback = gradertext_ex
           ex.is_public = true
@@ -597,7 +597,7 @@ end
     questions = doc.xpath('/quiz/question')
     questions.each do |question|
       ex = Exercise.new
-      title_ex = question.xpath('./name/text')[0].content
+      name_ex = question.xpath('./name/text')[0].content
       question_ex = question.xpath('./questiontext/text')[0].content
       if !question.xpath('.//generalfeedback/text').empty?
         feedback_ex = question.xpath('.//generalfeedback/text')[0].content
@@ -623,7 +623,7 @@ end
         gradertext_ex = ''
       end
       # TODO: Sanitize the uploads
-      ex.title = title_ex
+      ex.name = name_ex
       ex.question = question_ex
       ex.feedback = feedback_ex
       ex.is_public = true
@@ -743,7 +743,7 @@ end
           end
           @explain = @exercise.collate_feedback(@responses)
           @exercise_feedback = 'You have attempted exercise ' +
-            "#{@exercise.id}:#{@exercise.title}" +
+            "#{@exercise.id}:#{@exercise.name}" +
             ' and its feedback for you: ' +
             @explain.to_sentence
           if session[:current_workout]
@@ -845,7 +845,7 @@ end
 
     def create_new_version
       newexercise = Exercise.new
-      newexercise.title = @exercise.title
+      newexercise.name = @exercise.name
       newexercise.creator_id = current_user.id
       newexercise.question = @exercise.question
       newexercise.feedback = @exercise.feedback
@@ -868,7 +868,7 @@ end
 
     # Only allow a trusted parameter "white list" through.
     def exercise_params
-      params.require(:exercise).permit(:title, :question, :feedback,
+      params.require(:exercise).permit(:name, :question, :feedback,
         :experience, :id, :is_public, :priority, :type,
         :mcq_allow_multiple, :mcq_is_scrambled, :language, :area,
         choices_attributes: [:answer, :order, :value, :_destroy],

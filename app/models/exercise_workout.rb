@@ -23,7 +23,7 @@ class ExerciseWorkout < ActiveRecord::Base
 
   validates :exercise, presence: true
   validates :workout, presence: true
-  validates :ordering, presence: true,
+  validates :order, presence: true,
     numericality: { greater_than_or_equal_to: 0 }
 
 

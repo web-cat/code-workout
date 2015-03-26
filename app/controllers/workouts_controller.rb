@@ -37,7 +37,7 @@ class WorkoutsController < ApplicationController
         redirect_to workouts_url, notice: "Workout #{params[:id]} not found"
       else
         @workouts = found #.first
-        @exs = found.first.exercises.sort_by{ |a| a[:ordering] }
+        @exs = found.first.exercises.sort_by{ |a| a[:order] }
       end
     else
       redirect_to workouts_url, notice: 'Choose a workout for practice!'
@@ -67,7 +67,7 @@ class WorkoutsController < ApplicationController
   def new_with_search
     @workout = Workout.new
     @exers = Exercise.find_by_sql(
-      "SELECT * FROM exercises WHERE title LIKE '%#{params[:searchkey]}%'")
+      "SELECT * FROM exercises WHERE name LIKE '%#{params[:searchkey]}%'")
   end
 
 
@@ -102,7 +102,7 @@ class WorkoutsController < ApplicationController
         @workout.save
         wek = @workout.exercise_workouts.find_by_sql(
           "select * from exercise_workouts where exercise_id=#{ex}")
-        wek.last.ordering = index
+        wek.last.order = index
         wek.last.points = msg[:points_multiplier]
         wek.last.save
       end

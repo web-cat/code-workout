@@ -62,7 +62,7 @@
   .tab-pane.fade{ id: 'exers' }
     %ul
       - @course.exercises.each do |ex|
-        %li= link_to ex.title, '/exercises/' + ex.id.to_s
+        %li= link_to ex.name, '/exercises/' + ex.id.to_s
 
   .tab-pane.fade{ id: 'grdes' }
     - if user_signed_in? &&                                      |

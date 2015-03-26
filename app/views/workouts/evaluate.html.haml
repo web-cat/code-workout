@@ -6,7 +6,7 @@
     %td Maximum score
   - @current_workout.exercises.each do |exer|
     %tr
-      %td=exer.title
+      %td=exer.name
       %td=Attempt.where(exercise_id: exer.id).last.score.round(2)
       %td=ExerciseWorkout.findExercisePoints(exer.id, @current_workout.id)
 %br

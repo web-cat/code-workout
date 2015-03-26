@@ -28,29 +28,6 @@
 #  index_exercises_on_stem_id           (stem_id)
 #
 
-#table/schema migration for exercise........................
-#
-#create_table "exercises", force: true do |t|
-#    t.integer  "user_id",            null: false
-#    t.integer  "stem_id"
-#    t.integer  "language_id"
-#    t.string   "title",              null: false
-#    t.text     "question",           null: false
-#    t.text     "feedback"
-#    t.boolean  "is_public",          null: false
-#    t.integer  "priority",           null: false
-#    t.integer  "count_attempts",     null: false
-#    t.float    "count_correct",      null: false
-#    t.float    "difficulty",         null: false
-#    t.float    "discrimination",     null: false
-#    t.integer  "question_type",      null: false
-#    t.boolean  "mcq_allow_multiple"
-#    t.boolean  "mcq_is_scrambled"
-#    t.datetime "created_at"
-#    t.datetime "updated_at"
-#    t.integer  "experience"
-#  end
-
 require "cgi"
 
 class Exercise < ActiveRecord::Base
@@ -89,11 +66,11 @@ class Exercise < ActiveRecord::Base
   #~ Validation ...............................................................
 
   #validates :user, presence: true
-  validates :title,
+  validates :name,
     presence: true,
     format: {
       with: /[a-zA-Z0-9\-_ .]+/,
-      message: 'Title must consist only of letters, digits, hyphens (-), ' \
+      message: 'Name must consist only of letters, digits, hyphens (-), ' \
         'underscores (_), spaces ( ), and periods (.).'
     }
   validates :base_exercise, presence: true
@@ -244,11 +221,11 @@ class Exercise < ActiveRecord::Base
 
 
   # -------------------------------------------------------------
-  # getter override for title
-  def title
+  # getter override for name
+  def name
     temp = "X" + read_attribute(:id).to_s
-    if not read_attribute(:title).nil?
-      temp += ": " + read_attribute(:title).to_s
+    if not read_attribute(:name).nil?
+      temp += ": " + read_attribute(:name).to_s
     elsif (!self.tags.nil? && !self.tags.first.nil?)
       temp += ": " + self.tags.first.tag_name
     end
@@ -299,7 +276,7 @@ class Exercise < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def set_defaults
-    self.title ||= ''
+    self.name ||= ''
     self.is_public ||= true
     self.priority ||= 0
     self.count_attempts ||= 0

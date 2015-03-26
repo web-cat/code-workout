@@ -4,7 +4,7 @@ attributes :name, :scrambled, :description, :target_group, :points_multiplier
 
 child(:exercise_workouts => :exercises) do
   attribute :exercise_id => :exid
-  attributes :ordering, :points
+  attributes :order, :points
 end
 
 child(:workout_scores => :scores) do

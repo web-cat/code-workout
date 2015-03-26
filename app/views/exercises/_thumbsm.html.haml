@@ -7,7 +7,7 @@
         %i.fa-file-code-o
       - else
         %i.fa-keyboard-o
-      = link_to x.title, exercise_practice_path(:id => x[:id])
+      = link_to x.name, exercise_practice_path(:id => x[:id])
       -#= difficulty_image(x.experience.to_i)
     = teaser(x.question)
     .info
