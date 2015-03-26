@@ -5,7 +5,7 @@
 #  id                 :integer          not null, primary key
 #  user_id            :integer
 #  question_type      :integer
-#  current_version    :integer
+#  current_version_id :integer
 #  created_at         :datetime
 #  updated_at         :datetime
 #  versions           :integer

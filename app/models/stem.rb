@@ -17,6 +17,6 @@ class Stem < ActiveRecord::Base
 
   #~ Validation ...............................................................
 
-	validates :preamble, presence: true, allow_blank: false
+	validates :preamble, presence: true
 
 end

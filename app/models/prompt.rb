@@ -48,14 +48,18 @@ class Prompt < ActiveRecord::Base
   validates :language_id, numericality: true
 
   validates :instruction, presence: true
-  validates :order, presence: true, numericality: true
-  validates :max_user_attempts, numericality: true
-  validates :attempts, numericality: true, presence: true
-  validates :correct, numericality: true, presence: true
+  validates :order, presence: true,
+    numericality: { greater_than_or_equal_to: 0 }
+  validates :max_user_attempts,
+    numericality: { greater_than_or_equal_to: 0 }
+  validates :attempts, presence: true,
+    numericality: { greater_than_or_equal_to: 0 }
+  validates :correct, presence: true,
+    numericality: { greater_than_or_equal_to: 0 }
   #no validation for feedback
   validates :difficulty, presence: true, numericality: true
   validates :discrimination, presence: true, numericality: true
-  validates :type, presence: true, numericality: true
+  validates :type, presence: true
 
 
 

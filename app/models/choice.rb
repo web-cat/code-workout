@@ -27,7 +27,7 @@ class Choice < ActiveRecord::Base
 
   #~ Validation ...............................................................
 
-  validates :answer, presence: true, allow_blank: false
+  validates :answer, presence: true
   validates :order, presence: true,
     numericality: { greater_than_or_equal_to: 0 }
   validates :value, presence: true,

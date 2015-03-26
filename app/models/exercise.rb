@@ -62,8 +62,8 @@ class Exercise < ActiveRecord::Base
   #~ Relationships ............................................................
 
   belongs_to  :user
-  belongs_to  :stem
-  belongs_to  :base_exercise
+  belongs_to  :stem, inverse_of: :exercises
+  belongs_to  :base_exercise, inverse_of: :exercises
   # belongs_to  :language #language is now a tag with tagtype=2
 
   has_and_belongs_to_many :tags
@@ -72,9 +72,9 @@ class Exercise < ActiveRecord::Base
   # Associating with courses through course_exercises
   has_many    :courses, through: :course_exercises
   has_many    :course_exercises, inverse_of: :exercise
-  has_one     :coding_question
-  has_many :choices, inverse_of: :exercise
-  has_many :prompts, inverse_of: :exercise
+  has_one     :coding_question, inverse_of: :exercise, dependent: :destroy
+  has_many :choices, inverse_of: :exercise, dependent: :destroy
+  has_many :prompts, inverse_of: :exercise, dependent: :destroy
   has_many :attempts
   accepts_nested_attributes_for :attempts
   accepts_nested_attributes_for :coding_question, allow_destroy: true
@@ -91,20 +91,25 @@ class Exercise < ActiveRecord::Base
 
   #validates :user, presence: true
   validates :title,
-    length: { minimum: 1 },
+    presence: true,
     format: {
       with: /[a-zA-Z0-9\-_ .]+/,
-      message: 'Title must be 50 characters or less and consist only of ' \
-        'letters, digits, hyphens (-), underscores (_), spaces ( ), and ' \
-        'periods (.).'
+      message: 'Title must consist only of letters, digits, hyphens (-), ' \
+        'underscores (_), spaces ( ), and periods (.).'
     }
+  validates :base_exercise, presence: true
   validates :question, presence: true
   validates :is_public, presence: true
-  validates :priority, presence: true, numericality: true
-  validates :count_attempts, presence: true, numericality: true
-  validates :count_correct, presence: true, numericality: true
-  validates :experience, presence: true, numericality: true
-  validates :difficulty, presence: true, numericality: true
+  validates :priority, presence: true,
+    numericality: { greater_than_or_equal_to: 0 }
+  validates :count_attempts, presence: true,
+    numericality: { greater_than_or_equal_to: 0 }
+  validates :count_correct, presence: true,
+    numericality: { greater_than_or_equal_to: 0 }
+  validates :experience, presence: true,
+    numericality: { greater_than_or_equal_to: 0 }
+  validates :difficulty, presence: true,
+    numericality: { greater_than_or_equal_to: 0 }
   validates :discrimination, presence: true, numericality: true
 
 

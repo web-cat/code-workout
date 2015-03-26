@@ -19,14 +19,13 @@
 
 class CodingQuestion < ActiveRecord::Base
 
+  #~ Relationships
+  belongs_to :exercise, inverse_of: :coding_question
+  has_many :test_cases, inverse_of: :coding_question, dependent: :destroy
 
   #~ Validations
-  validates :wrapper_code, presence: true, allow_blank: false
-  validates :test_script, presence: true, allow_blank: false
-
-  #~ Relationships
-  belongs_to :exercise
-  has_many :test_cases
+  validates :wrapper_code, presence: true
+  validates :test_script, presence: true
 
   #~ Acceptance
   accepts_nested_attributes_for :test_cases, allow_destroy: true

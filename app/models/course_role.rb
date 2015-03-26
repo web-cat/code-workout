@@ -15,7 +15,7 @@ class CourseRole < ActiveRecord::Base
 
   #~ Validation ...............................................................
 
-  validates :name, presence: true, uniqueness: true, allow_blank: false
+  validates :name, presence: true, uniqueness: true
 
   with_options if: :builtin?, on: :update, changeable: false do |builtin|
     builtin.validates :can_manage_course
