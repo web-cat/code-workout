@@ -13,8 +13,6 @@
     .info
       - attempt = nil
       - uid = 0
-      - puts "USERID",uid,"USERID"
-      - puts "WORKOUTID",wid,"WORKOUTID"
       - if user_signed_in?
         - uid = current_user.id
       - attempt_pct = 0
@@ -40,7 +38,9 @@
             pts
           - else
             pt
-        - else    
+        - elsif wid
+          - ex_workout = ExerciseWorkout.find_by(exercise_id: x.id,
+            workout_id: wid)    
           = ex_workout.points
           - if ex_workout.points != 1
             pts
