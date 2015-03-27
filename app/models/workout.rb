@@ -24,7 +24,8 @@ class Workout < ActiveRecord::Base
   has_many :course_offerings, through:  :workout_offerings
   has_many :workout_offerings
 
-
+  accepts_nested_attributes_for :exercise_workouts
+  accepts_nested_attributes_for :workout_offerings
   #~ Validation ...............................................................
 
 	validates :name,
