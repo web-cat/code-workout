@@ -48,7 +48,7 @@ class WorkoutsController < ApplicationController
 
   # GET /gym
   def gym
-    @gym = Workout.order('created_at DESC').limit(12)
+    @gym = Workout.where(target_group: 'Public').order('created_at DESC').limit(12)
     render layout: 'two_columns'
   end
 
@@ -95,7 +95,6 @@ class WorkoutsController < ApplicationController
     msg      = params[:workout]
     exercises = msg[:exercise_workouts_attributes]
     @workout.creator_id = current_user.id
-<<<<<<< HEAD
     exercises.each_with_index do |ex, index|
       ex_id = ex.second[:exercise_id]              
       exercise = Exercise.find(ex_id)
@@ -202,13 +201,6 @@ class WorkoutsController < ApplicationController
   #~ Private instance methods .................................................
 
   private
-
-<<<<<<< HEAD
-    # Only allow a trusted parameter "white list" through.
-    def workout_params
-      params.require(:workout).permit(:name, :scrambled, :exercise_workouts_attributes, :workout_offerings_attributes, :exercise_ids,:description, :target_group, :points_multiplier, :opening_date, :soft_deadline, :hard_deadline)
-    end
-=======
   # Use callbacks to share common setup or constraints between actions.
   def set_workout
     @workout = Workout.find(params[:id])
@@ -222,8 +214,8 @@ class WorkoutsController < ApplicationController
   def workout_params
     params.require(:workout).permit(:name, :scrambled, :exercise_ids,
       :description, :target_group, :points_multiplier, :opening_date,
+      :exercise_workouts_attributes, :workout_offerings_attributes,
       :soft_deadline, :hard_deadline)
   end
 
->>>>>>> bec15821a897eba6e9987d11aa6eb44eeca569ff
 end
