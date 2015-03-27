@@ -8,7 +8,7 @@
       - else
         %i.fa-keyboard-o
       = link_to x.name, exercise_practice_path(:id => x[:id])
-      -#= difficulty_image(x.experience.to_i)
+      = difficulty_image(x.experience.to_i)
     = teaser(x.question)
     .info
       - attempt = nil
@@ -28,7 +28,7 @@
             - attempt_pct = number_to_percentage(attempt.score.round(2) / ex_workout.points)
       .pts
         - if attempt
-          = n_to_s attempt.score
+          = n_to_s attempt.score.round(2)
           - plural = (attempt.score != 1)
           - if ex_workout
             = '/'
@@ -47,6 +47,8 @@
             pts
           - else
             pt
+        - else
+          = n_to_s x.experience + ' experience points' 
 
       .taglist
         - x.tags.each do |t|
@@ -59,17 +61,23 @@
       - ex_workout = ExerciseWorkout.find_by(exercise_id: x.id, workout_id: wid)
     - if att && ex_workout
       - attemptp = attempt.score.round(2)
-      - puts "AP",attemptp,"AP"
       .progress-bar{ role: 'progressbar',
         'aria-valuenow' => attempt_pct,
         'aria-valuemax' => 100,
         'aria-valuemin' => 0,
         style: 'width: ' + attempt_pct.to_s + '%;' }
         %progress{value: attemptp,max: ex_workout.points }
-    - else
+    - elsif ex_workout
       .progress-bar{ role: 'progressbar',
         'aria-valuenow' => 0,
         'aria-valuemax' => 100,
         'aria-valuemin' => 0,
         style: 'width: 0%;' }
         %progress{value: 0,max: ex_workout.points }
+    - else
+      %progress.progress-bar{ role: 'progressbar',
+        'aria-valuenow' => 0,
+        'aria-valuemax' => 100,
+        'aria-valuemin' => 0,
+        style: 'width: 0%;' ,
+        value: 0,max: 100 }
