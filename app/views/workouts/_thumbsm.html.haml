@@ -6,7 +6,7 @@
       %span.badge.badge-info
         = w.exercises.count.to_s
         %i.fa.fa-bolt
-      -#= difficulty_image(w.highest_difficulty.to_i)
+      = difficulty_image(w.highest_difficulty.to_i)
     = teaser(w.description)
     .info
       .taglist
@@ -17,5 +17,5 @@
   .row
     .col-md-12
       - xp_data = Workout.xp_distribution(1, w.id)
-      = render :partial => 'workouts/progress',
-        :locals => { :xp_data => Workout.xp_distribution(1, w.id) }
+      = render partial: 'workouts/progress',
+        locals: { xp_data: Workout.xp_distribution(1, w.id) }

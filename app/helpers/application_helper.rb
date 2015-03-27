@@ -221,7 +221,7 @@ module ApplicationHelper
     if val == val.to_i
       val.to_i.to_s
     else
-      val.to_s
+      val.round(1).to_s
     end
   end
 

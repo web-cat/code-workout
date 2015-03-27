@@ -41,14 +41,14 @@
 
         - elsif wid
           - ex_workout = ExerciseWorkout.find_by(exercise_id: x.id,
-            workout_id: wid)    
+            workout_id: wid)
           = ex_workout.points
           - if ex_workout.points != 1
             pts
           - else
             pt
         - else
-          = n_to_s x.experience + ' experience points' 
+          = n_to_s(x.experience) + ' xp'
 
       .taglist
         - x.tags.each do |t|
