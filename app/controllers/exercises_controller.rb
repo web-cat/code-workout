@@ -721,7 +721,7 @@ end
         redirect_to exercises_url, notice: "Exercise #{params[:id]} not found"
       else
         @exercise = found.first
-        if @exercise.base_exercise.question_type.is_mcq?
+        if @exercise.base_exercise.is_mcq?
           response_ids = params[:exercise][:exercise][:choice_ids]
           p params
           @responses = Array.new

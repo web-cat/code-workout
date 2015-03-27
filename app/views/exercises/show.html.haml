@@ -1,3 +1,5 @@
+= render partial: 'layouts/breadcrumb', locals: {wid: nil, exid: @exercise.id}
+
 %p#notice= notice
 = link_to 'Edit', edit_exercise_path(@exercise)
 %p
@@ -37,7 +39,7 @@
   %strong Created:
   %p= @exercise.created_at
 %br
-- if @exercise.base_exercise.question_type == 2
+- if @exercise.base_exercise.is_coding?
   - language = @exercise.language || 'Java'
   - test_end_code = generate_tests(@exercise.id,
     language,
