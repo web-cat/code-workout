@@ -4,8 +4,8 @@
 - if not(@wos.empty?)
   %h2 Workouts
   = render partial: "workouts/thumblg", collection: @wos, as: :w,
-    locals: { uid: uid }
+    locals: { uid: uid, wid: nil }
 - if not(@exs.empty?)
   %h2 Individual Exercises
   = render partial: "exercises/thumblg", collection: @exs, as: :x,
-    locals: { uid: uid }
+    locals: { uid: uid, wid: nil }
