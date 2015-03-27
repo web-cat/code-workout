@@ -1,14 +1,27 @@
+%br
 = semantic_form_for @workout, html: { class: "form-horizontal" } do |f|
   = f.semantic_errors
   .row
     .col-md-10
       = f.input :name, maxlength: 50,
         placeholder: "Enter Workout title"
-  .row
-    .col-md-4
-      = f.input :exercises, :as => :select,
+  -#.row
+    -#.col-md-4
+      -#= f.input :exercises, :as => :select,
         :collection => @exers,
         :label => "Related Exercises"
+  #exercises
+    = f.semantic_fields_for :exercise_workouts do |ew|
+      = render 'exercise_workout_fields', f: ew
+    .links
+      = link_to_add_association 'Add Exercise', f, :exercise_workouts
+  
+  #course_offerings
+    = f.semantic_fields_for :workout_offerings do |co|
+      = render 'workout_offering_fields', f: co
+    .links
+      = link_to_add_association 'Add Workout to Course Offering', f, :workout_offerings    
+      
   .row
     .col-md-4
       
