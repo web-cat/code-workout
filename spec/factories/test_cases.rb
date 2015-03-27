@@ -4,14 +4,14 @@
 #
 #  id                 :integer          not null, primary key
 #  test_script        :string(255)
-#  negative_feedback  :text
-#  weight             :float
+#  negative_feedback  :text             not null
+#  weight             :float            not null
 #  description        :text
-#  input              :string(255)
-#  expected_output    :string(255)
+#  input              :string(255)      not null
+#  expected_output    :string(255)      not null
 #  created_at         :datetime
 #  updated_at         :datetime
-#  coding_question_id :integer
+#  coding_question_id :integer          not null
 #
 # Indexes
 #

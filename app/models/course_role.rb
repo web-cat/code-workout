@@ -13,8 +13,10 @@
 
 class CourseRole < ActiveRecord::Base
 
+  #~ Validation ...............................................................
+
   validates :name, presence: true, uniqueness: true
-  
+
   with_options if: :builtin?, on: :update, changeable: false do |builtin|
     builtin.validates :can_manage_course
     builtin.validates :can_manage_assignments
@@ -22,8 +24,13 @@ class CourseRole < ActiveRecord::Base
     builtin.validates :can_view_other_submissions
   end
 
+
+  #~ Hooks ....................................................................
+
   before_destroy :check_builtin?
 
+
+  #~ Constants ................................................................
 
   # Make sure to run rake db:seed after initial database creation
   # to ensure that the built-in roles with these IDs are created.
@@ -60,6 +67,15 @@ class CourseRole < ActiveRecord::Base
     find(STUDENT_ID)
   end
 
+
+  # -------------------------------------------------------------
+  def self.all_roles
+    ROLES
+  end
+
+
+  #~ Public instance methods ..................................................
+
   # -------------------------------------------------------------
   def staff?
     can_manage_course ||
@@ -68,10 +84,6 @@ class CourseRole < ActiveRecord::Base
     can_view_other_submissions
   end
 
-  # -------------------------------------------------------------
-  def self.all_roles
-    ROLES
-  end
 
   # -------------------------------------------------------------
   def order_number
@@ -84,7 +96,7 @@ class CourseRole < ActiveRecord::Base
   end
 
 
-  #~ Instance methods .........................................................
+  #~ Private instance methods .................................................
 
   private
 

@@ -17,6 +17,16 @@
 #
 
 class TagUserScore < ActiveRecord::Base
-	belongs_to :user
-	belongs_to :tag
+
+  #~ Relationships ............................................................
+
+	belongs_to :user, inverse_of: :tag_user_scores
+	belongs_to :tag, inverse_of: :tag_user_scores
+
+
+  #~ Validation ...............................................................
+
+  validates :user, presence: true
+  validates :tag, presence: true
+
 end

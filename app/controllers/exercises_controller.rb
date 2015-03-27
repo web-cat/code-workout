@@ -28,10 +28,16 @@ class ExercisesController < ApplicationController
       redirect_to root_path,
         notice: 'Unauthorized to view all exercises' and return
     end
-    @exercises = Exercise.all
+#    @exercises = Exercise.all
+#    p 'exercises = ' + @exercises.size.to_s
+#    p @exercises
+    @exercises = BaseExercise.all.map { |b| b.exercise }
+    p 'base filtered = ' + @exercises.size.to_s
+    p @exercises
 
     respond_to do |format|
       format.csv
+      format.json
     end
   end
 
@@ -87,7 +93,7 @@ class ExercisesController < ApplicationController
     basex.user_id = current_user.id
     basex.question_type = msg[:question_type] || 1
     basex.versions = 1
-    ex.title = msg[:title].chomp.strip
+    ex.name = msg[:name].chomp.strip
     # ex.question = ERB::Util.html_escape(msg[:question])
     # ex.feedback = ERB::Util.html_escape(msg[:feedback])
     ex.question = msg[:question]
@@ -158,7 +164,7 @@ class ExercisesController < ApplicationController
 
     basex.exercises << ex
     ex.save!
-    basex.current_version = ex.id
+    basex.current_version = ex
     basex.save
     if msg[:coding_questions]
       msg[:tag_ids].delete_if(&:empty?)
@@ -292,37 +298,38 @@ class ExercisesController < ApplicationController
     exercise_dump = []
     if params[:language]
       BaseExercise.all.each do |baseexercise|
-        candidate_exercise = Exercise.find_by(id: baseexercise.current_version, is_public: true)
+        candidate_exercise = baseexercise.current_version
         if candidate_exercise &&
+          candidate_exercise.is_public &&
           candidate_exercise.language == params[:language]
           exercise_dump << candidate_exercise
         elsif !candidate_exercise
           puts "ERROR: base exercise #{baseexercise.id} with current " +
-            "version #{baseexercise.current_version} does not refer to " +
+            "version #{baseexercise.current_version_id} does not refer to " +
             "an existing exercise."
         end # INNER IF
       end   # DO WHILE
 
     elsif params[:question_type]
       BaseExercise.where(question_type: params[:question_type].to_i).
-        find_each do |baseexercise|        
-        candidate_exercise = Exercise.find_by(id: baseexercise.current_version, is_public: true)
-        if candidate_exercise
+        find_each do |baseexercise|
+        candidate_exercise = baseexercise.current_version
+        if candidate_exercise && candidate_exercise.is_public
           exercise_dump << candidate_exercise
         elsif !candidate_exercise
           puts "ERROR: base exercise #{baseexercise.id} with current " +
-            "version #{baseexercise.current_version} does not refer to " +
+            "version #{baseexercise.current_version_id} does not refer to " +
             "an existing exercise."
         end # INNER IF
       end   # DO WHILE
     else
       BaseExercise.all.each do |baseexercise|
-        candidate_exercise = Exercise.find_by(id: baseexercise.current_version, is_public: true)
-        if candidate_exercise
+        candidate_exercise = baseexercise.current_version
+        if candidate_exercise && candidate_exercise.is_public
           exercise_dump << candidate_exercise
         elsif !candidate_exercise
           puts "ERROR: base exercise #{baseexercise.id} with current " +
-            "version #{baseexercise.current_version} does not refer to " +
+            "version #{baseexercise.current_version_id} does not refer to " +
             "an existing exercise."
         end # INNER IF
       end   # DO WHILE
@@ -336,27 +343,31 @@ def create_mcqs
   if !user_signed_in?
       redirect_to root_path, notice: 'Need to sign in first' and return
   end
-  basex=BaseExercise.new
-  basex.user_id=current_user.id
+  basex = BaseExercise.new
+  basex.user = current_user
   basex.question_type = msg[:question_type] || 1
-  basex.versions=1
+  basex.versions = 1
   csvfile = params[:form]
   puts csvfile.fetch(:xmlfile).path
   CSV.foreach(csvfile.fetch(:xmlfile).path) do |question|
     if $INPUT_LINE_NUMBER > 1
-      title_ex=question[1]
+      name_ex = question[1]
       #priority_ex=question[2]
-      question_ex=question[3][3..-5]
+      question_ex = question[3][3..-5]
 
-      if (!question[15].nil? && question[15].include?("p"))
-        gradertext_ex=question[15][3..-5]
+      if !question[15].nil? && question[15].include?('p')
+        gradertext_ex = question[15][3..-5]
       else
-        gradertext_ex=""
+        gradertext_ex = ''
       end
 
-      if ( !question[5].nil? && !question[6].nil? &&  !question[5][3..-5].nil? && !question[6][3..-5].nil?)
+      if !question[5].nil? &&
+        !question[6].nil? &&
+        !question[5][3..-5].nil? &&
+        !question[6][3..-5].nil?
+
         ex = Exercise.new
-        ex.title = title_ex
+        ex.name = name_ex
         ex.question = question_ex
         ex.feedback = gradertext_ex
         ex.is_public = true
@@ -381,65 +392,75 @@ def create_mcqs
         ex.count_correct = 1
 
 
-        ex.user_id = current_user.id
+        ex.user = current_user
         ex.experience = 10
 
 
         #default IRT statistics
         ex.difficulty = 0
         ex.discrimination = 0
-        ex.version=1
-        basex.exercises<<ex
+        ex.version = 1
+        basex.exercises << ex
         ex.save!
-        basex.current_version=ex.id
+        basex.current_version = ex
         basex.save
 
         #   i = 0
         #  right = 0.0
         # total = 0.0
-        alphanum = {"A"=>1,"B"=>2,"C"=>3,"D"=>4,"E"=>5,"F"=>6,"G"=>7,"H"=>8,"I"=>9,"J"=>10}
-        choices=[]
-        choice1=question[5][3..-5]
-        choices<<choice1
-        choice2=question[6][3..-5]
-        choices<<choice2
-        if (!question[7].nil? && question[7].include?("p"))
-          choice3=question[7][3..-5]
-          choices<<choice3
+        alphanum = {
+          'A' => 1,
+          'B' => 2,
+          'C' => 3,
+          'D' => 4,
+          'E' => 5,
+          'F' => 6,
+          'G' => 7,
+          'H' => 8,
+          'I' => 9,
+          'J' => 10 }
+        choices = []
+        choice1 = question[5][3..-5]
+        choices << choice1
+        choice2 = question[6][3..-5]
+        choices << choice2
+        if !question[7].nil? && question[7].include?('p')
+          choice3 = question[7][3..-5]
+          choices << choice3
         end
-        if (!question[8].nil? && question[8].include?("p"))
-          choice4=question[8][3..-5]
-          choices<<choice4
+        if !question[8].nil? && question[8].include?('p')
+          choice4 = question[8][3..-5]
+          choices << choice4
         end
-        if (!question[9].nil? && question[9].include?("p"))
-          choice5=question[9][3..-5]
-          choices<<choice5
+        if !question[9].nil? && question[9].include?('p')
+          choice5 = question[9][3..-5]
+          choices << choice5
         end
-        if (!question[10].nil? && question[10].include?("p"))
-          choice6=question[10][3..-5]
-          choices<<choice6
+        if !question[10].nil? && question[10].include?('p')
+          choice6 = question[10][3..-5]
+          choices << choice6
         end
-        if (!question[11].nil? && question[11].include?("p"))
-          choice7=question[11][3..-5]
-          choices<<choice7
+        if !question[11].nil? && question[11].include?('p')
+          choice7 = question[11][3..-5]
+          choices << choice7
         end
-        if (!question[12].nil? && question[12].include?("p"))
-          choice8=question[12][3..-5]
-          choices<<choice8
+        if !question[12].nil? && question[12].include?('p')
+          choice8 = question[12][3..-5]
+          choices << choice8
         end
-        if (!question[13].nil? && question[13].include?("p"))
-          choice9=question[13][3..-5]
-          choices<<choice9
+        if !question[13].nil? && question[13].include?('p')
+          choice9 = question[13][3..-5]
+          choices << choice9
         end
-        if (!question[14].nil? && question[14].include?("p"))
-          choice10=question[14][3..-5]
-          choices<<choice10
+        if !question[14].nil? && question[14].include?('p')
+          choice10 = question[14][3..-5]
+          choices << choice10
         end
 
         if question[5] && question[6] &&
           question[5][3..-5] && question[6][3..-5]
           ex = Exercise.new
-          ex.title = title_ex
+          ex.name = name_ex
           ex.question = question_ex
           ex.feedback = gradertext_ex
           ex.is_public = true
@@ -463,7 +484,7 @@ def create_mcqs
           ex.count_attempts = 5
           ex.count_correct = 1
 
-          ex.user_id = current_user.id
+          ex.user = current_user
           ex.experience = 10
 
           # default IRT statistics
@@ -472,7 +493,7 @@ def create_mcqs
           ex.version = 1
           basex.exercises << ex
           ex.save!
-          basex.current_version = ex.id
+          basex.current_version = ex
           basex.save
 
           #   i = 0
@@ -576,7 +597,7 @@ end
     questions = doc.xpath('/quiz/question')
     questions.each do |question|
       ex = Exercise.new
-      title_ex = question.xpath('./name/text')[0].content
+      name_ex = question.xpath('./name/text')[0].content
       question_ex = question.xpath('./questiontext/text')[0].content
       if !question.xpath('.//generalfeedback/text').empty?
         feedback_ex = question.xpath('.//generalfeedback/text')[0].content
@@ -602,7 +623,7 @@ end
         gradertext_ex = ''
       end
       # TODO: Sanitize the uploads
-      ex.title = title_ex
+      ex.name = name_ex
       ex.question = question_ex
       ex.feedback = feedback_ex
       ex.is_public = true
@@ -621,7 +642,7 @@ end
       ex.version = 1
       basex.exercises << ex
       ex.save!
-      basex.current_version=ex.id
+      basex.current_version = ex
       basex.save
     end
     redirect_to exercises_url, notice: 'Uploaded!'
@@ -650,11 +671,11 @@ end
         end
         @responses = ["There are no responses yet!"]
         @explain = ["There are no explanations yet!"]
-        if session[:leaf_exercises] 
+        if session[:leaf_exercises]
           session[:leaf_exercises] << @exercise.id
         else
           session[:leaf_exercises] = [@exercise.id]
-        end 
+        end
 
         # EOL stands for end of line
         # @wexs is the variable to hold the list of exercises of this workout yet to be attempted by the user apart from the current exercise
@@ -722,7 +743,7 @@ end
           end
           @explain = @exercise.collate_feedback(@responses)
           @exercise_feedback = 'You have attempted exercise ' +
-            "#{@exercise.id}:#{@exercise.title}" +
+            "#{@exercise.id}:#{@exercise.name}" +
             ' and its feedback for you: ' +
             @explain.to_sentence
           if session[:current_workout]
@@ -784,9 +805,9 @@ end
     end
     @exercise = Exercise.find(params[:id])
     new_exercise = create_new_version()
-    @exercise.base_exercise.exercises<<new_exercise;
+    @exercise.base_exercise.exercises << new_exercise
     new_exercise.save
-    @exercise.base_exercise.current_version=new_exercise.id
+    @exercise.base_exercise.current_version = new_exercise
     @exercise.base_exercise.save
     if new_exercise.update_attributes(exercise_params)
       respond_to do |format|
@@ -795,7 +816,7 @@ end
       end
     else
       respond_to do |format|
-        format.html { render action: "edit" }
+        format.html { render action: 'edit' }
         format.json { render json: new_exercise.errors, status: :unprocessable_entity }
       end
     end
@@ -824,7 +845,7 @@ end
 
     def create_new_version
       newexercise = Exercise.new
-      newexercise.title = @exercise.title
+      newexercise.name = @exercise.name
       newexercise.creator_id = current_user.id
       newexercise.question = @exercise.question
       newexercise.feedback = @exercise.feedback
@@ -847,7 +868,7 @@ end
 
     # Only allow a trusted parameter "white list" through.
     def exercise_params
-      params.require(:exercise).permit(:title, :question, :feedback,
+      params.require(:exercise).permit(:name, :question, :feedback,
         :experience, :id, :is_public, :priority, :type,
         :mcq_allow_multiple, :mcq_is_scrambled, :language, :area,
         choices_attributes: [:answer, :order, :value, :_destroy],

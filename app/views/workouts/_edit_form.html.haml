@@ -3,7 +3,7 @@
   .row
     .col-md-10
       = f.input :name, maxlength: 50,
-        placeholder: "Enter Workout title"
+        placeholder: "Enter Workout name"
   .row
     .col-md-4
       = f.input :exercises, :as => :select,
@@ -13,10 +13,10 @@
     .col-md-4
       = f.input :exercises, :as => :select,
         :collection => Exercise.find(@allexs-@exs),
-        :label => "Other Exercises"        
+        :label => "Other Exercises"
   .row
     .col-md-4
-      
+
     .col-md-4
       = f.input :target_group, :as => :select,
         :collection => ['Public','Class','Group','Instructor'],
@@ -35,19 +35,19 @@
   %h2 Answers
   .row.darker-bkg
     .col-md-4
-      = f.input :scrambled, 
+      = f.input :scrambled,
         :label => "Randomize?",
         :input_html => { checked: 'checked', value: true}
     .col-md-4
-      = f.input :opening_date, 
+      = f.input :opening_date,
         :label => "Workout opening date",
         :input_html => { value: Date.today}
     .col-md-4
-      = f.input :soft_deadline, 
+      = f.input :soft_deadline,
         :label => "Workout soft deadline",
         :input_html => { value: Date.today}
     .col-md-4
-      = f.input :hard_deadline, 
+      = f.input :hard_deadline,
         :label => "Workout hard deadline",
         :input_html => { value: Date.today}
   .actions

@@ -56,7 +56,7 @@ Some documentation is auto-generated.  In model classes, schema comments
 in the model source files show the table structure.  To update those
 comments, use:
 
-    bundle exect annotate
+    bundle exec annotate
 
 In the root of the project, the erd.pdf file presents an entity relationship
 diagram (ERD) showing the relationships between the model entities.  Diagram

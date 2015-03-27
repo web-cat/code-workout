@@ -1,20 +1,21 @@
-csv.headers :type, :id, :points, :question, :correct_answer,
+csv.headers :type, :exid, :points, :question, :correct_answer,
   :choice_1, :choice_2, :choice_3, :choice_4, :choice_5, :choice_6,
   :choice_7, :choice_8, :choice_9, :choice_10, :explanation,
   :programming_language, :tags,
-  :stem, :title, :is_public, :user_id, :priority, :experience,
+  :stem, :name, :is_public, :user_id, :priority, :experience,
   :mcq_allow_multiple, :mcq_is_scrambled,
   :variation_group,
   :class_name, :method_name, :starter_code, :wrapper_code, :tests
 
 csv.rows @exercises do |csv, exercise|
   csv.cell :type, exercise.base_exercise.type_name
-  csv.cells :id, :question, :is_public, :priority, :experience
-  csv.cell :title, exercise.read_attribute(:title)
+  csv.cell :exid, exercise.id
+  csv.cells :question, :is_public, :priority, :experience
+  csv.cell :name, exercise.read_attribute(:name)
   csv.cell :user_id,
     exercise.user ? exercise.user.id : exercise.base_exercise.user.andand.id
   csv.cell :variation_group,
-    exercise.base_exercise.variation_group.andand.title
+    exercise.base_exercise.variation_group.andand.name
   csv.cell :stem, exercise.andand.stem.andand.preamble
   if !exercise.feedback.blank?
     csv.cell :explanation, exercise.feedback
@@ -23,14 +24,13 @@ csv.rows @exercises do |csv, exercise|
     csv.cell :tags, exercise.tags.map {|t| t.tag_name}.join(', ')
   end
   csv.cell :programming_language, exercise.language
-  if exercise.base_exercise.question_type == BaseExercise::Q_MC
+  if exercise.base_exercise.is_mcq?
     csv.cells :mcq_allow_multiple, :mcq_is_scrambled
     choice = 1
     exercise.choices.each do |choice|
       csv.cell ("choice_" + choice.to_s).to_sym, choice.answer
     end
-  elsif exercise.base_exercise.question_type == BaseExercise::Q_CODING &&
-    exercise.coding_question
+  elsif exercise.base_exercise.is_coding? && exercise.coding_question
     csv.cell :class_name, exercise.coding_question.class_name
     csv.cell :method_name, exercise.coding_question.method_name
     csv.cell :starter_code, exercise.coding_question.starter_code

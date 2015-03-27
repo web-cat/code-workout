@@ -1,9 +1,9 @@
-= render partial: 'layouts/breadcrumb', locals: {wid: session[:current_workout], exid: @exercise.id}              
+= render partial: 'layouts/breadcrumb', locals: {wid: session[:current_workout], exid: @exercise.id} 
 .col-md-7
   = semantic_form_for @exercise, url: exercise_evaluate_path(@exercise,
     wexes: params[:wexes], feedback_return: true), remote: true do |f|
     = f.semantic_errors
-    %h1= @exercise.title
+    %h1= @exercise.name
     %p= make_html(@exercise.serve_question_html)
     - if @exercise.base_exercise.is_mcq?
       - if @exercise.mcq_allow_multiple

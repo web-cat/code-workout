@@ -62,7 +62,7 @@
   .tab-pane.fade{ id: 'exers' }
     %ul
       - @course.exercises.each do |ex|
-        %li= link_to ex.title, '/exercises/' + ex.id.to_s
+        %li= link_to ex.name, '/exercises/' + ex.id.to_s
 
   .tab-pane.fade{ id: 'grdes' }
     - if user_signed_in? &&                                      |
@@ -71,19 +71,19 @@
         course_gradebook_path(@course, format: :csv)
     - @course.course_offerings.each do |off|
       %br
-      - if !(cannot? :generate_gradebook, off)
+      - if can? :generate_gradebook, off
         %b= off.name
         %table{border: 1}
           %tr
             %td First name
-            %td Last name         
+            %td Last name
             - CourseOffering.find(off.id).workouts.each do |wkt|
               %td= wkt.name
-            %td Total        
+            %td Total
           - CourseEnrollment.where(course_offering_id: off.id).each do |ce|
-            - if ce.course_role_id == CourseRole.find_by(name: 'Student').id 
+            - if ce.course_role_id == CourseRole.find_by(name: 'Student').id
               %tr
-                %td= User.find(ce.user_id).first_name   
+                %td= User.find(ce.user_id).first_name
                 %td= User.find(ce.user_id).last_name
                 - grand_total = 0.0
                 - CourseOffering.find(off.id).workouts.each do |wkt|
@@ -91,12 +91,12 @@
                     - if !Attempt.where(user_id: ce.user_id, workout_offering_id: WorkoutOffering.find_by(course_offering_id: off.id, workout_id: wkt.id).id).blank?
                       - tot = WorkoutScore.find_by!(user_id: ce.user_id, workout_id: wkt.id).score
                       %td= tot
-                      - grand_total += tot    
+                      - grand_total += tot
                     - else
                       %td -/-
                 %td= grand_total
-          - if user_signed_in?        
-            %p= button_to 'Download class gradebook', course_offering_gradebook_path(off,format: :csv)       
+          - if user_signed_in?
+            %p= button_to 'Download class gradebook', course_offering_gradebook_path(off,format: :csv)
       - elsif user_signed_in?
         = off.name
         - ce = CourseEnrollment.find_by(course_offering: off.id,user_id: current_user.id)
@@ -110,8 +110,8 @@
                 %tr
                   %td= wkt.name
                   %td= WorkoutScore.find_by(workout_id: wkt.id,user_id: current_user.id)
-               
-      
+
+
   .tab-pane.fade{:id => 'rostr'}
     - @course.course_offerings.each do |off|
       %h3= off.name

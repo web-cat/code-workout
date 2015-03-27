@@ -7,9 +7,9 @@
 #  language_id       :integer          not null
 #  instruction       :text             not null
 #  order             :integer          not null
-#  max_user_attempts :integer
-#  attempts          :integer
-#  correct           :float
+#  max_user_attempts :integer          not null
+#  attempts          :integer          not null
+#  correct           :float            not null
 #  feedback          :text
 #  difficulty        :float            not null
 #  discrimination    :float            not null
@@ -30,7 +30,7 @@ class Prompt < ActiveRecord::Base
   #~ Relationships ............................................................
 
   # TODO: define Attempt model and relate to prompt for each student attempt
-  belongs_to :exercise
+  belongs_to :exercise, inverse_of: :prompts
   # TODO: define Hint model and decide how a hint determines how it maps to
   # different types of incorrect attempts
   has_many :choices
@@ -48,14 +48,18 @@ class Prompt < ActiveRecord::Base
   validates :language_id, numericality: true
 
   validates :instruction, presence: true
-  validates :order, presence: true, numericality: true
-  validates :max_user_attempts, numericality: true
-  validates :attempts, numericality: true, presence: true
-  validates :correct, numericality: true, presence: true
+  validates :order, presence: true,
+    numericality: { greater_than_or_equal_to: 0 }
+  validates :max_user_attempts,
+    numericality: { greater_than_or_equal_to: 0 }
+  validates :attempts, presence: true,
+    numericality: { greater_than_or_equal_to: 0 }
+  validates :correct, presence: true,
+    numericality: { greater_than_or_equal_to: 0 }
   #no validation for feedback
   validates :difficulty, presence: true, numericality: true
   validates :discrimination, presence: true, numericality: true
-  validates :type, presence: true, numericality: true
+  validates :type, presence: true
 
 
 

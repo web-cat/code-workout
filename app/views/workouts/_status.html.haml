@@ -7,4 +7,4 @@
   .alert No exercises remaining
 - else
   = render partial: 'exercises/thumbsm', collection: exs, as: :x,
-    locals: { uid: uid }
+    locals: { uid: uid, wid: w ? w.id : nil }

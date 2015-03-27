@@ -3,15 +3,29 @@
 # Table name: terms
 #
 #  id         :integer          not null, primary key
-#  season     :integer
-#  starts_on  :date
-#  ends_on    :date
-#  year       :integer
+#  season     :integer          not null
+#  starts_on  :date             not null
+#  ends_on    :date             not null
+#  year       :integer          not null
 #  created_at :datetime
 #  updated_at :datetime
 #
+# Indexes
+#
+#  index_terms_on_year_and_season  (year,season)
+#
 
 class Term < ActiveRecord::Base
+
+  #~ Relationships ............................................................
+
+  has_many :course_offerings, inverse_of: :term, dependent: :destroy
+
+  # Orders terms in descending order (latest time first).
+  scope :latest_first, -> { order('year desc, season desc') }
+
+
+  #~ Constants ................................................................
 
   # Hard-coded season names. It is assumed that these names contain
   # letters and spaces only -- no numbers. For example, the Summer
@@ -32,9 +46,6 @@ class Term < ActiveRecord::Base
     new_key = k.downcase.gsub(/\s+/, '')
     hash[new_key] = v
   end
-
-  # Orders terms in descending order (latest time first).
-  scope :latest_first, -> { order('year desc, season desc') }
 
 
   #~ Validation ...............................................................
@@ -58,11 +69,12 @@ class Term < ActiveRecord::Base
     if path =~ /([a-z]+)-(\d+)/
       season = SEASON_PATH_NAMES[$1]
       year = $2
-      where(season: season, year: year)
+      where(year: year, season: season)
     else
       where('1 = 0')
     end
   end
+
 
   #~ Instance methods .........................................................
 
@@ -91,25 +103,26 @@ class Term < ActiveRecord::Base
     "#{season_name} #{year}"
   end
 
+
   # -----------------------------------------
   def self.time_heuristic(date_string)
     if date_string.nil?
-      puts "INVALID Use of time_heuristic"
+      puts 'INVALID Use of time_heuristic'
       return 0
     else
       date_split = date_string.split("-")
-      if date_split[1]       
+      if date_split[1]
         date_year = date_split[0]
         date_month = date_split[1]
         date_day = date_split[2]
-        return date_year * 100.0 + date_month * 1.0 + date_day*0.01    
+        return date_year * 100.0 + date_month * 1.0 + date_day * 0.01
       else
-        puts "INVALID date_string format"
+        puts 'INVALID date_string format'
         return 0
-      end  
+      end
     end
-  end  
-   
+  end
+
 
   # -------------------------------------------------------------
   def url_part

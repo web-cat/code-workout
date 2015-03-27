@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150320002742) do
+ActiveRecord::Schema.define(version: 20150326193301) do
 
   create_table "attempts", force: true do |t|
     t.integer  "user_id",                           null: false
@@ -31,20 +31,24 @@ ActiveRecord::Schema.define(version: 20150320002742) do
 
   create_table "base_exercises", force: true do |t|
     t.integer  "user_id"
-    t.integer  "question_type"
-    t.integer  "current_version"
+    t.integer  "question_type",      null: false
+    t.integer  "current_version_id", null: false
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer  "versions"
+    t.integer  "versions",           null: false
     t.integer  "variation_group_id"
   end
 
+  add_index "base_exercises", ["current_version_id"], name: "index_base_exercises_on_current_version_id"
+  add_index "base_exercises", ["user_id"], name: "index_base_exercises_on_user_id"
+  add_index "base_exercises", ["variation_group_id"], name: "index_base_exercises_on_variation_group_id"
+
   create_table "choices", force: true do |t|
     t.integer  "exercise_id", null: false
-    t.string   "answer"
-    t.integer  "order"
+    t.string   "answer",      null: false
+    t.integer  "order",       null: false
     t.text     "feedback"
-    t.float    "value"
+    t.float    "value",       null: false
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -54,10 +58,10 @@ ActiveRecord::Schema.define(version: 20150320002742) do
   create_table "coding_questions", force: true do |t|
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer  "exercise_id"
+    t.integer  "exercise_id",  null: false
     t.string   "class_name"
-    t.text     "wrapper_code"
-    t.text     "test_script"
+    t.text     "wrapper_code", null: false
+    t.text     "test_script",  null: false
     t.string   "method_name"
     t.text     "starter_code"
   end
@@ -65,9 +69,9 @@ ActiveRecord::Schema.define(version: 20150320002742) do
   add_index "coding_questions", ["exercise_id"], name: "index_coding_questions_on_exercise_id"
 
   create_table "course_enrollments", force: true do |t|
-    t.integer "user_id"
-    t.integer "course_offering_id"
-    t.integer "course_role_id"
+    t.integer "user_id",            null: false
+    t.integer "course_offering_id", null: false
+    t.integer "course_role_id",     null: false
   end
 
   add_index "course_enrollments", ["course_offering_id"], name: "index_course_enrollments_on_course_offering_id"
@@ -76,22 +80,25 @@ ActiveRecord::Schema.define(version: 20150320002742) do
   add_index "course_enrollments", ["user_id"], name: "index_course_enrollments_on_user_id"
 
   create_table "course_exercises", force: true do |t|
-    t.integer  "course_id"
-    t.integer  "exercise_id"
+    t.integer  "course_id",   null: false
+    t.integer  "exercise_id", null: false
     t.datetime "created_at"
     t.datetime "updated_at"
   end
 
   create_table "course_offerings", force: true do |t|
-    t.integer  "course_id"
-    t.integer  "term_id"
-    t.string   "name"
+    t.integer  "course_id",               null: false
+    t.integer  "term_id",                 null: false
+    t.string   "name",                    null: false
     t.string   "label"
     t.string   "url"
     t.boolean  "self_enrollment_allowed"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
+
+  add_index "course_offerings", ["course_id"], name: "index_course_offerings_on_course_id"
+  add_index "course_offerings", ["term_id"], name: "index_course_offerings_on_term_id"
 
   create_table "course_roles", force: true do |t|
     t.string  "name",                                       null: false
@@ -103,19 +110,22 @@ ActiveRecord::Schema.define(version: 20150320002742) do
   end
 
   create_table "courses", force: true do |t|
-    t.string   "name"
-    t.string   "number"
-    t.integer  "organization_id"
-    t.string   "url_part"
+    t.string   "name",            null: false
+    t.string   "number",          null: false
+    t.integer  "organization_id", null: false
+    t.string   "url_part",        null: false
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "creator_id"
   end
 
+  add_index "courses", ["organization_id"], name: "index_courses_on_organization_id"
+  add_index "courses", ["url_part"], name: "index_courses_on_url_part"
+
   create_table "exercise_workouts", force: true do |t|
-    t.integer  "exercise_id"
-    t.integer  "workout_id"
-    t.integer  "ordering"
+    t.integer  "exercise_id",               null: false
+    t.integer  "workout_id",                null: false
+    t.integer  "order",                     null: false
     t.float    "points",      default: 1.0
     t.datetime "created_at"
     t.datetime "updated_at"
@@ -123,7 +133,7 @@ ActiveRecord::Schema.define(version: 20150320002742) do
 
   create_table "exercises", force: true do |t|
     t.integer  "stem_id"
-    t.string   "title"
+    t.string   "name",               null: false
     t.text     "question",           null: false
     t.text     "feedback"
     t.boolean  "is_public",          null: false
@@ -136,9 +146,9 @@ ActiveRecord::Schema.define(version: 20150320002742) do
     t.boolean  "mcq_is_scrambled"
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer  "experience"
-    t.integer  "base_exercise_id"
-    t.integer  "version"
+    t.integer  "experience",         null: false
+    t.integer  "base_exercise_id",   null: false
+    t.integer  "version",            null: false
     t.integer  "creator_id"
   end
 
@@ -150,10 +160,16 @@ ActiveRecord::Schema.define(version: 20150320002742) do
     t.integer "resource_file_id", null: false
   end
 
+  add_index "exercises_resource_files", ["exercise_id"], name: "index_exercises_resource_files_on_exercise_id"
+  add_index "exercises_resource_files", ["resource_file_id"], name: "index_exercises_resource_files_on_resource_file_id"
+
   create_table "exercises_tags", force: true do |t|
-    t.integer "exercise_id"
-    t.integer "tag_id"
+    t.integer "exercise_id", null: false
+    t.integer "tag_id",      null: false
   end
+
+  add_index "exercises_tags", ["exercise_id"], name: "index_exercises_tags_on_exercise_id"
+  add_index "exercises_tags", ["tag_id"], name: "index_exercises_tags_on_tag_id"
 
   create_table "global_roles", force: true do |t|
     t.string  "name",                                          null: false
@@ -163,30 +179,33 @@ ActiveRecord::Schema.define(version: 20150320002742) do
   end
 
   create_table "identities", force: true do |t|
-    t.integer  "user_id"
-    t.string   "provider"
-    t.string   "uid"
+    t.integer  "user_id",    null: false
+    t.string   "provider",   null: false
+    t.string   "uid",        null: false
     t.datetime "created_at"
     t.datetime "updated_at"
   end
 
+  add_index "identities", ["uid", "provider"], name: "index_identities_on_uid_and_provider"
   add_index "identities", ["user_id"], name: "index_identities_on_user_id"
 
   create_table "organizations", force: true do |t|
-    t.string   "display_name"
-    t.string   "url_part"
+    t.string   "display_name", null: false
+    t.string   "url_part",     null: false
     t.datetime "created_at"
     t.datetime "updated_at"
   end
+
+  add_index "organizations", ["url_part"], name: "index_organizations_on_url_part"
 
   create_table "prompts", force: true do |t|
     t.integer  "exercise_id",       null: false
     t.integer  "language_id",       null: false
     t.text     "instruction",       null: false
     t.integer  "order",             null: false
-    t.integer  "max_user_attempts"
-    t.integer  "attempts"
-    t.float    "correct"
+    t.integer  "max_user_attempts", null: false
+    t.integer  "attempts",          null: false
+    t.float    "correct",           null: false
     t.text     "feedback"
     t.float    "difficulty",        null: false
     t.float    "discrimination",    null: false
@@ -202,12 +221,15 @@ ActiveRecord::Schema.define(version: 20150320002742) do
 
   create_table "resource_files", force: true do |t|
     t.string   "filename"
-    t.string   "token"
-    t.integer  "user_id"
+    t.string   "token",                     null: false
+    t.integer  "user_id",                   null: false
     t.boolean  "public",     default: true
     t.datetime "created_at"
     t.datetime "updated_at"
   end
+
+  add_index "resource_files", ["token"], name: "index_resource_files_on_token"
+  add_index "resource_files", ["user_id"], name: "index_resource_files_on_user_id"
 
   create_table "signups", force: true do |t|
     t.string   "first_name"
@@ -247,41 +269,46 @@ ActiveRecord::Schema.define(version: 20150320002742) do
   end
 
   create_table "tags_workouts", force: true do |t|
-    t.integer "tag_id"
-    t.integer "workout_id"
+    t.integer "tag_id",     null: false
+    t.integer "workout_id", null: false
   end
 
   add_index "tags_workouts", ["tag_id"], name: "index_tags_workouts_on_tag_id"
   add_index "tags_workouts", ["workout_id"], name: "index_tags_workouts_on_workout_id"
 
   create_table "terms", force: true do |t|
-    t.integer  "season"
-    t.date     "starts_on"
-    t.date     "ends_on"
-    t.integer  "year"
+    t.integer  "season",     null: false
+    t.date     "starts_on",  null: false
+    t.date     "ends_on",    null: false
+    t.integer  "year",       null: false
     t.datetime "created_at"
     t.datetime "updated_at"
   end
 
+  add_index "terms", ["year", "season"], name: "index_terms_on_year_and_season"
+
   create_table "test_case_results", force: true do |t|
-    t.integer  "test_case_id"
-    t.integer  "user_id"
+    t.integer  "test_case_id",       null: false
+    t.integer  "user_id",            null: false
     t.text     "execution_feedback"
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.boolean  "pass"
+    t.boolean  "pass",               null: false
   end
+
+  add_index "test_case_results", ["test_case_id"], name: "index_test_case_results_on_test_case_id"
+  add_index "test_case_results", ["user_id"], name: "index_test_case_results_on_user_id"
 
   create_table "test_cases", force: true do |t|
     t.string   "test_script"
-    t.text     "negative_feedback"
-    t.float    "weight"
+    t.text     "negative_feedback",  null: false
+    t.float    "weight",             null: false
     t.text     "description"
-    t.string   "input"
-    t.string   "expected_output"
+    t.string   "input",              null: false
+    t.string   "expected_output",    null: false
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer  "coding_question_id"
+    t.integer  "coding_question_id", null: false
   end
 
   add_index "test_cases", ["coding_question_id"], name: "index_test_cases_on_coding_question_id"
@@ -304,10 +331,9 @@ ActiveRecord::Schema.define(version: 20150320002742) do
     t.datetime "updated_at"
     t.string   "first_name"
     t.string   "last_name"
-    t.integer  "global_role_id"
+    t.integer  "global_role_id",                      null: false
     t.string   "name"
-    t.string   "provider"
-    t.string   "uid"
+    t.string   "avatar"
   end
 
   add_index "users", ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
@@ -316,14 +342,14 @@ ActiveRecord::Schema.define(version: 20150320002742) do
   add_index "users", ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
 
   create_table "variation_groups", force: true do |t|
-    t.string   "title"
+    t.string   "name",       null: false
     t.datetime "created_at"
     t.datetime "updated_at"
   end
 
   create_table "workout_offerings", force: true do |t|
-    t.integer  "course_offering_id"
-    t.integer  "workout_id"
+    t.integer  "course_offering_id", null: false
+    t.integer  "workout_id",         null: false
     t.datetime "created_at"
     t.datetime "updated_at"
     t.date     "opening_date"
@@ -331,9 +357,12 @@ ActiveRecord::Schema.define(version: 20150320002742) do
     t.date     "hard_deadline"
   end
 
+  add_index "workout_offerings", ["course_offering_id"], name: "index_workout_offerings_on_course_offering_id"
+  add_index "workout_offerings", ["workout_id"], name: "index_workout_offerings_on_workout_id"
+
   create_table "workout_scores", force: true do |t|
-    t.integer  "workout_id"
-    t.integer  "user_id"
+    t.integer  "workout_id",          null: false
+    t.integer  "user_id",             null: false
     t.float    "score"
     t.boolean  "completed"
     t.datetime "completed_at"

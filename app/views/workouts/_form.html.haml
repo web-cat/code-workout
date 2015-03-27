@@ -4,7 +4,7 @@
   .row
     .col-md-10
       = f.input :name, maxlength: 50,
-        placeholder: "Enter Workout title"
+        placeholder: "Enter Workout name"
   -#.row
     -#.col-md-4
       -#= f.input :exercises, :as => :select,
@@ -24,7 +24,7 @@
       
   .row
     .col-md-4
-      
+
     .col-md-4
       = f.input :target_group, :as => :select,
         :collection => ['Public','Class','Group','Instructor'],
@@ -42,9 +42,9 @@
         input_html: { :class => 'richtexteditor span10', :rows => 2 }
   .row
     .col-md-4
-      = f.input :scrambled, 
+      = f.input :scrambled,
         :label => "Randomize?",
         :input_html => { checked: 'checked', value: true}
-    
+
   .actions
     = f.submit 'Save'

@@ -10,7 +10,13 @@
 
 class Stem < ActiveRecord::Base
 
-	has_many :exercises
+  #~ Relationships ............................................................
+
+	has_many :exercises, inverse_of: :stem
+
+
+  #~ Validation ...............................................................
 
 	validates :preamble, presence: true
+
 end

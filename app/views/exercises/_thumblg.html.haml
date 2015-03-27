@@ -6,8 +6,8 @@
       - elsif x.base_exercise.is_coding?
         %i.fa-file-code-o
       - else
-        %i.fa-keyboard-o 
-          = link_to x.title, exercise_practice_path(:id => x[:id])
+        %i.fa-keyboard-o
+      = link_to x.name, exercise_practice_path(:id => x[:id])
       -#= difficulty_image(x.experience.to_i)
     = teaser(x.question)
     .info
@@ -38,6 +38,7 @@
             pts
           - else
             pt
+
         - elsif wid
           - ex_workout = ExerciseWorkout.find_by(exercise_id: x.id,
             workout_id: wid)    
@@ -45,7 +46,8 @@
           - if ex_workout.points != 1
             pts
           - else
-            pt  
+            pt
+
       .taglist
         - x.tags.each do |t|
           =link_to t[:tag_name], search_path(search: t[:tag_name]),
@@ -57,7 +59,7 @@
       - ex_workout = ExerciseWorkout.find_by(exercise_id: x.id, workout_id: wid)
     - if att && ex_workout
       - attemptp = attempt.score.round(2)
-      - puts "AP",attemptp,"AP" 
+      - puts "AP",attemptp,"AP"
       .progress-bar{ role: 'progressbar',
         'aria-valuenow' => attempt_pct,
         'aria-valuemax' => 100,

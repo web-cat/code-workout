@@ -5,10 +5,10 @@
 #  id           :integer          not null, primary key
 #  created_at   :datetime
 #  updated_at   :datetime
-#  exercise_id  :integer
+#  exercise_id  :integer          not null
 #  class_name   :string(255)
-#  wrapper_code :text
-#  test_script  :text
+#  wrapper_code :text             not null
+#  test_script  :text             not null
 #  method_name  :string(255)
 #  starter_code :text
 #

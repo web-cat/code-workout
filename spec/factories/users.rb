@@ -20,8 +20,9 @@
 #  updated_at             :datetime
 #  first_name             :string(255)
 #  last_name              :string(255)
-#  global_role_id         :integer
+#  global_role_id         :integer          not null
 #  name                   :string(255)
+#  avatar                 :string(255)
 #
 # Indexes
 #

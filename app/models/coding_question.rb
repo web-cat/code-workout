@@ -5,10 +5,10 @@
 #  id           :integer          not null, primary key
 #  created_at   :datetime
 #  updated_at   :datetime
-#  exercise_id  :integer
+#  exercise_id  :integer          not null
 #  class_name   :string(255)
-#  wrapper_code :text
-#  test_script  :text
+#  wrapper_code :text             not null
+#  test_script  :text             not null
 #  method_name  :string(255)
 #  starter_code :text
 #
@@ -19,15 +19,18 @@
 
 class CodingQuestion < ActiveRecord::Base
 
+  #~ Relationships ............................................................
 
-  #~ Validations
-  validates :wrapper_code, presence: true, length: { minimum: 1 }
-  validates :test_script, presence: true, length: { minimum: 1 }
+  belongs_to :exercise, inverse_of: :coding_question
+  has_many :test_cases, inverse_of: :coding_question, dependent: :destroy
 
-  #~ Relationships
-  belongs_to :exercise
-  has_many :test_cases
 
-  #~ Acceptance
+  #~ Validation ...............................................................
+
+  validates :wrapper_code, presence: true
+  validates :test_script, presence: true
+  validates :exercise, presence: true
+
   accepts_nested_attributes_for :test_cases, allow_destroy: true
+
 end

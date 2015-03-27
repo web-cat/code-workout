@@ -3,12 +3,16 @@
 # Table name: terms
 #
 #  id         :integer          not null, primary key
-#  season     :integer
-#  starts_on  :date
-#  ends_on    :date
-#  year       :integer
+#  season     :integer          not null
+#  starts_on  :date             not null
+#  ends_on    :date             not null
+#  year       :integer          not null
 #  created_at :datetime
 #  updated_at :datetime
+#
+# Indexes
+#
+#  index_terms_on_year_and_season  (year,season)
 #
 
 FactoryGirl.define do

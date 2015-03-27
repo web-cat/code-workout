@@ -30,7 +30,7 @@ module ApplicationHelper
 
 
   # -------------------------------------------------------------
-  TEASER_LENGTH = 40
+  TEASER_LENGTH = 140
   def teaser(text, length = TEASER_LENGTH)
     plain = ActionController::Base.helpers.strip_tags(make_html(text))
     if (plain.size < length)
@@ -57,10 +57,12 @@ module ApplicationHelper
       'success' => 'alert-success',
       error:       'alert-danger',
       'error'   => 'alert-danger',
-      alert:       'alert-block',
-      'alert'   => 'alert-block',
-      block:       'alert-block',
-      'block'   => 'alert-block',
+      alert:       'alert-warning',
+      'alert'   => 'alert-warning',
+      block:       'alert-warning',
+      'block'   => 'alert-warning',
+      warning:     'alert-warning',
+      'warning' => 'alert-warning',
       notice:      'alert-info',
       'notice'  => 'alert-info',
       info:        'alert-info',
@@ -82,6 +84,7 @@ module ApplicationHelper
       'danger'  => 'exclamation-sign',
       'alert'   => 'warning-sign',
       'block'   => 'warning-sign',
+      'warning' => 'warning-sign',
       'notice'  => 'info-sign',
       'info'    => 'info-sign',
 
@@ -192,23 +195,25 @@ module ApplicationHelper
   # -------------------------------------------------------------
   # Creates a difficulty belt image.
   #
-  BELT_COLOR = ["White", "Yellow", "Orange", "Green", "Blue", "Violet", "Brown", "Black"]
+  BELT_COLOR = ['White', 'Yellow', 'Orange', 'Green', 'Blue', 'Violet',
+    'Brown', 'Black']
   def difficulty_image(val)
     levels = 8
     increments = 100.0/8
-    if( val <= 0 )
+    if val <= 0
       num = 1
-    elsif( val > 100)
+    elsif val > 100
       num = 8
     else
-      num = val/(increments).round
+      num = val / (increments).round
     end
-    if( num == 0 )
-      color = "White"
+    if num == 0
+      color = 'White'
     else
       color = BELT_COLOR[num]
     end
-    image_tag("belt"+num.to_s+".png", alt: color.to_s+" Belt ("+val.to_s+")")
+    image_tag('belt' + num.to_s + '.png',
+      alt: color.to_s + ' Belt (' + val.to_s + ')')
   end
 
   # -------------------------------------------------------------

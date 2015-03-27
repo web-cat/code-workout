@@ -2,7 +2,7 @@
 
 %p
   %strong Gravatar:
-  = image_tag @user.gravatar_url
+  = image_tag @user.avatar_url
 
 %p
   %strong First name:
@@ -16,7 +16,7 @@
   %strong Email:
   = @user.email
 %br
-- if @user.workout_scores[0]  
+- if @user.workout_scores[0]
   %table{border: 1}
     %tr
       %td Workout name
@@ -24,9 +24,9 @@
     - @user.workout_scores.each do |user_score|
       %tr
         %td= Workout.find(user_score.workout_id).name
-        %td= user_score.score  
+        %td= user_score.score
 
-%br    
+%br
 
 - if can? :update, @user
   = button_link 'Edit', edit_user_path(@user)

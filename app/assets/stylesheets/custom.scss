@@ -17,7 +17,7 @@ html, body { height: 100%; }
 .content, .maincol {
   padding-bottom: 40px;
 }
-.content .below-nav {}
+.below-nav > .alert { margin: 10px 15px 20px; }
 
 #main { margin: 0 0 40px; }
 

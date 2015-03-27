@@ -17,7 +17,7 @@ class Tag < ActiveRecord::Base
 
   has_and_belongs_to_many :exercises
   has_and_belongs_to_many :workouts
-  has_many :tag_user_scores
+  has_many :tag_user_scores, inverse_of: :tag, dependent: :destroy
 
 
   #~ Hooks ....................................................................
@@ -27,10 +27,7 @@ class Tag < ActiveRecord::Base
 
   #~ Validation ...............................................................
 
-  validates :tag_name,
-    presence: true,
-    length: { minimum: 1 },
-    uniqueness: true
+  validates :tag_name, presence: true, uniqueness: true
 
   TYPES = {
     'Misc' => 0,
@@ -45,24 +42,27 @@ class Tag < ActiveRecord::Base
 
   #~ Public class methods .....................................................
 
+  # -------------------------------------------------------------
   def self.type_name(type)
     TYPES.rassoc(type).first
   end
 
 
+  # -------------------------------------------------------------
   def self.tag_name_convention(name)
     return name.strip.gsub(/[\s]/,"_").downcase.titleize
   end
 
 
+  # -------------------------------------------------------------
   #~ pass in an object (Exercise or Workout)
   def self.tag_this_with(obj, t_name, t_type)
     convention = self.tag_name_convention(t_name)
-    duplicate = obj.tags.bsearch{|t| t.tag_name == convention}
-    if( duplicate.nil? )
-      tagged = Tag.where(:tag_name => convention)
+    duplicate = obj.tags.bsearch { |t| t.tag_name == convention }
+    if duplicate.nil?
+      tagged = Tag.where(tag_name: convention)
 
-      if( tagged.nil? || tagged.empty? )
+      if tagged.blank?
         tagged = Tag.new
         tagged.tag_name = convention
         tagged.tagtype = t_type
@@ -70,45 +70,50 @@ class Tag < ActiveRecord::Base
         tagged = tagged.first
       end
 
-      if( obj.class.name == "Exercise" )
+      if obj.class.name == 'Exercise'
         tagged.total_exercises = tagged.total_exercises + 1
         tagged.total_experience += obj.experience
       end
       tagged.save
-      #obj.tags << tagged
+      # obj.tags << tagged
 
-      if( obj.class.name == "Exercise" )
+      if obj.class.name == 'Exercise'
         tagged.exercises << obj
-      elsif( obj.class.name == "Workout" )
+      elsif obj.class.name == 'Workout'
         tagged.workouts << obj
       end
     end
   end
 
 
+  # -------------------------------------------------------------
   def self.misc
-    return TYPES["Misc"]
+    return TYPES['Misc']
   end
 
 
+  # -------------------------------------------------------------
   def self.area
-    return TYPES["Area"]
+    return TYPES['Area']
   end
 
 
+  # -------------------------------------------------------------
   def self.language
-    return TYPES["Language"]
+    return TYPES['Language']
   end
 
 
+  # -------------------------------------------------------------
   def self.skill
-    return TYPES["Skill"]
+    return TYPES['Skill']
   end
 
 
   #~ Private instance methods .................................................
   private
 
+  # -------------------------------------------------------------
   def standardize_tag
     if self.tag_name
       # remove pre-/post- and replace in-whitespace make lower-case only
@@ -117,6 +122,7 @@ class Tag < ActiveRecord::Base
   end
 
 
+  # -------------------------------------------------------------
   def standardize_tagtype
     if self.tagtype.nil? || self.tagtype >= TYPES.length || self.tagtype < 0
       self.tagtype = 0

@@ -149,7 +149,7 @@ class UploadedRoster
           first_name = row[columns[COLUMN_FIRST_NAME]]
           last_name = row[columns[COLUMN_LAST_NAME]]
         elsif not(full_name.nil?)
-          # needs a first and last name so extract it from full name if non-existant
+          # needs a first and last name so extract it from full name
           first_name = full_name.split(" ").first
           last_name = full_name.split(" ").second
         else

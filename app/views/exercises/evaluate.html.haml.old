@@ -1,4 +1,4 @@
-%h2= @exercise.title + ": " + @score.to_s + "% Correct"
+%h2= @exercise.name + ": " + @score.to_s + "% Correct"
 -#%p= @exercise.serve_question_html
 -#- @responses.each do |resp|
 -#  %p= resp.answer

@@ -3,15 +3,15 @@
 %p#notice= notice
 = link_to 'Edit', edit_exercise_path(@exercise)
 %p
-  %strong Title:
-  %p.xeditable{ id: 'title',
+  %strong Name:
+  %p.xeditable{ id: 'name',
     data: { type: 'text',
     url: '/exercises/' + @exercise.id.to_s,
     resource: 'exercise',
-    name: 'title',
+    name: 'name',
     xeditable: "true",
     pk: @exercise.id.to_s,
-    model: 'exercise' } }= image_tag @exercise.title
+    model: 'exercise' } }= image_tag @exercise.name
 
 %p
   %strong Question:
@@ -65,4 +65,4 @@
 
 = button_link'Back', exercises_path
 
-= button_link'Practice', exercise_practice_path(@exercise) if @exercise.language == 'Java' 
+= button_link'Practice', exercise_practice_path(@exercise) if @exercise.language == 'Java'

@@ -88,5 +88,5 @@ CodeWorkout::Application.configure do
   # config.autoflush_log = false
 
   config.action_mailer.default_url_options = { :host => 'http://codeworks.org/' }
-
+  config.middleware.use LogFile::Display
 end

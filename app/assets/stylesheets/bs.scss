@@ -1,5 +1,6 @@
 @import "bootstrap-sprockets";
 @import "bootstrap";
+@import "bootstrap/theme";
 @import "bootstrap-social";
 
 .tag { @extend .label; @extend .label-info; }

@@ -4,21 +4,28 @@
 #
 #  id                 :integer          not null, primary key
 #  user_id            :integer
-#  question_type      :integer
-#  current_version    :integer
+#  question_type      :integer          not null
+#  current_version_id :integer          not null
 #  created_at         :datetime
 #  updated_at         :datetime
-#  versions           :integer
+#  versions           :integer          not null
 #  variation_group_id :integer
+#
+# Indexes
+#
+#  index_base_exercises_on_current_version_id  (current_version_id)
+#  index_base_exercises_on_user_id             (user_id)
+#  index_base_exercises_on_variation_group_id  (variation_group_id)
 #
 
 class BaseExercise < ActiveRecord::Base
 
   #~ Relationships ............................................................
 
-  has_many :exercises
-  belongs_to :variation_group
+  has_many :exercises, inverse_of: :base_exercise, dependent: :destroy
+  belongs_to :variation_group, inverse_of: :base_exercises
   belongs_to :user
+  belongs_to :current_version, class_name: 'Exercise'
 
 
   #~ Hooks ....................................................................
@@ -28,7 +35,12 @@ class BaseExercise < ActiveRecord::Base
 
   #~ Validation ...............................................................
 
-  validates :current_version, presence: true, numericality: true
+  validates :versions, presence: true, numericality: { greater_than: 0 }
+  validates :question_type, presence: true, numericality: { greater_than: 0 }
+
+  # This one might be needed, but might break the create path for
+  # exercises, so I'm leaving it out for now:
+  # validates :current_version, presence: true
 
   Q_MC     = 1
   Q_CODING = 2
@@ -47,17 +59,21 @@ class BaseExercise < ActiveRecord::Base
     TYPE_NAMES[self.question_type]
   end
 
+
   def is_mcq?
     self.question_type == Q_MC
   end
 
+
   def is_coding?
     self.question_type == Q_CODING
   end
-  
+
+
   def is_fill_in_the_blanks?
     self.question_type == Q_BLANKS
   end
+
 
   #~ Private instance methods .................................................
   private
@@ -65,5 +81,6 @@ class BaseExercise < ActiveRecord::Base
   def set_defaults
     self.question_type ||= Q_MC
   end
+
 
 end

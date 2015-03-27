@@ -3,33 +3,35 @@
 # Table name: courses
 #
 #  id              :integer          not null, primary key
-#  name            :string(255)
-#  number          :string(255)
-#  organization_id :integer
-#  url_part        :string(255)
+#  name            :string(255)      not null
+#  number          :string(255)      not null
+#  organization_id :integer          not null
+#  url_part        :string(255)      not null
 #  created_at      :datetime
 #  updated_at      :datetime
+#  creator_id      :integer
+#
+# Indexes
+#
+#  index_courses_on_organization_id  (organization_id)
+#  index_courses_on_url_part         (url_part)
 #
 
 class Course < ActiveRecord::Base
 
   #~ Relationships ............................................................
 
-  belongs_to  :organization
-  has_many    :course_offerings
+  belongs_to  :organization, inverse_of: :courses
+  has_many    :course_offerings, inverse_of: :course, dependent: :destroy
   # Associating with exercises through course_exercises
   has_many    :exercises, through: :course_exercises
-  has_many    :course_exercises
-  
-  #Kaminari for the show method
-  paginates_per 2
-  
-  accepts_nested_attributes_for :course_offerings, :allow_destroy => true
-  
-  #~ Hooks ....................................................................
+  has_many    :course_exercises, inverse_of: :course, dependent: :destroy
 
-  before_validation :set_url_part
-  
+  #Kaminari for the show method
+  paginates_per 100
+
+  accepts_nested_attributes_for :course_offerings, allow_destroy: true
+
 
   #~ Validation ...............................................................
 
@@ -38,12 +40,22 @@ class Course < ActiveRecord::Base
   validates :organization, presence: true
   validates :url_part,
     presence: true,
+    format: {
+      with: /[a-z0-9\-_.]+/,
+      message: 'must consist only of letters, digits, hyphens (-), ' \
+        'underscores (_), and periods (.).'
+    },
     uniqueness: { case_sensitive: false }
 
 
-  #~ Private instance methods .................................................
-  
-  #~ Class methods
+  #~ Hooks ....................................................................
+
+  before_validation :set_url_part
+
+
+  #~ Class methods ............................................................
+
+  # -------------------------------------------------------------
   def self.search(terms)
     resultant = []
     term_array = terms.split
@@ -52,11 +64,13 @@ class Course < ActiveRecord::Base
       Course.where("name LIKE ?",term).find_each do |course|
         resultant<<course.id
       end
-    end    
-     
-    return resultant 
+    end
+
+    return resultant
   end
 
+
+  #~ Private instance methods .................................................
   private
 
   # -------------------------------------------------------------

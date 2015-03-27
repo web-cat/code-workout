@@ -1,6 +1,6 @@
 CodeWorkout::Application.routes.draw do
 
-  
+
 
   root 'home#index'
 
@@ -19,37 +19,39 @@ CodeWorkout::Application.routes.draw do
 
   get 'exercises/upload_exercises' => 'exercises#upload_exercises',
     as: :upload_exercises
-  get 'exercises/download' => 'exercises#download', as: :download
+  get 'exercises/download' => 'exercises#download'
   post 'exercises/upload_create' => 'exercises#upload_create'
   get 'exercises/upload_mcqs' => 'exercises#upload_mcqs', as: :upload_mcqs
   post 'exercises/create_mcqs' => 'exercises#create_mcqs'
+
   get 'workouts/:id/add_exercises' => 'workouts#add_exercises'
   post 'workouts/link_exercises'  => 'workouts#link_exercises'
   post "/coding_questions" => "exercises#create"
+  get 'workouts/download' => 'workouts#download'
+  get '/gym' => 'workouts#gym'
 
   resources :exercises
   resources :coding_problems
-  
-  
+
   resources :course_offerings
-  
+
   resources :courses
   resources :organizations
   resources :languages
   resources :tags
   resources :course_enrollments
-  
+
   resources :organizations
   resources :course_roles
   resources :global_roles
   resources :terms
-  # TODO: Might enable scaffolding pages later. Disabled till Fall. Being manually added till now.  
+  # TODO: Might enable scaffolding pages later. Disabled till Fall. Being manually added till now.
   #resources :languages
   #resources :tags
   #resources :choices
   #resources :stems
-  
-  
+
+
   resources :course_enrollments
   resources :users
   resources :resource_files
@@ -88,7 +90,6 @@ CodeWorkout::Application.routes.draw do
     get '/workouts/:id/evaluate' => 'workouts#evaluate', as: :workout_evaluate
     get '/users/:id/performance' => 'users#calc_performance', as: :calc_performance
     post '/exercises/search' => 'exercises#search', as: :search
-    get '/gym' => 'workouts#gym', as: :gym
     post 'resource_files/uploadFile' => 'resource_files#uploadFile'
   end
 

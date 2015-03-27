@@ -4,7 +4,7 @@
 #
 #  id                 :integer          not null, primary key
 #  stem_id            :integer
-#  title              :string(255)
+#  name               :string(255)      not null
 #  question           :text             not null
 #  feedback           :text
 #  is_public          :boolean          not null
@@ -17,9 +17,10 @@
 #  mcq_is_scrambled   :boolean
 #  created_at         :datetime
 #  updated_at         :datetime
-#  experience         :integer
-#  base_exercise_id   :integer
-#  version            :integer
+#  experience         :integer          not null
+#  base_exercise_id   :integer          not null
+#  version            :integer          not null
+#  creator_id         :integer
 #
 # Indexes
 #

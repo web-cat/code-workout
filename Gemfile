@@ -19,6 +19,12 @@ gem 'test-unit', '~> 3.0.9'
 gem 'nokogiri'
 gem 'csv_shaper'
 gem 'andand', github: 'raganwald/andand'
+gem 'foreigner'
+
+# For JSON support
+gem 'rabl'
+gem 'oj'
+gem 'oj_mimic_json'
 
 group :assets do
   gem 'sass-rails'
@@ -31,12 +37,11 @@ group :development, :test do
   gem 'rspec-rails'
   gem 'annotate'
   gem 'rails-erd', github: 'voormedia/rails-erd'
+  gem 'immigrant'
+  gem 'factory_girl_rails'
+  gem 'faker'
 end
-# These two should be in :development, :test above, but are temporarily
-# being added to production too, for db population on the deployed site
-# during testing.
-gem 'factory_girl_rails'
-gem 'faker'
+gem 'log_file'
 
 group :test do
   gem 'capybara'
