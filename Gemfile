@@ -38,9 +38,9 @@ group :development, :test do
   gem 'annotate'
   gem 'rails-erd', github: 'voormedia/rails-erd'
   gem 'immigrant'
-  gem 'factory_girl_rails'
   gem 'faker'
 end
+gem 'factory_girl_rails'
 gem 'log_file'
 
 group :test do
