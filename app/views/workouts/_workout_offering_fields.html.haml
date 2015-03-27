@@ -1,0 +1,19 @@
+.nested-fields
+  = f.inputs do
+    .row.darker-bkg
+      .row
+        .col-md-3
+          = f.input :course_offering, as: :select,
+            collection: CourseOffering.all,
+            input_html: { class: 'col-md-10', rows: 1 }        
+        .col-md-3
+          = f.input :opening_date,
+            input_html: { class: 'col-md-10', rows: 1 }
+        .col-md-2
+          = f.input :soft_deadline,
+            input_html: { class: 'col-md-10', rows: 1 }
+        .col-md-2
+          = f.input :hard_deadline,
+            input_html: { class: 'col-md-10', rows: 1 }
+        .col-md-2
+          = link_to_remove_association "Remove course offering", f
