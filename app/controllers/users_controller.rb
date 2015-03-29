@@ -7,7 +7,7 @@ class UsersController < ApplicationController
     if cannot? :index, User
       redirect_to root_path, notice: 'Unauthorized to view users' and return
     end
-    
+
     @users = User.all.page(params[:page])
     respond_to do |format|
       format.html # index.html.erb
@@ -51,9 +51,9 @@ class UsersController < ApplicationController
       info = Hash.new
       tag = Tag.find(t.tag_id)
       info[:tag_name] = tag.tag_name
-      tag.total_experience != 0 ? 
+      tag.total_experience != 0 ?
         info[:percent_experience] = t.experience*100/tag.total_experience :
-        info[:percent_experience] = 0 
+        info[:percent_experience] = 0
       info[:total_exercises] = tag.total_exercises
       info[:completed_exercises] = t.completed_exercises
       @tag_scores.push info
@@ -102,6 +102,6 @@ class UsersController < ApplicationController
 #      if !can? :manage, User
 #        params.delete(...)
 #      end
-      params.require(:user).permit(:first_name, :last_name, :email)
+      params.require(:user).permit(:first_name, :last_name, :email, :avatar)
     end
 end

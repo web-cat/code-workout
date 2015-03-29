@@ -2,11 +2,11 @@
 #
 # Table name: organizations
 #
-#  id           :integer          not null, primary key
-#  display_name :string(255)      not null
-#  url_part     :string(255)      not null
-#  created_at   :datetime
-#  updated_at   :datetime
+#  id         :integer          not null, primary key
+#  name       :string(255)      not null
+#  url_part   :string(255)      not null
+#  created_at :datetime
+#  updated_at :datetime
 #
 # Indexes
 #
@@ -27,7 +27,7 @@ class Organization < ActiveRecord::Base
 
   #~ Validation ...............................................................
 
-  validates :display_name, presence: true
+  validates :name, presence: true
   validates :url_part, presence: true,
     format: {
       with: /[a-z0-9\-_.]+/,
@@ -38,12 +38,11 @@ class Organization < ActiveRecord::Base
 
 
   #~ Private instance methods .................................................
-
   private
 
   # -------------------------------------------------------------
   def set_url_part
-    self.url_part = url_part_safe(display_name)
+    self.url_part = url_part_safe(url_part || name)
   end
 
 end

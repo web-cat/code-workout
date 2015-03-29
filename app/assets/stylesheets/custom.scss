@@ -32,7 +32,7 @@ html, body { height: 100%; }
 /* yamm */
 
 .dropdown-menu { border-radius: 6px; }
-.yamm .navbar-right .dropdown-menu { right: 0; }
+.yamm .navbar-right .dropdown-menu.signin { right: 0; }
 
 .dropdown-menu.signin { width: 30%; }
 .signin .yamm-content { padding: 5px 30px; }

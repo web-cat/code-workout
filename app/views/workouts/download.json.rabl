@@ -21,7 +21,7 @@ end
 
 child(:workout_offerings => :offerings) do
   child :course_offering => :course do
-    node(:organization) { |c| c.course.andand.organization.display_name }
+    node(:organization) { |c| c.course.andand.organization.name }
     node(:name) { |c| c.course.name }
   end
   attributes :opening_date, :soft_deadline, :hard_deadline

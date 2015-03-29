@@ -11,7 +11,22 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150326193301) do
+ActiveRecord::Schema.define(version: 20150328150855) do
+
+  create_table "active_admin_comments", force: true do |t|
+    t.string   "namespace"
+    t.text     "body"
+    t.string   "resource_id",   null: false
+    t.string   "resource_type", null: false
+    t.integer  "author_id"
+    t.string   "author_type"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "active_admin_comments", ["author_type", "author_id"], name: "index_active_admin_comments_on_author_type_and_author_id"
+  add_index "active_admin_comments", ["namespace"], name: "index_active_admin_comments_on_namespace"
+  add_index "active_admin_comments", ["resource_type", "resource_id"], name: "index_active_admin_comments_on_resource_type_and_resource_id"
 
   create_table "attempts", force: true do |t|
     t.integer  "user_id",                           null: false
@@ -89,8 +104,7 @@ ActiveRecord::Schema.define(version: 20150326193301) do
   create_table "course_offerings", force: true do |t|
     t.integer  "course_id",               null: false
     t.integer  "term_id",                 null: false
-    t.string   "name",                    null: false
-    t.string   "label"
+    t.string   "label",                   null: false
     t.string   "url"
     t.boolean  "self_enrollment_allowed"
     t.datetime "created_at"
@@ -190,8 +204,8 @@ ActiveRecord::Schema.define(version: 20150326193301) do
   add_index "identities", ["user_id"], name: "index_identities_on_user_id"
 
   create_table "organizations", force: true do |t|
-    t.string   "display_name", null: false
-    t.string   "url_part",     null: false
+    t.string   "name",       null: false
+    t.string   "url_part",   null: false
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -332,7 +346,6 @@ ActiveRecord::Schema.define(version: 20150326193301) do
     t.string   "first_name"
     t.string   "last_name"
     t.integer  "global_role_id",                      null: false
-    t.string   "name"
     t.string   "avatar"
   end
 

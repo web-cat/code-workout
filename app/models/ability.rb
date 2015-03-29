@@ -171,16 +171,16 @@ class Ability
     # offering and have a CourseRole where can_manage_course? is true.
 
     can :read, CourseOffering do |co|
-      co.enrolled? user
+      co.is_enrolled? user
     end
     can [:manage, :generate_gradebook], CourseOffering do |co|
-      co.manages? user
+      co.managed_by? user
     end
 
     # Likewise, a user can only manage enrollments in a CourseOffering
     # that they have can_manage_courses? permission in.
     can :manage, CourseEnrollment do |enrollment|
-      enrollment.course_offering.manages? user
+      enrollment.course_offering.managed_by? user
     end
   end
 

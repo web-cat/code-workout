@@ -2,11 +2,11 @@
 #
 # Table name: organizations
 #
-#  id           :integer          not null, primary key
-#  display_name :string(255)      not null
-#  url_part     :string(255)      not null
-#  created_at   :datetime
-#  updated_at   :datetime
+#  id         :integer          not null, primary key
+#  name       :string(255)      not null
+#  url_part   :string(255)      not null
+#  created_at :datetime
+#  updated_at :datetime
 #
 # Indexes
 #

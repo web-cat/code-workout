@@ -20,23 +20,25 @@
                     %li= link_to 'Workout 19', '/workouts/19'
                     %li= link_to 'Workout 20', '/workouts/20'
                     %li= link_to 'Workout 21', '/workouts/21'
-                  - if user_signed_in? && current_user.global_role.can_edit_system_configuration?
+                  - if user_signed_in? &&                                    |
+                    current_user.global_role.can_edit_system_configuration?  |
                     %ul.col-sm-6.list-unstyled
                       %li
                         %strong
                           Manage Workouts
                       %li= link_to 'Workouts', '/workouts/'
                       %li= link_to 'Create Workout', '/workouts/new'
-                - if user_signed_in? && current_user.global_role.can_edit_system_configuration?
+                - if user_signed_in? &&                                      |
+                  current_user.global_role.can_edit_system_configuration?    |
                   .row
                     %ul.col-sm-6.list-unstyled
                       %li
                         %strong
                           = link_to 'Exercises','/exercises'
                       %li= link_to 'Upload Exercises - CSV',
-                        'exercises/upload_exercises'
+                        exercises_upload_path
                       %li= link_to 'Upload Exercises - MCQ',
-                        'exercises/upload_mcqs'
+                        exercises_upload_mcqs_path
                     %ul.col-sm-6.list-unstyled
                       %li
                         %strong
@@ -57,7 +59,8 @@
                         %strong
                           My Courses
                       - current_user.course_enrollments.each do |ce|
-                        %li= link_to CourseOffering.find(ce.course_offering_id).name, course_offering_path(ce.course_offering_id)
+                        %li= link_to CourseOffering.find(ce.course_offering_id).display_name,
+                          course_offering_path(ce.course_offering_id)
                   %ul.col-sm-6.list-unstyled
                     %li
                       %strong
@@ -71,7 +74,7 @@
                           Manage Courses
                       %li= link_to 'Edit Course', '/courses/'
                       %li= link_to 'Create Course', '/courses/new'
-        
+
       -#= f.actions do
         -#= f.submit 'Sign up', class: 'btn btn-primary'
         -#= render 'devise/shared/links'
@@ -82,19 +85,7 @@
           = render :partial => 'exercises/search'
         - if user_signed_in?
           - if current_user.global_role.can_edit_system_configuration?
-            %li.dropdown
-              %a.dropdown-toggle{ href: '#', data: { toggle: 'dropdown' } }
-                %i.glyphicon.glyphicon-wrench
-                %i.fa.fa-caret-down.hidden-phone
-              %ul.dropdown-menu
-                %li.dropdown-header Manage
-                %li= link_to icon_tag_for('user') + ' Users', users_path
-                %li= link_to icon_tag_for('fa-sitemap') + ' Organizations',
-                  organizations_path
-                %li= link_to icon_tag_for('calendar') + ' Terms', terms_path
-                %li= link_to icon_tag_for('book') + ' Courses', courses_path
-                %li= link_to icon_tag_for('fa-group') + ' Course offerings',
-                  course_offerings_path
+            %li= link_to icon_tag_for('wrench'), admin_dashboard_path
           %li= link_to current_user.email, current_user
           %li
             = link_to destroy_user_session_path, method: :delete do

@@ -6,7 +6,7 @@ gem 'jquery-rails'
 gem 'bootstrap-editable-rails'
 gem 'codemirror-rails'
 gem 'font-awesome-rails'
-gem 'formtastic', '~> 2.3.1'
+gem 'formtastic', '~> 3.1'
 gem 'formtastic-bootstrap'
 #gem 'sidekiq'
 gem 'sucker_punch', '~> 1.0'
@@ -63,6 +63,9 @@ gem 'omniauth'
 gem 'omniauth-facebook'
 gem 'omniauth-google-oauth2'
 gem 'cancan', '1.6.9' # 1.6.10 broke shallow routes
+gem 'activeadmin', github: 'activeadmin'
+gem "active_admin_import" , github: 'activeadmin-plugins/active_admin_import'
+gem 'active_skin', github: 'rstgroup/active_skin'
 
 gem 'kaminari'        # Auto-paginated views
 gem 'remotipart'      # Adds support for remote mulitpart forms (file uploads)
@@ -71,13 +74,13 @@ gem 'js-routes'       # Route helpers in Javascript
 gem 'awesome_print'   # For debugging/logging output
 
 #gems for rich text editing
-gem "bootstrap-wysihtml5-rails"
+gem 'bootstrap-wysihtml5-rails'
 
 #gem for improved WHERE querying
-gem "squeel"
+gem 'squeel'
 
 #for nested forms
-gem "cocoon"
+gem 'cocoon'
 
 # Gems for deployment.
 gem 'capistrano'

@@ -1,6 +1,7 @@
 class CourseOfferingsController < ApplicationController
   require 'csv'
-  before_action :set_course_offering, only: [:show, :edit, :update, :destroy, :generate_gradebook, :add_workout, :store_workout]
+  before_action :set_course_offering, only: [:show, :edit, :update,
+    :destroy, :generate_gradebook, :add_workout, :store_workout]
 
   # GET /course_offerings
   def index
@@ -14,7 +15,8 @@ class CourseOfferingsController < ApplicationController
   # GET /course_offerings/new
   def new
     if cannot? :new, CourseOffering
-      redirect_to root_path, notice: 'Unauthorized to create course offering' and return
+      redirect_to root_path,
+        notice: 'Unauthorized to create course offering' and return
     end
     @course_offering = CourseOffering.new
   end
@@ -23,7 +25,8 @@ class CourseOfferingsController < ApplicationController
   def edit
     set_course_offering
     if cannot? :edit, @course_offering
-      redirect_to root_path, notice: 'Unauthorized to edit course offering' and return
+      redirect_to root_path,
+        notice: 'Unauthorized to edit course offering' and return
     end
     @uploaded_roster = UploadedRoster.new
   end
@@ -31,12 +34,14 @@ class CourseOfferingsController < ApplicationController
   # POST /course_offerings
   def create
     if cannot? :create, CourseOffering
-      redirect_to root_path, notice: 'Unauthorized to create course offering' and return
-    end    
+      redirect_to root_path,
+        notice: 'Unauthorized to create course offering' and return
+    end
     @course_offering = CourseOffering.new(course_offering_params)
 
     if @course_offering.save
-      redirect_to @course_offering, notice: 'Course offering was successfully created.'
+      redirect_to @course_offering,
+        notice: 'Course offering was successfully created.'
     else
       render action: 'new'
     end
@@ -45,10 +50,12 @@ class CourseOfferingsController < ApplicationController
   # PATCH/PUT /course_offerings/1
   def update
     if cannot? :update, @course_offering
-      redirect_to root_path, notice: 'Unauthorized to edit course offering' and return
+      redirect_to root_path,
+        notice: 'Unauthorized to edit course offering' and return
     end
     if @course_offering.update(course_offering_params)
-      redirect_to @course_offering, notice: 'Course offering was successfully updated.'
+      redirect_to @course_offering,
+        notice: 'Course offering was successfully updated.'
     else
       render action: 'edit'
     end
@@ -57,53 +64,61 @@ class CourseOfferingsController < ApplicationController
   # DELETE /course_offerings/1
   def destroy
     if cannot? :destroy, @course_offering
-      redirect_to root_path, notice: 'Unauthorized to destroy course offering' and return
+      redirect_to root_path,
+        notice: 'Unauthorized to destroy course offering' and return
     end
     @course_offering.destroy
-    redirect_to course_offerings_url, notice: 'Course offering was successfully destroyed.'
+    redirect_to course_offerings_url,
+      notice: 'Course offering was successfully destroyed.'
   end
-  
+
   #
   def generate_gradebook
     if cannot? :generate_gradebook, @course_offering
-      redirect_to root_path, notice: 'Unauthorized to generate gradebook for course offering' and return
+      redirect_to root_path,
+        notice: 'Unauthorized to generate gradebook for course offering' and
+        return
     end
     respond_to do |format|
       format.csv do
-        headers['Content-Disposition']="attachment; filename=\"#{@course_offering.name} Gradebook.csv\""
-        headers['Content-Type']||='text-csv'        
+        headers['Content-Disposition'] =
+          "attachment; filename=\"#{@course_offering.course.number}-" \
+          "#{@course_offering.label}-Gradebook.csv\""
+        headers['Content-Type'] ||= 'text-csv'
       end
     end
   end
-  
+
   # GET /course_offerings/:id/add_workout
   def add_workout
     if cannot? :add_workout, @course_offering
-      redirect_to root_path, notice: 'Unauthorized to add workout for course offering' and return
+      redirect_to root_path,
+        notice: 'Unauthorized to add workout for course offering' and return
     end
-    @workouts=Workout.all
-    @wkts=[]
+    @workouts = Workout.all
+    @wkts = []
     @course_offering.workouts.each do |wks|
-      @wkts<<wks
+      @wkts << wks
     end
-    @workouts=@workouts-@wkts
-    @course_offering    
+    @workouts = @workouts - @wkts
+    @course_offering
   end
-  
+
   # POST /course_offerings/store_workout/:id
   def store_workout
-    workouts=params[:workoutids]
+    workouts = params[:workoutids]
     workouts.each do |wkid|
-      wk=Workout.find(wkid)
-      @course_offering.workouts<<wk
+      wk = Workout.find(wkid)
+      @course_offering.workouts << wk
       @course_offering.save
-      wek = @course_offering.workout_offerings.find_by_sql("select * from workout_offerings where workout_id=#{wkid} and course_offering_id=#{@course_offering.id}")
-      wek.last.opening_date=params[:opening_date]
-      wek.last.soft_deadline=params[:soft_deadline]
-      wek.last.hard_deadline=params[:hard_deadline]
+      wek = @course_offering.workout_offerings.where(workout_id: wkid)
+      wek.last.opening_date = params[:opening_date]
+      wek.last.soft_deadline = params[:soft_deadline]
+      wek.last.hard_deadline = params[:hard_deadline]
       wek.last.save
     end
-    redirect_to course_offering_path(@course_offering), notice: 'Workouts added to course offering!'    
+    redirect_to course_offering_path(@course_offering),
+      notice: 'Workouts added to course offering!'
   end
 
   private
@@ -114,6 +129,7 @@ class CourseOfferingsController < ApplicationController
 
     # Only allow a trusted parameter "white list" through.
     def course_offering_params
-      params.require(:course_offering).permit(:course_id, :term_id, :name, :label, :url, :organization_id, :self_enrollment_allowed)
+      params.require(:course_offering).permit(:course_id, :term_id,
+        :label, :url, :self_enrollment_allowed)
     end
 end

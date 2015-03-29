@@ -77,22 +77,40 @@ class CourseRole < ActiveRecord::Base
   #~ Public instance methods ..................................................
 
   # -------------------------------------------------------------
-  def staff?
-    can_manage_course ||
-    can_manage_assignments ||
-    can_grade_submissions ||
-    can_view_other_submissions
+  def is_staff?
+    can_manage_course? ||
+    can_manage_assignments? ||
+    can_grade_submissions? ||
+    can_view_other_submissions?
   end
 
 
   # -------------------------------------------------------------
   def order_number
     number = 0
-    number |= 8 if can_manage_course
-    number |= 4 if can_manage_assignments
-    number |= 2 if can_grade_submissions
-    number |= 1 if can_view_other_submissions
+    number |= 8 if can_manage_course?
+    number |= 4 if can_manage_assignments?
+    number |= 2 if can_grade_submissions?
+    number |= 1 if can_view_other_submissions?
     number
+  end
+
+
+  # -------------------------------------------------------------
+  def is_instructor?
+    id == INSTRUCTOR_ID
+  end
+
+
+  # -------------------------------------------------------------
+  def is_grader?
+    id == GRADER_ID
+  end
+
+
+  # -------------------------------------------------------------
+  def is_student?
+    id == STUDENT_ID
   end
 
 
@@ -102,7 +120,7 @@ class CourseRole < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def check_builtin?
-    errors.add :base, "Cannot delete built-in roles." if builtin?
+    errors.add :base, 'Cannot delete built-in roles.' if builtin?
     errors.blank?
   end
 

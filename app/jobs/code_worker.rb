@@ -13,7 +13,7 @@ class CodeWorker
       if !ex.coding_question.wrapper_code.blank?
         user_code = ex.coding_question.wrapper_code.sub(/___/, user_code)
       end
-      current_attempt = Attempt.maximum("id") + 1
+      current_attempt = Attempt.maximum('id') + 1
       current_attempt = current_attempt.to_s
       language = ex.language
 
@@ -24,8 +24,7 @@ class CodeWorker
 
       puts "CodeWorker current working directory is #{Dir.pwd}"
 
-      term = Term.where("starts_on <= :now and :now < ends_on",
-        now: DateTime.now).first
+      term = Term.current_term
       term_name = term ? term.display_name : 'no-term'
       term_name.gsub!(/\W/, '-')
       term_dir = 'usr/attempts/' + term_name

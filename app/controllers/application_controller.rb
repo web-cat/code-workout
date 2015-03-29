@@ -19,4 +19,14 @@ class ApplicationController < ActionController::Base
 #
 #  protect_from_forgery
 
+
+  # -------------------------------------------------------------
+  def authenticate_admin_user!
+    if !current_user ||
+      !current_user.global_role.can_edit_system_configuration?
+      flash[:error] = 'Only administrators can access the requested page.'
+      redirect_to root_path
+    end
+  end
+
 end

@@ -70,6 +70,30 @@ class Course < ActiveRecord::Base
   end
 
 
+  # -------------------------------------------------------------
+  def display_name
+    number_and_name
+  end
+
+
+  # -------------------------------------------------------------
+  def number_and_name
+    "#{number}: #{name}"
+  end
+
+
+  # -------------------------------------------------------------
+  def number_and_org
+    "#{number} (#{organization.url_part})"
+  end
+
+
+  # -------------------------------------------------------------
+  def number_and_organization
+    "#{number} (#{organization.name})"
+  end
+
+
   #~ Private instance methods .................................................
   private
 

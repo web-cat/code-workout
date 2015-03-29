@@ -5,8 +5,7 @@
 #  id                      :integer          not null, primary key
 #  course_id               :integer          not null
 #  term_id                 :integer          not null
-#  name                    :string(255)      not null
-#  label                   :string(255)
+#  label                   :string(255)      not null
 #  url                     :string(255)
 #  self_enrollment_allowed :boolean
 #  created_at              :datetime
@@ -28,17 +27,18 @@ class CourseOffering < ActiveRecord::Base
     dependent: :destroy
   has_many :workouts, through: :workout_offerings
   has_many :course_enrollments,
-    -> { CourseEnrollment.includes(:course_role, :user).order(
+    -> { includes(:course_role, :user).order(
       'course_roles.id ASC', 'users.last_name ASC', 'users.first_name ASC') },
     inverse_of: :course_offering,
     dependent: :destroy
+  has_many :users, through: :course_enrollments
 
   accepts_nested_attributes_for :term
 
 
   #~ Validation ...............................................................
 
-  validates :name, presence: true
+  validates :label, presence: true
   validates :course, presence: true
   validates :term, presence: true
 
@@ -47,25 +47,13 @@ class CourseOffering < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def display_name
-    if label.blank?
-      name
-    else
-      "#{name} (#{label})"
-    end
+    "#{course.number} (#{label})"
   end
 
 
   # -------------------------------------------------------------
-  # Public: Gets a relation representing all Users who are associated
-  # with this CourseOffering.
-  #
-  def users
-    User.includes(course_enrollments: :course_role).where(
-      course_enrollments: { course_offering_id: id })
-      .order(
-        'course_roles.id ASC',
-        'users.last_name ASC',
-        'users.first_name ASC')
+  def display_name_with_term
+    "#{course.number} (#{term.display_name}, #{label})"
   end
 
 
@@ -74,11 +62,8 @@ class CourseOffering < ActiveRecord::Base
   # manage this CourseOffering.
   #
   def managers
-    User.joins(course_enrollments: :course_role).where(
-      course_enrollments: { course_offering_id: id },
-      course_roles: { can_manage_course: true }).order(
-        'users.last_name ASC',
-        'users.first_name ASC')
+    course_enrollments.where(course_roles: { can_manage_course: true }).
+      map(&:user)
   end
 
 
@@ -87,13 +72,7 @@ class CourseOffering < ActiveRecord::Base
   # this CourseOffering.
   #
   def students
-    User.joins(course_enrollments: :course_role).where(
-      course_enrollments: {
-        course_offering_id: id,
-        course_role_id: CourseRole.student
-      }).order(
-        'users.last_name ASC',
-        'users.first_name ASC')
+    course_enrollments.where(course_role: CourseRole.student).map(&:user)
   end
 
 
@@ -102,13 +81,7 @@ class CourseOffering < ActiveRecord::Base
   # this CourseOffering.
   #
   def instructors
-    User.joins(course_enrollments: :course_role).where(
-      course_enrollments: {
-        course_offering_id: id,
-        course_role_id: CourseRole.instructor
-      }).order(
-        'users.last_name ASC',
-        'users.first_name ASC')
+    course_enrollments.where(course_role: CourseRole.instructor).map(&:user)
   end
 
 
@@ -117,37 +90,49 @@ class CourseOffering < ActiveRecord::Base
   # this CourseOffering.
   #
   def graders
-    User.joins(course_enrollments: :course_role).where(
-      course_enrollments: {
-        course_offering_id: id,
-        course_role_id: CourseRole.grader
-      }).order(
-        'users.last_name ASC',
-        'users.first_name ASC')
+    course_enrollments.where(course_role: CourseRole.grader).map(&:user)
   end
 
 
   # -------------------------------------------------------------
   def other_concurrent_offerings
-    course.course_offerings.where('term_id = ? and id != ?', term.id, id)
+    course.course_offerings.where(term: term, course: course)
   end
 
 
   # -------------------------------------------------------------
-  def enrolled?(user)
-    user && course_enrollments.where(user_id: user.id).any?
+  def is_enrolled?(user)
+    user && users.include?(user)
   end
 
 
   # -------------------------------------------------------------
-  def manages?(user)
-    role_for_user(user).andand.can_manage_course
+  def managed_by?(user)
+    role_for_user(user).andand.can_manage_course?
+  end
+
+
+  # -------------------------------------------------------------
+  def taught_by?(user)
+    role_for_user(user).andand.is_instructor?
+  end
+
+
+  # -------------------------------------------------------------
+  def graded_by?(user)
+    role_for_user(user).andand.can_grade_submissions?
+  end
+
+
+  # -------------------------------------------------------------
+  def is_staff?(user)
+    role_for_user(user).andand.is_staff?
   end
 
 
   # -------------------------------------------------------------
   def role_for_user(user)
-    user && course_enrollments.where(user_id: user.id).first.andand.course_role
+    user && course_enrollments.where(user: user).first.andand.course_role
   end
 
 end
