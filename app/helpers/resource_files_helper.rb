@@ -1,2 +1,0 @@
-module ResourceFilesHelper
-end
