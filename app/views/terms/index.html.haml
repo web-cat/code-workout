@@ -18,8 +18,3 @@
         %td= term.year
         %td
           = button_link 'Show', term, size: 'sm'
-          = button_link 'Edit', edit_term_path(term), size: 'sm'
-          = button_link 'Destroy', term, method: :delete, size: 'sm',
-            data: { confirm: 'Are you sure?' }
-
-= button_link 'New Term', new_term_path

@@ -1,7 +1,5 @@
 CodeWorkout::Application.routes.draw do
 
-
-
   ActiveAdmin.routes(self)
   root 'home#index'
 
@@ -45,8 +43,10 @@ CodeWorkout::Application.routes.draw do
   resources :organizations
   resources :course_roles
   resources :global_roles
-  resources :terms
-  # TODO: Might enable scaffolding pages later. Disabled till Fall. Being manually added till now.
+  resources :terms, only: [ :index, :show ]
+
+  # TODO: Might enable scaffolding pages later. Disabled till Fall. Being
+  # manually added till now.
   #resources :languages
   #resources :tags
   #resources :choices
