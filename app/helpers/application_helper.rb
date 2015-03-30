@@ -213,8 +213,10 @@ module ApplicationHelper
       color = BELT_COLOR[num]
     end
     image_tag('belt' + num.to_s + '.png',
-      alt: color.to_s + ' Belt (' + val.to_s + ')')
+      alt: color.to_s + ' Belt (' + val.to_s + ')',
+      class: 'difficulty')
   end
+
 
   # -------------------------------------------------------------
   def n_to_s(val)

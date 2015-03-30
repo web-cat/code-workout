@@ -1,24 +1,36 @@
 class CourseRolesController < ApplicationController
   before_action :set_course_role, only: [:show, :edit, :update, :destroy]
 
+
+  #~ Action methods ...........................................................
+
+  # -------------------------------------------------------------
   # GET /course_roles
   def index
     @course_roles = CourseRole.all
   end
 
+
+  # -------------------------------------------------------------
   # GET /course_roles/1
   def show
   end
 
+
+  # -------------------------------------------------------------
   # GET /course_roles/new
   def new
     @course_role = CourseRole.new
   end
 
+
+  # -------------------------------------------------------------
   # GET /course_roles/1/edit
   def edit
   end
 
+
+  # -------------------------------------------------------------
   # POST /course_roles
   def create
     @course_role = CourseRole.new(course_role_params)
@@ -31,6 +43,8 @@ class CourseRolesController < ApplicationController
     end
   end
 
+
+  # -------------------------------------------------------------
   # PATCH/PUT /course_roles/1
   def update
     if @course_role.update(course_role_params)
@@ -41,6 +55,8 @@ class CourseRolesController < ApplicationController
     end
   end
 
+
+  # -------------------------------------------------------------
   # DELETE /course_roles/1
   def destroy
     @course_role.destroy
@@ -48,12 +64,18 @@ class CourseRolesController < ApplicationController
       notice: 'Course role was successfully destroyed.'
   end
 
+
+  #~ Private instance methods .................................................
   private
+
+    # -------------------------------------------------------------
     # Use callbacks to share common setup or constraints between actions.
     def set_course_role
       @course_role = CourseRole.find(params[:id])
     end
 
+
+    # -------------------------------------------------------------
     # Only allow a trusted parameter "white list" through.
     def course_role_params
       params.require(:course_role).permit(

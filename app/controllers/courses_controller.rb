@@ -1,18 +1,19 @@
 class CoursesController < ApplicationController
-
   before_action :set_course,
-    only: [:show, :edit, :generate_gradebook,:update, :destroy]
-  require 'action_view/helpers/javascript_helper'
-  include ActionView::Helpers::JavaScriptHelper
+    only: [:show, :edit, :generate_gradebook, :update, :destroy]
   respond_to :html, :js, :json
 
 
+  #~ Action methods ...........................................................
+
+  # -------------------------------------------------------------
   # GET /courses
   def index
     @courses = Course.all
   end
 
 
+  # -------------------------------------------------------------
   # GET /courses/1
   def show
     respond_to do |format|
@@ -22,27 +23,33 @@ class CoursesController < ApplicationController
   end
 
 
+  # -------------------------------------------------------------
   # GET /courses/new
   def new
     if cannot? :new, Course
-      redirect_to root_path, notice: 'Unauthorized to create new course' and return
+      redirect_to root_path,
+        notice: 'Unauthorized to create new course' and return
     end
     @course = Course.new
   end
 
 
+  # -------------------------------------------------------------
   # GET /courses/1/edit
   def edit
     if cannot? :edit, @course
-      redirect_to root_path, notice: 'Unauthorized to edit course' and return
+      redirect_to root_path,
+        notice: 'Unauthorized to edit course' and return
     end
   end
 
 
+  # -------------------------------------------------------------
   # POST /courses
   def create
     if cannot? :create, Course
-      redirect_to root_path, notice: 'Unauthorized to create course' and return
+      redirect_to root_path,
+        notice: 'Unauthorized to create course' and return
     end
     form = params[:course]
     offering = form[:course_offering]
@@ -92,10 +99,12 @@ class CoursesController < ApplicationController
   end
 
 
+  # -------------------------------------------------------------
   # PATCH/PUT /courses/1
   def update
     if cannot? :update, @course
-      redirect_to root_path, notice: 'Unauthorized to update course' and return
+      redirect_to root_path,
+        notice: 'Unauthorized to update course' and return
     end
     if @course.update(course_params)
       redirect_to @course, notice: 'Course was successfully updated.'
@@ -105,20 +114,24 @@ class CoursesController < ApplicationController
   end
 
 
+  # -------------------------------------------------------------
   # DELETE /courses/1
   def destroy
     if cannot? :destroy, @course
-      redirect_to root_path, notice: 'Unauthorized to delete course' and return
+      redirect_to root_path,
+        notice: 'Unauthorized to delete course' and return
     end
     @course.destroy
     redirect_to courses_url, notice: 'Course was successfully destroyed.'
   end
 
 
+  # -------------------------------------------------------------
   def search
   end
 
 
+  # -------------------------------------------------------------
   def find
     @courses = Course.search(params[:search])
     redirect_to courses_search_path(courses: @courses, listing: true),
@@ -126,10 +139,12 @@ class CoursesController < ApplicationController
   end
 
 
+  # -------------------------------------------------------------
   # POST /courses/:id/generate_gradebook
   def generate_gradebook
     if cannot? :generate_gradebook, @course
-      redirect_to root_path, notice: 'Unauthorized to generate gradebook for course' and return
+      redirect_to root_path,
+        notice: 'Unauthorized to generate gradebook for course' and return
     end
     respond_to do |format|
       format.html
@@ -142,14 +157,17 @@ class CoursesController < ApplicationController
   end
 
 
+  #~ Private instance methods .................................................
   private
 
+    # -------------------------------------------------------------
     # Use callbacks to share common setup or constraints between actions.
     def set_course
       @course = Course.find_by_id(params[:id])
     end
 
 
+    # -------------------------------------------------------------
     # Only allow a trusted parameter "white list" through.
     def course_params
       params.require(:course).

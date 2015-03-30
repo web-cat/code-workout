@@ -2,8 +2,9 @@ class WorkoutsController < ApplicationController
   before_action :set_workout, only: [:show, :edit, :update, :destroy]
 
 
-  #~ Public instance methods ..................................................
+  #~ Action methods ...........................................................
 
+  # -------------------------------------------------------------
   # GET /workouts
   def index
     if cannot? :index, Workout
@@ -16,6 +17,7 @@ class WorkoutsController < ApplicationController
   end
 
 
+  # -------------------------------------------------------------
   # GET /workouts/download.json
   def download
     if cannot? :index, Workout
@@ -29,6 +31,7 @@ class WorkoutsController < ApplicationController
   end
 
 
+  # -------------------------------------------------------------
   # GET /workouts/1
   def show
     if params[:id]
@@ -46,13 +49,16 @@ class WorkoutsController < ApplicationController
   end
 
 
+  # -------------------------------------------------------------
   # GET /gym
   def gym
-    @gym = Workout.where(target_group: 'Public').order('created_at DESC').limit(12)
+    @gym = Workout.where(target_group: 'Public').order('created_at DESC').
+      limit(12)
     render layout: 'two_columns'
   end
 
 
+  # -------------------------------------------------------------
   # GET /workouts/new
   def new
     if cannot? :new, Workout
@@ -63,6 +69,7 @@ class WorkoutsController < ApplicationController
   end
 
 
+  # -------------------------------------------------------------
   # GET /workouts/new_with_search/:searchkey
   def new_with_search
     @workout = Workout.new
@@ -71,6 +78,7 @@ class WorkoutsController < ApplicationController
   end
 
 
+  # -------------------------------------------------------------
   # GET /workouts/1/edit
   def edit
     if cannot? :edit, @workout
@@ -89,6 +97,7 @@ class WorkoutsController < ApplicationController
   end
 
 
+  # -------------------------------------------------------------
   # POST /workouts
   def create
     @workout = Workout.new(workout_params)
@@ -96,33 +105,33 @@ class WorkoutsController < ApplicationController
     exercises = msg[:exercise_workouts_attributes]
     @workout.creator_id = current_user.id
     exercises.each_with_index do |ex, index|
-      ex_id = ex.second[:exercise_id]              
+      ex_id = ex.second[:exercise_id]
       exercise = Exercise.find(ex_id)
       @workout.exercises<<exercise
-      @workout.save      
-      wek = @workout.exercise_workouts.find_by(exercise_id: ex_id, workout_id: @workout.id)
-      wek.ordering = index+1
+      @workout.save
+      wek = @workout.exercise_workouts.find_by(exercise: exercise)
+      wek.ordering = index + 1
       wek.points = ex.second[:points]
-      wek.save            
+      wek.save
     end
-    
-    course_offerings = msg[:workout_offerings_attributes]    
+
+    course_offerings = msg[:workout_offerings_attributes]
     course_offerings.each_with_index do |co, index|
-      co_id = co.second[:course_offering_id]              
+      co_id = co.second[:course_offering_id]
       course_offering = CourseOffering.find(co_id)
       @workout.course_offerings<<course_offering
-      @workout.save      
-      wo = @workout.workout_offerings.find_by(course_offering_id: co_id, workout_id: @workout.id)
-      wo.opening_date = Date.parse(co.second['opening_date(3i)']+
-        '-'+co.second['opening_date(2i)']+
-        '-'+co.second['opening_date(1i)'])
-      wo.soft_deadline = Date.parse(co.second['soft_deadline(3i)']+
-        '-'+co.second['soft_deadline(2i)']+
-        '-'+co.second['soft_deadline(1i)'])
-      wo.hard_deadline = Date.parse(co.second['hard_deadline(3i)']+
-        '-'+co.second['hard_deadline(2i)']+
-        '-'+co.second['hard_deadline(1i)'])
-      wo.save            
+      @workout.save
+      wo = @workout.workout_offerings.find_by(course_offering_id: co_id)
+      wo.opening_date = Date.parse(co.second['opening_date(3i)'] +
+        '-' + co.second['opening_date(2i)'] +
+        '-' + co.second['opening_date(1i)'])
+      wo.soft_deadline = Date.parse(co.second['soft_deadline(3i)'] +
+        '-' + co.second['soft_deadline(2i)'] +
+        '-' + co.second['soft_deadline(1i)'])
+      wo.hard_deadline = Date.parse(co.second['hard_deadline(3i)'] +
+        '-' + co.second['hard_deadline(2i)']+
+        '-' + co.second['hard_deadline(1i)'])
+      wo.save
     end
 
     if @workout.save
@@ -133,6 +142,7 @@ class WorkoutsController < ApplicationController
   end
 
 
+  # -------------------------------------------------------------
   def evaluate
     if session[:current_workout].nil?
       redirect_to root_path, notice: 'Invalid action' and return
@@ -150,6 +160,7 @@ class WorkoutsController < ApplicationController
   end
 
 
+  # -------------------------------------------------------------
   # PATCH/PUT /workouts/1
   def update
     if cannot? :update, @workout
@@ -164,6 +175,7 @@ class WorkoutsController < ApplicationController
   end
 
 
+  # -------------------------------------------------------------
   # DELETE /workouts/1
   def destroy
     if cannot? :destroy, @workout
@@ -175,6 +187,7 @@ class WorkoutsController < ApplicationController
   end
 
 
+  # -------------------------------------------------------------
   def practice_workout
     wid = params[:id]
     wkt = Workout.find(wid)
@@ -199,23 +212,25 @@ class WorkoutsController < ApplicationController
 
 
   #~ Private instance methods .................................................
-
   private
-  # Use callbacks to share common setup or constraints between actions.
-  def set_workout
-    @workout = Workout.find(params[:id])
-    @xp = 30
-    @xptogo = 60
-    @remain = 10
-  end
+
+    # -------------------------------------------------------------
+    # Use callbacks to share common setup or constraints between actions.
+    def set_workout
+      @workout = Workout.find(params[:id])
+      @xp = 30
+      @xptogo = 60
+      @remain = 10
+    end
 
 
-  # Only allow a trusted parameter "white list" through.
-  def workout_params
-    params.require(:workout).permit(:name, :scrambled, :exercise_ids,
-      :description, :target_group, :points_multiplier, :opening_date,
-      :exercise_workouts_attributes, :workout_offerings_attributes,
-      :soft_deadline, :hard_deadline)
-  end
+    # -------------------------------------------------------------
+    # Only allow a trusted parameter "white list" through.
+    def workout_params
+      params.require(:workout).permit(:name, :scrambled, :exercise_ids,
+        :description, :target_group, :points_multiplier, :opening_date,
+        :exercise_workouts_attributes, :workout_offerings_attributes,
+        :soft_deadline, :hard_deadline)
+    end
 
 end

@@ -1,16 +1,9 @@
 class ExercisesController < ApplicationController
-  include ExercisesHelper
-  require 'action_view/helpers/javascript_helper'
-  require 'nokogiri'
-  require 'csv'
-  include ActionView::Helpers::JavaScriptHelper
-
-
   before_action :set_exercise, only: [:show, :edit, :update, :destroy]
   respond_to :html, :js, :json
 
 
-  #~ Public instance methods ..................................................
+  #~ Action methods ...........................................................
 
   # -------------------------------------------------------------
   # GET /exercises
@@ -863,152 +856,152 @@ class ExercisesController < ApplicationController
   #~ Private instance methods .................................................
   private
 
-  # -------------------------------------------------------------
-  # Use callbacks to share common setup or constraints between actions.
-  def set_exercise
-    if params[:id]
-      @exercise = Exercise.find(params[:id])
-    end
-  end
-
-
-  # -------------------------------------------------------------
-  def create_new_version
-    newexercise = Exercise.new
-    newexercise.name = @exercise.name
-    newexercise.creator_id = current_user.id
-    newexercise.question = @exercise.question
-    newexercise.feedback = @exercise.feedback
-    newexercise.is_public = @exercise.is_public
-    newexercise.mcq_allow_multiple = @exercise.mcq_allow_multiple
-    newexercise.mcq_is_scrambled = @exercise.mcq_is_scrambled
-    newexercise.priority =  @exercise.priority
-    # TODO: Get the count of attempts from the session
-    newexercise.count_attempts = 0
-    newexercise.count_correct = 0
-    newexercise.experience = @exercise.experience
-    newexercise.version = @exercise.base_exercise.versions =
-      @exercise.version + 1
-    # default IRT statistics
-    newexercise.difficulty = 5
-    newexercise.discrimination = @exercise.discrimination
-    return newexercise
-  end
-
-
-  # -------------------------------------------------------------
-  # Only allow a trusted parameter "white list" through.
-  def exercise_params
-    params.require(:exercise).permit(:name, :question, :feedback,
-      :experience, :id, :is_public, :priority, :type,
-      :mcq_allow_multiple, :mcq_is_scrambled, :language, :area,
-      choices_attributes: [:answer, :order, :value, :_destroy],
-      tags_attributes: [:tag_name, :tagtype, :_destroy])
-  end
-
-
-  # -------------------------------------------------------------
-  # should call count_submission before calling this method
-  def record_attempt(score, exp)
-    ex = Exercise.find(params[:id])
-    attempt = Attempt.new
-    if !session[:exercise_id] ||
-      session[:exercise_id] != params[:id] ||
-      !session[:submit_num]
-
-      session[:exercise_id] = params[:id]
-    end
-    attempt.submit_num = session[:submit_num]
-    attempt.submit_time = Time.now
-    if ex.mcq_allow_multiple
-      attempt.answer = params[:exercise][:exercise][:choice_ids].
-        compact.delete_if{ |x| x.empty? }
-      attempt.answer = attempt.answer.join(',')
-    else
-      attempt.answer = params[:exercise][:exercise][:choice_ids] ||
-        params[:exercise][:answer_code]
-    end
-    attempt.score = score
-    attempt.experience_earned = exp
-    attempt.user_id = current_user.id
-
-    # wkt= Workout.find_by_sql(" SELECT * FROM workouts INNER JOIN
-    #   exercise_workouts ON workouts.id = exercise_workouts.workout_id and
-    #   exercise_workouts.exercise_id = #{session[:exercise_id]}")
-    if session[:current_workout]
-      wkt = Workout.find(session[:current_workout])
-      wo = WorkoutOffering.find_by workout_id: wkt.id
-      if wo
-        attempt.workout_offering_id = wo.id
+    # -------------------------------------------------------------
+    # Use callbacks to share common setup or constraints between actions.
+    def set_exercise
+      if params[:id]
+        @exercise = Exercise.find(params[:id])
       end
     end
-    ex.attempts << attempt
-    attempt.save!
-  end
 
 
-  # -------------------------------------------------------------
-  def record_workout_score(score, exer_id, wkt_id)
-    scoring = WorkoutScore.find_by(
-      user_id: current_user.id, workout_id: wkt_id)
-    @current_workout = Workout.find(wkt_id)
+    # -------------------------------------------------------------
+    def create_new_version
+      newexercise = Exercise.new
+      newexercise.name = @exercise.name
+      newexercise.creator_id = current_user.id
+      newexercise.question = @exercise.question
+      newexercise.feedback = @exercise.feedback
+      newexercise.is_public = @exercise.is_public
+      newexercise.mcq_allow_multiple = @exercise.mcq_allow_multiple
+      newexercise.mcq_is_scrambled = @exercise.mcq_is_scrambled
+      newexercise.priority =  @exercise.priority
+      # TODO: Get the count of attempts from the session
+      newexercise.count_attempts = 0
+      newexercise.count_correct = 0
+      newexercise.experience = @exercise.experience
+      newexercise.version = @exercise.base_exercise.versions =
+        @exercise.version + 1
+      # default IRT statistics
+      newexercise.difficulty = 5
+      newexercise.discrimination = @exercise.discrimination
+      return newexercise
+    end
 
-    # FIXME: This code repeats code in code_worker.rb and needs to be
-    # refactored, probably as a method (or constructor?) in WorkoutScore.
-    if scoring.nil?
-      scoring = WorkoutScore.new
-      scoring.score = score
-      scoring.last_attempted_at = Time.now
-      scoring.exercises_completed = 1
-      scoring.exercises_remaining = @current_workout.exercises.length - 1
-      @current_workout.workout_scores << scoring
-      current_user.workout_scores << scoring
 
-    else # At least one exercise has been attempted as a part of the workout
-      user_exercise_score =
-        Attempt.user_attempt(current_user.id, exer_id).andand.score
-      scoring.score += score
-      scoring.last_attempted_at = Time.now
-      if user_exercise_score
-        scoring.score -= user_exercise_score
+    # -------------------------------------------------------------
+    # Only allow a trusted parameter "white list" through.
+    def exercise_params
+      params.require(:exercise).permit(:name, :question, :feedback,
+        :experience, :id, :is_public, :priority, :type,
+        :mcq_allow_multiple, :mcq_is_scrambled, :language, :area,
+        choices_attributes: [:answer, :order, :value, :_destroy],
+        tags_attributes: [:tag_name, :tagtype, :_destroy])
+    end
+
+
+    # -------------------------------------------------------------
+    # should call count_submission before calling this method
+    def record_attempt(score, exp)
+      ex = Exercise.find(params[:id])
+      attempt = Attempt.new
+      if !session[:exercise_id] ||
+        session[:exercise_id] != params[:id] ||
+        !session[:submit_num]
+
+        session[:exercise_id] = params[:id]
+      end
+      attempt.submit_num = session[:submit_num]
+      attempt.submit_time = Time.now
+      if ex.mcq_allow_multiple
+        attempt.answer = params[:exercise][:exercise][:choice_ids].
+          compact.delete_if { |x| x.empty? }
+        attempt.answer = attempt.answer.join(',')
       else
-        scoring.exercises_completed += 1
-        scoring.exercises_remaining -= 1
-        # Compensate if overshoots
-        if scoring.exercises_completed > @current_workout.exercises.length
-          scoring.exercises_completed = @current_workout.exercises.length
-        end
-        if scoring.exercises_remaining < 0
-          scoring.exercises_remaining = 0
-        end
-        if scoring.exercises_remaining == 0
-          scoring.completed = true
-          scoring.completed_at = Time.now
+        attempt.answer = params[:exercise][:exercise][:choice_ids] ||
+          params[:exercise][:answer_code]
+      end
+      attempt.score = score
+      attempt.experience_earned = exp
+      attempt.user_id = current_user.id
+
+      # wkt= Workout.find_by_sql(" SELECT * FROM workouts INNER JOIN
+      #   exercise_workouts ON workouts.id = exercise_workouts.workout_id and
+      #   exercise_workouts.exercise_id = #{session[:exercise_id]}")
+      if session[:current_workout]
+        wkt = Workout.find(session[:current_workout])
+        wo = WorkoutOffering.find_by workout_id: wkt.id
+        if wo
+          attempt.workout_offering_id = wo.id
         end
       end
-
+      ex.attempts << attempt
+      attempt.save!
     end
-    scoring.save!
-  end
 
 
-  # -------------------------------------------------------------
-  def count_submission
-    if !session[:exercise_id] ||
-      session[:exercise_id] != params[:id] ||
-      !session[:submit_num]
+    # -------------------------------------------------------------
+    def record_workout_score(score, exer_id, wkt_id)
+      scoring = WorkoutScore.find_by(
+        user_id: current_user.id, workout_id: wkt_id)
+      @current_workout = Workout.find(wkt_id)
 
-      # TODO: look up only current user
-      recent = Attempt.where(user_id: 1).where(exercise_id: params[:id]).
-        sort_by{ |a| a[:submit_num] }
-      if !recent.empty?
-        session[:submit_num] = recent.last[:submit_num] + 1
+      # FIXME: This code repeats code in code_worker.rb and needs to be
+      # refactored, probably as a method (or constructor?) in WorkoutScore.
+      if scoring.nil?
+        scoring = WorkoutScore.new
+        scoring.score = score
+        scoring.last_attempted_at = Time.now
+        scoring.exercises_completed = 1
+        scoring.exercises_remaining = @current_workout.exercises.length - 1
+        @current_workout.workout_scores << scoring
+        current_user.workout_scores << scoring
+
+      else # At least one exercise has been attempted as a part of the workout
+        user_exercise_score =
+          Attempt.user_attempt(current_user.id, exer_id).andand.score
+        scoring.score += score
+        scoring.last_attempted_at = Time.now
+        if user_exercise_score
+          scoring.score -= user_exercise_score
+        else
+          scoring.exercises_completed += 1
+          scoring.exercises_remaining -= 1
+          # Compensate if overshoots
+          if scoring.exercises_completed > @current_workout.exercises.length
+            scoring.exercises_completed = @current_workout.exercises.length
+          end
+          if scoring.exercises_remaining < 0
+            scoring.exercises_remaining = 0
+          end
+          if scoring.exercises_remaining == 0
+            scoring.completed = true
+            scoring.completed_at = Time.now
+          end
+        end
+
+      end
+      scoring.save!
+    end
+
+
+    # -------------------------------------------------------------
+    def count_submission
+      if !session[:exercise_id] ||
+        session[:exercise_id] != params[:id] ||
+        !session[:submit_num]
+
+        # TODO: look up only current user
+        recent = Attempt.where(user_id: 1).where(exercise_id: params[:id]).
+          sort_by{ |a| a[:submit_num] }
+        if !recent.empty?
+          session[:submit_num] = recent.last[:submit_num] + 1
+        else
+          session[:submit_num] = 1
+        end
       else
-        session[:submit_num] = 1
+        session[:submit_num] +=  1
       end
-    else
-      session[:submit_num] +=  1
     end
-  end
 
 end

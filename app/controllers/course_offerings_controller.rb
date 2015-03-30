@@ -1,17 +1,22 @@
 class CourseOfferingsController < ApplicationController
-  require 'csv'
   before_action :set_course_offering, only: [:show, :edit, :update,
     :destroy, :generate_gradebook, :add_workout, :store_workout]
 
+
+  # -------------------------------------------------------------
   # GET /course_offerings
   def index
     @course_offerings = CourseOffering.all
   end
 
+
+  # -------------------------------------------------------------
   # GET /course_offerings/1
   def show
   end
 
+
+  # -------------------------------------------------------------
   # GET /course_offerings/new
   def new
     if cannot? :new, CourseOffering
@@ -21,6 +26,8 @@ class CourseOfferingsController < ApplicationController
     @course_offering = CourseOffering.new
   end
 
+
+  # -------------------------------------------------------------
   # GET /course_offerings/1/edit
   def edit
     set_course_offering
@@ -31,6 +38,8 @@ class CourseOfferingsController < ApplicationController
     @uploaded_roster = UploadedRoster.new
   end
 
+
+  # -------------------------------------------------------------
   # POST /course_offerings
   def create
     if cannot? :create, CourseOffering
@@ -47,6 +56,8 @@ class CourseOfferingsController < ApplicationController
     end
   end
 
+
+  # -------------------------------------------------------------
   # PATCH/PUT /course_offerings/1
   def update
     if cannot? :update, @course_offering
@@ -61,6 +72,8 @@ class CourseOfferingsController < ApplicationController
     end
   end
 
+
+  # -------------------------------------------------------------
   # DELETE /course_offerings/1
   def destroy
     if cannot? :destroy, @course_offering
@@ -72,7 +85,8 @@ class CourseOfferingsController < ApplicationController
       notice: 'Course offering was successfully destroyed.'
   end
 
-  #
+
+  # -------------------------------------------------------------
   def generate_gradebook
     if cannot? :generate_gradebook, @course_offering
       redirect_to root_path,
@@ -89,6 +103,8 @@ class CourseOfferingsController < ApplicationController
     end
   end
 
+
+  # -------------------------------------------------------------
   # GET /course_offerings/:id/add_workout
   def add_workout
     if cannot? :add_workout, @course_offering
@@ -104,6 +120,8 @@ class CourseOfferingsController < ApplicationController
     @course_offering
   end
 
+
+  # -------------------------------------------------------------
   # POST /course_offerings/store_workout/:id
   def store_workout
     workouts = params[:workoutids]
@@ -121,12 +139,18 @@ class CourseOfferingsController < ApplicationController
       notice: 'Workouts added to course offering!'
   end
 
+
+  #~ Private instance methods .................................................
   private
+
+    # -------------------------------------------------------------
     # Use callbacks to share common setup or constraints between actions.
     def set_course_offering
       @course_offering = CourseOffering.find(params[:id])
     end
 
+
+    # -------------------------------------------------------------
     # Only allow a trusted parameter "white list" through.
     def course_offering_params
       params.require(:course_offering).permit(:course_id, :term_id,
