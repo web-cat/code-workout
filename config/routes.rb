@@ -5,18 +5,18 @@ CodeWorkout::Application.routes.draw do
   ActiveAdmin.routes(self)
   root 'home#index'
 
-  get "home" => 'home#index'
-  get "main" => 'home#index'
-  get "home/about"
-  get "home/license"
-  get "home/contact"
+  get 'home' => 'home#index'
+  get 'main' => 'home#index'
+  get 'home/about'
+  get 'home/license'
+  get 'home/contact'
 
-  get "static_pages/home"
-  get "static_pages/help"
-  get "static_pages/mockup1"
-  get "static_pages/mockup2"
-  get "static_pages/mockup3"
-  get "static_pages/typography"
+  get 'static_pages/home'
+  get 'static_pages/help'
+  get 'static_pages/mockup1'
+  get 'static_pages/mockup2'
+  get 'static_pages/mockup3'
+  get 'static_pages/typography'
 
   get 'exercises/upload' => 'exercises#upload', as: :exercises_upload
   get 'exercises/download' => 'exercises#download', as: :exercises_download
@@ -27,7 +27,7 @@ CodeWorkout::Application.routes.draw do
 
   get 'workouts/:id/add_exercises' => 'workouts#add_exercises'
   post 'workouts/link_exercises'  => 'workouts#link_exercises'
-  post "/coding_questions" => "exercises#create"
+  post '/coding_questions' => 'exercises#create'
   get 'workouts/download' => 'workouts#download'
   get '/gym' => 'workouts#gym', as: :gym
 
@@ -65,28 +65,28 @@ CodeWorkout::Application.routes.draw do
     controllers: { omniauth_callbacks: 'users/omniauth_callbacks' },
     skip: [:registrations, :sessions]
   as :user do
-    get "/signup" => "devise/registrations#new", as: :new_user_registration
+    get '/signup' => 'devise/registrations#new', as: :new_user_registration
 
     # TODO: These routes are broken and need to be fixed!
-    get "/about" => "devise/about#new", as: :about_page
-    get "/license" => "devise/license#new", as: :license_page
-    get "/contact" => "devise/contact#new", as: :contact_page
-    post "/courses/:id/generate_gradebook" => "courses#generate_gradebook", as: :course_gradebook
-    post "/course_offerings/:id/generate_gradebook" => "course_offerings#generate_gradebook", as: :course_offering_gradebook
-    #post "/exercises/:id/update" => "exercise#update", as: :exercise_update
-    get "/exercises_random_exercise" => "exercises#random_exercise", as: :random_exercise
-    get "/courses_search" => "courses#search", as: :courses_search
-    post "/courses_find" => "courses#find", as: :course_find
-    get "/workouts/new_with_search/:searchkey"  => "workouts#new_with_search", as: :workouts_with_search
-    post "/workouts/new_with_search"  => "workouts#new_with_search", as: :workouts_exercise_search
-    post "/signup" => "devise/registrations#create", as: :user_registration
-    get "/login" => "devise/sessions#new", as: :new_user_session
-    post "/login" => "devise/sessions#create", as: :user_session
-    delete "/logout" => "devise/sessions#destroy", as: :destroy_user_session
+    get '/about' => 'devise/about#new', as: :about_page
+    get '/license' => 'devise/license#new', as: :license_page
+    get '/contact' => 'devise/contact#new', as: :contact_page
+    post '/courses/:id/generate_gradebook' => 'courses#generate_gradebook', as: :course_gradebook
+    post '/course_offerings/:id/generate_gradebook' => 'course_offerings#generate_gradebook', as: :course_offering_gradebook
+    #post '/exercises/:id/update' => 'exercise#update', as: :exercise_update
+    get '/exercises_random_exercise' => 'exercises#random_exercise', as: :random_exercise
+    get '/courses_search' => 'courses#search', as: :courses_search
+    post '/courses_find' => 'courses#find', as: :course_find
+    get '/workouts/new_with_search/:searchkey'  => 'workouts#new_with_search', as: :workouts_with_search
+    post '/workouts/new_with_search'  => 'workouts#new_with_search', as: :workouts_exercise_search
+    post '/signup' => 'devise/registrations#create', as: :user_registration
+    get '/login' => 'devise/sessions#new', as: :new_user_session
+    post '/login' => 'devise/sessions#create', as: :user_session
+    delete '/logout' => 'devise/sessions#destroy', as: :destroy_user_session
     get '/practice_workout/:id' => 'workouts#practice_workout', as: :practice_workout
     get '/practice/:id' => 'exercises#practice', as: :exercise_practice
     get '/course_offerings/:id/add_workout' => 'course_offerings#add_workout', as: :course_offering_add_workout
-    post "/course_offerings/store_workout/:id" => "course_offerings#store_workout", as: :course_offering_store_workout
+    post '/course_offerings/store_workout/:id' => 'course_offerings#store_workout', as: :course_offering_store_workout
     patch '/practice/:id' => 'exercises#evaluate', as: :exercise_evaluate
     get '/workouts/:id/evaluate' => 'workouts#evaluate', as: :workout_evaluate
     get '/users/:id/performance' => 'users#calc_performance', as: :calc_performance
