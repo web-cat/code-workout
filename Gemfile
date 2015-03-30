@@ -20,6 +20,8 @@ gem 'nokogiri'
 gem 'csv_shaper'
 gem 'andand', github: 'raganwald/andand'
 gem 'foreigner'
+gem 'responders', '~> 1.1' # Can't move above 1.1 until migrating to rails 4.2+
+gem 'friendly_id', '~> 5'
 
 # For JSON support
 gem 'rabl'

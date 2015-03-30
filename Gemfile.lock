@@ -162,6 +162,8 @@ GEM
     formtastic-bootstrap (3.0.0)
       formtastic (>= 2.2)
     formtastic_i18n (0.2.0)
+    friendly_id (5.1.0)
+      activerecord (>= 4.0.0)
     gravtastic (3.2.6)
     haml (4.0.5)
       tilt
@@ -365,6 +367,7 @@ DEPENDENCIES
   foreigner
   formtastic (~> 3.1)
   formtastic-bootstrap
+  friendly_id (~> 5)
   gravtastic
   haml (>= 3.1.4)
   haml-rails
@@ -383,6 +386,7 @@ DEPENDENCIES
   rails
   rails-erd!
   remotipart
+  responders (~> 1.1)
   rspec-rails
   sass-rails
   sdoc
