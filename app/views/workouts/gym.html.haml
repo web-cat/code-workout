@@ -3,4 +3,8 @@
   .alert No workouts found
 - else
   %h2 Popular Workouts
-  = render partial: "thumblg", collection: @gym, as: :w
+  - user_id = user_signed_in? ? current_user.id : 1
+  - @gym.in_groups_of(2, false) do |row|
+    = render partial: "workouts/thumblg", collection: row, as: :w,
+      locals: { uid: uid }
+    .clearfix

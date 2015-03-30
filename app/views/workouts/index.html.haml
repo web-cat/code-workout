@@ -1,4 +1,7 @@
 %h1 Workouts
 
-- @workouts.each do |w|
-  = render partial: "workouts/thumblg", locals: { w: w }
+- uid = user_signed_in? ? current_user.id : 0
+- @workouts.in_groups_of(2, false) do |row|
+  = render partial: "workouts/thumblg", collection: row, as: :w,
+    locals: { uid: uid }
+  .clearfix
