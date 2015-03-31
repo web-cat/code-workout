@@ -49,6 +49,10 @@ class CourseOffering < ActiveRecord::Base
   def display_name
     "#{course.number} (#{label})"
   end
+  
+  def name
+    self.course.name + ' - ' + self.term.display_name 
+  end
 
 
   # -------------------------------------------------------------
