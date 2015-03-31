@@ -32,7 +32,6 @@
 #
 
 class User < ActiveRecord::Base
-
   include Gravtastic
   gravtastic secure: true, default: 'monsterid'
 
@@ -226,6 +225,7 @@ class User < ActiveRecord::Base
       user.identities.create(uid: auth.uid, provider: auth.provider)
     end
 
+    # Update any blank fields from provider's info, if available
     if user
       user.first_name ||= auth.info.first_name
       user.last_name ||= auth.info.last_name
@@ -242,25 +242,25 @@ class User < ActiveRecord::Base
   #~ Private instance methods .................................................
   private
 
-  # -------------------------------------------------------------
-  # Sets the first user's role as administrator and subsequent users
-  # as student (note: be sure to run rake db:seed to create these roles)
-  def set_default_role
-    if User.count == 0
-      self.global_role = GlobalRole.administrator
-    elsif self.global_role.nil?
-      self.global_role = GlobalRole.regular_user
+    # -------------------------------------------------------------
+    # Sets the first user's role as administrator and subsequent users
+    # as student (note: be sure to run rake db:seed to create these roles)
+    def set_default_role
+      if User.count == 0
+        self.global_role = GlobalRole.administrator
+      elsif self.global_role.nil?
+        self.global_role = GlobalRole.regular_user
+      end
     end
-  end
 
 
-  # -------------------------------------------------------------
-  # Overrides the built-in password required method to allow for users
-  # to be updated without errors
-  # taken from: http://www.chicagoinformatics.com/index.php/2012/09/
-  # user-administration-for-devise/
-  def password_required?
-    (!password.blank? && !password_confirmation.blank?) || new_record?
-  end
+    # -------------------------------------------------------------
+    # Overrides the built-in password required method to allow for users
+    # to be updated without errors
+    # taken from: http://www.chicagoinformatics.com/index.php/2012/09/
+    # user-administration-for-devise/
+    def password_required?
+      (!password.blank? && !password_confirmation.blank?) || new_record?
+    end
 
 end

@@ -12,100 +12,32 @@ class Ability
   # user - the user
   #
   def initialize(user)
+    # default abilities for anonymous, non-logged-in visitors
+    can :read, Term
+    can :read, Organization
+    can :read, Course
+
     if user
       # This ability allows admins impersonating other users to revert
       # back to their original user.
       can :unimpersonate, User
+
+      # Global admin permissions
+      can :manage, :all if user.global_role.is_admin?
 
       # Creating an alias for CRUD operations
       alias_action :create, :read, :update, :destroy, to: :crud
 
       # A user should only be able to update himself or herself (assuming no
       # other permissions granted below by the global role).
-      can [:show, :edit, :update], User do |target_user|
-        target_user.id == user.id
-      end
-
-      cannot :index, [User, Workout, Exercise, CourseEnrollment] unless
-        user.global_role.can_edit_system_configuration?
-
-      cannot :crud, [Organization, GlobalRole, CourseRole] unless
-        user.global_role.can_edit_system_configuration?
-
-      cannot [:update, :edit, :destroy], [CourseEnrollment] do |ce|
-        role = CourseEnrollment.find_by(
-          user_id: user.id, course_offering_id: ce.course_offering.id)
-        role.nil? || !role.course_role.can_manage_course?
-      end
-
-      cannot :show, CourseEnrollment do |ce|
-        ce.user_id != user.id
-      end
-
-      cannot :new, CourseEnrollment unless user.global_role.is_instructor?
-
-      #~ CourseOffering and Course
-      cannot [:create, :new], [CourseOffering, Course] unless
-        (user.global_role.can_edit_system_configuration? ||
-        user.global_role.is_instructor?)
-
-      # FIXME: These belong in process_courses, and they probably
-      # need to be rewritten and/or removed anyway:
-
-#      cannot [:update, :generate_gradebook, :add_workout, :edit, :destroy],
-#        CourseOffering do |co|
-#        role = CourseEnrollment.find_by(
-#          user_id: user.id, course_offering_id: co.id)
-#        role.nil? || !role.course_role.can_manage_course?
-#      end
-
-#      cannot [:update, :generate_gradebook, :edit, :destroy], Course do |co|
-#        co.creator_id != user.id
-#      end
-
-      #~ Exercise and Workout
-      # Tighter permissions to remain till beginning of Fall 2015
-      cannot [:create, :new], Exercise unless
-        user.global_role.can_edit_system_configuration? ||
-        user.global_role.is_instructor?
-      cannot [:update, :edit, :destroy], Exercise do |ex|
-        ex.creator_id != user.id
-      end
-      can [:update, :edit, :destroy], Exercise do |ex|
-        ex.creator_id == user.id
-      end
-
-      cannot [:create, :new], Workout unless
-        user.global_role.can_edit_system_configuration? ||
-        user.global_role.is_instructor?
-      cannot [:update, :edit, :destroy], Workout do |wkt|
-        wkt.creator_id != user.id
-      end
-      can [:update, :edit, :destroy], Workout do |wkt|
-        wkt.creator_id == user.id
-      end
-
-      #~ Resource files
-      cannot [:create, :new], ResourceFile unless
-        user.global_role.can_edit_system_configuration?
-      cannot [:update, :edit, :show, :destroy], ResourceFile do |res|
-        res.user_id != user.id
-      end
-      can [:update, :edit, :show, :destroy], ResourceFile do |res|
-        res.user_id == user.id
-      end
-
-      #~ Signups
-      # cannot [:update, :index, :edit, :show, :destroy], Signup unless
-      #   user.global_role.can_edit_system_configuration?
+      can [:show, :update], User, id: user.id
 
       process_global_role user
       process_instructor user
       process_courses user
-#      process_assignments user
-#      process_repositories user
-#      process_assignment_checks user
-#      process_media_items user
+      process_exercises user
+      process_workouts user
+      process_resource_files user
     end
   end
 
@@ -154,7 +86,10 @@ class Ability
   # -------------------------------------------------------------
   def process_instructor(user)
     if user.global_role.is_instructor?
-      can [:create, :new],
+      # FIXME: The exercise/workout permissions need to be role-based
+      # with respect to the course offering, rather than depending on the
+      # global role.
+      can [:create],
         [Course, CourseOffering, Exercise, ResourceFile, Workout]
       can [:index], [Exercise, Workout]
     end
@@ -167,13 +102,17 @@ class Ability
   # user - the user
   #
   def process_courses(user)
-    # A user can manage a CourseOffering if they are enrolled in that
-    # offering and have a CourseRole where can_manage_course? is true.
+    # Everyone can manage their own course enrollments
+    can :manage, CourseEnrollment, user_id: user.id
 
+    # Everyone can read the course offerings they are enrolled in
     can :read, CourseOffering do |co|
       co.is_enrolled? user
     end
-    can [:manage, :generate_gradebook], CourseOffering do |co|
+
+    # A user can manage a CourseOffering if they are enrolled in that
+    # offering and have a CourseRole where can_manage_course? is true.
+    can [:manage], CourseOffering do |co|
       co.managed_by? user
     end
 
@@ -182,6 +121,31 @@ class Ability
     can :manage, CourseEnrollment do |enrollment|
       enrollment.course_offering.managed_by? user
     end
+  end
+
+
+  # -------------------------------------------------------------
+  def process_exercises(user)
+    # Tighter permissions to remain till beginning of Fall 2015
+    can :create, Exercise if user.global_role.is_instructor?
+    can [:read, :update, :destroy], Exercise, creator_id: user.id
+  end
+
+
+  # -------------------------------------------------------------
+  def process_workouts(user)
+    # Tighter permissions to remain till beginning of Fall 2015
+    can :create, Workout if user.global_role.is_instructor?
+    can [:read, :update, :destroy], Workout, creator_id: user.id
+  end
+
+
+  # -------------------------------------------------------------
+  def process_resource_files(user)
+    # Tighter permissions to remain till beginning of Fall 2015
+    can :create, ResourceFile if
+      user.global_role.can_edit_system_configuration?
+    can [:read, :update, :destroy], ResourceFile, user_id: user.id
   end
 
 end
