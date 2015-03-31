@@ -18,23 +18,15 @@
         - attempt = Attempt.where(user_id: uid, exercise_id: x.id).last
         -if attempt && attempt.score > 0
           - attempt_pct = 100
-        - if session[:current_workout]
+        - if wid
           - ex_workout = ExerciseWorkout.find_by(exercise_id: x.id,
-            workout_id: session[:current_workout])
+            workout_id: wid)
           - if ex_workout && attempt
             - attempt_pct = number_to_percentage(attempt.score.round(2) / ex_workout.points)
       .pts
         - if attempt
           = n_to_s attempt.score.round(2)
           - plural = (attempt.score != 1)
-        - if ex_workout
-          = "/"
-          = n_to_s ex_workout.points
-          - plural = (ex_workout.points != 1)
-          - if plural
-            pts
-          - else
-            pt
         - elsif ex_workout
           = ex_workout.points
           - if ex_workout.points != 1

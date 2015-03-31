@@ -1,5 +1,5 @@
 = render partial: "layouts/breadcrumb",
-  locals: { wid: @workouts.first.id, exid: nil }
+  locals: {wid: @workouts.first.id, exid: nil, off: nil}
 .row
   .col-md-12
     - @workouts.each do |w|
