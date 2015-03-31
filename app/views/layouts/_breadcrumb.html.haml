@@ -2,8 +2,8 @@
   %li  
     = link_to 'Home', root_path
   - if wid
-    - flag1 = true  
-    - if Workout.find(wid).course_offerings.any?      
+    - flag1 = true
+    - if Workout.find(wid).course_offerings.any?
       - Workout.find(wid).course_offerings.each do |off|
         - if user_signed_in? && current_user.course_offerings.any?
           - current_user.course_offerings.each do |user_off|
@@ -27,6 +27,7 @@
         - current_user.courses.each do |user_course|
           - if user_course.id == course.id
             %li= link_to course.name, course_path(course)
+
   
   - elsif off
     %li= link_to 'Courses', courses_path

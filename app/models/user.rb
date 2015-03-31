@@ -21,7 +21,6 @@
 #  first_name             :string(255)
 #  last_name              :string(255)
 #  global_role_id         :integer          not null
-#  name                   :string(255)
 #  avatar                 :string(255)
 #
 # Indexes
@@ -42,12 +41,16 @@ class User < ActiveRecord::Base
   belongs_to  :global_role
 #  has_many    :authentications
 #  has_many    :activity_logs
-  has_many    :course_enrollments, inverse_of: :user, dependent: :destroy
+  has_many    :course_enrollments,
+    -> { includes :course_role, :course_offering },
+   inverse_of: :user, dependent: :destroy
   has_many    :course_offerings, through: :course_enrollments
-  has_many    :workout_scores, inverse_of: :user, dependent: :destroy
+  has_many    :workout_scores, -> { includes :workout },
+    inverse_of: :user, dependent: :destroy
   has_many    :workouts, through: :workout_scores
   has_many    :attempts, dependent: :destroy
-  has_many    :tag_user_scores, inverse_of: :user, dependent: :destroy
+  has_many    :tag_user_scores, -> { includes :tag },
+    inverse_of: :user, dependent: :destroy
   has_many    :resource_files, inverse_of: :user
   has_many    :identities, inverse_of: :user, dependent: :destroy
 
@@ -61,9 +64,8 @@ class User < ActiveRecord::Base
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, and :timeoutable
   devise :database_authenticatable, :omniauthable, :registerable,
-    :recoverable, :rememberable, :trackable, :validatable,
+    :recoverable, :rememberable, :trackable, :validatable, :confirmable,
     :omniauth_providers => [:facebook, :google_oauth2]
-#    , :confirmable
 
   before_create :set_default_role
 
@@ -113,14 +115,30 @@ class User < ActiveRecord::Base
   # Returns a relation representing all of the CourseOfferings that this
   # user can manage
   #
-  def managing_course_offerings
-    # It seems like I should have been able to do this through the
-    # course_offerings association directly somehow, but writing
-    # course_offerings.joins(...) resulted in a double-join. This seems
-    # to work correctly instead.
-    CourseOffering.joins(:course_enrollments => :course_role).where(
-      course_enrollments: { user_id: id },
-      course_roles: { can_manage_course: true })
+  def managed_course_offerings
+    course_enrollments.where(course_roles: { can_manage_course: true }).
+      map(&:course_offering)
+  end
+
+
+  # -------------------------------------------------------------
+  def instructor_course_offerings
+    course_enrollments.where(course_role: CourseRole.instructor).
+      map(&:course_offering)
+  end
+
+
+  # -------------------------------------------------------------
+  def grader_course_offerings
+    course_enrollments.where(course_role: CourseRole.grader).
+      map(&:course_offering)
+  end
+
+
+  # -------------------------------------------------------------
+  def student_course_offerings
+    course_enrollments.where(course_role: CourseRole.student).
+      map(&:course_offering)
   end
 
 
@@ -152,6 +170,43 @@ class User < ActiveRecord::Base
 
 
   # -------------------------------------------------------------
+  def is_enrolled?(course_offering)
+    course_offering && course_offerings.include?(course_offering)
+  end
+
+
+  # -------------------------------------------------------------
+  def manages?(course_offering)
+    role_for_course_offering(course_offering).andand.can_manage_course?
+  end
+
+
+  # -------------------------------------------------------------
+  def teaches?(course_offering)
+    role_for_course_offering(course_offering).andand.is_instructor?
+  end
+
+
+  # -------------------------------------------------------------
+  def grades?(course_offering)
+    role_for_course_offering(course_offering).andand.can_grade_submissions?
+  end
+
+
+  # -------------------------------------------------------------
+  def is_staff?(course_offering)
+    role_for_course_offering(course_offering).andand.is_staff?
+  end
+
+
+  # -------------------------------------------------------------
+  def role_for_course_offering(course_offering)
+    course_offering && course_enrollments.
+      where(course_offering: course_offering).first.andand.course_role
+  end
+
+
+  # -------------------------------------------------------------
   # Omni auth for Facebook and Google Users
   def self.from_omniauth(auth, guest = nil)
     user = nil
@@ -165,6 +220,7 @@ class User < ActiveRecord::Base
           first_name: auth.info.first_name,
           last_name: auth.info.last_name,
           email: auth.info.email,
+          confirmed_at: DateTime.now,
           password: Devise.friendly_token[0, 20])
       end
       user.identities.create(uid: auth.uid, provider: auth.provider)

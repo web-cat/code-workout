@@ -63,8 +63,22 @@ class GlobalRole < ActiveRecord::Base
     errors.blank?
   end
 
+
+  # -------------------------------------------------------------
   def is_instructor?
     id == INSTRUCTOR_ID
+  end
+
+
+  # -------------------------------------------------------------
+  def is_admin?
+    id == ADMINISTRATOR_ID
+  end
+
+
+  # -------------------------------------------------------------
+  def is_regular_user?
+    id == REGULAR_USER_ID
   end
 
 end

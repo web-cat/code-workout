@@ -5,8 +5,7 @@
 #  id                      :integer          not null, primary key
 #  course_id               :integer          not null
 #  term_id                 :integer          not null
-#  name                    :string(255)      not null
-#  label                   :string(255)
+#  label                   :string(255)      not null
 #  url                     :string(255)
 #  self_enrollment_allowed :boolean
 #  created_at              :datetime

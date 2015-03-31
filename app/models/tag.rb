@@ -49,7 +49,7 @@ class Tag < ActiveRecord::Base
 
 
   # -------------------------------------------------------------
-  def self.tag_name_convention(name)
+  def self.normalize(name)
     return name.strip.gsub(/[\s]/,"_").downcase.titleize
   end
 
@@ -57,7 +57,7 @@ class Tag < ActiveRecord::Base
   # -------------------------------------------------------------
   #~ pass in an object (Exercise or Workout)
   def self.tag_this_with(obj, t_name, t_type)
-    convention = self.tag_name_convention(t_name)
+    convention = self.normalize(t_name)
     duplicate = obj.tags.bsearch { |t| t.tag_name == convention }
     if duplicate.nil?
       tagged = Tag.where(tag_name: convention)
@@ -117,7 +117,7 @@ class Tag < ActiveRecord::Base
   def standardize_tag
     if self.tag_name
       # remove pre-/post- and replace in-whitespace make lower-case only
-      self.tag_name = self.class.tag_name_convention(self.tag_name)
+      self.tag_name = self.class.normalize(self.tag_name)
     end
   end
 

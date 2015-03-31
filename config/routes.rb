@@ -2,6 +2,7 @@ CodeWorkout::Application.routes.draw do
 
 
 
+  ActiveAdmin.routes(self)
   root 'home#index'
 
   get "home" => 'home#index'
@@ -17,18 +18,18 @@ CodeWorkout::Application.routes.draw do
   get "static_pages/mockup3"
   get "static_pages/typography"
 
-  get 'exercises/upload_exercises' => 'exercises#upload_exercises',
-    as: :upload_exercises
-  get 'exercises/download' => 'exercises#download'
+  get 'exercises/upload' => 'exercises#upload', as: :exercises_upload
+  get 'exercises/download' => 'exercises#download', as: :exercises_download
   post 'exercises/upload_create' => 'exercises#upload_create'
-  get 'exercises/upload_mcqs' => 'exercises#upload_mcqs', as: :upload_mcqs
+  get 'exercises/upload_mcqs' => 'exercises#upload_mcqs',
+    as: :exercises_upload_mcqs
   post 'exercises/create_mcqs' => 'exercises#create_mcqs'
 
   get 'workouts/:id/add_exercises' => 'workouts#add_exercises'
   post 'workouts/link_exercises'  => 'workouts#link_exercises'
   post "/coding_questions" => "exercises#create"
   get 'workouts/download' => 'workouts#download'
-  get '/gym' => 'workouts#gym'
+  get '/gym' => 'workouts#gym', as: :gym
 
   resources :exercises
   resources :coding_problems

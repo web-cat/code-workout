@@ -6,7 +6,7 @@
     user_path(@course_enrollment.user)
 %p
   %b Course offering:
-  = @course_enrollment.course_offering.name
+  = @course_enrollment.course_offering.display_name_with_term
 %p
   %b Course role:
   = @role_text

@@ -1,6 +1,6 @@
 %p
   %strong
-    = @course_offering.name
+    = @course_offering.display_name
 %br
 = form_tag course_offering_store_workout_path(@course_offering.id) do
   = label_tag 'workoutids', 'Select Workouts'

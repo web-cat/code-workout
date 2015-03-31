@@ -14,7 +14,7 @@
       %tr
         %td= course_enrollment.user.first_name
         %td= course_enrollment.user.last_name
-        %td= course_enrollment.course_offering.name
+        %td= course_enrollment.course_offering.display_name_with_term
         %td= course_enrollment.course_role.name
         %td
           = button_link 'Show', course_enrollment, size: 'sm'

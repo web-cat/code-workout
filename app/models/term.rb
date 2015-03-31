@@ -76,6 +76,13 @@ class Term < ActiveRecord::Base
   end
 
 
+  # -------------------------------------------------------------
+  def self.current_term
+    Term.latest_first.where('starts_on <= :now and :now < ends_on',
+      now: DateTime.now).first
+  end
+
+
   #~ Instance methods .........................................................
 
   # -------------------------------------------------------------
