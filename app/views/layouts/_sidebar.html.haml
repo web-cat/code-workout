@@ -9,7 +9,8 @@
   = render partial: 'workouts/status',
     locals: { w: Workout.where(id: session[:current_workout]).first,
     exs: Exercise.includes(:workouts).where(["workouts.id = ?",
-    session[:current_workout]]).references(:workouts).limit(10) }
+    session[:current_workout]]).references(:workouts).limit(10),
+    wid: session[:current_workout] }
 - elsif user_signed_in?
   = render partial: "exercises/thumbsm", collection: Exercise.find(session[:leaf_exercises]), as: :x,
-    locals: { uid: current_user.id, wid: session[:current_workout] }
+    locals: { uid: current_user.id, wid: nil }
