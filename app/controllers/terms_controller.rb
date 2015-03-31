@@ -1,4 +1,5 @@
 class TermsController < InheritedResources::Base
+  load_and_authorize_resource
 
   # All standard action methods are inherited!
 

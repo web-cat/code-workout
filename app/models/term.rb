@@ -9,13 +9,17 @@
 #  year       :integer          not null
 #  created_at :datetime
 #  updated_at :datetime
+#  slug       :string(255)      not null
 #
 # Indexes
 #
+#  index_terms_on_slug             (slug) UNIQUE
 #  index_terms_on_year_and_season  (year,season)
 #
 
 class Term < ActiveRecord::Base
+  extend FriendlyId
+  friendly_id :display_name, use: :history
 
   #~ Relationships ............................................................
 
@@ -50,10 +54,7 @@ class Term < ActiveRecord::Base
 
   #~ Validation ...............................................................
 
-  validates :season, presence: true
-  validates :year, presence: true
-  validates :starts_on, presence: true
-  validates :ends_on, presence: true
+  validates_presence_of :season, :year, :starts_on, :ends_on, :slug
 
 
   #~ Class methods ............................................................
@@ -61,18 +62,6 @@ class Term < ActiveRecord::Base
   # -------------------------------------------------------------
   def self.season_name(season)
     SEASONS.rassoc(season).first
-  end
-
-
-  # -------------------------------------------------------------
-  def self.from_path_component(path)
-    if path =~ /([a-z]+)-(\d+)/
-      season = SEASON_PATH_NAMES[$1]
-      year = $2
-      where(year: year, season: season)
-    else
-      where('1 = 0')
-    end
   end
 
 
@@ -87,8 +76,6 @@ class Term < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def contains?(date_or_time)
-    # TODO We need to make sure time zones are properly handled, probably!
-
     starts_on <= date_or_time && date_or_time < ends_on
   end
 
@@ -131,9 +118,12 @@ class Term < ActiveRecord::Base
   end
 
 
-  # -------------------------------------------------------------
-  def url_part
-    "#{SEASON_PATH_NAMES.rassoc(season).first}-#{year}"
-  end
+  #~ Private instance methods .................................................
+  private
+
+    # -------------------------------------------------------------
+    def should_generate_new_friendly_id?
+      slug.blank? || season_changed? || year_changed?
+    end
 
 end

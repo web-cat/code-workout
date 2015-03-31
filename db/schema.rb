@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150330194627) do
+ActiveRecord::Schema.define(version: 20150331032124) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -310,8 +310,10 @@ ActiveRecord::Schema.define(version: 20150330194627) do
     t.integer  "year",       null: false
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.string   "slug",       null: false
   end
 
+  add_index "terms", ["slug"], name: "index_terms_on_slug", unique: true
   add_index "terms", ["year", "season"], name: "index_terms_on_year_and_season"
 
   create_table "test_case_results", force: true do |t|
