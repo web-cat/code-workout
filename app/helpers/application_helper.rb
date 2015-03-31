@@ -11,14 +11,14 @@ module ApplicationHelper
 
   # -------------------------------------------------------------
   def controller_stylesheet_link_tag
-    c = params[:controller]
+    c = params[:controller] || controller_name
     stylesheet_link_tag c if Rails.application.assets.find_asset("#{c}.css")
   end
 
 
   # -------------------------------------------------------------
   def controller_javascript_include_tag
-    c = params[:controller]
+    c = params[:controller] || controller_name
     javascript_include_tag c if Rails.application.assets.find_asset("#{c}.js")
   end
 

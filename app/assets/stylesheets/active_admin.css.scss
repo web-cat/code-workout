@@ -31,6 +31,9 @@ $panelHeaderBck: #40312a;
 //   .status_tag { background: #6090DB; }
 
 table.index_table td { color: #333; white-space: nowrap; }
+.attributes_table table td { color: #333; }
+body.admin_errors .attributes_table table .row-trace td { white-space: pre; }
+body.admin_errors table.index_table td.col-message { white-space: normal; }
 body { font-size: 12px; }
 // .main_content { overflow-x: scroll; }
 // #title_bar { padding-left: 0; padding-right: 0; }

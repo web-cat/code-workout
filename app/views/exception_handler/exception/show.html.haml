@@ -1,0 +1,13 @@
+- if @status.to_s == '404'
+  .error_container
+    .error
+      = image_tag 'exception_handler/alert.png', width: "150", alt: "Error!",
+        title: "Sorry, A Server Error Occurred", class: "alert"
+      %h2 Sorry, this page is missing!
+- else
+  .error
+    = image_tag 'exception_handler/alert.png', width: "150", alt: "Error!",
+      title: "Sorry, A Server Error Occurred", class: "alert"
+    .message
+      %strong= details[:name]
+      %span= details[:message]

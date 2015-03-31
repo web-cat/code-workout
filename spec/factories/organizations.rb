@@ -2,15 +2,16 @@
 #
 # Table name: organizations
 #
-#  id         :integer          not null, primary key
-#  name       :string(255)      not null
-#  url_part   :string(255)      not null
-#  created_at :datetime
-#  updated_at :datetime
+#  id           :integer          not null, primary key
+#  name         :string(255)      not null
+#  created_at   :datetime
+#  updated_at   :datetime
+#  abbreviation :string(255)
+#  slug         :string(255)      not null
 #
 # Indexes
 #
-#  index_organizations_on_url_part  (url_part)
+#  index_organizations_on_slug  (slug) UNIQUE
 #
 
 FactoryGirl.define do

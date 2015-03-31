@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150331121739) do
+ActiveRecord::Schema.define(version: 20150331153411) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -135,6 +135,23 @@ ActiveRecord::Schema.define(version: 20150331121739) do
 
   add_index "courses", ["organization_id"], name: "index_courses_on_organization_id"
   add_index "courses", ["url_part"], name: "index_courses_on_url_part"
+
+  create_table "errors", force: true do |t|
+    t.string   "usable_type"
+    t.integer  "usable_id"
+    t.text     "class_name"
+    t.text     "message"
+    t.text     "trace"
+    t.text     "target_url"
+    t.text     "referer_url"
+    t.text     "params"
+    t.text     "user_agent"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "errors", ["class_name"], name: "index_errors_on_class_name"
+  add_index "errors", ["created_at"], name: "index_errors_on_created_at"
 
   create_table "exercise_workouts", force: true do |t|
     t.integer  "exercise_id",               null: false

@@ -4,6 +4,17 @@ ActiveAdmin.register_page 'Dashboard' do
 
   content title: 'Administrator Dashboard' do
 
+    panel 'Recent Errrors' do
+      table_for Error.order('created_at desc').first(6) do
+        column :class_name
+        column(:message) do |e|
+          link_to e.message, admin_error_path(e)
+        end
+        column 'URL', :target_url
+      end
+      a 'View log file', href: '/log_file'
+    end
+
     columns do
 
       column do
@@ -33,7 +44,8 @@ ActiveAdmin.register_page 'Dashboard' do
 
       column do
         panel 'Recent Users' do
-          table_for User.all.order('last_sign_in_at desc').first(20) do
+          table_for User.where('last_sign_in_at not null').
+            order('last_sign_in_at desc').first(20) do
             column(:name) { |u| link_to u.display_name, admin_user_path(u) }
             column(:email) { |u| link_to u.email, 'mailto:' + u.email }
             column :last_login, :last_sign_in_at

@@ -68,6 +68,7 @@ gem 'cancan', '1.6.9' # 1.6.10 broke shallow routes
 gem 'activeadmin', github: 'activeadmin'
 gem "active_admin_import" , github: 'activeadmin-plugins/active_admin_import'
 gem 'active_skin', github: 'rstgroup/active_skin'
+gem 'exception_handler'
 
 gem 'kaminari'        # Auto-paginated views
 gem 'remotipart'      # Adds support for remote mulitpart forms (file uploads)
