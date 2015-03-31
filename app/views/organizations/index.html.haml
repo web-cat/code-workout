@@ -3,20 +3,14 @@
 %table.table.table-striped.table-bordered
   %thead
     %tr
-      %th Display name
-      %th URL part
+      %th Name
+      %th Abbreviation
       %th Actions
 
   %tbody
     - @organizations.each do |organization|
       %tr
-        %td= organization.display_name
-        %td= organization.url_part
+        %td= organization.name
+        %td= organization.abbreviation
         %td
           = button_link 'Show', organization, size: 'sm'
-          = button_link 'Edit', edit_organization_path(organization),
-            size: 'sm'
-          = button_link 'Destroy', organization, method: :delete,
-            size: 'sm', data: { confirm: 'Are you sure?' }
-
-= button_link 'New Organization', new_organization_path

@@ -1,12 +1,11 @@
 %p#notice= notice
 
 %p
-  %strong Display name:
+  %strong Name:
   = @organization.name
 
 %p
-  %strong Url part:
-  = @organization.url_part
+  %strong Abbreviation:
+  = @organization.abbreviation
 
-= button_link 'Edit', edit_organization_path(@organization)
 = button_link 'Back', organizations_path

@@ -35,7 +35,7 @@ CodeWorkout::Application.routes.draw do
   resources :course_offerings
 
   resources :courses
-  resources :organizations
+  resources :organizations, only: [ :index, :show ]
   resources :languages
   resources :tags
   resources :course_enrollments

@@ -12,4 +12,11 @@ class TermsController < InheritedResources::Base
       params.require(:term).permit(:season, :starts_on, :ends_on, :year)
     end
 
+
+    # -------------------------------------------------------------
+    # Defines resource human-readable name for use in flash messages.
+    def interpolation_options
+      { resource_name: @term.display_name }
+    end
+
 end
