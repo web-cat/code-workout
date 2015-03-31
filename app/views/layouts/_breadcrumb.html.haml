@@ -1,28 +1,40 @@
 %ol.breadcrumb
+  %li  
+    = link_to 'Home', root_path
   - if wid
     - flag1 = true  
     - if Workout.find(wid).course_offerings.any?      
       - Workout.find(wid).course_offerings.each do |off|
-        - if current_user.course_offerings.any?
+        - if user_signed_in? && current_user.course_offerings.any?
           - current_user.course_offerings.each do |user_off|
-            - if user_off.id == off.id
+            - if flag1 && user_off.id == off.id
               - flag1 = false
+              %li= link_to 'Courses', courses_path
               %li
-                = link_to off.name, course_offering_path(off)
+                = link_to off.name+' - '+off.term.display_name, course_offering_path(off)
     - if flag1
       %li
-        = link_to 'Gym', gym_path                   
-    %li  
-      = link_to Workout.find(wid).name, workout_path(wid)
+        = link_to 'Gym', gym_path
+    - if exid                   
+      %li  
+        = link_to Workout.find(wid).name, workout_path(wid)
+    - else
+      %li.active= Workout.find(wid).name  
     
   - elsif exid && Exercise.find(exid).courses.any?
     - Exercise.find(exid).courses.each do |course|
-      - if current_user.courses.any?
+      - if user_signed_in? && current_user.courses.any?
         - current_user.courses.each do |user_course|
           - if user_course.id == course.id
             %li= link_to course.name, course_path(course)
-              
+  
+  - elsif off
+    %li= link_to 'Courses', courses_path
+    %li.active=  off.name+' - '+off.term.display_name            
+  
+  
+  
   - else
     %li= link_to 'Gym', gym_path
-  - if exid     
-    %li.active= link_to @exercise.name, exercise_path(@exercise)
+  - if exid         
+    %li.active= @exercise.name
