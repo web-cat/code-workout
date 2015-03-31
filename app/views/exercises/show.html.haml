@@ -1,4 +1,5 @@
-= render partial: 'layouts/breadcrumb', locals: {wid: nil, exid: @exercise.id}
+= render partial: 'layouts/breadcrumb', 
+  locals: {wid: nil, exid: @exercise.id, off: nil}
 
 %p#notice= notice
 = link_to 'Edit', edit_exercise_path(@exercise)

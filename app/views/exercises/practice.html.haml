@@ -1,5 +1,5 @@
 = render partial: 'layouts/breadcrumb',
-  locals: {wid: session[:current_workout], exid: @exercise.id}
+  locals: {wid: session[:current_workout], exid: @exercise.id, off: nil}
 .col-md-7
   = semantic_form_for @exercise, url: exercise_evaluate_path(@exercise,
     wexes: params[:wexes], feedback_return: true), remote: true do |f|
