@@ -1,7 +1,7 @@
 %ol.breadcrumb
   %li= link_to 'Home', root_path
   %li.active= 'Gym'
-  
+
 %h1 The Gym
 - if @gym.empty?
   .alert No workouts found
@@ -10,5 +10,5 @@
   - user_id = user_signed_in? ? current_user.id : 1
   - @gym.in_groups_of(2, false) do |row|
     = render partial: "workouts/thumblg", collection: row, as: :w,
-      locals: { uid: uid }
+      locals: { uid: user_id }
     .clearfix
