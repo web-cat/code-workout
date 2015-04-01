@@ -231,6 +231,9 @@ class User < ActiveRecord::Base
       user.last_name ||= auth.info.last_name
       user.email ||= auth.info.email
       user.avatar ||= auth.info.image
+      if !user.confirmed_at
+        user.confirmed_at = DateTime.now
+      end
       if user.changed?
         user.save
       end
