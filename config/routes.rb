@@ -27,38 +27,32 @@ CodeWorkout::Application.routes.draw do
   post 'workouts/link_exercises'  => 'workouts#link_exercises'
   post '/coding_questions' => 'exercises#create'
   get 'workouts/download' => 'workouts#download'
-  get '/gym' => 'workouts#gym', as: :gym
 
-  resources :exercises
-  resources :coding_problems
+  scope :gym do
+    get '/' => 'workouts#gym', as: :gym
+    resources :exercises
+    resources :workouts
+  end
 
   resources :course_offerings
-
   resources :courses
-  resources :organizations, only: [ :index, :show ]
   resources :languages
   resources :tags
   resources :course_enrollments
 
-  resources :organizations
-  resources :course_roles
-  resources :global_roles
+  namespace :courses do
+    resources :organizations, only: [ :index, :show ]
+  end
   resources :terms, only: [ :index, :show ]
 
   # TODO: Might enable scaffolding pages later. Disabled till Fall. Being
   # manually added till now.
   #resources :languages
   #resources :tags
-  #resources :choices
-  #resources :stems
 
-
-  resources :course_enrollments
-  resources :users
-  resources :resource_files
-  resources :workouts
-  resources :signups
-
+  resources :users do
+    resources :resource_files
+  end
 
   #OmniAuth for Facebook
   devise_for :users,

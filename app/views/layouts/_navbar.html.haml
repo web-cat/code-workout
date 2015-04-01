@@ -5,7 +5,7 @@
     .navbar-collapse.collapse
       %ul.nav.navbar-nav.nav-top
         %li.dropdown
-          %a.dropdown-toggle{ href: '/gym',
+          %a.dropdown-toggle{ href: gym_url,
             data: { toggle: 'dropdown' }, value: 'Gym' }
             Gym
           %ul.dropdown-menu
@@ -16,25 +16,25 @@
                     %li
                       %strong
                         Workouts
-                    %li= link_to 'Workout 18', '/workouts/18'
-                    %li= link_to 'Workout 19', '/workouts/19'
-                    %li= link_to 'Workout 20', '/workouts/20'
-                    %li= link_to 'Workout 21', '/workouts/21'
+                    %li= link_to 'Workout 18', workout_path(18)
+                    %li= link_to 'Workout 19', workout_path(19)
+                    %li= link_to 'Workout 20', workout_path(20)
+                    %li= link_to 'Workout 21', workout_path(21)
                   - if user_signed_in? &&                                    |
                     current_user.global_role.can_edit_system_configuration?  |
                     %ul.col-sm-6.list-unstyled
                       %li
                         %strong
                           Manage Workouts
-                      %li= link_to 'Workouts', '/workouts/'
-                      %li= link_to 'Create Workout', '/workouts/new'
+                      %li= link_to 'Workouts', workouts_path
+                      %li= link_to 'Create Workout', new_workout_path
                 - if user_signed_in? &&                                      |
                   current_user.global_role.can_edit_system_configuration?    |
                   .row
                     %ul.col-sm-6.list-unstyled
                       %li
                         %strong
-                          = link_to 'Exercises','/exercises'
+                          = link_to 'Exercises', exercises_path
                       %li= link_to 'Upload Exercises - CSV',
                         exercises_upload_path
                       %li= link_to 'Upload Exercises - MCQ',
@@ -43,8 +43,7 @@
                       %li
                         %strong
                           Manage Exercises
-                      %li= link_to 'Edit Exercise', '/exercises/edit'
-                      %li= link_to 'Create Exercise', '/exercises/new'
+                      %li= link_to 'Create Exercise', new_exercise_path
         %li.dropdown
           %a.dropdown-toggle{ href: '/courses',
             data: { toggle: 'dropdown' }, value: 'Course' }

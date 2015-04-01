@@ -58,7 +58,7 @@
     - if @exs.empty?
       .alert No exercises in this workout
     - else
-      - user_id = user_signed_in? ? current_user.id : 1
+      - user_id = user_signed_in? ? current_user.id : 0
       - @exs.in_groups_of(2, false) do |row|
         = render partial: "exercises/thumblg", collection: row, as: :x,
           locals: { uid: user_id, wid: @workouts.first.id }
