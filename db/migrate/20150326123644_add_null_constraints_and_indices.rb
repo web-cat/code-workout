@@ -9,22 +9,17 @@ class AddNullConstraintsAndIndices < ActiveRecord::Migration
     # organizations
     change_column_null :organizations, :display_name, false
     change_column_null :organizations, :url_part, false
-    add_index :organizations, :url_part
 
     # courses
     change_column_null :courses, :name, false
     change_column_null :courses, :number, false
     change_column_null :courses, :organization_id, false
     change_column_null :courses, :url_part, false
-    add_index :courses, :url_part
-    add_index :courses, :organization_id
 
     # course_offerings
     change_column_null :course_offerings, :name, false
     change_column_null :course_offerings, :course_id, false
     change_column_null :course_offerings, :term_id, false
-    add_index :course_offerings, :course_id
-    add_index :course_offerings, :term_id
 
     # terms
     change_column_null :terms, :season, false

@@ -55,22 +55,21 @@
                   - if user_signed_in? && current_user.course_enrollments.any?
                     %ul.col-sm-6.list-unstyled
                       %li
-                        %strong
-                          My Courses
-                      - current_user.course_enrollments.each do |ce|
-                        %li= link_to CourseOffering.find(ce.course_offering_id).display_name,
-                          course_offering_path(ce.course_offering_id)
+                        %strong My Courses
+                      - term = Term.current_term
+                      - current_user.courses_for_term(term).each do |c|
+                        %li= link_to c.display_name,
+                          organization_course_path(c.organization, c, term)
                   %ul.col-sm-6.list-unstyled
                     %li
-                      %strong
-                        =link_to 'Other Courses', courses_path
+                      %strong= link_to 'Other Courses', organizations_path
                     %li= link_to 'CS 10', '/courses/10'
                     %li= link_to 'CS 12', '/courses/12'
-                  - if user_signed_in? && current_user.global_role.is_instructor?
+                  - if user_signed_in? &&                                  |
+                    current_user.managed_course_offerings.any?             |
                     %ul.col-sm-6.list-unstyled
                       %li
-                        %strong
-                          Manage Courses
+                        %strong Manage Courses
                       %li= link_to 'Edit Course', '/courses/'
                       %li= link_to 'Create Course', '/courses/new'
 

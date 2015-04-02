@@ -34,6 +34,7 @@ class WorkoutsController < ApplicationController
   # -------------------------------------------------------------
   # GET /workouts/1
   def show
+    puts "workouts#show: params = #{params}"
     if params[:id]
       found = Workout.where(id: params[:id])
       if found.empty?

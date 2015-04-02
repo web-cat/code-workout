@@ -45,10 +45,8 @@ class Organization < ActiveRecord::Base
     # name).
     def titleize(text)
       stop_words = %w(and or but in on to from with the a an)
-      x = text.downcase.split.map{ |w|
+      text.downcase.split.map{ |w|
         stop_words.include?(w) ? w : w.capitalize }.join(' ')
-      puts "titleize(#{text}) = #{x}"
-      x
     end
 
 
@@ -56,27 +54,21 @@ class Organization < ActiveRecord::Base
     # Convert a properly capitalized name into an acronym (i.e.,
     # "Virginia Tech" => "VT") by pulling out only the capital letters.
     def acronym(text)
-      x = titleize(text).scan(/[[:upper:]]/).join
-      puts "acronym(#{text}) = #{x}"
-      x
+      titleize(text).scan(/[[:upper:]]/).join
     end
 
 
     # -------------------------------------------------------------
     def set_abbreviation_if_necessary
       if abbreviation.blank?
-        puts 'abbreviation is blank'
         self.abbreviation = acronym(name)
-        puts "abbreviation = #{abbreviation}"
       end
     end
 
 
     # -------------------------------------------------------------
     def should_generate_new_friendly_id?
-      puts "should generate for '#{name}' = abbrev '#{abbreviation}'"
       set_abbreviation_if_necessary
-      puts "new abbrev = '#{abbreviation}'"
       slug.blank? || abbreviation_changed?
     end
 

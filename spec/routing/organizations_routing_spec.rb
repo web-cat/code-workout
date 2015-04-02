@@ -1,34 +1,36 @@
-require "spec_helper"
+require 'spec_helper'
 
 describe OrganizationsController do
-  describe "routing" do
+  describe 'routing' do
 
-    it "routes to #index" do
-      get("/organizations").should route_to("organizations#index")
+    it 'routes to #index' do
+      expect(get: '/courses').to route_to('organizations#index')
     end
 
-    it "routes to #new" do
-      get("/organizations/new").should route_to("organizations#new")
+    it 'routes to #new' do
+      # Treats /new as a slug for an organization
+      expect(get: '/courses/new').to route_to('organizations#show', id: 'new')
     end
 
-    it "routes to #show" do
-      get("/organizations/1").should route_to("organizations#show", :id => "1")
+    it 'routes to #show' do
+      expect(get: '/courses/1').to route_to('organizations#show', id: '1')
     end
 
-    it "routes to #edit" do
-      get("/organizations/1/edit").should route_to("organizations#edit", :id => "1")
+    it 'routes to #edit' do
+      expect(get: '/courses/1/edit').to route_to(
+        'courses#show', id: 'edit', organization_id: '1')
     end
 
-    it "routes to #create" do
-      post("/organizations").should route_to("organizations#create")
+    it 'routes to #create' do
+      expect(post: '/courses').not_to be_routable
     end
 
-    it "routes to #update" do
-      put("/organizations/1").should route_to("organizations#update", :id => "1")
+    it 'routes to #update' do
+      expect(put: '/courses/1').not_to be_routable
     end
 
-    it "routes to #destroy" do
-      delete("/organizations/1").should route_to("organizations#destroy", :id => "1")
+    it 'routes to #destroy' do
+      expect(delete: '/courses/1').not_to be_routable
     end
 
   end

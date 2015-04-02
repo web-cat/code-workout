@@ -16,6 +16,7 @@ class CoursesController < ApplicationController
   # -------------------------------------------------------------
   # GET /courses/1
   def show
+    puts "courses#show: params = #{params}"
     respond_to do |format|
       format.js
       format.html

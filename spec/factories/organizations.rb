@@ -17,8 +17,8 @@
 FactoryGirl.define do
 
   factory :organization do
-    display_name "Virginia Tech"
-    url_part "vt"
+    name "Virginia Tech"
+    abbreviation "VT"
   end
 
 end

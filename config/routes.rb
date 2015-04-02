@@ -16,42 +16,75 @@ CodeWorkout::Application.routes.draw do
   get 'static_pages/mockup3'
   get 'static_pages/typography'
 
-  get 'exercises/upload' => 'exercises#upload', as: :exercises_upload
-  get 'exercises/download' => 'exercises#download', as: :exercises_download
-  post 'exercises/upload_create' => 'exercises#upload_create'
-  get 'exercises/upload_mcqs' => 'exercises#upload_mcqs',
-    as: :exercises_upload_mcqs
-  post 'exercises/create_mcqs' => 'exercises#create_mcqs'
-
-  get 'workouts/:id/add_exercises' => 'workouts#add_exercises'
-  post 'workouts/link_exercises'  => 'workouts#link_exercises'
-  post '/coding_questions' => 'exercises#create'
-  get 'workouts/download' => 'workouts#download'
-
+  # All of the routes anchored at /gym
   scope :gym do
+    # The top-level gym route
     get '/' => 'workouts#gym', as: :gym
+
+    # /gym/exercises ...
+    get  'exercises/upload' => 'exercises#upload', as: :exercises_upload
+    get  'exercises/download' => 'exercises#download', as: :exercises_download
+    post 'exercises/upload_create' => 'exercises#upload_create'
+    get  'exercises/upload_mcqs' => 'exercises#upload_mcqs',
+      as: :exercises_upload_mcqs
+    post 'exercises/create_mcqs' => 'exercises#create_mcqs'
+    get  'exercises/any' => 'exercises#random_exercise',
+      as: :random_exercise
+    get 'exercises/:id/practice' => 'exercises#practice',
+      as: :exercise_practice
+    patch 'exercises/:id/practice' => 'exercises#evaluate',
+      as: :exercise_evaluate
+    post 'exercises/search' => 'exercises#search', as: :search
+    # At the bottom, so the routes above take precedence over existing ids
     resources :exercises
+
+    # /gym/workouts ...
+    get  'workouts/download' => 'workouts#download'
+    get  'workouts/:id/add_exercises' => 'workouts#add_exercises'
+    post 'workouts/link_exercises'  => 'workouts#link_exercises'
+    get  'workouts/new_with_search/:searchkey'  => 'workouts#new_with_search',
+      as: :workouts_with_search
+    post 'workouts/new_with_search'  => 'workouts#new_with_search',
+      as: :workouts_exercise_search
+    get  'workouts/:id/practice' => 'workouts#practice_workout',
+      as: :practice_workout
+    get  'workouts/:id/evaluate' => 'workouts#evaluate', as: :workout_evaluate
+
+    # At the bottom, so the routes above take precedence over existing ids
     resources :workouts
   end
 
-  resources :course_offerings
-  resources :courses
-  resources :languages
-  resources :tags
-  resources :course_enrollments
-
-  namespace :courses do
-    resources :organizations, only: [ :index, :show ]
+  # All of the routes anchored at /courses
+  get '/courses/search' => 'courses#search', as: :courses_search
+  post '/courses/find' => 'courses#find', as: :course_find
+  resources :organizations, only: [ :index, :show ], path: '/courses' do
+    post ':id/:term_id/generate_gradebook' => 'courses#generate_gradebook',
+      as: :course_gradebook
+    get ':course_id/:term_id/:workout_id/:id' => 'exercises#show'
+    get ':course_id/:term_id/:id' => 'workouts#show'
+    get ':id(/:term_id)' => 'courses#show', as: :course
   end
-  resources :terms, only: [ :index, :show ]
 
-  # TODO: Might enable scaffolding pages later. Disabled till Fall. Being
-  # manually added till now.
-  #resources :languages
-  #resources :tags
+  # doesn't fit in the other routes well, but that's ok since it is
+  # almost purely internal use only.
+  match '/course_offering/:course_offering_id/upload_roster/:action',
+    controller: 'upload_roster', as: 'upload_roster', via: [:get, :post]
+  # internal only
+  post '/course_offerings/:id/generate_gradebook' =>
+    'course_offerings#generate_gradebook', as: :course_offering_gradebook
 
-  resources :users do
-    resources :resource_files
+  # Need to be redesigned for new routes plan
+  get '/course_offerings/:id/add_workout' => 'course_offerings#add_workout',
+    as: :course_offering_add_workout
+  post '/course_offerings/store_workout/:id' =>
+    'course_offerings#store_workout', as: :course_offering_store_workout
+
+  resources :users, constraints: { id: /[^\/]+/ } do
+    resources :resource_files, path: 'media',
+      constraints: { id: /[^\/]+/ }
+    # This route is broken, since there is no such method
+    # post 'resource_files/uploadFile' => 'resource_files#uploadFile'
+    get 'performance' => 'users#calc_performance', as: :calc_performance
   end
 
   #OmniAuth for Facebook
@@ -60,36 +93,11 @@ CodeWorkout::Application.routes.draw do
     skip: [:registrations, :sessions]
   as :user do
     get '/signup' => 'devise/registrations#new', as: :new_user_registration
-
-    # TODO: These routes are broken and need to be fixed!
-    get '/about' => 'devise/about#new', as: :about_page
-    get '/license' => 'devise/license#new', as: :license_page
-    get '/contact' => 'devise/contact#new', as: :contact_page
-    post '/courses/:id/generate_gradebook' => 'courses#generate_gradebook', as: :course_gradebook
-    post '/course_offerings/:id/generate_gradebook' => 'course_offerings#generate_gradebook', as: :course_offering_gradebook
-    #post '/exercises/:id/update' => 'exercise#update', as: :exercise_update
-    get '/exercises_random_exercise' => 'exercises#random_exercise', as: :random_exercise
-    get '/courses_search' => 'courses#search', as: :courses_search
-    post '/courses_find' => 'courses#find', as: :course_find
-    get '/workouts/new_with_search/:searchkey'  => 'workouts#new_with_search', as: :workouts_with_search
-    post '/workouts/new_with_search'  => 'workouts#new_with_search', as: :workouts_exercise_search
     post '/signup' => 'devise/registrations#create', as: :user_registration
     get '/login' => 'devise/sessions#new', as: :new_user_session
     post '/login' => 'devise/sessions#create', as: :user_session
     delete '/logout' => 'devise/sessions#destroy', as: :destroy_user_session
-    get '/practice_workout/:id' => 'workouts#practice_workout', as: :practice_workout
-    get '/practice/:id' => 'exercises#practice', as: :exercise_practice
-    get '/course_offerings/:id/add_workout' => 'course_offerings#add_workout', as: :course_offering_add_workout
-    post '/course_offerings/store_workout/:id' => 'course_offerings#store_workout', as: :course_offering_store_workout
-    patch '/practice/:id' => 'exercises#evaluate', as: :exercise_evaluate
-    get '/workouts/:id/evaluate' => 'workouts#evaluate', as: :workout_evaluate
-    get '/users/:id/performance' => 'users#calc_performance', as: :calc_performance
-    post '/exercises/search' => 'exercises#search', as: :search
-    post 'resource_files/uploadFile' => 'resource_files#uploadFile'
   end
-
-  match 'course_offering/:course_offering_id/upload_roster/:action',
-    controller: 'upload_roster', as: 'upload_roster', via: [:get, :post]
 
 end
 #== Route Map

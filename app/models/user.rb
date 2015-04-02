@@ -63,7 +63,7 @@ class User < ActiveRecord::Base
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, and :timeoutable
   devise :database_authenticatable, :omniauthable, :registerable,
-    :recoverable, :rememberable, :trackable, :validatable, :confirmable,
+    :recoverable, :rememberable, :trackable, :validatable,  # :confirmable,
     :omniauth_providers => [:facebook, :google_oauth2]
 
   before_create :set_default_role
@@ -138,6 +138,24 @@ class User < ActiveRecord::Base
   def student_course_offerings
     course_enrollments.where(course_role: CourseRole.student).
       map(&:course_offering)
+  end
+
+
+  # -------------------------------------------------------------
+  def course_offerings_for_term(term)
+    CourseOffering.
+      joins(course_enrollments: :user).
+      where(term: term, 'users.id' => self).
+      distinct
+  end
+
+
+  # -------------------------------------------------------------
+  def courses_for_term(term)
+    Course.
+      joins(course_offerings: { course_enrollments: :user}).
+      where('course_offerings.term_id' => term, 'users.id' => self).
+      distinct
   end
 
 

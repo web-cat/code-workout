@@ -58,7 +58,8 @@ class UsersController < ApplicationController
     #  exs.push t.exercise_id
     #end
 
-    tags = TagUserScore.where(:user_id => params[:id]).order("updated_at DESC")
+    tags = TagUserScore.where(:user_id => params[:user_id]).
+      order("updated_at DESC")
     @tag_scores = Array.new
     tags.each do |t|
       info = Hash.new
