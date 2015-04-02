@@ -164,7 +164,8 @@ class CoursesController < ApplicationController
     # -------------------------------------------------------------
     # Use callbacks to share common setup or constraints between actions.
     def set_course
-      @course = Course.find_by_id(params[:id])
+      puts "set_course(): params = #{params}"
+      @course = Course.find(params[:id])
     end
 
 

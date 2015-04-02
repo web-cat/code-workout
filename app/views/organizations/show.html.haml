@@ -1,11 +1,17 @@
-%p#notice= notice
+%ol.breadcrumb
+  %li= link_to 'Home', root_path
+  %li= link_to 'Courses', organizations_path
+  %li.active= @organization.abbreviation
 
-%p
-  %strong Name:
+%h1
+  Courses from
   = @organization.name
 
-%p
-  %strong Abbreviation:
-  = @organization.abbreviation
+%ul
+  - if @organization.courses.any?
+    - @organization.courses.each do |course|
+      %li= link_to course.number_and_name,
+        organization_course_path(@organization, course)
+  - else
+    %li This organization does not have any courses yet.
 
-= button_link 'Back', organizations_path

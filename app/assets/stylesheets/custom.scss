@@ -9,6 +9,7 @@ html, body { height: 100%; }
 .full-height { min-height: 100%; }
 .no-overflow { overflow-y: hidden; }
 .below-nav { padding: 60px 10px 0; }
+.breadcrumb { margin-bottom: 15px; }
 
 .sidebar, .content, .maincol {
   padding-left: 0px;
@@ -179,7 +180,8 @@ ul.wysihtml5-toolbar li {
 
 .thumbnail.lg {
   width: 45%;
-  margin-right: 4%;
+  margin-right: 2%;
+  margin-left: 2%;
   padding-bottom: 0;
   display: block;
   float: left;

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150331153411) do
+ActiveRecord::Schema.define(version: 20150402043958) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -29,16 +29,16 @@ ActiveRecord::Schema.define(version: 20150331153411) do
   add_index "active_admin_comments", ["resource_type", "resource_id"], name: "index_active_admin_comments_on_resource_type_and_resource_id"
 
   create_table "attempts", force: true do |t|
-    t.integer  "user_id",                         null: false
-    t.integer  "exercise_id",                     null: false
-    t.datetime "submit_time",                     null: false
-    t.integer  "submit_num",                      null: false
+    t.integer  "user_id",                           null: false
+    t.integer  "exercise_id",                       null: false
+    t.datetime "submit_time",                       null: false
+    t.integer  "submit_num",                        null: false
     t.text     "answer"
-    t.decimal  "score",             default: 0.0
+    t.decimal  "score",               default: 0.0
     t.integer  "experience_earned"
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer  "workout_id"
+    t.integer  "workout_offering_id"
   end
 
   add_index "attempts", ["exercise_id"], name: "index_attempts_on_exercise_id"
@@ -114,11 +114,6 @@ ActiveRecord::Schema.define(version: 20150331153411) do
   add_index "course_offerings", ["course_id"], name: "index_course_offerings_on_course_id"
   add_index "course_offerings", ["term_id"], name: "index_course_offerings_on_term_id"
 
-  create_table "course_offerings_workouts", id: false, force: true do |t|
-    t.integer "course_offering_id", null: false
-    t.integer "workout_id",         null: false
-  end
-
   create_table "course_roles", force: true do |t|
     t.string  "name",                                       null: false
     t.boolean "can_manage_course",          default: false, null: false
@@ -132,14 +127,14 @@ ActiveRecord::Schema.define(version: 20150331153411) do
     t.string   "name",            null: false
     t.string   "number",          null: false
     t.integer  "organization_id", null: false
-    t.string   "url_part",        null: false
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "creator_id"
+    t.string   "slug",            null: false
   end
 
   add_index "courses", ["organization_id"], name: "index_courses_on_organization_id"
-  add_index "courses", ["url_part"], name: "index_courses_on_url_part", unique: true
+  add_index "courses", ["slug"], name: "index_courses_on_slug"
 
   create_table "errors", force: true do |t|
     t.string   "usable_type"
@@ -199,26 +194,13 @@ ActiveRecord::Schema.define(version: 20150331153411) do
   add_index "exercises_resource_files", ["exercise_id"], name: "index_exercises_resource_files_on_exercise_id"
   add_index "exercises_resource_files", ["resource_file_id"], name: "index_exercises_resource_files_on_resource_file_id"
 
-  create_table "exercises_tags", id: false, force: true do |t|
+  create_table "exercises_tags", force: true do |t|
     t.integer "exercise_id", null: false
     t.integer "tag_id",      null: false
   end
 
-  add_index "exercises_tags", ["exercise_id", "tag_id"], name: "index_exercises_tags_on_exercise_id_and_tag_id", unique: true
   add_index "exercises_tags", ["exercise_id"], name: "index_exercises_tags_on_exercise_id"
   add_index "exercises_tags", ["tag_id"], name: "index_exercises_tags_on_tag_id"
-
-  create_table "exercises_workouts", force: true do |t|
-    t.integer  "workout_id",  null: false
-    t.integer  "exercise_id", null: false
-    t.integer  "points"
-    t.integer  "order"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-  end
-
-  add_index "exercises_workouts", ["exercise_id"], name: "index_exercises_workouts_on_exercise_id"
-  add_index "exercises_workouts", ["workout_id"], name: "index_exercises_workouts_on_workout_id"
 
   create_table "friendly_id_slugs", force: true do |t|
     t.string   "slug",                      null: false
@@ -259,7 +241,6 @@ ActiveRecord::Schema.define(version: 20150331153411) do
     t.string   "slug",         null: false
   end
 
-  add_index "organizations", ["name"], name: "index_organizations_on_name", unique: true
   add_index "organizations", ["slug"], name: "index_organizations_on_slug", unique: true
 
   create_table "prompts", force: true do |t|
@@ -294,6 +275,16 @@ ActiveRecord::Schema.define(version: 20150331153411) do
 
   add_index "resource_files", ["token"], name: "index_resource_files_on_token"
   add_index "resource_files", ["user_id"], name: "index_resource_files_on_user_id"
+
+  create_table "signups", force: true do |t|
+    t.string   "first_name"
+    t.string   "last_name_name"
+    t.string   "email"
+    t.string   "institution"
+    t.text     "comments"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
 
   create_table "stems", force: true do |t|
     t.text     "preamble"
@@ -341,7 +332,6 @@ ActiveRecord::Schema.define(version: 20150331153411) do
   end
 
   add_index "terms", ["slug"], name: "index_terms_on_slug", unique: true
-  add_index "terms", ["starts_on"], name: "index_terms_on_starts_on"
   add_index "terms", ["year", "season"], name: "index_terms_on_year_and_season"
 
   create_table "test_case_results", force: true do |t|
@@ -390,12 +380,14 @@ ActiveRecord::Schema.define(version: 20150331153411) do
     t.string   "last_name"
     t.integer  "global_role_id",                      null: false
     t.string   "avatar"
+    t.string   "slug",                                null: false
   end
 
   add_index "users", ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
   add_index "users", ["email"], name: "index_users_on_email", unique: true
   add_index "users", ["global_role_id"], name: "index_users_on_global_role_id"
   add_index "users", ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
+  add_index "users", ["slug"], name: "index_users_on_slug", unique: true
 
   create_table "variation_groups", force: true do |t|
     t.string   "name",       null: false

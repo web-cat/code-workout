@@ -18,6 +18,10 @@
 #
 
 class Course < ActiveRecord::Base
+  extend FriendlyId
+  friendly_id :number_without_spaces, use: [:history, :scoped],
+    scope: :organization
+
 
   #~ Relationships ............................................................
 
@@ -35,22 +39,7 @@ class Course < ActiveRecord::Base
 
   #~ Validation ...............................................................
 
-  validates :name, presence: true
-  validates :number, presence: true
-  validates :organization, presence: true
-  validates :url_part,
-    presence: true,
-    format: {
-      with: /[a-z0-9\-_.]+/,
-      message: 'must consist only of letters, digits, hyphens (-), ' \
-        'underscores (_), and periods (.).'
-    },
-    uniqueness: { case_sensitive: false }
-
-
-  #~ Hooks ....................................................................
-
-  before_validation :set_url_part
+  validates_presence_of :name, :number, :organization
 
 
   #~ Class methods ............................................................
@@ -97,9 +86,15 @@ class Course < ActiveRecord::Base
   #~ Private instance methods .................................................
   private
 
-  # -------------------------------------------------------------
-  def set_url_part
-    self.url_part = url_part_safe(number)
-  end
+    # -------------------------------------------------------------
+    def number_without_spaces
+      number.gsub(/\s/, '')
+    end
+
+
+    # -------------------------------------------------------------
+    def should_generate_new_friendly_id?
+      slug.blank? || number_changed?
+    end
 
 end

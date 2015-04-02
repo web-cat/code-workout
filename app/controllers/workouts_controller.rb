@@ -34,19 +34,7 @@ class WorkoutsController < ApplicationController
   # -------------------------------------------------------------
   # GET /workouts/1
   def show
-    puts "workouts#show: params = #{params}"
-    if params[:id]
-      found = Workout.where(id: params[:id])
-      if found.empty?
-        redirect_to workouts_url, notice: "Workout #{params[:id]} not found"
-      else
-        @workouts = found #.first
-        @exs = found.first.exercises.sort_by{ |a| a[:order] }
-      end
-    else
-      redirect_to workouts_url, notice: 'Choose a workout for practice!'
-    end
-    # render layout: 'two_columns'
+    @exs = @workout.exercises
   end
 
 

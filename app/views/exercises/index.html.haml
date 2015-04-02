@@ -1,17 +1,14 @@
-%h1 Listing exercises
+%ol.breadcrumb
+  %li= link_to 'Home', root_path
+  %li= link_to 'Gym', gym_url
+  %li.active Exercises
 
-%table
-  %thead
-    %tr
-      %th
-      %th
-      %th
+%h1 Exercises
 
-  - @exercises.each do |exercise|
-    %tr
-      %td= link_to 'Show', exercise
-      %td= link_to 'Edit', edit_exercise_path(exercise)
-      %td= link_to 'Destroy', exercise, method: :delete,
-        data: { confirm: 'Are you sure?' }
+- user_id = user_signed_in? ? current_user.id : 0
+- @exercises.in_groups_of(2, false) do |row|
+  = render partial: "exercises/thumblg", collection: row, as: :x,
+    locals: { uid: user_id, wid: nil }
+  .clearfix
 
-%p= link_to 'New Exercise', new_exercise_path
+%p= button_link 'Write your own exercise', new_exercise_path, btn: 'primary'

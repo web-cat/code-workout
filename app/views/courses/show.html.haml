@@ -56,9 +56,13 @@
 
   .tab-pane.fade.in.active{ id: 'wkts' }
     %ul
+      -# FIXME: definitely busted!
+      - user_id = user_signed_in? ? current_user.id : 0
       - @course.course_offerings.each do |off|
-        - off.workouts.each do |wkt|
-          %li= link_to wkt.name, '/workouts/'+wkt.id.to_s
+        - off.workouts.in_groups_of(2, false) do |row|
+          = render partial: "workouts/thumblg", collection: row, as: :w,
+            locals: { uid: user_id }
+          .clearfix
 
   .tab-pane.fade{ id: 'exers' }
     %ul

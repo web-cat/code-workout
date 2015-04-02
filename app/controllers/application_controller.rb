@@ -31,4 +31,11 @@ class ApplicationController < ActionController::Base
     JHELPER.escape_javascript(text)
   end
 
+
+  # -------------------------------------------------------------
+  def params_with_flash
+    params.merge(flash.
+      select { |k, v| k.ends_with?('_id') && !params.has_key?(k) })
+  end
+
 end

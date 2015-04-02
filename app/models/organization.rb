@@ -20,7 +20,10 @@ class Organization < ActiveRecord::Base
 
   #~ Relationships ............................................................
 
-  has_many :courses, inverse_of: :organization, dependent: :destroy
+  has_many :courses,
+    -> { order('number asc') },
+    inverse_of: :organization,
+    dependent: :destroy
 
 
   #~ Validation ...............................................................

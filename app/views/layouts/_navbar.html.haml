@@ -14,8 +14,8 @@
                 .row
                   %ul.col-sm-6.list-unstyled
                     %li
-                      %strong
-                        Workouts
+                      %strong Workouts
+                    %li= link_to 'Browse all', workouts_path
                     %li= link_to 'Workout 18', workout_path(18)
                     %li= link_to 'Workout 19', workout_path(19)
                     %li= link_to 'Workout 20', workout_path(20)
@@ -24,8 +24,7 @@
                     current_user.global_role.can_edit_system_configuration?  |
                     %ul.col-sm-6.list-unstyled
                       %li
-                        %strong
-                          Manage Workouts
+                        %strong Manage Workouts
                       %li= link_to 'Workouts', workouts_path
                       %li= link_to 'Create Workout', new_workout_path
                 - if user_signed_in? &&                                      |
@@ -33,19 +32,18 @@
                   .row
                     %ul.col-sm-6.list-unstyled
                       %li
-                        %strong
-                          = link_to 'Exercises', exercises_path
+                        %strong Exercises
+                      %li= link_to 'Browse all', exercises_path
                       %li= link_to 'Upload Exercises - CSV',
                         exercises_upload_path
                       %li= link_to 'Upload Exercises - MCQ',
                         exercises_upload_mcqs_path
                     %ul.col-sm-6.list-unstyled
                       %li
-                        %strong
-                          Manage Exercises
+                        %strong Manage Exercises
                       %li= link_to 'Create Exercise', new_exercise_path
         %li.dropdown
-          %a.dropdown-toggle{ href: '/courses',
+          %a.dropdown-toggle{ href: organizations_path,
             data: { toggle: 'dropdown' }, value: 'Course' }
             Course
           %ul.dropdown-menu
@@ -62,7 +60,7 @@
                           organization_course_path(c.organization, c, term)
                   %ul.col-sm-6.list-unstyled
                     %li
-                      %strong= link_to 'Other Courses', organizations_path
+                      %strong= link_to 'Browse all', organizations_path
                     %li= link_to 'CS 10', '/courses/10'
                     %li= link_to 'CS 12', '/courses/12'
                   - if user_signed_in? &&                                  |
@@ -79,8 +77,7 @@
 
 
       %ul.nav.navbar-nav.navbar-right.nav-top
-        %li
-          = render :partial => 'exercises/search'
+        %li= render :partial => 'exercises/search'
         - if user_signed_in?
           - if current_user.global_role.can_edit_system_configuration?
             %li= link_to icon_tag_for('wrench'), admin_dashboard_path

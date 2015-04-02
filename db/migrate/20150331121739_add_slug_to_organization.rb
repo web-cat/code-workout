@@ -1,4 +1,5 @@
 class AddSlugToOrganization < ActiveRecord::Migration
+
   def up
     remove_column :organizations, :url_part, :string
     add_column :organizations, :abbreviation, :string

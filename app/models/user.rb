@@ -35,6 +35,10 @@ class User < ActiveRecord::Base
   include Gravtastic
   gravtastic secure: true, default: 'monsterid'
 
+  extend FriendlyId
+  friendly_id :email_or_id
+
+
   #~ Relationships ............................................................
 
   belongs_to  :global_role
@@ -260,6 +264,12 @@ class User < ActiveRecord::Base
   end
 
 
+  # -------------------------------------------------------------
+  def normalize_friendly_id(value)
+    value.split('@').map{ |x| CGI.escape x }.join('@')
+  end
+
+
   #~ Private instance methods .................................................
   private
 
@@ -282,6 +292,18 @@ class User < ActiveRecord::Base
     # user-administration-for-devise/
     def password_required?
       (!password.blank? && !password_confirmation.blank?) || new_record?
+    end
+
+
+    # -------------------------------------------------------------
+    def email_or_id
+      email || id
+    end
+
+
+    # -------------------------------------------------------------
+    def should_generate_new_friendly_id?
+      slug.blank? || email_changed?
     end
 
 end

@@ -18,7 +18,8 @@ class Workout < ActiveRecord::Base
   #~ Relationships ............................................................
 
 	has_many :exercises, through:  :exercise_workouts
-	has_many :exercise_workouts, inverse_of: :workout, dependent: :destroy
+	has_many :exercise_workouts, -> { order("'order' ASC") },
+	  inverse_of: :workout, dependent: :destroy
 	has_many :workout_scores, inverse_of: :workout, dependent: :destroy
   has_many :users, through: :workout_scores
 	has_and_belongs_to_many :tags

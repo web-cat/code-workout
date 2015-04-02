@@ -1,3 +1,8 @@
+%ol.breadcrumb
+  %li= link_to 'Home', root_path
+  %li= link_to 'Gym', gym_url
+  %li.active Workouts
+
 %h1 Workouts
 
 - uid = user_signed_in? ? current_user.id : 0

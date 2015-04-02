@@ -1,4 +1,5 @@
 class ResourceFilesController < ApplicationController
+  before_action :set_user
   before_action :set_resource_file, only: [:show]
 
 
@@ -67,7 +68,20 @@ class ResourceFilesController < ApplicationController
     # Use callbacks to share common setup or constraints between actions.
     def set_resource_file
       @resource_file = ResourceFile.find_by_token(params[:id])
+      if params[:user_id]
+        @user = User.find_by_token(params[:user_id])
+      end
     end
+
+
+    # -------------------------------------------------------------
+    # Use callbacks to share common setup or constraints between actions.
+    def set_user
+      if params[:user_id]
+        @user = User.find(params[:user_id])
+      end
+    end
+
 
     # Only allow a trusted parameter "white list" through.
 

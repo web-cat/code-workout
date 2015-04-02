@@ -1,16 +1,17 @@
-%h1 Organizations
+%ol.breadcrumb
+  %li= link_to 'Home', root_path
+  %li.active Courses
 
-%table.table.table-striped.table-bordered
-  %thead
-    %tr
-      %th Name
-      %th Abbreviation
-      %th Actions
 
-  %tbody
-    - @organizations.each do |organization|
-      %tr
-        %td= organization.name
-        %td= organization.abbreviation
-        %td
-          = button_link 'Show', organization, size: 'sm'
+%h1 Courses by Organization
+
+- @organizations.each do |organization|
+  %h2= organization.name
+
+  %ul
+    - if organization.courses.any?
+      - organization.courses.each do |course|
+        %li= link_to course.number_and_name,
+          organization_course_path(organization, course)
+    - else
+      %li This organization does not have any courses yet.

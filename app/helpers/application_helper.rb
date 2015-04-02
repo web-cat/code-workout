@@ -1,5 +1,6 @@
 module ApplicationHelper
   include ActionView::Helpers::JavaScriptHelper
+  include ActionView::Helpers::UrlHelper
 
 
   # -------------------------------------------------------------
@@ -166,21 +167,46 @@ module ApplicationHelper
 
 
   # -------------------------------------------------------------
+  def button_to_with_style(
+    name = nil, options = nil, html_options = nil, &block)
+    if !options
+      options = {}
+    elsif !options.is_a?(Hash)
+      html_options ||= {}
+    end
+    opts = html_options || options
+    opts[:class] = opts[:class] || 'btn'
+    if opts[:btn]
+      opts[:class] = opts[:class] + ' btn-' + opts.delete(:btn)
+    end
+    if opts[:size]
+      opts[:class] = opts[:class] + ' btn-' + opts.delete(:size)
+    end
+    if opts[:color]
+      opts[:class] = opts[:class] + ' btn-' + opts.delete(:color)
+    else
+      opts[:class] = opts[:class] + ' btn-default'
+    end
+    puts "options = #{options}"
+    puts "html_options = #{html_options}"
+    button_to_without_style(name, options, html_options, &block)
+  end
+  alias_method_chain :button_to, :style
+
+
+  # -------------------------------------------------------------
   # Creates a link styled as aBootstrap button.
   #
   def button_link(label, destination = '#', options = {})
     options[:class] = options[:class] || 'btn'
     if options[:btn]
-      options[:class] = options[:class] + ' btn-' + options[:btn]
-      options.delete(:btn)
+      options[:class] = options[:class] + ' btn-' + options.delete(:btn)
     end
     if options[:size]
-      options[:class] = options[:class] + ' btn-' + options[:size]
-      options.delete(:size)
+      options[:class] = options[:class] + ' btn-' + options.delete(:size)
     end
     if options[:color]
-      options[:class] = options[:class] + ' btn-' + options[:color]
-      options.delete(:color)
+      options[:class] = options[:class] + ' btn-' + options.delete(:color)
     else
       options[:class] = options[:class] + ' btn-default'
     end
