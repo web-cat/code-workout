@@ -16,6 +16,7 @@ CodeWorkout::Application.routes.draw do
   get 'static_pages/mockup3'
   get 'static_pages/typography'
 
+
   # All of the routes anchored at /gym
   scope :gym do
     # The top-level gym route
@@ -54,6 +55,7 @@ CodeWorkout::Application.routes.draw do
     resources :workouts
   end
 
+
   # All of the routes anchored at /courses
   get '/courses/search' => 'courses#search', as: :courses_search
   post '/courses/find' => 'courses#find', as: :course_find
@@ -65,6 +67,7 @@ CodeWorkout::Application.routes.draw do
     get ':id(/:term_id)' => 'courses#show', as: :course
   end
 
+
   # doesn't fit in the other routes well, but that's ok since it is
   # almost purely internal use only.
   match '/course_offering/:course_offering_id/upload_roster/:action',
@@ -73,12 +76,15 @@ CodeWorkout::Application.routes.draw do
   post '/course_offerings/:id/generate_gradebook' =>
     'course_offerings#generate_gradebook', as: :course_offering_gradebook
 
+
   # Need to be redesigned for new routes plan
   get '/course_offerings/:id/add_workout' => 'course_offerings#add_workout',
     as: :course_offering_add_workout
   post '/course_offerings/store_workout/:id' =>
     'course_offerings#store_workout', as: :course_offering_store_workout
 
+
+  # All of the routes anchored at /courses
   resources :users, constraints: { id: /[^\/]+/ } do
     resources :resource_files, path: 'media',
       constraints: { id: /[^\/]+/ }
