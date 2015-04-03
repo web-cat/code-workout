@@ -1,6 +1,6 @@
 CodeWorkout::Application.routes.draw do
 
-  ActiveAdmin.routes(self)
+
   root 'home#index'
 
   get 'home' => 'home#index'
@@ -15,6 +15,22 @@ CodeWorkout::Application.routes.draw do
   get 'static_pages/mockup2'
   get 'static_pages/mockup3'
   get 'static_pages/typography'
+
+
+  # routes anchored at /admin
+  # First, we have to override some of the ActiveAdmin auto-generated
+  # routes, since our user ids and file ids use restricted characters
+  get '/admin/users/:id/edit(.:format)' => 'admin/users#edit',
+    constraints: { id: /[^\/]+/ }
+  get '/admin/users/:id' => 'admin/users#show',
+    constraints: { id: /[^\/]+/ }
+  patch '/admin/users/:id' => 'admin/users#update',
+    constraints: { id: /[^\/]+/ }
+  put '/admin/users/:id' => 'admin/users#update',
+    constraints: { id: /[^\/]+/ }
+  delete '/admin/users/:id' => 'admin/users#destroy',
+    constraints: { id: /[^\/]+/ }
+  ActiveAdmin.routes(self)
 
 
   # All of the routes anchored at /gym
