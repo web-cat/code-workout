@@ -33,6 +33,7 @@ class ApplicationController < ActionController::Base
 
 
   # -------------------------------------------------------------
+  # Some pages use the flash to transfer
   def params_with_flash
     params.merge(flash.
       select { |k, v| k.ends_with?('_id') && !params.has_key?(k) })

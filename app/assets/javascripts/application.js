@@ -22,8 +22,6 @@
 //= require bootstrap-wysihtml5
 //= require cocoon
 //= require cm
-//= require exercises
-//= require workouts
 
 
 // Add the route helpers directly into the window object for easy access.

@@ -3,15 +3,44 @@
   %li.active Courses
 
 
-%h1 Courses by Organization
+%h1
+  = @term.display_name
+  Courses by Organization
 
-- @organizations.each do |organization|
-  %h2= organization.name
+%p
+  Switch to a different term:
+  = select_tag 'term_id',
+    options_for_select(Term.all.collect{ |t| [t.display_name, t.id] },
+    @term.id),
+    class: 'form-control inline'
 
-  %ul
-    - if organization.courses.any?
+- if @organizations.any?
+  - @organizations.each do |organization|
+    %h2= organization.name
+
+    %ul
       - organization.courses.each do |course|
-        %li= link_to course.number_and_name,
-          organization_course_path(organization, course)
-    - else
-      %li This organization does not have any courses yet.
+        %li
+          = link_to course.number_and_name,
+            organization_course_path(organization, course, @term)
+          %table.table.table-striped{ style: 'width: auto' }
+            %thead
+              %th Term
+              %th Section
+              %th Instructor(s)
+              %th Enroll
+            %tbody
+              - course.course_offerings.each do |o|
+                %tr
+                  %td
+                    = o.term.display_name
+                  %td
+                    = o.display_name
+                  %td!= o.instructors.map{ |i| link_to i.display_name,
+                    user_path(i) }.to_sentence
+                  %td
+- else
+  %p
+    No organizations have courses offered in
+    = @term.display_name
+    at this time.

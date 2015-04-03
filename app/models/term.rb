@@ -26,7 +26,8 @@ class Term < ActiveRecord::Base
   has_many :course_offerings, inverse_of: :term, dependent: :destroy
 
   # Orders terms in descending order (latest time first).
-  scope :latest_first, -> { order('year desc, season desc') }
+  # default_scope { order('ends_on desc') }
+  default_scope { order('year desc, season desc') }
 
 
   #~ Constants ................................................................
@@ -67,8 +68,9 @@ class Term < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def self.current_term
-    Term.latest_first.where('starts_on <= :now and :now < ends_on',
-      now: DateTime.now).first
+    Term.
+      where('starts_on <= :now and :now < ends_on', now: DateTime.now).
+      first
   end
 
 

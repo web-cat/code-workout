@@ -9,7 +9,7 @@
 
 %h2 Offerings
 
-%table{ class: 'table table-striped', style: 'width: auto' }
+%table.table.table-striped{ style: 'width: auto' }
   %thead
     %tr
       %th Term
@@ -20,15 +20,11 @@
     - @course.course_offerings.each do |off|
       %tr
         %td= off.term.display_name
-        %td= off.label
-        %td
-          %ul{ style: 'list-style-type: none; padding: 0; margin: 0;' }
-            - off.instructors.each do |u|
-              %li= link_to u.display_name, 'mailto:' + u.email
-        %td
-          %ul{ style: 'list-style-type: none; padding: 0; margin: 0;' }
-            - off.graders.each do |u|
-              %li= link_to u.display_name, 'mailto:' + u.email
+        %td= off.display_name
+        %td!= off.instructors.map{ |i| link_to i.display_name,
+          user_path(i) }.to_sentence
+        %td!= off.graders.map{ |i| link_to i.display_name,
+          user_path(i) }.to_sentence
 
 - if user_signed_in? &&                                      |
   current_user.global_role_id >= GlobalRole::INSTRUCTOR_ID   |
