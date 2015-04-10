@@ -19,7 +19,7 @@
         %td=link_to course.name, course_path(course)
         %td= course.number
         %td= course.organization_id
-        %td= course.url_part
+        %td= course.slug
         %td
           = button_link 'Show', course, size: 'sm'
           = button_link 'Edit', edit_course_path(course), size: 'sm'

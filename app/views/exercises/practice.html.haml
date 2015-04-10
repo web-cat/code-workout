@@ -38,7 +38,7 @@
     - if session[:current_workout].nil?
       %br
       = link_to "Practice a different #{@exercise.language} exercise",     |
-        '/exercises_random_exercise' +                                     |
+        '/gym/exercises/any' +                                     |
         (@exercise.language ? ('?language=' + @exercise.language) : '')    |
 .col-md-5
   #exercisefeedback{style: 'display: none;'}

@@ -17,8 +17,8 @@
           %strong Students
         is your course using CodeWorkout?
       -#  data: { confirm: 'Unimplemented: needs to go to Piazza-style pop-up for finding/enrolling in course.' }
-      = button_link 'Find your course', 'courses_search', color: 'primary', size: 'lg',
-        data: { confirm: 'Unimplemented: needs to go to Piazza-style pop-up for finding/enrolling in course.' }
+      = button_link 'Find your course', courses_search_path, color: 'primary', size: 'lg'
+       
 
   .row
     .pitch.col-md-4
@@ -34,17 +34,17 @@
         Want to
         %strong try
         CodeWorkout?
-      = button_link 'Try a question now', 'exercises_random_exercise', color: 'primary', size: 'lg'
+      = button_link 'Try a question now', '/gym/exercises/any', color: 'primary', size: 'lg'
       %p{ style: 'margin-top: 10px;' }
         Or try a specific kind of question:
         = succeed ',' do
-          = link_to 'multiple choice', '/exercises_random_exercise?question_type=1'
+          = link_to 'multiple choice', '/gym/exercises/any?question_type=1'
         = succeed ',' do
-          = link_to 'Java', '/exercises_random_exercise?language=Java'
+          = link_to 'Java', '/gym/exercises/any?language=Java'
         = succeed ', or ' do
-          = link_to 'Ruby', '/exercises_random_exercise?language=Ruby'
+          = link_to 'Ruby', '/gym/exercises/any?language=Ruby'
         = succeed '.' do
-          = link_to 'Python', '/exercises_random_exercise?language=Python'
+          = link_to 'Python', '/gym/exercises/any?language=Python'
 
 .row.blurb
   .col-md-4
