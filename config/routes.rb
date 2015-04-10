@@ -45,7 +45,7 @@ CodeWorkout::Application.routes.draw do
     get  'exercises/upload_mcqs' => 'exercises#upload_mcqs',
       as: :exercises_upload_mcqs
     post 'exercises/create_mcqs' => 'exercises#create_mcqs'
-    get  'exercises/any' => 'exercises#random_exercise',
+    get  '/exercises/any' => 'exercises#random_exercise',
       as: :random_exercise
     get 'exercises/:id/practice' => 'exercises#practice',
       as: :exercise_practice
@@ -71,10 +71,11 @@ CodeWorkout::Application.routes.draw do
     resources :workouts
   end
 
-
+  resources :courses
+  resources :course_offerings
   # All of the routes anchored at /courses
-  get '/courses/search' => 'courses#search', as: :courses_search
-  post '/courses/find' => 'courses#find', as: :course_find
+  get '/courses_search' => 'courses#search', as: :courses_search
+  post '/courses_find' => 'courses#find', as: :course_find
   resources :organizations, only: [ :index, :show ], path: '/courses' do
     post ':id/:term_id/generate_gradebook' => 'courses#generate_gradebook',
       as: :course_gradebook
