@@ -19,7 +19,7 @@
               selected: false,
               label: "&nbsp;"
       - else
-        %h2 Select one answer:
+        %h3 Select one answer:
         .answers
           = f.input :choice_ids,
             as: :radio,
@@ -38,7 +38,8 @@
     - if session[:current_workout].nil?
       %br
       = link_to "Practice a different #{@exercise.language} exercise",     |
-        '/exercises_random_exercise' +                                     |
-        (@exercise.language ? ('?language=' + @exercise.language) : '')    |
+        (@exercise.language ?                                              |
+        random_exercise_path(language: @exercise.language) :               |
+        random_exercise_path)                                              |
 .col-md-5
   #exercisefeedback{style: 'display: none;'}
