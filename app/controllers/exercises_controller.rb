@@ -655,6 +655,7 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # GET/POST /practice/1
   def practice
+    # Tighter practice requirements for the moment, should go away as a part of the eventual-engagement model
     if !user_signed_in?
       redirect_to exercise_path(params[:id]),
         notice: 'Need to sign in first' and return
@@ -665,9 +666,8 @@ class ExercisesController < ApplicationController
         redirect_to exercises_url, notice: "Exercise #{params[:id]} not found"
       elsif user_signed_in?
         @exercise = @found.first
-        # disabling non-Java coding questions for the time-being
-        if #@exercise.language != 'Java' &&
-          !current_user.global_role.can_edit_system_configuration?
+        # Tighter restrictions for the moment, should go away
+        if !current_user.global_role.can_edit_system_configuration?
           redirect_to root_path,
             notice: 'Exercise practice is temporarily disabled.' and return
         end

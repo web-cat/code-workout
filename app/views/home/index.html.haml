@@ -17,8 +17,8 @@
           %strong Students
         is your course using CodeWorkout?
       -#  data: { confirm: 'Unimplemented: needs to go to Piazza-style pop-up for finding/enrolling in course.' }
-      = button_link 'Find your course', 'courses_search', color: 'primary', size: 'lg',
-        data: { confirm: 'Unimplemented: needs to go to Piazza-style pop-up for finding/enrolling in course.' }
+      = button_link 'Find your course', courses_search_path, color: 'primary', size: 'lg'
+
 
   .row
     .pitch.col-md-4
@@ -34,7 +34,7 @@
         Want to
         %strong try
         CodeWorkout?
-      = button_link 'Try a question now', 'exercises_random_exercise', color: 'primary', size: 'lg'
+      = button_link 'Try a question now', '/gym/exercises/any', color: 'primary', size: 'lg'
       %p{ style: 'margin-top: 10px;' }
         Or try a specific kind of question:
         = succeed ',' do
