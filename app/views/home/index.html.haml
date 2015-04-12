@@ -38,13 +38,13 @@
       %p{ style: 'margin-top: 10px;' }
         Or try a specific kind of question:
         = succeed ',' do
-          = link_to 'multiple choice', '/exercises_random_exercise?question_type=1'
+          = link_to 'multiple choice', random_exercise_path(question_type: 1)
         = succeed ',' do
-          = link_to 'Java', '/exercises_random_exercise?language=Java'
+          = link_to 'Java', random_exercise_path(language: 'Java')
         = succeed ', or ' do
-          = link_to 'Ruby', '/exercises_random_exercise?language=Ruby'
+          = link_to 'Ruby', random_exercise_path(language: 'Ruby')
         = succeed '.' do
-          = link_to 'Python', '/exercises_random_exercise?language=Python'
+          = link_to 'Python', random_exercise_path(language: 'Python')
 
 .row.blurb
   .col-md-4
