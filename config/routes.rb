@@ -73,8 +73,7 @@ CodeWorkout::Application.routes.draw do
     resources :workouts
   end
 
-  resources :courses
-  resources :course_offerings
+
   # All of the routes anchored at /courses
   get '/courses_search' => 'courses#search', as: :courses_search
   post '/courses_find' => 'courses#find', as: :course_find
