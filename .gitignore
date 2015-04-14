@@ -43,3 +43,6 @@ usr/attempts/
 *_results.csv
 download.csv
 working.txt
+app/views/workouts/_form_bak.html.haml
+app/views/workouts/_add_New_Workout.html
+app/views/courses/show_ulti_bak.html.haml
