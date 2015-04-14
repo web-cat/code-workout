@@ -63,9 +63,11 @@
   .tab-pane.fade{ id: 'exers' }
     %ul
       - @course.exercises.each do |ex|
+        -# FIXME: this should use the right helper (path is now broken)
         %li= link_to ex.name, '/exercises/' + ex.id.to_s
 
   .tab-pane.fade{ id: 'grdes' }
+    -# FIXME: This should be role-based!!!!
     - if user_signed_in? &&                                      |
       current_user.global_role_id >= GlobalRole::INSTRUCTOR_ID   |
       = button_to 'Download entire course gradebook',
@@ -117,7 +119,7 @@
     - @course.course_offerings.each do |off|
       %h3= off.name
       %ul
-        - @sec = CourseEnrollment.where(course_offering_id: off.id).   |
+        - @sec = CourseEnrollment.where(course_offering: off).         |
           page(params[:page]).per(params[:per])                        |
         #rosterer
           = render 'roster', sec: @sec
