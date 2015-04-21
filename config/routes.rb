@@ -8,6 +8,7 @@ CodeWorkout::Application.routes.draw do
   get 'home/about'
   get 'home/license'
   get 'home/contact'
+  get 'home/new_course_modal', as: :new_course_modal
 
   get 'static_pages/home'
   get 'static_pages/help'
@@ -15,6 +16,7 @@ CodeWorkout::Application.routes.draw do
   get 'static_pages/mockup2'
   get 'static_pages/mockup3'
   get 'static_pages/typography'
+  get 'static_pages/thumbnails'
 
 
   # routes anchored at /admin
@@ -72,8 +74,7 @@ CodeWorkout::Application.routes.draw do
     resources :workouts
   end
 
-  resources :courses
-  resources :course_offerings
+
   # All of the routes anchored at /courses
   get '/courses_search' => 'courses#search', as: :courses_search
   post '/courses_find' => 'courses#find', as: :course_find

@@ -28,6 +28,5 @@ class TestCaseResult < ActiveRecord::Base
 
   validates :user, presence: true
   validates :test_case, presence: true
-  validates :pass, presence: true
 
 end
