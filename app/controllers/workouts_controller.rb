@@ -1,6 +1,6 @@
 class WorkoutsController < ApplicationController
   before_action :set_workout, only: [:show, :edit, :update, :destroy]
-
+  respond_to :html, :js
 
   #~ Action methods ...........................................................
 
@@ -96,16 +96,20 @@ class WorkoutsController < ApplicationController
     exercises.each_with_index do |ex, index|
       ex_id = ex.second[:exercise_id]
       exercise = Exercise.find(ex_id)
-      @workout.exercises<<exercise
-      @workout.save
-      wek = @workout.exercise_workouts.find_by(exercise: exercise)
-      wek.ordering = index + 1
+      @workout.save!
+      #@workout.exercises<<exercise
+      
+      #wek = @workout.exercise_workouts.find_by(exercise: exercise)
+      wek = ExerciseWorkout.new
+      wek.workout = @workout
+      wek.exercise = exercise
+      wek.order = index + 1
       wek.points = ex.second[:points]
       wek.save
     end
 
     course_offerings = msg[:workout_offerings_attributes]
-    course_offerings.each_with_index do |co, index|
+    course_offerings.andand.each_with_index do |co, index|
       co_id = co.second[:course_offering_id]
       course_offering = CourseOffering.find(co_id)
       @workout.course_offerings<<course_offering
@@ -130,6 +134,10 @@ class WorkoutsController < ApplicationController
     end
   end
 
+  # ------Placeholder for any views I want experiment with-------------------------------------------------------
+  def dummy
+    @workouts = Workout.all
+  end
 
   # -------------------------------------------------------------
   def evaluate
