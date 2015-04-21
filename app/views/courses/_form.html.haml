@@ -2,14 +2,14 @@
   = f.semantic_errors
   .row
     .col-md-4
-      = f.input :organization, :as => :select
+      = f.input :organization, as: :select
   .row
     .col-md-4
-      = f.input :name, :as => :string,
+      = f.input :name, as: :string,
         placeholder: "Intro to Java"
   .row
     .col-md-4
-      = f.input :number, :as=> :string,
+      = f.input :number, as: :string,
         placeholder: "CS101"
 
   .row-fluid
@@ -18,7 +18,7 @@
       #course_offerings
         .expand
           = f.semantic_fields_for :course_offering do |course_offering|
-            = render 'course_offering_fields', :f => course_offering
+            = render 'course_offering_fields', f: course_offering
           
   = f.actions do
     = f.action :submit, as: :button, button_html: { class: 'btn btn-primary' }
