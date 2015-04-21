@@ -66,7 +66,8 @@ CodeWorkout::Application.routes.draw do
     get  'workouts/:id/practice' => 'workouts#practice_workout',
       as: :practice_workout
     get  'workouts/:id/evaluate' => 'workouts#evaluate', as: :workout_evaluate
-
+    get  'workouts_dummy' => 'workouts#dummy'
+  
     # At the bottom, so the routes above take precedence over existing ids
     resources :workouts
   end
