@@ -1,22 +1,46 @@
 %article.exercise.thumbnail.sm
-  .text
-    .title
-      - if x.base_exercise.is_mcq?
-        %i.glyphicon.glyphicon-th-list
-      - elsif x.base_exercise.is_coding?
-        %i.fa-file-code-o
-      - else
-        %i.fa-keyboard-o
-      = link_to x.name, exercise_practice_path(:id => x[:id])
-      = difficulty_image(x.experience.to_i)
-    = teaser(x.question)
-    .info
+  .title
+    - if x.base_exercise.is_mcq?
+      %i.glyphicon.glyphicon-th-list
+    - elsif x.base_exercise.is_coding?
+      %span.fa-stack
+        %i.fa.fa-square.fa-stack-2x
+        %i.fa.fa-terminal.fa-stack-1x.fa-inverse
+    - else
+      %i.fa-pencil-square-o
+    = link_to x.name, exercise_practice_path(:id => x[:id])
+  .summary
+    .radial-progress
+      .circle
+        .mask.full
+          .fill
+        .mask.half
+          .fill
+          .fill.fix
+        .shadow
+      .inset
+        .score
+          ?
+          %span.outof> /?
+  .body
+    .text
+      = teaser(x.question)
+  .info
+    = difficulty_image(x.experience.to_i)
+    .taglist
+      - x.tags.each do |t|
+        = link_to t[:tag_name], search_path(search: t[:tag_name]),
+          method: :post, class: 'tag'
+    -#
       - attempt = nil
+      - uid = 0
+      - if user_signed_in?
+        - uid = current_user.id
       - attempt_pct = 0
       - ex_workout = nil
       - if uid && uid != 0
         - attempt = Attempt.where(user_id: uid, exercise_id: x.id).last
-        -if attempt && attempt.score > 0
+        - if attempt && attempt.score > 0
           - attempt_pct = 100
         - if wid
           - ex_workout = ExerciseWorkout.find_by(exercise_id: x.id,
@@ -27,7 +51,18 @@
         - if attempt
           = n_to_s attempt.score.round(2)
           - plural = (attempt.score != 1)
-        - elsif ex_workout
+          - if ex_workout
+            = '/'
+            = n_to_s ex_workout.points
+            - plural = (ex_workout.points != 1)
+          - if plural
+            pts
+          - else
+            pt
+
+        - elsif wid
+          - ex_workout = ExerciseWorkout.find_by(exercise_id: x.id,
+            workout_id: wid)
           = ex_workout.points
           - if ex_workout.points != 1
             pts
@@ -35,11 +70,7 @@
             pt
         - else
           = n_to_s(x.experience) + ' xp'
-
-      .taglist
-        - x.tags.each do |t|
-          =link_to t[:tag_name], search_path(search: t[:tag_name]),
-            method: :post, class: 'tag'
+-#
   .progress
     - att = Attempt.where(user_id: uid, exercise_id: x.id).last
     - ex_workout = nil

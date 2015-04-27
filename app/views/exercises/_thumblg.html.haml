@@ -1,16 +1,37 @@
 %article.exercise.thumbnail.lg
-  .text
-    .title
-      - if x.base_exercise.is_mcq?
-        %i.glyphicon.glyphicon-th-list
-      - elsif x.base_exercise.is_coding?
-        %i.fa-file-code-o
-      - else
-        %i.fa-keyboard-o
-      = link_to x.name, exercise_practice_path(:id => x[:id])
-      = difficulty_image(x.experience.to_i)
-    = teaser(x.question)
-    .info
+  .title
+    - if x.base_exercise.is_mcq?
+      %i.glyphicon.glyphicon-th-list
+    - elsif x.base_exercise.is_coding?
+      %span.fa-stack
+        %i.fa.fa-square.fa-stack-2x
+        %i.fa.fa-terminal.fa-stack-1x.fa-inverse
+    - else
+      %i.fa-pencil-square-o
+    = link_to x.name, exercise_practice_path(:id => x[:id])
+  .summary
+    .radial-progress
+      .circle
+        .mask.full
+          .fill
+        .mask.half
+          .fill
+          .fill.fix
+        .shadow
+      .inset
+        .score
+          ?
+          %span.outof> /?
+  .body
+    .text
+      = teaser(x.question)
+  .info
+    = difficulty_image(x.experience.to_i)
+    .taglist
+      - x.tags.each do |t|
+        = link_to t[:tag_name], search_path(search: t[:tag_name]),
+          method: :post, class: 'tag'
+    -#
       - attempt = nil
       - uid = 0
       - if user_signed_in?
@@ -49,11 +70,7 @@
             pt
         - else
           = n_to_s(x.experience) + ' xp'
-
-      .taglist
-        - x.tags.each do |t|
-          =link_to t[:tag_name], search_path(search: t[:tag_name]),
-            method: :post, class: 'tag'
+-#
   .progress
     - att = Attempt.where(user_id: uid, exercise_id: x.id).last
     - ex_workout = nil
