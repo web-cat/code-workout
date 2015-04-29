@@ -12,7 +12,7 @@ class VariationGroup < ActiveRecord::Base
 
   #~ Relationships ............................................................
 
-  has_many :base_exercises, inverse_of: :variation_group, dependent: :nullify
+  has_many :exercises, inverse_of: :variation_group, dependent: :nullify
 
 
   #~ Validation ...............................................................

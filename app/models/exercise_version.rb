@@ -1,6 +1,6 @@
 # == Schema Information
 #
-# Table name: exercises
+# Table name: exercise_versions
 #
 #  id                 :integer          not null, primary key
 #  stem_id            :integer
@@ -24,8 +24,8 @@
 #
 # Indexes
 #
-#  index_exercises_on_base_exercise_id  (base_exercise_id)
-#  index_exercises_on_stem_id           (stem_id)
+#  index_exercise_versions_on_base_exercise_id  (base_exercise_id)
+#  index_exercise_versions_on_stem_id           (stem_id)
 #
 
 require "cgi"
@@ -40,9 +40,9 @@ class ExerciseVersion < ActiveRecord::Base
 
   belongs_to  :user
   belongs_to  :stem, inverse_of: :exercise_versions
-  belongs_to  :base_exercise, inverse_of: :exercise_versions
-  has_many :courses, through: :base_exercise
-  has_many :workouts, through:  :base_exercise
+  belongs_to  :exercise, inverse_of: :exercise_versions
+  has_many :courses, through: :exercise
+  has_many :workouts, through:  :exercise
   has_and_belongs_to_many :tags
   has_one :coding_question, inverse_of: :exercise_version, dependent: :destroy
   has_many :choices, inverse_of: :exercise_version, dependent: :destroy

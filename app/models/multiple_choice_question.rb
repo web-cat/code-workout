@@ -1,6 +1,6 @@
 # == Schema Information
 #
-# Table name: exercises
+# Table name: exercise_versions
 #
 #  id                 :integer          not null, primary key
 #  stem_id            :integer
@@ -24,8 +24,8 @@
 #
 # Indexes
 #
-#  index_exercises_on_base_exercise_id  (base_exercise_id)
-#  index_exercises_on_stem_id           (stem_id)
+#  index_exercise_versions_on_base_exercise_id  (base_exercise_id)
+#  index_exercise_versions_on_stem_id           (stem_id)
 #
 
 class MultipleChoiceQuestion < ExerciseVersion

@@ -4,7 +4,7 @@
 #
 #  id                  :integer          not null, primary key
 #  user_id             :integer          not null
-#  exercise_id         :integer          not null
+#  exercise_version_id :integer          not null
 #  submit_time         :datetime         not null
 #  submit_num          :integer          not null
 #  answer              :text
@@ -16,8 +16,8 @@
 #
 # Indexes
 #
-#  index_attempts_on_exercise_id  (exercise_id)
-#  index_attempts_on_user_id      (user_id)
+#  index_attempts_on_exercise_version_id  (exercise_version_id)
+#  index_attempts_on_user_id              (user_id)
 #
 
 # Read about factories at https://github.com/thoughtbot/factory_girl
