@@ -53,6 +53,8 @@ class User < ActiveRecord::Base
   has_many    :workout_scores, -> { includes :workout },
     inverse_of: :user, dependent: :destroy
   has_many    :workouts, through: :workout_scores
+  has_many    :exercise_owners, inverse_of: :user
+  has_many    :exercises, through: :exercise_owners
   has_many    :attempts, dependent: :destroy
   has_many    :tag_user_scores, -> { includes :tag },
     inverse_of: :user, dependent: :destroy

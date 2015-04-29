@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150429132614) do
+ActiveRecord::Schema.define(version: 20150429170252) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -139,6 +139,19 @@ ActiveRecord::Schema.define(version: 20150429132614) do
   add_index "errors", ["class_name"], name: "index_errors_on_class_name"
   add_index "errors", ["created_at"], name: "index_errors_on_created_at"
 
+  create_table "exercise_families", force: true do |t|
+    t.string   "name",       null: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  create_table "exercise_owners", force: true do |t|
+    t.integer "exercise_id", null: false
+    t.integer "user_id",     null: false
+  end
+
+  add_index "exercise_owners", ["exercise_id", "user_id"], name: "index_exercise_owners_on_exercise_id_and_user_id", unique: true
+
   create_table "exercise_versions", force: true do |t|
     t.integer  "stem_id"
     t.string   "name",               null: false
@@ -189,18 +202,16 @@ ActiveRecord::Schema.define(version: 20150429132614) do
   end
 
   create_table "exercises", force: true do |t|
-    t.integer  "user_id"
     t.integer  "question_type",      null: false
     t.integer  "current_version_id", null: false
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "versions",           null: false
-    t.integer  "variation_group_id"
+    t.integer  "exercise_family_id"
   end
 
   add_index "exercises", ["current_version_id"], name: "index_exercises_on_current_version_id"
-  add_index "exercises", ["user_id"], name: "index_exercises_on_user_id"
-  add_index "exercises", ["variation_group_id"], name: "index_exercises_on_variation_group_id"
+  add_index "exercises", ["exercise_family_id"], name: "index_exercises_on_exercise_family_id"
 
   create_table "friendly_id_slugs", force: true do |t|
     t.string   "slug",                      null: false
@@ -388,12 +399,6 @@ ActiveRecord::Schema.define(version: 20150429132614) do
   add_index "users", ["global_role_id"], name: "index_users_on_global_role_id"
   add_index "users", ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   add_index "users", ["slug"], name: "index_users_on_slug", unique: true
-
-  create_table "variation_groups", force: true do |t|
-    t.string   "name",       null: false
-    t.datetime "created_at"
-    t.datetime "updated_at"
-  end
 
   create_table "workout_offerings", force: true do |t|
     t.integer  "course_offering_id", null: false

@@ -1,6 +1,6 @@
 # == Schema Information
 #
-# Table name: variation_groups
+# Table name: exercise_families
 #
 #  id         :integer          not null, primary key
 #  name       :string(255)      not null
@@ -8,11 +8,11 @@
 #  updated_at :datetime
 #
 
-class VariationGroup < ActiveRecord::Base
+class ExerciseFamily < ActiveRecord::Base
 
   #~ Relationships ............................................................
 
-  has_many :exercises, inverse_of: :variation_group, dependent: :nullify
+  has_many :exercises, inverse_of: :exercise_family, dependent: :nullify
 
 
   #~ Validation ...............................................................

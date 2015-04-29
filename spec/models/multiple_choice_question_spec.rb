@@ -18,14 +18,14 @@
 #  created_at         :datetime
 #  updated_at         :datetime
 #  experience         :integer          not null
-#  base_exercise_id   :integer          not null
+#  exercise_id        :integer          not null
 #  version            :integer          not null
 #  creator_id         :integer
 #
 # Indexes
 #
-#  index_exercise_versions_on_base_exercise_id  (base_exercise_id)
-#  index_exercise_versions_on_stem_id           (stem_id)
+#  index_exercise_versions_on_exercise_id  (exercise_id)
+#  index_exercise_versions_on_stem_id      (stem_id)
 #
 
 require 'spec_helper'
