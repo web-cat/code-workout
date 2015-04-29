@@ -6,15 +6,15 @@
 #  name            :string(255)      not null
 #  number          :string(255)      not null
 #  organization_id :integer          not null
-#  url_part        :string(255)      not null
 #  created_at      :datetime
 #  updated_at      :datetime
 #  creator_id      :integer
+#  slug            :string(255)      not null
 #
 # Indexes
 #
 #  index_courses_on_organization_id  (organization_id)
-#  index_courses_on_url_part         (url_part)
+#  index_courses_on_slug             (slug)
 #
 
 class Course < ActiveRecord::Base
@@ -28,8 +28,8 @@ class Course < ActiveRecord::Base
   belongs_to  :organization, inverse_of: :courses
   has_many    :course_offerings, inverse_of: :course, dependent: :destroy
   # Associating with exercises through course_exercises
-  has_many    :exercises, through: :course_exercises
-  has_many    :course_exercises, inverse_of: :course, dependent: :destroy
+  has_many    :base_exercises, through: :course_base_exercises
+  has_many    :course_base_exercises, inverse_of: :course, dependent: :destroy
 
   #Kaminari for the show method
   paginates_per 100

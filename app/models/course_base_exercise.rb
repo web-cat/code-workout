@@ -9,17 +9,17 @@
 #  updated_at  :datetime
 #
 
-class CourseExercise < ActiveRecord::Base
+class CourseBaseExercise < ActiveRecord::Base
 
   #~ Relationships ............................................................
 
-  belongs_to :course, inverse_of: :course_exercises
-  belongs_to :exercise, inverse_of: :course_exercises
+  belongs_to :course, inverse_of: :course_base_exercises
+  belongs_to :base_exercise, inverse_of: :course_base_exercises
 
 
   #~ Validation ...............................................................
 
   validates :course, presence: true
-  validates :exercise, presence: true
+  validates :base_exercise, presence: true
 
 end

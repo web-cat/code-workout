@@ -22,6 +22,7 @@
 #  last_name              :string(255)
 #  global_role_id         :integer          not null
 #  avatar                 :string(255)
+#  slug                   :string(255)      not null
 #
 # Indexes
 #
@@ -29,6 +30,7 @@
 #  index_users_on_email                 (email) UNIQUE
 #  index_users_on_global_role_id        (global_role_id)
 #  index_users_on_reset_password_token  (reset_password_token) UNIQUE
+#  index_users_on_slug                  (slug) UNIQUE
 #
 
 FactoryGirl.define do

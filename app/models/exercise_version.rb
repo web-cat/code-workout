@@ -30,7 +30,7 @@
 
 require "cgi"
 
-class Exercise < ActiveRecord::Base
+class ExerciseVersion < ActiveRecord::Base
 
   #~ Accessor
   attr_accessor :answer_code
@@ -39,16 +39,14 @@ class Exercise < ActiveRecord::Base
   #~ Relationships ............................................................
 
   belongs_to  :user
-  belongs_to  :stem, inverse_of: :exercises
-  belongs_to  :base_exercise, inverse_of: :exercises
+  belongs_to  :stem, inverse_of: :exercise_versions
+  belongs_to  :base_exercise, inverse_of: :exercise_versions
+  has_many :courses, through: :base_exercise
+  has_many :workouts, through:  :base_exercise
   has_and_belongs_to_many :tags
-  has_many :workouts, through:  :exercise_workouts
-  has_many :exercise_workouts,  inverse_of: :exercise, dependent: :destroy
-  has_many :course_exercises, inverse_of: :exercise
-  has_many :courses, through: :course_exercises
-  has_one :coding_question, inverse_of: :exercise, dependent: :destroy
-  has_many :choices, inverse_of: :exercise, dependent: :destroy
-  has_many :prompts, inverse_of: :exercise, dependent: :destroy
+  has_one :coding_question, inverse_of: :exercise_version, dependent: :destroy
+  has_many :choices, inverse_of: :exercise_version, dependent: :destroy
+  has_many :prompts, inverse_of: :exercise_version, dependent: :destroy
   has_many :attempts, dependent: :destroy
   has_and_belongs_to_many :resource_files
 

@@ -17,8 +17,8 @@ class Workout < ActiveRecord::Base
 
   #~ Relationships ............................................................
 
-	has_many :exercises, through:  :exercise_workouts
-	has_many :exercise_workouts, -> { order("'order' ASC") },
+	has_many :base_exercises, through:  :base_exercise_workouts
+	has_many :base_exercise_workouts, -> { order("'order' ASC") },
 	  inverse_of: :workout, dependent: :destroy
 	has_many :workout_scores, inverse_of: :workout, dependent: :destroy
   has_many :users, through: :workout_scores
@@ -26,7 +26,7 @@ class Workout < ActiveRecord::Base
   has_many :workout_offerings, inverse_of: :workout, dependent: :destroy
   has_many :course_offerings, through:  :workout_offerings
 
-  accepts_nested_attributes_for :exercise_workouts
+  accepts_nested_attributes_for :base_exercise_workouts
   accepts_nested_attributes_for :workout_offerings
   #~ Validation ...............................................................
 

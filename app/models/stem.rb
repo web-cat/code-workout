@@ -12,7 +12,7 @@ class Stem < ActiveRecord::Base
 
   #~ Relationships ............................................................
 
-	has_many :exercises, inverse_of: :stem
+	has_many :exercise_versions, inverse_of: :stem
 
 
   #~ Validation ...............................................................

@@ -28,21 +28,21 @@
 #  index_exercises_on_stem_id           (stem_id)
 #
 
-class MultipleChoiceQuestion < Exercise
-	
+class MultipleChoiceQuestion < ExerciseVersion
+
 #~ Validation ...............................................................
 	validates :mcq_allow_multiple, presence: true
 	validates :mcq_is_scrambled, presence: true
 
 #~ Class methods.............................................................
-  
+
   # -------------------------------------------------------------
-  
+
 
   #~ Instance methods .........................................................
   def get_choices
   	#TODO randomize order of choices if is_scrambled is true
-  
+
   end
 
   def scrambled?

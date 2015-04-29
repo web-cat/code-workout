@@ -11,17 +11,17 @@
 #  updated_at  :datetime
 #
 
-class ExerciseWorkout < ActiveRecord::Base
+class BaseExerciseWorkout < ActiveRecord::Base
 
   #~ Relationships ............................................................
 
-  belongs_to :exercise, inverse_of: :exercise_workouts
-  belongs_to :workout, inverse_of: :exercise_workouts
+  belongs_to :base_exercise, inverse_of: :base_exercise_workouts
+  belongs_to :workout, inverse_of: :base_exercise_workouts
 
 
   #~ Validation ...............................................................
 
-  validates :exercise, presence: true
+  validates :base_exercise, presence: true
   validates :workout, presence: true
   validates :order, presence: true,
     numericality: { greater_than_or_equal_to: 0 }

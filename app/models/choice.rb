@@ -20,13 +20,14 @@ class Choice < ActiveRecord::Base
 
   #~ Relationships ............................................................
 
-  belongs_to :exercise, inverse_of: :choices
+  belongs_to :exercise_version, inverse_of: :choices
 
 
   #~ Hooks ....................................................................
 
   #~ Validation ...............................................................
 
+  validates :exercise_version, presence: true
   validates :answer, presence: true
   validates :order, presence: true,
     numericality: { greater_than_or_equal_to: 0 }

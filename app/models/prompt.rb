@@ -30,7 +30,7 @@ class Prompt < ActiveRecord::Base
   #~ Relationships ............................................................
 
   # TODO: define Attempt model and relate to prompt for each student attempt
-  belongs_to :exercise, inverse_of: :prompts
+  belongs_to :exercise_version, inverse_of: :prompts
   # TODO: define Hint model and decide how a hint determines how it maps to
   # different types of incorrect attempts
   has_many :choices
@@ -44,7 +44,7 @@ class Prompt < ActiveRecord::Base
 
   #~ Validation ...............................................................
 
-  validates :exercise_id, presence: true, numericality: true
+  validates :exercise_version, presence: true
   validates :language_id, numericality: true
 
   validates :instruction, presence: true

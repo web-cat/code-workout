@@ -22,7 +22,7 @@ class ResourceFile < ActiveRecord::Base
 
   #~ Relationships ............................................................
 
-  has_and_belongs_to_many :exercises
+  has_and_belongs_to_many :exercise_versions
   belongs_to :user
 
 

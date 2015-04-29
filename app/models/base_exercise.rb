@@ -22,10 +22,15 @@ class BaseExercise < ActiveRecord::Base
 
   #~ Relationships ............................................................
 
-  has_many :exercises, inverse_of: :base_exercise, dependent: :destroy
+  has_many :exercise_versions, inverse_of: :base_exercise, dependent: :destroy
+  has_many :course_base_exercises, inverse_of: :base_exercise
+  has_many :courses, through: :course_base_exercises
+  has_many :base_exercise_workouts, inverse_of: :base_exercise,
+    dependent: :destroy
+  has_many :workouts, through: :base_exercise_workouts
   belongs_to :variation_group, inverse_of: :base_exercises
   belongs_to :user
-  belongs_to :current_version, class_name: 'Exercise'
+  belongs_to :current_version, class_name: 'ExerciseVersion'
 
 
   #~ Hooks ....................................................................

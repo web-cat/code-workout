@@ -37,7 +37,7 @@ class Attempt < ActiveRecord::Base
 
   #~ Relationships ............................................................
 
-  belongs_to :exercise, inverse_of: :attempts
+  belongs_to :exercise_version, inverse_of: :attempts
   belongs_to :user, inverse_of: :attempts
   belongs_to :workout_offering, inverse_of: :attempts
 
@@ -45,7 +45,7 @@ class Attempt < ActiveRecord::Base
   #~ Validation ...............................................................
 
   validates :user, presence: true
-  validates :exercise, presence: true
+  validates :exercise_version, presence: true
   validates :submit_time, presence: true
   validates :submit_num, numericality: { greater_than: 0 }
   validates :score, numericality: { greater_than_or_equal_to: 0 }
