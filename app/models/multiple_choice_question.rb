@@ -19,7 +19,7 @@
 #  updated_at         :datetime
 #  experience         :integer          not null
 #  exercise_id        :integer          not null
-#  version            :integer          not null
+#  position           :integer          not null
 #  creator_id         :integer
 #
 # Indexes

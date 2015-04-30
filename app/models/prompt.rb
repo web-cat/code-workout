@@ -6,7 +6,7 @@
 #  exercise_version_id :integer          not null
 #  language_id         :integer          not null
 #  instruction         :text             not null
-#  order               :integer          not null
+#  position            :integer          not null
 #  max_user_attempts   :integer          not null
 #  attempts            :integer          not null
 #  correct             :float            not null
@@ -31,9 +31,12 @@ class Prompt < ActiveRecord::Base
 
   # TODO: define Attempt model and relate to prompt for each student attempt
   belongs_to :exercise_version, inverse_of: :prompts
+  acts_as_list scope: :exercise_version
   # TODO: define Hint model and decide how a hint determines how it maps to
   # different types of incorrect attempts
   has_many :choices
+  # has_many :choices, -> { order("position ASC") },
+  #  inverse_of: :prompt, dependent: :destroy
 
   # has_one :prompt_type
   # has_one :language
@@ -48,7 +51,7 @@ class Prompt < ActiveRecord::Base
   validates :language_id, numericality: true
 
   validates :instruction, presence: true
-  validates :order, presence: true,
+  validates :position, presence: true,
     numericality: { greater_than_or_equal_to: 0 }
   validates :max_user_attempts,
     numericality: { greater_than_or_equal_to: 0 }

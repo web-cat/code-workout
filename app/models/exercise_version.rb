@@ -19,7 +19,7 @@
 #  updated_at         :datetime
 #  experience         :integer          not null
 #  exercise_id        :integer          not null
-#  version            :integer          not null
+#  position           :integer          not null
 #  creator_id         :integer
 #
 # Indexes
@@ -41,12 +41,15 @@ class ExerciseVersion < ActiveRecord::Base
   belongs_to  :creator, class_name: 'User'
   belongs_to  :stem, inverse_of: :exercise_versions
   belongs_to  :exercise, inverse_of: :exercise_versions
+  acts_as_list scope: :exercise
   has_many :courses, through: :exercise
   has_many :workouts, through:  :exercise
   has_and_belongs_to_many :tags
   has_one :coding_question, inverse_of: :exercise_version, dependent: :destroy
-  has_many :choices, inverse_of: :exercise_version, dependent: :destroy
-  has_many :prompts, inverse_of: :exercise_version, dependent: :destroy
+  has_many :choices, -> { order("position ASC") },
+    inverse_of: :exercise_version, dependent: :destroy
+  has_many :prompts, -> { order("position ASC") },
+    inverse_of: :exercise_version, dependent: :destroy
   has_many :attempts, dependent: :destroy
   has_and_belongs_to_many :resource_files
 
@@ -129,7 +132,7 @@ class ExerciseVersion < ActiveRecord::Base
       return ["No answers available"]
     else
       answers = Array.new
-      raw = self.choices.sort_by{ |a| a[:order] }
+      raw = self.choices.sort_by{ |a| a[:position] }
       raw.each do |c|
         formatted = c
         # moved to view controller:
@@ -181,7 +184,7 @@ class ExerciseVersion < ActiveRecord::Base
   def collate_feedback(answered)
     total = score(answered)
     feed = Array.new
-    all = self.choices.sort_by{ |a| a[:order] }
+    all = self.choices.sort_by{ |a| a[:position] }
     all.each do |choice|
       found = answered.select { |x| x["id"] == choice.id }
       if ((choice.value > 0 && (found.nil? || found.empty?)) ||

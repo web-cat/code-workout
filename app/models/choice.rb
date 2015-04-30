@@ -5,7 +5,7 @@
 #  id                  :integer          not null, primary key
 #  exercise_version_id :integer          not null
 #  answer              :string(255)      not null
-#  order               :integer          not null
+#  position            :integer          not null
 #  feedback            :text
 #  value               :float            not null
 #  created_at          :datetime
@@ -21,6 +21,9 @@ class Choice < ActiveRecord::Base
   #~ Relationships ............................................................
 
   belongs_to :exercise_version, inverse_of: :choices
+  acts_as_list scope: :exercise_version
+  # belongs_to :prompt, inverse_of: :choices
+  # acts_as_list scope: :prompt
 
 
   #~ Hooks ....................................................................
@@ -29,7 +32,7 @@ class Choice < ActiveRecord::Base
 
   validates :exercise_version, presence: true
   validates :answer, presence: true
-  validates :order, presence: true,
+  validates :position, presence: true,
     numericality: { greater_than_or_equal_to: 0 }
   validates :value, presence: true,
     numericality: { greater_than_or_equal_to: 0 }

@@ -20,7 +20,8 @@ class Exercise < ActiveRecord::Base
 
   #~ Relationships ............................................................
 
-  has_many :exercise_versions, inverse_of: :exercise, dependent: :destroy
+  has_many :exercise_versions, -> { order("position ASC") },
+    inverse_of: :exercise, dependent: :destroy
   has_many :course_exercises, inverse_of: :exercise
   has_many :courses, through: :course_exercises
   has_many :exercise_workouts, inverse_of: :exercise,

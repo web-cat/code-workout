@@ -22,6 +22,8 @@ gem 'andand', github: 'raganwald/andand'
 gem 'foreigner'
 gem 'responders', '~> 1.1' # Can't move above 1.1 until migrating to rails 4.2+
 gem 'friendly_id', '~> 5'
+gem 'active_record-acts_as'
+gem 'acts_as_list'
 
 # For JSON support
 gem 'rabl'

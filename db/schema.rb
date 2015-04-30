@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150429170252) do
+ActiveRecord::Schema.define(version: 20150430165328) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -47,7 +47,7 @@ ActiveRecord::Schema.define(version: 20150429170252) do
   create_table "choices", force: true do |t|
     t.integer  "exercise_version_id", null: false
     t.string   "answer",              null: false
-    t.integer  "order",               null: false
+    t.integer  "position",            null: false
     t.text     "feedback"
     t.float    "value",               null: false
     t.datetime "created_at"
@@ -169,7 +169,7 @@ ActiveRecord::Schema.define(version: 20150429170252) do
     t.datetime "updated_at"
     t.integer  "experience",         null: false
     t.integer  "exercise_id",        null: false
-    t.integer  "version",            null: false
+    t.integer  "position",           null: false
     t.integer  "creator_id"
   end
 
@@ -195,7 +195,7 @@ ActiveRecord::Schema.define(version: 20150429170252) do
   create_table "exercise_workouts", force: true do |t|
     t.integer  "exercise_id",               null: false
     t.integer  "workout_id",                null: false
-    t.integer  "order",                     null: false
+    t.integer  "position",                  null: false
     t.float    "points",      default: 1.0
     t.datetime "created_at"
     t.datetime "updated_at"
@@ -258,7 +258,7 @@ ActiveRecord::Schema.define(version: 20150429170252) do
     t.integer  "exercise_version_id", null: false
     t.integer  "language_id",         null: false
     t.text     "instruction",         null: false
-    t.integer  "order",               null: false
+    t.integer  "position",            null: false
     t.integer  "max_user_attempts",   null: false
     t.integer  "attempts",            null: false
     t.float    "correct",             null: false

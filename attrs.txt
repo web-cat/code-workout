@@ -1,0 +1,114 @@
+----------------------------------------------------------------------
+# Table name: exercises
+#
+#  id                 :integer          not null, primary key
+#  question_type      :integer          not null
+#  current_version_id :integer          not null
+#  created_at         :datetime
+#  updated_at         :datetime
+#  versions           :integer          not null
+#  exercise_family_id :integer
+#
+# Indexes
+#
+#  index_exercises_on_current_version_id  (current_version_id)
+#  index_exercises_on_exercise_family_id  (exercise_family_id)
+
+
+----------------------------------------------------------------------
+# Table name: exercise_versions
+#
+#  id                 :integer          not null, primary key
+#  stem_id            :integer
+#  name               :string(255)      not null
+#  question           :text             not null
+#  feedback           :text
+#  is_public          :boolean          not null
+#  priority           :integer          not null
+#  count_attempts     :integer          not null
+#  count_correct      :float            not null
+#  difficulty         :float            not null
+#  discrimination     :float            not null
+#  mcq_allow_multiple :boolean
+#  mcq_is_scrambled   :boolean
+#  created_at         :datetime
+#  updated_at         :datetime
+#  experience         :integer          not null
+#  exercise_id        :integer          not null
+#  version            :integer          not null
+#  creator_id         :integer
+#
+# Indexes
+#
+#  index_exercise_versions_on_exercise_id  (exercise_id)
+#  index_exercise_versions_on_stem_id      (stem_id)
+
+
+----------------------------------------------------------------------
+# Table name: prompts
+#
+#  id                  :integer          not null, primary key
+#  exercise_version_id :integer          not null
+#  language_id         :integer          not null
+#  instruction         :text             not null
+#  order               :integer          not null
+#  max_user_attempts   :integer          not null
+#  attempts            :integer          not null
+#  correct             :float            not null
+#  feedback            :text
+#  difficulty          :float            not null
+#  discrimination      :float            not null
+#  type                :integer          not null
+#  allow_multiple      :boolean
+#  is_scrambled        :boolean
+#  created_at          :datetime
+#  updated_at          :datetime
+#
+# Indexes
+#
+#  index_prompts_on_exercise_version_id  (exercise_version_id)
+#  index_prompts_on_language_id          (language_id)
+
+
+----------------------------------------------------------------------
+# Table name: coding_questions
+#
+#  id                  :integer          not null, primary key
+#  created_at          :datetime
+#  updated_at          :datetime
+#  exercise_version_id :integer          not null
+#  class_name          :string(255)
+#  wrapper_code        :text             not null
+#  test_script         :text             not null
+#  method_name         :string(255)
+#  starter_code        :text
+#
+# Indexes
+#
+#  index_coding_questions_on_exercise_version_id  (exercise_version_id)
+
+
+----------------------------------------------------------------------
+# multiple_choice_question
+
+
+----------------------------------------------------------------------
+# Table name: stems
+#
+#  id         :integer          not null, primary key
+#  preamble   :text
+#  created_at :datetime
+#  updated_at :datetime
+
+
+----------------------------------------------------------------------
+# Table name: choices
+#
+#  id                  :integer          not null, primary key
+#  exercise_version_id :integer          not null
+#  answer              :string(255)      not null
+#  order               :integer          not null
+#  feedback            :text
+#  value               :float            not null
+#  created_at          :datetime
+#  updated_at          :datetime

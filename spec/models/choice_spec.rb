@@ -5,7 +5,7 @@
 #  id                  :integer          not null, primary key
 #  exercise_version_id :integer          not null
 #  answer              :string(255)      not null
-#  order               :integer          not null
+#  position            :integer          not null
 #  feedback            :text
 #  value               :float            not null
 #  created_at          :datetime

@@ -6,7 +6,7 @@
 #  exercise_version_id :integer          not null
 #  language_id         :integer          not null
 #  instruction         :text             not null
-#  order               :integer          not null
+#  position            :integer          not null
 #  max_user_attempts   :integer          not null
 #  attempts            :integer          not null
 #  correct             :float            not null

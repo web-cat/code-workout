@@ -17,7 +17,7 @@ class Workout < ActiveRecord::Base
 
   #~ Relationships ............................................................
 
-	has_many :exercise_workouts, -> { order("'order' ASC") },
+	has_many :exercise_workouts, -> { order("'position' ASC") },
 	  inverse_of: :workout, dependent: :destroy
   has_many :exercises, through:  :exercise_workouts
 	has_many :workout_scores, inverse_of: :workout, dependent: :destroy
@@ -49,6 +49,9 @@ class Workout < ActiveRecord::Base
   #~ Class methods ............................................................
 
   def add_exercise(ex_id)
+    # FIXME: This is all wrong, and needs to use the exercise_workout
+    # relation to correctly encode the order.  Hopefully, this method
+    # isn't used anywhere anyway at this point.
     duplicate = self.exercises.bsearch{ |x| x.id == ex_id }
     if duplicate.nil?
       exists = Exercise.find(ex_id)
