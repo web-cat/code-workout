@@ -4,16 +4,12 @@
 #
 #  id             :integer          not null, primary key
 #  stem_id        :integer
-#  name           :string(255)      not null
-#  question       :text             not null
-#  is_public      :boolean          not null
 #  attempt_count  :integer          not null
 #  correct_count  :float            not null
 #  difficulty     :float            not null
 #  discrimination :float            not null
 #  created_at     :datetime
 #  updated_at     :datetime
-#  experience     :integer          not null
 #  exercise_id    :integer          not null
 #  position       :integer          not null
 #  creator_id     :integer

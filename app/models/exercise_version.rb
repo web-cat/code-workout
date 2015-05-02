@@ -4,16 +4,12 @@
 #
 #  id             :integer          not null, primary key
 #  stem_id        :integer
-#  name           :string(255)      not null
-#  question       :text             not null
-#  is_public      :boolean          not null
 #  attempt_count  :integer          not null
 #  correct_count  :float            not null
 #  difficulty     :float            not null
 #  discrimination :float            not null
 #  created_at     :datetime
 #  updated_at     :datetime
-#  experience     :integer          not null
 #  exercise_id    :integer          not null
 #  position       :integer          not null
 #  creator_id     :integer
@@ -40,13 +36,10 @@ class ExerciseVersion < ActiveRecord::Base
   acts_as_list scope: :exercise
   has_many :courses, through: :exercise
   has_many :workouts, through:  :exercise
-  has_and_belongs_to_many :tags
   has_many :prompts, -> { order("position ASC") },
     inverse_of: :exercise_version, dependent: :destroy
   has_many :attempts, dependent: :destroy
   has_and_belongs_to_many :resource_files
-
-  accepts_nested_attributes_for :tags, allow_destroy: true
 
 
   #~ Hooks ....................................................................
@@ -56,24 +49,10 @@ class ExerciseVersion < ActiveRecord::Base
 
   #~ Validation ...............................................................
 
-  #validates :user, presence: true
-  validates :name,
-    presence: true,
-    format: {
-      with: /[a-zA-Z0-9\-_ .]+/,
-      message: 'Name must consist only of letters, digits, hyphens (-), ' \
-        'underscores (_), spaces ( ), and periods (.).'
-    }
   validates :exercise, presence: true
-  validates :question, presence: true
-  validates :is_public, presence: true
-  validates :priority, presence: true,
-    numericality: { greater_than_or_equal_to: 0 }
   validates :count_attempts, presence: true,
     numericality: { greater_than_or_equal_to: 0 }
   validates :count_correct, presence: true,
-    numericality: { greater_than_or_equal_to: 0 }
-  validates :experience, presence: true,
     numericality: { greater_than_or_equal_to: 0 }
   validates :difficulty, presence: true,
     numericality: { greater_than_or_equal_to: 0 }

@@ -15,7 +15,7 @@ class Tag < ActiveRecord::Base
 
   #~ Relationships ............................................................
 
-  has_and_belongs_to_many :exercise_versions
+  has_and_belongs_to_many :exercises
   has_and_belongs_to_many :workouts
   has_many :tag_user_scores, inverse_of: :tag, dependent: :destroy
 

@@ -4,7 +4,7 @@
 #
 #  id                        :integer          not null, primary key
 #  multiple_choice_prompt_id :integer          not null
-#  answer                    :string(255)      not null
+#  answer                    :text(255)        not null
 #  position                  :integer          not null
 #  feedback                  :text
 #  value                     :float            not null

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150502155552) do
+ActiveRecord::Schema.define(version: 20150502210606) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -45,11 +45,11 @@ ActiveRecord::Schema.define(version: 20150502155552) do
   add_index "attempts", ["user_id"], name: "index_attempts_on_user_id"
 
   create_table "choices", force: true do |t|
-    t.integer  "multiple_choice_prompt_id", null: false
-    t.string   "answer",                    null: false
-    t.integer  "position",                  null: false
+    t.integer  "multiple_choice_prompt_id",             null: false
+    t.text     "answer",                    limit: 255, null: false
+    t.integer  "position",                              null: false
     t.text     "feedback"
-    t.float    "value",                     null: false
+    t.float    "value",                                 null: false
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -151,16 +151,12 @@ ActiveRecord::Schema.define(version: 20150502155552) do
 
   create_table "exercise_versions", force: true do |t|
     t.integer  "stem_id"
-    t.string   "name",           null: false
-    t.text     "question",       null: false
-    t.boolean  "is_public",      null: false
     t.integer  "attempt_count",  null: false
     t.float    "correct_count",  null: false
     t.float    "difficulty",     null: false
     t.float    "discrimination", null: false
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer  "experience",     null: false
     t.integer  "exercise_id",    null: false
     t.integer  "position",       null: false
     t.integer  "creator_id"
@@ -177,14 +173,6 @@ ActiveRecord::Schema.define(version: 20150502155552) do
   add_index "exercise_versions_resource_files", ["exercise_version_id"], name: "index_exercise_versions_resource_files_on_exercise_version_id"
   add_index "exercise_versions_resource_files", ["resource_file_id"], name: "index_exercise_versions_resource_files_on_resource_file_id"
 
-  create_table "exercise_versions_tags", force: true do |t|
-    t.integer "exercise_version_id", null: false
-    t.integer "tag_id",              null: false
-  end
-
-  add_index "exercise_versions_tags", ["exercise_version_id"], name: "index_exercise_versions_tags_on_exercise_version_id"
-  add_index "exercise_versions_tags", ["tag_id"], name: "index_exercise_versions_tags_on_tag_id"
-
   create_table "exercise_workouts", force: true do |t|
     t.integer  "exercise_id",               null: false
     t.integer  "workout_id",                null: false
@@ -195,16 +183,30 @@ ActiveRecord::Schema.define(version: 20150502155552) do
   end
 
   create_table "exercises", force: true do |t|
-    t.integer  "question_type",      null: false
-    t.integer  "current_version_id", null: false
+    t.integer  "question_type",                      null: false
+    t.integer  "current_version_id",                 null: false
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer  "versions",           null: false
+    t.integer  "versions",                           null: false
     t.integer  "exercise_family_id"
+    t.string   "name"
+    t.boolean  "is_public",          default: false, null: false
+    t.integer  "experience",                         null: false
+    t.integer  "attempt_count",      default: 0,     null: false
+    t.float    "correct_count",      default: 0.0,   null: false
+    t.float    "difficulty",         default: 0.0,   null: false
+    t.float    "discrimination",     default: 0.0,   null: false
   end
 
   add_index "exercises", ["current_version_id"], name: "index_exercises_on_current_version_id"
   add_index "exercises", ["exercise_family_id"], name: "index_exercises_on_exercise_family_id"
+
+  create_table "exercises_tags", id: false, force: true do |t|
+    t.integer "exercise_id", null: false
+    t.integer "tag_id",      null: false
+  end
+
+  add_index "exercises_tags", ["exercise_id", "tag_id"], name: "index_exercises_tags_on_exercise_id_and_tag_id", unique: true
 
   create_table "friendly_id_slugs", force: true do |t|
     t.string   "slug",                      null: false

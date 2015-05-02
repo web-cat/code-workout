@@ -9,6 +9,13 @@
 #  updated_at         :datetime
 #  versions           :integer          not null
 #  exercise_family_id :integer
+#  name               :string(255)
+#  is_public          :boolean          default(FALSE), not null
+#  experience         :integer          not null
+#  attempt_count      :integer          default(0), not null
+#  correct_count      :float            default(0.0), not null
+#  difficulty         :float            default(0.0), not null
+#  discrimination     :float            default(0.0), not null
 #
 # Indexes
 #
