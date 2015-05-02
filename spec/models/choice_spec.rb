@@ -2,18 +2,18 @@
 #
 # Table name: choices
 #
-#  id                  :integer          not null, primary key
-#  exercise_version_id :integer          not null
-#  answer              :string(255)      not null
-#  position            :integer          not null
-#  feedback            :text
-#  value               :float            not null
-#  created_at          :datetime
-#  updated_at          :datetime
+#  id                        :integer          not null, primary key
+#  multiple_choice_prompt_id :integer          not null
+#  answer                    :string(255)      not null
+#  position                  :integer          not null
+#  feedback                  :text
+#  value                     :float            not null
+#  created_at                :datetime
+#  updated_at                :datetime
 #
 # Indexes
 #
-#  index_choices_on_exercise_version_id  (exercise_version_id)
+#  index_choices_on_multiple_choice_prompt_id  (multiple_choice_prompt_id)
 #
 
 require 'spec_helper'

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150430165328) do
+ActiveRecord::Schema.define(version: 20150502155552) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -45,29 +45,26 @@ ActiveRecord::Schema.define(version: 20150430165328) do
   add_index "attempts", ["user_id"], name: "index_attempts_on_user_id"
 
   create_table "choices", force: true do |t|
-    t.integer  "exercise_version_id", null: false
-    t.string   "answer",              null: false
-    t.integer  "position",            null: false
+    t.integer  "multiple_choice_prompt_id", null: false
+    t.string   "answer",                    null: false
+    t.integer  "position",                  null: false
     t.text     "feedback"
-    t.float    "value",               null: false
+    t.float    "value",                     null: false
     t.datetime "created_at"
     t.datetime "updated_at"
   end
 
-  add_index "choices", ["exercise_version_id"], name: "index_choices_on_exercise_version_id"
+  add_index "choices", ["multiple_choice_prompt_id"], name: "index_choices_on_multiple_choice_prompt_id"
 
-  create_table "coding_questions", force: true do |t|
+  create_table "coding_prompts", force: true do |t|
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer  "exercise_version_id", null: false
     t.string   "class_name"
-    t.text     "wrapper_code",        null: false
-    t.text     "test_script",         null: false
+    t.text     "wrapper_code", null: false
+    t.text     "test_script",  null: false
     t.string   "method_name"
     t.text     "starter_code"
   end
-
-  add_index "coding_questions", ["exercise_version_id"], name: "index_coding_questions_on_exercise_version_id"
 
   create_table "course_enrollments", force: true do |t|
     t.integer "user_id",            null: false
@@ -154,22 +151,18 @@ ActiveRecord::Schema.define(version: 20150430165328) do
 
   create_table "exercise_versions", force: true do |t|
     t.integer  "stem_id"
-    t.string   "name",               null: false
-    t.text     "question",           null: false
-    t.text     "feedback"
-    t.boolean  "is_public",          null: false
-    t.integer  "priority",           null: false
-    t.integer  "count_attempts",     null: false
-    t.float    "count_correct",      null: false
-    t.float    "difficulty",         null: false
-    t.float    "discrimination",     null: false
-    t.boolean  "mcq_allow_multiple"
-    t.boolean  "mcq_is_scrambled"
+    t.string   "name",           null: false
+    t.text     "question",       null: false
+    t.boolean  "is_public",      null: false
+    t.integer  "attempt_count",  null: false
+    t.float    "correct_count",  null: false
+    t.float    "difficulty",     null: false
+    t.float    "discrimination", null: false
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer  "experience",         null: false
-    t.integer  "exercise_id",        null: false
-    t.integer  "position",           null: false
+    t.integer  "experience",     null: false
+    t.integer  "exercise_id",    null: false
+    t.integer  "position",       null: false
     t.integer  "creator_id"
   end
 
@@ -244,6 +237,11 @@ ActiveRecord::Schema.define(version: 20150430165328) do
   add_index "identities", ["uid", "provider"], name: "index_identities_on_uid_and_provider"
   add_index "identities", ["user_id"], name: "index_identities_on_user_id"
 
+  create_table "multiple_choice_prompts", force: true do |t|
+    t.boolean "allow_multiple", default: false, null: false
+    t.boolean "is_scrambled",   default: true,  null: false
+  end
+
   create_table "organizations", force: true do |t|
     t.string   "name",         null: false
     t.datetime "created_at"
@@ -256,24 +254,22 @@ ActiveRecord::Schema.define(version: 20150430165328) do
 
   create_table "prompts", force: true do |t|
     t.integer  "exercise_version_id", null: false
-    t.integer  "language_id",         null: false
-    t.text     "instruction",         null: false
+    t.text     "prompt",              null: false
     t.integer  "position",            null: false
-    t.integer  "max_user_attempts",   null: false
-    t.integer  "attempts",            null: false
-    t.float    "correct",             null: false
+    t.integer  "attempt_count",       null: false
+    t.float    "correct_count",       null: false
     t.text     "feedback"
     t.float    "difficulty",          null: false
     t.float    "discrimination",      null: false
-    t.integer  "type",                null: false
-    t.boolean  "allow_multiple"
     t.boolean  "is_scrambled"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer  "actable_id"
+    t.string   "actable_type"
   end
 
+  add_index "prompts", ["actable_id"], name: "index_prompts_on_actable_id", unique: true
   add_index "prompts", ["exercise_version_id"], name: "index_prompts_on_exercise_version_id"
-  add_index "prompts", ["language_id"], name: "index_prompts_on_language_id"
 
   create_table "resource_files", force: true do |t|
     t.string   "filename"
@@ -359,17 +355,17 @@ ActiveRecord::Schema.define(version: 20150430165328) do
 
   create_table "test_cases", force: true do |t|
     t.string   "test_script"
-    t.text     "negative_feedback",  null: false
-    t.float    "weight",             null: false
+    t.text     "negative_feedback", null: false
+    t.float    "weight",            null: false
     t.text     "description"
-    t.string   "input",              null: false
-    t.string   "expected_output",    null: false
+    t.string   "input",             null: false
+    t.string   "expected_output",   null: false
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer  "coding_question_id", null: false
+    t.integer  "coding_prompt_id",  null: false
   end
 
-  add_index "test_cases", ["coding_question_id"], name: "index_test_cases_on_coding_question_id"
+  add_index "test_cases", ["coding_prompt_id"], name: "index_test_cases_on_coding_prompt_id"
 
   create_table "users", force: true do |t|
     t.string   "email",                  default: "", null: false

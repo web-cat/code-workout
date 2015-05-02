@@ -2,25 +2,21 @@
 #
 # Table name: exercise_versions
 #
-#  id                 :integer          not null, primary key
-#  stem_id            :integer
-#  name               :string(255)      not null
-#  question           :text             not null
-#  feedback           :text
-#  is_public          :boolean          not null
-#  priority           :integer          not null
-#  count_attempts     :integer          not null
-#  count_correct      :float            not null
-#  difficulty         :float            not null
-#  discrimination     :float            not null
-#  mcq_allow_multiple :boolean
-#  mcq_is_scrambled   :boolean
-#  created_at         :datetime
-#  updated_at         :datetime
-#  experience         :integer          not null
-#  exercise_id        :integer          not null
-#  position           :integer          not null
-#  creator_id         :integer
+#  id             :integer          not null, primary key
+#  stem_id        :integer
+#  name           :string(255)      not null
+#  question       :text             not null
+#  is_public      :boolean          not null
+#  attempt_count  :integer          not null
+#  correct_count  :float            not null
+#  difficulty     :float            not null
+#  discrimination :float            not null
+#  created_at     :datetime
+#  updated_at     :datetime
+#  experience     :integer          not null
+#  exercise_id    :integer          not null
+#  position       :integer          not null
+#  creator_id     :integer
 #
 # Indexes
 #
@@ -45,17 +41,11 @@ class ExerciseVersion < ActiveRecord::Base
   has_many :courses, through: :exercise
   has_many :workouts, through:  :exercise
   has_and_belongs_to_many :tags
-  has_one :coding_question, inverse_of: :exercise_version, dependent: :destroy
-  has_many :choices, -> { order("position ASC") },
-    inverse_of: :exercise_version, dependent: :destroy
   has_many :prompts, -> { order("position ASC") },
     inverse_of: :exercise_version, dependent: :destroy
   has_many :attempts, dependent: :destroy
   has_and_belongs_to_many :resource_files
 
-  accepts_nested_attributes_for :attempts
-  accepts_nested_attributes_for :coding_question, allow_destroy: true
-  accepts_nested_attributes_for :choices, allow_destroy: true
   accepts_nested_attributes_for :tags, allow_destroy: true
 
 
@@ -74,7 +64,7 @@ class ExerciseVersion < ActiveRecord::Base
       message: 'Name must consist only of letters, digits, hyphens (-), ' \
         'underscores (_), spaces ( ), and periods (.).'
     }
-  validates :base_exercise, presence: true
+  validates :exercise, presence: true
   validates :question, presence: true
   validates :is_public, presence: true
   validates :priority, presence: true,
