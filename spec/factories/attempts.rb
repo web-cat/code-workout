@@ -8,16 +8,20 @@
 #  submit_time         :datetime         not null
 #  submit_num          :integer          not null
 #  answer              :text
-#  score               :decimal(, )      default(0.0)
+#  score               :float            default(0.0)
 #  experience_earned   :integer
 #  created_at          :datetime
 #  updated_at          :datetime
 #  workout_offering_id :integer
+#  workout_score_id    :integer
+#  active_score_id     :integer
 #
 # Indexes
 #
+#  index_attempts_on_active_score_id      (active_score_id)
 #  index_attempts_on_exercise_version_id  (exercise_version_id)
 #  index_attempts_on_user_id              (user_id)
+#  index_attempts_on_workout_score_id     (workout_score_id)
 #
 
 # Read about factories at https://github.com/thoughtbot/factory_girl

@@ -17,6 +17,12 @@
 #  index_courses_on_slug             (slug)
 #
 
+
+# =============================================================================
+# Represents a course at a university; akin to the course's catalog
+# description.  A course may have one or more course offerings in any
+# specific term.
+#
 class Course < ActiveRecord::Base
   extend FriendlyId
   friendly_id :number_without_spaces, use: [:history, :scoped],

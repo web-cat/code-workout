@@ -18,6 +18,11 @@
 #  index_test_cases_on_coding_prompt_id  (coding_prompt_id)
 #
 
+
+# =============================================================================
+# Represents a test case used to evaluate a student's answer to a coding
+# prompt.
+#
 class TestCase < ActiveRecord::Base
 
   #~ Relationships ............................................................

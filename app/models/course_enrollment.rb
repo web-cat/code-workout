@@ -15,6 +15,11 @@
 #  index_course_enrollments_on_user_id_and_course_offering_id  (user_id,course_offering_id) UNIQUE
 #
 
+# =============================================================================
+# Represents a many-to-many relationship between course offerings and users,
+# indicating each user's role with respect to the course offerings in which
+# they are enrolled.
+#
 class CourseEnrollment < ActiveRecord::Base
 
   #~ Relationships ............................................................

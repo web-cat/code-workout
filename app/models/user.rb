@@ -33,6 +33,10 @@
 #  index_users_on_slug                  (slug) UNIQUE
 #
 
+
+# =============================================================================
+# Represents a single user account on the system.
+#
 class User < ActiveRecord::Base
   include Gravtastic
   gravtastic secure: true, default: 'monsterid'
@@ -53,8 +57,10 @@ class User < ActiveRecord::Base
   has_many    :workout_scores, -> { includes :workout },
     inverse_of: :user, dependent: :destroy
   has_many    :workouts, through: :workout_scores
-  has_many    :exercise_owners, inverse_of: :user
+  has_many    :exercise_owners, inverse_of: :owner
   has_many    :exercises, through: :exercise_owners
+  has_many    :workout_owners, inverse_of: :owner
+  has_many    :workouts, through: :workout_owners
   has_many    :attempts, dependent: :destroy
   has_many    :tag_user_scores, -> { includes :tag },
     inverse_of: :user, dependent: :destroy

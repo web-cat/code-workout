@@ -1,26 +1,24 @@
 # == Schema Information
 #
-# Table name: exercise_versions
+# Table name: multiple_choice_prompts
 #
 #  id             :integer          not null, primary key
-#  stem_id        :integer
-#  attempt_count  :integer          not null
-#  correct_count  :float            not null
-#  difficulty     :float            not null
-#  discrimination :float            not null
-#  created_at     :datetime
-#  updated_at     :datetime
-#  exercise_id    :integer          not null
-#  position       :integer          not null
-#  creator_id     :integer
-#
-# Indexes
-#
-#  index_exercise_versions_on_exercise_id  (exercise_id)
-#  index_exercise_versions_on_stem_id      (stem_id)
+#  allow_multiple :boolean          default(FALSE), not null
+#  is_scrambled   :boolean          default(TRUE), not null
 #
 
-class MultipleChoicePrompt < ExerciseVersion
+
+
+# =============================================================================
+# Represents a multiple-choice prompt in a single ExerciseVersion.  In spirit,
+# this is a subclass of Prompt, and inherits all of the fields of Prompt via
+# acts_as (see the documentation on-line for the activerecord-acts_as
+# gem).
+#
+# One multiple-choice prompt includes one or more choices, which are
+# represented at different objects.
+#
+class MultipleChoicePrompt < ActiveRecord::Base
 
   #~ Relationships ............................................................
 

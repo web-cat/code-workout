@@ -17,6 +17,9 @@
 #  index_course_offerings_on_term_id    (term_id)
 #
 
+# =============================================================================
+# Represents a single section (or offering) of a course in a specific term.
+#
 class CourseOffering < ActiveRecord::Base
 
   #~ Relationships ............................................................
@@ -49,9 +52,9 @@ class CourseOffering < ActiveRecord::Base
   def display_name
     "#{course.number} (#{label})"
   end
-  
+
   def name
-    self.course.name + ' - ' + self.term.display_name 
+    self.course.name + ' - ' + self.term.display_name
   end
 
 

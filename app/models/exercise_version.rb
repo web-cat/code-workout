@@ -22,6 +22,10 @@
 
 require "cgi"
 
+# =============================================================================
+# Represents one version of an exercise--a single snapshot in the exercise's
+# entire edit history.
+#
 class ExerciseVersion < ActiveRecord::Base
 
   #~ Accessor
@@ -40,6 +44,7 @@ class ExerciseVersion < ActiveRecord::Base
     inverse_of: :exercise_version, dependent: :destroy
   has_many :attempts, dependent: :destroy
   has_and_belongs_to_many :resource_files
+  belongs_to :creator, class_name: 'User'
 
 
   #~ Hooks ....................................................................

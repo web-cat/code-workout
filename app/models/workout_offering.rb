@@ -17,13 +17,21 @@
 #  index_workout_offerings_on_workout_id          (workout_id)
 #
 
+
+# =============================================================================
+# Represents a many-to-many relationship between workouts and course
+# offerings, where each instance of the relationship represents one
+# "assignment" for one "section" of a course.  Workout offerings have
+# due dates that control when the students in the corresponding course
+# offering can take the workout (and thus, when they must complete it).
+#
 class WorkoutOffering < ActiveRecord::Base
 
   #~ Relationships ............................................................
 
   belongs_to :workout, inverse_of: :workout_offerings
   belongs_to :course_offering, inverse_of: :workout_offerings
-  has_many :attempts, inverse_of: :workout_offering, dependent: :destroy
+  has_many :workout_scores, inverse_of: :workout_offering, dependent: :nullify
 
 
   #~ Validation ...............................................................

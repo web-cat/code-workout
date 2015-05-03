@@ -16,6 +16,10 @@
 #  index_test_case_results_on_user_id       (user_id)
 #
 
+
+# =============================================================================
+# Represents the outcome of a test case on a coding prompt.
+#
 class TestCaseResult < ActiveRecord::Base
 
   #~ Relationships ............................................................

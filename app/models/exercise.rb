@@ -23,6 +23,25 @@
 #  index_exercises_on_exercise_family_id  (exercise_family_id)
 #
 
+
+# =============================================================================
+# Represents a single exercise (question) that a student (or any user) can
+# answer.  An exercise may include introductory text (a stem), and one
+# or more prompts.  The prompts represent the "parts" of the question, which
+# are presented in sequential order (never randomized, since they often
+# follow a logical progression).
+#
+# Many simple questions contain only one prompt, which is the most common
+# case.  However, a multi-part question (say, a question that has a), b), and
+# c) subparts) is simply one exercise with multiple prompts (three, in
+# this example).
+#
+# As exercises are edited over time, the edit history is maintained as
+# a series of ExerciseVersion objects.  When a user answers an exercise,
+# their attempt is associated with the specific ExerciseVersion that was
+# in effect when they gave their answer.  New users seeing an exercise
+# for the first time always see the newest version.
+#
 class Exercise < ActiveRecord::Base
 
   #~ Relationships ............................................................
@@ -35,7 +54,7 @@ class Exercise < ActiveRecord::Base
   has_many :workouts, through: :exercise_workouts
   belongs_to :exercise_family, inverse_of: :exercises
   has_many :exercise_owners, inverse_of: :exercise, dependent: :destroy
-  has_many :users, through: :exercise_owners
+  has_many :owners, through: :exercise_owners
   belongs_to :current_version, class_name: 'ExerciseVersion'
   has_and_belongs_to_many :tags
 

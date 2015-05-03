@@ -9,6 +9,11 @@
 #  builtin                       :boolean          default(FALSE), not null
 #
 
+
+# =============================================================================
+# Represents a user's global permissions on the system.  This has now
+# degenerated into what ammounts to a global "administrator" flag.
+#
 class GlobalRole < ActiveRecord::Base
 
   #~ Validation ...............................................................

@@ -11,6 +11,12 @@
 #  updated_at  :datetime
 #
 
+
+# =============================================================================
+# Represents a many-to-many relationship between exercises and workouts,
+# indicating which exercises are included in a given workout, and in
+# what order.
+#
 class ExerciseWorkout < ActiveRecord::Base
 
   #~ Relationships ............................................................

@@ -13,6 +13,7 @@
 #  exercises_remaining :integer
 #  created_at          :datetime
 #  updated_at          :datetime
+#  workout_offering_id :integer
 #
 # Indexes
 #

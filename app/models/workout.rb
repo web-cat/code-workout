@@ -13,6 +13,22 @@
 #  creator_id        :integer
 #
 
+
+# =============================================================================
+# Represents a collection of exercises given as an assignment.  A workout
+# can be associated with one or more courses through workout offerings,
+# which represent individual assignments of the same workout in different
+# courses or terms.
+#
+# In addition, each user who starts a workout is associated with the
+# workout through one or more WorkoutScores--these WorkoutScore objects
+# represent that user's score on the exercises in one completion of this
+# workout.
+#
+# Note that workouts can implicitly be "owned" by courses.  Effectively,
+# the "courses" associated with a workout are those for which course
+# offerings have been given workout offerings.
+#
 class Workout < ActiveRecord::Base
 
   #~ Relationships ............................................................
@@ -25,9 +41,15 @@ class Workout < ActiveRecord::Base
 	has_and_belongs_to_many :tags
   has_many :workout_offerings, inverse_of: :workout, dependent: :destroy
   has_many :course_offerings, through:  :workout_offerings
+  has_many :courses, through: :course_offerings
+  belongs_to :creator, class_name: 'User'
+  has_many :workout_owners, inverse_of: :workout, dependent: :destroy
+  has_many :owners, through: :workout_owners
 
   accepts_nested_attributes_for :exercise_workouts
   accepts_nested_attributes_for :workout_offerings
+
+
   #~ Validation ...............................................................
 
 	validates :name,
@@ -43,7 +65,7 @@ class Workout < ActiveRecord::Base
 
   #~ Hooks ....................................................................
 
-  paginates_per 1
+  # paginates_per 1
 
 
   #~ Class methods ............................................................

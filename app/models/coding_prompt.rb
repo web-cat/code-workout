@@ -12,6 +12,12 @@
 #  starter_code :text
 #
 
+# =============================================================================
+# Represents one coding prompt in an exercise.  In spirit,
+# this is a subclass of Prompt, and inherits all of the fields of Prompt via
+# acts_as (see the documentation on-line for the activerecord-acts_as
+# gem).
+#
 class CodingPrompt < ActiveRecord::Base
 
   #~ Relationships ............................................................

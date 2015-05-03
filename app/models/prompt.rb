@@ -23,6 +23,27 @@
 #  index_prompts_on_exercise_version_id  (exercise_version_id)
 #
 
+
+# =============================================================================
+# A base class for all concrete prompt classes.  This class should be
+# considered abstract, and only exists to capture the common fields that
+# all prompt subclasses share.  All subclasses of prompt inherit all of the
+# fields of Prompt via acts_as (see the documentation on-line for the
+# activerecord-acts_as gem).
+#
+# Any relationships that other entities have on Prompt are automatically
+# polymorphic in nature, but should not use the rails "polymorphic" keyword.
+# The polymorphic support is built into this class via "actable".
+#
+# A prompt represents the "parts" of the question in an exercise, which
+# are presented in sequential order (never randomized, since they often
+# follow a logical progression).
+#
+# Many simple questions contain only one prompt, which is the most common
+# case.  However, a multi-part question (say, a question that has a), b), and
+# c) subparts) is simply one exercise with multiple prompts (three, in
+# this example).
+#
 class Prompt < ActiveRecord::Base
 
   #~ Relationships ............................................................

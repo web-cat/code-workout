@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150502210606) do
+ActiveRecord::Schema.define(version: 20150503153952) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -34,15 +34,19 @@ ActiveRecord::Schema.define(version: 20150502210606) do
     t.datetime "submit_time",                       null: false
     t.integer  "submit_num",                        null: false
     t.text     "answer"
-    t.decimal  "score",               default: 0.0
+    t.float    "score",               default: 0.0
     t.integer  "experience_earned"
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "workout_offering_id"
+    t.integer  "workout_score_id"
+    t.integer  "active_score_id"
   end
 
+  add_index "attempts", ["active_score_id"], name: "index_attempts_on_active_score_id"
   add_index "attempts", ["exercise_version_id"], name: "index_attempts_on_exercise_version_id"
   add_index "attempts", ["user_id"], name: "index_attempts_on_user_id"
+  add_index "attempts", ["workout_score_id"], name: "index_attempts_on_workout_score_id"
 
   create_table "choices", force: true do |t|
     t.integer  "multiple_choice_prompt_id",             null: false
@@ -144,10 +148,10 @@ ActiveRecord::Schema.define(version: 20150502210606) do
 
   create_table "exercise_owners", force: true do |t|
     t.integer "exercise_id", null: false
-    t.integer "user_id",     null: false
+    t.integer "owner_id",    null: false
   end
 
-  add_index "exercise_owners", ["exercise_id", "user_id"], name: "index_exercise_owners_on_exercise_id_and_user_id", unique: true
+  add_index "exercise_owners", ["exercise_id", "owner_id"], name: "index_exercise_owners_on_exercise_id_and_owner_id", unique: true
 
   create_table "exercise_versions", force: true do |t|
     t.integer  "stem_id"
@@ -411,6 +415,13 @@ ActiveRecord::Schema.define(version: 20150502210606) do
   add_index "workout_offerings", ["course_offering_id"], name: "index_workout_offerings_on_course_offering_id"
   add_index "workout_offerings", ["workout_id"], name: "index_workout_offerings_on_workout_id"
 
+  create_table "workout_owners", force: true do |t|
+    t.integer "workout_id", null: false
+    t.integer "owner_id",   null: false
+  end
+
+  add_index "workout_owners", ["workout_id", "owner_id"], name: "index_workout_owners_on_workout_id_and_owner_id", unique: true
+
   create_table "workout_scores", force: true do |t|
     t.integer  "workout_id",          null: false
     t.integer  "user_id",             null: false
@@ -422,6 +433,7 @@ ActiveRecord::Schema.define(version: 20150502210606) do
     t.integer  "exercises_remaining"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer  "workout_offering_id"
   end
 
   add_index "workout_scores", ["user_id"], name: "index_workout_scores_on_user_id"

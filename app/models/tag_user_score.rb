@@ -16,6 +16,10 @@
 #  index_tag_user_scores_on_user_id  (user_id)
 #
 
+
+# =============================================================================
+# Represents a user's xp score for a given tag.
+#
 class TagUserScore < ActiveRecord::Base
 
   #~ Relationships ............................................................

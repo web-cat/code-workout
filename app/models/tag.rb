@@ -11,6 +11,10 @@
 #  total_experience :integer          default(0)
 #
 
+
+# =============================================================================
+# Represents a tag, used for filtering/searching exercises or workouts.
+#
 class Tag < ActiveRecord::Base
 
   #~ Relationships ............................................................
