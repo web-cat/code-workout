@@ -47,12 +47,31 @@ class CourseOfferingsController < ApplicationController
         notice: 'Unauthorized to create course offering' and return
     end
     @course_offering = CourseOffering.new(course_offering_params)
-
+  # Sets a default cutoff_date for an offering if there isn't already one.
+  # TODO: Need to implement this available from the view    
+    @course_offering.cutoff_date = @course_offering.cutoff_date || term.ends_on    
+    
     if @course_offering.save
       redirect_to @course_offering,
         notice: 'Course offering was successfully created.'
     else
       render action: 'new'
+    end
+  end
+  
+  # -------------------------------------------------------------
+  # POST /course_enrollments
+  # Public: Creates a new course enrollment based on enroll link.
+  # FIXME:  Not really sure this is the best place to do it.
+  
+  def create_enrollment    
+    @course_enrollment = CourseEnrollment.new(course_enrollment_params)
+    if @course_enrollment.save
+      redirect_to root_path,
+        notice: 'Course enrollment was successfully created.'
+    else
+      redirect_to root_path,
+        notice: 'Enrollment didnt really work.'
     end
   end
 
@@ -155,5 +174,12 @@ class CourseOfferingsController < ApplicationController
     def course_offering_params
       params.require(:course_offering).permit(:course_id, :term_id,
         :label, :url, :self_enrollment_allowed)
+    end
+    # -------------------------------------------------------------
+    # FIXME: Hacky workaround to get in the parameters for 
+    # course enrollment since its controller is gone!    
+    def course_enrollment_params
+      params.require(:course_enrollment).permit(:course_offering_id,
+        :course_role_id, :user_id)
     end
 end
