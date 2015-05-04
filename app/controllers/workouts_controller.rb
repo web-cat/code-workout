@@ -1,4 +1,4 @@
-class WorkoutsController < ApplicationController
+class WorkoutsController < ApplicationController 
   before_action :set_workout, only: [:show, :edit, :update, :destroy]
   respond_to :html, :js
 
@@ -136,7 +136,8 @@ class WorkoutsController < ApplicationController
 
   # ------Placeholder for any views I want experiment with-------------------------------------------------------
   def dummy
-    @workouts = Workout.all
+    @workouts = Workout.find(1)
+    
   end
 
   # -------------------------------------------------------------

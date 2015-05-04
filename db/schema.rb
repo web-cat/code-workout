@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150504004247) do
+ActiveRecord::Schema.define(version: 20150504051530) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -105,6 +105,7 @@ ActiveRecord::Schema.define(version: 20150504004247) do
     t.boolean  "self_enrollment_allowed"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.date     "cutoff_date"
   end
 
   add_index "course_offerings", ["course_id"], name: "index_course_offerings_on_course_id"

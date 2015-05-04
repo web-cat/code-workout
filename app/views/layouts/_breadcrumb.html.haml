@@ -9,9 +9,9 @@
           - current_user.course_offerings.each do |user_off|
             - if flag1 && user_off.id == off.id
               - flag1 = false
-              %li= link_to 'Courses', courses_path
+              -#%li= link_to 'Courses', courses_path
               %li
-                = link_to off.name, course_offering_path(off)
+                -#= link_to off.name, course_offering_path(off)
     - if flag1
       %li
         = link_to 'Gym', gym_path

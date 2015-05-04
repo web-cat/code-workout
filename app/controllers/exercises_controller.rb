@@ -682,8 +682,7 @@ class ExercisesController < ApplicationController
           session[:leaf_exercises] << @exercise.id
         else
           session[:leaf_exercises] = [@exercise.id]
-        end
-
+        end        
         # EOL stands for end of line
         # @wexs is the variable to hold the list of exercises of this workout
         # yet to be attempted by the user apart from the current exercise
@@ -731,6 +730,9 @@ class ExercisesController < ApplicationController
         redirect_to exercises_url, notice: "Exercise #{params[:id]} not found"
       else
         @exercise = found.first
+        attempt = Attempt.new(user_id: current_user.id, exercise_id: @exercise.id,submit_time: Time.now, submit_num: 1,answer: params[:exercise][:answer_code],workout_id: session[:current_workout])
+        attempt.save
+        attempt_id = attempt.id
         if @exercise.base_exercise.is_mcq?
           response_ids = params[:exercise][:exercise][:choice_ids]
           p params
@@ -765,19 +767,14 @@ class ExercisesController < ApplicationController
           count_submission()
           @xp = @exercise.experience_on(@responses, session[:submit_num])
           record_attempt(@score, @xp)
-        elsif @exercise.base_exercise.is_coding?
+        elsif @exercise.base_exercise.is_coding?          
           CodeWorker.new.async.perform(@exercise.coding_question.class_name,
             @exercise.id,
             current_user.id,
             params[:exercise][:answer_code],
-            session[:current_workout])
-          # TODO: This sleep call is a broken approach to turning the
-          # async processing into a synchronous call, since feedback is
-          # pulled from the client via an ajax call.  This needs to be
-          # removed, and instead feedback results need to be sent using
-          # HTML5 server-side push
-          sleep(3.0)
+            session[:current_workout],attempt_id)
         end
+        puts "ATTEMPT-#{attempt_id}\n","ATTEMPT-#{attempt_id}\n","ATTEMPT-#{attempt_id}\n"
         if params[:wexes]
           session[:remaining_wexes] = params[:wexes]
           if params[:wexes][1..-1].count < 1
@@ -789,18 +786,30 @@ class ExercisesController < ApplicationController
             @wexs = params[:wexes][1..-1]
           end
           if params[:feedback_return]
-            redirect_to exercise_practice_path(@exercise,
-              wexes: params[:wexes],
-              feedback_return: true),
-              format: :js # and return
+            # FIXME: Horrible rendering of javascipt output on method completion
+            # to provide the AJAXy feedback mechanism that doesn't work.
+            str = "$('#exercisefeedback').append(\"<%= j(render 'ajax_feedback') %>\");"
+            render js: "var source = new EventSource('/feedback_send?uid='+#{current_user.id}+'&att_id='+#{attempt_id});  console.log('Established inside');   source.addEventListener('feedback_#{current_user.id}',function(e){  console.log('WINTER IS ' + e.data); $('#exercisefeedback').show(); #{str}  });"
+            # redirect_to exercise_practice_path(@exercise,
+            #   wexes: params[:wexes],
+            #   feedback_return: true,att_id: attempt_id),
+            #   format: :js # and return
           else
-            redirect_to exercise_practice_path(id: params[:wexes].first,
-              wexes: @wexs) and return
+            # FIXME: Horrible rendering of javascipt output on method completion
+            # to provide the AJAXy feedback mechanism that doesn't work.
+            str = "$('#exercisefeedback').append(\"<%= j(render 'ajax_feedback') %>\");"
+            render js: "var source = new EventSource('/feedback_send?uid='+#{current_user.id}+'&att_id='+#{attempt_id});  console.log('Established inside');   source.addEventListener('feedback_#{current_user.id}',function(e){  console.log('WINTER IS ' + e.data); $('#exercisefeedback').show(); #{str}  });"
+            # redirect_to exercise_practice_path(id: params[:wexes].first,
+            #   wexes: @wexs,att_id: attempt_id) and return
           end
         else
           # Move as to display the exercise submission feedback
-          redirect_to exercise_practice_path(@exercise,
-            feedback_return: true), format: :js and return
+          # FIXME: Horrible rendering of javascipt output on method completion
+          # to provide the AJAXy feedback mechanism that doesn't work.
+          str = "$('#exercisefeedback').append(\"<%= j(render 'ajax_feedback') %>\");"
+          render js: "var source = new EventSource('/feedback_send?uid='+#{current_user.id}+'&att_id='+#{attempt_id});  console.log('Established inside');   source.addEventListener('feedback_#{current_user.id}',function(e){  console.log('WINTER IS ' + e.data); $('#exercisefeedback').show(); #{str}  });"         
+          #redirect_to exercise_practice_path(@exercise,
+          #  feedback_return: true,att_id: attempt_id) and return
         end
       end
     else

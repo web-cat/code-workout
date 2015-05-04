@@ -16,6 +16,7 @@
       %th Section
       %th Instructors
       %th Graders
+      %th Enrolling
   %tbody
     - @course.course_offerings.each do |off|
       %tr
@@ -25,7 +26,18 @@
           user_path(i) }.to_sentence
         %td!= off.graders.map{ |i| link_to i.display_name,
           user_path(i) }.to_sentence
-
+        %td
+          - if !off.is_enrolled?(current_user)    
+            - if off.cutoff?
+              Self-enrollment not possible forevermore
+            - else
+              = link_to 'Enroll',                                                  |
+                '/course_enrollments?' + { course_enrollment:                      |
+                ActionController::Parameters.new({user_id: current_user.id,        |
+                course_offering_id: off.id,                           |
+                course_role_id: CourseRole::STUDENT_ID})}.to_param, method: :post  |
+          - else
+            You are already a part of this course
 - if user_signed_in? &&                                      |
   current_user.global_role_id >= GlobalRole::INSTRUCTOR_ID   |
   %p

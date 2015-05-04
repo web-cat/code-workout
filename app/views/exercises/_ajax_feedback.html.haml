@@ -3,15 +3,17 @@
 - attempts = Attempt.where(user_id: current_user.id,exercise_id: @exercise.id)
 - if attempts.any?
   - attempt = attempts.last
-  - if @exercise.base_exercise.question_type == 1
+  - puts "ATTEMPT ",attempt.id,"ATTEMPT ","ATTEMPTis "
+  - if @exercise.base_exercise.is_mcq?
     = Choice.find(attempt.answer.to_i).feedback
-  - elsif @exercise.base_exercise.question_type == 2
+  - elsif @exercise.base_exercise.is_coding?
     %table.table.table-striped.feedback
       %thead
         %tr
           %th Behavior
           %th Result
       %tbody
+        - puts "IJD","IJD",TestCaseResult.where(attempt_id: attempt.id).last,"IJD","IJD"
         - @exercise.coding_question.test_cases.each_with_index do |test_case, i|
           %tr
             %td
@@ -36,7 +38,8 @@
       workout_evaluate_path(uid: current_user.id,
         wid: session[:current_workout])
   - elsif session[:current_workout] && params[:wexes][1..-1].count >= 0
-    = button_to 'Next question',
+    - puts "HINTER WEXES",params[:wexes][1..-1],"HINTER WEXES"
+    = link_to 'Next question',
       exercise_practice_path(id: params[:wexes].first,
         wexes: params[:wexes][1..-1]),
       method: :get
