@@ -27,16 +27,21 @@ class CodeWorker
       term = Term.current_term
       term_name = term ? term.display_name : 'no-term'
       term_name.gsub!(/\W/, '-')
-      term_dir = 'usr/attempts/' + term_name
+      # Create the usr/attempts dir if needed
+      term_dir = 'usr/attempts/'
+      if !Dir.exist?(term_dir)
+        Dir.mkdir(term_dir)
+      end
+      # Create the term-specific folder within /usr/attempts if needed
+      term_dir = term_dir + term_name
       if !Dir.exist?(term_dir)
         Dir.mkdir(term_dir)
       end      
       attempt_dir = term_dir + '/' + current_attempt
       puts "DIRECTORY",attempt_dir,"DIRECTORY"
       if !Dir.exist?(attempt_dir)
-        #Dir.mkdir(attempt_dir)
-      else
-        puts "EXISTS"
+        puts 'current working directory'
+        puts Dir.pwd
       end
       if !Dir[attempt_dir].empty?
         puts 'WARNING, OVERWRITING EXISTING DIRECTORY'

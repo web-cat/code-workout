@@ -14,3 +14,4 @@
 - elsif user_signed_in? && session[:leaf_exercises]
   = render partial: "exercises/thumbsm", collection: Exercise.find(session[:leaf_exercises]), as: :x,
     locals: { uid: current_user.id, wid: nil }
+.clearfix

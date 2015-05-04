@@ -14,4 +14,7 @@ class StaticPagesController < ApplicationController
   def mockup3
   end
 
+  def thumbnails
+  end
+
 end

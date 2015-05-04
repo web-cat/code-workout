@@ -23,10 +23,12 @@
 .content .answers,
 .exercise.thumbnail {
   background-color: #fcf2e3;
+  background-image: none;
   border-color: #dfcdb2;
 }
 .workout.thumbnail {
   background-color: #dfcdb2;
+  background-image: none;
   border-color: #e8d8c0;
 }
 .breadcrumb { background-color: #f0e6d8; }
@@ -80,7 +82,6 @@ h1 {
   color: #3da2b4;
   text-shadow: 0 -1px 0 #231914;
 }
-.thumbnail .title a { color: #247184; }
 
 h1, h2, h3, h4, h5, h6 {
   margin-top: 0px;
@@ -114,6 +115,11 @@ a:hover, a:focus { color: #247184; }
     *background-color: #df8505; }
   &:active, &.active { background-color: #c67605; }
 }
+
+
+/* Thumbnails */
+.thumbnail .title a { color: #247184; }
+.thumbnail .title .xp { background-color: #40312a; color: white; }
 
 
 /* Codemirror */
