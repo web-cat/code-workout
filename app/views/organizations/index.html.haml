@@ -39,6 +39,19 @@
                   %td!= o.instructors.map{ |i| link_to i.display_name,
                     user_path(i) }.to_sentence
                   %td
+                    - if !o.is_enrolled?(current_user)    
+                      - if o.cutoff?
+                        Self-enrollment not possible forevermore
+                      - else
+                        = link_to 'Enroll',                                                  |
+                          '/course_enrollments?' + { course_enrollment:                      |
+                          ActionController::Parameters.new({user_id: current_user.id,        |
+                          course_offering_id: o.id,                           |
+                          course_role_id: CourseRole::STUDENT_ID})}.to_param, method: :post  |
+                    - else
+                      You are already a part of this course
+
+
 - else
   %p
     No organizations have courses offered in
