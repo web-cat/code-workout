@@ -22,7 +22,7 @@ class TestCaseResult < ActiveRecord::Base
 
   belongs_to :user, inverse_of: :test_case_results
   belongs_to :test_case, inverse_of: :test_case_results
-
+  belongs_to :attempt, inverse_of: :test_case_results
 
   #~ Validation ...............................................................
 
