@@ -40,8 +40,8 @@ class Attempt < ActiveRecord::Base
   belongs_to :exercise, inverse_of: :attempts
   belongs_to :user, inverse_of: :attempts
   belongs_to :workout_offering, inverse_of: :attempts
-
-
+  belongs_to :workout, inverse_of: :attempts
+  has_many :test_case_results
   #~ Validation ...............................................................
 
   validates :user, presence: true
