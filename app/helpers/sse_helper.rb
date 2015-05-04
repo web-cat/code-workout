@@ -1,0 +1,2 @@
+module SseHelper
+end
