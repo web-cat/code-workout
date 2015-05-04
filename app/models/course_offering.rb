@@ -42,7 +42,6 @@ class CourseOffering < ActiveRecord::Base
   validates :course, presence: true
   validates :term, presence: true
 
-
   #~ Public instance methods ..................................................
 
   # -------------------------------------------------------------
@@ -88,6 +87,21 @@ class CourseOffering < ActiveRecord::Base
     course_enrollments.where(course_role: CourseRole.instructor).map(&:user)
   end
 
+  # -------------------------------------------------------------
+  # Public: Returns a boolean indicating whether the offering is
+  # currently unavailable for self-enrollment
+  def cutoff?
+    if self_enrollment_allowed
+      if !cutoff_date
+        return false        
+      else
+        if cutoff_date >= Time.now
+          return false  
+        end
+      end
+    end
+    return true
+  end
 
   # -------------------------------------------------------------
   # Public: Gets a relation representing all Users who are graders in
