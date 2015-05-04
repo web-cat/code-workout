@@ -22,6 +22,7 @@ class Workout < ActiveRecord::Base
 	  inverse_of: :workout, dependent: :destroy
 	has_many :workout_scores, inverse_of: :workout, dependent: :destroy
   has_many :users, through: :workout_scores
+  has_many :attempts
 	has_and_belongs_to_many :tags
   has_many :workout_offerings, inverse_of: :workout, dependent: :destroy
   has_many :course_offerings, through:  :workout_offerings
