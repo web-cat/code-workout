@@ -6,16 +6,13 @@
 #  exercise_version_id :integer          not null
 #  prompt              :text             not null
 #  position            :integer          not null
-#  attempt_count       :integer          not null
-#  correct_count       :float            not null
 #  feedback            :text
-#  difficulty          :float            not null
-#  discrimination      :float            not null
 #  is_scrambled        :boolean
 #  created_at          :datetime
 #  updated_at          :datetime
 #  actable_id          :integer
 #  actable_type        :string(255)
+#  irt_data_id         :integer
 #
 # Indexes
 #

@@ -7,12 +7,10 @@
 #  exercise_version_id :integer          not null
 #  submit_time         :datetime         not null
 #  submit_num          :integer          not null
-#  answer              :text
 #  score               :float            default(0.0)
 #  experience_earned   :integer
 #  created_at          :datetime
 #  updated_at          :datetime
-#  workout_offering_id :integer
 #  workout_score_id    :integer
 #  active_score_id     :integer
 #
@@ -60,6 +58,7 @@ class Attempt < ActiveRecord::Base
 
   #~ Relationships ............................................................
 
+  has_many :prompt_answers, inverse_of: :attempt, dependent: :destroy
   belongs_to :exercise_version, inverse_of: :attempts
   belongs_to :user, inverse_of: :attempts
   belongs_to :workout_score, inverse_of: :attempts

@@ -4,12 +4,12 @@
 #
 #  id                        :integer          not null, primary key
 #  multiple_choice_prompt_id :integer          not null
-#  answer                    :text(255)        not null
 #  position                  :integer          not null
 #  feedback                  :text
 #  value                     :float            not null
 #  created_at                :datetime
 #  updated_at                :datetime
+#  answer                    :text             not null
 #
 # Indexes
 #
@@ -36,6 +36,7 @@ class Choice < ActiveRecord::Base
 
   belongs_to :multiple_choice_prompt, inverse_of: :choices
   acts_as_list scope: :multiple_choice_prompt
+  has_and_belongs_to_many :multiple_choice_prompt_answers, inverse_of: :choices
 
 
   #~ Hooks ....................................................................

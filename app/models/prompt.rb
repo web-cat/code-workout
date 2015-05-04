@@ -6,23 +6,19 @@
 #  exercise_version_id :integer          not null
 #  prompt              :text             not null
 #  position            :integer          not null
-#  attempt_count       :integer          not null
-#  correct_count       :float            not null
 #  feedback            :text
-#  difficulty          :float            not null
-#  discrimination      :float            not null
 #  is_scrambled        :boolean
 #  created_at          :datetime
 #  updated_at          :datetime
 #  actable_id          :integer
 #  actable_type        :string(255)
+#  irt_data_id         :integer
 #
 # Indexes
 #
 #  index_prompts_on_actable_id           (actable_id) UNIQUE
 #  index_prompts_on_exercise_version_id  (exercise_version_id)
 #
-
 
 # =============================================================================
 # A base class for all concrete prompt classes.  This class should be
@@ -53,6 +49,7 @@ class Prompt < ActiveRecord::Base
   # TODO: define Attempt model and relate to prompt for each student attempt
   belongs_to :exercise_version, inverse_of: :prompts
   acts_as_list scope: :exercise_version
+  has_many :prompt_answers, inverse_of: :prompt, dependent: :destroy
 
   # TODO: define Hint model and decide how a hint determines how it maps to
   # different types of incorrect attempts

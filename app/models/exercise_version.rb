@@ -2,17 +2,14 @@
 #
 # Table name: exercise_versions
 #
-#  id             :integer          not null, primary key
-#  stem_id        :integer
-#  attempt_count  :integer          not null
-#  correct_count  :float            not null
-#  difficulty     :float            not null
-#  discrimination :float            not null
-#  created_at     :datetime
-#  updated_at     :datetime
-#  exercise_id    :integer          not null
-#  position       :integer          not null
-#  creator_id     :integer
+#  id          :integer          not null, primary key
+#  stem_id     :integer
+#  created_at  :datetime
+#  updated_at  :datetime
+#  exercise_id :integer          not null
+#  position    :integer          not null
+#  creator_id  :integer
+#  irt_data_id :integer
 #
 # Indexes
 #

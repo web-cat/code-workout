@@ -7,12 +7,10 @@
 #  exercise_version_id :integer          not null
 #  submit_time         :datetime         not null
 #  submit_num          :integer          not null
-#  answer              :text
 #  score               :float            default(0.0)
 #  experience_earned   :integer
 #  created_at          :datetime
 #  updated_at          :datetime
-#  workout_offering_id :integer
 #  workout_score_id    :integer
 #  active_score_id     :integer
 #

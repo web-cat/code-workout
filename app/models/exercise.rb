@@ -12,17 +12,13 @@
 #  name               :string(255)
 #  is_public          :boolean          default(FALSE), not null
 #  experience         :integer          not null
-#  attempt_count      :integer          default(0), not null
-#  correct_count      :float            default(0.0), not null
-#  difficulty         :float            default(0.0), not null
-#  discrimination     :float            default(0.0), not null
+#  irt_data_id        :integer
 #
 # Indexes
 #
 #  index_exercises_on_current_version_id  (current_version_id)
 #  index_exercises_on_exercise_family_id  (exercise_family_id)
 #
-
 
 # =============================================================================
 # Represents a single exercise (question) that a student (or any user) can

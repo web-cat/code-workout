@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150503153952) do
+ActiveRecord::Schema.define(version: 20150504004247) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -33,12 +33,10 @@ ActiveRecord::Schema.define(version: 20150503153952) do
     t.integer  "exercise_version_id",               null: false
     t.datetime "submit_time",                       null: false
     t.integer  "submit_num",                        null: false
-    t.text     "answer"
     t.float    "score",               default: 0.0
     t.integer  "experience_earned"
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer  "workout_offering_id"
     t.integer  "workout_score_id"
     t.integer  "active_score_id"
   end
@@ -49,16 +47,27 @@ ActiveRecord::Schema.define(version: 20150503153952) do
   add_index "attempts", ["workout_score_id"], name: "index_attempts_on_workout_score_id"
 
   create_table "choices", force: true do |t|
-    t.integer  "multiple_choice_prompt_id",             null: false
-    t.text     "answer",                    limit: 255, null: false
-    t.integer  "position",                              null: false
+    t.integer  "multiple_choice_prompt_id", null: false
+    t.integer  "position",                  null: false
     t.text     "feedback"
-    t.float    "value",                                 null: false
+    t.float    "value",                     null: false
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.text     "answer",                    null: false
   end
 
   add_index "choices", ["multiple_choice_prompt_id"], name: "index_choices_on_multiple_choice_prompt_id"
+
+  create_table "choices_multiple_choice_prompt_answers", id: false, force: true do |t|
+    t.integer "choice_id"
+    t.integer "multiple_choice_prompt_answer_id"
+  end
+
+  add_index "choices_multiple_choice_prompt_answers", ["choice_id", "multiple_choice_prompt_answer_id"], name: "choices_multiple_choice_prompt_answers_idx", unique: true
+
+  create_table "coding_prompt_answers", force: true do |t|
+    t.text "answer", null: false
+  end
 
   create_table "coding_prompts", force: true do |t|
     t.datetime "created_at"
@@ -155,15 +164,12 @@ ActiveRecord::Schema.define(version: 20150503153952) do
 
   create_table "exercise_versions", force: true do |t|
     t.integer  "stem_id"
-    t.integer  "attempt_count",  null: false
-    t.float    "correct_count",  null: false
-    t.float    "difficulty",     null: false
-    t.float    "discrimination", null: false
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer  "exercise_id",    null: false
-    t.integer  "position",       null: false
+    t.integer  "exercise_id", null: false
+    t.integer  "position",    null: false
     t.integer  "creator_id"
+    t.integer  "irt_data_id"
   end
 
   add_index "exercise_versions", ["exercise_id"], name: "index_exercise_versions_on_exercise_id"
@@ -196,10 +202,7 @@ ActiveRecord::Schema.define(version: 20150503153952) do
     t.string   "name"
     t.boolean  "is_public",          default: false, null: false
     t.integer  "experience",                         null: false
-    t.integer  "attempt_count",      default: 0,     null: false
-    t.float    "correct_count",      default: 0.0,   null: false
-    t.float    "difficulty",         default: 0.0,   null: false
-    t.float    "discrimination",     default: 0.0,   null: false
+    t.integer  "irt_data_id"
   end
 
   add_index "exercises", ["current_version_id"], name: "index_exercises_on_current_version_id"
@@ -243,6 +246,16 @@ ActiveRecord::Schema.define(version: 20150503153952) do
   add_index "identities", ["uid", "provider"], name: "index_identities_on_uid_and_provider"
   add_index "identities", ["user_id"], name: "index_identities_on_user_id"
 
+  create_table "irt_data", force: true do |t|
+    t.integer "attempt_count",  null: false
+    t.float   "sum_of_scores",  null: false
+    t.float   "difficulty",     null: false
+    t.float   "discrimination", null: false
+  end
+
+  create_table "multiple_choice_prompt_answers", force: true do |t|
+  end
+
   create_table "multiple_choice_prompts", force: true do |t|
     t.boolean "allow_multiple", default: false, null: false
     t.boolean "is_scrambled",   default: true,  null: false
@@ -258,20 +271,29 @@ ActiveRecord::Schema.define(version: 20150503153952) do
 
   add_index "organizations", ["slug"], name: "index_organizations_on_slug", unique: true
 
+  create_table "prompt_answers", force: true do |t|
+    t.integer "attempt_id"
+    t.integer "prompt_id"
+    t.integer "actable_id"
+    t.string  "actable_type"
+  end
+
+  add_index "prompt_answers", ["actable_id"], name: "index_prompt_answers_on_actable_id", unique: true
+  add_index "prompt_answers", ["attempt_id", "prompt_id"], name: "index_prompt_answers_on_attempt_id_and_prompt_id", unique: true
+  add_index "prompt_answers", ["attempt_id"], name: "index_prompt_answers_on_attempt_id"
+  add_index "prompt_answers", ["prompt_id"], name: "index_prompt_answers_on_prompt_id"
+
   create_table "prompts", force: true do |t|
     t.integer  "exercise_version_id", null: false
     t.text     "prompt",              null: false
     t.integer  "position",            null: false
-    t.integer  "attempt_count",       null: false
-    t.float    "correct_count",       null: false
     t.text     "feedback"
-    t.float    "difficulty",          null: false
-    t.float    "discrimination",      null: false
     t.boolean  "is_scrambled"
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "actable_id"
     t.string   "actable_type"
+    t.integer  "irt_data_id"
   end
 
   add_index "prompts", ["actable_id"], name: "index_prompts_on_actable_id", unique: true
@@ -348,14 +370,16 @@ ActiveRecord::Schema.define(version: 20150503153952) do
   add_index "terms", ["year", "season"], name: "index_terms_on_year_and_season"
 
   create_table "test_case_results", force: true do |t|
-    t.integer  "test_case_id",       null: false
-    t.integer  "user_id",            null: false
+    t.integer  "test_case_id",            null: false
+    t.integer  "user_id",                 null: false
     t.text     "execution_feedback"
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.boolean  "pass",               null: false
+    t.boolean  "pass",                    null: false
+    t.integer  "coding_prompt_answer_id"
   end
 
+  add_index "test_case_results", ["coding_prompt_answer_id"], name: "index_test_case_results_on_coding_prompt_answer_id"
   add_index "test_case_results", ["test_case_id"], name: "index_test_case_results_on_test_case_id"
   add_index "test_case_results", ["user_id"], name: "index_test_case_results_on_user_id"
 

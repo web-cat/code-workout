@@ -4,12 +4,12 @@
 #
 #  id                        :integer          not null, primary key
 #  multiple_choice_prompt_id :integer          not null
-#  answer                    :text(255)        not null
 #  position                  :integer          not null
 #  feedback                  :text
 #  value                     :float            not null
 #  created_at                :datetime
 #  updated_at                :datetime
+#  answer                    :text             not null
 #
 # Indexes
 #
