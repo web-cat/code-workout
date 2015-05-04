@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150402043958) do
+ActiveRecord::Schema.define(version: 20150504051530) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -39,10 +39,12 @@ ActiveRecord::Schema.define(version: 20150402043958) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "workout_offering_id"
+    t.integer  "workout_id"
   end
 
   add_index "attempts", ["exercise_id"], name: "index_attempts_on_exercise_id"
   add_index "attempts", ["user_id"], name: "index_attempts_on_user_id"
+  add_index "attempts", ["workout_id"], name: "index_attempts_on_workout_id"
 
   create_table "base_exercises", force: true do |t|
     t.integer  "user_id"
@@ -109,6 +111,7 @@ ActiveRecord::Schema.define(version: 20150402043958) do
     t.boolean  "self_enrollment_allowed"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.date     "cutoff_date"
   end
 
   add_index "course_offerings", ["course_id"], name: "index_course_offerings_on_course_id"
@@ -341,8 +344,10 @@ ActiveRecord::Schema.define(version: 20150402043958) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.boolean  "pass",               null: false
+    t.integer  "attempt_id"
   end
 
+  add_index "test_case_results", ["attempt_id"], name: "index_test_case_results_on_attempt_id"
   add_index "test_case_results", ["test_case_id"], name: "index_test_case_results_on_test_case_id"
   add_index "test_case_results", ["user_id"], name: "index_test_case_results_on_user_id"
 
