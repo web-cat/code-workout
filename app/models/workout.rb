@@ -71,35 +71,33 @@ class Workout < ActiveRecord::Base
 
   #~ Class methods ............................................................
 
-  def add_exercise(ex_id)
-    # FIXME: This is all wrong, and needs to use the exercise_workout
-    # relation to correctly encode the order.  Hopefully, this method
-    # isn't used anywhere anyway at this point.
-    duplicate = self.exercises.bsearch{ |x| x.id == ex_id }
-    if duplicate.nil?
-      exists = Exercise.find(ex_id)
-      if exists
-        self.exercises << exists
-        exists.workouts << self
-        self.order = self.exercises.size
-      end
-    end
+  # -------------------------------------------------------------
+  def add_exercise(ex)
+    self.exercise_workouts <<
+      ExerciseWorkout.new(
+        workout: self,
+        exercise: ex,
+        position: self.exercises.size)
   end
 
 
+  # -------------------------------------------------------------
   # return the totals points of the exercises in the current workout.
+  # FIXME: Why isn't this a property of the workout?  The exercises
+  # themselves don't record absolute points at all!
   def returnTotalWorkoutPoints
     total_points = 0.0
-    exers = self.exercises
-    exers.each do |ex|
+    self.exercises.each do |ex|
       total_points += ExerciseWorkout.findExercisePoints(ex.id, self.id)
     end
     return total_points
   end
 
 
+  # -------------------------------------------------------------
   # returns a hash of exercise experience points (XP) with
   # { scored: ___, total: ___, percent: ___ }
+  # FIXME: refactor to use workout score instead
   def xp(u_id)
     xp = Hash.new
     xp[:scored] = 0
@@ -121,10 +119,10 @@ class Workout < ActiveRecord::Base
   end
 
 
+  # -------------------------------------------------------------
   def all_tags
     coll = self.tags.pluck(:tag_name).uniq
-    exs = self.exercises
-    exs.each do |x|
+    self.exercises.each do |x|
       x_tags = x.tags.pluck(:tag_name).uniq
       x_tags.each do |another|
         if coll.index(another).nil?
@@ -136,38 +134,27 @@ class Workout < ActiveRecord::Base
   end
 
 
+  # -------------------------------------------------------------
   def highest_difficulty
     diff = 0
-    exs = self.exercises
-    exs.each do |x|
+    self.exercises.each do |x|
       if x.difficulty && x.difficulty > diff
         diff = x.difficulty
       end
     end
-    return diff.to_i
+    return diff
   end
 
 
-  #~ Class methods ............................................................
-
-  def self.search(terms)
-    term_array = terms.split
-    term_array.each do |term|
-      term = "%" + term + "%"
-    end
-    return Workout.joins(:tags).where{ tags.tag_name.like_any term_array }
-  end
-
-
-  def self.xp_distribution(u_id, w_id)
-    w = Workout.find(w_id)
-    results = w.xp(u_id)
+  # -------------------------------------------------------------
+  # FIXME: refactor to use workout score instead
+  def xp_distribution(u_id)
+    results = self.xp(u_id)
     earned = results[:scored]
     earned_per = results[:percent]
     total = results[:total]
     remaining = 0
-    exs = w.exercises
-    exs.each do |x|
+    self.exercises.each do |x|
       x_attempt = x.attempts.where(user_id: u_id).pluck(:experience_earned)
       x_earned = 0
       x_attempt.each do |a|
@@ -180,4 +167,17 @@ class Workout < ActiveRecord::Base
     gap_per = 100 - earned_per - remaining_per
     return [earned, remaining, gap, earned_per, remaining_per, gap_per]
   end
+
+
+  #~ Class methods ............................................................
+
+  # -------------------------------------------------------------
+  def self.search(terms)
+    term_array = terms.split
+    term_array.each do |term|
+      term = "%" + term + "%"
+    end
+    return Workout.joins(:tags).where{ tags.tag_name.like_any term_array }
+  end
+
 end

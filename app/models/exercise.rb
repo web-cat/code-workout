@@ -44,6 +44,7 @@ class Exercise < ActiveRecord::Base
 
   has_many :exercise_versions, -> { order("position ASC") },
     inverse_of: :exercise, dependent: :destroy
+  has_many :attempts, through: :exercise_versions
   has_many :course_exercises, inverse_of: :exercise, dependent: :destroy
   has_many :courses, through: :course_exercises
   has_many :exercise_workouts, inverse_of: :exercise, dependent: :destroy
@@ -91,26 +92,90 @@ class Exercise < ActiveRecord::Base
     Q_BLANKS => 'Fill in the blanks'
   }
 
+  LANGUAGE_EXTENSION = {
+    'Ruby' => 'rb',
+    'Java' => 'java',
+    'Python' => 'py',
+    'Shell' => 'sh'
+  }
+
+
+  #~ Class methods ............................................................
+
+  # -------------------------------------------------------------
+  def self.search(terms)
+    term_array = terms.split
+    term_array.each do |term|
+      term = "%" + term + "%"
+    end
+    return Exercise.joins(:tags).where{ tags.tag_name.like_any term_array }
+  end
+
+
+  # -------------------------------------------------------------
+  # return the extension of a given language
+  # FIXME: This doesn't belong in this class and should be moved elsewhere
+  #
+  def self.extension_of(lang)
+    LANGUAGE_EXTENSION[lang]
+  end
+
 
   #~ Public instance methods ..................................................
 
+  # -------------------------------------------------------------
   def type_name
     TYPE_NAMES[self.question_type]
   end
 
 
+  # -------------------------------------------------------------
   def is_mcq?
     self.question_type == Q_MC
   end
 
 
+  # -------------------------------------------------------------
   def is_coding?
     self.question_type == Q_CODING
   end
 
 
+  # -------------------------------------------------------------
   def is_fill_in_the_blanks?
     self.question_type == Q_BLANKS
+  end
+
+
+  # -------------------------------------------------------------
+  # getter override for name
+  def name
+    temp = 'E' + read_attribute(:id).to_s
+    if not read_attribute(:name).nil?
+      temp += ': ' + read_attribute(:name).to_s
+    elsif (!self.tags.nil? && !self.tags.first.nil?)
+      temp += ': ' + self.tags.first.tag_name
+    end
+    return temp
+  end
+
+
+  # -------------------------------------------------------------
+  # Determine the programming language of the exercise from its language tag
+  def language
+    self.tags.to_ary.each do |tag|
+      if tag.tagtype == Tag.language
+        return tag.tag_name
+      end
+    end
+    return nil
+  end
+
+
+  # -------------------------------------------------------------
+  # return true if user has attempted this exercise version or not.
+  def user_attempted?(u_id)
+    self.attempts.where(user_id: u_id).any?
   end
 
 
@@ -119,7 +184,9 @@ class Exercise < ActiveRecord::Base
 
   def set_defaults
     self.question_type ||= Q_MC
+    self.name ||= ''
+    self.is_public ||= true
+    self.experience ||= 100
   end
-
 
 end

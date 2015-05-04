@@ -63,41 +63,10 @@ class ExerciseVersion < ActiveRecord::Base
     numericality: { greater_than_or_equal_to: 0 }
 
 
-  LANGUAGE_EXTENSION = {
-    'Ruby' => 'rb',
-    'Java' => 'java',
-    'Python' => 'py',
-    'Shell' => 'sh'
-  }
-
-
-  #~ Class methods ............................................................
-
-  # -------------------------------------------------------------
-  def self.search(terms)
-    term_array = terms.split
-    term_array.each do |term|
-      term = "%" + term + "%"
-    end
-    return Exercise.joins(:tags).where{ tags.tag_name.like_any term_array }
-  end
-
-
-  # -------------------------------------------------------------
-  def self.type_mc
-    TYPES['Multiple Choice Question']
-  end
-
-
-  # -------------------------------------------------------------
-  def self.type_coding
-    TYPES['Coding Question']
-  end
-
-
   #~ Public instance methods ..................................................
 
   # -------------------------------------------------------------
+  # FIXME: move to multiple_choice_prompt
   def serve_choice_array
     if self.choices.nil?
       return ["No answers available"]
@@ -124,6 +93,7 @@ class ExerciseVersion < ActiveRecord::Base
 
 
   # -------------------------------------------------------------
+  # Needs to be split among prompts and stem.
   def serve_question_html
     source = stem ? stem.preamble : ''
     if !question.blank?
@@ -137,6 +107,8 @@ class ExerciseVersion < ActiveRecord::Base
 
 
   # -------------------------------------------------------------
+  # Needs to be split among prompts.
+  # Also, why is this here, and not in the attempt class?
   def score(answered)
     score = 0
     answered.each do |a|
@@ -152,6 +124,7 @@ class ExerciseVersion < ActiveRecord::Base
   # -------------------------------------------------------------
   # Grab all feedback for choices either selected when wrong
   #  or not selected when (at least partially) right
+  # FIXME: Move to multiple choice prompt
   def collate_feedback(answered)
     total = score(answered)
     feed = Array.new
@@ -174,6 +147,7 @@ class ExerciseVersion < ActiveRecord::Base
 
 
   # -------------------------------------------------------------
+  # FIXME: split across prompts?
   def experience_on(answered, attempt)
     total = score(answered)
     options = self.choices.size
@@ -189,73 +163,6 @@ class ExerciseVersion < ActiveRecord::Base
     else
       return self.experience / options / 4
     end
-  end
-
-
-  # -------------------------------------------------------------
-  # getter override for name
-  def name
-    temp = 'E' + read_attribute(:id).to_s
-    if not read_attribute(:name).nil?
-      temp += ': ' + read_attribute(:name).to_s
-    elsif (!self.tags.nil? && !self.tags.first.nil?)
-      temp += ': ' + self.tags.first.tag_name
-    end
-    return temp
-  end
-
-
-  # -------------------------------------------------------------
-  # Determine the programming language of the exercise from its language tag
-  def language
-    self.tags.to_ary.each do |tag|
-      if tag.tagtype == Tag.language
-        return tag.tag_name
-      end
-    end
-    return nil
-  end
-
-
-  # -------------------------------------------------------------
-  # return the extension of a given language
-  def self.extension_of(lang)
-    LANGUAGE_EXTENSION[lang]
-  end
-
-
-  # -------------------------------------------------------------
-  def language
-    exercise_tags = self.tags.to_ary
-    exercise_tags.each do |tag|
-      if tag.tagtype == Tag.language
-        return tag.tag_name
-      end
-    end
-    return nil
-  end
-
-
-  # -------------------------------------------------------------
-  #method to return whether user has attempted exercise or not
-  def user_attempted?(u_id)
-    self.attempts.where(user_id: u_id).any?
-  end
-
-
-  #~ Private instance methods .................................................
-  private
-
-  # -------------------------------------------------------------
-  def set_defaults
-    self.name ||= ''
-    self.is_public ||= true
-    self.priority ||= 0
-    self.count_attempts ||= 0
-    self.count_correct ||= 0
-    self.difficulty ||= 50
-    self.experience ||= 100
-    self.discrimination ||= 0
   end
 
 end

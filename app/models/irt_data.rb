@@ -38,4 +38,14 @@ class IRTData < ActiveRecord::Base
     # calculations!
   end
 
+  #~ Private instance methods .................................................
+  private
+
+  def set_defaults
+    self.attempt_counts ||= 0
+    self.sum_of_scores  ||= 0
+    self.difficulty     ||= 50
+    self.discrimination ||= 0
+  end
+
 end
