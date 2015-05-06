@@ -16,7 +16,7 @@
       %th Section
       %th Instructors
       %th Graders
-      %th Enrolling
+      %th Enroll
   %tbody
     - @course.course_offerings.each do |off|
       %tr
@@ -27,9 +27,9 @@
         %td!= off.graders.map{ |i| link_to i.display_name,
           user_path(i) }.to_sentence
         %td
-          - if !off.is_enrolled?(current_user)    
+          - if !off.is_enrolled?(current_user)
             - if off.cutoff?
-              Self-enrollment not possible forevermore
+              Contact your instructor
             - else
               = link_to 'Enroll',                                                  |
                 '/course_enrollments?' + { course_enrollment:                      |
@@ -37,7 +37,7 @@
                 course_offering_id: off.id,                           |
                 course_role_id: CourseRole::STUDENT_ID})}.to_param, method: :post  |
           - else
-            You are already a part of this course
+            You are enrolled
 - if user_signed_in? &&                                      |
   current_user.global_role_id >= GlobalRole::INSTRUCTOR_ID   |
   %p

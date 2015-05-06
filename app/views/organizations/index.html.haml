@@ -39,9 +39,9 @@
                   %td!= o.instructors.map{ |i| link_to i.display_name,
                     user_path(i) }.to_sentence
                   %td
-                    - if !o.is_enrolled?(current_user)    
+                    - if !o.is_enrolled?(current_user)
                       - if o.cutoff?
-                        Self-enrollment not possible forevermore
+                        Contact your instructor
                       - else
                         = link_to 'Enroll',                                                  |
                           '/course_enrollments?' + { course_enrollment:                      |
@@ -49,7 +49,7 @@
                           course_offering_id: o.id,                           |
                           course_role_id: CourseRole::STUDENT_ID})}.to_param, method: :post  |
                     - else
-                      You are already a part of this course
+                      You are enrolled
 
 
 - else
