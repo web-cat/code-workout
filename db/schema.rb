@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150504051530) do
+ActiveRecord::Schema.define(version: 20150506124650) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -45,6 +45,13 @@ ActiveRecord::Schema.define(version: 20150504051530) do
   add_index "attempts", ["exercise_version_id"], name: "index_attempts_on_exercise_version_id"
   add_index "attempts", ["user_id"], name: "index_attempts_on_user_id"
   add_index "attempts", ["workout_score_id"], name: "index_attempts_on_workout_score_id"
+
+  create_table "attempts_tag_user_scores", id: false, force: true do |t|
+    t.integer "attempt_id"
+    t.integer "tag_user_score_id"
+  end
+
+  add_index "attempts_tag_user_scores", ["attempt_id", "tag_user_score_id"], name: "attempts_tag_user_scores_idx", unique: true
 
   create_table "choices", force: true do |t|
     t.integer  "multiple_choice_prompt_id", null: false
@@ -470,7 +477,6 @@ ActiveRecord::Schema.define(version: 20150504051530) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.text     "description"
-    t.string   "target_group"
     t.integer  "points_multiplier"
     t.integer  "creator_id"
   end

@@ -64,6 +64,7 @@ class Attempt < ActiveRecord::Base
   belongs_to :workout_score, inverse_of: :attempts
   belongs_to :active_score, class_name: 'WorkoutScore',
     foreign_key: 'active_score_id', inverse_of: :scored_attempts
+  has_and_belongs_to_many :tag_user_scores
 
 
   #~ Validation ...............................................................

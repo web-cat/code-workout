@@ -26,6 +26,7 @@ class TagUserScore < ActiveRecord::Base
 
 	belongs_to :user, inverse_of: :tag_user_scores
 	belongs_to :tag, inverse_of: :tag_user_scores
+  has_and_belongs_to_many :attempts
 
 
   #~ Validation ...............................................................

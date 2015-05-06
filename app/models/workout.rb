@@ -8,11 +8,9 @@
 #  created_at        :datetime
 #  updated_at        :datetime
 #  description       :text
-#  target_group      :string(255)
 #  points_multiplier :integer
 #  creator_id        :integer
 #
-
 
 # =============================================================================
 # Represents a collection of exercises given as an assignment.  A workout

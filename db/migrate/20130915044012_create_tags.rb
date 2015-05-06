@@ -12,6 +12,6 @@ class CreateTags < ActiveRecord::Migration
       t.belongs_to :tag
     end
 
-    add_index(:exercises_tags, [:exercise_id, :tag_id], unique: true)
+    add_index :exercises_tags, [:exercise_id, :tag_id], unique: true
   end
 end
