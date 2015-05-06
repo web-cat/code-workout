@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150506124650) do
+ActiveRecord::Schema.define(version: 20150506161404) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -211,10 +211,12 @@ ActiveRecord::Schema.define(version: 20150506124650) do
     t.boolean  "is_public",          default: false, null: false
     t.integer  "experience",                         null: false
     t.integer  "irt_data_id"
+    t.string   "external_id"
   end
 
   add_index "exercises", ["current_version_id"], name: "index_exercises_on_current_version_id"
   add_index "exercises", ["exercise_family_id"], name: "index_exercises_on_exercise_family_id"
+  add_index "exercises", ["external_id"], name: "index_exercises_on_external_id", unique: true
 
   create_table "exercises_tags", id: false, force: true do |t|
     t.integer "exercise_id", null: false
@@ -479,6 +481,9 @@ ActiveRecord::Schema.define(version: 20150506124650) do
     t.text     "description"
     t.integer  "points_multiplier"
     t.integer  "creator_id"
+    t.string   "external_id"
   end
+
+  add_index "workouts", ["external_id"], name: "index_workouts_on_external_id", unique: true
 
 end

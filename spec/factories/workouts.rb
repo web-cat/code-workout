@@ -10,6 +10,11 @@
 #  description       :text
 #  points_multiplier :integer
 #  creator_id        :integer
+#  external_id       :string(255)
+#
+# Indexes
+#
+#  index_workouts_on_external_id  (external_id) UNIQUE
 #
 
 # Read about factories at https://github.com/thoughtbot/factory_girl
