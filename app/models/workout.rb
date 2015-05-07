@@ -141,8 +141,9 @@ class Workout < ActiveRecord::Base
   def highest_difficulty
     diff = 0
     self.exercises.each do |x|
-      if x.difficulty && x.difficulty > diff
-        diff = x.difficulty
+      x_diff = x.andand.irt_data.andand.difficulty || 0
+      if x_diff > diff
+        diff = x_diff
       end
     end
     return diff

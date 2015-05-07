@@ -4,7 +4,7 @@
 #
 #  id                 :integer          not null, primary key
 #  question_type      :integer          not null
-#  current_version_id :integer          not null
+#  current_version_id :integer
 #  created_at         :datetime
 #  updated_at         :datetime
 #  versions           :integer          not null
@@ -56,6 +56,7 @@ class Exercise < ActiveRecord::Base
   has_many :owners, through: :exercise_owners
   belongs_to :current_version, class_name: 'ExerciseVersion'
   has_and_belongs_to_many :tags
+  belongs_to :irt_data, dependent: :destroy
 
   accepts_nested_attributes_for :tags, allow_destroy: true
   accepts_nested_attributes_for :exercise_versions, allow_destroy: true
@@ -72,13 +73,6 @@ class Exercise < ActiveRecord::Base
   validates :question_type, presence: true, numericality: { greater_than: 0 }
   validates :experience, presence: true,
     numericality: { greater_than_or_equal_to: 0 }
-  validates :count_attempts, presence: true,
-    numericality: { greater_than_or_equal_to: 0 }
-  validates :count_correct, presence: true,
-    numericality: { greater_than_or_equal_to: 0 }
-  validates :difficulty, presence: true,
-    numericality: { greater_than_or_equal_to: 0 }
-  validates :discrimination, presence: true, numericality: true
 
   # This one might be needed, but might break the create path for
   # exercises, so I'm leaving it out for now:

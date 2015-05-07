@@ -46,8 +46,12 @@ changes to the project:
 After pulling updates from git, be sure to run this to bring the database
 up to speed:
 
-    rake db:reset
     rake db:populate
+
+The db:populate task with reset the database to an empty state with
+the current schema, and then preload it with some sample data.  Use
+"rake db:reset" if you want to go to an empty database without any
+sample data instead.
 
 
 Updating Documentation

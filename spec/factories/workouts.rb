@@ -21,5 +21,16 @@
 
 FactoryGirl.define do
   factory :workout do
+    name 'Workout from Factory'
+    scrambled true
+    description 'Created by Factory Girl for testing.'
+
+    factory :workout_with_exercise do
+      after :create do |w|
+        FactoryGirl.create :exercise_workout,
+          workout_id: w.id,
+          exercise: FactoryGirl.create(:coding_exercise)
+      end
+    end
   end
 end

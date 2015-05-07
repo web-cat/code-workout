@@ -42,24 +42,16 @@ class ExerciseVersion < ActiveRecord::Base
   has_many :attempts, dependent: :destroy
   has_and_belongs_to_many :resource_files
   belongs_to :creator, class_name: 'User'
+  belongs_to :irt_data, dependent: :destroy
 
 
   #~ Hooks ....................................................................
-
-  before_validation :set_defaults
 
 
   #~ Validation ...............................................................
 
   validates :exercise, presence: true
-  validates :count_attempts, presence: true,
-    numericality: { greater_than_or_equal_to: 0 }
-  validates :count_correct, presence: true,
-    numericality: { greater_than_or_equal_to: 0 }
-  validates :difficulty, presence: true,
-    numericality: { greater_than_or_equal_to: 0 }
-  validates :discrimination, presence: true, numericality: true
-  validates :version, presence: true,
+  validates :position, presence: true,
     numericality: { greater_than_or_equal_to: 0 }
 
 

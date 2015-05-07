@@ -4,7 +4,7 @@
 #
 #  id                 :integer          not null, primary key
 #  question_type      :integer          not null
-#  current_version_id :integer          not null
+#  current_version_id :integer
 #  created_at         :datetime
 #  updated_at         :datetime
 #  versions           :integer          not null

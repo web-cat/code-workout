@@ -4,10 +4,9 @@
 #
 #  id                  :integer          not null, primary key
 #  exercise_version_id :integer          not null
-#  prompt              :text             not null
+#  question            :text             not null
 #  position            :integer          not null
 #  feedback            :text
-#  is_scrambled        :boolean
 #  created_at          :datetime
 #  updated_at          :datetime
 #  actable_id          :integer
@@ -50,6 +49,7 @@ class Prompt < ActiveRecord::Base
   belongs_to :exercise_version, inverse_of: :prompts
   acts_as_list scope: :exercise_version
   has_many :prompt_answers, inverse_of: :prompt, dependent: :destroy
+  belongs_to :irt_data, dependent: :destroy
 
   # TODO: define Hint model and decide how a hint determines how it maps to
   # different types of incorrect attempts
@@ -62,16 +62,10 @@ class Prompt < ActiveRecord::Base
 
   validates :exercise_version, presence: true
 
-  validates :prompt, presence: true
+  validates :question, presence: true
   validates :position, presence: true,
     numericality: { greater_than_or_equal_to: 0 }
-  validates :attempt_count, presence: true,
-    numericality: { greater_than_or_equal_to: 0 }
-  validates :correct_count, presence: true,
-    numericality: { greater_than_or_equal_to: 0 }
   #no validation for feedback
-  validates :difficulty, presence: true, numericality: true
-  validates :discrimination, presence: true, numericality: true
 
   # For actable
   validates :actable_id, presence: true

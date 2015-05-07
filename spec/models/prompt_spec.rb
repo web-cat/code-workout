@@ -4,10 +4,9 @@
 #
 #  id                  :integer          not null, primary key
 #  exercise_version_id :integer          not null
-#  prompt              :text             not null
+#  question            :text             not null
 #  position            :integer          not null
 #  feedback            :text
-#  is_scrambled        :boolean
 #  created_at          :datetime
 #  updated_at          :datetime
 #  actable_id          :integer

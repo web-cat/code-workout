@@ -54,6 +54,6 @@
 - else
   - user_id = user_signed_in? ? current_user.id : 0
   - @exs.in_groups_of(2, false) do |row|
-    = render partial: "exercises/thumblg", collection: row, as: :x,
+    = render partial: "exercises/exercise", collection: row, as: :x,
       locals: { uid: user_id, wid: @workout.id }
     .clearfix

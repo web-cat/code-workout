@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150506161404) do
+ActiveRecord::Schema.define(version: 20150507143058) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -202,7 +202,7 @@ ActiveRecord::Schema.define(version: 20150506161404) do
 
   create_table "exercises", force: true do |t|
     t.integer  "question_type",                      null: false
-    t.integer  "current_version_id",                 null: false
+    t.integer  "current_version_id"
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "versions",                           null: false
@@ -295,10 +295,9 @@ ActiveRecord::Schema.define(version: 20150506161404) do
 
   create_table "prompts", force: true do |t|
     t.integer  "exercise_version_id", null: false
-    t.text     "prompt",              null: false
+    t.text     "question",            null: false
     t.integer  "position",            null: false
     t.text     "feedback"
-    t.boolean  "is_scrambled"
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "actable_id"
