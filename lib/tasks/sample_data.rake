@@ -31,8 +31,8 @@ namespace :db do
     end
 
     # Create a workout with one exercise, and a second exercise
-    FactoryGirl.create :workout_with_exercise
-    FactoryGirl.create :coding_exercise, name: 'Factorial 2'
+    FactoryGirl.create :workout_with_exercises
+    FactoryGirl.create :coding_exercise, name: 'Factorial 3'
   end
 
 #  task exercises: :environment do

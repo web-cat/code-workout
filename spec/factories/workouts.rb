@@ -28,11 +28,16 @@ FactoryGirl.define do
     tag_list 'factorial, function, multiplication'
     style_list 'code writing'
 
-    factory :workout_with_exercise do
+    factory :workout_with_exercises do
       after :create do |w|
         FactoryGirl.create :exercise_workout,
           workout_id: w.id,
           exercise: FactoryGirl.create(:coding_exercise)
+        FactoryGirl.create :exercise_workout,
+          workout_id: w.id,
+          exercise: FactoryGirl.create(:coding_exercise,
+            name: 'Factorial 2'),
+          position: 1
       end
     end
   end

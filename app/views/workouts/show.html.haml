@@ -5,8 +5,8 @@
 
 %p
   Tags:
-  - @workout.all_tags.each do |t|
-    =link_to t, search_path(search: t), method: :post, class: 'tag'
+  - @workout.tags.each do |t|
+    =link_to t.name, search_path(search: t.name), method: :post, class: 'tag'
 %p
   = button_to 'Practice Workout', practice_workout_path(params[:id]),
     method: :get, btn: 'primary'
