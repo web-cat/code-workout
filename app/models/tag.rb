@@ -2,15 +2,14 @@
 #
 # Table name: tags
 #
-#  id               :integer          not null, primary key
-#  tag_name         :string(255)      not null
-#  created_at       :datetime
-#  updated_at       :datetime
-#  tagtype          :integer          default(0)
-#  total_exercises  :integer          default(0)
-#  total_experience :integer          default(0)
+#  id             :integer          not null, primary key
+#  name           :string(255)
+#  taggings_count :integer          default(0)
 #
-
+# Indexes
+#
+#  index_tags_on_name  (name) UNIQUE
+#
 
 # =============================================================================
 # Represents a tag, used for filtering/searching exercises or workouts.

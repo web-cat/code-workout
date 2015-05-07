@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150507143058) do
+ActiveRecord::Schema.define(version: 20150507164243) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -218,13 +218,6 @@ ActiveRecord::Schema.define(version: 20150507143058) do
   add_index "exercises", ["exercise_family_id"], name: "index_exercises_on_exercise_family_id"
   add_index "exercises", ["external_id"], name: "index_exercises_on_external_id", unique: true
 
-  create_table "exercises_tags", id: false, force: true do |t|
-    t.integer "exercise_id", null: false
-    t.integer "tag_id",      null: false
-  end
-
-  add_index "exercises_tags", ["exercise_id", "tag_id"], name: "index_exercises_tags_on_exercise_id_and_tag_id", unique: true
-
   create_table "friendly_id_slugs", force: true do |t|
     t.string   "slug",                      null: false
     t.integer  "sluggable_id",              null: false
@@ -338,32 +331,33 @@ ActiveRecord::Schema.define(version: 20150507143058) do
 
   create_table "tag_user_scores", force: true do |t|
     t.integer  "user_id",                         null: false
-    t.integer  "tag_id",                          null: false
     t.integer  "experience",          default: 0
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "completed_exercises", default: 0
   end
 
-  add_index "tag_user_scores", ["tag_id"], name: "index_tag_user_scores_on_tag_id"
   add_index "tag_user_scores", ["user_id"], name: "index_tag_user_scores_on_user_id"
 
-  create_table "tags", force: true do |t|
-    t.string   "tag_name",                     null: false
+  create_table "taggings", force: true do |t|
+    t.integer  "tag_id"
+    t.integer  "taggable_id"
+    t.string   "taggable_type"
+    t.integer  "tagger_id"
+    t.string   "tagger_type"
+    t.string   "context",       limit: 128
     t.datetime "created_at"
-    t.datetime "updated_at"
-    t.integer  "tagtype",          default: 0
-    t.integer  "total_exercises",  default: 0
-    t.integer  "total_experience", default: 0
   end
 
-  create_table "tags_workouts", force: true do |t|
-    t.integer "tag_id",     null: false
-    t.integer "workout_id", null: false
+  add_index "taggings", ["tag_id", "taggable_id", "taggable_type", "context", "tagger_id", "tagger_type"], name: "taggings_idx", unique: true
+  add_index "taggings", ["taggable_id", "taggable_type", "context"], name: "index_taggings_on_taggable_id_and_taggable_type_and_context"
+
+  create_table "tags", force: true do |t|
+    t.string  "name"
+    t.integer "taggings_count", default: 0
   end
 
-  add_index "tags_workouts", ["tag_id"], name: "index_tags_workouts_on_tag_id"
-  add_index "tags_workouts", ["workout_id"], name: "index_tags_workouts_on_workout_id"
+  add_index "tags", ["name"], name: "index_tags_on_name", unique: true
 
   create_table "terms", force: true do |t|
     t.integer  "season",     null: false

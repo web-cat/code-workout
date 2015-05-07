@@ -44,6 +44,7 @@ class Exercise < ActiveRecord::Base
 
   #~ Relationships ............................................................
 
+  acts_as_taggable_on :tags, :languages, :styles
   has_many :exercise_versions, -> { order("position ASC") },
     inverse_of: :exercise, dependent: :destroy
   has_many :attempts, through: :exercise_versions
@@ -55,10 +56,8 @@ class Exercise < ActiveRecord::Base
   has_many :exercise_owners, inverse_of: :exercise, dependent: :destroy
   has_many :owners, through: :exercise_owners
   belongs_to :current_version, class_name: 'ExerciseVersion'
-  has_and_belongs_to_many :tags
   belongs_to :irt_data, dependent: :destroy
 
-  accepts_nested_attributes_for :tags, allow_destroy: true
   accepts_nested_attributes_for :exercise_versions, allow_destroy: true
 
 
