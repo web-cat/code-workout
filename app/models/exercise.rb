@@ -99,11 +99,9 @@ class Exercise < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def self.search(terms)
-    term_array = terms.split
-    term_array.each do |term|
-      term = "%" + term + "%"
-    end
-    return Exercise.joins(:tags).where{ tags.tag_name.like_any term_array }
+    return Exercise.tagged_with(terms, wild: true, on: :tags) +
+      Exercise.tagged_with(terms, wild: true, on: :languages) +
+      Exercise.tagged_with(terms, wild: true, on: :styles)
   end
 
 

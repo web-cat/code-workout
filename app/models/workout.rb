@@ -177,11 +177,9 @@ class Workout < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def self.search(terms)
-    term_array = terms.split
-    term_array.each do |term|
-      term = "%" + term + "%"
-    end
-    return Workout.joins(:tags).where{ tags.tag_name.like_any term_array }
+    return Workout.tagged_with(terms, wild: true, on: :tags) +
+      Workout.tagged_with(terms, wild: true, on: :languages) +
+      Workout.tagged_with(terms, wild: true, on: :styles)
   end
 
 end

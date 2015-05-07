@@ -39,17 +39,17 @@ class ExercisesController < ApplicationController
 
   # -------------------------------------------------------------
   def search
-    searched = escape_javascript(params[:search])
-    @wos = Workout.search searched
-    @exs = Exercise.search searched
-    if(@wos.length + @exs.length > 0)
-      @msg = ""
+    @terms = escape_javascript(params[:search])
+    @terms = @terms.split(@terms.include?(',') ? /\s*,\s*/ : nil)
+    @wos = Workout.search @terms
+    @exs = Exercise.search @terms
+    if @wos.length + @exs.length > 0
+      @msg = ''
     else
       @msg = 'No ' + searched + ' exercises found. Try these instead...'
       @wos = Workout.order('RANDOM()').limit(4)
       @exs = Exercise.order('RANDOM()').limit(16)
     end
-    render layout: 'two_columns'
   end
 
 
@@ -682,7 +682,7 @@ class ExercisesController < ApplicationController
           session[:leaf_exercises] << @exercise.id
         else
           session[:leaf_exercises] = [@exercise.id]
-        end        
+        end
         # EOL stands for end of line
         # @wexs is the variable to hold the list of exercises of this workout
         # yet to be attempted by the user apart from the current exercise
@@ -767,7 +767,7 @@ class ExercisesController < ApplicationController
           count_submission()
           @xp = @exercise.experience_on(@responses, session[:submit_num])
           record_attempt(@score, @xp)
-        elsif @exercise.base_exercise.is_coding?          
+        elsif @exercise.base_exercise.is_coding?
           CodeWorker.new.async.perform(@exercise.coding_question.class_name,
             @exercise.id,
             current_user.id,
@@ -807,7 +807,7 @@ class ExercisesController < ApplicationController
           # FIXME: Horrible rendering of javascipt output on method completion
           # to provide the AJAXy feedback mechanism that doesn't work.
           str = "$('#exercisefeedback').append(\"<%= j(render 'ajax_feedback') %>\");"
-          render js: "var source = new EventSource('/feedback_send?uid='+#{current_user.id}+'&att_id='+#{attempt_id});  console.log('Established inside');   source.addEventListener('feedback_#{current_user.id}',function(e){  console.log('WINTER IS ' + e.data); $('#exercisefeedback').show(); #{str}  });"         
+          render js: "var source = new EventSource('/feedback_send?uid='+#{current_user.id}+'&att_id='+#{attempt_id});  console.log('Established inside');   source.addEventListener('feedback_#{current_user.id}',function(e){  console.log('WINTER IS ' + e.data); $('#exercisefeedback').show(); #{str}  });"
           #redirect_to exercise_practice_path(@exercise,
           #  feedback_return: true,att_id: attempt_id) and return
         end

@@ -21,8 +21,9 @@
   .info
     = difficulty_image(w.highest_difficulty.to_i)
     .taglist
-      - w.all_tags.each do |t|
-        = link_to t, search_path(search: t), method: :post, class: 'tag'
+      - w.tags.each do |t|
+        = link_to t.name, search_path(search: t.name),
+          method: :post, class: 'tag'
 
 -#.well.well-sm.col-md-5
   .row

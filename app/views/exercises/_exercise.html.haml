@@ -30,7 +30,7 @@
     = difficulty_image(x.experience.to_i)
     .taglist
       - x.tags.each do |t|
-        = link_to t[:tag_name], search_path(search: t[:tag_name]),
+        = link_to t.name, search_path(search: t.name),
           method: :post, class: 'tag'
     -#
       - attempt = nil

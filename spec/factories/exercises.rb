@@ -60,6 +60,9 @@ FactoryGirl.define do
 
       versions 1
       question_type { Exercise::Q_CODING }
+      language_list 'Java'
+      tag_list 'factorial, function, multiplication'
+      style_list 'code writing'
 
       after :create do |e, v|
         e.current_version = FactoryGirl.create :exercise_version,
