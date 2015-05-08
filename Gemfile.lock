@@ -279,6 +279,10 @@ GEM
     rdoc (4.1.2)
       json (~> 1.4)
     remotipart (1.2.1)
+    representable (2.1.6)
+      multi_json
+      nokogiri
+      uber (~> 0.0.7)
     responders (1.1.1)
       railties (>= 3.2, < 4.2)
     rspec-core (3.1.5)
@@ -337,6 +341,7 @@ GEM
       hitimes
     tzinfo (1.2.2)
       thread_safe (~> 0.1)
+    uber (0.0.13)
     uglifier (2.5.3)
       execjs (>= 0.3.0)
       json (>= 1.8.0)
@@ -401,6 +406,7 @@ DEPENDENCIES
   rails
   rails-erd!
   remotipart
+  representable
   responders (~> 1.1)
   rspec-rails
   sass-rails

@@ -23,16 +23,18 @@ class ExercisesController < ApplicationController
       redirect_to root_path,
         notice: 'Unauthorized to view all exercises' and return
     end
-#    @exercises = Exercise.all
-#    p 'exercises = ' + @exercises.size.to_s
-#    p @exercises
-    @exercises = BaseExercise.all.map { |b| b.exercise }
-    p 'base filtered = ' + @exercises.size.to_s
-    p @exercises
+    @exercises = Exercise.accessible_by(current_ability)
 
     respond_to do |format|
       format.csv
-      format.json
+      format.json do
+        render text:
+          ExerciseRepresenter.for_collection.new(@exercises).to_hash.to_json
+      end
+      format.yml do
+        render text:
+          ExerciseRepresenter.for_collection.new(@exercises).to_hash.to_yaml
+      end
     end
   end
 

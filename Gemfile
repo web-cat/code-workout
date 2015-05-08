@@ -25,6 +25,7 @@ gem 'friendly_id', '~> 5'
 gem 'active_record-acts_as'
 gem 'acts_as_list'
 gem 'acts-as-taggable-on'
+gem 'representable'
 gem 'puma'
 
 # For JSON support
