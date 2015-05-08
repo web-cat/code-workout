@@ -71,6 +71,8 @@ CodeWorkout::Application.routes.draw do
       as: :practice_workout
     get  'workouts/:id/evaluate' => 'workouts#evaluate', as: :workout_evaluate
     get  'workouts_dummy' => 'workouts#dummy'
+    get  'workouts_import' => 'workouts#upload_yaml'
+    post  'workouts_yaml_create' => 'workouts#yaml_create'
   
     # At the bottom, so the routes above take precedence over existing ids
     resources :workouts
@@ -91,6 +93,7 @@ CodeWorkout::Application.routes.draw do
 
   # FIXME: Needs to be fixed so that it works well with the general formatting of routes
   post '/course_enrollments' => 'course_offerings#create_enrollment'
+  delete '/unenroll' => 'course_offerings#delete_enrollment'
 
   # doesn't fit in the other routes well, but that's ok since it is
   # almost purely internal use only.
