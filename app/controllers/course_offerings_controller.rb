@@ -75,6 +75,16 @@ class CourseOfferingsController < ApplicationController
     end
   end
 
+  # -------------------------------------------------------------
+  # DELETE /unenroll
+  # Public: Deletes an enrollment, if it exists.
+  # FIXME:  Not really sure this is the best place to do it.
+  def delete_enrollment
+    CourseEnrollment.where(user_id: course_enrollment_params[:user_id]).
+       where(course_offering_id: course_enrollment_params[:course_offering_id]).
+       delete_all
+    redirect_to root_path, notice: "You enrollment has been removed"
+  end
 
   # -------------------------------------------------------------
   # PATCH/PUT /course_offerings/1
