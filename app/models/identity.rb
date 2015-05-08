@@ -15,6 +15,12 @@
 #  index_identities_on_user_id           (user_id)
 #
 
+
+# =============================================================================
+# Represents a user's external identity on an external devise-oriented
+# authentication provider.  A single user object may be associated with
+# multiple identities, each from a separate provider.
+#
 class Identity < ActiveRecord::Base
 
   #~ Relationships ............................................................

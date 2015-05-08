@@ -1,8 +1,9 @@
-%article.exercise.thumbnail.sm
+- size ||= 'lg'
+%article.exercise.thumbnail{ class: size }
   .title
-    - if x.base_exercise.is_mcq?
+    - if x.is_mcq?
       %i.glyphicon.glyphicon-th-list
-    - elsif x.base_exercise.is_coding?
+    - elsif x.is_coding?
       %span.fa-stack
         %i.fa.fa-square.fa-stack-2x
         %i.fa.fa-terminal.fa-stack-1x.fa-inverse
@@ -24,12 +25,12 @@
           %span.outof> /?
   .body
     .text
-      = teaser(x.question)
+      = teaser(x.current_version.prompts.first.question)
   .info
     = difficulty_image(x.experience.to_i)
     .taglist
       - x.tags.each do |t|
-        = link_to t[:tag_name], search_path(search: t[:tag_name]),
+        = link_to t.name, search_path(search: t.name),
           method: :post, class: 'tag'
     -#
       - attempt = nil
@@ -39,7 +40,8 @@
       - attempt_pct = 0
       - ex_workout = nil
       - if uid && uid != 0
-        - attempt = Attempt.where(user_id: uid, exercise_id: x.id).last
+        - attempt = Attempt.where(user_id: uid,
+          exercise_id: x.current_version.id).last
         - if attempt && attempt.score > 0
           - attempt_pct = 100
         - if wid
@@ -72,7 +74,8 @@
           = n_to_s(x.experience) + ' xp'
 -#
   .progress
-    - att = Attempt.where(user_id: uid, exercise_id: x.id).last
+    - att = Attempt.where(user_id: uid,
+      exercise_version_id: x.current_version.id).last
     - ex_workout = nil
     - if wid
       - ex_workout = ExerciseWorkout.find_by(exercise_id: x.id, workout_id: wid)

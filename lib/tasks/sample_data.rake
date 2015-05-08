@@ -1,8 +1,8 @@
 require 'factory_girl'
 
 namespace :db do
-  desc "Fill database with sample data"
-  task populate: :environment do
+  desc "Reset database and then fill it with sample data"
+  task populate: [:environment, :reset] do
     FactoryGirl.create(:organization)
     FactoryGirl.create(:term)
     FactoryGirl.create(:term2)
@@ -29,5 +29,13 @@ namespace :db do
           email:      "example-#{n+2}@railstutorial.org"),
         course_offering: c)
     end
+
+    # Create a workout with one exercise, and a second exercise
+    FactoryGirl.create :workout_with_exercises
+    FactoryGirl.create :coding_exercise, name: 'Factorial 3'
   end
+
+#  task exercises: :environment do
+#  end
+
 end

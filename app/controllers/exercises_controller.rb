@@ -22,33 +22,35 @@ class ExercisesController < ApplicationController
       redirect_to root_path,
         notice: 'Unauthorized to view all exercises' and return
     end
-#    @exercises = Exercise.all
-#    p 'exercises = ' + @exercises.size.to_s
-#    p @exercises
-    @exercises = BaseExercise.all.map { |b| b.exercise }
-    p 'base filtered = ' + @exercises.size.to_s
-    p @exercises
+    @exercises = Exercise.accessible_by(current_ability)
 
     respond_to do |format|
       format.csv
-      format.json
+      format.json do
+        render text:
+          ExerciseRepresenter.for_collection.new(@exercises).to_hash.to_json
+      end
+      format.yml do
+        render text:
+          ExerciseRepresenter.for_collection.new(@exercises).to_hash.to_yaml
+      end
     end
   end
 
 
   # -------------------------------------------------------------
   def search
-    searched = escape_javascript(params[:search])
-    @wos = Workout.search searched
-    @exs = Exercise.search searched
-    if(@wos.length + @exs.length > 0)
-      @msg = ""
+    @terms = escape_javascript(params[:search])
+    @terms = @terms.split(@terms.include?(',') ? /\s*,\s*/ : nil)
+    @wos = Workout.search @terms
+    @exs = Exercise.search @terms
+    if @wos.length + @exs.length > 0
+      @msg = ''
     else
       @msg = 'No ' + searched + ' exercises found. Try these instead...'
       @wos = Workout.order('RANDOM()').limit(4)
       @exs = Exercise.order('RANDOM()').limit(16)
     end
-    render layout: 'two_columns'
   end
 
 
@@ -681,7 +683,7 @@ class ExercisesController < ApplicationController
           session[:leaf_exercises] << @exercise.id
         else
           session[:leaf_exercises] = [@exercise.id]
-        end        
+        end
         # EOL stands for end of line
         # @wexs is the variable to hold the list of exercises of this workout
         # yet to be attempted by the user apart from the current exercise
@@ -768,7 +770,7 @@ class ExercisesController < ApplicationController
           count_submission()
           @xp = @exercise.experience_on(@responses, session[:submit_num])
           record_attempt(@score, @xp)
-        elsif @exercise.base_exercise.is_coding?          
+        elsif @exercise.base_exercise.is_coding?
           CodeWorker.new.async.perform(@exercise.coding_question.class_name,
             @exercise.id,
             @user_id,

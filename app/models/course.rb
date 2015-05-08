@@ -6,17 +6,23 @@
 #  name            :string(255)      not null
 #  number          :string(255)      not null
 #  organization_id :integer          not null
-#  url_part        :string(255)      not null
 #  created_at      :datetime
 #  updated_at      :datetime
 #  creator_id      :integer
+#  slug            :string(255)      not null
 #
 # Indexes
 #
 #  index_courses_on_organization_id  (organization_id)
-#  index_courses_on_url_part         (url_part)
+#  index_courses_on_slug             (slug)
 #
 
+
+# =============================================================================
+# Represents a course at a university; akin to the course's catalog
+# description.  A course may have one or more course offerings in any
+# specific term.
+#
 class Course < ActiveRecord::Base
   extend FriendlyId
   friendly_id :number_without_spaces, use: [:history, :scoped],
@@ -28,8 +34,8 @@ class Course < ActiveRecord::Base
   belongs_to  :organization, inverse_of: :courses
   has_many    :course_offerings, inverse_of: :course, dependent: :destroy
   # Associating with exercises through course_exercises
-  has_many    :exercises, through: :course_exercises
   has_many    :course_exercises, inverse_of: :course, dependent: :destroy
+  has_many    :exercises, through: :course_exercises
 
   #Kaminari for the show method
   paginates_per 100

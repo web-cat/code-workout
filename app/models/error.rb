@@ -21,6 +21,12 @@
 #  index_errors_on_created_at  (created_at)
 #
 
+
+# =============================================================================
+# Represents an error record for a run-time error experienced on the server.
+# This model class is here purely so that run-time errors can be tracked
+# in the database for development/debugging purposes.
+#
 class Error < ActiveRecord::Base
 #  belongs_to :usable, polymorphic: true
 end

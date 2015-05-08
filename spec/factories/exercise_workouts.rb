@@ -5,7 +5,7 @@
 #  id          :integer          not null, primary key
 #  exercise_id :integer          not null
 #  workout_id  :integer          not null
-#  order       :integer          not null
+#  position    :integer          not null
 #  points      :float            default(1.0)
 #  created_at  :datetime
 #  updated_at  :datetime
@@ -17,7 +17,7 @@ FactoryGirl.define do
   factory :exercise_workout do
     exercise_id 1
     workout_id 1
-    order 1
-    points ""
+    position 0
+    points 10
   end
 end

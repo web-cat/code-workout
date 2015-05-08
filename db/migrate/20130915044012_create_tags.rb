@@ -7,11 +7,11 @@ class CreateTags < ActiveRecord::Migration
     end
 
     #join table tags<->exercises (many to many)
-   	create_table :exercises_tags, :id => false do |t|
+   	create_table :exercises_tags, id: false do |t|
       t.belongs_to :exercise
       t.belongs_to :tag
     end
 
-    add_index(:exercises_tags, [:exercise_id, :tag_id], :unique => true)
+    add_index :exercises_tags, [:exercise_id, :tag_id], unique: true
   end
 end

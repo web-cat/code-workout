@@ -109,7 +109,7 @@ class UploadedExercise
           choice = Choice.new
           choice.answer = row[index]
           choice_num = index - COLUMN_CHOICE_A
-          choice.order = choice_num
+          choice.position = choice_num
           if ans == choice_num
             choice.value = 100
           else

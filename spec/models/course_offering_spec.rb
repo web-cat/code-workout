@@ -10,6 +10,7 @@
 #  self_enrollment_allowed :boolean
 #  created_at              :datetime
 #  updated_at              :datetime
+#  cutoff_date             :date
 #
 # Indexes
 #

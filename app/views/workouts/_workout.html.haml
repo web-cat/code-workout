@@ -1,4 +1,5 @@
-%article.workout.thumbnail.sm
+- size ||= 'lg'
+%article.workout.thumbnail{ class: size }
   .title
     %i.fa.fa-folder-open
     = link_to w.name, workout_path(:id => w[:id])
@@ -20,10 +21,11 @@
   .info
     = difficulty_image(w.highest_difficulty.to_i)
     .taglist
-      - w.all_tags.each do |t|
-        = link_to t, search_path(search: t), method: :post, class: 'tag'
+      - w.tags.each do |t|
+        = link_to t.name, search_path(search: t.name),
+          method: :post, class: 'tag'
 
--# .well.well-sm.col-md-5
+-#.well.well-sm.col-md-5
   .row
     .col-md-12
       - xp_data = Workout.xp_distribution(1, w.id)

@@ -2,27 +2,21 @@
 #
 # Table name: prompts
 #
-#  id                :integer          not null, primary key
-#  exercise_id       :integer          not null
-#  language_id       :integer          not null
-#  instruction       :text             not null
-#  order             :integer          not null
-#  max_user_attempts :integer          not null
-#  attempts          :integer          not null
-#  correct           :float            not null
-#  feedback          :text
-#  difficulty        :float            not null
-#  discrimination    :float            not null
-#  type              :integer          not null
-#  allow_multiple    :boolean
-#  is_scrambled      :boolean
-#  created_at        :datetime
-#  updated_at        :datetime
+#  id                  :integer          not null, primary key
+#  exercise_version_id :integer          not null
+#  question            :text             not null
+#  position            :integer          not null
+#  feedback            :text
+#  created_at          :datetime
+#  updated_at          :datetime
+#  actable_id          :integer
+#  actable_type        :string(255)
+#  irt_data_id         :integer
 #
 # Indexes
 #
-#  index_prompts_on_exercise_id  (exercise_id)
-#  index_prompts_on_language_id  (language_id)
+#  index_prompts_on_actable_id           (actable_id) UNIQUE
+#  index_prompts_on_exercise_version_id  (exercise_version_id)
 #
 
 require 'spec_helper'

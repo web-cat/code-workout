@@ -5,16 +5,8 @@
       %button.close{data:{dismiss: "modal"}} &times;
       %h4.modal-title Confirmation
     .modal-body
-      = render partial: "workouts/thumblg", collection: @workouts, as: :w 
-      %p= @wkt[0]['workout']['name']
-      %p= @wkt[0]['workout']['scrambled'].to_b
-      %p
-        - @wkt[0]['workout']['tags'].split(",").each do |split|
-          = split+"-"
-      %p= @wkt[0]['workout']['description']
-      %p
-        - @wkt[0]['workout']['exercises'].each do |exer|
-          = exer['exid'].to_s + "-" + exer['position'].to_s + "-" + exer['points'].to_s  
+      = render partial: "workouts/workout", collection: @workouts, as: :w
+      %p Minsum Dinsum
     .modal-footer
       %button.btn{data:{dismiss: "modal"}} Close
       %button.btn Save changes

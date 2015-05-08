@@ -11,6 +11,10 @@
 #  builtin                    :boolean          default(FALSE), not null
 #
 
+# =============================================================================
+# Represents the role a user has with respect to a course offering in which
+# the user is enrolled.  Roles are stored in the CourseEnrollment relationship.
+#
 class CourseRole < ActiveRecord::Base
 
   #~ Validation ...............................................................

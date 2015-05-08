@@ -1,4 +1,3 @@
-require 'yaml'
 class WorkoutsController < ApplicationController 
   before_action :set_workout, only: [:show, :edit, :update, :destroy]
   respond_to :html, :js
@@ -25,9 +24,16 @@ class WorkoutsController < ApplicationController
       redirect_to root_path,
         notice: 'Unauthorized to view all workouts' and return
     end
-    @workouts = Workout.all
+    @workouts = Workout.accessible_by(current_ability)
     respond_to do |format|
-      format.json
+      format.json do
+        render text:
+          WorkoutRepresenter.for_collection.new(@workouts).to_hash.to_json
+      end
+      format.yml do
+        render text:
+          WorkoutRepresenter.for_collection.new(@workouts).to_hash.to_yaml
+      end
     end
   end
 
@@ -99,7 +105,7 @@ class WorkoutsController < ApplicationController
       exercise = Exercise.find(ex_id)
       @workout.save!
       #@workout.exercises<<exercise
-      
+
       #wek = @workout.exercise_workouts.find_by(exercise: exercise)
       wek = ExerciseWorkout.new
       wek.workout = @workout
@@ -183,7 +189,7 @@ class WorkoutsController < ApplicationController
 
   # ------Placeholder for any views I want experiment with-------------------------------------------------------
   def dummy
-    @workouts = Workout.find(1)       
+    @workouts = Workout.find(1)  
   end
 
   # -------------------------------------------------------------

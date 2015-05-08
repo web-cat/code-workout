@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150504051530) do
+ActiveRecord::Schema.define(version: 20150507164243) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -30,60 +30,61 @@ ActiveRecord::Schema.define(version: 20150504051530) do
 
   create_table "attempts", force: true do |t|
     t.integer  "user_id",                           null: false
-    t.integer  "exercise_id",                       null: false
+    t.integer  "exercise_version_id",               null: false
     t.datetime "submit_time",                       null: false
     t.integer  "submit_num",                        null: false
-    t.text     "answer"
-    t.decimal  "score",               default: 0.0
+    t.float    "score",               default: 0.0
     t.integer  "experience_earned"
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer  "workout_offering_id"
-    t.integer  "workout_id"
+    t.integer  "workout_score_id"
+    t.integer  "active_score_id"
   end
 
-  add_index "attempts", ["exercise_id"], name: "index_attempts_on_exercise_id"
+  add_index "attempts", ["active_score_id"], name: "index_attempts_on_active_score_id"
+  add_index "attempts", ["exercise_version_id"], name: "index_attempts_on_exercise_version_id"
   add_index "attempts", ["user_id"], name: "index_attempts_on_user_id"
-  add_index "attempts", ["workout_id"], name: "index_attempts_on_workout_id"
+  add_index "attempts", ["workout_score_id"], name: "index_attempts_on_workout_score_id"
 
-  create_table "base_exercises", force: true do |t|
-    t.integer  "user_id"
-    t.integer  "question_type",      null: false
-    t.integer  "current_version_id", null: false
-    t.datetime "created_at"
-    t.datetime "updated_at"
-    t.integer  "versions",           null: false
-    t.integer  "variation_group_id"
+  create_table "attempts_tag_user_scores", id: false, force: true do |t|
+    t.integer "attempt_id"
+    t.integer "tag_user_score_id"
   end
 
-  add_index "base_exercises", ["current_version_id"], name: "index_base_exercises_on_current_version_id"
-  add_index "base_exercises", ["user_id"], name: "index_base_exercises_on_user_id"
-  add_index "base_exercises", ["variation_group_id"], name: "index_base_exercises_on_variation_group_id"
+  add_index "attempts_tag_user_scores", ["attempt_id", "tag_user_score_id"], name: "attempts_tag_user_scores_idx", unique: true
 
   create_table "choices", force: true do |t|
-    t.integer  "exercise_id", null: false
-    t.string   "answer",      null: false
-    t.integer  "order",       null: false
+    t.integer  "multiple_choice_prompt_id", null: false
+    t.integer  "position",                  null: false
     t.text     "feedback"
-    t.float    "value",       null: false
+    t.float    "value",                     null: false
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.text     "answer",                    null: false
   end
 
-  add_index "choices", ["exercise_id"], name: "index_choices_on_exercise_id"
+  add_index "choices", ["multiple_choice_prompt_id"], name: "index_choices_on_multiple_choice_prompt_id"
 
-  create_table "coding_questions", force: true do |t|
+  create_table "choices_multiple_choice_prompt_answers", id: false, force: true do |t|
+    t.integer "choice_id"
+    t.integer "multiple_choice_prompt_answer_id"
+  end
+
+  add_index "choices_multiple_choice_prompt_answers", ["choice_id", "multiple_choice_prompt_answer_id"], name: "choices_multiple_choice_prompt_answers_idx", unique: true
+
+  create_table "coding_prompt_answers", force: true do |t|
+    t.text "answer", null: false
+  end
+
+  create_table "coding_prompts", force: true do |t|
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer  "exercise_id",  null: false
     t.string   "class_name"
     t.text     "wrapper_code", null: false
     t.text     "test_script",  null: false
     t.string   "method_name"
     t.text     "starter_code"
   end
-
-  add_index "coding_questions", ["exercise_id"], name: "index_coding_questions_on_exercise_id"
 
   create_table "course_enrollments", force: true do |t|
     t.integer "user_id",            null: false
@@ -156,54 +157,66 @@ ActiveRecord::Schema.define(version: 20150504051530) do
   add_index "errors", ["class_name"], name: "index_errors_on_class_name"
   add_index "errors", ["created_at"], name: "index_errors_on_created_at"
 
+  create_table "exercise_families", force: true do |t|
+    t.string   "name",       null: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  create_table "exercise_owners", force: true do |t|
+    t.integer "exercise_id", null: false
+    t.integer "owner_id",    null: false
+  end
+
+  add_index "exercise_owners", ["exercise_id", "owner_id"], name: "index_exercise_owners_on_exercise_id_and_owner_id", unique: true
+
+  create_table "exercise_versions", force: true do |t|
+    t.integer  "stem_id"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+    t.integer  "exercise_id", null: false
+    t.integer  "position",    null: false
+    t.integer  "creator_id"
+    t.integer  "irt_data_id"
+  end
+
+  add_index "exercise_versions", ["exercise_id"], name: "index_exercise_versions_on_exercise_id"
+  add_index "exercise_versions", ["stem_id"], name: "index_exercise_versions_on_stem_id"
+
+  create_table "exercise_versions_resource_files", id: false, force: true do |t|
+    t.integer "exercise_version_id", null: false
+    t.integer "resource_file_id",    null: false
+  end
+
+  add_index "exercise_versions_resource_files", ["exercise_version_id"], name: "index_exercise_versions_resource_files_on_exercise_version_id"
+  add_index "exercise_versions_resource_files", ["resource_file_id"], name: "index_exercise_versions_resource_files_on_resource_file_id"
+
   create_table "exercise_workouts", force: true do |t|
     t.integer  "exercise_id",               null: false
     t.integer  "workout_id",                null: false
-    t.integer  "order",                     null: false
+    t.integer  "position",                  null: false
     t.float    "points",      default: 1.0
     t.datetime "created_at"
     t.datetime "updated_at"
   end
 
   create_table "exercises", force: true do |t|
-    t.integer  "stem_id"
-    t.string   "name",               null: false
-    t.text     "question",           null: false
-    t.text     "feedback"
-    t.boolean  "is_public",          null: false
-    t.integer  "priority",           null: false
-    t.integer  "count_attempts",     null: false
-    t.float    "count_correct",      null: false
-    t.float    "difficulty",         null: false
-    t.float    "discrimination",     null: false
-    t.boolean  "mcq_allow_multiple"
-    t.boolean  "mcq_is_scrambled"
+    t.integer  "question_type",                      null: false
+    t.integer  "current_version_id"
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer  "experience",         null: false
-    t.integer  "base_exercise_id",   null: false
-    t.integer  "version",            null: false
-    t.integer  "creator_id"
+    t.integer  "versions",                           null: false
+    t.integer  "exercise_family_id"
+    t.string   "name"
+    t.boolean  "is_public",          default: false, null: false
+    t.integer  "experience",                         null: false
+    t.integer  "irt_data_id"
+    t.string   "external_id"
   end
 
-  add_index "exercises", ["base_exercise_id"], name: "index_exercises_on_base_exercise_id"
-  add_index "exercises", ["stem_id"], name: "index_exercises_on_stem_id"
-
-  create_table "exercises_resource_files", id: false, force: true do |t|
-    t.integer "exercise_id",      null: false
-    t.integer "resource_file_id", null: false
-  end
-
-  add_index "exercises_resource_files", ["exercise_id"], name: "index_exercises_resource_files_on_exercise_id"
-  add_index "exercises_resource_files", ["resource_file_id"], name: "index_exercises_resource_files_on_resource_file_id"
-
-  create_table "exercises_tags", force: true do |t|
-    t.integer "exercise_id", null: false
-    t.integer "tag_id",      null: false
-  end
-
-  add_index "exercises_tags", ["exercise_id"], name: "index_exercises_tags_on_exercise_id"
-  add_index "exercises_tags", ["tag_id"], name: "index_exercises_tags_on_tag_id"
+  add_index "exercises", ["current_version_id"], name: "index_exercises_on_current_version_id"
+  add_index "exercises", ["exercise_family_id"], name: "index_exercises_on_exercise_family_id"
+  add_index "exercises", ["external_id"], name: "index_exercises_on_external_id", unique: true
 
   create_table "friendly_id_slugs", force: true do |t|
     t.string   "slug",                      null: false
@@ -236,6 +249,21 @@ ActiveRecord::Schema.define(version: 20150504051530) do
   add_index "identities", ["uid", "provider"], name: "index_identities_on_uid_and_provider"
   add_index "identities", ["user_id"], name: "index_identities_on_user_id"
 
+  create_table "irt_data", force: true do |t|
+    t.integer "attempt_count",  null: false
+    t.float   "sum_of_scores",  null: false
+    t.float   "difficulty",     null: false
+    t.float   "discrimination", null: false
+  end
+
+  create_table "multiple_choice_prompt_answers", force: true do |t|
+  end
+
+  create_table "multiple_choice_prompts", force: true do |t|
+    t.boolean "allow_multiple", default: false, null: false
+    t.boolean "is_scrambled",   default: true,  null: false
+  end
+
   create_table "organizations", force: true do |t|
     t.string   "name",         null: false
     t.datetime "created_at"
@@ -246,26 +274,32 @@ ActiveRecord::Schema.define(version: 20150504051530) do
 
   add_index "organizations", ["slug"], name: "index_organizations_on_slug", unique: true
 
-  create_table "prompts", force: true do |t|
-    t.integer  "exercise_id",       null: false
-    t.integer  "language_id",       null: false
-    t.text     "instruction",       null: false
-    t.integer  "order",             null: false
-    t.integer  "max_user_attempts", null: false
-    t.integer  "attempts",          null: false
-    t.float    "correct",           null: false
-    t.text     "feedback"
-    t.float    "difficulty",        null: false
-    t.float    "discrimination",    null: false
-    t.integer  "type",              null: false
-    t.boolean  "allow_multiple"
-    t.boolean  "is_scrambled"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+  create_table "prompt_answers", force: true do |t|
+    t.integer "attempt_id"
+    t.integer "prompt_id"
+    t.integer "actable_id"
+    t.string  "actable_type"
   end
 
-  add_index "prompts", ["exercise_id"], name: "index_prompts_on_exercise_id"
-  add_index "prompts", ["language_id"], name: "index_prompts_on_language_id"
+  add_index "prompt_answers", ["actable_id"], name: "index_prompt_answers_on_actable_id", unique: true
+  add_index "prompt_answers", ["attempt_id", "prompt_id"], name: "index_prompt_answers_on_attempt_id_and_prompt_id", unique: true
+  add_index "prompt_answers", ["attempt_id"], name: "index_prompt_answers_on_attempt_id"
+  add_index "prompt_answers", ["prompt_id"], name: "index_prompt_answers_on_prompt_id"
+
+  create_table "prompts", force: true do |t|
+    t.integer  "exercise_version_id", null: false
+    t.text     "question",            null: false
+    t.integer  "position",            null: false
+    t.text     "feedback"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+    t.integer  "actable_id"
+    t.string   "actable_type"
+    t.integer  "irt_data_id"
+  end
+
+  add_index "prompts", ["actable_id"], name: "index_prompts_on_actable_id", unique: true
+  add_index "prompts", ["exercise_version_id"], name: "index_prompts_on_exercise_version_id"
 
   create_table "resource_files", force: true do |t|
     t.string   "filename"
@@ -297,32 +331,33 @@ ActiveRecord::Schema.define(version: 20150504051530) do
 
   create_table "tag_user_scores", force: true do |t|
     t.integer  "user_id",                         null: false
-    t.integer  "tag_id",                          null: false
     t.integer  "experience",          default: 0
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "completed_exercises", default: 0
   end
 
-  add_index "tag_user_scores", ["tag_id"], name: "index_tag_user_scores_on_tag_id"
   add_index "tag_user_scores", ["user_id"], name: "index_tag_user_scores_on_user_id"
 
-  create_table "tags", force: true do |t|
-    t.string   "tag_name",                     null: false
+  create_table "taggings", force: true do |t|
+    t.integer  "tag_id"
+    t.integer  "taggable_id"
+    t.string   "taggable_type"
+    t.integer  "tagger_id"
+    t.string   "tagger_type"
+    t.string   "context",       limit: 128
     t.datetime "created_at"
-    t.datetime "updated_at"
-    t.integer  "tagtype",          default: 0
-    t.integer  "total_exercises",  default: 0
-    t.integer  "total_experience", default: 0
   end
 
-  create_table "tags_workouts", force: true do |t|
-    t.integer "tag_id",     null: false
-    t.integer "workout_id", null: false
+  add_index "taggings", ["tag_id", "taggable_id", "taggable_type", "context", "tagger_id", "tagger_type"], name: "taggings_idx", unique: true
+  add_index "taggings", ["taggable_id", "taggable_type", "context"], name: "index_taggings_on_taggable_id_and_taggable_type_and_context"
+
+  create_table "tags", force: true do |t|
+    t.string  "name"
+    t.integer "taggings_count", default: 0
   end
 
-  add_index "tags_workouts", ["tag_id"], name: "index_tags_workouts_on_tag_id"
-  add_index "tags_workouts", ["workout_id"], name: "index_tags_workouts_on_workout_id"
+  add_index "tags", ["name"], name: "index_tags_on_name", unique: true
 
   create_table "terms", force: true do |t|
     t.integer  "season",     null: false
@@ -338,32 +373,32 @@ ActiveRecord::Schema.define(version: 20150504051530) do
   add_index "terms", ["year", "season"], name: "index_terms_on_year_and_season"
 
   create_table "test_case_results", force: true do |t|
-    t.integer  "test_case_id",       null: false
-    t.integer  "user_id",            null: false
+    t.integer  "test_case_id",            null: false
+    t.integer  "user_id",                 null: false
     t.text     "execution_feedback"
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.boolean  "pass",               null: false
-    t.integer  "attempt_id"
+    t.boolean  "pass",                    null: false
+    t.integer  "coding_prompt_answer_id"
   end
 
-  add_index "test_case_results", ["attempt_id"], name: "index_test_case_results_on_attempt_id"
+  add_index "test_case_results", ["coding_prompt_answer_id"], name: "index_test_case_results_on_coding_prompt_answer_id"
   add_index "test_case_results", ["test_case_id"], name: "index_test_case_results_on_test_case_id"
   add_index "test_case_results", ["user_id"], name: "index_test_case_results_on_user_id"
 
   create_table "test_cases", force: true do |t|
     t.string   "test_script"
-    t.text     "negative_feedback",  null: false
-    t.float    "weight",             null: false
+    t.text     "negative_feedback", null: false
+    t.float    "weight",            null: false
     t.text     "description"
-    t.string   "input",              null: false
-    t.string   "expected_output",    null: false
+    t.string   "input",             null: false
+    t.string   "expected_output",   null: false
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer  "coding_question_id", null: false
+    t.integer  "coding_prompt_id",  null: false
   end
 
-  add_index "test_cases", ["coding_question_id"], name: "index_test_cases_on_coding_question_id"
+  add_index "test_cases", ["coding_prompt_id"], name: "index_test_cases_on_coding_prompt_id"
 
   create_table "users", force: true do |t|
     t.string   "email",                  default: "", null: false
@@ -394,12 +429,6 @@ ActiveRecord::Schema.define(version: 20150504051530) do
   add_index "users", ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   add_index "users", ["slug"], name: "index_users_on_slug", unique: true
 
-  create_table "variation_groups", force: true do |t|
-    t.string   "name",       null: false
-    t.datetime "created_at"
-    t.datetime "updated_at"
-  end
-
   create_table "workout_offerings", force: true do |t|
     t.integer  "course_offering_id", null: false
     t.integer  "workout_id",         null: false
@@ -413,6 +442,13 @@ ActiveRecord::Schema.define(version: 20150504051530) do
   add_index "workout_offerings", ["course_offering_id"], name: "index_workout_offerings_on_course_offering_id"
   add_index "workout_offerings", ["workout_id"], name: "index_workout_offerings_on_workout_id"
 
+  create_table "workout_owners", force: true do |t|
+    t.integer "workout_id", null: false
+    t.integer "owner_id",   null: false
+  end
+
+  add_index "workout_owners", ["workout_id", "owner_id"], name: "index_workout_owners_on_workout_id_and_owner_id", unique: true
+
   create_table "workout_scores", force: true do |t|
     t.integer  "workout_id",          null: false
     t.integer  "user_id",             null: false
@@ -424,6 +460,7 @@ ActiveRecord::Schema.define(version: 20150504051530) do
     t.integer  "exercises_remaining"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer  "workout_offering_id"
   end
 
   add_index "workout_scores", ["user_id"], name: "index_workout_scores_on_user_id"
@@ -435,9 +472,11 @@ ActiveRecord::Schema.define(version: 20150504051530) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.text     "description"
-    t.string   "target_group"
     t.integer  "points_multiplier"
     t.integer  "creator_id"
+    t.string   "external_id"
   end
+
+  add_index "workouts", ["external_id"], name: "index_workouts_on_external_id", unique: true
 
 end

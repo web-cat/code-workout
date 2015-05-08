@@ -9,6 +9,12 @@
 #  updated_at  :datetime
 #
 
+# =============================================================================
+# Represents a many-to-many relationship between courses and exercises,
+# capturing the notion of course-specific question banks.  I'm not sure
+# If we really need many-to-many, though, since right now, exercises can
+# only belong to one course?
+#
 class CourseExercise < ActiveRecord::Base
 
   #~ Relationships ............................................................

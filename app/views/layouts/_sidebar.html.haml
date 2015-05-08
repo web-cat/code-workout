@@ -12,6 +12,8 @@
     session[:current_workout]]).references(:workouts).limit(10),
     wid: session[:current_workout] }
 - elsif user_signed_in? && session[:leaf_exercises]
-  = render partial: "exercises/thumbsm", collection: Exercise.find(session[:leaf_exercises]), as: :x,
+  = render partial: "exercises/exercise",
+    collection: Exercise.find(session[:leaf_exercises]),
+    as: :x,
     locals: { uid: current_user.id, wid: nil }
 .clearfix

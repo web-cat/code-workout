@@ -5,8 +5,8 @@
 
 %p
   Tags:
-  - @workout.all_tags.each do |t|
-    =link_to t, search_path(search: t), method: :post, class: 'tag'
+  - @workout.tags.each do |t|
+    =link_to t.name, search_path(search: t.name), method: :post, class: 'tag'
 %p
   = button_to 'Practice Workout', practice_workout_path(params[:id]),
     method: :get, btn: 'primary'
@@ -54,6 +54,6 @@
 - else
   - user_id = user_signed_in? ? current_user.id : 0
   - @exs.in_groups_of(2, false) do |row|
-    = render partial: "exercises/thumblg", collection: row, as: :x,
+    = render partial: "exercises/exercise", collection: row, as: :x,
       locals: { uid: user_id, wid: @workout.id }
     .clearfix

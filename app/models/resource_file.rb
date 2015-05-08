@@ -16,13 +16,18 @@
 #  index_resource_files_on_user_id  (user_id)
 #
 
+
+# =============================================================================
+# Represents a file uploaded by a user for use in exercises, such as an
+# image or video file.
+#
 class ResourceFile < ActiveRecord::Base
   include Tokenable #for unique non-serial url tokens
 
 
   #~ Relationships ............................................................
 
-  has_and_belongs_to_many :exercises
+  has_and_belongs_to_many :exercise_versions
   belongs_to :user
 
 

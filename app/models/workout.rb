@@ -8,27 +8,52 @@
 #  created_at        :datetime
 #  updated_at        :datetime
 #  description       :text
-#  target_group      :string(255)
 #  points_multiplier :integer
 #  creator_id        :integer
+#  external_id       :string(255)
+#
+# Indexes
+#
+#  index_workouts_on_external_id  (external_id) UNIQUE
 #
 
+# =============================================================================
+# Represents a collection of exercises given as an assignment.  A workout
+# can be associated with one or more courses through workout offerings,
+# which represent individual assignments of the same workout in different
+# courses or terms.
+#
+# In addition, each user who starts a workout is associated with the
+# workout through one or more WorkoutScores--these WorkoutScore objects
+# represent that user's score on the exercises in one completion of this
+# workout.
+#
+# Note that workouts can implicitly be "owned" by courses.  Effectively,
+# the "courses" associated with a workout are those for which course
+# offerings have been given workout offerings.
+#
 class Workout < ActiveRecord::Base
 
   #~ Relationships ............................................................
 
-	has_many :exercises, through:  :exercise_workouts
-	has_many :exercise_workouts, -> { order("'order' ASC") },
+  acts_as_taggable_on :tags, :languages, :styles
+	has_many :exercise_workouts, -> { order("'position' ASC") },
 	  inverse_of: :workout, dependent: :destroy
+  has_many :exercises, through:  :exercise_workouts
 	has_many :workout_scores, inverse_of: :workout, dependent: :destroy
   has_many :users, through: :workout_scores
   has_many :attempts
-	has_and_belongs_to_many :tags
   has_many :workout_offerings, inverse_of: :workout, dependent: :destroy
   has_many :course_offerings, through:  :workout_offerings
+  has_many :courses, through: :course_offerings
+  belongs_to :creator, class_name: 'User'
+  has_many :workout_owners, inverse_of: :workout, dependent: :destroy
+  has_many :owners, through: :workout_owners
 
   accepts_nested_attributes_for :exercise_workouts
   accepts_nested_attributes_for :workout_offerings
+
+
   #~ Validation ...............................................................
 
 	validates :name,
@@ -44,37 +69,38 @@ class Workout < ActiveRecord::Base
 
   #~ Hooks ....................................................................
 
-  paginates_per 1
+  # paginates_per 1
 
 
   #~ Class methods ............................................................
 
-  def add_exercise(ex_id)
-    duplicate = self.exercises.bsearch{ |x| x.id == ex_id }
-    if duplicate.nil?
-      exists = Exercise.find(ex_id)
-      if exists
-        self.exercises << exists
-        exists.workouts << self
-        self.order = self.exercises.size
-      end
-    end
+  # -------------------------------------------------------------
+  def add_exercise(ex)
+    self.exercise_workouts <<
+      ExerciseWorkout.new(
+        workout: self,
+        exercise: ex,
+        position: self.exercises.size)
   end
 
 
+  # -------------------------------------------------------------
   # return the totals points of the exercises in the current workout.
+  # FIXME: Why isn't this a property of the workout?  The exercises
+  # themselves don't record absolute points at all!
   def returnTotalWorkoutPoints
     total_points = 0.0
-    exers = self.exercises
-    exers.each do |ex|
+    self.exercises.each do |ex|
       total_points += ExerciseWorkout.findExercisePoints(ex.id, self.id)
     end
     return total_points
   end
 
 
+  # -------------------------------------------------------------
   # returns a hash of exercise experience points (XP) with
   # { scored: ___, total: ___, percent: ___ }
+  # FIXME: refactor to use workout score instead
   def xp(u_id)
     xp = Hash.new
     xp[:scored] = 0
@@ -96,10 +122,10 @@ class Workout < ActiveRecord::Base
   end
 
 
+  # -------------------------------------------------------------
   def all_tags
     coll = self.tags.pluck(:tag_name).uniq
-    exs = self.exercises
-    exs.each do |x|
+    self.exercises.each do |x|
       x_tags = x.tags.pluck(:tag_name).uniq
       x_tags.each do |another|
         if coll.index(another).nil?
@@ -111,38 +137,28 @@ class Workout < ActiveRecord::Base
   end
 
 
+  # -------------------------------------------------------------
   def highest_difficulty
     diff = 0
-    exs = self.exercises
-    exs.each do |x|
-      if x.difficulty && x.difficulty > diff
-        diff = x.difficulty
+    self.exercises.each do |x|
+      x_diff = x.andand.irt_data.andand.difficulty || 0
+      if x_diff > diff
+        diff = x_diff
       end
     end
-    return diff.to_i
+    return diff
   end
 
 
-  #~ Class methods ............................................................
-
-  def self.search(terms)
-    term_array = terms.split
-    term_array.each do |term|
-      term = "%" + term + "%"
-    end
-    return Workout.joins(:tags).where{ tags.tag_name.like_any term_array }
-  end
-
-
-  def self.xp_distribution(u_id, w_id)
-    w = Workout.find(w_id)
-    results = w.xp(u_id)
+  # -------------------------------------------------------------
+  # FIXME: refactor to use workout score instead
+  def xp_distribution(u_id)
+    results = self.xp(u_id)
     earned = results[:scored]
     earned_per = results[:percent]
     total = results[:total]
     remaining = 0
-    exs = w.exercises
-    exs.each do |x|
+    self.exercises.each do |x|
       x_attempt = x.attempts.where(user_id: u_id).pluck(:experience_earned)
       x_earned = 0
       x_attempt.each do |a|
@@ -155,4 +171,15 @@ class Workout < ActiveRecord::Base
     gap_per = 100 - earned_per - remaining_per
     return [earned, remaining, gap, earned_per, remaining_per, gap_per]
   end
+
+
+  #~ Class methods ............................................................
+
+  # -------------------------------------------------------------
+  def self.search(terms)
+    return Workout.tagged_with(terms, wild: true, on: :tags) +
+      Workout.tagged_with(terms, wild: true, on: :languages) +
+      Workout.tagged_with(terms, wild: true, on: :styles)
+  end
+
 end
