@@ -15,7 +15,7 @@
 # =============================================================================
 # Represents a many-to-many relationship between exercises and workouts,
 # indicating which exercises are included in a given workout, and in
-# what order.
+# what order.  The order is determined by "position", which starts at 1.
 #
 class ExerciseWorkout < ActiveRecord::Base
 
@@ -30,8 +30,9 @@ class ExerciseWorkout < ActiveRecord::Base
 
   validates :exercise, presence: true
   validates :workout, presence: true
-  validates :position, presence: true,
-    numericality: { greater_than_or_equal_to: 0 }
+
+  # Note: position should not be validated, since it is auto-updated in
+  # a hook after validation.
 
 
   #~ Class methods ............................................................

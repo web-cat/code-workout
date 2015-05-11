@@ -7,7 +7,7 @@
 #  current_version_id :integer
 #  created_at         :datetime
 #  updated_at         :datetime
-#  versions           :integer          not null
+#  versions           :integer
 #  exercise_family_id :integer
 #  name               :string(255)
 #  is_public          :boolean          default(FALSE), not null
@@ -45,7 +45,7 @@ class Exercise < ActiveRecord::Base
   #~ Relationships ............................................................
 
   acts_as_taggable_on :tags, :languages, :styles
-  has_many :exercise_versions, -> { order("position ASC") },
+  has_many :exercise_versions, -> { order("version DESC") },
     inverse_of: :exercise, dependent: :destroy
   has_many :attempts, through: :exercise_versions
   has_many :course_exercises, inverse_of: :exercise, dependent: :destroy
@@ -68,7 +68,6 @@ class Exercise < ActiveRecord::Base
 
   #~ Validation ...............................................................
 
-  validates :versions, presence: true, numericality: { greater_than: 0 }
   validates :question_type, presence: true, numericality: { greater_than: 0 }
   validates :experience, presence: true,
     numericality: { greater_than_or_equal_to: 0 }
@@ -179,7 +178,12 @@ class Exercise < ActiveRecord::Base
     self.question_type ||= Q_MC
     self.name ||= ''
     self.is_public ||= true
-    self.experience ||= 100
+    self.experience ||= 10
+
+    # Update current_version if necessary
+    if !self.current_version
+      self.current_version = self.exercise_versions.first
+    end
   end
 
 end

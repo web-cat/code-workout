@@ -17,7 +17,6 @@ FactoryGirl.define do
   factory :exercise_workout do
     exercise_id 1
     workout_id 1
-    position 0
     points 10
   end
 end

@@ -7,7 +7,7 @@
 #  created_at  :datetime
 #  updated_at  :datetime
 #  exercise_id :integer          not null
-#  position    :integer          not null
+#  version     :integer          not null
 #  creator_id  :integer
 #  irt_data_id :integer
 #

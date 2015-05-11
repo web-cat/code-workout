@@ -15,7 +15,7 @@
 #
 # Indexes
 #
-#  index_prompts_on_actable_id           (actable_id) UNIQUE
+#  index_prompts_on_actable_id           (actable_id)
 #  index_prompts_on_exercise_version_id  (exercise_version_id)
 #
 
@@ -39,6 +39,8 @@
 # c) subparts) is simply one exercise with multiple prompts (three, in
 # this example).
 #
+# Prompts are ordered by "position", which starts at 1.
+#
 class Prompt < ActiveRecord::Base
 
   #~ Relationships ............................................................
@@ -61,15 +63,10 @@ class Prompt < ActiveRecord::Base
   #~ Validation ...............................................................
 
   validates :exercise_version, presence: true
-
   validates :question, presence: true
-  validates :position, presence: true,
-    numericality: { greater_than_or_equal_to: 0 }
-  #no validation for feedback
 
-  # For actable
-  validates :actable_id, presence: true
-  validates :actable_type, presence: true
+  # Note: position should not be validated, since it is auto-updated in
+  # a hook after validation.
 
 
   #~ Class methods.............................................................

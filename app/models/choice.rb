@@ -19,8 +19,12 @@
 # =============================================================================
 # Represents one choice in a multiple-choice prompt.
 #
-# The position field stores the choice's 0-based order (unless the choices get
-# scrambled in presentation) among the list of choices.
+# The position field stores the choice's 1-based order (unless the choices get
+# scrambled in presentation) among the list of choices.  New choices with
+# the default value of 0 for position will be auto-moved to the end of the
+# list (the position will be auto-updated), so only set the position on
+# newly created choices if you want to force them to a different location
+# (i.e., set position to 1 to make it first, pushing all others back).
 #
 # The value field stores a 0.0-1.0 indication of the percentage credit earned
 # when the user selects this choice, where 0.0 indicates no value, and 1.0
@@ -45,10 +49,11 @@ class Choice < ActiveRecord::Base
 
   validates :multiple_choice_prompt, presence: true
   validates :answer, presence: true
-  validates :position, presence: true,
-    numericality: { greater_than_or_equal_to: 0 }
   validates :value, presence: true,
     numericality: { greater_than_or_equal_to: 0 }
+
+  # Note: position should not be validated, since it is auto-updated in
+  # a hook after validation.
 
 
   #~ Private instance methods .................................................

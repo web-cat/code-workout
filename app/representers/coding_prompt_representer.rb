@@ -4,6 +4,7 @@ class CodingPromptRepresenter < Representable::Decorator
 
   self.representation_wrap = :coding_prompt
 
+  property :position
   property :question
   property :feedback
   property :class_name

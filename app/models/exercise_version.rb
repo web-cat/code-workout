@@ -7,7 +7,7 @@
 #  created_at  :datetime
 #  updated_at  :datetime
 #  exercise_id :integer          not null
-#  position    :integer          not null
+#  version     :integer          not null
 #  creator_id  :integer
 #  irt_data_id :integer
 #
@@ -33,8 +33,9 @@ class ExerciseVersion < ActiveRecord::Base
 
   belongs_to  :creator, class_name: 'User'
   belongs_to  :stem, inverse_of: :exercise_versions
-  belongs_to  :exercise, inverse_of: :exercise_versions
-  acts_as_list scope: :exercise
+  belongs_to  :exercise, inverse_of: :exercise_versions,
+    counter_cache: :versions
+  acts_as_list scope: :exercise, column: 'version'
   has_many :courses, through: :exercise
   has_many :workouts, through:  :exercise
   has_many :prompts, -> { order("position ASC") },
@@ -51,8 +52,6 @@ class ExerciseVersion < ActiveRecord::Base
   #~ Validation ...............................................................
 
   validates :exercise, presence: true
-  validates :position, presence: true,
-    numericality: { greater_than_or_equal_to: 0 }
 
 
   #~ Public instance methods ..................................................

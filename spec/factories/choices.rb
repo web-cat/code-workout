@@ -19,7 +19,6 @@
 FactoryGirl.define do
   factory :choice do
     answer 'A choice'
-    position 0
     value 0.0
   end
 end
