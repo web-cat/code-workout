@@ -87,11 +87,11 @@ class ExerciseVersion < ActiveRecord::Base
   # Needs to be split among prompts and stem.
   def serve_question_html
     source = stem ? stem.preamble : ''
-    if !question.blank?
+    if !prompts.first.andand.question.blank?
       if !source.blank?
         source += '</p><p>'
       end
-      source += question
+      source += prompts.first.question
     end
     return source
   end

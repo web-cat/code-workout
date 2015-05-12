@@ -5,9 +5,9 @@
     wexes: params[:wexes], feedback_return: true), remote: true do |f|
     = f.semantic_errors
     %h1= @exercise.name
-    %p= make_html(@exercise.serve_question_html)
-    - if @exercise.base_exercise.is_mcq?
-      - if @exercise.mcq_allow_multiple
+    %p= make_html(@exercise.current_version.serve_question_html)
+    - if @exercise.is_mcq?
+      - if @exercise.current_version.prompts.first.specific.allow_multiple
         %h2 Choose ALL that apply:
         .answers
           = f.semantic_fields_for @ex_attempt do |exa|
@@ -27,12 +27,12 @@
             member_value: :id,
             member_label: :answer,
             label: "&nbsp;"
-    - elsif @exercise.base_exercise.is_coding?
-      = f.input :answer_code, as: :text, class: 'code',                    |
-        input_html: {                                                      |
-          lang: 'text/x-' + (@exercise.language || 'java').downcase,       |
-          value: @exercise.coding_question.starter_code                    |
-        }                                                                  |
+    - elsif @exercise.is_coding?
+      = f.input :answer_code, as: :text, class: 'code',                        |
+        input_html: {                                                          |
+          lang: 'text/x-' + (@exercise.language || 'java').downcase,           |
+          value: @exercise.current_version.prompts.first.specific.starter_code |
+        }                                                                      |
     .actions
       = f.submit 'Check my answer!', class: 'btn btn-primary'
     - if session[:current_workout].nil?
@@ -43,5 +43,3 @@
         random_exercise_path)                                              |
 .col-md-5
   #exercisefeedback{style: 'display: none;'}
-
-
