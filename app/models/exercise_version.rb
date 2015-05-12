@@ -59,18 +59,18 @@ class ExerciseVersion < ActiveRecord::Base
   # -------------------------------------------------------------
   # FIXME: move to multiple_choice_prompt
   def serve_choice_array
-    if self.choices.nil?
+    if self.prompts.first.specific.choices.nil?
       return ["No answers available"]
     else
       answers = Array.new
-      raw = self.choices.sort_by{ |a| a[:position] }
+      raw = self.prompts.first.specific.choices.sort_by{ |a| a[:position] }
       raw.each do |c|
         formatted = c
         # moved to view controller:
         # formatted[:answer] = make_html(c[:answer])
         answers.push(formatted)
       end
-      if self.mcq_is_scrambled
+      if self..prompts.first.specific.is_scrambled
         scrambled = Array.new
         until answers.empty?
           rand = Random.rand(answers.length)

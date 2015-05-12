@@ -153,12 +153,8 @@ class Exercise < ActiveRecord::Base
   # -------------------------------------------------------------
   # Determine the programming language of the exercise from its language tag
   def language
-    self.tags.to_ary.each do |tag|
-      if tag.tagtype == Tag.language
-        return tag.tag_name
-      end
-    end
-    return nil
+    tag = self.languages.first
+    return tag ? tag.name : nil
   end
 
 

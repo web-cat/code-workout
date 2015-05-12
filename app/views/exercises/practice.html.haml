@@ -17,7 +17,7 @@
               member_value: :id,
               member_label: :answer,
               selected: false,
-              label: "&nbsp;"
+              label: '&nbsp;ß'
       - else
         %h3 Select one answer:
         .answers
@@ -26,7 +26,7 @@
             collection: @answers,
             member_value: :id,
             member_label: :answer,
-            label: "&nbsp;"
+            label: '&nbsp;'
     - elsif @exercise.is_coding?
       = f.input :answer_code, as: :text, class: 'code',                        |
         input_html: {                                                          |

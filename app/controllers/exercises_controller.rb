@@ -679,7 +679,7 @@ class ExercisesController < ApplicationController
     if( params[:id] )
       @found = Exercise.where(id: params[:id])
       if( @found.empty? )
-        redirect_to exercises_url, notice: "Exercise #{params[:id]} not found"
+        redirect_to exercises_url, notice: "Exercise E#{params[:id]} not found"
       elsif user_signed_in?
         @exercise = @found.first
         # Tighter restrictions for the moment, should go away
@@ -687,10 +687,12 @@ class ExercisesController < ApplicationController
           redirect_to root_path,
             notice: 'Exercise practice is temporarily disabled.' and return
         end
-        @answers = @exercise.serve_choice_array
-        @answers.each do |a|
-          # TODO: Make make_html work
-          #a[:answer] = make_html(a[:answer])
+        if @exercise.is_mcq?
+          @answers = @exercise.current_version.serve_choice_array
+          @answers.each do |a|
+            # TODO: Make make_html work
+            #a[:answer] = make_html(a[:answer])
+          end
         end
         @responses = ['There are no responses yet!']
         @explain = ['There are no explanations yet!']
@@ -743,7 +745,7 @@ class ExercisesController < ApplicationController
     if( params[:id] )
       found = Exercise.where(id: params[:id])
       if( found.empty? )
-        redirect_to exercises_url, notice: "Exercise #{params[:id]} not found"
+        redirect_to exercises_url, notice: "Exercise E#{params[:id]} not found"
       else
         @exercise = found.first
         attempt = Attempt.new(user_id: current_user.id, exercise_id: @exercise.id,submit_time: Time.now, submit_num: 1,answer: params[:exercise][:answer_code],workout_id: session[:current_workout])
@@ -791,7 +793,7 @@ class ExercisesController < ApplicationController
             @user_id,
             params[:exercise][:answer_code],
             session[:current_workout],@att_id)
-        end        
+        end
         if params[:wexes]
           session[:remaining_wexes] = params[:wexes]
           if params[:wexes][1..-1].count < 1
@@ -811,17 +813,17 @@ class ExercisesController < ApplicationController
             #   wexes: params[:wexes],
             #   feedback_return: true,att_id: attempt_id),
             #   format: :js # and return
-          else            
+          else
             respond_to do |format|
               format.js
             end
             # redirect_to exercise_practice_path(id: params[:wexes].first,
             #   wexes: @wexs,att_id: attempt_id) and return
           end
-        else          
+        else
           respond_to do |format|
               format.js
-          end         
+          end
           #redirect_to exercise_practice_path(@exercise,
           #  feedback_return: true,att_id: attempt_id) and return
         end
