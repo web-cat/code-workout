@@ -21,12 +21,13 @@
       - else
         %h3 Select one answer:
         .answers
-          = f.input :choice_ids,
-            as: :radio,
-            collection: @answers,
-            member_value: :id,
-            member_label: :answer,
-            label: '&nbsp;'
+          = f.semantic_fields_for @exercise.current_version.prompts.first.specific do |p|
+            = p.input :choice_ids,
+              as: :radio,
+              collection: @answers,
+              member_value: :id,
+              member_label: :answer,
+              label: '&nbsp;'
     - elsif @exercise.is_coding?
       = f.input :answer_code, as: :text, class: 'code',                        |
         input_html: {                                                          |
