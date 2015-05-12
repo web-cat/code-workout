@@ -141,12 +141,10 @@ class Exercise < ActiveRecord::Base
 
   # -------------------------------------------------------------
   # getter override for name
-  def name
-    temp = 'E' + read_attribute(:id).to_s
-    if not read_attribute(:name).nil?
-      temp += ': ' + read_attribute(:name).to_s
-    elsif (!self.tags.nil? && !self.tags.first.nil?)
-      temp += ': ' + self.tags.first.tag_name
+  def display_name
+    temp = 'E' + id.to_s
+    if not name.nil?
+      temp += ': ' + name
     end
     return temp
   end

@@ -95,6 +95,7 @@ FactoryGirl.define do
           "just\nan example.\n"
       end
 
+      name { 'Pick One ' + num.to_s }
       question_type { Exercise::Q_MC }
       tag_list 'random'
       style_list 'forced choice'
