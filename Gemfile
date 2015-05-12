@@ -90,6 +90,9 @@ gem 'squeel'
 #for nested forms
 gem 'cocoon'
 
+# For handling converting to booleans
+gem 'wannabe_bool'
+
 # Gems for deployment.
 gem 'capistrano'
 gem 'capistrano-bundler'

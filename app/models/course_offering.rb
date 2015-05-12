@@ -151,6 +151,10 @@ class CourseOffering < ActiveRecord::Base
     role_for_user(user).andand.is_staff?
   end
 
+  # -------------------------------------------------------------
+  def is_student?(user)
+    role_for_user(user).andand.is_student?
+  end
 
   # -------------------------------------------------------------
   def role_for_user(user)

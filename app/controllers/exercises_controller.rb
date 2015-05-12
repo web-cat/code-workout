@@ -1,6 +1,5 @@
 class ExercisesController < ApplicationController
   before_action :set_exercise, only: [:show, :edit, :update, :destroy]
-  respond_to :html, :js, :json
 
 
   #~ Action methods ...........................................................
@@ -750,6 +749,8 @@ class ExercisesController < ApplicationController
         attempt = Attempt.new(user_id: current_user.id, exercise_id: @exercise.id,submit_time: Time.now, submit_num: 1,answer: params[:exercise][:answer_code],workout_id: session[:current_workout])
         attempt.save
         attempt_id = attempt.id
+        @att_id = attempt_id
+        @user_id = current_user.id
         if @exercise.base_exercise.is_mcq?
           response_ids = params[:exercise][:exercise][:choice_ids]
           p params
@@ -787,11 +788,10 @@ class ExercisesController < ApplicationController
         elsif @exercise.base_exercise.is_coding?
           CodeWorker.new.async.perform(@exercise.coding_question.class_name,
             @exercise.id,
-            current_user.id,
+            @user_id,
             params[:exercise][:answer_code],
-            session[:current_workout],attempt_id)
-        end
-        puts "ATTEMPT-#{attempt_id}\n","ATTEMPT-#{attempt_id}\n","ATTEMPT-#{attempt_id}\n"
+            session[:current_workout],@att_id)
+        end        
         if params[:wexes]
           session[:remaining_wexes] = params[:wexes]
           if params[:wexes][1..-1].count < 1
@@ -802,29 +802,26 @@ class ExercisesController < ApplicationController
           else
             @wexs = params[:wexes][1..-1]
           end
+          # FIXME: Horrible multiple respond_to statement must be consolidated
           if params[:feedback_return]
-            # FIXME: Horrible rendering of javascipt output on method completion
-            # to provide the AJAXy feedback mechanism that doesn't work.
-            str = "$('#exercisefeedback').append(\"<%= j(render 'ajax_feedback') %>\");"
-            render js: "var source = new EventSource('/feedback_send?uid='+#{current_user.id}+'&att_id='+#{attempt_id});  console.log('Established inside');   source.addEventListener('feedback_#{current_user.id}',function(e){  console.log('WINTER IS ' + e.data); $('#exercisefeedback').show(); #{str}  });"
+            respond_to do |format|
+              format.js
+            end
             # redirect_to exercise_practice_path(@exercise,
             #   wexes: params[:wexes],
             #   feedback_return: true,att_id: attempt_id),
             #   format: :js # and return
-          else
-            # FIXME: Horrible rendering of javascipt output on method completion
-            # to provide the AJAXy feedback mechanism that doesn't work.
-            str = "$('#exercisefeedback').append(\"<%= j(render 'ajax_feedback') %>\");"
-            render js: "var source = new EventSource('/feedback_send?uid='+#{current_user.id}+'&att_id='+#{attempt_id});  console.log('Established inside');   source.addEventListener('feedback_#{current_user.id}',function(e){  console.log('WINTER IS ' + e.data); $('#exercisefeedback').show(); #{str}  });"
+          else            
+            respond_to do |format|
+              format.js
+            end
             # redirect_to exercise_practice_path(id: params[:wexes].first,
             #   wexes: @wexs,att_id: attempt_id) and return
           end
-        else
-          # Move as to display the exercise submission feedback
-          # FIXME: Horrible rendering of javascipt output on method completion
-          # to provide the AJAXy feedback mechanism that doesn't work.
-          str = "$('#exercisefeedback').append(\"<%= j(render 'ajax_feedback') %>\");"
-          render js: "var source = new EventSource('/feedback_send?uid='+#{current_user.id}+'&att_id='+#{attempt_id});  console.log('Established inside');   source.addEventListener('feedback_#{current_user.id}',function(e){  console.log('WINTER IS ' + e.data); $('#exercisefeedback').show(); #{str}  });"
+        else          
+          respond_to do |format|
+              format.js
+          end         
           #redirect_to exercise_practice_path(@exercise,
           #  feedback_return: true,att_id: attempt_id) and return
         end

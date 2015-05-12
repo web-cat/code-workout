@@ -27,17 +27,7 @@
         %td!= off.graders.map{ |i| link_to i.display_name,
           user_path(i) }.to_sentence
         %td
-          - if !off.is_enrolled?(current_user)
-            - if off.cutoff?
-              Contact your instructor
-            - else
-              = link_to 'Enroll',                                                  |
-                '/course_enrollments?' + { course_enrollment:                      |
-                ActionController::Parameters.new({user_id: current_user.id,        |
-                course_offering_id: off.id,                           |
-                course_role_id: CourseRole::STUDENT_ID})}.to_param, method: :post  |
-          - else
-            You are enrolled
+          = render partial: "course_offerings/self_enrollment", locals: {off: off}
 - if user_signed_in? &&                                      |
   current_user.global_role_id >= GlobalRole::INSTRUCTOR_ID   |
   %p

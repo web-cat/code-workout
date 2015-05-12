@@ -1,4 +1,4 @@
-class WorkoutsController < ApplicationController
+class WorkoutsController < ApplicationController 
   before_action :set_workout, only: [:show, :edit, :update, :destroy]
   respond_to :html, :js
 
@@ -140,11 +140,56 @@ class WorkoutsController < ApplicationController
       render action: 'new'
     end
   end
+  
+  def upload_yaml
+    
+  end
+  
+  def yaml_create
+    @yaml_wkts = YAML.load_file(params[:form].fetch(:yamlfile).path)
+    @yaml_wkts.each do |workout|
+      wkt = workout['workout']
+      @wkt = Workout.new
+      @wkt.name = wkt['name']
+      @wkt.scrambled = wkt['scrambled']
+      @wkt.description = wkt['description']
+      @wkt.save
+      wkt['tags'].split(",").each do |t|
+        Tag.tag_this_with(@wkt,t,Tag.skill)
+      end
+      wkt['exercises'].andand.each_with_index do |exer,i|
+        if Exercise.find(exer['exid'][1..-1].to_i)
+          ex_wkt = ExerciseWorkout.new
+          ex_wkt.exercise_id = exer['exid'][1..-1].to_i
+          ex_wkt.workout_id = @wkt.id
+          ex_wkt.points = exer['points']
+          ex_wkt.order = i + 1
+          ex_wkt.save
+        else
+          puts "Exercise not found"
+        end 
+      end
+      wkt['offerings'].andand.each_with_index do |off, i|
+        matching_course = Course.find_by(number: off['course']['number'],organization: Organization.find_by(abbreviation: off['course']['organization']['abbreviation']))
+        if matching_course
+          wkt_off = WorkoutOffering.new
+          wkt_off.opening_date = off['opening_date']
+          wkt_off.soft_deadline = off['soft_deadline']
+          wkt_off.hard_deadline = off['hard_deadline']
+          wkt_off.course_offering_id = matching_course.id
+          wkt_off.workout_id = @wkt.id
+          wkt_off.save
+        else
+          puts "No MATCHING COURSE","No MATCHING COURSE"
+        end
+      end
+    end
+    redirect_to workouts_path
+  end
 
   # ------Placeholder for any views I want experiment with-------------------------------------------------------
   def dummy
-    @workouts = Workout.find(1)
-
+    @workouts = Workout.find(1)  
   end
 
   # -------------------------------------------------------------
