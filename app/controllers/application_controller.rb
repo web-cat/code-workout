@@ -1,4 +1,5 @@
 require 'application_responder'
+require 'loofah_render'
 
 class ApplicationController < ActionController::Base
   protect_from_forgery with: :exception
@@ -37,6 +38,21 @@ class ApplicationController < ActionController::Base
   def params_with_flash
     params.merge(flash.
       select { |k, v| k.ends_with?('_id') && !params.has_key?(k) })
+  end
+
+
+  # -------------------------------------------------------------
+  helper_method :markdown
+  def markdown(text)
+    markdown = Redcarpet::Markdown.new(
+      LoofahRender.new(
+        safe_links_only: true, xhtml: true),
+      no_intra_emphasis: true,
+      tables: true,
+      fenced_code_blocks: true,
+      autolink: true,
+      strikethrough: true,
+      lax_spacing: true).render(text)
   end
 
 end

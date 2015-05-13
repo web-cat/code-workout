@@ -65,10 +65,7 @@ class ExerciseVersion < ActiveRecord::Base
       answers = Array.new
       raw = self.prompts.first.specific.choices.sort_by{ |a| a[:position] }
       raw.each do |c|
-        formatted = c
-        # moved to view controller:
-        # formatted[:answer] = make_html(c[:answer])
-        answers.push(formatted)
+        answers.push(c)
       end
       if self..prompts.first.specific.is_scrambled
         scrambled = Array.new
@@ -80,20 +77,6 @@ class ExerciseVersion < ActiveRecord::Base
       end
       return answers
     end
-  end
-
-
-  # -------------------------------------------------------------
-  # Needs to be split among prompts and stem.
-  def serve_question_html
-    source = stem ? stem.preamble : ''
-    if !prompts.first.andand.question.blank?
-      if !source.blank?
-        source += '</p><p>'
-      end
-      source += prompts.first.question
-    end
-    return source
   end
 
 
@@ -124,7 +107,6 @@ class ExerciseVersion < ActiveRecord::Base
       found = answered.select { |x| x["id"] == choice.id }
       if ((choice.value > 0 && (found.nil? || found.empty?)) ||
           (choice.value <= 0 && (!found.nil? && !found.empty?)))
-        # feed.push(make_html(choice.feedback))
         feed.push(choice.feedback)
       end
     end

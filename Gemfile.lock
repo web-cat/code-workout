@@ -208,6 +208,8 @@ GEM
       actionpack (>= 3.0.0)
       activesupport (>= 3.0.0)
     log_file (0.0.3)
+    loofah (1.2.1)
+      nokogiri (>= 1.4.4)
     mail (2.6.1)
       mime-types (>= 1.16, < 3)
     mime-types (2.3)
@@ -278,6 +280,7 @@ GEM
     rchardet (1.6.0)
     rdoc (4.1.2)
       json (~> 1.4)
+    redcarpet (3.1.1)
     remotipart (1.2.1)
     representable (2.1.6)
       multi_json
@@ -339,6 +342,7 @@ GEM
     tilt (1.4.1)
     timers (4.0.1)
       hitimes
+    truncate_html (0.9.3)
     tzinfo (1.2.2)
       thread_safe (~> 0.1)
     uber (0.0.13)
@@ -396,6 +400,7 @@ DEPENDENCIES
   js-routes
   kaminari
   log_file
+  loofah
   nokogiri
   oj
   oj_mimic_json
@@ -406,6 +411,7 @@ DEPENDENCIES
   rabl
   rails
   rails-erd!
+  redcarpet
   remotipart
   representable
   responders (~> 1.1)
@@ -416,5 +422,6 @@ DEPENDENCIES
   squeel
   sucker_punch (~> 1.0)
   test-unit (~> 3.0.9)
+  truncate_html
   uglifier (>= 1.3.0)
   wannabe_bool

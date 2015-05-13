@@ -690,8 +690,7 @@ class ExercisesController < ApplicationController
         if @exercise.is_mcq?
           @answers = @exercise.current_version.serve_choice_array
           @answers.each do |a|
-            # TODO: Make make_html work
-            #a[:answer] = make_html(a[:answer])
+            a[:answer] = markdown(a[:answer])
           end
         end
         @responses = ['There are no responses yet!']
@@ -766,7 +765,7 @@ class ExercisesController < ApplicationController
           end
           @responses = @responses.compact
           @responses.each do |answer|
-            answer[:answer] = make_html(answer[:answer])
+            answer[:answer] = markdown(answer[:answer])
           end
           @score = @exercise.score(@responses)
           if session[:current_workout]

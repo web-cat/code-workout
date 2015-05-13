@@ -5,7 +5,9 @@
     wexes: params[:wexes], feedback_return: true), remote: true do |f|
     = f.semantic_errors
     %h1= @exercise.name
-    %p= make_html(@exercise.current_version.serve_question_html)
+    - if @exercise.current_version.stem
+      = markdown @exercise.current_version.stem.preamble
+    = markdown @exercise.current_version.prompts.first.question
     - if @exercise.is_mcq?
       - if @exercise.current_version.prompts.first.specific.allow_multiple
         %h2 Choose ALL that apply:
