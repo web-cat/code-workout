@@ -5,8 +5,9 @@
     wexes: params[:wexes], feedback_return: true), remote: true do |f|
     = f.semantic_errors
     %h1= @exercise.name
-    %p= make_html(@exercise.serve_question_html)
-    - if @exercise.base_exercise.is_mcq?
+    %p
+      -#= make_html(@exercise.serve_question_html)
+    - if @exercise.is_mcq?
       - if @exercise.mcq_allow_multiple
         %h2 Choose ALL that apply:
         .answers
@@ -27,11 +28,11 @@
             member_value: :id,
             member_label: :answer,
             label: "&nbsp;"
-    - elsif @exercise.base_exercise.is_coding?
+    - elsif @exercise.is_coding?
       = f.input :answer_code, as: :text, class: 'code',                    |
         input_html: {                                                      |
           lang: 'text/x-' + (@exercise.language || 'java').downcase,       |
-          value: @exercise.coding_question.starter_code                    |
+          value: CodingPrompt.find(@exercise.current_version.prompts.first.actable_id).andand.starter_code      |
         }                                                                  |
     .actions
       = f.submit 'Check my answer!', class: 'btn btn-primary'
