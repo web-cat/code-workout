@@ -7,7 +7,7 @@
   - @current_workout.exercises.each do |exer|
     %tr
       %td=exer.name
-      %td=Attempt.where(exercise_id: exer.id).last.score.round(2)
+      %td=Attempt.where(exercise_version_id: exer.current_version_id).last.score.round(2)
       %td=ExerciseWorkout.findExercisePoints(exer.id, @current_workout.id)
 %br
 - @workout_feedback.each do |line|
