@@ -6,8 +6,11 @@
 -#      Search
 -#= render :partial => 'exercises/search'
 - if session[:wexes]
+  - puts "WORKOUT"
+  - p Workout.find(session[:current_workout])
+  - puts "WORKOUT"  
   = render partial: 'workouts/status',
-    locals: { w: Workout.where(id: session[:current_workout]).first,
+    locals: { w: Workout.find(session[:current_workout]),
     exs: Exercise.includes(:workouts).where(["workouts.id = ?",
     session[:current_workout]]).references(:workouts).limit(10),
     wid: session[:current_workout] }
