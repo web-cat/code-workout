@@ -1,7 +1,7 @@
 -#TODO replace with session data for user
 - uid = user_signed_in? ? current_user.id : 0
 - if w
-  = render w, locals: { w: w }
+  = render partial: w, locals: { w: w }
 
 - if exs.empty?
   .alert No exercises remaining
