@@ -61,16 +61,17 @@ class Tag < ActiveRecord::Base
   #~ pass in an object (Exercise or Workout)
   def self.tag_this_with(obj, t_name, t_type)
     convention = self.normalize(t_name)
-    duplicate = obj.tags.bsearch { |t| t.tag_name == convention }
+    duplicate = obj.tags.bsearch { |t| t.name == convention }
     if duplicate.nil?
-      tagged = Tag.where(tag_name: convention)
+      tagged = Tag.find_by(name: convention)
 
       if tagged.blank?
         tagged = Tag.new
-        tagged.tag_name = convention
+        tagged.name = convention
         tagged.tagtype = t_type
-      else
+      else        
         tagged = tagged.first
+        tagged.taggings_count += 1
       end
 
       if obj.class.name == 'Exercise'
