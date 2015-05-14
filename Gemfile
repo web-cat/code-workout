@@ -26,6 +26,9 @@ gem 'active_record-acts_as'
 gem 'acts_as_list'
 gem 'acts-as-taggable-on'
 gem 'representable'
+gem 'redcarpet'
+gem 'loofah'
+gem 'truncate_html'
 gem 'puma'
 
 # For JSON support
@@ -46,6 +49,10 @@ group :development, :test do
   gem 'rails-erd', github: 'voormedia/rails-erd'
   gem 'immigrant'
   gem 'faker'
+  # Needed for debugging support in Aptana Studio.  Disabled, since these
+  # two gems do not support Ruby 2.0 yet :-(.
+  # gem 'ruby-debug-base'
+  # gem 'ruby-debug-ide'
 end
 gem 'factory_girl_rails'
 gem 'log_file'

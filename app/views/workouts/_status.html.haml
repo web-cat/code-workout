@@ -1,10 +1,10 @@
 -#TODO replace with session data for user
 - uid = user_signed_in? ? current_user.id : 0
 - if w
-  = render partial: w, locals: { w: w }
+  = render partial: w, locals: { w: w, size: 'sm' }
 
 - if exs.empty?
   .alert No exercises remaining
 - else
   = render partial: 'exercises/exercise', collection: exs, as: :x,
-    locals: { uid: uid, wid: w ? w.id : nil }
+    locals: { uid: uid, wid: w ? w.id : nil, size: 'sm' }

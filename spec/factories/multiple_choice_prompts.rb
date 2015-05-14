@@ -12,11 +12,13 @@ FactoryGirl.define do
     allow_multiple false
     is_scrambled true
 
-    # Can't validate during create for some reason, because of actable
-    to_create {|instance| instance.save(validate: false) }
-    after :create do |mcp|
-      # Force validation now, after actable relationship is set up
-      mcp.save!
+    factory :mc_with_choices do
+      after :create do |p|
+        p.choices << FactoryGirl.create(:choice, multiple_choice_prompt: p)
+        p.choices << FactoryGirl.create(:choice,
+          answer: 'The right choice', value: 100, multiple_choice_prompt: p)
+        p.choices << FactoryGirl.create(:choice, multiple_choice_prompt: p)
+      end
     end
   end
 end

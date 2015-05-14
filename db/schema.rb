@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150507164243) do
+ActiveRecord::Schema.define(version: 20150511225412) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -177,7 +177,7 @@ ActiveRecord::Schema.define(version: 20150507164243) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "exercise_id", null: false
-    t.integer  "position",    null: false
+    t.integer  "version",     null: false
     t.integer  "creator_id"
     t.integer  "irt_data_id"
   end
@@ -207,7 +207,7 @@ ActiveRecord::Schema.define(version: 20150507164243) do
     t.integer  "current_version_id"
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer  "versions",                           null: false
+    t.integer  "versions"
     t.integer  "exercise_family_id"
     t.string   "name"
     t.boolean  "is_public",          default: false, null: false
@@ -283,7 +283,7 @@ ActiveRecord::Schema.define(version: 20150507164243) do
     t.string  "actable_type"
   end
 
-  add_index "prompt_answers", ["actable_id"], name: "index_prompt_answers_on_actable_id", unique: true
+  add_index "prompt_answers", ["actable_id"], name: "index_prompt_answers_on_actable_id"
   add_index "prompt_answers", ["attempt_id", "prompt_id"], name: "index_prompt_answers_on_attempt_id_and_prompt_id", unique: true
   add_index "prompt_answers", ["attempt_id"], name: "index_prompt_answers_on_attempt_id"
   add_index "prompt_answers", ["prompt_id"], name: "index_prompt_answers_on_prompt_id"
@@ -300,7 +300,7 @@ ActiveRecord::Schema.define(version: 20150507164243) do
     t.integer  "irt_data_id"
   end
 
-  add_index "prompts", ["actable_id"], name: "index_prompts_on_actable_id", unique: true
+  add_index "prompts", ["actable_id"], name: "index_prompts_on_actable_id"
   add_index "prompts", ["exercise_version_id"], name: "index_prompts_on_exercise_version_id"
 
   create_table "resource_files", force: true do |t|

@@ -77,10 +77,7 @@ class Workout < ActiveRecord::Base
   # -------------------------------------------------------------
   def add_exercise(ex)
     self.exercise_workouts <<
-      ExerciseWorkout.new(
-        workout: self,
-        exercise: ex,
-        position: self.exercises.size)
+      ExerciseWorkout.new(workout: self, exercise: ex)
   end
 
 

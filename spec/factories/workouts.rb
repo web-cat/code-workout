@@ -35,9 +35,10 @@ FactoryGirl.define do
           exercise: FactoryGirl.create(:coding_exercise)
         FactoryGirl.create :exercise_workout,
           workout_id: w.id,
-          exercise: FactoryGirl.create(:coding_exercise,
-            name: 'Factorial 2'),
-          position: 1
+          exercise: FactoryGirl.create(:mc_exercise)
+        FactoryGirl.create :exercise_workout,
+          workout_id: w.id,
+          exercise: FactoryGirl.create(:coding_exercise)
       end
     end
   end

@@ -569,9 +569,9 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # GET exercises/upload_mcqs
   def upload_mcqs
-    if !user_signed_in? || !current_user.global_role.is_instructor?
+    if !user_signed_in? || !current_user.global_role.is_admin?
         redirect_to root_path,
-          notice: 'Need to sign as an instructor first' and return
+          notice: 'You do not have permission to access this page.' and return
     end
   end
 
@@ -579,9 +579,9 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # GET exercises/upload_exercises
   def upload
-    if !user_signed_in? || !current_user.global_role.is_instructor?
+    if !user_signed_in? || !current_user.global_role.is_admin?
         redirect_to root_path,
-          notice: 'Need to sign as an instructor first' and return
+          notice: 'You do not have permission to access this page.' and return
     end
   end
 
@@ -649,68 +649,83 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # POST /exercises/upload_create
   def upload_create
-    if !user_signed_in? || !current_user.global_role.is_instructor?
+    if !user_signed_in? || !current_user.global_role.is_admin?
       redirect_to root_path,
-        notice: 'Need to sign as an instructor first' and return
+          notice: 'You do not have permission to access this page.' and return
     end
-    basex = BaseExercise.new
-    basex.user_id = current_user.id
-    basex.question_type = msg[:question_type] || 1
-    basex.versions = 1
-    questionfile = params[:form]
-    doc = Nokogiri::XML(File.open(questionfile.fetch(:xmlfile).path))
-    questions = doc.xpath('/quiz/question')
-    questions.each do |question|
-      ex = Exercise.new
-      name_ex = question.xpath('./name/text')[0].content
-      question_ex = question.xpath('./questiontext/text')[0].content
-      if !question.xpath('.//generalfeedback/text').empty?
-        feedback_ex = question.xpath('.//generalfeedback/text')[0].content
-      else
-        feedback_ex = ''
-      end
+    puts 'uploaded file = ', params[:form].fetch(:file).path
+    puts 'uploaded file = ', params[:form][:file].path
 
-      if !question.xpath('.//defaultgrade').empty?
-        priority_ex = question.xpath('.//defaultgrade')[0].content
-      else
-        priority_ex = 1.to_s
+    hash = YAML.load(File.read(params[:form][:file].path))
+    exercises = ExerciseRepresenter.for_collection.new([]).from_hash(hash)
+    exercises.each do |e|
+      if !e.save
+        puts 'cannot save exercise, name = ' + e.name.to_s +
+          ', external_id = ' + e.external_id.to_s + ': ' +
+          e.errors.full_messages.to_s
       end
-
-      if !question.xpath('.//penalty').empty?
-        discrimination_ex = question.xpath('.//penalty')[0].content
-      else
-        discrimination_ex = 0.to_s
-      end
-
-      if !question.xpath('.//graderinfo').empty?
-        gradertext_ex = question.xpath('.//graderinfo/text')[0].content
-      else
-        gradertext_ex = ''
-      end
-      # TODO: Sanitize the uploads
-      ex.name = name_ex
-      ex.question = question_ex
-      ex.feedback = feedback_ex
-      ex.is_public = true
-      ex.mcq_allow_multiple = false
-      ex.mcq_is_scrambled = false
-      ex.priority = priority_ex
-      # TODO: Get the count of attempts from the session
-      ex.count_attempts = 1
-      ex.count_correct = 1
-      ex.user_id = current_user.id
-      ex.experience = 20
-
-      # default IRT statistics
-      ex.difficulty = 5
-      ex.discrimination = discrimination_ex
-      ex.version = 1
-      basex.exercises << ex
-      ex.save!
-      basex.current_version = ex
-      basex.save
     end
-    redirect_to exercises_url, notice: 'Uploaded!'
+    puts 'exercises = ',
+      ExerciseRepresenter.for_collection.new(exercises).to_hash.to_yaml
+
+    # basex = BaseExercise.new
+    # basex.user_id = current_user.id
+    # basex.question_type = msg[:question_type] || 1
+    # basex.versions = 1
+    # questionfile = params[:form]
+    # doc = Nokogiri::XML(File.open(questionfile.fetch(:file).path))
+    # questions = doc.xpath('/quiz/question')
+    # questions.each do |question|
+      # ex = Exercise.new
+      # name_ex = question.xpath('./name/text')[0].content
+      # question_ex = question.xpath('./questiontext/text')[0].content
+      # if !question.xpath('.//generalfeedback/text').empty?
+        # feedback_ex = question.xpath('.//generalfeedback/text')[0].content
+      # else
+        # feedback_ex = ''
+      # end
+#
+      # if !question.xpath('.//defaultgrade').empty?
+        # priority_ex = question.xpath('.//defaultgrade')[0].content
+      # else
+        # priority_ex = 1.to_s
+      # end
+#
+      # if !question.xpath('.//penalty').empty?
+        # discrimination_ex = question.xpath('.//penalty')[0].content
+      # else
+        # discrimination_ex = 0.to_s
+      # end
+#
+      # if !question.xpath('.//graderinfo').empty?
+        # gradertext_ex = question.xpath('.//graderinfo/text')[0].content
+      # else
+        # gradertext_ex = ''
+      # end
+      # # TODO: Sanitize the uploads
+      # ex.name = name_ex
+      # ex.question = question_ex
+      # ex.feedback = feedback_ex
+      # ex.is_public = true
+      # ex.mcq_allow_multiple = false
+      # ex.mcq_is_scrambled = false
+      # ex.priority = priority_ex
+      # # TODO: Get the count of attempts from the session
+      # ex.count_attempts = 1
+      # ex.count_correct = 1
+      # ex.user_id = current_user.id
+      # ex.experience = 20
+#
+      # # default IRT statistics
+      # ex.difficulty = 5
+      # ex.discrimination = discrimination_ex
+      # ex.version = 1
+      # basex.exercises << ex
+      # ex.save!
+      # basex.current_version = ex
+      # basex.save
+    # end
+    redirect_to exercises_url, notice: 'Exercise upload complete.'
   end
 
 
@@ -725,7 +740,7 @@ class ExercisesController < ApplicationController
     if( params[:id] )
       @found = Exercise.where(id: params[:id])
       if( @found.empty? )
-        redirect_to exercises_url, notice: "Exercise #{params[:id]} not found"
+        redirect_to exercises_url, notice: "Exercise E#{params[:id]} not found"
       elsif user_signed_in?
         @exercise = @found.first
         # Tighter restrictions for the moment, should go away
@@ -733,11 +748,20 @@ class ExercisesController < ApplicationController
           redirect_to root_path,
             notice: 'Exercise practice is temporarily disabled.' and return
         end
+<<<<<<< HEAD
         #@answers = @exercise.current_version.serve_choice_array
         #@answers.each do |a|
           # TODO: Make make_html work
           #a[:answer] = make_html(a[:answer])
         #end
+=======
+        if @exercise.is_mcq?
+          @answers = @exercise.current_version.serve_choice_array
+          @answers.each do |a|
+            a[:answer] = markdown(a[:answer])
+          end
+        end
+>>>>>>> c9c097bc9fccf0973d3ebdbff112648e9eab506c
         @responses = ['There are no responses yet!']
         @explain = ['There are no explanations yet!']
         if session[:leaf_exercises]
@@ -789,7 +813,7 @@ class ExercisesController < ApplicationController
     if( params[:id] )
       found = Exercise.where(id: params[:id])
       if( found.empty? )
-        redirect_to exercises_url, notice: "Exercise #{params[:id]} not found"
+        redirect_to exercises_url, notice: "Exercise E#{params[:id]} not found"
       else
         @exercise = found.first
         attempt = Attempt.new(user_id: current_user.id, exercise_version_id: @exercise.current_version_id, 
@@ -812,7 +836,7 @@ class ExercisesController < ApplicationController
           end
           @responses = @responses.compact
           @responses.each do |answer|
-            answer[:answer] = make_html(answer[:answer])
+            answer[:answer] = markdown(answer[:answer])
           end
           @score = @exercise.score(@responses)
           if session[:current_workout]
@@ -851,7 +875,7 @@ class ExercisesController < ApplicationController
             puts "IMPROPER PROMPT","IMPROPER PROMPT"
           end                  
           
-        end        
+        end
         if params[:wexes]
           session[:remaining_wexes] = params[:wexes]
           if params[:wexes][1..-1].count < 1
@@ -871,17 +895,17 @@ class ExercisesController < ApplicationController
             #   wexes: params[:wexes],
             #   feedback_return: true,att_id: attempt_id),
             #   format: :js # and return
-          else            
+          else
             respond_to do |format|
               format.js
             end
             # redirect_to exercise_practice_path(id: params[:wexes].first,
             #   wexes: @wexs,att_id: attempt_id) and return
           end
-        else          
+        else
           respond_to do |format|
               format.js
-          end         
+          end
           #redirect_to exercise_practice_path(@exercise,
           #  feedback_return: true,att_id: attempt_id) and return
         end

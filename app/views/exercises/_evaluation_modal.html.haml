@@ -1,5 +1,6 @@
 #evaluation_modal.modal.modal-wide.hide.fade
-  = semantic_form_for @exercise, html: { class: 'modal-form form-horizontal' } do |f|
+  = semantic_form_for @exercise,
+    html: { class: 'modal-form form-horizontal' } do |f|
     .modal-header
       -#= close_button_tag dismiss: 'modal'
       %h3 Results
@@ -8,7 +9,7 @@
       #flashbar-placeholder
       %h2= @exercise.name + ": " + @score.to_s + "% Correct"
       - @explain.each do |ex|
-        %p= make_html(ex)
+        %p= markdown(ex)
       %h2= @xp.to_s + " XP earned"
 
       -#TO DO buttons for Try Again (dismiss), See Answer, Next Question

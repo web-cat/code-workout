@@ -15,7 +15,7 @@
 #
 # Indexes
 #
-#  index_prompts_on_actable_id           (actable_id) UNIQUE
+#  index_prompts_on_actable_id           (actable_id)
 #  index_prompts_on_exercise_version_id  (exercise_version_id)
 #
 

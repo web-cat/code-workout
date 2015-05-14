@@ -9,7 +9,7 @@
         %i.fa.fa-terminal.fa-stack-1x.fa-inverse
     - else
       %i.fa-pencil-square-o
-    = link_to x.name, exercise_practice_path(:id => x[:id])
+    = link_to x.display_name, exercise_practice_path(:id => x[:id])
   .summary
     .radial-progress
       .circle

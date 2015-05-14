@@ -4,9 +4,10 @@ class MultipleChoicePromptRepresenter < Representable::Decorator
 
   self.representation_wrap = :multiple_choice_prompt
 
+  property :position
   property :question
-  property :mcq_allow_multiple
-  property :mcq_is_scrambled
+  property :allow_multiple
+  property :is_scrambled
   collection :choices, class: Choice do
     property :answer
     property :value

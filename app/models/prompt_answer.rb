@@ -10,7 +10,7 @@
 #
 # Indexes
 #
-#  index_prompt_answers_on_actable_id                (actable_id) UNIQUE
+#  index_prompt_answers_on_actable_id                (actable_id)
 #  index_prompt_answers_on_attempt_id                (attempt_id)
 #  index_prompt_answers_on_attempt_id_and_prompt_id  (attempt_id,prompt_id) UNIQUE
 #  index_prompt_answers_on_prompt_id                 (prompt_id)

@@ -29,8 +29,8 @@ class MultipleChoicePrompt < ActiveRecord::Base
 
   #~ Validation ...............................................................
 
-	validates :allow_multiple, presence: true
-	validates :is_scrambled, presence: true
+	validates :allow_multiple, inclusion: [true, false]
+	validates :is_scrambled, inclusion: [true, false]
 
 
   #~ Class methods.............................................................

@@ -7,7 +7,7 @@
 #  current_version_id :integer
 #  created_at         :datetime
 #  updated_at         :datetime
-#  versions           :integer          not null
+#  versions           :integer
 #  exercise_family_id :integer
 #  name               :string(255)
 #  is_public          :boolean          default(FALSE), not null
