@@ -2,7 +2,7 @@
 %article.workout.thumbnail{ class: size }
   .title
     %i.fa.fa-folder-open
-    = link_to w.name, workout_path(:id => w[:id])
+    = link_to w.name, workout_path(id: w[:id])
     %span.badge.badge-info= w.exercises.count.to_s
   .summary
     .radial-progress
