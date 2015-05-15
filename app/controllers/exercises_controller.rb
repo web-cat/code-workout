@@ -851,15 +851,15 @@ class ExercisesController < ApplicationController
           @xp = @exercise.experience_on(@responses, session[:submit_num])
           record_attempt(@score, @xp)
         elsif @exercise.is_coding?
-<<<<<<< HEAD
-          CodeWorker.new.async.perform(
-            @exercise.current_version.prompts.first.specific.class_name,
-            @exercise.id,
-            @user_id,
-            params[:exercise][:answer_code],
-            session[:current_workout],
-            @att_id)
-=======
+
+#          CodeWorker.new.async.perform(
+#            @exercise.current_version.prompts.first.specific.class_name,
+#            @exercise.id,
+#            @user_id,
+#            params[:exercise][:answer_code],
+#            session[:current_workout],
+#            @att_id)
+
             # FIXME: Need to make it work for multiple prompts
             prompt_question =  CodingPrompt.find(@exercise.current_version.prompts.first.actable_id)
             prompt_answer = CodingPromptAnswer.new(attempt_id: @att_id,
@@ -872,12 +872,13 @@ class ExercisesController < ApplicationController
               @exercise.current_version,
               @user_id,
               params[:exercise][:answer_code],
-              session[:current_workout],@att_id,prompt_answer.id)
+              session[:current_workout],
+              @att_id,
+              prompt_answer.id)
           else
             puts "IMPROPER PROMPT","IMPROPER PROMPT"
           end
 
->>>>>>> b0ee7e1248c2883447129b74937181a69f963593
         end
         if params[:wexes]
           session[:remaining_wexes] = params[:wexes]
