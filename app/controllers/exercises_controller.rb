@@ -741,22 +741,27 @@ class ExercisesController < ApplicationController
     if !user_signed_in?
       redirect_to root_path, notice: 'Need to sign in first' and return
     end
-    if( params[:id] )
-      found = Exercise.where(id: params[:id])
-      if( found.empty? )
+    if params[:id]
+      @exercise = Exercise.find(params[:id])
+      if !@exercise
         redirect_to exercises_url, notice: "Exercise E#{params[:id]} not found"
       else
-        @exercise = found.first
-        attempt = Attempt.new(user_id: current_user.id, exercise_id: @exercise.id,submit_time: Time.now, submit_num: 1,answer: params[:exercise][:answer_code],workout_id: session[:current_workout])
+        attempt = Attempt.new(
+          user: current_user,
+          exercise_version: @exercise.current_version,
+          submit_time: Time.now,
+          submit_num: 1,
+#          answer: params[:exercise][:answer_code],
+#          workout_id: session[:current_workout]
+          )
         attempt.save
-        attempt_id = attempt.id
-        @att_id = attempt_id
+        @att_id = attempt.id
         @user_id = current_user.id
-        if @exercise.base_exercise.is_mcq?
+        if @exercise.is_mcq?
           response_ids = params[:exercise][:exercise][:choice_ids]
           p params
           @responses = Array.new
-          if @exercise.mcq_allow_multiple
+          if @exercise.current_version.prompts.first.specific.allow_multiple
             response_ids.each do |r|
               @responses.push(Choice.where(id: r).first)
             end
@@ -786,12 +791,14 @@ class ExercisesController < ApplicationController
           count_submission()
           @xp = @exercise.experience_on(@responses, session[:submit_num])
           record_attempt(@score, @xp)
-        elsif @exercise.base_exercise.is_coding?
-          CodeWorker.new.async.perform(@exercise.coding_question.class_name,
+        elsif @exercise.is_coding?
+          CodeWorker.new.async.perform(
+            @exercise.current_version.prompts.first.specific.class_name,
             @exercise.id,
             @user_id,
             params[:exercise][:answer_code],
-            session[:current_workout],@att_id)
+            session[:current_workout],
+            @att_id)
         end
         if params[:wexes]
           session[:remaining_wexes] = params[:wexes]
@@ -810,7 +817,7 @@ class ExercisesController < ApplicationController
             end
             # redirect_to exercise_practice_path(@exercise,
             #   wexes: params[:wexes],
-            #   feedback_return: true,att_id: attempt_id),
+            #   feedback_return: true,att_id: @att_id),
             #   format: :js # and return
           else
             respond_to do |format|

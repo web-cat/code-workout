@@ -1,17 +1,19 @@
 # app/workers/code_worker.rb
 require 'csv'
 require 'fileutils'
+require "#{Rails.root}/usr/resources/Java/java_config"
 
 class CodeWorker
   include SuckerPunch::Job
   workers 20
   # sidekiq_options retry: false, backtrace: true
 
-  def perform(class_name, exid, uid, user_code, wktid,attempt_id)
+  def perform(class_name, exid, uid, user_code, wktid, attempt_id)
     ActiveRecord::Base.connection_pool.with_connection do
       ex = Exercise.find(exid)
-      if !ex.coding_question.wrapper_code.blank?
-        user_code = ex.coding_question.wrapper_code.sub(/___/, user_code)
+      if !ex.current_version.prompts.first.specific.wrapper_code.blank?
+        user_code = ex.current_version.prompts.first.specific.
+          wrapper_code.sub(/___/, user_code)
       end
       current_attempt = attempt_id
       current_attempt = current_attempt.to_s
@@ -36,7 +38,7 @@ class CodeWorker
       term_dir = term_dir + term_name
       if !Dir.exist?(term_dir)
         Dir.mkdir(term_dir)
-      end      
+      end
       attempt_dir = term_dir + '/' + current_attempt
       puts "DIRECTORY",attempt_dir,"DIRECTORY"
       if !Dir.exist?(attempt_dir)
@@ -56,7 +58,7 @@ class CodeWorker
 
       # This "switch" based on language type needs to be refactored
       # to be more OO
-      
+
         if language == "Java"
           result = execute_javatest(class_name, attempt_dir)
         elsif language == "Ruby"
@@ -64,14 +66,14 @@ class CodeWorker
         elsif language == "Python"
           result = execute_pythontest(class_name, attempt_dir)
         end # IF INNERMOST
-      
+
 
       correct = 0.0
       total = 0.0
       # print "RESULT",result,"RESULT"
       puts "FILE SIZE",
         File.size?(class_name + "_#{language}_results.csv").class
-      puts "JAHAERYS", class_name + "_#{language}_results.csv"  
+      puts "JAHAERYS", class_name + "_#{language}_results.csv"
       if File.size?(class_name + "_#{language}_results.csv").nil?
         feedback = result.split("#{class_name}Test")[2]
         puts "CODE-ERROR-FEEDBACK", "CODE-ERROR-FEEDBACK"
@@ -101,8 +103,8 @@ class CodeWorker
         end  # CSV end
       end
       record_attempt(ex, uid, user_code, wktid, correct, total,attempt_id)
-      ActiveSupport::Notifications.instrument("record_#{current_attempt}_attempt", extra: :nothing) do              
-        puts "SKYFALL","SKYFALL","SKYFALL","SKYFALL"        
+      ActiveSupport::Notifications.instrument("record_#{current_attempt}_attempt", extra: :nothing) do
+        puts "SKYFALL","SKYFALL","SKYFALL","SKYFALL"
      end
     end
   end
@@ -132,7 +134,7 @@ class CodeWorker
     # wkt = Workout.find_by_sql(" SELECT * FROM workouts INNER JOIN
     #   exercise_workouts ON workouts.id = exercise_workouts.workout_id
     #   and exercise_workouts.exercise_id = #{session[:exercise_id]}")
-    if wktid      
+    if wktid
       wkt = Workout.find(wktid)
       attempt.workout = wkt
       wo = WorkoutOffering.find_by workout_id: wkt.id
@@ -155,7 +157,7 @@ class CodeWorker
       tcr.pass = false
     end
     tcr.execution_feedback = feedback
-    Attempt.find(att_id).test_case_results << tcr 
+    Attempt.find(att_id).test_case_results << tcr
     TestCase.find(testcaseid).test_case_results << tcr
     tcr.save!
   end
@@ -202,13 +204,14 @@ class CodeWorker
 
 
   def execute_javatest(class_name, attempt_dir)
-    classpath = Dir['usr/resources/Java/*.jar'].join(':')
-    cmd = "javac -cp #{classpath} #{attempt_dir}/*.java " +
+    cmd = CodeWorkout::Config::JAVA[:compile_cmd] +
+      " #{attempt_dir}/*.java " +
       ">> #{attempt_dir}/compile.log " +
       "2>> #{attempt_dir}/compile.log"
     puts "javac command = ", cmd
     if system(cmd)
-      cmd = "java -cp #{classpath}:#{attempt_dir} #{class_name}TestRunner " +
+      cmd = CodeWorkout::Config::JAVA[:run_cmd] +
+        ":#{attempt_dir} #{class_name}TestRunner " +
         ">> #{attempt_dir}/run.log " +
         "2>> #{attempt_dir}/run.log"
       puts "java command = ", cmd

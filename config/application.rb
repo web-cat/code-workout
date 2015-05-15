@@ -23,8 +23,5 @@ module CodeWorkout
 
     # Custom directories with classes and modules you want to be autoloadable.
     # config.autoload_paths += %W(#{config.root}/extras)
-    config.autoload_paths += %W(
-      #{config.root}/representers
-    )
   end
 end
