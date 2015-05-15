@@ -37,6 +37,7 @@ ActiveRecord::Schema.define(version: 20150511225412) do
     t.integer  "experience_earned"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer  "workout_id"
     t.integer  "workout_score_id"
     t.integer  "active_score_id"
   end
@@ -44,6 +45,7 @@ ActiveRecord::Schema.define(version: 20150511225412) do
   add_index "attempts", ["active_score_id"], name: "index_attempts_on_active_score_id"
   add_index "attempts", ["exercise_version_id"], name: "index_attempts_on_exercise_version_id"
   add_index "attempts", ["user_id"], name: "index_attempts_on_user_id"
+  add_index "attempts", ["workout_id"], name: "index_attempts_on_workout_id"
   add_index "attempts", ["workout_score_id"], name: "index_attempts_on_workout_score_id"
 
   create_table "attempts_tag_user_scores", id: false, force: true do |t|
@@ -379,9 +381,11 @@ ActiveRecord::Schema.define(version: 20150511225412) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.boolean  "pass",                    null: false
+    t.integer  "attempt_id"
     t.integer  "coding_prompt_answer_id"
   end
 
+  add_index "test_case_results", ["attempt_id"], name: "index_test_case_results_on_attempt_id"
   add_index "test_case_results", ["coding_prompt_answer_id"], name: "index_test_case_results_on_coding_prompt_answer_id"
   add_index "test_case_results", ["test_case_id"], name: "index_test_case_results_on_test_case_id"
   add_index "test_case_results", ["user_id"], name: "index_test_case_results_on_user_id"

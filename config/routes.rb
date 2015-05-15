@@ -43,6 +43,8 @@ CodeWorkout::Application.routes.draw do
     get '/' => 'workouts#gym', as: :gym
 
     # /gym/exercises ...
+    get  'exercises_import' => 'exercises#upload_yaml'
+    post  'exercises_yaml_create' => 'exercises#yaml_create'
     get  'exercises/upload' => 'exercises#upload', as: :exercises_upload
     get  'exercises/download' => 'exercises#download', as: :exercises_download
     post 'exercises/upload_create' => 'exercises#upload_create'

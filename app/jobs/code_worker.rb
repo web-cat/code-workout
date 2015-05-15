@@ -8,19 +8,23 @@ class CodeWorker
   workers 20
   # sidekiq_options retry: false, backtrace: true
 
-  def perform(class_name, exid, uid, user_code, wktid, attempt_id)
+#  def perform(class_name, exid, uid, user_code, wktid, attempt_id)
+#    ActiveRecord::Base.connection_pool.with_connection do
+#      ex = Exercise.find(exid)
+#      if !ex.current_version.prompts.first.specific.wrapper_code.blank?
+#        user_code = ex.current_version.prompts.first.specific.
+#          wrapper_code.sub(/___/, user_code)
+  def perform(prompt_question, exercise_version, uid, user_code, wktid,attempt_id,prompt_answer_id)
     ActiveRecord::Base.connection_pool.with_connection do
-      ex = Exercise.find(exid)
-      if !ex.current_version.prompts.first.specific.wrapper_code.blank?
-        user_code = ex.current_version.prompts.first.specific.
-          wrapper_code.sub(/___/, user_code)
+      ex = exercise_version.exercise
+      if !prompt_question.wrapper_code.blank?
+        code_body = prompt_question.wrapper_code.sub(/___/, user_code)
       end
       current_attempt = attempt_id
       current_attempt = current_attempt.to_s
       language = ex.language
 
-      # code_body = ex.coding_question.wrapper_code.sub('___',user_code)
-      code_body = user_code
+
       lang =  Exercise.extension_of(language)
       # codeworkout_home=`echo $CODEWORKOUT`
 
@@ -47,24 +51,24 @@ class CodeWorker
       end
       if !Dir[attempt_dir].empty?
         puts 'WARNING, OVERWRITING EXISTING DIRECTORY'
-        system "yes | rm -rf #{current_attempt}"
+        system "yes | rm -rf #{attempt_dir}"
       end
       Dir.mkdir(attempt_dir)
-      File.open(attempt_dir + '/' + class_name + '.' + lang, 'w') do |f|
+      File.open(attempt_dir + '/' + prompt_question.class_name + '.' + lang, 'w') do |f|
         f.write(code_body)
       end
-      system "yes | cp -rf usr/resources/#{language}/#{class_name}*.#{lang} " +
+      system "yes | cp -rf usr/resources/#{language}/#{prompt_question.class_name}*.#{lang} " +
         "#{attempt_dir}"
 
       # This "switch" based on language type needs to be refactored
       # to be more OO
 
         if language == "Java"
-          result = execute_javatest(class_name, attempt_dir)
+          result = execute_javatest(prompt_question.class_name, attempt_dir)
         elsif language == "Ruby"
-          result = execute_rubytest(class_name, attempt_dir)
+          result = execute_rubytest(prompt_question.class_name, attempt_dir)
         elsif language == "Python"
-          result = execute_pythontest(class_name, attempt_dir)
+          result = execute_pythontest(prompt_question.class_name, attempt_dir)
         end # IF INNERMOST
 
 
@@ -72,12 +76,12 @@ class CodeWorker
       total = 0.0
       # print "RESULT",result,"RESULT"
       puts "FILE SIZE",
-        File.size?(class_name + "_#{language}_results.csv").class
-      puts "JAHAERYS", class_name + "_#{language}_results.csv"
-      if File.size?(class_name + "_#{language}_results.csv").nil?
-        feedback = result.split("#{class_name}Test")[2]
+        File.size?(prompt_question.class_name + "_#{language}_results.csv").class
+      puts "JAHAERYS", prompt_question.class_name + "_#{language}_results.csv"
+      if File.size?(prompt_question.class_name + "_#{language}_results.csv").nil?
+        feedback = result.split("#{prompt_question.class_name}Test")[2]
         puts "CODE-ERROR-FEEDBACK", "CODE-ERROR-FEEDBACK"
-        ex.coding_question.test_cases.each_with_index do |tc,i|
+        prompt_question.test_cases.each_with_index do |tc,i|
           record_test_case_result(uid, 0.0, ex,
             "CODE-ERROR-CODE-ERROR " + feedback.to_s, i)
         end
@@ -85,10 +89,10 @@ class CodeWorker
         total = 1.0
       else
         puts "ASSERTIONS-FEEDBACK","ASSERTIONS-FEEDBACK"
-        CSV.foreach(class_name + "_#{language}_results.csv") do |line|
-          weight = ex.coding_question.
+        CSV.foreach(prompt_question.class_name + "_#{language}_results.csv") do |line|
+          weight = prompt_question.
             test_cases[line[2].to_i - 1].weight
-          test_case_negative_feedback = ex.coding_question.
+          test_case_negative_feedback = prompt_question.
             test_cases[line[2].to_i - 1].negative_feedback
           correct += line[0].to_f * weight
           line[0].to_f >= 1.0 ?
@@ -98,11 +102,11 @@ class CodeWorker
             feedback = 'Test case not completely passed' +
             test_case_negative_feedback
           record_test_case_result(
-            uid, line[0].to_f, ex, feedback, line[2].to_i - 1,attempt_id)
+            uid, line[0].to_f, prompt_question, feedback, line[2].to_i - 1,attempt_id,prompt_answer_id)
           total += weight
         end  # CSV end
       end
-      record_attempt(ex, uid, user_code, wktid, correct, total,attempt_id)
+      record_attempt(ex, uid, user_code, wktid, correct, total, attempt_id)
       ActiveSupport::Notifications.instrument("record_#{current_attempt}_attempt", extra: :nothing) do
         puts "SKYFALL","SKYFALL","SKYFALL","SKYFALL"
      end
@@ -118,14 +122,13 @@ class CodeWorker
     exWorkout = ExerciseWorkout.find_by(exercise_id: ex.id, workout_id: wktid)
     multiplier = exWorkout ? exWorkout.points : 1.0
     scr = correct * multiplier / total_weight
-    if wktid
-      record_workout_score(uid, scr, ex.id, wktid)
-    end
     attempt = Attempt.find(aid)
+    if wktid
+      attempt.workout_score_id = record_workout_score(uid, scr, ex.current_version_id, wktid)
+    end
     # TODO Make the submission count dynamic
     attempt.submit_num = 1
     attempt.submit_time = Time.now
-    attempt.answer = user_code
     attempt.score = scr
     # TODO Make the experience earned dynamic
     attempt.experience_earned = 10
@@ -134,21 +137,13 @@ class CodeWorker
     # wkt = Workout.find_by_sql(" SELECT * FROM workouts INNER JOIN
     #   exercise_workouts ON workouts.id = exercise_workouts.workout_id
     #   and exercise_workouts.exercise_id = #{session[:exercise_id]}")
-    if wktid
-      wkt = Workout.find(wktid)
-      attempt.workout = wkt
-      wo = WorkoutOffering.find_by workout_id: wkt.id
-      if wo
-        attempt.workout_offering_id = wo.id
-      end
-    end
-    ex.attempts << attempt
+    ex.current_version.attempts << attempt
     attempt.save!
   end
 
 
-  def record_test_case_result(uid, score, ex, feedback, index,att_id)
-    testcaseid = ex.coding_question.test_cases[index].id
+  def record_test_case_result(uid, score, prompt_question, feedback, index,att_id,prompt_answer_id)
+    testcaseid = prompt_question.test_cases[index].id
     tcr = TestCaseResult.new
     tcr.user_id = uid
     if score >= 1.0
@@ -157,13 +152,14 @@ class CodeWorker
       tcr.pass = false
     end
     tcr.execution_feedback = feedback
-    Attempt.find(att_id).test_case_results << tcr
+    tcr.coding_prompt_answer_id = prompt_answer_id
+    #Attempt.find(att_id).test_case_results << tcr
     TestCase.find(testcaseid).test_case_results << tcr
     tcr.save!
   end
 
 
-  def record_workout_score(uid, score, exer_id, wkt_id)
+  def record_workout_score(uid, score, ex_version_id, wkt_id)
     scoring = WorkoutScore.find_by(user_id: uid, workout_id: wkt_id)
     current_workout = Workout.find(wkt_id)
 
@@ -178,9 +174,10 @@ class CodeWorker
       current_workout.workout_scores << scoring
       User.find(uid).workout_scores << scoring
     else # At least one exercise has been attempted as a part of the workout
-      user_exercise_score = Attempt.user_attempt(uid, exer_id).andand.score
       scoring.score += score
       scoring.last_attempted_at = Time.now
+      user_exercise_score = Attempt.find_by(user_id: uid,
+        exercise_version_id: ex_version_id, workout_id: wkt_id).andand.score
       if user_exercise_score
         scoring.score -= user_exercise_score
       else
@@ -200,6 +197,7 @@ class CodeWorker
       end
     end
     scoring.save!
+    return scoring.id
   end
 
 

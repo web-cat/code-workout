@@ -302,11 +302,11 @@ class ExercisesController < ApplicationController
   def random_exercise
     exercise_dump = []
     if params[:language]
-      BaseExercise.all.each do |baseexercise|
+      Exercise.all.each do |baseexercise|
         candidate_exercise = baseexercise.current_version
         if candidate_exercise &&
-          candidate_exercise.is_public &&
-          candidate_exercise.language == params[:language]
+          baseexercise.is_public &&
+          baseexercise.language == params[:language]
           exercise_dump << candidate_exercise
         elsif !candidate_exercise
           puts "ERROR: base exercise #{baseexercise.id} with current " +
@@ -316,10 +316,10 @@ class ExercisesController < ApplicationController
       end   # DO WHILE
 
     elsif params[:question_type]
-      BaseExercise.where(question_type: params[:question_type].to_i).
+      Exercise.where(question_type: params[:question_type].to_i).
         find_each do |baseexercise|
         candidate_exercise = baseexercise.current_version
-        if candidate_exercise && candidate_exercise.is_public
+        if candidate_exercise && baseexercise.is_public
           exercise_dump << candidate_exercise
         elsif !candidate_exercise
           puts "ERROR: base exercise #{baseexercise.id} with current " +
@@ -328,9 +328,9 @@ class ExercisesController < ApplicationController
         end # INNER IF
       end   # DO WHILE
     else
-      BaseExercise.all.each do |baseexercise|
+      Exercise.all.each do |baseexercise|
         candidate_exercise = baseexercise.current_version
-        if candidate_exercise && candidate_exercise.is_public
+        if candidate_exercise && baseexercise.is_public
           exercise_dump << candidate_exercise
         elsif !candidate_exercise
           puts "ERROR: base exercise #{baseexercise.id} with current " +
@@ -339,6 +339,7 @@ class ExercisesController < ApplicationController
         end # INNER IF
       end   # DO WHILE
     end #OUTER IF
+    puts "VICTARION",exercise_dump.sample,"VICTARION"
     redirect_to exercise_practice_path(exercise_dump.sample) and return
   end
 
@@ -584,6 +585,66 @@ class ExercisesController < ApplicationController
     end
   end
 
+  def upload_yaml
+
+  end
+
+  def yaml_create
+    @yaml_exers = YAML.load_file(params[:form].fetch(:yamlfile).path)
+    @yaml_exers.each do |exercise|
+      @ex = Exercise.new
+      @ex.name = exercise['name']
+      @ex.external_id = exercise['external_id']
+      @ex.is_public = exercise['is_public']
+      @ex.experience = exercise['experience']
+      exercise['language_list'].split(",").each do |lang|
+        print "\nLanguage: ", lang
+      end
+      exercise['style_list'].split(",").each do |style|
+        print "\nStyle: ", style
+      end
+      exercise['tag_list'].split(",").each do |tag|
+        print "\nTag: ", tag
+      end
+      version = exercise['current_version']
+      @ex.versions = version['version']
+      @ex.save!
+
+
+      @version = ExerciseVersion.new(exercise: @ex,creator_id:
+                 User.find_by(email: version['creator']).andand.id,
+                 exercise: @ex,
+                 position:1)
+      @version.save!
+      version['prompts'].each do |prompt|
+        # FIXME: Need to incorporate mcqs too.
+        prompt = prompt['coding_prompt']
+        @prompt = CodingPrompt.new(exercise_version: @version)
+        @prompt.question = prompt['question']
+        @prompt.position = prompt['position']
+        @prompt.feedback = prompt['feedback']
+        @prompt.class_name = prompt['class_name']
+        @prompt.method_name = prompt['method_name']
+        @prompt.starter_code = prompt['starter_code']
+        @prompt.wrapper_code = prompt['wrapper_code']
+        @prompt.test_script = prompt['tests']
+        @prompt.actable_id = rand(100)
+        @prompt.save!
+
+        prompt['tests'].split(/\r?\n/).each do |test|
+          t = test.split(";")
+          tc = TestCase.new(test_script: "None", weight: 1.0, coding_prompt: @prompt)
+          tc.description = t[2]
+          tc.negative_feedback = t[3]
+          tc.input = t[0]
+          tc.expected_output = t[1]
+          tc.save!
+        end
+      end
+
+    end
+    redirect_to exercises_path
+  end
 
   # -------------------------------------------------------------
   # POST /exercises/upload_create
@@ -750,9 +811,7 @@ class ExercisesController < ApplicationController
           user: current_user,
           exercise_version: @exercise.current_version,
           submit_time: Time.now,
-          submit_num: 1,
-#          answer: params[:exercise][:answer_code],
-#          workout_id: session[:current_workout]
+          submit_num: 1
           )
         attempt.save
         @att_id = attempt.id
@@ -792,6 +851,7 @@ class ExercisesController < ApplicationController
           @xp = @exercise.experience_on(@responses, session[:submit_num])
           record_attempt(@score, @xp)
         elsif @exercise.is_coding?
+<<<<<<< HEAD
           CodeWorker.new.async.perform(
             @exercise.current_version.prompts.first.specific.class_name,
             @exercise.id,
@@ -799,6 +859,25 @@ class ExercisesController < ApplicationController
             params[:exercise][:answer_code],
             session[:current_workout],
             @att_id)
+=======
+            # FIXME: Need to make it work for multiple prompts
+            prompt_question =  CodingPrompt.find(@exercise.current_version.prompts.first.actable_id)
+            prompt_answer = CodingPromptAnswer.new(attempt_id: @att_id,
+              prompt_id: Prompt.find_by(exercise_version_id: @exercise.current_version_id).id,
+              actable_id: rand(10000),
+              answer: params[:exercise][:answer_code]
+              )
+          if prompt_answer.save!
+            CodeWorker.new.async.perform( prompt_question,
+              @exercise.current_version,
+              @user_id,
+              params[:exercise][:answer_code],
+              session[:current_workout],@att_id,prompt_answer.id)
+          else
+            puts "IMPROPER PROMPT","IMPROPER PROMPT"
+          end
+
+>>>>>>> b0ee7e1248c2883447129b74937181a69f963593
         end
         if params[:wexes]
           session[:remaining_wexes] = params[:wexes]

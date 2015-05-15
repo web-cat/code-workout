@@ -1,12 +1,12 @@
 %h2 Feedback
 - attempt = nil
-- attempts = Attempt.where(user_id: current_user.id,exercise_id: @exercise.id)
+- attempts = Attempt.where(user_id: current_user.id,exercise_version_id: @exercise.current_version_id)
 - if attempts.any?
   - attempt = attempts.last
   - puts "ATTEMPT ",attempt.id,"ATTEMPT ","ATTEMPTis "
-  - if @exercise.base_exercise.is_mcq?
+  - if @exercise.is_mcq?
     = Choice.find(attempt.answer.to_i).feedback
-  - elsif @exercise.base_exercise.is_coding?
+  - elsif @exercise.is_coding?
     %table.table.table-striped.feedback
       %thead
         %tr
@@ -14,11 +14,17 @@
           %th Result
       %tbody
         - puts "IJD","IJD",TestCaseResult.where(attempt_id: attempt.id).last,"IJD","IJD"
-        - @exercise.coding_question.test_cases.each_with_index do |test_case, i|
+        - CodingPrompt.find(@exercise.current_version.prompts.first.actable_id).test_cases.each_with_index do |test_case, i|
           %tr
             %td
+              - puts "TEST CASE"
+              - p test_case
+              - puts "TEST CASE"
               - tcr = TestCaseResult.all.order('id desc').                    |
                 find_by(test_case_id: test_case.id, user_id: current_user.id) |
+              - puts "TCR"
+              - p tcr
+              - puts "TCR"
               - if tcr.execution_feedback.include?("CODE-ERROR-CODE-ERROR")
                 CODE EXECUTION ERROR
                 = tcr.execution_feedback
