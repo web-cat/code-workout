@@ -49,10 +49,6 @@ class PromptAnswer < ActiveRecord::Base
   validates :attempt, presence: true
   validates :prompt, presence: true
 
-  # For actable
-  validates :actable_id, presence: true
-  validates :actable_type, presence: true
-
 
   #~ Class methods.............................................................
 

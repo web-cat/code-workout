@@ -3,9 +3,8 @@
 # Table name: coding_prompt_answers
 #
 #  id     :integer          not null, primary key
-#  answer :text             not null
+#  answer :text
 #
-
 
 # =============================================================================
 # Represents one coding prompt answer in an exercise attempt.  In spirit,
@@ -28,5 +27,6 @@ class CodingPromptAnswer < ActiveRecord::Base
   # There may be cases where a user attempts an exercise but does not
   # answer all prompts, and that would constitute an empty answer. We
   # want to allow that, so do not add validations preventing it.
+
 
 end

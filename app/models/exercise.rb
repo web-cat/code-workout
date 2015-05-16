@@ -169,15 +169,16 @@ class Exercise < ActiveRecord::Base
   private
 
   def set_defaults
-    self.question_type ||= Q_MC
-    self.name ||= ''
-    self.is_public ||= true
-    self.experience ||= 10
-
     # Update current_version if necessary
     if !self.current_version
       self.current_version = self.exercise_versions.first
     end
+
+    self.question_type ||=
+      current_version ? current_version.question_type : Q_MC
+    self.name ||= ''
+    self.is_public ||= true
+    self.experience ||= 10
   end
 
 end

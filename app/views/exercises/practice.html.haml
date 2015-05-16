@@ -1,41 +1,45 @@
 = render partial: 'layouts/breadcrumb',
   locals: {wid: session[:current_workout], exid: @exercise.id, off: nil}
 .col-md-7
-  = semantic_form_for @exercise, url: exercise_evaluate_path(@exercise,
+  = semantic_form_for @exercise_version,
+    url: exercise_evaluate_path(@exercise_version.exercise,
+    exercise_version_id: @exercise_version.id,
     wexes: params[:wexes], feedback_return: true), remote: true do |f|
     = f.semantic_errors
     %h1= @exercise.name
-    - if @exercise.current_version.stem
-      = markdown @exercise.current_version.stem.preamble
-    = markdown @exercise.current_version.prompts.first.question
-    - if @exercise.is_mcq?
-      - if @exercise.current_version.prompts.first.specific.allow_multiple
+    - if @exercise_version.stem
+      = markdown @exercise_version.stem.preamble
+    - prompt = @exercise_version.prompts.first.specific
+    = markdown prompt.question
+    - if prompt.is_mcq?
+      - answer = @attempt.prompt_answers.first.specific
+      - if prompt.allow_multiple
         %h2 Choose ALL that apply:
         .answers
-          = f.semantic_fields_for @ex_attempt do |exa|
-            = exa.input :choice_ids,
+          = f.semantic_fields_for answer do |p|
+            = p.input :choice_ids,
               as: :check_boxes,
               collection: @answers,
               member_value: :id,
               member_label: :answer,
               selected: false,
-              label: '&nbsp;ß'
+              label: '&nbsp;'
       - else
         %h3 Select one answer:
         .answers
-          = f.semantic_fields_for @exercise.current_version.prompts.first.specific do |p|
+          = f.semantic_fields_for answer do |p|
             = p.input :choice_ids,
               as: :radio,
               collection: @answers,
               member_value: :id,
               member_label: :answer,
               label: '&nbsp;'
-    - elsif @exercise.is_coding?
-      = f.input :answer_code, as: :text, class: 'code',                        |
-        input_html: {                                                          |
-          lang: 'text/x-' + (@exercise.language || 'java').downcase,           |
-          value: @exercise.current_version.prompts.first.specific.starter_code |
-        }                                                                      |
+    - elsif prompt.is_coding?
+      = f.input :answer_code, as: :text, class: 'code',                  |
+        input_html: {                                                    |
+          lang: 'text/x-' + (@exercise.language || 'java').downcase,     |
+          value: prompt.starter_code                                     |
+        }                                                                |
     .actions
       = f.submit 'Check my answer!', class: 'btn btn-primary'
     - if session[:current_workout].nil?

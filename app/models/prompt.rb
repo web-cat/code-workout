@@ -75,4 +75,32 @@ class Prompt < ActiveRecord::Base
 
   # TODO: methods for calculating scores, difficulty, and discrimination
 
+  # -------------------------------------------------------------
+  def question_type
+    specific.question_type
+  end
+
+
+  # -------------------------------------------------------------
+  def is_mcq?
+    specific.is_mcq?
+  end
+
+
+  # -------------------------------------------------------------
+  def is_coding?
+    specific.is_coding?
+  end
+
+
+  # -------------------------------------------------------------
+  def new_answer(args)
+    answer = specific.new_answer(args)
+    answer.attempt = args[:attempt]
+    args[:attempt].prompt_answers << answer
+    answer.prompt = self
+    prompt_answers << answer
+    answer
+  end
+
 end

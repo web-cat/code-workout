@@ -38,4 +38,27 @@ class MultipleChoicePrompt < ActiveRecord::Base
 
   #~ Instance methods .........................................................
 
+  # -------------------------------------------------------------
+  def question_type
+    Exercise::Q_MC
+  end
+
+
+  # -------------------------------------------------------------
+  def is_mcq?
+    true
+  end
+
+
+  # -------------------------------------------------------------
+  def is_coding?
+    false
+  end
+
+
+  # -------------------------------------------------------------
+  def new_answer(args)
+    MultipleChoicePromptAnswer.new()
+  end
+
 end

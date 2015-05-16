@@ -57,6 +57,45 @@ class ExerciseVersion < ActiveRecord::Base
   #~ Public instance methods ..................................................
 
   # -------------------------------------------------------------
+  def question_type
+    prompts.first.specific.question_type
+  end
+
+
+  # -------------------------------------------------------------
+  def is_mcq?
+    prompts.first.specific.is_mcq?
+  end
+
+
+  # -------------------------------------------------------------
+  def is_coding?
+    prompts.first.specific.is_coding?
+  end
+
+
+  # -------------------------------------------------------------
+  def new_attempt(args)
+    num = 1
+    user = args[:user]
+    if user
+      num = Attempt.where(user: user, exercise_version: self).count + 1
+    end
+    attempt = Attempt.new(
+      user: user,
+      exercise_version: self,
+      submit_time: Time.now,
+      submit_num: num
+      )
+    args.merge!(attempt: attempt)
+    prompts.each do |prompt|
+      prompt.new_answer(args)
+    end
+    attempt
+  end
+
+
+  # -------------------------------------------------------------
   # FIXME: move to multiple_choice_prompt
   def serve_choice_array
     if self.prompts.first.specific.choices.nil?

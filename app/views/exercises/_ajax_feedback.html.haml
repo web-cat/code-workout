@@ -13,7 +13,7 @@
           %th Behavior
           %th Result
       %tbody
-        - puts "IJD","IJD",TestCaseResult.where(attempt_id: attempt.id).last,"IJD","IJD"
+        -# puts "IJD","IJD",TestCaseResult.where(attempt_id: attempt.id).last,"IJD","IJD"
         - CodingPrompt.find(@exercise.current_version.prompts.first.actable_id).test_cases.each_with_index do |test_case, i|
           %tr
             %td

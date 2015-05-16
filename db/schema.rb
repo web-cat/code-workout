@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150511225412) do
+ActiveRecord::Schema.define(version: 20150515205710) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -37,7 +37,6 @@ ActiveRecord::Schema.define(version: 20150511225412) do
     t.integer  "experience_earned"
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer  "workout_id"
     t.integer  "workout_score_id"
     t.integer  "active_score_id"
   end
@@ -45,7 +44,6 @@ ActiveRecord::Schema.define(version: 20150511225412) do
   add_index "attempts", ["active_score_id"], name: "index_attempts_on_active_score_id"
   add_index "attempts", ["exercise_version_id"], name: "index_attempts_on_exercise_version_id"
   add_index "attempts", ["user_id"], name: "index_attempts_on_user_id"
-  add_index "attempts", ["workout_id"], name: "index_attempts_on_workout_id"
   add_index "attempts", ["workout_score_id"], name: "index_attempts_on_workout_score_id"
 
   create_table "attempts_tag_user_scores", id: false, force: true do |t|
@@ -75,7 +73,7 @@ ActiveRecord::Schema.define(version: 20150511225412) do
   add_index "choices_multiple_choice_prompt_answers", ["choice_id", "multiple_choice_prompt_answer_id"], name: "choices_multiple_choice_prompt_answers_idx", unique: true
 
   create_table "coding_prompt_answers", force: true do |t|
-    t.text "answer", null: false
+    t.text "answer"
   end
 
   create_table "coding_prompts", force: true do |t|
@@ -381,25 +379,22 @@ ActiveRecord::Schema.define(version: 20150511225412) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.boolean  "pass",                    null: false
-    t.integer  "attempt_id"
     t.integer  "coding_prompt_answer_id"
   end
 
-  add_index "test_case_results", ["attempt_id"], name: "index_test_case_results_on_attempt_id"
   add_index "test_case_results", ["coding_prompt_answer_id"], name: "index_test_case_results_on_coding_prompt_answer_id"
   add_index "test_case_results", ["test_case_id"], name: "index_test_case_results_on_test_case_id"
   add_index "test_case_results", ["user_id"], name: "index_test_case_results_on_user_id"
 
   create_table "test_cases", force: true do |t|
-    t.string   "test_script"
-    t.text     "negative_feedback", null: false
+    t.text     "negative_feedback"
     t.float    "weight",            null: false
     t.text     "description"
-    t.string   "input",             null: false
-    t.string   "expected_output",   null: false
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "coding_prompt_id",  null: false
+    t.text     "input",             null: false
+    t.text     "expected_output",   null: false
   end
 
   add_index "test_cases", ["coding_prompt_id"], name: "index_test_cases_on_coding_prompt_id"

@@ -44,9 +44,8 @@ class ExercisesController < ApplicationController
     @terms = @terms.split(@terms.include?(',') ? /\s*,\s*/ : nil)
     @wos = Workout.search @terms
     @exs = Exercise.search @terms
-    if @wos.length + @exs.length > 0
-      @msg = ''
-    else
+    @msg = ''
+    if @wos.length == 0 && @exs.length == 0
       @msg = 'No ' + searched + ' exercises found. Try these instead...'
       @wos = Workout.order('RANDOM()').limit(4)
       @exs = Exercise.order('RANDOM()').limit(16)
@@ -630,21 +629,12 @@ class ExercisesController < ApplicationController
         @prompt.test_script = prompt['tests']
         @prompt.actable_id = rand(100)
         @prompt.save!
-
-        prompt['tests'].split(/\r?\n/).each do |test|
-          t = test.split(";")
-          tc = TestCase.new(test_script: "None", weight: 1.0, coding_prompt: @prompt)
-          tc.description = t[2]
-          tc.negative_feedback = t[3]
-          tc.input = t[0]
-          tc.expected_output = t[1]
-          tc.save!
-        end
       end
 
     end
     redirect_to exercises_path
   end
+
 
   # -------------------------------------------------------------
   # POST /exercises/upload_create
@@ -653,20 +643,17 @@ class ExercisesController < ApplicationController
       redirect_to root_path,
           notice: 'You do not have permission to access this page.' and return
     end
-    puts 'uploaded file = ', params[:form].fetch(:file).path
-    puts 'uploaded file = ', params[:form][:file].path
 
     hash = YAML.load(File.read(params[:form][:file].path))
     exercises = ExerciseRepresenter.for_collection.new([]).from_hash(hash)
     exercises.each do |e|
       if !e.save
+        # FIXME: Add these to alert message that can be sent back to user
         puts 'cannot save exercise, name = ' + e.name.to_s +
           ', external_id = ' + e.external_id.to_s + ': ' +
           e.errors.full_messages.to_s
       end
     end
-    puts 'exercises = ',
-      ExerciseRepresenter.for_collection.new(exercises).to_hash.to_yaml
 
     # basex = BaseExercise.new
     # basex.user_id = current_user.id
@@ -732,60 +719,60 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # GET/POST /practice/1
   def practice
-    # Tighter practice requirements for the moment, should go away as a part of the eventual-engagement model
+    # Tighter practice requirements for the moment, should go away as a
+    # part of the gradual-engagement model
     if !user_signed_in?
       redirect_to exercise_path(params[:id]),
         notice: 'Need to sign in first' and return
     end
-    if( params[:id] )
-      @found = Exercise.where(id: params[:id])
-      if( @found.empty? )
-        redirect_to exercises_url, notice: "Exercise E#{params[:id]} not found"
-      elsif user_signed_in?
-        @exercise = @found.first
-        # Tighter restrictions for the moment, should go away
-        if !current_user.global_role.can_edit_system_configuration?
-          redirect_to root_path,
-            notice: 'Exercise practice is temporarily disabled.' and return
-        end
-        if @exercise.is_mcq?
-          @answers = @exercise.current_version.serve_choice_array
-          @answers.each do |a|
-            a[:answer] = markdown(a[:answer])
-          end
-        end
-        @responses = ['There are no responses yet!']
-        @explain = ['There are no explanations yet!']
-        if session[:leaf_exercises]
-          session[:leaf_exercises] << @exercise.id
-        else
-          session[:leaf_exercises] = [@exercise.id]
-        end
-        # EOL stands for end of line
-        # @wexs is the variable to hold the list of exercises of this workout
-        # yet to be attempted by the user apart from the current exercise
-        if params[:wexes] != 'EOL'
-          @wexs = params[:wexes] || session[:remaining_wexes]
-        else
-          @wexs = nil
-        end
-      else
-        redirect_to exercise_path(found.first),
-          notice: 'Need to login to practice' and return
+    if params[:exercise_version_id]
+      @exercise_version =
+        ExerciseVersion.find_by(id: params[:exercise_version_id])
+      if !@exercise_version
+        redirect_to exercises_url, notice:
+          "Exercise version EV#{params[:exercise_version_id]} " +
+          "not found" and return
       end
+      @exercise = @exercise_version.exercise
+    elsif params[:id]
+      @exercise = Exercise.find_by(id: params[:id])
+      if !@exercise
+        redirect_to exercises_url,
+          notice: "Exercise E#{params[:id]} not found" and return
+      end
+      @exercise_version = @exercise.current_version
     else
-      redirect_to exercises_url, notice: 'Choose an exercise to practice!'
+      redirect_to exercises_url,
+        notice: 'Choose an exercise to practice!' and return
     end
-   # if params[:feedback_return]
-   #   render layout: 'three_columns'
-   # else
-      render layout: 'two_columns'
-   # end
-   # respond_to do |format|
-   #   format.html
-   #   format.js
-   # end
+    # Tighter restrictions for the moment, should go away
+    if !current_user.global_role.can_edit_system_configuration?
+      redirect_to root_path,
+        notice: 'Exercise practice is temporarily disabled.' and return
+    end
 
+    if @exercise_version.is_mcq?
+      @answers = @exercise_version.serve_choice_array
+      @answers.each do |a|
+        a[:answer] = markdown(a[:answer])
+      end
+    end
+    @responses = ['There are no responses yet!']
+    @explain = ['There are no explanations yet!']
+    if session[:leaf_exercises]
+      session[:leaf_exercises] << @exercise.id
+    else
+      session[:leaf_exercises] = [@exercise.id]
+    end
+    # EOL stands for end of line
+    # @wexs is the variable to hold the list of exercises of this workout
+    # yet to be attempted by the user apart from the current exercise
+    if params[:wexes] != 'EOL'
+      @wexs = params[:wexes] || session[:remaining_wexes]
+    else
+      @wexs = nil
+    end
+    render layout: 'two_columns'
   end
 
 
@@ -799,58 +786,73 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   #GET /evaluate/1
   def evaluate
+    # Copy/pasted from #practice method.  Should be refactored.
     if !user_signed_in?
-      redirect_to root_path, notice: 'Need to sign in first' and return
+      redirect_to exercise_path(params[:id]),
+        notice: 'Need to sign in first' and return
     end
-    if params[:id]
-      @exercise = Exercise.find(params[:id])
+    if params[:exercise_version_id]
+      @exercise_version =
+        ExerciseVersion.find_by(id: params[:exercise_version_id])
+      if !@exercise_version
+        redirect_to exercises_url, notice:
+          "Exercise version EV#{params[:exercise_version_id]} " +
+          "not found" and return
+      end
+      @exercise = @exercise_version.exercise
+    elsif params[:id]
+      @exercise = Exercise.find_by(id: params[:id])
       if !@exercise
-        redirect_to exercises_url, notice: "Exercise E#{params[:id]} not found"
+        redirect_to exercises_url,
+          notice: "Exercise E#{params[:id]} not found" and return
+      end
+      @exercise_version = @exercise.current_version
+    else
+      redirect_to exercises_url,
+        notice: 'Choose an exercise to practice!' and return
+    end
+    # Tighter restrictions for the moment, should go away
+    if !current_user.global_role.can_edit_system_configuration?
+      redirect_to root_path,
+        notice: 'Exercise practice is temporarily disabled.' and return
+    end
+
+    @attempt = @exercise_version.new_attempt(user: current_user)
+    @attempt.save
+    if @exercise_version.is_mcq?
+      response_ids = params[:exercise_version][:multiple_choice_prompt][:choice_ids]
+      p params
+      @responses = Array.new
+      if @exercise_version.prompts.first.specific.allow_multiple
+        response_ids.each do |r|
+          @responses.push(Choice.where(id: r).first)
+        end
       else
-        attempt = Attempt.new(
-          user: current_user,
-          exercise_version: @exercise.current_version,
-          submit_time: Time.now,
-          submit_num: 1
-          )
-        attempt.save
-        @att_id = attempt.id
-        @user_id = current_user.id
-        if @exercise.is_mcq?
-          response_ids = params[:exercise][:exercise][:choice_ids]
-          p params
-          @responses = Array.new
-          if @exercise.current_version.prompts.first.specific.allow_multiple
-            response_ids.each do |r|
-              @responses.push(Choice.where(id: r).first)
-            end
-          else
-            @responses.push(Choice.where(id: response_ids).first)
-          end
-          @responses = @responses.compact
-          @responses.each do |answer|
-            answer[:answer] = markdown(answer[:answer])
-          end
-          @score = @exercise.score(@responses)
-          if session[:current_workout]
-            @score = @score * ExerciseWorkout.findExercisePoints(
-              @exercise.id, session[:current_workout])
-          end
-          @explain = @exercise.collate_feedback(@responses)
-          @exercise_feedback = 'You have attempted exercise ' +
-            "#{@exercise.id}:#{@exercise.name}" +
-            ' and its feedback for you: ' +
-            @explain.to_sentence
-          if session[:current_workout]
-            record_workout_score(@score, @exercise.id,
-              session[:current_workout])
-            session[:workout_feedback][@exercise.id] = @exercise_feedback
-          end
-          # TODO: calculate experience based on correctness and num submissions
-          count_submission()
-          @xp = @exercise.experience_on(@responses, session[:submit_num])
-          record_attempt(@score, @xp)
-        elsif @exercise.is_coding?
+        @responses.push(Choice.where(id: response_ids).first)
+      end
+      @responses = @responses.compact
+      @responses.each do |answer|
+        answer[:answer] = markdown(answer[:answer])
+      end
+      @score = @exercise_version.score(@responses)
+      if session[:current_workout]
+        @score = @score * ExerciseWorkout.findExercisePoints(
+          @exercise.id, session[:current_workout])
+      end
+      @explain = @exercise_version.collate_feedback(@responses)
+      @exercise_feedback = 'You have attempted exercise ' +
+        "#{@exercise.id}:#{@exercise.name}" +
+        ' and its feedback for you: ' +
+        @explain.to_sentence
+      if session[:current_workout]
+        record_workout_score(@score, @exercise.id, session[:current_workout])
+        session[:workout_feedback][@exercise.id] = @exercise_feedback
+      end
+      # TODO: calculate experience based on correctness and num submissions
+      count_submission()
+      @xp = @exercise_version.experience_on(@responses, session[:submit_num])
+      record_attempt(@score, @xp)
+    elsif @exercise_version.is_coding?
 
 #          CodeWorker.new.async.perform(
 #            @exercise.current_version.prompts.first.specific.class_name,
@@ -860,62 +862,56 @@ class ExercisesController < ApplicationController
 #            session[:current_workout],
 #            @att_id)
 
-            # FIXME: Need to make it work for multiple prompts
-            prompt_question =  CodingPrompt.find(@exercise.current_version.prompts.first.actable_id)
-            prompt_answer = CodingPromptAnswer.new(attempt_id: @att_id,
-              prompt_id: Prompt.find_by(exercise_version_id: @exercise.current_version_id).id,
-              actable_id: rand(10000),
-              answer: params[:exercise][:answer_code]
-              )
-          if prompt_answer.save!
-            CodeWorker.new.async.perform( prompt_question,
-              @exercise.current_version,
-              @user_id,
-              params[:exercise][:answer_code],
-              session[:current_workout],
-              @att_id,
-              prompt_answer.id)
-          else
-            puts "IMPROPER PROMPT","IMPROPER PROMPT"
-          end
+      # FIXME: Need to make it work for multiple prompts
+      prompt = @exercise_version.prompts.first.specific
+      prompt_answer = @attempt.prompt_answers.first  # already specific here
+      prompt_answer.answer = params[:exercise_version][:answer_code]
+      if prompt_answer.save
+        CodeWorker.new.async.perform(
+          @exercise_version.id,
+          current_user.id,
+          session[:current_workout],
+          @attempt.id)
+      else
+        puts 'IMPROPER PROMPT',
+          'unable to save prompt_answer: ' \
+          "#{prompt_answer.errors.full_messages.to_s}",
+          'IMPROPER PROMPT'
+      end
 
+    end
+    if params[:wexes]
+      session[:remaining_wexes] = params[:wexes]
+      if params[:wexes][1..-1].count < 1
+        # @wexs set to EOL if it has reached the last exercise in the
+        # workout. Its is set to EOL instead of null to distinguish from
+        # the latter
+        @wexs = String.new('EOL')
+      else
+        @wexs = params[:wexes][1..-1]
+      end
+      # FIXME: Horrible multiple respond_to statement must be consolidated
+      if params[:feedback_return]
+        respond_to do |format|
+          format.js
         end
-        if params[:wexes]
-          session[:remaining_wexes] = params[:wexes]
-          if params[:wexes][1..-1].count < 1
-            # @wexs set to EOL if it has reached the last exercise in the
-            # workout. Its is set to EOL instead of null to distinguish from
-            # the latter
-            @wexs = String.new('EOL')
-          else
-            @wexs = params[:wexes][1..-1]
-          end
-          # FIXME: Horrible multiple respond_to statement must be consolidated
-          if params[:feedback_return]
-            respond_to do |format|
-              format.js
-            end
-            # redirect_to exercise_practice_path(@exercise,
-            #   wexes: params[:wexes],
-            #   feedback_return: true,att_id: @att_id),
-            #   format: :js # and return
-          else
-            respond_to do |format|
-              format.js
-            end
-            # redirect_to exercise_practice_path(id: params[:wexes].first,
-            #   wexes: @wexs,att_id: attempt_id) and return
-          end
-        else
-          respond_to do |format|
-              format.js
-          end
-          #redirect_to exercise_practice_path(@exercise,
-          #  feedback_return: true,att_id: attempt_id) and return
+        # redirect_to exercise_practice_path(@exercise,
+        #   wexes: params[:wexes],
+        #   feedback_return: true,att_id: @att_id),
+        #   format: :js # and return
+      else
+        respond_to do |format|
+          format.js
         end
+        # redirect_to exercise_practice_path(id: params[:wexes].first,
+        #   wexes: @wexs,att_id: attempt_id) and return
       end
     else
-      redirect_to exercises_url, notice: 'Choose an exercise to practice!'
+      respond_to do |format|
+        format.js
+      end
+      #redirect_to exercise_practice_path(@exercise,
+      #  feedback_return: true,att_id: attempt_id) and return
     end
   end
 
