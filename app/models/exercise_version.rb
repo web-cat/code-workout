@@ -38,7 +38,7 @@ class ExerciseVersion < ActiveRecord::Base
   acts_as_list scope: :exercise, column: 'version'
   has_many :courses, through: :exercise
   has_many :workouts, through:  :exercise
-  has_many :prompts, -> { order("position ASC") },
+  has_many :prompts, -> { order('position ASC') },
     inverse_of: :exercise_version, dependent: :destroy
   has_many :attempts, dependent: :destroy
   has_and_belongs_to_many :resource_files

@@ -1,0 +1,39 @@
+%h2 Feedback
+- if @exercise_version.is_mcq?
+  -#= Choice.find(attempt.answer.to_i).feedback
+  = @attempt.prompt_answers.first.specific.choice.feedback
+- elsif @exercise_version.is_coding?
+  %table.table.table-striped.feedback
+    %thead
+      %tr
+        %th Behavior
+        %th Result
+    %tbody
+      -# puts "IJD","IJD",TestCaseResult.where(attempt_id: attempt.id).last,"IJD","IJD"
+      - @attempt.prompt_answers.first.specific.test_case_results(true).each do |tcr|
+        %tr
+          %td
+            - if tcr.execution_feedback.include?('CODE-ERROR-CODE-ERROR')
+              CODE EXECUTION ERROR
+              = tcr.execution_feedback
+              - break
+            = tcr.test_case.description
+            - if !tcr.pass
+              - if !tcr.test_case.description.include?('hidden')
+                %br
+                .out= tcr.execution_feedback
+          - if tcr.pass
+            %td.pass
+              %i.fa.fa-check-square
+          - else
+            %td.fail
+              %i.fa.fa-minus-square
+- if session[:current_workout] && params[:wexes].nil?
+  = link_to 'Finish workout',
+    workout_evaluate_path(id: session[:current_workout])
+- elsif session[:current_workout] && params[:wexes][1..-1].count >= 0
+  - puts "HINTER WEXES",params[:wexes][1..-1],"HINTER WEXES"
+  = link_to 'Next question',
+    exercise_practice_path(id: params[:wexes].first,
+      wexes: params[:wexes][1..-1]),
+    method: :get

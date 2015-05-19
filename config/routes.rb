@@ -1,8 +1,6 @@
 CodeWorkout::Application.routes.draw do
 
 
-  get 'sse/feedback_send'
-
   root 'home#index'
 
   get 'home' => 'home#index'
@@ -19,8 +17,6 @@ CodeWorkout::Application.routes.draw do
   get 'static_pages/mockup3'
   get 'static_pages/typography'
   get 'static_pages/thumbnails'
-  get '/feedback_send' => 'sse#feedback_send'
-  get '/last_attempt' => 'sse#last_attempt'
   # routes anchored at /admin
   # First, we have to override some of the ActiveAdmin auto-generated
   # routes, since our user ids and file ids use restricted characters
@@ -36,7 +32,10 @@ CodeWorkout::Application.routes.draw do
     constraints: { id: /[^\/]+/ }
   ActiveAdmin.routes(self)
 
-    
+
+  get 'sse/feedback_wait'
+  get 'sse/feedback_update'
+
   # All of the routes anchored at /gym
   scope :gym do
     # The top-level gym route
@@ -75,11 +74,11 @@ CodeWorkout::Application.routes.draw do
     get  'workouts_dummy' => 'workouts#dummy'
     get  'workouts_import' => 'workouts#upload_yaml'
     post  'workouts_yaml_create' => 'workouts#yaml_create'
-  
+
     # At the bottom, so the routes above take precedence over existing ids
     resources :workouts
   end
-  
+
   # All of the routes anchored at /courses
   get '/courses_search' => 'courses#search', as: :courses_search
   post '/courses_find' => 'courses#find', as: :course_find
@@ -90,7 +89,7 @@ CodeWorkout::Application.routes.draw do
       as: :course_gradebook
     get ':course_id/:term_id/:workout_id/:id' => 'exercises#show'
     get ':course_id/:term_id/:id' => 'workouts#show'
-    get ':id(/:term_id)' => 'courses#show', as: :course    
+    get ':id(/:term_id)' => 'courses#show', as: :course
   end
 
   # FIXME: Needs to be fixed so that it works well with the general formatting of routes

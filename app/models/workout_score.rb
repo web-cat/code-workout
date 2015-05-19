@@ -83,4 +83,25 @@ class WorkoutScore < ActiveRecord::Base
   validates :workout, presence: true
   validates :user, presence: true
 
+
+  #~ Instance methods .........................................................
+
+  # -------------------------------------------------------------
+  def update_attempt(attempt, old_score)
+    if self.scored_attempts.include? attempt
+      self.score = self.score - old_score + attempt.score
+    else
+      # look for other scored attempt for the same exercise
+      scored = self.scored_attempts.includes(exercise_versions: :exercise).
+        where(exercise: attempt.exercise_version.exercise).first
+      if scored
+        self.score -= scored.score
+        self.scored_attempts.delete(scored)
+      end
+      self.score += attempt.score
+      self.scored_attempts << attempt
+    end
+    self.save!
+  end
+
 end

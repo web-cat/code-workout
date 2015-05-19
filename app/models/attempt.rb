@@ -85,4 +85,20 @@ class Attempt < ActiveRecord::Base
       where.not(workout_offering_id: nil).andand.last
   end
 
+
+  #~ Instance methods .........................................................
+
+  # -------------------------------------------------------------
+  def update_score(score)
+    old_score = self.score
+    self.score = score
+    if self.workout_score
+      # Multiply score by points from workout, if necessary
+      self.score *= self.workout_score.workout.exercise_workouts.where(
+        exercise: exercise_version.exercise).first.points
+      self.workout_score.update_attempt(self, old_score)
+    end
+    self.save!
+  end
+
 end

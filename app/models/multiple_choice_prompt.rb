@@ -23,7 +23,7 @@ class MultipleChoicePrompt < ActiveRecord::Base
   #~ Relationships ............................................................
 
   acts_as :prompt
-  has_many :choices, -> { order("position ASC") },
+  has_many :choices, -> { order('position ASC') },
     inverse_of: :multiple_choice_prompt, dependent: :destroy
 
 

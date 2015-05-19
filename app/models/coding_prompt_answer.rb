@@ -17,8 +17,8 @@ class CodingPromptAnswer < ActiveRecord::Base
   #~ Relationships ............................................................
 
   acts_as :prompt_answer
-  has_many :test_case_results, inverse_of: :coding_prompt_answer,
-    dependent: :destroy
+  has_many :test_case_results, #-> { order('test_case_id ASC') },
+    inverse_of: :coding_prompt_answer, dependent: :destroy
 
 
   #~ Validation ...............................................................
@@ -27,6 +27,5 @@ class CodingPromptAnswer < ActiveRecord::Base
   # There may be cases where a user attempts an exercise but does not
   # answer all prompts, and that would constitute an empty answer. We
   # want to allow that, so do not add validations preventing it.
-
 
 end

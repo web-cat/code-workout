@@ -45,7 +45,7 @@ class Exercise < ActiveRecord::Base
   #~ Relationships ............................................................
 
   acts_as_taggable_on :tags, :languages, :styles
-  has_many :exercise_versions, -> { order("version DESC") },
+  has_many :exercise_versions, -> { order('version DESC') },
     inverse_of: :exercise, dependent: :destroy
   has_many :attempts, through: :exercise_versions
   has_many :course_exercises, inverse_of: :exercise, dependent: :destroy

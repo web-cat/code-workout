@@ -67,8 +67,29 @@ class CodingPrompt < ActiveRecord::Base
   end
 
 
+  # -------------------------------------------------------------
+  def test_file_name
+    dir = prompt_dir
+    if !Dir.exist?(dir)
+      FileUtils.mkdir_p(dir)
+    end
+    file_name = dir + '/' + self.class_name + 'Test.' +
+      Exercise.extension_of(exercise_version.exercise.language)
+    if !File.exist?(file_name)
+      generate_tests(file_name)
+    end
+    return file_name
+  end
+
+
   #~ Private instance methods .................................................
   private
+
+  # -------------------------------------------------------------
+  def prompt_dir
+    'usr/resources/Java/tests/' + self.id.to_s
+  end
+
 
   # -------------------------------------------------------------
   def parse_tests
@@ -82,11 +103,10 @@ class CodingPrompt < ActiveRecord::Base
       end
 
       # Prep the directory to contain the generated test class
-      dir = 'usr/resources/Java/tests/' + self.id.to_s
+      dir = prompt_dir
       if Dir.exist?(dir)
         FileUtils.remove_dir(dir)
       end
-      FileUtils.mkdir_p(dir)
 
       # Now parse the test description into test case objects
       CSV.parse(self.test_script) do |row|
@@ -119,6 +139,23 @@ class CodingPrompt < ActiveRecord::Base
 
       # TODO: Generate the test case class in code form here
     end
+  end
+
+
+  # -------------------------------------------------------------
+  def generate_tests(file_name)
+    language = exercise_version.exercise.language
+    tests = ''
+    self.test_cases.each do |test_case|
+      tests << test_case.to_code(language)
+    end
+    body = File.read('usr/resources/' + language + '/' + language +
+      'BaseTestFile.' + Exercise.extension_of(language))
+    File.write(file_name, body % {
+      tests: tests,
+      method_name: self.method_name,
+      class_name: self.class_name
+      })
   end
 
 end
