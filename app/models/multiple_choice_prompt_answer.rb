@@ -20,5 +20,19 @@ class MultipleChoicePromptAnswer < ActiveRecord::Base
 
 
   #~ Validation ...............................................................
+  validates :answer, presence: true
 
+  #~ Class method .............................................................
+  def self.record_answer(exv,responses,att)
+      mcq_answer = MultipleChoicePromptAnswer.new(attempt: att, prompt: exv.prompts.first)
+      if exv.prompts.first.specific.allow_multiple
+        mcq_answer.answer = responses.
+          compact.delete_if { |x| x.empty? }
+        mcq_answer.answer = mcq_answer.answer.join(',')
+      else
+        mcq_answer.answer = responses.first
+      end
+      return mcq_answer
+  end
+  
 end
