@@ -1,8 +1,8 @@
 %h2 Feedback
 - if @exercise_version.is_mcq?
   -#= Choice.find(attempt.answer.to_i).feedback
-  -#= TODO: Make this work for multi-correct mcqs
-  = Choice.find_by!(id: @attempt.prompt_answers.first.specific.answer.to_i).feedback
+  - @attempt.prompt_answers.first.specific.choices.each do |choice|
+    = choice.feedback
 - elsif @exercise_version.is_coding?
   %table.table.table-striped.feedback
     %thead
