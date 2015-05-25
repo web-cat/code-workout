@@ -28,11 +28,10 @@
           user_path(i) }.to_sentence
         %td
           = render partial: "course_offerings/self_enrollment", locals: {off: off}
-- if user_signed_in? &&                                      |
-  current_user.global_role_id >= GlobalRole::INSTRUCTOR_ID   |
+- if user_signed_in? && @course.creator_id == current_user.id
   %p
-    = button_link 'Edit Course Properties', edit_course_path(@course)
-    = button_link 'Add an offering', new_course_path
+    -#= button_link 'Edit Course Properties', edit_course_path(@course)
+    -#= button_link 'Add an offering', new_course_path
 
 .container-fluid
   .navbar-collapse.collapse
@@ -43,12 +42,15 @@
       %li
         %a{ href: '#exers', data: { toggle: "tab" } }
           Exercises
-      %li
-        %a{ href: '#grdes', data: { toggle: "tab" } }
-          Grades
-      %li
-        %a{ href: '#rostr', data: { toggle: 'tab' } }
-          Roster
+      - @course.course_offerings.each do |off|
+        - if user_signed_in? && off.is_enrolled?(current_user)
+          %li
+            %a{ href: '#grdes', data: { toggle: "tab" } }
+              Grades
+          %li
+            %a{ href: '#rostr', data: { toggle: 'tab' } }
+              Roster
+          - break
 
 %div.tab-content.under-collapsible
 
@@ -58,7 +60,7 @@
       - user_id = user_signed_in? ? current_user.id : 0
       - @course.course_offerings.each do |off|
         - off.workouts.in_groups_of(2, false) do |row|
-          = render partial: "workouts/thumblg", collection: row, as: :w,
+          = render partial: "workouts/workout", collection: row, as: :w,
             locals: { uid: user_id }
           .clearfix
 
@@ -69,9 +71,8 @@
         %li= link_to ex.name, '/exercises/' + ex.id.to_s
 
   .tab-pane.fade{ id: 'grdes' }
-    -# FIXME: This should be role-based!!!!
-    - if user_signed_in? &&                                      |
-      current_user.global_role_id >= GlobalRole::INSTRUCTOR_ID   |
+    -# FIXME: Funky logic for the time being
+    - if user_signed_in? &&  @course.creator_id == current_user.id
       = button_to 'Download entire course gradebook',
         course_gradebook_path(@course, format: :csv)
     - @course.course_offerings.each do |off|
@@ -92,19 +93,19 @@
                 %td= User.find(ce.user_id).last_name
                 - grand_total = 0.0
                 - CourseOffering.find(off.id).workouts.each do |wkt|
-                  - if !WorkoutOffering.find_by(course_offering_id: off.id, workout_id: wkt.id).nil?
-                    - if !Attempt.where(user_id: ce.user_id, workout_offering_id: WorkoutOffering.find_by(course_offering_id: off.id, workout_id: wkt.id).id).blank?
-                      - tot = WorkoutScore.find_by!(user_id: ce.user_id, workout_id: wkt.id).score
-                      %td= tot
-                      - grand_total += tot
-                    - else
-                      %td -/-
+                  - if WorkoutScore.find_by(user_id: ce.user_id, workout: wkt)
+                    - tot = WorkoutScore.find_by!(user_id: ce.user_id, workout: wkt).andand.score
+                    %td= tot
+                    - grand_total += tot
+                  - else
+                    %td -/-
                 %td= grand_total
-          - if user_signed_in?
+          - if user_signed_in? && off.is_staff?(current_user)
+            -#%p= button_to 'Download class gradebook', course_offering_gradebook_path(off,format: :csv)
             %p= button_to 'Download class gradebook', course_offering_gradebook_path(off,format: :csv)
       - elsif user_signed_in?
         = off.name
-        - ce = CourseEnrollment.find_by(course_offering: off.id,user_id: current_user.id)
+        - ce = CourseEnrollment.find_by(course_offering: off,user: current_user)
         - if ce
           - if off.workouts.any?
             %table{border: 1}
@@ -114,7 +115,7 @@
               - off.workouts.each do |wkt|
                 %tr
                   %td= wkt.name
-                  %td= WorkoutScore.find_by(workout_id: wkt.id,user_id: current_user.id)
+                  %td= WorkoutScore.find_by(workout: wkt,user: current_user).andand.score
 
 
   .tab-pane.fade{:id => 'rostr'}

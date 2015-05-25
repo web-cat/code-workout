@@ -112,7 +112,7 @@ class WorkoutScore < ActiveRecord::Base
       user: current_user, workout_id: wkt_id)
     @current_workout = Workout.find(wkt_id)
     exercise_version = exer.current_version
-    
+    score = score.round(2)
     # FIXME: This code repeats code in code_worker.rb and needs to be
     # refactored, probably as a method (or constructor?) in WorkoutScore.
     if scoring.nil?

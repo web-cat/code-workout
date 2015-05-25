@@ -838,6 +838,7 @@ class ExercisesController < ApplicationController
       if session[:current_workout]
         @score = @score * ExerciseWorkout.findExercisePoints(
           @exercise, session[:current_workout]) / @exercise_version.max_mcq_score
+        @score = @score.round(2)  
       end
       # TODO: Enable @explain and @exercise_feedback again
       #@explain = @exercise_version.collate_feedback(@responses)
@@ -1031,7 +1032,7 @@ class ExercisesController < ApplicationController
       exv.attempts << attempt
       attempt.save!
       
-       MultipleChoicePromptAnswer.record_answer(@exercise_version,@responses,attempt).save!
+       MultipleChoicePromptAnswer.record_answer(@exercise_version,@responses,attempt)
        
        return attempt
     end

@@ -9,7 +9,7 @@
         %i.fa.fa-terminal.fa-stack-1x.fa-inverse
     - else
       %i.fa-pencil-square-o
-    = link_to x.display_name, exercise_practice_path(:id => x[:id])
+    = link_to x.display_name, exercise_practice_path(id: x[:id])
   .summary
     .radial-progress
       .circle
@@ -21,8 +21,10 @@
         .shadow
       .inset
         .score
-          ?
-          %span.outof> /?
+          - wkt_id = session[:current_workout] || wid
+          = x.current_version.attempts.andand.last.andand.score ?  x.current_version.attempts.last.score : 0.0 
+          %span.outof> 
+            = "/ "  + ExerciseWorkout.findExercisePoints(x,wkt_id).to_s
   .body
     .text
       = teaser(x.current_version.andand.prompts.andand.first.andand.question)
@@ -41,7 +43,8 @@
       - ex_workout = nil
       - if uid && uid != 0
         - attempt = Attempt.where(user_id: uid,
-          exercise_id: x.current_version.id).last
+          exercise_version: x.current_version).last
+        - puts "KEER",attempt,"KEER"  
         - if attempt && attempt.score > 0
           - attempt_pct = 100
         - if wid
@@ -75,7 +78,7 @@
 -#
   .progress
     - att = Attempt.where(user_id: uid,
-      exercise_version_id: x.current_version.id).last
+      exercise_version: x.current_version).last
     - ex_workout = nil
     - if wid
       - ex_workout = ExerciseWorkout.find_by(exercise_id: x.id, workout_id: wid)

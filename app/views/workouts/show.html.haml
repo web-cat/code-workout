@@ -11,6 +11,9 @@
   = button_to 'Practice Workout', practice_workout_path(params[:id]),
     method: :get, btn: 'primary'
 
+%p
+  = render partial: "workouts/workout", locals: {w: @workout}
+
 %table.table.table-striped{ style: 'width: auto' }
   %thead
     %tr
@@ -46,6 +49,8 @@
           xeditable: "true",
           pk: woff.id.to_s,
           model: 'workout_offering' } }= woff.hard_deadline
+
+
 
 %h2 Exercises
 

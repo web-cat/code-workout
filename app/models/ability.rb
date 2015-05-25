@@ -116,6 +116,12 @@ class Ability
       co.managed_by? user
     end
 
+    # A user can grade a CourseOffering if they are enrolled in that
+    # offering and have a CourseRole where can_grade_submissions? is true.
+    can [:generate_gradebook], CourseOffering do |co|
+      co.graded_by? user
+    end
+
     # Likewise, a user can only manage enrollments in a CourseOffering
     # that they have can_manage_courses? permission in.
     can :manage, CourseEnrollment do |enrollment|

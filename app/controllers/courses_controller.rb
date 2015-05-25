@@ -143,7 +143,7 @@ class CoursesController < ApplicationController
   # -------------------------------------------------------------
   # POST /courses/:id/generate_gradebook
   def generate_gradebook
-    if cannot? :generate_gradebook, @course
+    if @course.creator_id == current_user.id
       redirect_to root_path,
         notice: 'Unauthorized to generate gradebook for course' and return
     end
