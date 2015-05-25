@@ -246,15 +246,12 @@ class WorkoutsController < ApplicationController
         redirect_to workout_path(wkt),
           notice: "Need to Sign in to practice" and return
       end
-      ex1 = wkt.exercises.first
+      ex1 = wkt.next_exercise(nil,current_user)
       session[:current_workout] = wid
       session[:workout_feedback] = Hash.new
       session[:workout_feedback]['workout'] =
         "You have attempted Workout #{wkt.name}"
-      session[:wexes] = wkt.exercises.ids[1..-1]
-      session[:remaining_wexes] = session[:wexes]
-      redirect_to exercise_practice_path(
-        id: ex1.id, wexes: wkt.exercises.ids[1..-1])
+      redirect_to exercise_practice_path(id: ex1.id)
     else
       redirect_to workouts, notice: 'Workout not found' and return
     end
