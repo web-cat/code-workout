@@ -118,6 +118,19 @@ class ExerciseVersion < ActiveRecord::Base
     end
   end
 
+  # -------------------------------------------------------------
+  # A method to return the maximum score possible for a 
+  # a stand-alone mcq
+  def max_mcq_score
+    if self.exercise.is_mcq?
+      sum  = 0.0
+      self.prompts.first.specific.choices.each do |choice|
+        sum += choice.value if choice.value > 0.0
+      end
+      puts "MAX MCQ SCORE",sum,"MAX MCQ SCORE"
+      return sum
+    end
+  end
 
   # -------------------------------------------------------------
   # Needs to be split among prompts.
@@ -125,8 +138,9 @@ class ExerciseVersion < ActiveRecord::Base
   def score(answered)
     score = 0
     answered.each do |a|
-      score = score + a.value
+      score += a.value
     end
+    # TODO: Decide whether safeguarding against negative scoring is worth it
     if (score < 0)
       score = 0
     end
@@ -162,18 +176,18 @@ class ExerciseVersion < ActiveRecord::Base
   # FIXME: split across prompts?
   def experience_on(answered, attempt)
     total = score(answered)
-    options = self.choices.size
+    options = prompts.first.specific.choices.size
 
     if (options == 0 || attempt == 0)
       return 0
     elsif (total >= 100 && attempt == 1)
-      return self.experience
+      return self.exercise.experience
     elsif (attempt >= options)
       return 0
     elsif (total >= 100)
-      return self.experience - self.experience * (attempt - 1) / options
+      return self.exercise.experience - self.exercise.experience * (attempt - 1) / options
     else
-      return self.experience / options / 4
+      return self.exercise.experience / options / 4
     end
   end
 
