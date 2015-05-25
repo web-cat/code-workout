@@ -817,18 +817,18 @@ class ExercisesController < ApplicationController
         notice: 'Exercise practice is temporarily disabled.' and return
     end
 
-    @attempt = @exercise_version.new_attempt(user: current_user)
-    @attempt.save
+   
     if @exercise_version.is_mcq?
-      response_ids = params[:exercise_version][:multiple_choice_prompt][:choice_ids]
+      #response_ids = params[:exercise_version][:multiple_choice_prompt][:choice_ids]
+      response_ids = params[:exercise_version][:choice][:id]
       p params
       @responses = Array.new
       if @exercise_version.prompts.first.specific.allow_multiple
         response_ids.each do |r|
-          @responses.push(Choice.where(id: r).first)
+          @responses.push(Choice.find(r))
         end
       else
-        @responses.push(Choice.where(id: response_ids).first)
+        @responses.push(Choice.find(response_ids))
       end
       @responses = @responses.compact
       @responses.each do |answer|
@@ -837,31 +837,28 @@ class ExercisesController < ApplicationController
       @score = @exercise_version.score(@responses)
       if session[:current_workout]
         @score = @score * ExerciseWorkout.findExercisePoints(
-          @exercise.id, session[:current_workout])
+          @exercise, session[:current_workout]) / @exercise_version.max_mcq_score
       end
-      @explain = @exercise_version.collate_feedback(@responses)
-      @exercise_feedback = 'You have attempted exercise ' +
-        "#{@exercise.id}:#{@exercise.name}" +
-        ' and its feedback for you: ' +
-        @explain.to_sentence
+      # TODO: Enable @explain and @exercise_feedback again
+      #@explain = @exercise_version.collate_feedback(@responses)
+      @exercise_feedback = 'You have attempted exercise ' 
+      # + "#{@exercise.id}:#{@exercise.name}" +
+      #  ' and its feedback for you: ' +
+      #  @explain.to_sentence
       if session[:current_workout]
-        record_workout_score(@score, @exercise.id, session[:current_workout])
+        WorkoutScore.record_workout_score(@score, @exercise, session[:current_workout],current_user)
         session[:workout_feedback][@exercise.id] = @exercise_feedback
       end
       # TODO: calculate experience based on correctness and num submissions
       count_submission()
       @xp = @exercise_version.experience_on(@responses, session[:submit_num])
-      record_attempt(@score, @xp)
+      
+      @attempt = record_attempt(@score, @xp)
+      @attempt.save!
+      
     elsif @exercise_version.is_coding?
-
-#          CodeWorker.new.async.perform(
-#            @exercise.current_version.prompts.first.specific.class_name,
-#            @exercise.id,
-#            @user_id,
-#            params[:exercise][:answer_code],
-#            session[:current_workout],
-#            @att_id)
-
+      @attempt = @exercise_version.new_attempt(user: current_user)
+      @attempt.save
       # FIXME: Need to make it work for multiple prompts
       prompt = @exercise_version.prompts.first.specific
       prompt_answer = @attempt.prompt_answers.first  # already specific here
@@ -871,7 +868,7 @@ class ExercisesController < ApplicationController
           @exercise_version.id,
           current_user.id,
           session[:current_workout],
-          @attempt.id)
+          @attempt)
       else
         puts 'IMPROPER PROMPT',
           'unable to save prompt_answer: ' \
@@ -999,8 +996,9 @@ class ExercisesController < ApplicationController
     # -------------------------------------------------------------
     # Only allow a trusted parameter "white list" through.
     def exercise_params
-      params.require(:exercise).permit(:name, :question, :feedback,
+      params.require(:exercise_version).permit(:name, :question, :feedback,
         :experience, :id, :is_public, :priority, :type,
+        :exercise_version, :exercise_version_id, :commit,
         :mcq_allow_multiple, :mcq_is_scrambled, :language, :area,
         choices_attributes: [:answer, :order, :value, :_destroy],
         tags_attributes: [:tag_name, :tagtype, :_destroy])
@@ -1010,7 +1008,7 @@ class ExercisesController < ApplicationController
     # -------------------------------------------------------------
     # should call count_submission before calling this method
     def record_attempt(score, exp)
-      ex = Exercise.find(params[:id])
+      exv = @exercise_version
       attempt = Attempt.new
       if !session[:exercise_id] ||
         session[:exercise_id] != params[:id] ||
@@ -1019,78 +1017,24 @@ class ExercisesController < ApplicationController
         session[:exercise_id] = params[:id]
       end
       attempt.submit_num = session[:submit_num]
-      attempt.submit_time = Time.now
-      if ex.mcq_allow_multiple
-        attempt.answer = params[:exercise][:exercise][:choice_ids].
-          compact.delete_if { |x| x.empty? }
-        attempt.answer = attempt.answer.join(',')
-      else
-        attempt.answer = params[:exercise][:exercise][:choice_ids] ||
-          params[:exercise][:answer_code]
-      end
+      attempt.submit_time = Time.now                  
       attempt.score = score
       attempt.experience_earned = exp
-      attempt.user_id = current_user.id
-
-      # wkt= Workout.find_by_sql(" SELECT * FROM workouts INNER JOIN
-      #   exercise_workouts ON workouts.id = exercise_workouts.workout_id and
-      #   exercise_workouts.exercise_id = #{session[:exercise_id]}")
+      attempt.user = current_user
+      
+        
       if session[:current_workout]
         wkt = Workout.find(session[:current_workout])
-        wo = WorkoutOffering.find_by workout_id: wkt.id
-        if wo
-          attempt.workout_offering_id = wo.id
-        end
+        ws = WorkoutScore.find_by(user: current_user, workout: wkt)
+        attempt.workout_score = ws
       end
-      ex.attempts << attempt
+      exv.attempts << attempt
       attempt.save!
+      
+       MultipleChoicePromptAnswer.record_answer(@exercise_version,@responses,attempt).save!
+       
+       return attempt
     end
-
-
-    # -------------------------------------------------------------
-    def record_workout_score(score, exer_id, wkt_id)
-      scoring = WorkoutScore.find_by(
-        user_id: current_user.id, workout_id: wkt_id)
-      @current_workout = Workout.find(wkt_id)
-
-      # FIXME: This code repeats code in code_worker.rb and needs to be
-      # refactored, probably as a method (or constructor?) in WorkoutScore.
-      if scoring.nil?
-        scoring = WorkoutScore.new
-        scoring.score = score
-        scoring.last_attempted_at = Time.now
-        scoring.exercises_completed = 1
-        scoring.exercises_remaining = @current_workout.exercises.length - 1
-        @current_workout.workout_scores << scoring
-        current_user.workout_scores << scoring
-
-      else # At least one exercise has been attempted as a part of the workout
-        user_exercise_score =
-          Attempt.user_attempt(current_user.id, exer_id).andand.score
-        scoring.score += score
-        scoring.last_attempted_at = Time.now
-        if user_exercise_score
-          scoring.score -= user_exercise_score
-        else
-          scoring.exercises_completed += 1
-          scoring.exercises_remaining -= 1
-          # Compensate if overshoots
-          if scoring.exercises_completed > @current_workout.exercises.length
-            scoring.exercises_completed = @current_workout.exercises.length
-          end
-          if scoring.exercises_remaining < 0
-            scoring.exercises_remaining = 0
-          end
-          if scoring.exercises_remaining == 0
-            scoring.completed = true
-            scoring.completed_at = Time.now
-          end
-        end
-
-      end
-      scoring.save!
-    end
-
 
     # -------------------------------------------------------------
     def count_submission
@@ -1099,7 +1043,7 @@ class ExercisesController < ApplicationController
         !session[:submit_num]
 
         # TODO: look up only current user
-        recent = Attempt.where(user_id: 1).where(exercise_id: params[:id]).
+        recent = Attempt.where(user_id: 1).where(exercise_version_id: params[:exercise_version_id]).
           sort_by{ |a| a[:submit_num] }
         if !recent.empty?
           session[:submit_num] = recent.last[:submit_num] + 1
