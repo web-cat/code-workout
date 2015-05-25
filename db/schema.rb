@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150522205618) do
+ActiveRecord::Schema.define(version: 20150525184958) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -274,7 +274,6 @@ ActiveRecord::Schema.define(version: 20150522205618) do
   end
 
   create_table "multiple_choice_prompt_answers", force: true do |t|
-    t.string "answer"
   end
 
   create_table "multiple_choice_prompts", force: true do |t|
