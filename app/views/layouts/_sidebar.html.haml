@@ -5,7 +5,7 @@
 -#      %i.fa.fa-search
 -#      Search
 -#= render :partial => 'exercises/search'
-- if session[:wexes]
+- if session[:current_workout]
   - puts "WORKOUT"
   - p Workout.find(session[:current_workout])
   - puts "WORKOUT"  
