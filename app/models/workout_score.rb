@@ -103,5 +103,54 @@ class WorkoutScore < ActiveRecord::Base
     end
     self.save!
   end
+  
+  # -------------------------------------------------------------
+  # (Finall) The refactored method to record the workout score
+  # when a workout's exercise has been attempted
+  def self.record_workout_score(score, exer, wkt_id,current_user)
+    scoring = WorkoutScore.find_by(
+      user: current_user, workout_id: wkt_id)
+    @current_workout = Workout.find(wkt_id)
+    exercise_version = exer.current_version
+    
+    # FIXME: This code repeats code in code_worker.rb and needs to be
+    # refactored, probably as a method (or constructor?) in WorkoutScore.
+    if scoring.nil?
+      puts "SCORING NOT THERE","SCORING ALREADY THERE"
+      scoring = WorkoutScore.new
+      scoring.score = score
+      scoring.last_attempted_at = Time.now
+      scoring.exercises_completed = 1
+      scoring.exercises_remaining = @current_workout.exercises.length - 1
+      @current_workout.workout_scores << scoring
+      current_user.workout_scores << scoring
 
+    else # At least one exercise has been attempted as a part of the workout
+      user_exercise_score =
+        Attempt.user_attempt(current_user, exercise_version).andand.score
+      puts "SCORED","ALREAD SCORED","ALREADY SCORED"  
+      scoring.score += score
+      scoring.last_attempted_at = Time.now
+      if user_exercise_score
+        scoring.score -= user_exercise_score
+      else
+        scoring.exercises_completed += 1
+        scoring.exercises_remaining -= 1
+        # Compensate if overshoots
+        if scoring.exercises_completed > @current_workout.exercises.length
+          scoring.exercises_completed = @current_workout.exercises.length
+        end
+        if scoring.exercises_remaining < 0
+          scoring.exercises_remaining = 0
+        end
+        if scoring.exercises_remaining == 0
+          scoring.completed = true
+          scoring.completed_at = Time.now
+        end
+      end
+
+    end
+    scoring.save!
+  end
+  
 end
