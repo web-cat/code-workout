@@ -1,7 +1,8 @@
 %h2 Feedback
 - if @exercise_version.is_mcq?
   -#= Choice.find(attempt.answer.to_i).feedback
-  = @attempt.prompt_answers.first.specific.choice.feedback
+  -#= TODO: Make this work for multi-correct mcqs
+  = Choice.find_by!(id: @attempt.prompt_answers.first.specific.answer.to_i).feedback
 - elsif @exercise_version.is_coding?
   %table.table.table-striped.feedback
     %thead
@@ -28,12 +29,12 @@
           - else
             %td.fail
               %i.fa.fa-minus-square
-- if session[:current_workout] && params[:wexes].nil?
-  = link_to 'Finish workout',
-    workout_evaluate_path(id: session[:current_workout])
-- elsif session[:current_workout] && params[:wexes][1..-1].count >= 0
-  - puts "HINTER WEXES",params[:wexes][1..-1],"HINTER WEXES"
-  = link_to 'Next question',
-    exercise_practice_path(id: params[:wexes].first,
-      wexes: params[:wexes][1..-1]),
-    method: :get
+- if session[:current_workout]
+  - wkt = Workout.find(session[:current_workout])
+  - if wkt.next_exercise(@exercise,current_user).nil?
+    = link_to 'Finish workout',
+      workout_evaluate_path(id: session[:current_workout])
+  - else    
+    = link_to 'Next question',
+      exercise_practice_path(wkt.next_exercise(@exercise,current_user)),
+      method: :get
