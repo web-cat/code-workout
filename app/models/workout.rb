@@ -92,6 +92,12 @@ class Workout < ActiveRecord::Base
     end
     return total_points
   end
+  
+  # -------------------------------------------------------------
+  # Simple method to return the number of exercises a workout has
+  def num_exercises
+    self.exercises.length
+  end
 
 
   # -------------------------------------------------------------
@@ -118,6 +124,35 @@ class Workout < ActiveRecord::Base
     return xp
   end
 
+  # ------------------------------------------------------------
+  def next_exercise(ex,user)
+    if user.nil?
+      puts "Invalid USER"
+    end   
+        
+    (1..self.num_exercises).each do |i|
+      if ex
+        exw = ExerciseWorkout.find_by(exercise: ex,workout: self)
+        candiate_exercise_position = (exw.position+i)%self.num_exercises
+        candiate_exercise_position = exw.position+i if candiate_exercise_position == 0
+      else
+        candiate_exercise_position = 1
+      end
+      puts "CANDIDATE POSITION",candiate_exercise_position,"CANDIDATE POSITION"
+      candidate_exercise = ExerciseWorkout.
+             find_by(position: candiate_exercise_position, workout: self).exercise
+      candidate_attempt = Attempt.user_attempt(user, candidate_exercise.current_version)
+      if candidate_attempt
+        return candidate_exercise if candidate_attempt.score !=  
+          ExerciseWorkout.find_by(position: candiate_exercise_position, workout: self).points
+      else
+        return candidate_exercise
+      end      
+    end
+    # Reaching this point means none of the exercises (possibly apart from the current)
+    # has scored a perfect score  
+    return nil 
+  end
 
   # -------------------------------------------------------------
   def all_tags
