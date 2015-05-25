@@ -8,16 +8,15 @@ class CodeWorker
   workers 20
 
   # -------------------------------------------------------------
-  def perform(exercise_version_id, user_id, workout_id, attempt_id)
+  def perform(exercise_version_id, user_id, workout_id, attempt)
     ActiveRecord::Base.connection_pool.with_connection do
       exv = ExerciseVersion.find(exercise_version_id)
       prompt = exv.prompts.first.specific
-      attempt = Attempt.find(attempt_id)
       if !prompt.wrapper_code.blank?
         code_body = prompt.wrapper_code.sub(/\b___\b/,
           attempt.prompt_answers.first.specific.answer)
       end
-      current_attempt = attempt_id.to_s
+      current_attempt = attempt.id.to_s
       language = exv.exercise.language
 
 
@@ -84,7 +83,14 @@ class CodeWorker
           total += test_case.weight
         end  # CSV end
       end
-      attempt.update_score(correct / total)
+      multiplier = 1.0
+      if Workout.find_by(id: workout_id)
+        WorkoutScore.record_workout_score(correct / total, exv.exercise, workout_id,User.find(user_id))
+        multiplier  = ExerciseWorkout.find_by(exercise: exv.exercise,workout_id: workout_id).points
+        attempt.workout_score = WorkoutScore.find_by(user_id: user_id,workout_id: workout_id) 
+      end
+      attempt.score = correct * multiplier / total
+      attempt.save!
       ActiveSupport::Notifications.instrument(
         "record_#{current_attempt}_attempt", extra: :nothing) do
         puts "SKYFALL","SKYFALL","SKYFALL","SKYFALL"
