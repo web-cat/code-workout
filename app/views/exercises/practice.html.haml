@@ -4,7 +4,7 @@
   = semantic_form_for @exercise_version,
     url: exercise_evaluate_path(@exercise_version.exercise,
     exercise_version_id: @exercise_version.id,
-    wexes: params[:wexes], feedback_return: true), remote: true do |f|
+    feedback_return: true), remote: true do |f|
     = f.semantic_errors
     %h1= @exercise.name
     - if @exercise_version.stem
@@ -12,12 +12,12 @@
     - prompt = @exercise_version.prompts.first.specific
     = markdown prompt.question
     - if prompt.is_mcq?
-      - answer = @attempt.prompt_answers.first.specific
+      - answer = Choice.new
       - if prompt.allow_multiple
         %h2 Choose ALL that apply:
         .answers
           = f.semantic_fields_for answer do |p|
-            = p.input :choice_ids,
+            = p.input :id,
               as: :check_boxes,
               collection: @answers,
               member_value: :id,
@@ -28,7 +28,7 @@
         %h3 Select one answer:
         .answers
           = f.semantic_fields_for answer do |p|
-            = p.input :choice_ids,
+            = p.input :id,
               as: :radio,
               collection: @answers,
               member_value: :id,
