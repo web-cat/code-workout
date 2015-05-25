@@ -85,8 +85,8 @@ CodeWorkout::Application.routes.draw do
   resources :organizations, only: [ :index, :show ], path: '/courses' do
     get 'new' => 'courses#new'
     get 'index' => 'courses#index', as: :courses
-    post ':id/:term_id/generate_gradebook' => 'courses#generate_gradebook',
-      as: :course_gradebook
+    #get ':org_id/:term_id/generate_gradebook/:id' => 'courses#generate_gradebook',
+     # as: :course_gradebook
     get ':course_id/:term_id/:workout_id/:id' => 'exercises#show'
     get ':course_id/:term_id/:id' => 'workouts#show'
     get ':id(/:term_id)' => 'courses#show', as: :course
@@ -103,7 +103,8 @@ CodeWorkout::Application.routes.draw do
   # internal only
   post '/course_offerings/:id/generate_gradebook' =>
     'course_offerings#generate_gradebook', as: :course_offering_gradebook
-
+  post ':id/generate_gradebook/' => 'courses#generate_gradebook',
+      as: :course_gradebook
 
   # Need to be redesigned for new routes plan
   get '/course_offerings/:id/add_workout' => 'course_offerings#add_workout',
