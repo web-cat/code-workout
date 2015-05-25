@@ -16,10 +16,8 @@
                     %li
                       %strong Workouts
                     %li= link_to 'Browse all', workouts_path
-                    %li= link_to 'Workout 18', workout_path(18)
-                    %li= link_to 'Workout 19', workout_path(19)
-                    %li= link_to 'Workout 20', workout_path(20)
-                    %li= link_to 'Workout 21', workout_path(21)
+                    %li= link_to 'Workout 1', workout_path(1)
+                    %li= link_to 'Workout 2', workout_path(2)
                   - if user_signed_in? &&                                    |
                     current_user.global_role.can_edit_system_configuration?  |
                     %ul.col-sm-6.list-unstyled
@@ -61,8 +59,8 @@
                   %ul.col-sm-6.list-unstyled
                     %li
                       %strong= link_to 'Browse all', organizations_path
-                    %li= link_to 'CS 10', '/courses/10'
-                    %li= link_to 'CS 12', '/courses/12'
+                    %li= link_to 'Course 1', '/courses/vt/cs1114/spring-2015'
+                    -#%li= link_to 'Course 2', course_path(2)
                   - if user_signed_in? &&                                  |
                     current_user.managed_course_offerings.any?             |
                     %ul.col-sm-6.list-unstyled
