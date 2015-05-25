@@ -15,6 +15,7 @@
         .shadow
       .inset
         .pct
+          = WorkoutScore.find_by(workout: w,user: current_user) ? (WorkoutScore.find_by(workout: w,user: current_user).score / w.returnTotalWorkoutPoints).round(2) : 0
   .body
     .text
       = teaser(w.description)
