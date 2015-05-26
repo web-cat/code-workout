@@ -86,6 +86,7 @@ GEM
       activerecord (>= 3.2, < 5)
     acts_as_list (0.6.0)
       activerecord (>= 3.0)
+    addressable (2.3.8)
     annotate (2.6.5)
       activerecord (>= 2.3.0)
       rake (>= 0.8.7)
@@ -234,6 +235,10 @@ GEM
     omniauth (1.2.2)
       hashie (>= 1.2, < 4)
       rack (~> 1.0)
+    omniauth-cas (1.1.0)
+      addressable (~> 2.3)
+      nokogiri (~> 1.5)
+      omniauth (~> 1.2.0)
     omniauth-facebook (2.0.0)
       omniauth-oauth2 (~> 1.2)
     omniauth-google-oauth2 (0.2.6)
@@ -405,6 +410,7 @@ DEPENDENCIES
   oj
   oj_mimic_json
   omniauth
+  omniauth-cas
   omniauth-facebook
   omniauth-google-oauth2
   puma

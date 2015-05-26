@@ -118,11 +118,6 @@ ActiveRecord::Schema.define(version: 20150525184958) do
   add_index "course_offerings", ["course_id"], name: "index_course_offerings_on_course_id"
   add_index "course_offerings", ["term_id"], name: "index_course_offerings_on_term_id"
 
-  create_table "course_offerings_workouts", id: false, force: true do |t|
-    t.integer "course_offering_id", null: false
-    t.integer "workout_id",         null: false
-  end
-
   create_table "course_roles", force: true do |t|
     t.string  "name",                                       null: false
     t.boolean "can_manage_course",          default: false, null: false
@@ -223,18 +218,6 @@ ActiveRecord::Schema.define(version: 20150525184958) do
   add_index "exercises", ["exercise_family_id"], name: "index_exercises_on_exercise_family_id"
   add_index "exercises", ["external_id"], name: "index_exercises_on_external_id", unique: true
 
-  create_table "exercises_workouts", force: true do |t|
-    t.integer  "workout_id",  null: false
-    t.integer  "exercise_id", null: false
-    t.integer  "points"
-    t.integer  "order"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-  end
-
-  add_index "exercises_workouts", ["exercise_id"], name: "index_exercises_workouts_on_exercise_id"
-  add_index "exercises_workouts", ["workout_id"], name: "index_exercises_workouts_on_workout_id"
-
   create_table "friendly_id_slugs", force: true do |t|
     t.string   "slug",                      null: false
     t.integer  "sluggable_id",              null: false
@@ -289,7 +272,6 @@ ActiveRecord::Schema.define(version: 20150525184958) do
     t.string   "slug",         null: false
   end
 
-  add_index "organizations", ["name"], name: "index_organizations_on_name", unique: true
   add_index "organizations", ["slug"], name: "index_organizations_on_slug", unique: true
 
   create_table "prompt_answers", force: true do |t|
@@ -330,6 +312,16 @@ ActiveRecord::Schema.define(version: 20150525184958) do
 
   add_index "resource_files", ["token"], name: "index_resource_files_on_token"
   add_index "resource_files", ["user_id"], name: "index_resource_files_on_user_id"
+
+  create_table "signups", force: true do |t|
+    t.string   "first_name"
+    t.string   "last_name_name"
+    t.string   "email"
+    t.string   "institution"
+    t.text     "comments"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
 
   create_table "stems", force: true do |t|
     t.text     "preamble"
@@ -378,7 +370,6 @@ ActiveRecord::Schema.define(version: 20150525184958) do
   end
 
   add_index "terms", ["slug"], name: "index_terms_on_slug", unique: true
-  add_index "terms", ["starts_on"], name: "index_terms_on_starts_on"
   add_index "terms", ["year", "season"], name: "index_terms_on_year_and_season"
 
   create_table "test_case_results", force: true do |t|
