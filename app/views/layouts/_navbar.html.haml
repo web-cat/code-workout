@@ -100,6 +100,12 @@
                   %i.fa.fa-google
                   Sign in with Google
               %li
+                = link_to user_omniauth_authorize_path(:cas),
+                  class: 'btn btn-social btn-vt' do
+                  -#%i.fa.fa-google
+                  %span VT
+                  Sign in with Virginia Tech CAS
+              %li
                 %div
                   .yamm-content
                     = render '/devise/sessions/new'

@@ -58,19 +58,19 @@ class ExerciseVersion < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def question_type
-    prompts.first.specific.question_type
+    prompts.first.andand.question_type
   end
 
 
   # -------------------------------------------------------------
   def is_mcq?
-    prompts.first.specific.is_mcq?
+    prompts.first.andand.is_mcq?
   end
 
 
   # -------------------------------------------------------------
   def is_coding?
-    prompts.first.specific.is_coding?
+    prompts.first.andand.is_coding?
   end
 
 
@@ -119,7 +119,7 @@ class ExerciseVersion < ActiveRecord::Base
   end
 
   # -------------------------------------------------------------
-  # A method to return the maximum score possible for a 
+  # A method to return the maximum score possible for a
   # a stand-alone mcq
   def max_mcq_score
     if self.exercise.is_mcq?

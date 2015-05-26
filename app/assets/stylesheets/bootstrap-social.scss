@@ -115,3 +115,13 @@ $bs-height-xs:   (floor($font-size-small * 1.2) + $padding-small-vertical + 1);
 .btn-vimeo         { @include btn-social(#1ab7ea); }
 .btn-vk            { @include btn-social(#587ea3); }
 .btn-yahoo         { @include btn-social(#720e9e); }
+
+.btn-vt,
+.dropdown-menu > li > a.btn-vt {
+  @include btn-social(#680001);
+  > :first-child { font-size: 1.3em; font-weight: bold; line-height: 30px; }
+}
+.dropdown-menu > li > a.btn-social:hover,
+.dropdown-menu > li > a.btn-social:focus {
+  background-image: none;
+}

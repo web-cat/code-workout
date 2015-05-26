@@ -8,6 +8,10 @@ grant codeBase "file:${ant.home}/-" {
     permission java.security.AllPermission;
 };
 
+grant codeBase "file:/usr/share/java/-" {
+    permission java.security.AllPermission;
+};
+
 grant codeBase "file:${resource_dir}/-" {
     permission java.security.AllPermission;
 };
@@ -16,9 +20,9 @@ grant codeBase "file:${resource_dir}/-" {
 
 grant {
     // Local file access permissions
-    permission java.io.FilePermission "${attempt_dir}", "read,write";
+    permission java.io.FilePermission "${work_dir}", "read,write";
     permission java.io.FilePermission
-      "${attempt_dir}${/}-", "read,write,delete";
+      "${work_dir}${/}-", "read,write,delete";
     permission java.util.logging.LoggingPermission "control";
 
     // Allows any thread to stop itself using the java.lang.Thread.stop()

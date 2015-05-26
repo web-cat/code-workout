@@ -78,7 +78,7 @@ class User < ActiveRecord::Base
   # :confirmable, :lockable, and :timeoutable
   devise :database_authenticatable, :omniauthable, :registerable,
     :recoverable, :rememberable, :trackable, :validatable,  # :confirmable,
-    :omniauth_providers => [:facebook, :google_oauth2]
+    :omniauth_providers => [:facebook, :google_oauth2, :cas]
 
   before_create :set_default_role
 

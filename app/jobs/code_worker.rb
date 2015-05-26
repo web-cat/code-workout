@@ -19,7 +19,6 @@ class CodeWorker
       current_attempt = attempt.id.to_s
       language = exv.exercise.language
 
-
       lang =  Exercise.extension_of(language)
       # codeworkout_home=`echo $CODEWORKOUT`
 
@@ -87,7 +86,7 @@ class CodeWorker
       if Workout.find_by(id: workout_id)
         WorkoutScore.record_workout_score(correct / total, exv.exercise, workout_id,User.find(user_id))
         multiplier  = ExerciseWorkout.find_by(exercise: exv.exercise,workout_id: workout_id).points
-        attempt.workout_score = WorkoutScore.find_by(user_id: user_id,workout_id: workout_id) 
+        attempt.workout_score = WorkoutScore.find_by(user_id: user_id,workout_id: workout_id)
       end
       attempt.score = correct * multiplier / total
       attempt.save!
@@ -110,7 +109,7 @@ class CodeWorker
       "2>> #{attempt_dir}/err.log")
       return nil
     else
-      return File.read(attempt_dir + '/compile.log')
+      return File.read(attempt_dir + 'reports/compile.log')
     end
   end
 

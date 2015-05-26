@@ -262,6 +262,8 @@ Devise.setup do |config|
     config.omniauth :google_oauth2,
       Rails.application.secrets.google_id,
       Rails.application.secrets.google_secret
+    config.omniauth :cas,
+      url: 'https://auth.vt.edu'
   #
 
   # ==> Mountable engine configurations

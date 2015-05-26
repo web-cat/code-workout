@@ -175,7 +175,8 @@ class Exercise < ActiveRecord::Base
     end
 
     self.question_type ||=
-      current_version ? current_version.question_type : Q_MC
+      (current_version && current_version.prompts.first) ?
+        current_version.question_type : Q_MC
     self.name ||= ''
     self.is_public ||= true
     self.experience ||= 10
