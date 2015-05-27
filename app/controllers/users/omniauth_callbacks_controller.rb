@@ -14,6 +14,12 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
   end
 
 
+  # -------------------------------------------------------------
+  def cas
+    internal_auth('VT CAS')
+  end
+
+
   #~ Private instance methods .................................................
   private
 

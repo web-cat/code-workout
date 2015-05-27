@@ -245,16 +245,23 @@ class User < ActiveRecord::Base
     if identity
       user = identity.user
     else
-      user = User.where(email: auth.info.email).first
-      if !user
-        user = User.create(
-          first_name: auth.info.first_name,
-          last_name: auth.info.last_name,
-          email: auth.info.email,
-          confirmed_at: DateTime.now,
-          password: Devise.friendly_token[0, 20])
+      if auth.provider == :cas
+        auth.info.email = auth.uid + '@vt.edu'
       end
-      user.identities.create(uid: auth.uid, provider: auth.provider)
+      if auth.info.email
+        user = User.where(email: auth.info.email).first
+        if !user
+          user = User.create(
+            first_name: auth.info.first_name,
+            last_name: auth.info.last_name,
+            email: auth.info.email,
+            confirmed_at: DateTime.now,
+            password: Devise.friendly_token[0, 20])
+        end
+      end
+      if user
+        user.identities.create(uid: auth.uid, provider: auth.provider)
+      end
     end
 
     # Update any blank fields from provider's info, if available
