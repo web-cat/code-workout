@@ -76,7 +76,8 @@ class TestCase < ActiveRecord::Base
           'AssertionError',
           'ComparisonFailure',
           'ReflectionSupportError'].include?(exception_name) ||
-          test_results_array[6].blank?
+          test_results_array[6].blank? ||
+          "null" == test_results_array[6]
           tcr.execution_feedback = exception_name
         end
       end
