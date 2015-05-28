@@ -45,6 +45,19 @@ class TestCase < ActiveRecord::Base
   #~ Instance methods .........................................................
 
   # -------------------------------------------------------------
+  def display_description(pass = true)
+    result = self.description
+    if result.blank?
+      result = coding_prompt.method_name + '(' + self.input + ')'
+      if pass
+        result += ' -> ' + self.expected_output
+      end
+    end
+    result
+  end
+
+
+  # -------------------------------------------------------------
   def record_result(answer, test_results_array)
     tcr = TestCaseResult.new(
       test_case: self,
@@ -54,12 +67,30 @@ class TestCase < ActiveRecord::Base
       )
     if !self.negative_feedback.blank?
       tcr.execution_feedback = self.negative_feedback
-    elsif !test_results_array[6].blank? && 'null' != test_results_array[6]
-      tcr.execution_feedback = test_results_array[6]
-    elsif !test_results_array[5].blank?
-      tcr.execution_feedback = test_results_array[5].sub(/^.*\./, '')
     else
-      tcr.execution_feedback = 'did not meet expectations'
+      # This logic is somewhat Java-specific, and needs to be refactored
+      # to better support other languages.
+      if !test_results_array[5].blank?
+        exception_name = test_results_array[5].sub(/^.*\./, '')
+        if !['AssertionFailedError',
+          'AssertionError',
+          'ComparisonFailure',
+          'ReflectionSupportError'].include?(exception_name) ||
+          test_results_array[6].blank?
+          tcr.execution_feedback = exception_name
+        end
+      end
+      if !test_results_array[6].blank? && 'null' != test_results_array[6]
+        if !tcr.execution_feedback.blank?
+          tcr.execution_feedback += ': '
+        else
+          tcr.execution_feedback = ''
+        end
+        tcr.execution_feedback += test_results_array[6].sub(/^\w/, &:upcase)
+      end
+      if tcr.execution_feedback.blank?
+        tcr.execution_feedback = 'did not meet expectations'
+      end
     end
     tcr.save!
 

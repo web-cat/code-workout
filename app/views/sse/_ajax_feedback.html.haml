@@ -22,7 +22,7 @@
         - answer.test_case_results(true).each do |tcr|
           %tr
             %td
-              = tcr.test_case.description
+              = tcr.display_description
               - if !tcr.pass
                 - if !tcr.test_case.description.include?('hidden')
                   %br

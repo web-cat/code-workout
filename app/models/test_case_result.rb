@@ -35,5 +35,16 @@ class TestCaseResult < ActiveRecord::Base
   validates :user, presence: true
   validates :test_case, presence: true
   validates :coding_prompt_answer, presence: true
+  validates :pass, inclusion: [true, false]
+
+
+  #~ Instance methods .........................................................
+
+  # -------------------------------------------------------------
+  # Provides the associated test case's displayable description,
+  # computing it if needed
+  def display_description
+    test_case.display_description(self.pass)
+  end
 
 end

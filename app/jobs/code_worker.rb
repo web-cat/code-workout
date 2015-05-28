@@ -79,10 +79,7 @@ class CodeWorker
         puts "ASSERTIONS-FEEDBACK","ASSERTIONS-FEEDBACK"
         CSV.foreach(attempt_dir + '/results.csv') do |line|
           # find test id
-          test_name = line[2]
-          p "test name = #{test_name}"
-          test_id = test_name[/\d+/].to_i
-          p "test id = #{test_id}"
+          test_id = line[2][/\d+/].to_i
           test_case = prompt.test_cases.where(id: test_id).first
           correct += test_case.record_result(answer, line)
           total += test_case.weight

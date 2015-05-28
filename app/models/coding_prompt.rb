@@ -120,9 +120,6 @@ class CodingPrompt < ActiveRecord::Base
         end
         if !row[2].blank?
           tc.description = row[2]
-        else
-          tc.description = self.method_name + '(' + tc.input +
-            ') -> ' + tc.expected_output
         end
         if !row[3].blank?
           tc.negative_feedback = row[3]
