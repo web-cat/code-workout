@@ -24,15 +24,19 @@
     <mkdir dir="${report_dir}"/>
     <delete>
       <fileset dir="${report_dir}"/>
+      <fileset dir="${work_dir}" includes="*.class"/>
     </delete>
   	<record name="${report_dir}/compile.log" action="start"/>
     <javac
-      srcdir="${attempt_dir}"
-      destdir="${attempt_dir}"
+      srcdir="${work_dir}"
+      destdir="${work_dir}"
       debug="true"
       debuglevel="lines,vars,source"
       includeAntRuntime="false">
       <classpath refid="codeworkout.classpath"/>
+      <compilerarg value="-Xlint:unchecked"/>
+      <compilerarg value="-Xlint:empty"/>
+      <compilerarg value="-Xlint:fallthrough"/>
     </javac>
   	<record name="${report_dir}/compile.log" action="stop"/>
   </target>

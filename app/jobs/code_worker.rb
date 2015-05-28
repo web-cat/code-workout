@@ -113,13 +113,15 @@ class CodeWorker
   # -------------------------------------------------------------
   def execute_javatest(class_name, attempt_dir, pre_lines)
     cmd = CodeWorkout::Config::JAVA[:ant_cmd] % {attempt_dir: attempt_dir}
-    if system(cmd +
+    system(cmd +
       ">> #{attempt_dir}/err.log " +
       "2>> #{attempt_dir}/err.log")
-      return nil
-    else
-      error = ''
-      compile_out = File.foreach(attempt_dir + '/reports/compile.log') do |line|
+
+    # Parse compiler output for error messages to determine success
+    error = ''
+    logfile = attempt_dir + '/reports/compile.log'
+    if File.exist?(logfile)
+      compile_out = File.foreach(logfile) do |line|
         line.chomp!
         puts "checking line: #{line}"
         m = /^\s*\[javac\]\s/.match(line)
@@ -131,7 +133,7 @@ class CodeWorker
         puts "javac output: #{line}"
         if line =~ /^Compiling/
           next
-        elsif line =~ /^\S+\.java:\s*([0-9]+)\s*:\s*(.*)/
+        elsif line =~ /^\S+\.java:\s*([0-9]+)\s*:\s*(?:warning:\s*)?(.*)/
           error += "line #{$1.to_i - pre_lines}: #{$2}"
           puts "error now: #{error}"
         elsif line =~ /^(found|expected|required|symbol)\s*:(.*)/
@@ -141,11 +143,18 @@ class CodeWorker
           break
         end
       end
-      if error.blank?
-        error = nil
-      end
-      return error
     end
+    if error.blank?
+      error = nil
+    else
+      # If there's an error, remove the test results, if any.
+      # This causes warnings to be treated the same as errors.
+      result_file = attempt_dir + '/results.csv'
+      if File.exist?(result_file)
+        File.delete(result_file)
+      end
+    end
+    return error
   end
 
 
