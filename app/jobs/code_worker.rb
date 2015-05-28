@@ -5,7 +5,7 @@ require "#{Rails.root}/usr/resources/config"
 
 class CodeWorker
   include SuckerPunch::Job
-  workers 20
+  workers 10
 
   # -------------------------------------------------------------
   def perform(exercise_version_id, user_id, workout_id, attempt)
