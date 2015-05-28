@@ -12,9 +12,18 @@ class CodeWorker
     ActiveRecord::Base.connection_pool.with_connection do
       exv = ExerciseVersion.find(exercise_version_id)
       prompt = exv.prompts.first.specific
+      pre_lines = 0
       if !prompt.wrapper_code.blank?
         code_body = prompt.wrapper_code.sub(/\b___\b/,
           attempt.prompt_answers.first.specific.answer)
+        if $`
+          # Want pre_lines to be a count of the number of lines preceding
+          # the one the match is on, so use count() instead of lines() here
+          pre_lines = $`.count("\n")
+        else
+          puts 'ERROR: no answer insertion marker in wrapper code: ' +
+            prompt.wrapper_code.to_s
+        end
       end
       current_attempt = attempt.id.to_s
       language = exv.exercise.language
@@ -44,11 +53,11 @@ class CodeWorker
       # to be more OO
 
       if language == "Java"
-        result = execute_javatest(prompt.class_name, attempt_dir)
+        result = execute_javatest(prompt.class_name, attempt_dir, pre_lines)
       elsif language == "Ruby"
-        result = execute_rubytest(prompt.class_name, attempt_dir)
+        result = execute_rubytest(prompt.class_name, attempt_dir, pre_lines)
       elsif language == "Python"
-        result = execute_pythontest(prompt.class_name, attempt_dir)
+        result = execute_pythontest(prompt.class_name, attempt_dir, pre_lines)
       end # IF INNERMOST
 
       correct = 0.0
@@ -62,13 +71,10 @@ class CodeWorker
       answer =
         attempt.prompt_answers.where(prompt: prompt.acting_as).first.specific
       if !File.exist?(attempt_dir + '/results.csv')
-        feedback = result.split("#{prompt.class_name}Test")[2]
-        puts "CODE-ERROR-FEEDBACK", "CODE-ERROR-FEEDBACK"
-        prompt.test_cases.each_with_index do |tc|
-          test_case.record_result(answer, ['', '', '', '', '', '',
-            'CODE-ERROR-CODE-ERROR ' + feedback, 0])
-        end
+        answer.error = result
+        puts "CODE-ERROR-FEEDBACK", answer.error, "CODE-ERROR-FEEDBACK"
         total = 1.0
+        answer.save
       else
         puts "ASSERTIONS-FEEDBACK","ASSERTIONS-FEEDBACK"
         CSV.foreach(attempt_dir + '/results.csv') do |line|
@@ -84,9 +90,12 @@ class CodeWorker
       end
       multiplier = 1.0
       if Workout.find_by(id: workout_id)
-        WorkoutScore.record_workout_score(correct / total, exv.exercise, workout_id,User.find(user_id))
-        multiplier  = ExerciseWorkout.find_by(exercise: exv.exercise,workout_id: workout_id).points
-        attempt.workout_score = WorkoutScore.find_by(user_id: user_id,workout_id: workout_id)
+        WorkoutScore.record_workout_score(
+          correct / total, exv.exercise, workout_id, User.find(user_id))
+        multiplier  = ExerciseWorkout.find_by(
+          exercise: exv.exercise,workout_id: workout_id).points
+        attempt.workout_score = WorkoutScore.find_by(
+          user_id: user_id, workout_id: workout_id)
       end
       attempt.score = correct * multiplier / total
       attempt.save!
@@ -102,20 +111,46 @@ class CodeWorker
   private
 
   # -------------------------------------------------------------
-  def execute_javatest(class_name, attempt_dir)
+  def execute_javatest(class_name, attempt_dir, pre_lines)
     cmd = CodeWorkout::Config::JAVA[:ant_cmd] % {attempt_dir: attempt_dir}
     if system(cmd +
       ">> #{attempt_dir}/err.log " +
       "2>> #{attempt_dir}/err.log")
       return nil
     else
-      return File.read(attempt_dir + 'reports/compile.log')
+      error = ''
+      compile_out = File.foreach(attempt_dir + '/reports/compile.log') do |line|
+        line.chomp!
+        puts "checking line: #{line}"
+        m = /^\s*\[javac\]\s/.match(line)
+        if m
+          line = m.post_match
+        else
+          break
+        end
+        puts "javac output: #{line}"
+        if line =~ /^Compiling/
+          next
+        elsif line =~ /^\S+\.java:\s*([0-9]+)\s*:\s*(.*)/
+          error += "line #{$1.to_i - pre_lines}: #{$2}"
+          puts "error now: #{error}"
+        elsif line =~ /^(found|expected|required|symbol)\s*:(.*)/
+          error += "\n#{$1}: #{$2}"
+          puts "error now: #{error}"
+        else
+          break
+        end
+      end
+      if error.blank?
+        error = nil
+      end
+      return error
     end
   end
 
 
   # -------------------------------------------------------------
-  def execute_rubytest(class_name, attempt_dir)
+  def execute_rubytest(class_name, attempt_dir, pre_lines)
     if system("ruby #{class_name}Test.rb",
       [:out, :err] => 'err.log',
       chdir: attempt_dir)
@@ -129,7 +164,7 @@ class CodeWorker
 
 
   # -------------------------------------------------------------
-  def execute_pythontest(class_name, attempt_dir)
+  def execute_pythontest(class_name, attempt_dir, pre_lines)
     if system("python #{class_name}Test.py",
       [:out, :err] => 'err.log',
       chdir: attempt_dir)

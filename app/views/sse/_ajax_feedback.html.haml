@@ -4,37 +4,42 @@
   - @attempt.prompt_answers.first.specific.choices.each do |choice|
     = choice.feedback
 - elsif @exercise_version.is_coding?
-  %table.table.table-striped.feedback
-    %thead
-      %tr
-        %th Behavior
-        %th Result
-    %tbody
-      -# puts "IJD","IJD",TestCaseResult.where(attempt_id: attempt.id).last,"IJD","IJD"
-      - @attempt.prompt_answers.first.specific.test_case_results(true).each do |tcr|
+  - answer = @attempt.prompt_answers.first.specific
+  - if !answer.error.blank?
+    %p Your answer could not be processed because it contains errors:
+    .alert.alert-danger{ role: 'alert' }
+      - answer.error.lines.each_with_index do |line, i|
+        - if i > 0
+          %br
+        = line
+  - else
+    %table.table.table-striped.feedback
+      %thead
         %tr
-          %td
-            - if tcr.execution_feedback.include?('CODE-ERROR-CODE-ERROR')
-              CODE EXECUTION ERROR
-              = tcr.execution_feedback
-              - break
-            = tcr.test_case.description
-            - if !tcr.pass
-              - if !tcr.test_case.description.include?('hidden')
-                %br
-                .out= tcr.execution_feedback
-          - if tcr.pass
-            %td.pass
-              %i.fa.fa-check-square
-          - else
-            %td.fail
-              %i.fa.fa-minus-square
+          %th Behavior
+          %th Result
+      %tbody
+        - answer.test_case_results(true).each do |tcr|
+          %tr
+            %td
+              = tcr.test_case.description
+              - if !tcr.pass
+                - if !tcr.test_case.description.include?('hidden')
+                  %br
+                  .out= tcr.execution_feedback
+            - if tcr.pass
+              %td.pass
+                %i.fa.fa-check-square
+            - else
+              %td.fail
+                %i.fa.fa-minus-square
+
 - if session[:current_workout]
   - wkt = Workout.find(session[:current_workout])
   - if wkt.next_exercise(@exercise,current_user).nil?
     = link_to 'Finish workout',
       workout_evaluate_path(id: session[:current_workout])
-  - else    
+  - else
     = link_to 'Next question',
       exercise_practice_path(wkt.next_exercise(@exercise,current_user)),
       method: :get
