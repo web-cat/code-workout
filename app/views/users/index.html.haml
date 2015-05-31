@@ -3,7 +3,7 @@
 %table.table.table-striped.table-bordered
   %thead
     %tr
-      %th Gravatar
+      %th Image
       %th Last name
       %th First name
       %th Email
@@ -18,7 +18,7 @@
     - else
       = render @users
 
-- unless @users.empty?
+- if @users.is_a?(Array) && @users.size > 1
   #users_paginator
     = paginate @users, remote: true
 

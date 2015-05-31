@@ -113,7 +113,7 @@ CodeWorkout::Application.routes.draw do
     'course_offerings#store_workout', as: :course_offering_store_workout
 
 
-  # All of the routes anchored at /courses
+  # All of the routes anchored at /users
   resources :users, constraints: { id: /[^\/]+/ } do
     resources :resource_files, path: 'media',
       constraints: { id: /[^\/]+/ }

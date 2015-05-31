@@ -1,53 +1,8 @@
-class UsersController < ApplicationController
-  before_action :set_user,
-    only: [:show, :edit, :update, :destroy, :calc_performance]
-  authorize_resource except: [:show, :index]
+class UsersController < InheritedResources::Base
+  load_and_authorize_resource
 
 
   #~ Action methods ...........................................................
-
-  # -------------------------------------------------------------
-  # GET /users
-  def index
-    if cannot? :index, User
-      redirect_to root_path, notice: 'Unauthorized to view users' and return
-    end
-
-    @users = User.all.page(params[:page])
-    respond_to do |format|
-      format.html # index.html.erb
-      format.js
-      format.json { render json: @users }
-    end
-  end
-
-
-  # -------------------------------------------------------------
-  # GET /users/1
-  def show
-    if can? :show, @user
-      puts "PASS"
-    else
-      redirect_to root_path, notice: 'Unauthorized to view user' and return
-    end
-  end
-
-
-  # -------------------------------------------------------------
-  # GET /users/new
-  def new
-    @user = User.new
-  end
-
-
-  # -------------------------------------------------------------
-  # GET /users/1/edit
-  def edit
-    if cannot? :index, User
-      redirect_to root_path, notice: 'Unauthorized to edit user' and return
-    end
-  end
-
 
   # -------------------------------------------------------------
   # GET /users/1/performance
@@ -75,40 +30,8 @@ class UsersController < ApplicationController
     respond_to do |format|
       format.html # index.html.erb
       format.js
-      format.json { render json: @tag_Scores }
+      format.json { render json: @tag_scores }
     end
-  end
-
-
-  # -------------------------------------------------------------
-  # POST /users
-  def create
-    @user = User.new(user_params)
-
-    if @user.save
-      redirect_to @user, notice: 'User was successfully created.'
-    else
-      render action: 'new'
-    end
-  end
-
-
-  # -------------------------------------------------------------
-  # PATCH/PUT /users/1
-  def update
-    if @user.update(user_params)
-      redirect_to @user, notice: 'User was successfully updated.'
-    else
-      render action: 'edit'
-    end
-  end
-
-
-  # -------------------------------------------------------------
-  # DELETE /users/1
-  def destroy
-    @user.destroy
-    redirect_to users_url, notice: 'User was successfully destroyed.'
   end
 
 
@@ -116,18 +39,16 @@ class UsersController < ApplicationController
   private
 
     # -------------------------------------------------------------
-    # Use callbacks to share common setup or constraints between actions.
-    def set_user
-      @user = User.find(params[:id])
+    # Only allow a trusted parameter "white list" through.
+    def user_params
+      params.require(:user).permit(:first_name, :last_name, :email, :avatar)
     end
 
 
     # -------------------------------------------------------------
-    # Only allow a trusted parameter "white list" through.
-    def user_params
-#      if !can? :manage, User
-#        params.delete(...)
-#      end
-      params.require(:user).permit(:first_name, :last_name, :email, :avatar)
+    # Defines resource human-readable name for use in flash messages.
+    def interpolation_options
+      { resource_name: @user.display_name }
     end
+
 end

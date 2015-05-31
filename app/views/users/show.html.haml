@@ -1,8 +1,6 @@
 %p#notice= notice
 
-%p
-  %strong Gravatar:
-  = image_tag @user.avatar_url
+= image_tag @user.avatar_url
 
 %p
   %strong First name:
@@ -16,15 +14,17 @@
   %strong Email:
   = @user.email
 %br
-- if @user.workout_scores[0]
-  %table{border: 1}
-    %tr
-      %td Workout name
-      %td Score
-    - @user.workout_scores.each do |user_score|
+- if @user.workout_scores.size > 0
+  %table.table.table-striped
+    %thead
       %tr
-        %td= Workout.find(user_score.workout_id).name
-        %td= user_score.score
+        %th Workout name
+        %th Score
+    %tbody
+      - @user.workout_scores.each do |user_score|
+        %tr
+          %td= user_score.workout.name
+          %td= user_score.score
 
 %br
 

@@ -23,14 +23,14 @@ class Ability
       can :unimpersonate, User
 
       # Global admin permissions
-      can :manage, :all if user.global_role.is_admin?
+      can :manage, :all if user.global_role.id == GlobalRole::ADMINISTRATOR_ID
 
       # Creating an alias for CRUD operations
       alias_action :create, :read, :update, :destroy, to: :crud
 
       # A user should only be able to update himself or herself (assuming no
       # other permissions granted below by the global role).
-      can [:show, :update], User, id: user.id
+      can [:read, :edit, :update], User, id: user.id
 
       process_global_role user
       process_instructor user

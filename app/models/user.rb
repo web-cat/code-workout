@@ -196,7 +196,7 @@ class User < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def avatar_url
-    avatar || gravatar_url
+    self.avatar.blank? ? gravatar_url : self.avatar
   end
 
 
