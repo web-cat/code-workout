@@ -13,19 +13,19 @@ class UsersController < InheritedResources::Base
     #  exs.push t.exercise_id
     #end
 
-    tags = TagUserScore.where(:user_id => params[:user_id]).
+    tags = TagUserScore.where(user_id: params[:user_id]).
       order("updated_at DESC")
     @tag_scores = Array.new
     tags.each do |t|
-      info = Hash.new
-      tag = Tag.find(t.tag_id)
-      info[:tag_name] = tag.tag_name
-      tag.total_experience != 0 ?
-        info[:percent_experience] = t.experience*100/tag.total_experience :
-        info[:percent_experience] = 0
-      info[:total_exercises] = tag.total_exercises
-      info[:completed_exercises] = t.completed_exercises
-      @tag_scores.push info
+      tag = t.tag
+      if tag.total_experience > 0
+        info = Hash.new
+        info[:tag_name] = tag.tag_name
+        info[:percent_experience] = t.experience * 100 / tag.total_experience
+        info[:total_exercises] = tag.total_exercises
+        info[:completed_exercises] = t.completed_exercises
+        @tag_scores << info
+      end
     end
     respond_to do |format|
       format.html # index.html.erb
