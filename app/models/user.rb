@@ -270,8 +270,9 @@ class User < ActiveRecord::Base
       user.last_name ||= auth.info.last_name
       user.email ||= auth.info.email
       user.avatar ||= auth.info.image
+      user.remember_created_at = DateTime.now
       if !user.confirmed_at
-        user.confirmed_at = DateTime.now
+        user.confirmed_at = user.remember_created_at
       end
       if user.changed?
         user.save

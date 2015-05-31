@@ -6,6 +6,11 @@
       = f.input :email, input_html: { autofocus: true }
     .form-group
       = f.input :password
+    .checkbox
+      %label
+        = f.check_box :remember_me, checked: true, style: 'margin-top: 6px;'
+        Remember me
+      other
 
   = f.actions do
     = f.submit 'Sign in', class: 'btn btn-primary'

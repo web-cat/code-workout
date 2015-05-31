@@ -55,10 +55,10 @@ FactoryGirl.define do
           "    ___\n"\
           "}\n"
         test_script ""\
-          "0,1,factorial(0) -> 1\n"\
-          "1,1,factorial(1) -> 1\n"\
-          "2,2,factorial(2) -> 2\n"\
-          "3,6,factorial(3) -> 6\n"\
+          "0,1\n"\
+          "1,1\n"\
+          "2,2\n"\
+          "3,6\n"\
           "4,24,hidden\n"\
           "5,120,hidden\n"
       end
