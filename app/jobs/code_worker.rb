@@ -157,27 +157,29 @@ class CodeWorker
 
   # -------------------------------------------------------------
   def execute_rubytest(class_name, attempt_dir, pre_lines)
-    if system("ruby #{class_name}Test.rb",
-      [:out, :err] => 'err.log',
-      chdir: attempt_dir)
-      puts 'FINE', 'RUBY FINE'
-      return nil
-    else
-      puts 'ERROR', 'RUBY ERROR'
-      return File.read(attempt_dir + '/err.log')
-    end
+    return 'Ruby execution is temporarily suspended.'
+#    if system("ruby #{class_name}Test.rb",
+#      [:out, :err] => 'err.log',
+#      chdir: attempt_dir)
+#      puts 'FINE', 'RUBY FINE'
+#      return nil
+#    else
+#      puts 'ERROR', 'RUBY ERROR'
+#      return File.read(attempt_dir + '/err.log')
+#    end
   end
 
 
   # -------------------------------------------------------------
   def execute_pythontest(class_name, attempt_dir, pre_lines)
-    if system("python #{class_name}Test.py",
-      [:out, :err] => 'err.log',
-      chdir: attempt_dir)
-      return nil
-    else
-      return File.read(attempt_dir + '/err.log')
-    end
+    return 'Python execution is temporarily suspended.'
+#    if system("python #{class_name}Test.py",
+#      [:out, :err] => 'err.log',
+#      chdir: attempt_dir)
+#      return nil
+#    else
+#      return File.read(attempt_dir + '/err.log')
+#    end
   end
 
 end
