@@ -10,7 +10,6 @@ ActiveAdmin.register Course, sort_order: :number_asc do
     column :number
     column(:name) { |c| link_to c.name, admin_course_path(c) }
     column :organization, sortable: 'organizations.name'
-    column :url_part
     column :creator
     column :created_at
     actions

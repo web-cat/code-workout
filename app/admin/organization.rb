@@ -2,13 +2,13 @@ ActiveAdmin.register Organization do
   active_admin_import
 
   menu parent: 'University-oriented', priority: 20
-  permit_params :name, :url_part
+  permit_params :name, :abbreviation
   actions :all, except: [:destroy]
 
   index do
     id_column
     column(:name) { |org| link_to org.name, admin_organization_path(org) }
-    column :url_part
+    column :abbreviation
     column :created_at
     actions
   end

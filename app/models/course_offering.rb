@@ -39,12 +39,17 @@ class CourseOffering < ActiveRecord::Base
 
   accepts_nested_attributes_for :term
 
+  scope :managed_by_user, -> (u) { joins{course_enrollments}.
+    where{ course_enrollments.user == u &&
+    course_enrollments.course_role_id == CourseRole::INSTRUCTOR_ID } }
+
 
   #~ Validation ...............................................................
 
   validates :label, presence: true
   validates :course, presence: true
   validates :term, presence: true
+
 
   #~ Public instance methods ..................................................
 
@@ -93,18 +98,10 @@ class CourseOffering < ActiveRecord::Base
 
   # -------------------------------------------------------------
   # Public: Returns a boolean indicating whether the offering is
-  # currently unavailable for self-enrollment
-  def cutoff?
-    if self_enrollment_allowed
-      if !cutoff_date
-        return false        
-      else
-        if cutoff_date >= Time.now
-          return false  
-        end
-      end
-    end
-    return true
+  # currently available for self-enrollment
+  def can_enroll?
+    self.self_enrollment_allowed &&
+    (!self.cutoff_date || self.cutoff_date >= Time.now)
   end
 
   # -------------------------------------------------------------
@@ -135,14 +132,14 @@ class CourseOffering < ActiveRecord::Base
 
 
   # -------------------------------------------------------------
-  def taught_by?(user)
+  def is_instructor?(user)
     role_for_user(user).andand.is_instructor?
   end
 
 
   # -------------------------------------------------------------
-  def graded_by?(user)
-    role_for_user(user).andand.can_grade_submissions?
+  def is_grader?(user)
+    role_for_user(user).andand.is_grader?
   end
 
 

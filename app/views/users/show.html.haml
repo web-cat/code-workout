@@ -12,7 +12,7 @@
 
 %p
   %strong Email:
-  = @user.email
+  = link_to @user.email, 'mailto:' + @user.email
 %br
 - if @user.workout_scores.size > 0
   %table.table.table-striped

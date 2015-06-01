@@ -9,6 +9,7 @@ if is_coding
   $("#exercisefeedback").html('<h2>Feedback</h2><i class="fa fa-spinner fa-spin fa-2x"></i>')
   source.addEventListener "feedback_#{att_id}",(e)->
     $.ajax(url: "/sse/feedback_update?att_id=#{att_id}")
+    source.close
 else
   $.ajax(url: "/sse/feedback_update?att_id=#{att_id}")
 

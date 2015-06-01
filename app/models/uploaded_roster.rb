@@ -38,7 +38,7 @@ class UploadedRoster
     @column_hash = params[:columns] || {}
     @has_headers = params[:has_headers]
     @course_role_id = params[:course_role_id]
-    @course_offering = CourseOffering.find_by_id(params[:course_offering_id])
+    @course_offering = CourseOffering.find_by_id(params[:id])
 
     @users_created = []
     @users_enrolled = []

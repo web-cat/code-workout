@@ -1,17 +1,12 @@
-- if !off.is_enrolled?(current_user)    
-  - if off.cutoff?
-    Self-enrollment not possible forevermore
-  - else
-    = link_to 'Enroll',                                                  |
-      '/course_enrollments?' + { course_enrollment:                      |
-      ActionController::Parameters.new({user_id: current_user.id,        |
-      course_offering_id: off.id,                           |
-      course_role_id: CourseRole::STUDENT_ID})}.to_param, method: :post  |
-- else
-  - if off.is_staff?(current_user)
-    = "You are already a part of the staff for this course"
+- if off.is_enrolled?(current_user)
+  - if off.is_instructor?(current_user)
+    Enrolled as instructor
+  - elsif off.is_grader?(current_user)
+    Enrolled as grader
   - elsif off.is_student?(current_user)
-    = link_to 'Unenroll',                                                  |
-      '/unenroll?' + { course_enrollment:                      |
-      ActionController::Parameters.new({user_id: current_user.id,        |
-      course_offering_id: off.id})}.to_param, method: :delete  
+    = link_to 'Unenroll', unenroll_path(off), method: :delete
+- else
+  - if off.can_enroll?
+    = link_to 'Enroll', enroll_path(off), method: :post
+  - else
+    Contact instructor

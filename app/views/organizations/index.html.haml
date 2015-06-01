@@ -39,10 +39,8 @@
                   %td!= o.instructors.map{ |i| link_to i.display_name,
                     user_path(i) }.to_sentence
                   %td
-                    = render partial: "course_offerings/self_enrollment", locals: {off: o} 
-
-
-
+                    = render partial: "course_offerings/self_enrollment",
+                      locals: { off: o }
 - else
   %p
     No organizations have courses offered in

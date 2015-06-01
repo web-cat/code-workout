@@ -1,6 +1,5 @@
 CodeWorkout::Application.routes.draw do
 
-
   root 'home#index'
 
   get 'home' => 'home#index'
@@ -80,9 +79,9 @@ CodeWorkout::Application.routes.draw do
   end
 
   # All of the routes anchored at /courses
-  get '/courses_search' => 'courses#search', as: :courses_search
-  post '/courses_find' => 'courses#find', as: :course_find
   resources :organizations, only: [ :index, :show ], path: '/courses' do
+    get 'search' => 'courses#search', as: :courses_search
+    post 'find' => 'courses#find', as: :course_find
     get 'new' => 'courses#new'
     get 'index' => 'courses#index', as: :courses
     #get ':org_id/:term_id/generate_gradebook/:id' => 'courses#generate_gradebook',
@@ -93,13 +92,14 @@ CodeWorkout::Application.routes.draw do
   end
 
   # FIXME: Needs to be fixed so that it works well with the general formatting of routes
-  post '/course_enrollments' => 'course_offerings#create_enrollment'
-  delete '/unenroll' => 'course_offerings#delete_enrollment'
+  post '/course_offerings/:id/enroll' => 'course_offerings#enroll', as: :enroll
+  delete '/course_offerings/:id/unenroll' =>
+    'course_offerings#unenroll', as: :unenroll
 
   # doesn't fit in the other routes well, but that's ok since it is
   # almost purely internal use only.
-  match '/course_offering/:course_offering_id/upload_roster/:action',
-    controller: 'upload_roster', as: 'upload_roster', via: [:get, :post]
+  match '/course_offerings/:id/upload_roster/:action',
+    controller: 'upload_roster', as: :upload_roster, via: [:get, :post]
   # internal only
   post '/course_offerings/:id/generate_gradebook' =>
     'course_offerings#generate_gradebook', as: :course_offering_gradebook

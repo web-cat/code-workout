@@ -79,7 +79,7 @@ class Course < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def number_and_org
-    "#{number} (#{organization.url_part})"
+    "#{number} (#{organization.abbreviation})"
   end
 
 
