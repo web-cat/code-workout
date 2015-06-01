@@ -107,7 +107,7 @@ GEM
       sass (~> 3.2)
       thor
     builder (3.2.2)
-    cancan (1.6.9)
+    cancancan (1.10.1)
     capistrano (3.2.1)
       i18n
       rake (>= 10.0.0)
@@ -378,7 +378,7 @@ DEPENDENCIES
   bootstrap-editable-rails
   bootstrap-sass (~> 3.2.0)
   bootstrap-wysihtml5-rails
-  cancan (= 1.6.9)
+  cancancan
   capistrano
   capistrano-bundler
   capistrano-rails

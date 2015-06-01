@@ -94,6 +94,10 @@ class Exercise < ActiveRecord::Base
   }
 
 
+  scope :visible_to_user, -> (u) { joins{exercise_owners.outer}.
+    where{ (is_public == true) | (exercise_owners.owner == u) } }
+
+
   #~ Class methods ............................................................
 
   # -------------------------------------------------------------
@@ -162,6 +166,12 @@ class Exercise < ActiveRecord::Base
   # return true if user has attempted this exercise version or not.
   def user_attempted?(u_id)
     self.attempts.where(user_id: u_id).any?
+  end
+
+
+  # -------------------------------------------------------------
+  def visible_to?(u)
+    self.is_public || self.owners.include?(u)
   end
 
 

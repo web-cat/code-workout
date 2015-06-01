@@ -24,7 +24,8 @@
             %td
               = tcr.display_description
               - if !tcr.pass
-                - if !tcr.test_case.description.include?('hidden')
+                - if !tcr.test_case.description.blank? &&                |
+                  !tcr.test_case.description.include?('hidden')          |
                   %br
                   .out= tcr.execution_feedback
             - if tcr.pass

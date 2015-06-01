@@ -3,13 +3,16 @@ class SseController < ApplicationController
 
   # -------------------------------------------------------------
   def feedback_wait
+    max_attempt = params[:att_id]
+    @attempt = Attempt.find_by(id: params[:att_id])
+    authorize! :read, @attempt
+
     response.headers['Content-Type'] = 'text/event-stream'
 
     # Feedbacker::SSE.new(response.stream)
     sse = SSE.new(response.stream, retry: 300,
       event: "feedback_#{params[:att_id]}")
 
-    max_attempt = params[:att_id]
     puts 'FINGON', "record_#{max_attempt}_attempt", 'FINGON'
     flag = true
     ActiveSupport::Notifications.subscribe(
@@ -31,9 +34,11 @@ class SseController < ApplicationController
     render nothing: true
   end
 
+
   # -------------------------------------------------------------
   def feedback_update
     @attempt = Attempt.find_by(id: params[:att_id])
+    authorize! :read, @attempt
     @exercise_version = @attempt.exercise_version
     @exercise = @exercise_version.exercise
     respond_to do |format|

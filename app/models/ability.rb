@@ -132,9 +132,25 @@ class Ability
 
   # -------------------------------------------------------------
   def process_exercises(user)
-    # Tighter permissions to remain till beginning of Fall 2015
+    # Everyone can search exercises
+    can [:search, :random_exercise], Exercise
+
+    # Still needs revision
+    can [:index, :read, :practice, :evaluate], Exercise,
+      Exercise.visible_to_user(user) do |e|
+      e.visible_to?(user)
+    end
     can :create, Exercise if user.global_role.is_instructor?
-    can [:read, :update, :destroy], Exercise, creator_id: user.id
+    can [:update], Exercise, exercise_owners: { owner: user }
+
+    can :read, Attempt, workout_score:
+      { workout_offering:
+        { course_offering:
+          { course_enrollment:
+            { user: user, course_role:
+              { can_manage_assignments: true } } } } }
+    can [:create, :read], Attempt, user: user
+
   end
 
 

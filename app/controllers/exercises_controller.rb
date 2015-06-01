@@ -1,5 +1,5 @@
 class ExercisesController < ApplicationController
-  before_action :set_exercise, only: [:show, :edit, :update, :destroy]
+  load_and_authorize_resource
 
 
   #~ Action methods ...........................................................
@@ -7,21 +7,15 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # GET /exercises
   def index
-    if cannot? :index, Exercise
-      redirect_to root_path,
-        notice: 'Unauthorized to view all exercises' and return
-    end
-    @exercises = Exercise.all
+    puts "@exercises = #{@exercises}"
+    @exercises = Exercise.accessible_by(current_ability)
+    puts "@exercises = #{@exercises}"
   end
 
 
   # -------------------------------------------------------------
   # GET /exercises/download.csv
   def download
-    if cannot? :index, Exercise
-      redirect_to root_path,
-        notice: 'Unauthorized to view all exercises' and return
-    end
     @exercises = Exercise.accessible_by(current_ability)
 
     respond_to do |format|
@@ -62,10 +56,6 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # GET /exercises/new
   def new
-    if !user_signed_in? || (cannot? :new, Exercise)
-      redirect_to root_path,
-        notice: 'Unauthorized to create new exercise' and return
-    end
     @exercise = Exercise.new
     @coding_exercise = CodingQuestion.new
     @languages = Tag.where(tagtype: Tag.language).pluck(:tag_name)
@@ -76,20 +66,12 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # GET /exercises/1/edit
   def edit
-    if !user_signed_in? || (cannot? :edit, @exercise)
-      redirect_to root_path,
-        notice: 'Unauthorized to edit exercise' and return
-    end
   end
 
 
   # -------------------------------------------------------------
   # POST /exercises
   def create
-    if !user_signed_in? || (cannot? :exercise, Exercise)
-      redirect_to root_path,
-        notice: 'Unauthorized to create exercise' and return
-    end
     basex=BaseExercise.new
     ex=Exercise.new
     msg = params[:exercise] || params[:coding_question]
@@ -300,45 +282,16 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   def random_exercise
     exercise_dump = []
-    if params[:language]
-      Exercise.all.each do |baseexercise|
-        candidate_exercise = baseexercise.current_version
-        if candidate_exercise &&
-          baseexercise.is_public &&
-          baseexercise.language == params[:language]
-          exercise_dump << candidate_exercise
-        elsif !candidate_exercise
-          puts "ERROR: base exercise #{baseexercise.id} with current " +
-            "version #{baseexercise.current_version_id} does not refer to " +
-            'an existing exercise.'
-        end # INNER IF
-      end   # DO WHILE
+    Exercise.where(is_public: true).each do |exercise|
+      if params[:language] ?
+        (exercise.language == params[:language]) :
+        params[:question_type] ?
+        (exercise.question_type == params[:question_type].to_i) :
+        true
 
-    elsif params[:question_type]
-      Exercise.where(question_type: params[:question_type].to_i).
-        find_each do |baseexercise|
-        candidate_exercise = baseexercise.current_version
-        if candidate_exercise && baseexercise.is_public
-          exercise_dump << candidate_exercise
-        elsif !candidate_exercise
-          puts "ERROR: base exercise #{baseexercise.id} with current " +
-            "version #{baseexercise.current_version_id} does not refer to " +
-            'an existing exercise.'
-        end # INNER IF
-      end   # DO WHILE
-    else
-      Exercise.all.each do |baseexercise|
-        candidate_exercise = baseexercise.current_version
-        if candidate_exercise && baseexercise.is_public
-          exercise_dump << candidate_exercise
-        elsif !candidate_exercise
-          puts "ERROR: base exercise #{baseexercise.id} with current " +
-            "version #{baseexercise.current_version_id} does not refer to " +
-            'an existing exercise.'
-        end # INNER IF
-      end   # DO WHILE
-    end #OUTER IF
-    puts "VICTARION",exercise_dump.sample,"VICTARION"
+        exercise_dump << exercise
+      end
+    end
     redirect_to exercise_practice_path(exercise_dump.sample) and return
   end
 
@@ -346,9 +299,6 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # POST exercises/create_mcqs
   def create_mcqs
-    if !user_signed_in?
-      redirect_to root_path, notice: 'Need to sign in first' and return
-    end
     basex = BaseExercise.new
     basex.user = current_user
     basex.question_type = msg[:question_type] || 1
@@ -568,26 +518,21 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # GET exercises/upload_mcqs
   def upload_mcqs
-    if !user_signed_in? || !current_user.global_role.is_admin?
-        redirect_to root_path,
-          notice: 'You do not have permission to access this page.' and return
-    end
   end
 
 
   # -------------------------------------------------------------
   # GET exercises/upload_exercises
   def upload
-    if !user_signed_in? || !current_user.global_role.is_admin?
-        redirect_to root_path,
-          notice: 'You do not have permission to access this page.' and return
-    end
   end
 
+
+  # -------------------------------------------------------------
   def upload_yaml
-
   end
 
+
+  # -------------------------------------------------------------
   def yaml_create
     @yaml_exers = YAML.load_file(params[:form].fetch(:yamlfile).path)
     @yaml_exers.each do |exercise|
@@ -639,11 +584,6 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # POST /exercises/upload_create
   def upload_create
-    if !user_signed_in? || !current_user.global_role.is_admin?
-      redirect_to root_path,
-          notice: 'You do not have permission to access this page.' and return
-    end
-
     hash = YAML.load(File.read(params[:form][:file].path))
     exercises = ExerciseRepresenter.for_collection.new([]).from_hash(hash)
     exercises.each do |e|
@@ -719,12 +659,6 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # GET/POST /practice/1
   def practice
-    # Tighter practice requirements for the moment, should go away as a
-    # part of the gradual-engagement model
-    if !user_signed_in?
-      redirect_to exercise_path(params[:id]),
-        notice: 'Need to sign in first' and return
-    end
     if params[:exercise_version_id]
       @exercise_version =
         ExerciseVersion.find_by(id: params[:exercise_version_id])
@@ -745,11 +679,9 @@ class ExercisesController < ApplicationController
       redirect_to exercises_url,
         notice: 'Choose an exercise to practice!' and return
     end
+
     # Tighter restrictions for the moment, should go away
-    if !current_user.global_role.can_edit_system_configuration?
-      redirect_to root_path,
-        notice: 'Exercise practice is temporarily disabled.' and return
-    end
+    authorize! :practice, @exercise
 
     if @exercise_version.is_mcq?
       @answers = @exercise_version.serve_choice_array
@@ -787,10 +719,6 @@ class ExercisesController < ApplicationController
   #GET /evaluate/1
   def evaluate
     # Copy/pasted from #practice method.  Should be refactored.
-    if !user_signed_in?
-      redirect_to exercise_path(params[:id]),
-        notice: 'Need to sign in first' and return
-    end
     if params[:exercise_version_id]
       @exercise_version =
         ExerciseVersion.find_by(id: params[:exercise_version_id])
@@ -811,13 +739,10 @@ class ExercisesController < ApplicationController
       redirect_to exercises_url,
         notice: 'Choose an exercise to practice!' and return
     end
-    # Tighter restrictions for the moment, should go away
-    if !current_user.global_role.can_edit_system_configuration?
-      redirect_to root_path,
-        notice: 'Exercise practice is temporarily disabled.' and return
-    end
 
-   
+    # Tighter restrictions for the moment, should go away
+    authorize! :practice, @exercise
+
     if @exercise_version.is_mcq?
       #response_ids = params[:exercise_version][:multiple_choice_prompt][:choice_ids]
       response_ids = params[:exercise_version][:choice][:id]
@@ -837,26 +762,28 @@ class ExercisesController < ApplicationController
       @score = @exercise_version.score(@responses)
       if session[:current_workout]
         @score = @score * ExerciseWorkout.findExercisePoints(
-          @exercise, session[:current_workout]) / @exercise_version.max_mcq_score
-        @score = @score.round(2)  
+          @exercise, session[:current_workout]) /
+          @exercise_version.max_mcq_score
+        @score = @score.round(2)
       end
       # TODO: Enable @explain and @exercise_feedback again
       #@explain = @exercise_version.collate_feedback(@responses)
-      @exercise_feedback = 'You have attempted exercise ' 
+      @exercise_feedback = 'You have attempted exercise '
       # + "#{@exercise.id}:#{@exercise.name}" +
       #  ' and its feedback for you: ' +
       #  @explain.to_sentence
       if session[:current_workout]
-        WorkoutScore.record_workout_score(@score, @exercise, session[:current_workout],current_user)
+        WorkoutScore.record_workout_score(
+          @score, @exercise, session[:current_workout],current_user)
         session[:workout_feedback][@exercise.id] = @exercise_feedback
       end
       # TODO: calculate experience based on correctness and num submissions
       count_submission()
       @xp = @exercise_version.experience_on(@responses, session[:submit_num])
-      
+
       @attempt = record_attempt(@score, @xp)
       @attempt.save!
-      
+
     elsif @exercise_version.is_coding?
       @attempt = @exercise_version.new_attempt(user: current_user)
       @attempt.save
@@ -917,11 +844,6 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # PATCH/PUT /exercises/1
   def update
-    if !user_signed_in? || (cannot? :update, @exercise)
-      redirect_to root_path,
-        notice: 'Unauthorized to update exercise' and return
-    end
-    @exercise = Exercise.find(params[:id])
     new_exercise = create_new_version()
     @exercise.base_exercise.exercises << new_exercise
     new_exercise.save
@@ -949,10 +871,6 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # DELETE /exercises/1
   def destroy
-    if !user_signed_in? || (cannot? :destroy, @exercise)
-      redirect_to root_path,
-        notice: 'Unauthorized to delete exercise' and return
-    end
     @exercise.destroy
     redirect_to exercises_url, notice: 'Exercise was successfully destroyed.'
   end
@@ -960,15 +878,6 @@ class ExercisesController < ApplicationController
 
   #~ Private instance methods .................................................
   private
-
-    # -------------------------------------------------------------
-    # Use callbacks to share common setup or constraints between actions.
-    def set_exercise
-      if params[:id]
-        @exercise = Exercise.find(params[:id])
-      end
-    end
-
 
     # -------------------------------------------------------------
     def create_new_version
@@ -1018,12 +927,12 @@ class ExercisesController < ApplicationController
         session[:exercise_id] = params[:id]
       end
       attempt.submit_num = session[:submit_num]
-      attempt.submit_time = Time.now                  
+      attempt.submit_time = Time.now
       attempt.score = score
       attempt.experience_earned = exp
       attempt.user = current_user
-      
-        
+
+
       if session[:current_workout]
         wkt = Workout.find(session[:current_workout])
         ws = WorkoutScore.find_by(user: current_user, workout: wkt)
@@ -1031,9 +940,10 @@ class ExercisesController < ApplicationController
       end
       exv.attempts << attempt
       attempt.save!
-      
-       MultipleChoicePromptAnswer.record_answer(@exercise_version,@responses,attempt)
-       
+
+       MultipleChoicePromptAnswer.record_answer(
+         @exercise_version, @responses, attempt)
+
        return attempt
     end
 
@@ -1044,8 +954,9 @@ class ExercisesController < ApplicationController
         !session[:submit_num]
 
         # TODO: look up only current user
-        recent = Attempt.where(user_id: 1).where(exercise_version_id: params[:exercise_version_id]).
-          sort_by{ |a| a[:submit_num] }
+        recent = Attempt.where(user_id: 1).where(
+          exercise_version_id: params[:exercise_version_id]).
+          sort_by { |a| a[:submit_num] }
         if !recent.empty?
           session[:submit_num] = recent.last[:submit_num] + 1
         else
