@@ -44,7 +44,7 @@ ActiveAdmin.register_page 'Dashboard' do
 
       column do
         panel 'Recent Users' do
-          table_for User.where('last_sign_in_at not null').
+          table_for User.where('last_sign_in_at is not null').
             order('last_sign_in_at desc').first(20) do
             column(:name) { |u| link_to u.display_name, admin_user_path(u) }
             column(:email) { |u| link_to u.email, 'mailto:' + u.email }
