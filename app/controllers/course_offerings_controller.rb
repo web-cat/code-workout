@@ -31,9 +31,6 @@ class CourseOfferingsController < ApplicationController
   # POST /course_offerings
   def create
     @course_offering = CourseOffering.new(course_offering_params)
-    # Sets a default cutoff_date for an offering if there isn't already one.
-    # TODO: Need to implement this available from the view
-    @course_offering.cutoff_date = @course_offering.cutoff_date || term.ends_on
 
     if @course_offering.save
       redirect_to organization_course_path(

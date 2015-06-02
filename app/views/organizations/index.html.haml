@@ -32,15 +32,14 @@
             %tbody
               - course.course_offerings.each do |o|
                 %tr
-                  %td
-                    = o.term.display_name
-                  %td
-                    = o.display_name
+                  %td= o.term.display_name
+                  %td= link_to o.display_name,
+                    organization_course_path(o.course.organization,
+                    o.course, o.term)
                   %td!= o.instructors.map{ |i| link_to i.display_name,
                     user_path(i) }.to_sentence
-                  %td
-                    = render partial: "course_offerings/self_enrollment",
-                      locals: { off: o }
+                  %td= render partial: "course_offerings/self_enrollment",
+                    locals: { off: o }
 - else
   %p
     No organizations have courses offered in

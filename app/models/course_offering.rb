@@ -39,6 +39,8 @@ class CourseOffering < ActiveRecord::Base
 
   accepts_nested_attributes_for :term
 
+  scope :by_date,
+    -> { includes(:term).order('terms.starts_on DESC', 'label ASC') }
   scope :managed_by_user, -> (u) { joins{course_enrollments}.
     where{ course_enrollments.user == u &&
     course_enrollments.course_role_id == CourseRole::INSTRUCTOR_ID } }
@@ -96,13 +98,20 @@ class CourseOffering < ActiveRecord::Base
     course_enrollments.where(course_role: CourseRole.instructor).map(&:user)
   end
 
+
+  # -------------------------------------------------------------
+  def effective_cutoff_date
+    self.cutoff_date || self.term.ends_on
+  end
+
+
   # -------------------------------------------------------------
   # Public: Returns a boolean indicating whether the offering is
   # currently available for self-enrollment
   def can_enroll?
-    self.self_enrollment_allowed &&
-    (!self.cutoff_date || self.cutoff_date >= Time.now)
+    self.self_enrollment_allowed && effective_cutoff_date >= Time.now
   end
+
 
   # -------------------------------------------------------------
   # Public: Gets a relation representing all Users who are graders in

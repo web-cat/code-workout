@@ -3,7 +3,9 @@
   %li= link_to 'Courses', organizations_path
   %li= link_to @course.organization.abbreviation,
     organization_path(@course.organization)
-  %li.active= @course.number
+  %li= link_to @course.number,
+    organization_course_path(@course.organization, @course)
+  %li.active= @term.andand.display_name
 
 %h1= @course.number_and_name
 

@@ -1,6 +1,5 @@
 class CoursesController < ApplicationController
-  before_action :set_course,
-    only: [:show, :edit, :generate_gradebook, :update, :destroy]
+  load_and_authorize_resource
   respond_to :html, :js, :json
 
 
@@ -9,17 +8,24 @@ class CoursesController < ApplicationController
   # -------------------------------------------------------------
   # GET /courses
   def index
-    @courses = Course.all
   end
 
 
   # -------------------------------------------------------------
   # GET /courses/1
   def show
-    puts "courses#show: params = #{params}"
-    respond_to do |format|
-      format.js
-      format.html
+    puts "params = #{params.to_s}"
+    if !@course
+      flash[:warning] = 'Course not found.'
+      redirect_to organizations_path
+    elsif !params[:term_id]
+      render 'show_terms'
+    else
+      @term = Term.find(params[:term_id])
+      respond_to do |format|
+        format.js
+        format.html
+      end
     end
   end
 
@@ -27,10 +33,6 @@ class CoursesController < ApplicationController
   # -------------------------------------------------------------
   # GET /courses/new
   def new
-    if cannot? :new, Course
-      redirect_to root_path,
-        notice: 'Unauthorized to create new course' and return
-    end
     @course = Course.new
   end
 
@@ -38,38 +40,30 @@ class CoursesController < ApplicationController
   # -------------------------------------------------------------
   # GET /courses/1/edit
   def edit
-    if cannot? :edit, @course
-      redirect_to root_path,
-        notice: 'Unauthorized to edit course' and return
-    end
   end
 
 
   # -------------------------------------------------------------
   # POST /courses
   def create
-    if cannot? :create, Course
-      redirect_to root_path,
-        notice: 'Unauthorized to create course' and return
-    end
     form = params[:course]
     offering = form[:course_offering]
-    @course = Course.find_by number: form[:number]
+    @course = Course.find_by(number: form[:number])
 
     if @course.nil?
-      @course = Course.new
-      @course.name = form[:name].to_s
-      @course.number = form[:number].to_s
-      @course.creator_id = current_user.id
-      #@course.save
-
-      #establish relationships
-      org = Organization.find_by_id(form[:organization_id])
-
-      if org
+      org = Organization.find_by(id: form[:organization_id])
+      if !org
+        flash[:error] = "Organization #{form[:organization_id]} " +
+          'could not be found.'
+        redirect_to root_path and return
+      end
+      @course = Course.new(
+        name: form[:name].to_s,
+        number: form[:number].to_s,
+        creator: current_user,
+        organization: org)
         org.courses << @course
         org.save
-      end
     else
       @course.course_offerings do |c|
         if c.term == offering[:term].to_s
@@ -80,20 +74,19 @@ class CoursesController < ApplicationController
       end
     end
 
-    tmp = CourseOffering.create
-    tmp.name = form[:name].to_s
-    tmp.label = offering[:label].andand.to_s
-    tmp.url = offering[:url].andand.to_s
-    tmp.self_enrollment_allowed =
-      offering[:self_enrollment_allowed].andand. == '1'
-    tmp.term_id = offering[:term].andand.to_i
-    p tmp.term_id
+    tmp = CourseOffering.create(
+      label: offering[:label].andand.to_s,
+      url: offering[:url].andand.to_s,
+      self_enrollment_allowed:
+        offering[:self_enrollment_allowed].andand.to_i == '1',
+      term: Term.find_by(id: offering[:term].andand.to_i))
     @course.course_offerings << tmp
 
-    @course.save
-    # TODO: why are there two calls to save in a row here?
-    if @course.save!
-      redirect_to @course, notice: 'Course was successfully created.'
+    if @course.save
+      redirect_to organization_course_path(
+        @course.organization,
+        @course,
+        tmp.term), notice: "#{tmp.display_name} was successfully created."
     else
       render action: 'new'
     end
@@ -103,12 +96,11 @@ class CoursesController < ApplicationController
   # -------------------------------------------------------------
   # PATCH/PUT /courses/1
   def update
-    if cannot? :update, @course
-      redirect_to root_path,
-        notice: 'Unauthorized to update course' and return
-    end
     if @course.update(course_params)
-      redirect_to @course, notice: 'Course was successfully updated.'
+      redirect_to organization_courses_path(
+        @course.organization,
+        @course),
+        notice: "#{@course.display_name} was successfully updated."
     else
       render action: 'edit'
     end
@@ -118,12 +110,14 @@ class CoursesController < ApplicationController
   # -------------------------------------------------------------
   # DELETE /courses/1
   def destroy
-    if cannot? :destroy, @course
-      redirect_to root_path,
-        notice: 'Unauthorized to delete course' and return
+    description = @course.display_name
+    if @course.destroy
+      redirect_to organization_path(@course.organization),
+        notice: "#{description} was successfully destroyed."
+    else
+      flash[:error] = "Unable to detroy #{description}."
+      redirect_to organization_path(@course.organization)
     end
-    @course.destroy
-    redirect_to courses_url, notice: 'Course was successfully destroyed.'
   end
 
 
@@ -143,10 +137,6 @@ class CoursesController < ApplicationController
   # -------------------------------------------------------------
   # POST /courses/:id/generate_gradebook
   def generate_gradebook
-    if @course.creator_id == current_user.id
-      redirect_to root_path,
-        notice: 'Unauthorized to generate gradebook for course' and return
-    end
     respond_to do |format|
       format.html
       format.csv do
@@ -162,18 +152,10 @@ class CoursesController < ApplicationController
   private
 
     # -------------------------------------------------------------
-    # Use callbacks to share common setup or constraints between actions.
-    def set_course
-      puts "set_course(): params = #{params}"
-      @course = Course.find(params[:id])
-    end
-
-
-    # -------------------------------------------------------------
     # Only allow a trusted parameter "white list" through.
     def course_params
       params.require(:course).
-        permit(:name, :number, :organization_id)
+        permit(:name, :number, :organization_id, :term_id)
     end
 
 end

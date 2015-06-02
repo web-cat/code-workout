@@ -15,7 +15,8 @@
       %tr
         %td= course_offering.term.display_name
         %td= course_offering.course.number
-        %td= link_to course_offering.label,course_offering_path(course_offering)
+        %td= link_to course_offering.label,
+          course_offering_path(course_offering)
         %td= course_offering.url
         %td= course_offering.self_enrollment_allowed
         %td

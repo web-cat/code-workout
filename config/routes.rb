@@ -84,11 +84,11 @@ CodeWorkout::Application.routes.draw do
     post 'find' => 'courses#find', as: :course_find
     get 'new' => 'courses#new'
     get 'index' => 'courses#index', as: :courses
-    #get ':org_id/:term_id/generate_gradebook/:id' => 'courses#generate_gradebook',
-     # as: :course_gradebook
     get ':course_id/:term_id/:workout_id/:id' => 'exercises#show'
     get ':course_id/:term_id/:id' => 'workouts#show'
     get ':id(/:term_id)' => 'courses#show', as: :course
+    # get ':org_id/:term_id/generate_gradebook/:id' =>
+    #   'courses#generate_gradebook', as: :course_gradebook
   end
 
   # FIXME: Needs to be fixed so that it works well with the general formatting of routes
