@@ -18,9 +18,8 @@
     - else
       = render @users
 
-- if @users.is_a?(Array) && @users.size > 1
-  #users_paginator
-    = paginate @users, remote: true
+- if @users.is_a?(Array)
+  #users_paginator= paginate @users, remote: true
 
 - if can? :manage, User
   = button_link 'New User', new_user_path

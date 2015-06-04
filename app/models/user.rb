@@ -159,10 +159,14 @@ class User < ActiveRecord::Base
 
 
   # -------------------------------------------------------------
-  def course_offerings_for_term(term)
+  def course_offerings_for_term(term, course)
+    conditions = { term: term, 'users.id' => self }
+    if course
+      conditions[:course] = course
+    end
     CourseOffering.
       joins(course_enrollments: :user).
-      where(term: term, 'users.id' => self).
+      where(conditions).
       distinct
   end
 
@@ -170,7 +174,7 @@ class User < ActiveRecord::Base
   # -------------------------------------------------------------
   def courses_for_term(term)
     Course.
-      joins(course_offerings: { course_enrollments: :user}).
+      joins(course_offerings: { course_enrollments: :user }).
       where('course_offerings.term_id' => term, 'users.id' => self).
       distinct
   end
@@ -187,6 +191,17 @@ class User < ActiveRecord::Base
 
 
   # -------------------------------------------------------------
+  def display_name_with_email
+    result = last_name.blank? ?
+      (first_name.blank? ? email : first_name) :
+      (first_name.blank? ? last_name : (first_name + ' ' + last_name))
+    if !first_name.blank? || ! last_name.blank?
+      result += ' (' + email + ')'
+    end
+  end
+
+
+  # -------------------------------------------------------------
   # Gets the username (without the domain) of the e-mail address, if possible.
   def email_without_domain
     if email =~ /(^[^@]+)@/
@@ -198,8 +213,8 @@ class User < ActiveRecord::Base
 
 
   # -------------------------------------------------------------
-  def avatar_url
-    self.avatar.blank? ? gravatar_url : self.avatar
+  def avatar_url(options = {})
+    self.avatar.blank? ? gravatar_url(options) : self.avatar
   end
 
 

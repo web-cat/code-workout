@@ -4,11 +4,11 @@
   - elsif off.is_grader?(current_user)
     Enrolled as grader
   - elsif off.is_student?(current_user)
-    = link_to 'Unenroll', unenroll_path(off), method: :delete
+    = link_to 'Unenroll', course_offering_unenroll_path(off), method: :delete
 - else
   - if off.effective_cutoff_date < Time.now
     Closed
   - elsif off.self_enrollment_allowed?
-    = link_to 'Enroll', enroll_path(off), method: :post
+    = link_to 'Enroll', course_offering_enroll_path(off), method: :post
   - else
     Contact instructor

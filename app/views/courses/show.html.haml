@@ -5,129 +5,170 @@
     organization_path(@course.organization)
   %li= link_to @course.number,
     organization_course_path(@course.organization, @course)
-  %li.active= @term.andand.display_name
+  %li.active= @term.display_name
 
-%h1= @course.number_and_name
+%h1
+  = @course.number_and_name
+  %small= @term.display_name
 
-%h2 Offerings
-
-%table.table.table-striped{ style: 'width: auto' }
-  %thead
-    %tr
-      %th Term
-      %th Section
-      %th Instructors
-      %th Graders
-      %th Enroll
-  %tbody
-    - @course.course_offerings.each do |off|
-      %tr
-        %td= off.term.display_name
-        %td= off.display_name
-        %td!= off.instructors.map{ |i| link_to i.display_name,
-          user_path(i) }.to_sentence
-        %td!= off.graders.map{ |i| link_to i.display_name,
-          user_path(i) }.to_sentence
-        %td
-          = render partial: "course_offerings/self_enrollment",
-            locals: { off: off }
-- if user_signed_in? && @course.creator_id == current_user.id
+- if @course_offerings.any?
   %p
-    -#= button_link 'Edit Course Properties', edit_course_path(@course)
-    -#= button_link 'Add an offering', new_course_path
+    - @course_offerings.each_with_index do |offering, i|
+      - if i > 0
+        %br/
+      %strong= offering.display_name
+      = surround '(', (offering.instructors.any? ? '),' : ')') do
+        - if offering.is_manager? current_user
+          = link_to 'edit', edit_course_offering_path(offering)
+        - else
+          = link_to 'unenroll', course_offering_unenroll_path(offering),
+            method: :delete
+      - if offering.instructors.any?
+        = succeed ':' do
+          = 'instructor'.pluralize(offering.instructors.size)
+        = succeed (offering.graders.any? ? ',' : '') do
+          != offering.instructors.map{ |i| link_to i.display_name,
+            user_path(i) }.to_sentence
+      - if offering.graders.any?
+        = succeed ':' do
+          = 'grader'.pluralize(offering.graders.size)
+        != offering.graders.map{ |i| link_to i.display_name,
+          user_path(i) }.to_sentence
 
-.container-fluid
-  .navbar-collapse.collapse
-    %ul.nav.nav-tabs
-      %li.active
-        %a{ href: '#wkts', data: { toggle: "tab" } }
-          Workouts
-      %li
-        %a{ href: '#exers', data: { toggle: "tab" } }
-          Exercises
-      - @course.course_offerings.each do |off|
-        - if user_signed_in? && off.is_enrolled?(current_user)
+  -#- if can? :edit, @course
+    %p
+      = button_link 'Edit Course Properties', edit_course_path(@course)
+      = button_link 'Add an offering', new_course_path
+
+  .container-fluid
+    .navbar-collapse.collapse
+      %ul.nav.nav-tabs
+        %li.active
+          %a{ href: '#workouts', data: { toggle: 'tab' } } Workouts
+        - if !@is_student
           %li
-            %a{ href: '#grdes', data: { toggle: "tab" } }
-              Grades
+            %a{ href: '#exercises', data: { toggle: 'tab' } } Exercises
+        %li
+          %a{ href: '#grades', data: { toggle: 'tab' } } Grades
+        - if !@is_student
           %li
-            %a{ href: '#rostr', data: { toggle: 'tab' } }
-              Roster
-          - break
+            %a{ href: '#roster', data: { toggle: 'tab' } } Roster
 
-%div.tab-content.under-collapsible
+  %div.tab-content.under-collapsible
 
-  .tab-pane.fade.in.active{ id: 'wkts' }
-    %ul
-      -# FIXME: definitely busted!
-      - user_id = user_signed_in? ? current_user.id : 0
-      - @course.course_offerings.each do |off|
-        - off.workouts.in_groups_of(2, false) do |row|
-          = render partial: "workouts/workout", collection: row, as: :w,
-            locals: { uid: user_id }
-          .clearfix
+    .tab-pane.fade.in.active{ id: 'workouts' }
+      %ul
+        -# FIXME: definitely busted!
+        - @course_offerings.each do |offering|
+          - offering.workouts.in_groups_of(2, false) do |row|
+            = render partial: "workouts/workout", collection: row, as: :w,
+              locals: { uid: current_user.id }
+            .clearfix
 
-  .tab-pane.fade{ id: 'exers' }
-    %ul
-      - @course.exercises.each do |ex|
-        -# FIXME: this should use the right helper (path is now broken)
-        %li= link_to ex.name, '/exercises/' + ex.id.to_s
+    - if !@is_student
+      .tab-pane.fade{ id: 'exercises' }
+        %ul
+          - @course.exercises.each do |ex|
+            -# FIXME: this should use the right helper (path is now broken)
+            %li= link_to ex.name, '/exercises/' + ex.id.to_s
 
-  .tab-pane.fade{ id: 'grdes' }
-    -# FIXME: Funky logic for the time being
-    - if user_signed_in? &&  @course.creator_id == current_user.id
-      = button_to 'Download entire course gradebook',
-        course_gradebook_path(@course, format: :csv)
-    - @course.course_offerings.each do |off|
-      %br
-      - if can? :generate_gradebook, off
-        %b= off.name
-        %table{border: 1}
-          %tr
-            %td First name
-            %td Last name
-            - CourseOffering.find(off.id).workouts.each do |wkt|
-              %td= wkt.name
-            %td Total
-          - CourseEnrollment.where(course_offering_id: off.id).each do |ce|
-            - if ce.course_role_id == CourseRole.find_by(name: 'Student').id
+    .tab-pane.fade{ id: 'grades' }
+      -# FIXME: Funky logic for the time being
+      - if @course_offerings.size > 1 && !@is_student
+        = button_to 'Download grades (all sections)',
+          course_gradebook_path(@course, format: :csv)
+      - @course_offerings.each do |offering|
+        -if @course_offerings.size > 1
+          %h2= offering.display_name
+        - workout_offerings = offering.workout_offerings
+        - if @is_student
+          - workout_offerings = workout_offerings.visible_to_students
+        - if can? :generate_gradebook, offering
+          = button_to 'Download section grades',
+            course_offering_gradebook_path(offering, format: :csv)
+          %table.table.table-striped
+            %thead
               %tr
-                %td= User.find(ce.user_id).first_name
-                %td= User.find(ce.user_id).last_name
-                - grand_total = 0.0
-                - CourseOffering.find(off.id).workouts.each do |wkt|
-                  - if WorkoutScore.find_by(user_id: ce.user_id, workout: wkt)
-                    - tot = WorkoutScore.find_by!(user_id: ce.user_id, workout: wkt).andand.score
-                    %td= tot
-                    - grand_total += tot
+                %th Name
+                - workout_offerings.each do |wkto|
+                  %th= wkto.workout.name
+                %th Total
+            %tbody
+              - offering.students.each do |student|
+                %tr
+                  %td
+                    = image_tag student.avatar_url(size: 28),
+                      width: 28, height: 28
+                    = student.display_name_with_email
+                  - grand_total = 0.0
+                  - workout_offerings.each do |wkto|
+                    - score = wkto.score_for(student).andand.score
+                    - if score
+                      %td= score
+                      - grand_total += score
+                    - else
+                      %td -/-
+                  %td= grand_total
+        - else
+          %table.table.table-striped
+            %thead
+              %tr
+                %th Workout
+                %th Score
+            %tbody
+              - workout_offerings.each do |wkto|
+                %tr
+                  %td= wkto.workout.name
+                  - score = wkto.score_for(current_user).andand.score
+                  - if score
+                    %td= score
                   - else
                     %td -/-
-                %td= grand_total
-          - if user_signed_in? && off.is_staff?(current_user)
-            -#%p= button_to 'Download class gradebook', course_offering_gradebook_path(off,format: :csv)
-            %p= button_to 'Download class gradebook', course_offering_gradebook_path(off,format: :csv)
-      - elsif user_signed_in?
-        = off.name
-        - ce = CourseEnrollment.find_by(course_offering: off,user: current_user)
-        - if ce
-          - if off.workouts.any?
-            %table{border: 1}
+
+    - if !@is_student
+      .tab-pane.fade{ id: 'roster' }
+        - @course_offerings.each do |offering|
+          - if @course_offerings.size > 1
+            %h2= offering.display_name
+          %table.table.table-striped
+            %thead
               %tr
-                %td Workouts
-                %td Score
-              - off.workouts.each do |wkt|
-                %tr
-                  %td= wkt.name
-                  %td= WorkoutScore.find_by(workout: wkt,user: current_user).andand.score
+                %th Image
+                %th Last name
+                %th First name
+                %th Email
+                %th Role
+                %th
+                  %i.fa.fa-cog
+            %tbody#roster
+              - @sec = offering.course_enrollments.               |
+                page(params[:page]).per(params[:per])             |
+              = render @sec
+          - if @sec.is_a?(Array)
+            #roster_paginator= paginate @sec, remote: true
 
+-else
 
-  .tab-pane.fade{:id => 'rostr'}
-    - @course.course_offerings.each do |off|
-      %h3= off.name
-      %ul
-        - @sec = CourseEnrollment.where(course_offering: off).         |
-          page(params[:page]).per(params[:per])                        |
-        #rosterer
-          = render 'roster', sec: @sec
-        #roster_paginator
-          = paginate @sec
+  %h2 Offerings
+
+  %table.table.table-striped{ style: 'width: auto' }
+    %thead
+      %tr
+        %th Term
+        %th Section
+        %th Instructors
+        %th Graders
+        %th Enroll
+    %tbody
+      - @course.course_offerings.each do |off|
+        %tr
+          %td= off.term.display_name
+          %td= off.display_name
+          %td!= off.instructors.map{ |i| link_to i.display_name,
+            user_path(i) }.to_sentence
+          %td!= off.graders.map{ |i| link_to i.display_name,
+            user_path(i) }.to_sentence
+          %td
+            = render partial: "course_offerings/self_enrollment",
+              locals: { off: off }
+

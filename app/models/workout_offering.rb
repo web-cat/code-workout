@@ -34,9 +34,22 @@ class WorkoutOffering < ActiveRecord::Base
   has_many :workout_scores, inverse_of: :workout_offering, dependent: :nullify
 
 
+  scope :visible_to_students, -> { where{
+    (published == true) &
+    ((opening_date == nil) | (opening_date <= Time.now)) } }
+
+
   #~ Validation ...............................................................
 
   validates :course_offering, presence: true
   validates :workout, presence: true
+
+
+  #~ Instance methods .........................................................
+
+  # -------------------------------------------------------------
+  def score_for(user)
+    workout_scores.where(user: user).order('updated_at DESC').limit(1)
+  end
 
 end

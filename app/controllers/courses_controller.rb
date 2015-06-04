@@ -14,7 +14,6 @@ class CoursesController < ApplicationController
   # -------------------------------------------------------------
   # GET /courses/1
   def show
-    puts "params = #{params.to_s}"
     if !@course
       flash[:warning] = 'Course not found.'
       redirect_to organizations_path
@@ -22,6 +21,11 @@ class CoursesController < ApplicationController
       render 'show_terms'
     else
       @term = Term.find(params[:term_id])
+      @course_offerings =
+        current_user.andand.course_offerings_for_term(@term, @course)
+      @is_student = !current_user.global_role.is_admin? &&
+        (@course_offerings.any? {|co| co.is_student? current_user } ||
+        !@course_offerings.any? {|co| co.is_staff? current_user })
       respond_to do |format|
         format.js
         format.html

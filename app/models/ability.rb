@@ -13,7 +13,7 @@ class Ability
   #
   def initialize(user)
     # default abilities for anonymous, non-logged-in visitors
-    can :read, [Term, Organization, Course, CourseOffering]
+    can [:read, :index], [Term, Organization, Course, CourseOffering]
 
     if user
       # This ability allows admins impersonating other users to revert
@@ -122,7 +122,7 @@ class Ability
       # offering and have a CourseRole where can_manage_course? is true.
       can [:edit, :update], CourseOffering,
         CourseOffering.managed_by_user(user) do |co|
-        co.managed_by? user
+        co.is_manager? user
       end
 
       # A user can grade a CourseOffering if they are enrolled in that
@@ -134,7 +134,7 @@ class Ability
       # Likewise, a user can only manage enrollments in a CourseOffering
       # that they have can_manage_courses? permission in.
       can :manage, CourseEnrollment do |enrollment|
-        enrollment.course_offering.managed_by? user
+        enrollment.course_offering.is_manager? user
       end
     end
   end

@@ -83,35 +83,23 @@ CodeWorkout::Application.routes.draw do
     get 'search' => 'courses#search', as: :courses_search
     post 'find' => 'courses#find', as: :course_find
     get 'new' => 'courses#new'
-    get 'index' => 'courses#index', as: :courses
     get ':course_id/:term_id/:workout_id/:id' => 'exercises#show'
     get ':course_id/:term_id/:id' => 'workouts#show'
+    get ':id/edit' => 'courses#edit', as: :course_edit
+    post ':id/:term_id/generate_gradebook/' => 'courses#generate_gradebook',
+      as: :course_gradebook
     get ':id(/:term_id)' => 'courses#show', as: :course
-    # get ':org_id/:term_id/generate_gradebook/:id' =>
-    #   'courses#generate_gradebook', as: :course_gradebook
   end
 
-  # FIXME: Needs to be fixed so that it works well with the general formatting of routes
-  post '/course_offerings/:id/enroll' => 'course_offerings#enroll', as: :enroll
-  delete '/course_offerings/:id/unenroll' =>
-    'course_offerings#unenroll', as: :unenroll
-
-  # doesn't fit in the other routes well, but that's ok since it is
-  # almost purely internal use only.
-  match '/course_offerings/:id/upload_roster/:action',
-    controller: 'upload_roster', as: :upload_roster, via: [:get, :post]
-  # internal only
-  post '/course_offerings/:id/generate_gradebook' =>
-    'course_offerings#generate_gradebook', as: :course_offering_gradebook
-  post ':id/generate_gradebook/' => 'courses#generate_gradebook',
-      as: :course_gradebook
-
-  # Need to be redesigned for new routes plan
-  get '/course_offerings/:id/add_workout' => 'course_offerings#add_workout',
-    as: :course_offering_add_workout
-  post '/course_offerings/store_workout/:id' =>
-    'course_offerings#store_workout', as: :course_offering_store_workout
-
+  resources :course_offerings, only: [ :edit, :update ] do
+    post 'enroll' => :enroll, as: :enroll
+    delete 'unenroll' => :unenroll, as: :unenroll
+    match 'upload_roster/:action', controller: 'upload_roster',
+      as: :upload_roster, via: [:get, :post]
+    post 'generate_gradebook' => :generate_gradebook, as: :gradebook
+    get 'add_workout' => :add_workout, as: :add_workout
+    post 'store_workout/:id' => :store_workout, as: :store_workout
+  end
 
   # All of the routes anchored at /users
   resources :users, constraints: { id: /[^\/]+/ } do
@@ -119,7 +107,7 @@ CodeWorkout::Application.routes.draw do
       constraints: { id: /[^\/]+/ }
     # This route is broken, since there is no such method
     # post 'resource_files/uploadFile' => 'resource_files#uploadFile'
-    get 'performance' => 'users#calc_performance', as: :calc_performance
+    get 'performance' => :calc_performance, as: :calc_performance
   end
 
   #OmniAuth for Facebook

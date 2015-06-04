@@ -135,7 +135,7 @@ class CourseOffering < ActiveRecord::Base
 
 
   # -------------------------------------------------------------
-  def managed_by?(user)
+  def is_manager?(user)
     role_for_user(user).andand.can_manage_course?
   end
 

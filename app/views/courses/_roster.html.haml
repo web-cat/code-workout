@@ -1,4 +1,0 @@
-- sec.each do |ce|
-  - if ce.course_role.is_student?
-    -# This link is broken
-    %li= link_to ce.user.display_name, '/course_enrollments/' + ce.id.to_s

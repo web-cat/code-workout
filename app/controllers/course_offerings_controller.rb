@@ -1,4 +1,5 @@
 class CourseOfferingsController < ApplicationController
+  before_filter :rename_course_offering_id_param
   load_and_authorize_resource
 
 
@@ -75,13 +76,19 @@ class CourseOfferingsController < ApplicationController
   # Public: Deletes an enrollment, if it exists.
   def unenroll
     if @course_offering
-      @course_offering.course_enrollments.where(user: current_user).delete_all
+      path = organization_course_path(
+        @course_offering.course.organization,
+         @course_offering.course,
+        @course_offering.term)
+      description = @course_offering.display_name
+
+      @course_offering.course_enrollments.where(user: current_user).destroy_all
+      redirect_to path, notice: "You have unenrolled from #{description}."
+    else
+      flash[:error] =
+        'No course offering was specified in your unenroll request.'
+      redirect_to root_path
     end
-    redirect_to organization_course_path(
-      @course_offering.course.organization,
-      @course_offering.course,
-      @course_offering.term),
-      notice: "You have unenrolled from #{@course_offering.display_name}."
   end
 
 
@@ -165,6 +172,14 @@ class CourseOfferingsController < ApplicationController
 
   #~ Private instance methods .................................................
   private
+
+    # -------------------------------------------------------------
+    def rename_course_offering_id_param
+      if params[:course_offering_id] && !params[:id]
+        params[:id] = params[:course_offering_id]
+      end
+    end
+
 
     # -------------------------------------------------------------
     # Only allow a trusted parameter "white list" through.

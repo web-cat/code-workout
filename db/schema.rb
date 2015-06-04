@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150531004056) do
+ActiveRecord::Schema.define(version: 20150604011650) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -430,13 +430,14 @@ ActiveRecord::Schema.define(version: 20150531004056) do
   add_index "users", ["slug"], name: "index_users_on_slug", unique: true
 
   create_table "workout_offerings", force: true do |t|
-    t.integer  "course_offering_id", null: false
-    t.integer  "workout_id",         null: false
+    t.integer  "course_offering_id",                 null: false
+    t.integer  "workout_id",                         null: false
     t.datetime "created_at"
     t.datetime "updated_at"
     t.date     "opening_date"
     t.date     "soft_deadline"
     t.date     "hard_deadline"
+    t.boolean  "published",          default: false, null: false
   end
 
   add_index "workout_offerings", ["course_offering_id"], name: "index_workout_offerings_on_course_offering_id"
