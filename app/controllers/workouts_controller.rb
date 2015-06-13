@@ -1,4 +1,4 @@
-class WorkoutsController < ApplicationController 
+class WorkoutsController < ApplicationController
   before_action :set_workout, only: [:show, :edit, :update, :destroy]
   respond_to :html, :js
 
@@ -11,8 +11,10 @@ class WorkoutsController < ApplicationController
       redirect_to root_path,
         notice: 'Unauthorized to view all workouts' and return
     end
-    @workouts = Workout.all
-    @gym = Workout.order("created_at DESC").limit(12)
+#    @workouts = Workout.all
+#    @gym = Workout.order("created_at DESC").limit(12)
+    @workouts = []
+    @gym = []
     #render layout: 'two_columns'
   end
 
@@ -140,11 +142,11 @@ class WorkoutsController < ApplicationController
       render action: 'new'
     end
   end
-  
+
   def upload_yaml
-    
+
   end
-  
+
   def yaml_create
     @yaml_wkts = YAML.load_file(params[:form].fetch(:yamlfile).path)
     @yaml_wkts.each do |workout|
@@ -167,7 +169,7 @@ class WorkoutsController < ApplicationController
           ex_wkt.save
         else
           puts "Exercise not found"
-        end 
+        end
       end
       wkt['offerings'].andand.each_with_index do |off, i|
         matching_course = Course.find_by(number: off['course']['number'],organization: Organization.find_by(abbreviation: off['course']['organization']['abbreviation']))
@@ -189,7 +191,7 @@ class WorkoutsController < ApplicationController
 
   # ------Placeholder for any views I want experiment with-------------------------------------------------------
   def dummy
-    @workouts = Workout.find(1)  
+    @workouts = Workout.find(1)
   end
 
   # -------------------------------------------------------------

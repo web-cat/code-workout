@@ -14,7 +14,7 @@ class ExerciseRepresenter < Representable::Decorator
 
   property :name
   property :external_id
-  property :is_public
+  property :is_public, setter: lambda { |val, *| self.is_public = val.to_b }
   property :experience
   property :language_list, getter: lambda { |*| language_list.to_s }
   property :style_list, getter: lambda { |*| style_list.to_s }

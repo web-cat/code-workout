@@ -49,7 +49,7 @@ class WorkoutOffering < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def score_for(user)
-    workout_scores.where(user: user).order('updated_at DESC').limit(1)
+    workout_scores.where(user: user).order('updated_at DESC').first
   end
 
 end

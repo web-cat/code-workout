@@ -9,6 +9,9 @@
   - if off.effective_cutoff_date < Time.now
     Closed
   - elsif off.self_enrollment_allowed?
-    = link_to 'Enroll', course_offering_enroll_path(off), method: :post
+    - if user_signed_in?
+      = link_to 'Enroll', course_offering_enroll_path(off), method: :post
+    - else
+      Sign in to enroll
   - else
     Contact instructor

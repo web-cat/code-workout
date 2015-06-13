@@ -27,7 +27,11 @@ module ApplicationHelper
   # -------------------------------------------------------------
   TEASER_LENGTH = 140
   def teaser(text, length = TEASER_LENGTH)
-    truncate_html(markdown(text), length: length, omission: '...')
+    if text.blank?
+      ""
+    else
+      truncate_html(markdown(text), length: length, omission: '...')
+    end
   end
 
 
@@ -52,7 +56,6 @@ module ApplicationHelper
       'info'    => 'alert-info'
   }
   def flash_class_for(level)
-    puts "level = #{level}, class = #{FLASH_CLASS[level]}"
     FLASH_CLASS[level] || level.to_s
   end
 

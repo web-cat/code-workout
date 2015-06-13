@@ -1,0 +1,120 @@
+---
+- name: HW 05
+  scrambled: false
+  language_list: Java
+  style_list: code writing
+  tag_list: logic, conditionals, if, String
+  exercises:
+  - position: 1
+    points: 1.0
+    exercise:
+      name: Factorial 1
+      external_id: E1
+      is_public: true
+      experience: 50
+      language_list: Java
+      style_list: code writing
+      tag_list: factorial, function, multiplication
+      current_version:
+        version: 1
+        creator: admin@codeworkout.org
+        prompts:
+        - coding_prompt:
+            position: 1
+            question: |
+              Write a function in Java called `factorial()` that will take a
+              positive integer as input and returns its factorial as output.
+            feedback: |
+              Explanation for the correct answer goes here.  This is just
+              an example.
+            class_name: Factorial
+            method_name: factorial
+            starter_code: |
+              public int factorial(int n)
+              {
+                  ___
+              }
+            wrapper_code: |
+              public class Factorial
+              {
+                  ___
+              }
+            tests: |
+              0,1,factorial(0) -> 1
+              1,1,factorial(1) -> 1
+              2,2,factorial(2) -> 2
+              3,6,factorial(3) -> 6
+              4,24,hidden
+              5,120,hidden
+  - position: 2
+    points: 10.0
+    exercise:
+      name: Pick One 2
+      external_id: E2
+      is_public: true
+      experience: 50
+      language_list: ''
+      style_list: forced choice
+      tag_list: random
+      current_version:
+        version: 1
+        creator: admin@codeworkout.org
+        prompts:
+        - multiple_choice_prompt:
+            position: 1
+            question: |
+              This is a sample multiple choice question.  It has only one correct answer.
+            allow_multiple: false
+            is_scrambled: true
+            choices:
+            - answer: A choice
+              value: 0.0
+              position: 1
+            - answer: The right choice
+              value: 100.0
+              position: 2
+            - answer: A choice
+              value: 0.0
+              position: 3
+  - position: 3
+    points: 10.0
+    exercise:
+      name: Factorial 3
+      external_id: E3
+      is_public: true
+      experience: 50
+      language_list: Java
+      style_list: code writing
+      tag_list: factorial, function, multiplication
+      current_version:
+        version: 1
+        creator: admin@codeworkout.org
+        prompts:
+        - coding_prompt:
+            position: 1
+            question: |
+              Write a function in Java called `factorial()` that will take a
+              positive integer as input and returns its factorial as output.
+            feedback: |
+              Explanation for the correct answer goes here.  This is just
+              an example.
+            class_name: Factorial
+            method_name: factorial
+            starter_code: |
+              public int factorial(int n)
+              {
+                  ___
+              }
+            wrapper_code: |
+              public class Factorial
+              {
+                  ___
+              }
+            tests: |
+              0,1,factorial(0) -> 1
+              1,1,factorial(1) -> 1
+              2,2,factorial(2) -> 2
+              3,6,factorial(3) -> 6
+              4,24,hidden
+              5,120,hidden
+  offerings: []

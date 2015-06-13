@@ -87,6 +87,14 @@ class WorkoutScore < ActiveRecord::Base
   #~ Instance methods .........................................................
 
   # -------------------------------------------------------------
+  def attempt_for(exercise)
+    Attempt.joins{exercise_version}.
+      where{(active_score_id == self.id) &
+      (exercise_version.exercise_id == exercise.id)}.first
+  end
+
+
+  # -------------------------------------------------------------
   def update_attempt(attempt, old_score)
     if self.scored_attempts.include? attempt
       self.score = self.score - old_score + attempt.score
@@ -103,7 +111,7 @@ class WorkoutScore < ActiveRecord::Base
     end
     self.save!
   end
-  
+
   # -------------------------------------------------------------
   # (Finall) The refactored method to record the workout score
   # when a workout's exercise has been attempted
@@ -128,7 +136,7 @@ class WorkoutScore < ActiveRecord::Base
     else # At least one exercise has been attempted as a part of the workout
       user_exercise_score =
         Attempt.user_attempt(current_user, exercise_version).andand.score
-      puts "SCORED","ALREAD SCORED","ALREADY SCORED"  
+      puts "SCORED","ALREAD SCORED","ALREADY SCORED"
       scoring.score += score
       scoring.last_attempted_at = Time.now
       if user_exercise_score
@@ -152,5 +160,5 @@ class WorkoutScore < ActiveRecord::Base
     end
     scoring.save!
   end
-  
+
 end

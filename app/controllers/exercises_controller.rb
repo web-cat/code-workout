@@ -7,9 +7,6 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # GET /exercises
   def index
-    puts "@exercises = #{@exercises}"
-    @exercises = Exercise.accessible_by(current_ability)
-    puts "@exercises = #{@exercises}"
   end
 
 
@@ -36,13 +33,20 @@ class ExercisesController < ApplicationController
   def search
     @terms = escape_javascript(params[:search])
     @terms = @terms.split(@terms.include?(',') ? /\s*,\s*/ : nil)
-    @wos = Workout.search @terms
-    @exs = Exercise.search @terms
+#    @wos = Workout.search @terms
+    @wos = []
+    @exs = Exercise.search(@terms, current_user)
     @msg = ''
-    if @wos.length == 0 && @exs.length == 0
-      @msg = 'No ' + searched + ' exercises found. Try these instead...'
-      @wos = Workout.order('RANDOM()').limit(4)
+#    if @wos.length == 0 && @exs.length == 0
+    if @exs.length == 0
+      @msg = 'No exercises were found for your search request. ' \
+        'Try these instead...'
+#      @wos = Workout.order('RANDOM()').limit(4)
       @exs = Exercise.order('RANDOM()').limit(16)
+    end
+    if @exs.length == 0
+      @msg = 'No public exercises are available to search right now. ' \
+        'Wait for contributors to add more.'
     end
   end
 

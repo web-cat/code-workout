@@ -4,7 +4,11 @@
 
   = f.input :first_name
   = f.input :last_name
-  = f.input :email
+  .form-group
+    %span.form-label
+      %label.control-label Email
+    .form-wrapper{ style: 'padding-top: 7px;' }
+      = @user.email
   .form-group
     %span.form-label
       %label.control-label Avatar

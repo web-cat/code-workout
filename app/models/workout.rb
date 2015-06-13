@@ -75,6 +75,8 @@ class Workout < ActiveRecord::Base
   #~ Class methods ............................................................
 
   # -------------------------------------------------------------
+  # FIXME: probably shouldn't be here, since it omits setting the
+  # point value.
   def add_exercise(ex)
     self.exercise_workouts <<
       ExerciseWorkout.new(workout: self, exercise: ex)
@@ -85,14 +87,10 @@ class Workout < ActiveRecord::Base
   # return the totals points of the exercises in the current workout.
   # FIXME: Why isn't this a property of the workout?  The exercises
   # themselves don't record absolute points at all!
-  def returnTotalWorkoutPoints
-    total_points = 0.0
-    self.exercises.each do |ex|
-      total_points += ExerciseWorkout.findExercisePoints(ex.id, self.id)
-    end
-    return total_points
+  def total_points
+    self.exercise_workouts.pluck(:points).reduce(0.0, :+)
   end
-  
+
   # -------------------------------------------------------------
   # Simple method to return the number of exercises a workout has
   def num_exercises
@@ -128,8 +126,8 @@ class Workout < ActiveRecord::Base
   def next_exercise(ex,user)
     if user.nil?
       puts "Invalid USER"
-    end   
-        
+    end
+
     (1..self.num_exercises).each do |i|
       if ex
         exw = ExerciseWorkout.find_by(exercise: ex,workout: self)
@@ -143,15 +141,15 @@ class Workout < ActiveRecord::Base
              find_by(position: candiate_exercise_position, workout: self).exercise
       candidate_attempt = Attempt.user_attempt(user, candidate_exercise.current_version)
       if candidate_attempt
-        return candidate_exercise if candidate_attempt.score !=  
+        return candidate_exercise if candidate_attempt.score !=
           ExerciseWorkout.find_by(position: candiate_exercise_position, workout: self).points
       else
         return candidate_exercise
-      end      
+      end
     end
     # Reaching this point means none of the exercises (possibly apart from the current)
-    # has scored a perfect score  
-    return nil 
+    # has scored a perfect score
+    return nil
   end
 
   # -------------------------------------------------------------
@@ -209,6 +207,7 @@ class Workout < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def self.search(terms)
+    # FIXME: need to add visibility controls here
     return Workout.tagged_with(terms, wild: true, on: :tags) +
       Workout.tagged_with(terms, wild: true, on: :languages) +
       Workout.tagged_with(terms, wild: true, on: :styles)

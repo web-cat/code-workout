@@ -11,7 +11,7 @@ class WorkoutRepresenter < Representable::Decorator
   property :style_list, getter: lambda { |*| style_list.to_s }
   property :tag_list, getter: lambda { |*| tag_list.to_s }
   property :description
-  collection :exercises, class: ExerciseWorkout do
+  collection :exercise_workouts, as: :exercises, class: ExerciseWorkout do
     property :position
     property :points
     property :exercise, class: Exercise, decorator: ExerciseRepresenter

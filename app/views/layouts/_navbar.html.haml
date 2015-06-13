@@ -11,35 +11,13 @@
           %ul.dropdown-menu
             %li
               .yamm-content
-                .row
-                  %ul.col-sm-6.list-unstyled
-                    %li
-                      %strong Workouts
-                    %li= link_to 'Browse all', workouts_path
-                    %li= link_to 'Workout 1', workout_path(1)
-                    %li= link_to 'Workout 2', workout_path(2)
-                  - if user_signed_in? &&                                    |
-                    current_user.global_role.can_edit_system_configuration?  |
-                    %ul.col-sm-6.list-unstyled
-                      %li
-                        %strong Manage Workouts
-                      %li= link_to 'Workouts', workouts_path
-                      %li= link_to 'Create Workout', new_workout_path
-                - if user_signed_in? &&                                      |
-                  current_user.global_role.can_edit_system_configuration?    |
-                  .row
-                    %ul.col-sm-6.list-unstyled
-                      %li
-                        %strong Exercises
-                      %li= link_to 'Browse all', exercises_path
-                      %li= link_to 'Upload Exercises - CSV',
-                        exercises_upload_path
-                      %li= link_to 'Upload Exercises - MCQ',
-                        exercises_upload_mcqs_path
-                    %ul.col-sm-6.list-unstyled
-                      %li
-                        %strong Manage Exercises
-                      %li= link_to 'Create Exercise', new_exercise_path
+                %ul.list-unstyled
+                  %li
+                    %strong Workouts
+                  %li= link_to 'Browse all', workouts_path
+                  %li
+                    %strong Exercises
+                  %li= link_to 'Browse all', exercises_path
         %li.dropdown
           %a.dropdown-toggle{ href: organizations_path,
             data: { toggle: 'dropdown' }, value: 'Course' }
@@ -47,32 +25,16 @@
           %ul.dropdown-menu
             %li
               .yamm-content
-                .row
+                %ul.list-unstyled
+                  %li
+                    %strong Courses
+                  %li
+                    %strong= link_to 'Browse all', organizations_path
                   - if user_signed_in? && current_user.course_enrollments.any?
-                    %ul.col-sm-6.list-unstyled
-                      %li
-                        %strong My Courses
-                      - term = Term.current_term
-                      - current_user.courses_for_term(term).each do |c|
-                        %li= link_to c.display_name,
-                          organization_course_path(c.organization, c, term)
-                  %ul.col-sm-6.list-unstyled
-                    %li
-                      %strong= link_to 'Browse all', organizations_path
-                    %li= link_to 'Course 1', '/courses/vt/cs1114/spring-2015'
-                    -#%li= link_to 'Course 2', course_path(2)
-                  - if user_signed_in? &&                                  |
-                    current_user.managed_course_offerings.any?             |
-                    %ul.col-sm-6.list-unstyled
-                      %li
-                        %strong Manage Courses
-                      %li= link_to 'Edit Course', '/courses/'
-                      %li= link_to 'Create Course', '/courses/new'
-
-      -#= f.actions do
-        -#= f.submit 'Sign up', class: 'btn btn-primary'
-        -#= render 'devise/shared/links'
-
+                    - term = Term.current_term
+                    - current_user.courses_for_term(term).each do |c|
+                      %li= link_to c.display_name,
+                        organization_course_path(c.organization, c, term)
 
       %ul.nav.navbar-nav.navbar-right.nav-top
         %li= render :partial => 'exercises/search'
@@ -109,5 +71,5 @@
                 %div
                   .yamm-content
                     = render '/devise/sessions/new'
-          %li= link_to 'Sign Up', new_user_registration_path
+          -#%li= link_to 'Sign Up', new_user_registration_path
           -#%li= link_to 'Sign In', new_user_session_path

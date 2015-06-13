@@ -11,7 +11,7 @@
   = @course.number_and_name
   %small= @term.display_name
 
-- if @course_offerings.any?
+- if @course_offerings && @course_offerings.any?
   %p
     - @course_offerings.each_with_index do |offering, i|
       - if i > 0
@@ -57,13 +57,12 @@
   %div.tab-content.under-collapsible
 
     .tab-pane.fade.in.active{ id: 'workouts' }
-      %ul
-        -# FIXME: definitely busted!
-        - @course_offerings.each do |offering|
-          - offering.workouts.in_groups_of(2, false) do |row|
-            = render partial: "workouts/workout", collection: row, as: :w,
-              locals: { uid: current_user.id }
-            .clearfix
+      -# FIXME: definitely busted!
+      - @course_offerings.each do |offering|
+        - offering.workouts.in_groups_of(2, false) do |row|
+          = render partial: "workouts/workout", collection: row, as: :w,
+            locals: { uid: current_user.id }
+          .clearfix
 
     - if !@is_student
       .tab-pane.fade{ id: 'exercises' }
@@ -89,6 +88,7 @@
           %table.table.table-striped
             %thead
               %tr
+                %th
                 %th Name
                 - workout_offerings.each do |wkto|
                   %th= wkto.workout.name
@@ -99,7 +99,12 @@
                   %td
                     = image_tag student.avatar_url(size: 28),
                       width: 28, height: 28
-                    = student.display_name_with_email
+                  %td
+                    = student.display_name
+                    - if !student.last_name.blank? || !student.first_name.blank?
+                      %br
+                      = surround '(', ')' do
+                        = student.email
                   - grand_total = 0.0
                   - workout_offerings.each do |wkto|
                     - score = wkto.score_for(student).andand.score
@@ -169,6 +174,6 @@
           %td!= off.graders.map{ |i| link_to i.display_name,
             user_path(i) }.to_sentence
           %td
-            = render partial: "course_offerings/self_enrollment",
+            = render partial: 'course_offerings/self_enrollment',
               locals: { off: off }
 

@@ -1,11 +1,18 @@
 - size ||= 'lg'
+- user ||= current_user
+- offering ||= nil
+- wscore ||= user ? WorkoutScore.find_by(workout: w,
+  workout_offering: offering, user: user) : nil
+- score_pct = wscore ? (wscore.score/w.total_points * 100).round(0) : 0
+- if score_pct == 100 && wscore.score < w.total_points
+  - score_pct = 99
 %article.workout.thumbnail{ class: size }
   .title
     %i.fa.fa-folder-open
     = link_to w.name, workout_path(id: w[:id])
     %span.badge.badge-info= w.exercises.count.to_s
   .summary
-    .radial-progress
+    .radial-progress{ 'data-progress' => score_pct }
       .circle
         .mask.full
           .fill
@@ -15,7 +22,6 @@
         .shadow
       .inset
         .pct
-          = WorkoutScore.find_by(workout: w,user: current_user) ? (WorkoutScore.find_by(workout: w,user: current_user).score / w.returnTotalWorkoutPoints).round(2) : 0
   .body
     .text
       = teaser(w.description)

@@ -101,10 +101,22 @@ class Exercise < ActiveRecord::Base
   #~ Class methods ............................................................
 
   # -------------------------------------------------------------
-  def self.search(terms)
-    return Exercise.tagged_with(terms, wild: true, on: :tags) +
-      Exercise.tagged_with(terms, wild: true, on: :languages) +
-      Exercise.tagged_with(terms, wild: true, on: :styles)
+  def self.search(terms, user)
+    if user
+      return Exercise.visible_to_user(user).
+        tagged_with(terms, wild: true, on: :tags) +
+        Exercise.visible_to_user(user).
+        tagged_with(terms, wild: true, on: :languages) +
+        Exercise.visible_to_user(user).
+        tagged_with(terms, wild: true, on: :styles)
+    else
+      return Exercise.where(is_public: true).
+        tagged_with(terms, wild: true, on: :tags) +
+        Exercise.where(is_public: true).
+        tagged_with(terms, wild: true, on: :languages) +
+        Exercise.where(is_public: true).
+        tagged_with(terms, wild: true, on: :styles)
+    end
   end
 
 

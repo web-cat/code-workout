@@ -37,9 +37,4 @@ class ExerciseWorkout < ActiveRecord::Base
 
   #~ Class methods ............................................................
 
-  # -------------------------------------------------------------
-  #return the points for an exercise belonging to a particular workout
-  def self.findExercisePoints(ex, wktid)
-    return ExerciseWorkout.find_by(exercise: ex, workout_id: wktid).andand.points
-  end
 end

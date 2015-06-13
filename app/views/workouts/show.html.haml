@@ -3,55 +3,61 @@
 
 %h1= @workout.name
 
+- if @workout.tags.any?
+  %p
+    Tags:
+    - @workout.tags.each do |t|
+      =link_to t.name, search_path(search: t.name), method: :post, class: 'tag'
 %p
-  Tags:
-  - @workout.tags.each do |t|
-    =link_to t.name, search_path(search: t.name), method: :post, class: 'tag'
-%p
-  = button_to 'Practice Workout', practice_workout_path(params[:id]),
+  = button_to 'Start Workout', practice_workout_path(params[:id]),
     method: :get, btn: 'primary'
 
 %p
-  = render partial: "workouts/workout", locals: {w: @workout}
+  = render partial: "workouts/workout", locals: { w: @workout }
 
 %table.table.table-striped{ style: 'width: auto' }
   %thead
     %tr
-      %th Course Offering
+      %th Course
       %th Open
       %th Due
       %th Close
   %tbody
-    - @workout.workout_offerings.each do |woff|
-      %tr
-        %td= woff.course_offering.display_name
-        %td.xeditable{ id: 'opening_date',
-          data: { type: 'text',
-          url: '/workout_offerings/' + woff.id.to_s,
-          resource: 'workout_offering',
-          name: 'opening_date',
-          xeditable: "true",
-          pk: woff.id.to_s,
-          model: 'workout_offering' } }= woff.opening_date
-        %td.xeditable{ id: 'soft_deadline',
-          data: { type: 'text',
-          url: '/workout_offerings/' + woff.id.to_s,
-          resource: 'workout_offering',
-          name: 'soft_deadline',
-          xeditable: "true",
-          pk: woff.id.to_s,
-          model: 'workout_offering' } }= woff.soft_deadline
-        %td.xeditable{ id: 'hard_deadline',
-          data: { type: 'text',
-          url: '/workout_offerings/' + woff.id.to_s,
-          resource: 'workout_offering',
-          name: 'hard_deadline',
-          xeditable: "true",
-          pk: woff.id.to_s,
-          model: 'workout_offering' } }= woff.hard_deadline
+    - Time.use_zone(ActiveSupport::TimeZone["America/New_York"]) do
+      - @workout.workout_offerings.each do |woff|
+        %tr
+          %td= woff.course_offering.display_name
+          -#%td.xeditable{ id: 'opening_date',
+            data: { type: 'text',
+            url: '/workout_offerings/' + woff.id.to_s,
+            resource: 'workout_offering',
+            name: 'opening_date',
+            xeditable: "true",
+            pk: woff.id.to_s,
+            model: 'workout_offering' } }= woff.opening_date
+          %td
+            - if woff.opening_date
+              = l woff.opening_date
+          -#%td.xeditable{ id: 'soft_deadline',
+            data: { type: 'text',
+            url: '/workout_offerings/' + woff.id.to_s,
+            resource: 'workout_offering',
+            name: 'soft_deadline',
+            xeditable: "true",
+            pk: woff.id.to_s,
+            model: 'workout_offering' } }= woff.soft_deadline
+          %td= l woff.soft_deadline
+          -#%td.xeditable{ id: 'hard_deadline',
+            data: { type: 'text',
+            url: '/workout_offerings/' + woff.id.to_s,
+            resource: 'workout_offering',
+            name: 'hard_deadline',
+            xeditable: "true",
+            pk: woff.id.to_s,
+            model: 'workout_offering' } }= woff.hard_deadline
+          %td= l woff.hard_deadline
 
-
-
+.clearfix
 %h2 Exercises
 
 - if @exs.empty?

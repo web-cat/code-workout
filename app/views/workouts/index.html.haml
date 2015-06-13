@@ -5,8 +5,13 @@
 
 %h1 Workouts
 
-- uid = user_signed_in? ? current_user.id : 0
-- @workouts.in_groups_of(2, false) do |row|
-  = render partial: "workouts/workout", collection: row, as: :w,
-    locals: { uid: uid }
-  .clearfix
+- if @workouts.size > 0
+  - uid = user_signed_in? ? current_user.id : 0
+  - @workouts.in_groups_of(2, false) do |row|
+    = render partial: "workouts/workout", collection: row, as: :w,
+      locals: { uid: uid }
+    .clearfix
+- else
+  %p
+    No public workouts are available to view right now.  Please wait for
+    contributors to add more.

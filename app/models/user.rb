@@ -191,17 +191,6 @@ class User < ActiveRecord::Base
 
 
   # -------------------------------------------------------------
-  def display_name_with_email
-    result = last_name.blank? ?
-      (first_name.blank? ? email : first_name) :
-      (first_name.blank? ? last_name : (first_name + ' ' + last_name))
-    if !first_name.blank? || ! last_name.blank?
-      result += ' (' + email + ')'
-    end
-  end
-
-
-  # -------------------------------------------------------------
   # Gets the username (without the domain) of the e-mail address, if possible.
   def email_without_domain
     if email =~ /(^[^@]+)@/

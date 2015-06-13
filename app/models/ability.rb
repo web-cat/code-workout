@@ -154,6 +154,21 @@ class Ability
         Exercise.visible_to_user(user) do |e|
         e.visible_to?(user)
       end
+      can [:practice, :evaluate], Exercise do |e|
+        now = Time.now
+        WorkoutOffering.
+          joins{workout.exercises}.joins{course_offering.course_enrollments}.
+          where{
+            ((starts_on == nil) | (starts_on <= time)) &
+            ((hard_deadline >= time) | (soft_deadline >= time)) &
+            course_offering.course_enrollments.user_id == user.id
+             }.any?
+#        e.workouts.workout_offerings.where(
+#          '(starts_on is NULL or starts_on < :time) and ' \
+#          '(hard_deadline >= :time or soft_deadline >= :time)',
+#          { time: Time.now }).course_offering.course_enrollments.
+#          where(user: user)
+      end
       can :create, Exercise if user.global_role.is_instructor?
       can [:update], Exercise, exercise_owners: { owner: user }
 
