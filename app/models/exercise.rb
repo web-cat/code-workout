@@ -94,8 +94,8 @@ class Exercise < ActiveRecord::Base
   }
 
 
-  scope :visible_to_user, -> (u) { joins{exercise_owners.outer}.
-    where{ (is_public == true) | (exercise_owners.owner == u) } }
+#  scope :visible_to_user, -> (u) { joins{exercise_owners.outer}.
+#    where{ (is_public == true) | (exercise_owners.owner == u) } }
 
 
   #~ Class methods ............................................................

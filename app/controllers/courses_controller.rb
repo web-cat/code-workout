@@ -17,8 +17,8 @@ class CoursesController < ApplicationController
     if !@course
       flash[:warning] = 'Course not found.'
       redirect_to organizations_path
-    elsif !params[:term_id]
-      render 'show_terms'
+    # elsif !params[:term_id]
+      # render 'show_terms'
     else
       @term = Term.find(params[:term_id])
       @course_offerings =
@@ -27,10 +27,10 @@ class CoursesController < ApplicationController
         !current_user.global_role.is_admin? &&
         (@course_offerings.any? {|co| co.is_student? current_user } ||
         !@course_offerings.any? {|co| co.is_staff? current_user })
-      respond_to do |format|
-        format.js
-        format.html
-      end
+      # respond_to do |format|
+       # format.js
+       # format.html
+      # end
     end
   end
 
