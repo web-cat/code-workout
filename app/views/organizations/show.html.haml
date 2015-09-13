@@ -1,7 +1,4 @@
-%ol.breadcrumb
-  %li= link_to 'Home', root_path
-  %li= link_to 'Courses', organizations_path
-  %li.active= @organization.abbreviation
+= render 'layouts/breadcrumb'
 
 %h1
   = @term.display_name
