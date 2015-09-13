@@ -14,6 +14,8 @@
       %label.control-label Avatar
     .form-wrapper
       = image_tag @user.avatar_url
+  = f.input :time_zone, as: :select, 
+  collection: TimeZone.all
   = f.input :avatar, label: 'Avatar URL'
   .form-group
     %span.form-label
