@@ -34,7 +34,7 @@ CodeWorkout::Application.routes.draw do
 
   get 'sse/feedback_wait'
   get 'sse/feedback_update'
-
+  post '/course_offerings/:id/upload_roster' => 'course_offerings#upload_roster'
   # All of the routes anchored at /gym
   scope :gym do
     # The top-level gym route
@@ -89,7 +89,10 @@ CodeWorkout::Application.routes.draw do
     post ':id/:term_id/generate_gradebook/' => 'courses#generate_gradebook',
       as: :course_gradebook
     get ':id(/:term_id)' => 'courses#show', as: :course
+    
+    
   end
+  
 
   resources :course_offerings, only: [ :edit, :update ] do
     post 'enroll' => :enroll, as: :enroll
