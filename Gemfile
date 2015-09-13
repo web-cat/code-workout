@@ -30,6 +30,7 @@ gem 'redcarpet'
 gem 'loofah'
 gem 'truncate_html'
 gem 'puma'
+gem 'tzinfo' # For timezone support
 
 # For JSON support
 gem 'rabl'
