@@ -1,5 +1,4 @@
-= render partial: "layouts/breadcrumb",
-  locals: { wid: @workout.id, exid: nil, off: nil }
+= render partial: "layouts/breadcrumb"
 
 %h1= @workout.name
 
@@ -24,38 +23,38 @@
       %th Close
   %tbody
     - Time.use_zone(ActiveSupport::TimeZone["America/New_York"]) do
-      - @workout.workout_offerings.each do |woff|
+      - @workout.workout_offerings.each do |workout_offering|
         %tr
-          %td= woff.course_offering.display_name
+          %td= workout_offering.course_offering.display_name
           -#%td.xeditable{ id: 'opening_date',
             data: { type: 'text',
-            url: '/workout_offerings/' + woff.id.to_s,
+            url: '/workout_offerings/' + workout_offering.id.to_s,
             resource: 'workout_offering',
             name: 'opening_date',
             xeditable: "true",
-            pk: woff.id.to_s,
-            model: 'workout_offering' } }= woff.opening_date
+            pk: workout_offering.id.to_s,
+            model: 'workout_offering' } }= workout_offering.opening_date
           %td
-            - if woff.opening_date
-              = l woff.opening_date
+            - if workout_offering.opening_date
+              = l workout_offering.opening_date
           -#%td.xeditable{ id: 'soft_deadline',
             data: { type: 'text',
-            url: '/workout_offerings/' + woff.id.to_s,
+            url: '/workout_offerings/' + workout_offering.id.to_s,
             resource: 'workout_offering',
             name: 'soft_deadline',
             xeditable: "true",
-            pk: woff.id.to_s,
-            model: 'workout_offering' } }= woff.soft_deadline
-          %td= l woff.soft_deadline
+            pk: workout_offering.id.to_s,
+            model: 'workout_offering' } }= workout_offering.soft_deadline
+          %td= l workout_offering.soft_deadline
           -#%td.xeditable{ id: 'hard_deadline',
             data: { type: 'text',
-            url: '/workout_offerings/' + woff.id.to_s,
+            url: '/workout_offerings/' + workout_offering.id.to_s,
             resource: 'workout_offering',
             name: 'hard_deadline',
             xeditable: "true",
-            pk: woff.id.to_s,
-            model: 'workout_offering' } }= woff.hard_deadline
-          %td= l woff.hard_deadline
+            pk: workout_offering.id.to_s,
+            model: 'workout_offering' } }= workout_offering.hard_deadline
+          %td= l workout_offering.hard_deadline
 
 .clearfix
 %h2 Exercises
