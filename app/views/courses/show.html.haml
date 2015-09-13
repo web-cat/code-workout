@@ -1,18 +1,8 @@
-%ol.breadcrumb
-  %li= link_to 'Home', root_path
-  %li= link_to 'Courses', organizations_path
-  %li= link_to @course.organization.abbreviation,
-    organization_path(@course.organization)
-  %li= link_to @course.number,
-    organization_course_path(@course.organization, @course)
-  %li.active= @term.display_name
-  %li Lich
+= render 'layouts/breadcrumb'
+
 %h1
   = @course.number_and_name
   %small= @term.display_name
-- puts "Course offerings", @course_offerings 
-- puts "Course offerings", @course_offerings
-- puts "Winter war!"
 - if @course_offerings && @course_offerings.any?
   %p
     - @course_offerings.each_with_index do |offering, i|
@@ -65,6 +55,9 @@
           = render partial: "workouts/workout", collection: row, as: :w,
             locals: { uid: current_user.id }
           .clearfix
+        - offering.workouts.each do |workout|
+          - deadline = WorkoutOffering.find_by(course_offering: offering, workout: workout).andand.hard_deadline
+          = "Deadline " + user_time(current_user, deadline)
 
     - if !@is_student
       .tab-pane.fade{ id: 'exercises' }
@@ -137,7 +130,10 @@
         - @course_offerings.each do |offering|
           - if @course_offerings.size > 1
             %h2= offering.display_name
-            = link_to 
+            = link_to
+          = form_tag '/course_offerings/'+ offering.id.to_s + '/upload_roster', multipart: true do
+            = file_field( "form", "rosterfile" )
+            = submit_tag "Submit File" 
           %table.table.table-striped
             %thead
               %tr
