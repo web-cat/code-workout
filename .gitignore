@@ -23,3 +23,4 @@ usr/attempts/
 usr/resources/*/tests
 *.csv
 working.txt
+timezones.txt
