@@ -90,6 +90,20 @@ class CourseOfferingsController < ApplicationController
       redirect_to root_path
     end
   end
+  
+  # -------------------------------------------------------------
+  # /course_offerings/:id/upload_roster
+  
+  def upload_roster
+    form_contents = params[:form]
+    puts form_contents.fetch(:rosterfile).path
+    CSV.foreach(form_contents.fetch(:rosterfile).path) do |enroller|
+      student = User.find_by!(email: enroller)
+      co = CourseEnrollment.new(user: student, course_offering_id: params[:id], course_role_id: 3)
+      co.save!
+    end
+    redirect_to root_path
+  end
 
 
   # -------------------------------------------------------------
