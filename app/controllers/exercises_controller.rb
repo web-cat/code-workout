@@ -686,7 +686,9 @@ class ExercisesController < ApplicationController
 
     # Tighter restrictions for the moment, should go away
     authorize! :practice, @exercise
-
+    if session[:current_workout]
+      @workout = Workout.find(session[:current_workout])
+    end
     if @exercise_version.is_mcq?
       @answers = @exercise_version.serve_choice_array
       @answers.each do |a|
