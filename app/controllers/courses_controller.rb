@@ -14,13 +14,17 @@ class CoursesController < ApplicationController
   # -------------------------------------------------------------
   # GET /courses/1
   def show
+    if params[:organization_id]
+        @organization = Organization.find(params[:organization_id])
+    end
     if !@course
       flash[:warning] = 'Course not found.'
       redirect_to organizations_path
-    # elsif !params[:term_id]
-      # render 'show_terms'
+    elsif !params[:term_id]
+      render 'show_terms'
     else
       @term = Term.find(params[:term_id])
+        
       @course_offerings =
         current_user.andand.course_offerings_for_term(@term, @course)
       @is_student = !user_signed_in? ||
@@ -65,7 +69,7 @@ class CoursesController < ApplicationController
       @course = Course.new(
         name: form[:name].to_s,
         number: form[:number].to_s,
-        creator: current_user,
+        creator_id: current_user.id,
         organization: org)
         org.courses << @course
         org.save
@@ -160,7 +164,7 @@ class CoursesController < ApplicationController
     # Only allow a trusted parameter "white list" through.
     def course_params
       params.require(:course).
-        permit(:name, :number, :organization_id, :term_id)
+        permit(:name, :id, :number, :organization_id, :term_id)
     end
 
 end
