@@ -16,7 +16,7 @@
 
 - if @organizations.any?
   - @organizations.each do |organization|
-    %h2= organization.name
+    %h2= link_to organization.name, organization_path(organization)
 
     %ul
       - organization.courses.each do |course|
