@@ -431,5 +431,6 @@ DEPENDENCIES
   sucker_punch (~> 1.0)
   test-unit (~> 3.0.9)
   truncate_html
+  tzinfo
   uglifier (>= 1.3.0)
   wannabe_bool
