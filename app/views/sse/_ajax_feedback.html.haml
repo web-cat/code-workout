@@ -22,10 +22,10 @@
         - answer.test_case_results(true).each do |tcr|
           %tr
             %td
-              = tcr.display_description
+              - description = tcr.display_description
+              = description
               - if !tcr.pass
-                - if !tcr.test_case.description.blank? &&                |
-                  !tcr.test_case.description.include?('hidden')          |
+                - if !description.blank? && !description.include?('hidden')
                   %br
                   .out= tcr.execution_feedback
             - if tcr.pass
@@ -35,7 +35,7 @@
               %td.fail
                 %i.fa.fa-minus-square
 
-- if session[:current_workout]
+-# if session[:current_workout]
   - wkt = Workout.find(session[:current_workout])
   - if wkt.next_exercise(@exercise,current_user).nil?
     = link_to 'Finish workout',

@@ -88,8 +88,9 @@ class WorkoutScore < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def attempt_for(exercise)
+    workout_score = self
     Attempt.joins{exercise_version}.
-      where{(active_score_id == self.id) &
+      where{(active_score_id == workout_score.id) &
       (exercise_version.exercise_id == exercise.id)}.first
   end
 
@@ -112,52 +113,96 @@ class WorkoutScore < ActiveRecord::Base
     self.save!
   end
 
+
   # -------------------------------------------------------------
-  # (Finall) The refactored method to record the workout score
+  def record_attempt(attempt)
+    value = attempt.score.round(2)
+    last_attempt = self.scored_attempts.
+      where(exercise_version: attempt.exercise_version).first
+    if last_attempt
+      self.score -= last_attempt.score
+      last_attempt.active_scored_id = nil
+      last_attempt.save!
+    else
+      if self.exercises_completed < self.workout.exercises.length
+        self.exercises_completed += 1
+      end
+      if self.exercises_remaining > 0
+        self.exercises_remaining -= 1
+      end
+    end
+    attempt.active_score = self
+    attempt.save!
+    self.score += value
+    self.last_attempted_at = Time.now
+
+#    if self.exercises_remaining == 0
+#      self.completed = true
+#      self.completed_at = Time.now
+#    end
+
+    self.save!
+  end
+
+
+  # -------------------------------------------------------------
+  # (Final) The refactored method to record the workout score
   # when a workout's exercise has been attempted
-  def self.record_workout_score(score, exer, wkt_id,current_user)
-    scoring = WorkoutScore.find_by(
-      user: current_user, workout_id: wkt_id)
+  def self.record_workout_score(score, exer, wkt_id, current_user)
+    self.fail # this method needs to go away and be replaced by
+              # a better instance method
+    scoring = nil
+    if current_user && current_user.current_workout_score &&
+      current_user.current_workout_score.workout.id = wkt_id
+      scoring = current_user.current_workout_score
+    end
     @current_workout = Workout.find(wkt_id)
+    if scoring.nil? && current_user
+      scoring = @current_workout.score_for(current_user)
+    end
     exercise_version = exer.current_version
     score = score.round(2)
     # FIXME: This code repeats code in code_worker.rb and needs to be
     # refactored, probably as a method (or constructor?) in WorkoutScore.
     if scoring.nil?
-      puts "SCORING NOT THERE","SCORING ALREADY THERE"
-      scoring = WorkoutScore.new
-      scoring.score = score
-      scoring.last_attempted_at = Time.now
-      scoring.exercises_completed = 1
-      scoring.exercises_remaining = @current_workout.exercises.length - 1
+      scoring = WorkoutScore.new(
+        score: score,
+        exercises_completed: 1,
+        exercises_remaining: @current_workout.exercises.length - 1)
       @current_workout.workout_scores << scoring
       current_user.workout_scores << scoring
+      if current_user
+        scoring.save!
+        current_user.current_workout_score = scoring
+        current_user.save!
+      end
 
     else # At least one exercise has been attempted as a part of the workout
-      user_exercise_score =
-        Attempt.user_attempt(current_user, exercise_version).andand.score
-      puts "SCORED","ALREAD SCORED","ALREADY SCORED"
-      scoring.score += score
-      scoring.last_attempted_at = Time.now
-      if user_exercise_score
-        scoring.score -= user_exercise_score
+      last_attempt = scoring.scored_attempts.
+        where(exercise_version: exercise_version).first
+      if last_attempt
+        scoring.score -= last_attempt.score
+        last_attempt.active_scored_id = nil
+        last_attempt.save!
       else
         scoring.exercises_completed += 1
         scoring.exercises_remaining -= 1
-        # Compensate if overshoots
-        if scoring.exercises_completed > @current_workout.exercises.length
-          scoring.exercises_completed = @current_workout.exercises.length
-        end
-        if scoring.exercises_remaining < 0
-          scoring.exercises_remaining = 0
-        end
-        if scoring.exercises_remaining == 0
-          scoring.completed = true
-          scoring.completed_at = Time.now
-        end
       end
-
+      scoring.score += score
     end
+    scoring.last_attempted_at = Time.now
+    # Compensate if overshoots
+    if scoring.exercises_completed > @current_workout.exercises.length
+      scoring.exercises_completed = @current_workout.exercises.length
+    end
+    if scoring.exercises_remaining < 0
+      scoring.exercises_remaining = 0
+    end
+    if scoring.exercises_remaining == 0
+      scoring.completed = true
+      scoring.completed_at = Time.now
+    end
+
     scoring.save!
   end
 

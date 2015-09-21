@@ -11,13 +11,11 @@
   %h2 Workouts
   -# = render partial: "workouts/thumblg", collection: @wos, as: :w,
   - @wos.in_groups_of(2, false) do |row|
-    = render partial: "workouts/workout", collection: row, as: :w,
-      locals: { uid: uid }
+    = render row, uid: uid
     .clearfix
 
 - if not(@exs.empty?)
   %h2 Individual Exercises
   - @exs.in_groups_of(2, false) do |row|
-    = render partial: "exercises/exercise", collection: row, as: :x,
-      locals: { uid: uid, wid: nil }
+    = render row, user: current_user
     .clearfix

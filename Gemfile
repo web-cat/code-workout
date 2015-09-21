@@ -44,6 +44,7 @@ end
 
 group :development, :test do
   gem 'sqlite3'
+  gem 'mysql2'
   gem 'rspec-rails'
   gem 'annotate'
   gem 'rails-erd', github: 'voormedia/rails-erd'

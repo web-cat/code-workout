@@ -35,7 +35,24 @@ namespace :db do
     FactoryGirl.create :coding_exercise, name: 'Factorial 3'
   end
 
-#  task exercises: :environment do
-#  end
+  desc "Reset database and then fill it with Summer I 2015 data"
+  task populate_su15: [:environment, :reset] do
+    FactoryGirl.create(:organization)
+    FactoryGirl.create(:term,
+       season: 200,
+       starts_on: "2015-05-25",
+       ends_on: "2015-07-07",
+       year: 2015)
+    FactoryGirl.create(:course)
+    c = FactoryGirl.create(:course_offering,
+      self_enrollment_allowed: true,
+      url: 'http://moodle.cs.vt.edu/course/view.php?id=282',
+      label: '60396'
+      )
+    FactoryGirl.create(:course_enrollment,
+      user: FactoryGirl.create(:admin),
+      course_offering: c,
+      course_role: CourseRole.instructor)
+  end
 
 end

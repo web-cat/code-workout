@@ -687,6 +687,13 @@ class ExercisesController < ApplicationController
     # Tighter restrictions for the moment, should go away
     authorize! :practice, @exercise
 
+    if params[:workout_offering_id]
+      @workout_offering =
+        WorkoutOffering.find_by(id: params[:workout_offering_id])
+    else
+      @workout_offering = nil
+    end
+
     if @exercise_version.is_mcq?
       @answers = @exercise_version.serve_choice_array
       @answers.each do |a|
@@ -747,6 +754,41 @@ class ExercisesController < ApplicationController
     # Tighter restrictions for the moment, should go away
     authorize! :practice, @exercise
 
+    @workout = nil
+    @workout_offering = nil
+    if params[:workout_offering_id]
+      @workout_offering =
+        WorkoutOffering.find_by(id: params[:workout_offering_id])
+      if @workout_offering &&
+        !@workout_offering.workout.contains?(@exercise_version.exercise)
+        @workout_offering = nil
+      end
+    else
+      @workout_offering = nil
+    end
+    if @workout_offering.nil? && current_user.andand.current_workout_score &&
+      current_user.current_workout_score.workout.contains?(@exercise_version.exercise)
+      @workout_offering = current_user.current_workout_score.workout_offering
+      if @workout_offering.nil?
+        @workout = current_user.current_workout_score.workout
+      end
+    end
+    if @workout_offering && @workout.nil?
+      @workout = @workout_offering.workout
+    end
+    if @workout.nil? && session[:current_workout]
+      @workout = Workout.find_by(id: session[:current_workout])
+      if !@workout.contains?(@exercise_version.exercise)
+        @workout = nil
+      end
+    end
+    @workout_score = nil
+    if @workout_offering
+      @workout_score = @workout_offering.score_for(current_user)
+    elsif @workout
+      @workout_score = @workout.score_for(current_user)
+    end
+
     if @exercise_version.is_mcq?
       #response_ids = params[:exercise_version][:multiple_choice_prompt][:choice_ids]
       response_ids = params[:exercise_version][:choice][:id]
@@ -764,9 +806,9 @@ class ExercisesController < ApplicationController
         answer[:answer] = markdown(answer[:answer])
       end
       @score = @exercise_version.score(@responses)
-      if session[:current_workout]
+      if @workout
         @score = @score * ExerciseWorkout.findExercisePoints(
-          @exercise, session[:current_workout]) /
+          @exercise, @workout.id) /
           @exercise_version.max_mcq_score
         @score = @score.round(2)
       end
@@ -776,20 +818,22 @@ class ExercisesController < ApplicationController
       # + "#{@exercise.id}:#{@exercise.name}" +
       #  ' and its feedback for you: ' +
       #  @explain.to_sentence
-      if session[:current_workout]
+      if @workout
+        #FIXME: busted!  Needs replacing
         WorkoutScore.record_workout_score(
-          @score, @exercise, session[:current_workout],current_user)
+          @score, @exercise, @workout.id, current_user)
         session[:workout_feedback][@exercise.id] = @exercise_feedback
       end
       # TODO: calculate experience based on correctness and num submissions
       count_submission()
       @xp = @exercise_version.experience_on(@responses, session[:submit_num])
 
-      @attempt = record_attempt(@score, @xp)
+      @attempt = record_attempt(@score, @xp, @workout_score)
       @attempt.save!
 
     elsif @exercise_version.is_coding?
-      @attempt = @exercise_version.new_attempt(user: current_user)
+      @attempt = @exercise_version.new_attempt(
+        user: current_user, workout_score: @workout_score)
       @attempt.save
       # FIXME: Need to make it work for multiple prompts
       prompt = @exercise_version.prompts.first.specific
@@ -797,10 +841,8 @@ class ExercisesController < ApplicationController
       prompt_answer.answer = params[:exercise_version][:answer_code]
       if prompt_answer.save
         CodeWorker.new.async.perform(
-          @exercise_version.id,
-          current_user.id,
-          session[:current_workout],
-          @attempt)
+          @attempt.id,
+          @workout_score.andand.id)
       else
         puts 'IMPROPER PROMPT',
           'unable to save prompt_answer: ' \
@@ -921,7 +963,7 @@ class ExercisesController < ApplicationController
 
     # -------------------------------------------------------------
     # should call count_submission before calling this method
-    def record_attempt(score, exp)
+    def record_attempt(score, exp, workout_score)
       exv = @exercise_version
       attempt = Attempt.new
       if !session[:exercise_id] ||
@@ -935,6 +977,9 @@ class ExercisesController < ApplicationController
       attempt.score = score
       attempt.experience_earned = exp
       attempt.user = current_user
+      if workout_score
+        attempt.workout_score = workout_score
+      end
 
 
       if session[:current_workout]

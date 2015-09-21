@@ -52,4 +52,24 @@ class WorkoutOffering < ActiveRecord::Base
     workout_scores.where(user: user).order('updated_at DESC').first
   end
 
+
+  # -------------------------------------------------------------
+  def can_be_seen_by?(user)
+    now = Time.now
+    course_offering.is_staff?(user) ||
+    (((opening_date == nil) || (opening_date <= now)) &&
+      course_offering.is_enrolled?(user))
+  end
+
+
+  # -------------------------------------------------------------
+  # TODO: add support for individual deadlines
+  def can_be_practiced_by?(user)
+    now = Time.now
+    course_offering.is_staff?(user) ||
+    (((opening_date == nil) || (opening_date <= now)) &&
+      ((hard_deadline >= now) || (soft_deadline >= now)) &&
+      course_offering.is_enrolled?(user))
+  end
+
 end

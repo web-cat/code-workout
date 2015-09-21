@@ -39,16 +39,19 @@ sed diam voluptua.
 
 
 Tests:
-tests {
+tests "outer description" {
   subject { new Answer() }
 
-  example tests {
+  example tests "example set" {
     teenSum( 3,  4) is  7
     teenSum(10, 13) is 19
     teenSum(13,  2) is 19
   }
 
-  teenSum( 3,  4) is 7
+  test "check the 7s" teenSum( 3,  4) is 7
+  test "check the 7s" {
+     teenSum( 3,  4) is 7
+  }
   teenSum(10, 13) is 19
   teenSum(13,  2) is 19
   teenSum( 3, 19) is 19
@@ -60,11 +63,38 @@ tests {
   teenSum( 2, 17) is 19
   teenSum( 2, 16) is 19
 
-  hidden tests {
+  hidden tests "can't see these" {
     teenSum(13, 13) is 19
     teenSum(19, 19) is 19
     teenSum( 6,  7) is 13
     teenSum(19, 20) is 19
     teenSum( 2, 18) is 19
   }
+  
+  
+  
+  teenSum(2, 2) matches /some [regex]/
+
+  teenSum(2, 2) is 15.90
+  teenSum(2, 2) is 15.90 within 0.001
+
+  some.package.Class.teenSum(2, 2) is 15
+
+  teenSum(2, 2)
+     >> Some string of output
+
+     << Some string of input
+     << wlkqwjrlqwkjw
+     >> welkrjwlrkj with a /re[gular] expression/ in the middle
+     << some more input
+     << some more input
+     << some more input
+     << some more input
+     << some more input
+     << some more input
+     << some more input
+
+     is 0
+
+  teenSum(2, 2)
 }

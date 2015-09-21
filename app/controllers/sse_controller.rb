@@ -13,13 +13,10 @@ class SseController < ApplicationController
     sse = SSE.new(response.stream, retry: 300,
       event: "feedback_#{params[:att_id]}")
 
-    puts 'FINGON', "record_#{max_attempt}_attempt", 'FINGON'
     flag = true
     ActiveSupport::Notifications.subscribe(
       "record_#{max_attempt}_attempt") do |*args|
       begin
-        puts 'WORKING', "USER-#{params[:user_id]}",
-          "ATTEMPT-#{params[:att_id]}", 'WORKING'
         sse.write({arg: args})
       rescue IOError
         puts 'IOError', 'IOError', 'IOError'

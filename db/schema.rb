@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150608001534) do
+ActiveRecord::Schema.define(version: 20150921113747) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -218,6 +218,7 @@ ActiveRecord::Schema.define(version: 20150608001534) do
   add_index "exercises", ["current_version_id"], name: "index_exercises_on_current_version_id", using: :btree
   add_index "exercises", ["exercise_family_id"], name: "index_exercises_on_exercise_family_id", using: :btree
   add_index "exercises", ["external_id"], name: "index_exercises_on_external_id", unique: true, using: :btree
+  add_index "exercises", ["is_public"], name: "index_exercises_on_is_public", using: :btree
 
   create_table "friendly_id_slugs", force: true do |t|
     t.string   "slug",                      default: "", null: false
@@ -401,12 +402,12 @@ ActiveRecord::Schema.define(version: 20150608001534) do
   add_index "test_cases", ["coding_prompt_id"], name: "index_test_cases_on_coding_prompt_id", using: :btree
 
   create_table "users", force: true do |t|
-    t.string   "email",                  default: "", null: false
-    t.string   "encrypted_password",     default: "", null: false
+    t.string   "email",                    default: "", null: false
+    t.string   "encrypted_password",       default: "", null: false
     t.string   "reset_password_token"
     t.datetime "reset_password_sent_at"
     t.datetime "remember_created_at"
-    t.integer  "sign_in_count",          default: 0,  null: false
+    t.integer  "sign_in_count",            default: 0,  null: false
     t.datetime "current_sign_in_at"
     t.datetime "last_sign_in_at"
     t.string   "current_sign_in_ip"
@@ -418,12 +419,14 @@ ActiveRecord::Schema.define(version: 20150608001534) do
     t.datetime "updated_at"
     t.string   "first_name"
     t.string   "last_name"
-    t.integer  "global_role_id",                      null: false
+    t.integer  "global_role_id",                        null: false
     t.string   "avatar"
-    t.string   "slug",                   default: "", null: false
+    t.string   "slug",                     default: "", null: false
+    t.integer  "current_workout_score_id"
   end
 
   add_index "users", ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true, using: :btree
+  add_index "users", ["current_workout_score_id"], name: "index_users_on_current_workout_score_id", unique: true, using: :btree
   add_index "users", ["email"], name: "index_users_on_email", unique: true, using: :btree
   add_index "users", ["global_role_id"], name: "index_users_on_global_role_id", using: :btree
   add_index "users", ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true, using: :btree
@@ -476,8 +479,12 @@ ActiveRecord::Schema.define(version: 20150608001534) do
     t.integer  "points_multiplier"
     t.integer  "creator_id"
     t.string   "external_id"
+    t.boolean  "is_public"
   end
 
   add_index "workouts", ["external_id"], name: "index_workouts_on_external_id", unique: true, using: :btree
+  add_index "workouts", ["is_public"], name: "index_workouts_on_is_public", using: :btree
+
+  add_foreign_key "users", "workout_scores", name: "users_current_workout_score_id_fk", column: "current_workout_score_id"
 
 end

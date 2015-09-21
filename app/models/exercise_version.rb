@@ -87,6 +87,9 @@ class ExerciseVersion < ActiveRecord::Base
       submit_time: Time.now,
       submit_num: num
       )
+    if args[:workout_score]
+      attempt.workout_score = args[:workout_score]
+    end
     args.merge!(attempt: attempt)
     prompts.each do |prompt|
       prompt.new_answer(args)

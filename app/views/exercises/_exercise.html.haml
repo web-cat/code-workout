@@ -1,15 +1,23 @@
 - size ||= 'lg'
+- start_workout ||= nil
 - user ||= current_user
-- offering ||= nil
-- wid ||= session[:current_workout]
-- w ||= wid ? Workout.find_by(id: wid) : nil
-- wscore ||= (user && w) ? WorkoutScore.find_by(workout: w,
-  workout_offering: offering, user: user) : nil
-- pts = w ? w.exercise_workouts.where(exercise: x).first.andand.points : nil
-- attempt = wscore ? wscore.attempt_for(x) : nil
+- workout_offering ||= nil
+- workout ||= workout_offering.andand.workout
+- if workout
+  - workout_id ||= workout
+- else
+  - workout_id ||= session[:current_workout]
+  - workout ||= workout_id ? Workout.find_by(id: workout_id) : nil
+- if workout_offering
+  - workout_score ||= workout_offering.score_for(user)
+- else
+  - workout_score ||= workout && user && workout.score_for(user)
+-#
+- pts = workout ? workout.exercise_workouts.where(exercise: exercise).first.andand.points : nil
+- attempt = workout_score ? workout_score.attempt_for(exercise) : nil
 - score = attempt ? attempt.score : 0
 - if !pts
-  - pts = x.experience
+  - pts = exercise.experience
 - pts = pts.to_i
 - score_pct = (score / pts * 100).round(0).to_i
 - if score.round(1) < pts
@@ -18,17 +26,37 @@
     - score -= 1
 - else
   - score = score.round(0).to_i
+-#
 %article.exercise.thumbnail{ class: size }
   .title
-    - if x.is_mcq?
+    - if exercise.is_mcq?
       %i.glyphicon.glyphicon-th-list
-    - elsif x.is_coding?
+    - elsif exercise.is_coding?
       %span.fa-stack
         %i.fa.fa-square.fa-stack-2x
         %i.fa.fa-terminal.fa-stack-1x.fa-inverse
     - else
       %i.fa-pencil-square-o
-    = link_to x.display_name, exercise_practice_path(x)
+    - if workout_offering
+      - if workout_offering.can_be_practiced_by?(user)
+        - if start_workout
+          = link_to exercise.display_name,
+            organization_workout_offering_practice_path(exercise_id: exercise.id,
+              organization_id: workout_offering.course_offering.course.organization.slug,
+              course_id: workout_offering.course_offering.course.slug,
+              term_id: workout_offering.course_offering.term.slug,
+              id: workout_offering.id)
+        - else
+          = link_to exercise.display_name,
+            organization_workout_offering_exercise_path(id: exercise.id,
+              organization_id: workout_offering.course_offering.course.organization.slug,
+              course_id: workout_offering.course_offering.course.slug,
+              term_id: workout_offering.course_offering.term.slug,
+              workout_offering_id: workout_offering.id)
+      - else
+        = exercise.display_name
+    - else
+      = link_to exercise.display_name, exercise_practice_path(exercise)
   .summary
     .radial-progress{ 'data-progress' => score_pct }
       .circle
@@ -45,11 +73,11 @@
             = "/ "  + n_to_s(pts)
   .body
     .text
-      = teaser(x.current_version.andand.prompts.andand.first.andand.question)
+      = teaser(exercise.current_version.andand.prompts.andand.first.andand.question)
   .info
-    = difficulty_image(x.experience.to_i)
+    = difficulty_image(exercise.experience.to_i)
     .taglist
-      - x.tags.each do |t|
+      - exercise.tags.each do |t|
         = link_to t.name, search_path(search: t.name),
           method: :post, class: 'tag'
     -#
@@ -61,13 +89,12 @@
       - ex_workout = nil
       - if uid && uid != 0
         - attempt = Attempt.where(user_id: uid,
-          exercise_version: x.current_version).last
-        - puts "KEER",attempt,"KEER"
+          exercise_version: exercise.current_version).last
         - if attempt && attempt.score > 0
           - attempt_pct = 100
-        - if wid
-          - ex_workout = ExerciseWorkout.find_by(exercise_id: x.id,
-            workout_id: wid)
+        - if workout_id
+          - ex_workout = ExerciseWorkout.find_by(exercise_id: exercise.id,
+            workout_id: workout_id)
           - if ex_workout && attempt
             - attempt_pct = number_to_percentage(attempt.score.round(2) / ex_workout.points)
       .pts
@@ -83,23 +110,23 @@
           - else
             pt
 
-        - elsif wid
-          - ex_workout = ExerciseWorkout.find_by(exercise_id: x.id,
-            workout_id: wid)
+        - elsif workout_id
+          - ex_workout = ExerciseWorkout.find_by(exercise_id: exercise.id,
+            workout_id: workout_id)
           = ex_workout.points
           - if ex_workout.points != 1
             pts
           - else
             pt
         - else
-          = n_to_s(x.experience) + ' xp'
+          = n_to_s(exercise.experience) + ' xp'
 -#
   .progress
     - att = Attempt.where(user_id: uid,
-      exercise_version: x.current_version).last
+      exercise_version: exercise.current_version).last
     - ex_workout = nil
-    - if wid
-      - ex_workout = ExerciseWorkout.find_by(exercise_id: x.id, workout_id: wid)
+    - if workout_id
+      - ex_workout = ExerciseWorkout.find_by(exercise_id: exercise.id, workout_id: workout_id)
     - if att && ex_workout
       - attemptp = attempt.score.round(2)
       .progress-bar{ role: 'progressbar',
@@ -107,7 +134,7 @@
         'aria-valuemax' => 100,
         'aria-valuemin' => 0,
         style: 'width: ' + attempt_pct.to_s + '%;' }
-        %progress{value: attemptp,max: ex_workout.points }
+        %progress{value: attemptp, max: ex_workout.points }
     - elsif ex_workout
       .progress-bar{ role: 'progressbar',
         'aria-valuenow' => 0,

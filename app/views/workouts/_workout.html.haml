@@ -1,16 +1,40 @@
 - size ||= 'lg'
 - user ||= current_user
-- offering ||= nil
-- wscore ||= user ? WorkoutScore.find_by(workout: w,
-  workout_offering: offering, user: user) : nil
-- score_pct = wscore ? (wscore.score/w.total_points * 100).round(0) : 0
-- if score_pct == 100 && wscore.score < w.total_points
+- workout ||= nil
+- workout_offering ||= (offering ||= nil)
+- workout_score ||= user ? user.current_workout_score : nil
+- if workout_score && ((workout && workout_score.workout != workout) ||      |
+  (workout_offering && workout_score.workout_offering != workout_offering))  |
+  - workout_score = nil
+- workout_score ||= user ? WorkoutScore.find_by(workout: workout,
+  workout_offering: workout_offering, user: user) : nil
+- workout ||= workout_score.andand.workout
+- workout ||= workout_offering.andand.workout
+- workout_offering ||= workout_score.andand.workout_offering
+- score_pct = workout_score ? (workout_score.score/workout.total_points * 100).round(0) : 0
+- if score_pct == 100 && workout_score.score < workout.total_points
   - score_pct = 99
-%article.workout.thumbnail{ class: size }
+- closed = (workout_offering && workout_offering.hard_deadline < Time.now)
+%article.workout.thumbnail{ class: (closed ? (size + " closed") : size) }
   .title
-    %i.fa.fa-folder-open
-    = link_to w.name, workout_path(id: w[:id])
-    %span.badge.badge-info= w.exercises.count.to_s
+    - if workout_offering
+      .due
+        - Time.use_zone(ActiveSupport::TimeZone["America/New_York"]) do
+          = workout_offering.soft_deadline.strftime("%-m/%d/%y")
+    - if closed
+      %i.fa.fa-lock
+        = link_to workout.name, "#"
+    - else
+      %i.fa.fa-folder-open
+      - if workout_offering
+        = link_to workout.name,
+          organization_workout_offering_path(id: workout_offering.id,
+          course_id: workout_offering.course_offering.course.slug,
+          term_id: workout_offering.course_offering.term.slug,
+          organization_id: workout_offering.course_offering.course.organization.slug)
+      - else
+        = link_to workout.name, workout_path(id: workout[:id])
+    %span.badge.badge-info= workout.exercises.count.to_s
   .summary
     .radial-progress{ 'data-progress' => score_pct }
       .circle
@@ -24,17 +48,17 @@
         .pct
   .body
     .text
-      = teaser(w.description)
+      = teaser(workout.description)
   .info
-    = difficulty_image(w.highest_difficulty.to_i)
+    = difficulty_image(workout.highest_difficulty.to_i)
     .taglist
-      - w.tags.each do |t|
+      - workout.tags.each do |t|
         = link_to t.name, search_path(search: t.name),
           method: :post, class: 'tag'
 
 -#.well.well-sm.col-md-5
   .row
     .col-md-12
-      - xp_data = Workout.xp_distribution(1, w.id)
+      - xp_data = Workout.xp_distribution(1, workout.id)
       = render partial: 'workouts/progress',
-        locals: { xp_data: Workout.xp_distribution(1, w.id) }
+        locals: { xp_data: Workout.xp_distribution(1, workout.id) }

@@ -82,6 +82,15 @@ class CodingPrompt < ActiveRecord::Base
   end
 
 
+  # -------------------------------------------------------------
+  def prepare_starter_code
+    result = self.starter_code
+    if result.nil?
+      result = ''
+    end
+    return result.gsub(/\b___\b/, '')
+  end
+
   #~ Private instance methods .................................................
   private
 
