@@ -8,4 +8,9 @@
   -if exs.empty?
     .alert No exercises remaining
   - else
-    = render exs, user: current_user, workout_score: workout_score, size: 'sm'
+    = render exs,
+      user: current_user,
+      workout_score: workout_score,
+      workout_offering: workout_score.andand.workout_offering,
+      workout: workout_score.andand.workout,
+      size: 'sm'

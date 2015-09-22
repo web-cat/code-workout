@@ -121,7 +121,7 @@ class WorkoutScore < ActiveRecord::Base
       where(exercise_version: attempt.exercise_version).first
     if last_attempt
       self.score -= last_attempt.score
-      last_attempt.active_scored_id = nil
+      last_attempt.active_score_id = nil
       last_attempt.save!
     else
       if self.exercises_completed < self.workout.exercises.length
@@ -134,6 +134,7 @@ class WorkoutScore < ActiveRecord::Base
     attempt.active_score = self
     attempt.save!
     self.score += value
+    self.score = self.score.round(2)
     self.last_attempted_at = Time.now
 
 #    if self.exercises_remaining == 0
