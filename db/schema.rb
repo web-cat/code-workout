@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150921113747) do
+ActiveRecord::Schema.define(version: 20150923144539) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -39,6 +39,7 @@ ActiveRecord::Schema.define(version: 20150921113747) do
     t.datetime "updated_at"
     t.integer  "workout_score_id"
     t.integer  "active_score_id"
+    t.boolean  "feedback_ready"
   end
 
   add_index "attempts", ["active_score_id"], name: "index_attempts_on_active_score_id", using: :btree

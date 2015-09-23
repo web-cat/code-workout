@@ -829,6 +829,7 @@ class ExercisesController < ApplicationController
       @xp = @exercise_version.experience_on(@responses, session[:submit_num])
 
       @attempt = record_attempt(@score, @xp, @workout_score)
+      @attempt.feedback_ready = true
       @attempt.save!
 
     elsif @exercise_version.is_coding?

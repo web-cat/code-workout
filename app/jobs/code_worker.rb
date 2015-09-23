@@ -87,6 +87,7 @@ class CodeWorker
       attempt.score = correct / total
       workout_score = workout_score_id &&
         WorkoutScore.find_by(id: workout_score_id)
+      attempt.feedback_ready = true
       if workout_score
         attempt.score *= workout_score.workout.exercise_workouts.
           where(exercise: exv.exercise).first.points
@@ -96,10 +97,10 @@ class CodeWorker
         attempt.save!
       end
 
-      ActiveSupport::Notifications.instrument(
-        "record_#{current_attempt}_attempt", extra: :nothing) do
-        puts "SKYFALL"
-      end
+#      ActiveSupport::Notifications.instrument(
+#        "record_#{current_attempt}_attempt", extra: :nothing) do
+#        puts "SKYFALL"
+#      end
     end
   end
 

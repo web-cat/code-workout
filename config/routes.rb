@@ -33,7 +33,8 @@ CodeWorkout::Application.routes.draw do
 
 
   get 'sse/feedback_wait'
-  get 'sse/feedback_update'
+  # get 'sse/feedback_update'
+  get 'sse/feedback_poll'
 
   # All of the routes anchored at /gym
   scope :gym do

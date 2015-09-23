@@ -43,4 +43,19 @@ class SseController < ApplicationController
     end
   end
 
+
+  # -------------------------------------------------------------
+  def feedback_poll
+    @attempt = Attempt.find_by(id: params[:att_id])
+    authorize! :read, @attempt
+    @exercise_version = @attempt.exercise_version
+    @exercise = @exercise_version.exercise
+    respond_to do |format|
+      format.js do
+        render action:
+          (@attempt.feedback_ready ? 'feedback_update' : 'feedback_poll')
+      end
+    end
+  end
+
 end
