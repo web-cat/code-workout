@@ -67,7 +67,8 @@ class User < ActiveRecord::Base
     inverse_of: :user, dependent: :destroy
   has_many    :resource_files, inverse_of: :user
   has_many    :identities, inverse_of: :user, dependent: :destroy
-
+  has_many    :student_extensions
+  has_many    :workout_offerings, through: :student_extenions
   has_many    :test_case_results, inverse_of: :user, dependent: :destroy
 
 

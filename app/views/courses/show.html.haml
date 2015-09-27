@@ -57,7 +57,8 @@
           .clearfix
         - offering.workouts.each do |workout|
           - deadline = WorkoutOffering.find_by(course_offering: offering, workout: workout).andand.hard_deadline
-          = "Deadline " + user_time(current_user, deadline)
+          - if deadline
+            = "\nDeadline " + user_time(current_user, deadline).to_s
 
     - if !@is_student
       .tab-pane.fade{ id: 'exercises' }

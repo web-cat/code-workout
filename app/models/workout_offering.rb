@@ -32,7 +32,8 @@ class WorkoutOffering < ActiveRecord::Base
   belongs_to :workout, inverse_of: :workout_offerings
   belongs_to :course_offering, inverse_of: :workout_offerings
   has_many :workout_scores, inverse_of: :workout_offering, dependent: :nullify
-
+  has_many :student_extensions
+  has_many :users, through: :student_extensions
 
   scope :visible_to_students, -> { where{
     (published == true) &
@@ -47,9 +48,33 @@ class WorkoutOffering < ActiveRecord::Base
 
   #~ Instance methods .........................................................
 
-  # -------------------------------------------------------------
+  # -----------------------------------------------------------------
   def score_for(user)
     workout_scores.where(user: user).order('updated_at DESC').first
+  end
+  
+  # --------------------------------------------------------------------------------
+  # Describes how 'far' is the workout offering from its hard and soft deadlines. 
+  # 4 indicates that there is more than one day remaining to soft deadline
+  # 1 indicates that it is past the hard deadline
+  # nil indicates that there is no valid deadline
+  # Else it will return the number of hours remaining to the soft deadline
+  def current_deadline_distance
+    current_time = Time.now.to_i
+
+    if hard_deadline.nil?
+      return nil
+    end
+
+    if hard_deadline.to_i < current_time
+      return 1
+    end
+
+    if soft_deadline.to_i - current_time > 86400
+      return 4
+    end
+    return (soft_deadline.to_i - current_time)/ 3600
+
   end
 
 end

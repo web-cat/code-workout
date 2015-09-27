@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150912200222) do
+ActiveRecord::Schema.define(version: 20150927020504) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -337,6 +337,18 @@ ActiveRecord::Schema.define(version: 20150912200222) do
     t.datetime "created_at"
     t.datetime "updated_at"
   end
+
+  create_table "student_extensions", force: true do |t|
+    t.integer  "user_id"
+    t.integer  "workout_offering_id"
+    t.datetime "soft_deadline"
+    t.datetime "hard_deadline"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "student_extensions", ["user_id"], name: "index_student_extensions_on_user_id"
+  add_index "student_extensions", ["workout_offering_id"], name: "index_student_extensions_on_workout_offering_id"
 
   create_table "tag_user_scores", force: true do |t|
     t.integer  "user_id",                         null: false

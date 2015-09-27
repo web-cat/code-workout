@@ -1,6 +1,15 @@
 - size ||= 'lg'
 - user ||= current_user
 - offering ||= nil
+- flag1 = true
+- if @workout && @workout.course_offerings.any?
+  - @workout.course_offerings.each do |workout_course_offering|
+    - if flag1 && user_signed_in? && current_user.course_offerings.any?
+      - current_user.course_offerings.each do |user_course_offering|
+        - if flag1 && user_course_offering.id == workout_course_offering.id
+          - flag1 = false
+          - offering = WorkoutOffering.find_by(course_offering: workout_course_offering)
+          
 - wscore ||= user ? WorkoutScore.find_by(workout: w,
   workout_offering: offering, user: user) : nil
 - score_pct = wscore ? (wscore.score/w.total_points * 100).round(0) : 0
@@ -8,7 +17,28 @@
   - score_pct = 99
 %article.workout.thumbnail{ class: size }
   .title
-    %i.fa.fa-folder-open
+    - if offering && offering.current_deadline_distance == 4
+      %i.fa.fa-folder-open
+      .due.soon= offering.soft_deadline.to_s.split(" ").first
+    - elsif offering && offering.current_deadline_distance == 1
+      %i.fa.fa-lock
+      .due= offering.soft_deadline.to_s.split(" ").first
+    - elsif offering && offering.current_deadline_distance.nil?
+      %i.fa.fa-folder-open
+      .due Open
+    - elsif offering && offering.current_deadline_distance > 0
+      %i.fa.fa-folder-open
+      .due.soon
+        = 'In ' + offering.current_deadline_distance.to_s + 'hrs'
+    - elsif offering && offering.current_deadline_distance < 0
+      %i.fa.fa-folder-open
+      .due.late 
+        = offering.current_deadline_distance.abs.to_s + ' hrs ago'
+    - else
+      - puts "MISSED CASE","\nMISSED CASE"
+      
+      .due= offering.soft_deadline.to_s
+      
     = link_to w.name, workout_path(id: w[:id])
     %span.badge.badge-info= w.exercises.count.to_s
   .summary
