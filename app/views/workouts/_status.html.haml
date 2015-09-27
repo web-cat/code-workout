@@ -1,10 +1,16 @@
--#TODO replace with session data for user
-- uid = user_signed_in? ? current_user.id : 0
-- if w
-  = render partial: w, locals: { w: w, size: 'sm' }
+- workout_score ||= nil
+- exs ||= nil
+- if workout_score
+  = render workout_score.workout, size: 'sm', workout_score: workout_score
+  - exs = workout_score.workout.exercises
 
-- if exs.empty?
-  .alert No exercises remaining
-- else
-  = render partial: 'exercises/exercise', collection: exs, as: :x,
-    locals: { uid: uid, wid: w ? w.id : nil, size: 'sm' }
+- if exs
+  -if exs.empty?
+    .alert No exercises remaining
+  - else
+    = render exs,
+      user: current_user,
+      workout_score: workout_score,
+      workout_offering: workout_score.andand.workout_offering,
+      workout: workout_score.andand.workout,
+      size: 'sm'

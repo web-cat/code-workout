@@ -8,9 +8,10 @@ class CodeWorker
   workers 10
 
   # -------------------------------------------------------------
-  def perform(exercise_version_id, user_id, workout_id, attempt)
+  def perform(attempt_id, workout_score_id)
     ActiveRecord::Base.connection_pool.with_connection do
-      exv = ExerciseVersion.find(exercise_version_id)
+      attempt = Attempt.find(attempt_id)
+      exv = attempt.exercise_version
       prompt = exv.prompts.first.specific
       pre_lines = 0
       if !prompt.wrapper_code.blank?
@@ -31,15 +32,15 @@ class CodeWorker
       lang =  Exercise.extension_of(language)
       # codeworkout_home=`echo $CODEWORKOUT`
 
-      puts "CodeWorker current working directory is #{Dir.pwd}"
+      # puts "CodeWorker current working directory is #{Dir.pwd}"
 
       term = Term.current_term
       term_name = term ? term.slug : 'no-term'
       attempt_dir = 'usr/attempts/' + term_name + '/' + current_attempt
-      puts "DIRECTORY",attempt_dir,"DIRECTORY"
+      # puts "DIRECTORY",attempt_dir,"DIRECTORY"
       FileUtils.mkdir_p(attempt_dir)
       if !Dir[attempt_dir].empty?
-        puts 'WARNING, OVERWRITING EXISTING DIRECTORY'
+        puts 'WARNING, OVERWRITING EXISTING DIRECTORY = ' + attempt_dir
         FileUtils.remove_dir(attempt_dir, true)
         FileUtils.mkdir_p(attempt_dir)
       end
@@ -63,20 +64,17 @@ class CodeWorker
       correct = 0.0
       total = 0.0
       # print "RESULT",result,"RESULT"
-      puts 'FILE SIZE',
-        File.size?(attempt_dir + '/results.csv').class
-      puts "JAHAERYS", attempt_dir + '/results.csv'
+      # puts "JAHAERYS", attempt_dir + '/results.csv'
       correct = 0.0
       total = 0.0
       answer =
         attempt.prompt_answers.where(prompt: prompt.acting_as).first.specific
       if !File.exist?(attempt_dir + '/results.csv')
         answer.error = result
-        puts "CODE-ERROR-FEEDBACK", answer.error, "CODE-ERROR-FEEDBACK"
+        # puts "CODE-ERROR-FEEDBACK", answer.error, "CODE-ERROR-FEEDBACK"
         total = 1.0
         answer.save
       else
-        puts "ASSERTIONS-FEEDBACK","ASSERTIONS-FEEDBACK"
         CSV.foreach(attempt_dir + '/results.csv') do |line|
           # find test id
           test_id = line[2][/\d+/].to_i
@@ -86,20 +84,23 @@ class CodeWorker
         end  # CSV end
       end
       multiplier = 1.0
-      if Workout.find_by(id: workout_id)
-        WorkoutScore.record_workout_score(
-          correct / total, exv.exercise, workout_id, User.find(user_id))
-        multiplier  = ExerciseWorkout.find_by(
-          exercise: exv.exercise,workout_id: workout_id).points
-        attempt.workout_score = WorkoutScore.find_by(
-          user_id: user_id, workout_id: workout_id)
+      attempt.score = correct / total
+      workout_score = workout_score_id &&
+        WorkoutScore.find_by(id: workout_score_id)
+      attempt.feedback_ready = true
+      if workout_score
+        attempt.score *= workout_score.workout.exercise_workouts.
+          where(exercise: exv.exercise).first.points
+        attempt.save!
+        workout_score.record_attempt(attempt)
+      else
+        attempt.save!
       end
-      attempt.score = correct * multiplier / total
-      attempt.save!
-      ActiveSupport::Notifications.instrument(
-        "record_#{current_attempt}_attempt", extra: :nothing) do
-        puts "SKYFALL","SKYFALL","SKYFALL","SKYFALL"
-      end
+
+#      ActiveSupport::Notifications.instrument(
+#        "record_#{current_attempt}_attempt", extra: :nothing) do
+#        puts "SKYFALL"
+#      end
     end
   end
 
@@ -120,22 +121,22 @@ class CodeWorker
     if File.exist?(logfile)
       compile_out = File.foreach(logfile) do |line|
         line.chomp!
-        puts "checking line: #{line}"
+        # puts "checking line: #{line}"
         m = /^\s*\[javac\]\s/.match(line)
         if m
           line = m.post_match
         else
           break
         end
-        puts "javac output: #{line}"
+        # puts "javac output: #{line}"
         if line =~ /^Compiling/
           next
         elsif line =~ /^\S+\.java:\s*([0-9]+)\s*:\s*(?:warning:\s*)?(.*)/
           error += "line #{$1.to_i - pre_lines}: #{$2}"
-          puts "error now: #{error}"
+          # puts "error now: #{error}"
         elsif line =~ /^(found|expected|required|symbol)\s*:(.*)/
           error += "\n#{$1}: #{$2}"
-          puts "error now: #{error}"
+          # puts "error now: #{error}"
         else
           break
         end

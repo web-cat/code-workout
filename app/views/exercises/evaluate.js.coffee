@@ -5,11 +5,10 @@ is_coding = <%= JSON.generate @exercise.is_coding? %>
 $("#exercisefeedback").show()
 
 if is_coding
-  source = new EventSource("/sse/feedback_wait?uid=#{user_id}&att_id=#{att_id}")
   $("#exercisefeedback").html('<h2>Feedback</h2><i class="fa fa-spinner fa-spin fa-2x"></i>')
-  source.addEventListener "feedback_#{att_id}",(e)->
-    $.ajax(url: "/sse/feedback_update?att_id=#{att_id}")
-    source.close
+  setTimeout ( ->
+    $.ajax(url: "/sse/feedback_poll?att_id=#{att_id}")
+  ), 1500
 else
   $.ajax(url: "/sse/feedback_update?att_id=#{att_id}")
 

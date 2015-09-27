@@ -154,13 +154,26 @@ class Ability
         Exercise.visible_to_user(user) do |e|
         e.visible_to?(user)
       end
+      can [:show], WorkoutOffering do |o|
+        o.can_be_seen_by? user
+#        now = Time.now
+#        ((o.opening_date == nil) || (o.opening_date <= now)) &&
+#          o.course_offering.course_enrollments.where(user_id: user.id).any?
+      end
+      can [:practice], WorkoutOffering do |o|
+        o.can_be_practiced_by? user
+#        now = Time.now
+#        ((o.opening_date == nil) || (o.opening_date <= now)) &&
+#          ((o.hard_deadline >= now) || (o.soft_deadline >= now)) &&
+#          o.course_offering.course_enrollments.where(user_id: user.id).any?
+      end
       can [:practice, :evaluate], Exercise do |e|
         now = Time.now
         WorkoutOffering.
           joins{workout.exercises}.joins{course_offering.course_enrollments}.
           where{
-            ((starts_on == nil) | (starts_on <= time)) &
-            ((hard_deadline >= time) | (soft_deadline >= time)) &
+            ((starts_on == nil) | (starts_on <= now)) &
+            ((hard_deadline >= now) | (soft_deadline >= now)) &
             course_offering.course_enrollments.user_id == user.id
              }.any?
 #        e.workouts.workout_offerings.where(

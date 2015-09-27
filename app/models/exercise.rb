@@ -158,7 +158,7 @@ class Exercise < ActiveRecord::Base
   # -------------------------------------------------------------
   # getter override for name
   def display_name
-    temp = 'E' + id.to_s
+    temp = 'X' + id.to_s
     if not name.nil?
       temp += ': ' + name
     end

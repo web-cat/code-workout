@@ -33,8 +33,13 @@ CodeWorkout::Application.routes.draw do
 
 
   get 'sse/feedback_wait'
-  get 'sse/feedback_update'
+  # get 'sse/feedback_update'
+  get 'sse/feedback_poll'
   post '/course_offerings/:id/upload_roster' => 'course_offerings#upload_roster'
+
+  get '/request_extension' => 'workout_offerings#request_extension'
+  post '/add_extension' => 'workout_offerings#add_extension'
+    
   # All of the routes anchored at /gym
   scope :gym do
     # The top-level gym route
@@ -67,7 +72,7 @@ CodeWorkout::Application.routes.draw do
       as: :workouts_with_search
     post 'workouts/new_with_search'  => 'workouts#new_with_search',
       as: :workouts_exercise_search
-    get  'workouts/:id/practice' => 'workouts#practice_workout',
+    get  'workouts/:id/practice' => 'workouts#practice',
       as: :practice_workout
     get  'workouts/:id/evaluate' => 'workouts#evaluate', as: :workout_evaluate
     get  'workouts_dummy' => 'workouts#dummy'
@@ -83,9 +88,17 @@ CodeWorkout::Application.routes.draw do
     get 'search' => 'courses#search', as: :courses_search
     post 'find' => 'courses#find', as: :course_find
     get 'new' => 'courses#new'
-    get ':course_id/:term_id/:workout_id/:id' => 'exercises#show'
-    get ':course_id/:term_id/:id' => 'workouts#show'
     get ':id/edit' => 'courses#edit', as: :course_edit
+    get ':course_id/:term_id/:id/practice(/:exercise_id)' =>
+      'workout_offerings#practice',
+      as: :workout_offering_practice     
+    get ':course_id/:term_id/:workout_offering_id/:id' => 'exercises#practice',
+      as: :workout_offering_exercise
+    patch ':course_id/:term_id/:workout_offering_id/:id' => 'exercises#evaluate',
+      as: :workout_offering_exercise_evaluate
+
+    get ':course_id/:term_id/:id' => 'workout_offerings#show',
+      as: :workout_offering
     post ':id/:term_id/generate_gradebook/' => 'courses#generate_gradebook',
       as: :course_gradebook
     get ':id(/:term_id)' => 'courses#show', as: :course

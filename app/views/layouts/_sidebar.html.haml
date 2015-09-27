@@ -5,15 +5,10 @@
 -#      %i.fa.fa-search
 -#      Search
 -#= render :partial => 'exercises/search'
-- if session[:current_workout]
+- if user_signed_in? && current_user.current_workout_score
   = render partial: 'workouts/status',
-    locals: { w: Workout.find(session[:current_workout]),
-    exs: Exercise.includes(:workouts).where(["workouts.id = ?",
-    session[:current_workout]]).references(:workouts).limit(10),
-    wid: session[:current_workout] }
+    locals: { workout_score: current_user.current_workout_score }
 - elsif user_signed_in? && session[:leaf_exercises]
-  = render partial: "exercises/exercise",
-    collection: Exercise.find(session[:leaf_exercises]),
-    as: :x,
-    locals: { uid: current_user.id, wid: nil, size: 'sm' }
+  = render Exercise.find(session[:leaf_exercises]),
+    user: current_user, size: 'sm'
 .clearfix

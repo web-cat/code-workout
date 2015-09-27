@@ -8,8 +8,7 @@
 - if @workouts.size > 0
   - uid = user_signed_in? ? current_user.id : 0
   - @workouts.in_groups_of(2, false) do |row|
-    = render partial: "workouts/workout", collection: row, as: :w,
-      locals: { uid: uid }
+    = render row, locals: { uid: uid }
     .clearfix
 - else
   %p

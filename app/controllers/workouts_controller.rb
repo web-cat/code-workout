@@ -50,7 +50,7 @@ class WorkoutsController < ApplicationController
   # -------------------------------------------------------------
   # GET /gym
   def gym
-    @gym = Workout.where(target_group: 'Public').order('created_at DESC').
+    @gym = Workout.where(is_public: true).order('created_at DESC').
       limit(12)
     render layout: 'two_columns'
   end
@@ -240,19 +240,33 @@ class WorkoutsController < ApplicationController
 
 
   # -------------------------------------------------------------
-  def practice_workout
-    wid = params[:id]
-    wkt = Workout.find(wid)
-    if wkt
+  def practice
+    @workout = Workout.find_by(id: params[:id])
+    authorize! :practice, @workout
+    if @workout
       if !user_signed_in?
-        redirect_to workout_path(wkt),
+        redirect_to workout_path(@workout),
           notice: "Need to Sign in to practice" and return
       end
-      ex1 = wkt.next_exercise(nil,current_user)
-      session[:current_workout] = wid
+      ex1 = @workout.next_exercise(nil, current_user)
+      session[:current_workout] = @workout.id
       session[:workout_feedback] = Hash.new
       session[:workout_feedback]['workout'] =
         "You have attempted Workout #{wkt.name}"
+      if current_user
+        @workout_score = @workout.score_for(current_user)
+        if @workout_score.nil?
+          @workout_score = WorkoutScore.new(
+            score: 0,
+            exercises_completed: 0,
+            exercises_remaining: @workout.exercises.length,
+            user: current_user,
+            workout: @workout)
+          @workout_score.save!
+        end
+        current_user.current_workout_score = @workout_score
+        current_user.save!
+      end
       redirect_to exercise_practice_path(id: ex1.id)
     else
       redirect_to workouts, notice: 'Workout not found' and return

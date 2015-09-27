@@ -1,9 +1,13 @@
 = render partial: 'layouts/breadcrumb'
 .col-md-7
   = semantic_form_for @exercise_version,
-    url: exercise_evaluate_path(@exercise_version.exercise,
+    url: (@workout_offering ? organization_workout_offering_exercise_evaluate_path(id: @exercise_version.exercise.id,
+      course_id: @workout_offering.course_offering.course.slug,
+      organization_id: @workout_offering.course_offering.course.organization.slug,
+      term_id: @workout_offering.course_offering.term.slug,
+      workout_offering_id: @workout_offering.id) : exercise_evaluate_path(@exercise_version.exercise,
     exercise_version_id: @exercise_version.id,
-    feedback_return: true), remote: true do |f|
+    feedback_return: true)), remote: true do |f|
     = f.semantic_errors
     %h1= @exercise.name
     - if @exercise_version.stem
@@ -37,7 +41,7 @@
       = f.input :answer_code, as: :text, class: 'code',                  |
         input_html: {                                                    |
           lang: 'text/x-' + (@exercise.language || 'java').downcase,     |
-          value: prompt.starter_code                                     |
+          value: prompt.prepare_starter_code                             |
         }                                                                |
     .actions
       = f.submit 'Check my answer!', class: 'btn btn-primary'

@@ -80,9 +80,10 @@ class Attempt < ActiveRecord::Base
 
   # -------------------------------------------------------------
   # Returns the latest attempt of the given exercise by the given user
-  def self.user_attempt(u, exv)
-    return Attempt.where(user: u, exercise_version: exv).
-      where.not(workout_score_id: nil).where.not(score: nil).andand.last
+  def self.user_attempt(u, exv, workout_score)
+    return Attempt.where(
+      user: u, exercise_version: exv, workout_score: workout_score).
+      where.not(score: nil).andand.last
   end
 
 

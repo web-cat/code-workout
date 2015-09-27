@@ -91,10 +91,17 @@ class Workout < ActiveRecord::Base
     self.exercise_workouts.pluck(:points).reduce(0.0, :+)
   end
 
+
   # -------------------------------------------------------------
   # Simple method to return the number of exercises a workout has
   def num_exercises
     self.exercises.length
+  end
+
+
+  # -------------------------------------------------------------
+  def contains?(exercise)
+    self.exercise_workouts.where(exercise: exercise).any?
   end
 
 
@@ -122,35 +129,41 @@ class Workout < ActiveRecord::Base
     return xp
   end
 
+
   # ------------------------------------------------------------
-  def next_exercise(ex,user)
+  def next_exercise(ex, user, workout_score)
     if user.nil?
       puts "Invalid USER"
     end
 
-    (1..self.num_exercises).each do |i|
-      if ex
-        exw = ExerciseWorkout.find_by(exercise: ex,workout: self)
-        candiate_exercise_position = (exw.position+i)%self.num_exercises
-        candiate_exercise_position = exw.position+i if candiate_exercise_position == 0
-      else
-        candiate_exercise_position = 1
-      end
-      puts "CANDIDATE POSITION",candiate_exercise_position,"CANDIDATE POSITION"
-      candidate_exercise = ExerciseWorkout.
-             find_by(position: candiate_exercise_position, workout: self).exercise
-      candidate_attempt = Attempt.user_attempt(user, candidate_exercise.current_version)
-      if candidate_attempt
-        return candidate_exercise if candidate_attempt.score !=
-          ExerciseWorkout.find_by(position: candiate_exercise_position, workout: self).points
-      else
-        return candidate_exercise
+    if workout_score.nil?
+      workout_score = score_for(user)
+    end
+
+    position = 0
+    if ex
+      exw = exercise_workouts.where(exercise: ex).first
+      if exw
+        position = exw.position
       end
     end
-    # Reaching this point means none of the exercises (possibly apart from the current)
-    # has scored a perfect score
-    return nil
+    candidate = nil
+    exercise_workouts.each do |x|
+      if candidate.nil? ||
+        (candidate.position <= position && x.position > position)
+        attempt = Attempt.user_attempt(
+          user, x.exercise.current_version, workout_score)
+        if attempt.nil? || attempt.score < x.points
+          candidate = x
+        end
+      end
+    end
+    if candidate.nil? && exercise_workouts.size > 0
+      candidate = exercise_workouts.first
+    end
+    return candidate.exercise
   end
+
 
   # -------------------------------------------------------------
   def all_tags
@@ -200,6 +213,17 @@ class Workout < ActiveRecord::Base
     gap = total - earned - remaining
     gap_per = 100 - earned_per - remaining_per
     return [earned, remaining, gap, earned_per, remaining_per, gap_per]
+  end
+
+
+  # -------------------------------------------------------------
+  def score_for(user, workout_offering = nil)
+    if workout_offering
+      workout_scores.where(user: user, workout_offering: workout_offering).
+        order('updated_at DESC').first
+    else
+      workout_scores.where(user: user).order('updated_at DESC').first
+    end
   end
 
 

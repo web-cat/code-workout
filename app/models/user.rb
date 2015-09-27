@@ -69,6 +69,8 @@ class User < ActiveRecord::Base
   has_many    :identities, inverse_of: :user, dependent: :destroy
   has_many    :student_extensions
   has_many    :workout_offerings, through: :student_extenions
+
+  belongs_to  :current_workout_score, class_name: 'WorkoutScore'
   has_many    :test_case_results, inverse_of: :user, dependent: :destroy
 
 

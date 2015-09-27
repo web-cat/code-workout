@@ -77,4 +77,36 @@ class WorkoutOffering < ActiveRecord::Base
 
   end
 
+  # -------------------------------------------------------------
+  def can_be_seen_by?(user)
+    now = Time.now
+    course_offering.is_staff?(user) ||
+    (((opening_date == nil) || (opening_date <= now)) &&
+      course_offering.is_enrolled?(user))
+  end
+
+
+  # -------------------------------------------------------------
+  # Method that determines whether the given user can practice
+  # this workout offering. The method looks up if the user has
+  # any extension for this workout and if so 'normalizes' her
+  # deadlines for this workout offering. Course staff always
+  # have full access. 
+  
+  def can_be_practiced_by?(user)
+    now = Time.now
+    user_extension = StudentExtension.find_by(user: user, workout_offering: self)
+    if user_extension
+      normalized_hard_deadline = user_extension.hard_deadline
+      normalized_soft_deadline = user_extension.soft_deadline
+    else
+      normalized_hard_deadline = hard_deadline
+      normalized_soft_deadline = soft_deadline
+    end
+    course_offering.is_staff?(user) ||
+    (((opening_date == nil) || (opening_date <= now)) &&
+      ((normalized_hard_deadline >= now) || (normalized_soft_deadline >= now)) &&
+      course_offering.is_enrolled?(user))
+  end
+
 end

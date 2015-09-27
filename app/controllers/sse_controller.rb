@@ -13,13 +13,10 @@ class SseController < ApplicationController
     sse = SSE.new(response.stream, retry: 300,
       event: "feedback_#{params[:att_id]}")
 
-    puts 'FINGON', "record_#{max_attempt}_attempt", 'FINGON'
     flag = true
     ActiveSupport::Notifications.subscribe(
       "record_#{max_attempt}_attempt") do |*args|
       begin
-        puts 'WORKING', "USER-#{params[:user_id]}",
-          "ATTEMPT-#{params[:att_id]}", 'WORKING'
         sse.write({arg: args})
       rescue IOError
         puts 'IOError', 'IOError', 'IOError'
@@ -43,6 +40,21 @@ class SseController < ApplicationController
     @exercise = @exercise_version.exercise
     respond_to do |format|
       format.js
+    end
+  end
+
+
+  # -------------------------------------------------------------
+  def feedback_poll
+    @attempt = Attempt.find_by(id: params[:att_id])
+    authorize! :read, @attempt
+    @exercise_version = @attempt.exercise_version
+    @exercise = @exercise_version.exercise
+    respond_to do |format|
+      format.js do
+        render action:
+          (@attempt.feedback_ready ? 'feedback_update' : 'feedback_poll')
+      end
     end
   end
 
