@@ -9,7 +9,7 @@
   <echo message="report_dir = ${report_dir}"/>
   <echo message="ant.home = ${ant.home}"/>
   <!-- timeout is in milliseconds -->
-  <property name="exec.timeout" value="30000"/>
+  <property name="exec.timeout" value="120000"/>
 
   <path id="codeworkout.classpath">
     <pathelement location="${resource_dir}/JavaTddPluginSupport.jar"/>
@@ -61,6 +61,8 @@
       <jvmarg value="-Dresource_dir=${resource_dir}"/>
       <jvmarg value="-Dant.home=${ant.home}"/>
       <jvmarg value="-Dstudent.TestCase.trimStackTraces=false"/>
+      <jvmarg value="-Dstudent.testingsupport.junit4.AdaptiveTimeout.ceiling=3000"/>
+      <jvmarg value="-Dstudent.testingsupport.junit4.AdaptiveTimeout.maximum=4000"/>
       <jvmarg value="-Dstudent.testingsupport.junit4.AdaptiveTimeout.logfile=${report_dir}/timeout.csv"/>
       <jvmarg value="-Dstudent.testingsupport.junit4.AdaptiveTimeout.user=${attempt_dir}"/>
       <jvmarg value="-Dnet.sf.webcat.plugins.javatddplugin.CsvJUnitResultFormatter.prefix=${attempt_dir}"/>
