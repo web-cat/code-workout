@@ -1,5 +1,5 @@
-workers 2
-threads 16, 16
+workers 4
+threads 8, 8
 daemonize
 
 app_dir = File.expand_path('../..', __FILE__)
