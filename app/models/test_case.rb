@@ -48,9 +48,17 @@ class TestCase < ActiveRecord::Base
   def display_description(pass = true)
     result = self.description
     if result.blank?
-      result = coding_prompt.method_name + '(' + self.input + ')'
+      inp = self.input
+      if !inp.blank?
+        inp.gsub!(/new [a-zA-Z0-9]+(\[\])+\s*/, '')
+      end
+      result = coding_prompt.method_name + '(' + inp + ')'
       if pass
-        result += ' -> ' + self.expected_output
+        outp = self.expected_output
+        if !outp.blank?
+          outp.gsub!(/new [a-zA-Z0-9]+(\[\])+\s*/, '')
+        end
+        result += ' -> ' + outp
       end
     end
     result
@@ -108,7 +116,9 @@ class TestCase < ActiveRecord::Base
       class_name: coding_prompt.class_name,
       input: self.input,
       expected_output: self.expected_output,
-      negative_feedback: self.negative_feedback
+      negative_feedback: self.negative_feedback,
+      array: (self.expected_output.start_with?('new ') &&
+        self.expected_output.include?('[]')) ? 'Array' : ''
     }
   end
 
@@ -142,7 +152,7 @@ PYTHON_TEST
     @Test
     public void test%{id}()
     {
-        assertEquals(
+        assert%{array}Equals(
           "%{negative_feedback}",
           %{expected_output},
           subject.%{method_name}(%{input}));
