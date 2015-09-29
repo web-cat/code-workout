@@ -39,11 +39,9 @@
               member_label: :answer,
               label: '&nbsp;'
     - elsif prompt.is_coding?
-      = f.input :answer_code, as: :text, class: 'code',                  |
-        input_html: {                                                    |
-          lang: 'text/x-' + (@exercise.language || 'java').downcase,     |
-          value: prompt.prepare_starter_code                             |
-        }                                                                |
+      = f.input :answer_code, as: :text, class: 'code',
+        input_html: { lang: 'text/x-' + (@exercise.language || 'java').downcase,
+          value: @attempt ? @attempt.prompt_answers.where(prompt: prompt).first.specific.answer : prompt.prepare_starter_code }
     .actions
       = f.submit 'Check my answer!', class: 'btn btn-primary'
     - if session[:current_workout].nil?
@@ -53,4 +51,7 @@
         random_exercise_path(language: @exercise.language) :               |
         random_exercise_path)                                              |
 .col-md-5
-  #exercisefeedback{style: 'display: none;'}
+  - if @attempt
+    = render partial: 'sse/ajax_feedback'
+  - else
+    #exercisefeedback{style: 'display: none;'}
