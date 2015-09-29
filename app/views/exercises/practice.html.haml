@@ -52,6 +52,7 @@
         random_exercise_path)                                              |
 .col-md-5
   - if @attempt
-    = render partial: 'sse/ajax_feedback'
+    #exercisefeedback
+      = render partial: 'sse/ajax_feedback'
   - else
     #exercisefeedback{style: 'display: none;'}
