@@ -39,9 +39,10 @@
               member_label: :answer,
               label: '&nbsp;'
     - elsif prompt.is_coding?
+      - prior_answer = @attempt && @attempt.prompt_answers.where(prompt: prompt).first
       = f.input :answer_code, as: :text, class: 'code',
         input_html: { lang: 'text/x-' + (@exercise.language || 'java').downcase,
-          value: @attempt ? @attempt.prompt_answers.where(prompt: prompt).first.specific.answer : prompt.prepare_starter_code }
+          value: prior_answer ? prior_answer.specific.answer : prompt.prepare_starter_code }
     .actions
       = f.submit 'Check my answer!', class: 'btn btn-primary'
     - if session[:current_workout].nil?
