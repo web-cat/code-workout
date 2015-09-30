@@ -79,7 +79,7 @@
 
 
 - if @workout.description
-  %p= @workout.description
+  %p= markdown(@workout.description)
 
 -#= render @workout
 -#.clearfix
