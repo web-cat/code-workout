@@ -80,10 +80,12 @@ class TestCase < ActiveRecord::Base
       # to better support other languages.
       if !test_results_array[5].blank?
         exception_name = test_results_array[5].sub(/^.*\./, '')
-        if !['AssertionFailedError',
+        if !(['AssertionFailedError',
           'AssertionError',
           'ComparisonFailure',
           'ReflectionSupportError'].include?(exception_name) ||
+          (exception_name == 'Exception' &&
+          test_results_array[6].start_with?('test timed out'))) ||
           test_results_array[6].blank? ||
           "null" == test_results_array[6]
           tcr.execution_feedback = exception_name
@@ -94,6 +96,10 @@ class TestCase < ActiveRecord::Base
           tcr.execution_feedback += ': '
         else
           tcr.execution_feedback = ''
+        end
+        if test_results_array[6].start_with? 'test timed out'
+          test_results_array[6].sub!(/^test /, '')
+          test_results_array[6].sub!('000 milli', ' ')
         end
         tcr.execution_feedback += test_results_array[6].sub(/^\w/, &:upcase)
       end
