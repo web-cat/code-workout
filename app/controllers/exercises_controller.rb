@@ -703,6 +703,24 @@ class ExercisesController < ApplicationController
       @answers.each do |a|
         a[:answer] = markdown(a[:answer])
       end
+    else
+      @attempt = nil
+      @workout_score = current_user.current_workout_score
+      if @workout_offering &&
+        @workout_score.workout_offering != @workout_offering
+        @workout_score = nil
+      end
+      if @workout_offering && !@workout_score
+        @workout_score = @workout_offering.score_for(current_user)
+      end
+      if @workout_score
+        @attempt = @workout_score.attempt_for(@exercise_version.exercise)
+      else
+        @attempt = Attempt.joins{exercise_version}.
+          where{(user_id == current_user.id) &
+          (exercise_version.exercise_id == @exercise_version.exercise.id) &
+          (workout_score_id == nil)}.first
+      end
     end
     @responses = ['There are no responses yet!']
     @explain = ['There are no explanations yet!']
