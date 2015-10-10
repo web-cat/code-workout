@@ -599,63 +599,6 @@ class ExercisesController < ApplicationController
       end
     end
 
-    # basex = BaseExercise.new
-    # basex.user_id = current_user.id
-    # basex.question_type = msg[:question_type] || 1
-    # basex.versions = 1
-    # questionfile = params[:form]
-    # doc = Nokogiri::XML(File.open(questionfile.fetch(:file).path))
-    # questions = doc.xpath('/quiz/question')
-    # questions.each do |question|
-      # ex = Exercise.new
-      # name_ex = question.xpath('./name/text')[0].content
-      # question_ex = question.xpath('./questiontext/text')[0].content
-      # if !question.xpath('.//generalfeedback/text').empty?
-        # feedback_ex = question.xpath('.//generalfeedback/text')[0].content
-      # else
-        # feedback_ex = ''
-      # end
-#
-      # if !question.xpath('.//defaultgrade').empty?
-        # priority_ex = question.xpath('.//defaultgrade')[0].content
-      # else
-        # priority_ex = 1.to_s
-      # end
-#
-      # if !question.xpath('.//penalty').empty?
-        # discrimination_ex = question.xpath('.//penalty')[0].content
-      # else
-        # discrimination_ex = 0.to_s
-      # end
-#
-      # if !question.xpath('.//graderinfo').empty?
-        # gradertext_ex = question.xpath('.//graderinfo/text')[0].content
-      # else
-        # gradertext_ex = ''
-      # end
-      # # TODO: Sanitize the uploads
-      # ex.name = name_ex
-      # ex.question = question_ex
-      # ex.feedback = feedback_ex
-      # ex.is_public = true
-      # ex.mcq_allow_multiple = false
-      # ex.mcq_is_scrambled = false
-      # ex.priority = priority_ex
-      # # TODO: Get the count of attempts from the session
-      # ex.count_attempts = 1
-      # ex.count_correct = 1
-      # ex.user_id = current_user.id
-      # ex.experience = 20
-#
-      # # default IRT statistics
-      # ex.difficulty = 5
-      # ex.discrimination = discrimination_ex
-      # ex.version = 1
-      # basex.exercises << ex
-      # ex.save!
-      # basex.current_version = ex
-      # basex.save
-    # end
     redirect_to exercises_url, notice: 'Exercise upload complete.'
   end
 
@@ -722,6 +665,10 @@ class ExercisesController < ApplicationController
           (workout_score_id == nil)}.first
       end
     end
+    @workout ||= @workout_score.workout
+    puts "WORKOUT PRAC", @workout, "WORKOUT PRAC"
+    @max_points = ExerciseWorkout.find_by(exercise: @exercise, workout: @workout).points
+    puts "\nMAX-POINTS", @max_points, "\nMAX-POINTS"
     @responses = ['There are no responses yet!']
     @explain = ['There are no explanations yet!']
     if session[:leaf_exercises]
@@ -811,6 +758,8 @@ class ExercisesController < ApplicationController
       @workout_score = @workout.score_for(current_user)
     end
 
+    @is_perfect = false
+ 
     if @exercise_version.is_mcq?
       #response_ids = params[:exercise_version][:multiple_choice_prompt][:choice_ids]
       response_ids = params[:exercise_version][:choice][:id]
@@ -829,9 +778,7 @@ class ExercisesController < ApplicationController
       end
       @score = @exercise_version.score(@responses)
       if @workout
-        @score = @score * ExerciseWorkout.findExercisePoints(
-          @exercise, @workout.id) /
-          @exercise_version.max_mcq_score
+        @score = @score * ExerciseWorkout.find_by(exercise: @exercise, workout: @workout).points / @exercise_version.max_mcq_score
         @score = @score.round(2)
       end
       # TODO: Enable @explain and @exercise_feedback again
@@ -840,20 +787,20 @@ class ExercisesController < ApplicationController
       # + "#{@exercise.id}:#{@exercise.name}" +
       #  ' and its feedback for you: ' +
       #  @explain.to_sentence
-      if @workout
-        #FIXME: busted!  Needs replacing
-        WorkoutScore.record_workout_score(
-          @score, @exercise, @workout.id, current_user)
-        session[:workout_feedback][@exercise.id] = @exercise_feedback
-      end
+      
       # TODO: calculate experience based on correctness and num submissions
       count_submission()
       @xp = @exercise_version.experience_on(@responses, session[:submit_num])
 
       @attempt = record_attempt(@score, @xp, @workout_score)
-      @attempt.feedback_ready = true
-      @attempt.save!
-
+      
+      if @workout
+        exercise_points = ExerciseWorkout.find_by(exercise: @exercise, workout: @workout).points
+        if exercise_points <= @attempt.score
+          @is_perfect = true        
+        end        
+      end
+      
     elsif @exercise_version.is_coding?
       @attempt = @exercise_version.new_attempt(
         user: current_user, workout_score: @workout_score)
@@ -872,8 +819,10 @@ class ExercisesController < ApplicationController
           "#{prompt_answer.errors.full_messages.to_s}",
           'IMPROPER PROMPT'
       end
-
+      @workout ||= @workout_score.workout
+      @max_points = ExerciseWorkout.find_by(exercise: @exercise, workout: @workout).points
     end
+    
     if params[:wexes]
       session[:remaining_wexes] = params[:wexes]
       if params[:wexes][1..-1].count < 1
@@ -907,6 +856,7 @@ class ExercisesController < ApplicationController
       #redirect_to exercise_practice_path(@exercise,
       #  feedback_return: true,att_id: attempt_id) and return
     end
+    
   end
 
 
@@ -988,6 +938,14 @@ class ExercisesController < ApplicationController
     # should call count_submission before calling this method
     def record_attempt(score, exp, workout_score)
       exv = @exercise_version
+      previous_attempts = Attempt.where(user: workout_score.score, exercise_version: exv)      
+      if workout_score && previous_attempts.any?
+        previous_score = previous_attempts.last.score
+        workout_score.exercises_completed += 1
+        workout_score.exercises_remaining -= 1 
+      else
+        previous_score = 0.00
+      end
       attempt = Attempt.new
       if !session[:exercise_id] ||
         session[:exercise_id] != params[:id] ||
@@ -998,10 +956,15 @@ class ExercisesController < ApplicationController
       attempt.submit_num = session[:submit_num]
       attempt.submit_time = Time.now
       attempt.score = score
+      attempt.feedback_ready = true
       attempt.experience_earned = exp
       attempt.user = current_user
       if workout_score
         attempt.workout_score = workout_score
+        # attempt.active_score = workout_score
+        workout_score.score += previous_score
+        workout_score.score += score
+        workout_score.save
       end
 
 
