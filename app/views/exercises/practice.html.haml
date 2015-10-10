@@ -39,11 +39,17 @@
               label: '&nbsp;'
     - elsif prompt.is_coding?
       - prior_answer = @attempt && @attempt.prompt_answers.where(prompt: prompt).first
+      - read_only = false
+      - if prior_answer && @workout_offering
+        - if @workout_offering.can_be_practiced_by?(current_user) == false
+          - read_only = true
       = f.input :answer_code, as: :text, class: 'code',
-        input_html: { lang: 'text/x-' + (@exercise.language || 'java').downcase,
+        input_html: { lang: 'text/x-' + (@exercise.language || 'java').downcase, readonly: true, autofocus: true,
           value: prior_answer ? prior_answer.specific.answer : prompt.prepare_starter_code }
     .actions
-      = f.submit 'Check my answer!', class: 'btn btn-primary'
+      - if @workout_offering.nil? || @workout_offering.can_be_practiced_by?(current_user)
+        = f.submit 'Check my answer!', class: 'btn btn-primary btn-submit', id: 'primarybtn'
+      
     - if session[:current_workout].nil?
       %br
       = link_to "Practice a different #{@exercise.language} exercise",     |
@@ -56,3 +62,11 @@
       = render partial: 'sse/ajax_feedback'
   - else
     #exercisefeedback{style: 'display: none;'}
+
+- if @workout  
+  = button_to 'Next exercise',
+      organization_workout_offering_practice_path(exercise_id: @workout.next_exercise(@exercise, current_user, nil),
+      organization_id: @workout_offering.course_offering.course.organization.slug,
+      course_id: @workout_offering.course_offering.course.slug,
+      term_id: @workout_offering.course_offering.term.slug,
+      id: @workout_offering.id), method: :get, class: 'btn btn-next', id: 'nextbtn'
