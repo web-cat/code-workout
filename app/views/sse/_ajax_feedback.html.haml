@@ -1,4 +1,23 @@
 %h2 Feedback
+- @workout ||= @attempt.workout_score.workout
+- if @workout
+  - pts = @workout.exercise_workouts.find_by(exercise: @exercise).andand.points
+  - score = @attempt.score
+  - score_pct = score * 100.0 / pts
+  .summary
+    .radial-progress{ 'data-progress' => score_pct.round() }
+      .circle
+        .mask.full
+          .fill
+        .mask.half
+          .fill
+          .fill.fix
+        .shadow
+      .inset
+        .score
+          = n_to_s(score)
+          %span.outof>
+            = "/ "  + n_to_s(pts)  
 - if @exercise_version.is_mcq?
   -#= Choice.find(attempt.answer.to_i).feedback
   - @attempt.prompt_answers.first.specific.choices.each do |choice|
