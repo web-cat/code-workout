@@ -58,19 +58,26 @@
     - else
       = link_to exercise.display_name, exercise_practice_path(exercise)
   .summary
-    .radial-progress{ 'data-progress' => score_pct }
-      .circle
-        .mask.full
-          .fill
-        .mask.half
-          .fill
-          .fill.fix
-        .shadow
-      .inset
-        .score
-          = n_to_s(score)
-          %span.outof>
-            = "/ "  + n_to_s(pts)
+    - if !attempt || !workout_score || workout_score.show_feedback?
+      .radial-progress{ 'data-progress' => score_pct }
+        .circle
+          .mask.full
+            .fill
+          .mask.half
+            .fill
+            .fill.fix
+          .shadow
+        .inset
+          .score
+            = n_to_s(score)
+            %span.outof>
+              = "/ "  + n_to_s(pts)
+    - else
+      .radial-progress.masked
+        .circle
+          .shadow
+        .inset
+          .score= image_tag 'pct-blur.png'
   .body
     .text
       = teaser(exercise.current_version.andand.prompts.andand.first.andand.question)

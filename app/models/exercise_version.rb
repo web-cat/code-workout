@@ -124,6 +124,7 @@ class ExerciseVersion < ActiveRecord::Base
   # -------------------------------------------------------------
   # A method to return the maximum score possible for a
   # a stand-alone mcq
+  # TODO: broken :-/
   def max_mcq_score
     if self.exercise.is_mcq?
       sum  = 0.0

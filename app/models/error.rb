@@ -5,7 +5,7 @@
 #  id          :integer          not null, primary key
 #  usable_type :string(255)
 #  usable_id   :integer
-#  class_name  :text
+#  class_name  :string(255)
 #  message     :text
 #  trace       :text
 #  target_url  :text
@@ -20,7 +20,6 @@
 #  index_errors_on_class_name  (class_name)
 #  index_errors_on_created_at  (created_at)
 #
-
 
 # =============================================================================
 # Represents an error record for a run-time error experienced on the server.

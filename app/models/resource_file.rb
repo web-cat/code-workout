@@ -4,7 +4,7 @@
 #
 #  id         :integer          not null, primary key
 #  filename   :string(255)
-#  token      :string(255)      not null
+#  token      :string(255)      default(""), not null
 #  user_id    :integer          not null
 #  public     :boolean          default(TRUE)
 #  created_at :datetime
@@ -15,7 +15,6 @@
 #  index_resource_files_on_token    (token)
 #  index_resource_files_on_user_id  (user_id)
 #
-
 
 # =============================================================================
 # Represents a file uploaded by a user for use in exercises, such as an

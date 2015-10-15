@@ -11,12 +11,12 @@ class WorkoutOfferingsController < ApplicationController
     end
     render 'workouts/show'
   end
-  
-  def requestion_extension    
+
+  def requestion_extension
   end
-  
+
   # --------------------------------------------------------------
-  # Controller action to add an extension for a workout offering 
+  # Controller action to add an extension for a workout offering
   # to a student.
   def add_extenstion
     if params[:user_id] && student = User.find(params[:user_id]) && workoutoffering = WorkoutOffering.find(params[:workout_offering_id])
@@ -29,7 +29,7 @@ class WorkoutOfferingsController < ApplicationController
           redirect_to root_path, notice: 'Extension success'
         else
           redirect_to root_path, notice: 'Failed to create extension'
-        end 
+        end
       else
         redirect_to root_path, notice: 'Both deadlines need to be specified' and return
       end
@@ -64,6 +64,15 @@ class WorkoutOfferingsController < ApplicationController
         end
         current_user.current_workout_score = @workout_score
         current_user.save!
+        if @workout_score.closed?
+          redirect_to organization_workout_offering_path(
+            organization_id:
+              @workout_offering.course_offering.course.organization.slug,
+            course_id: @workout_offering.course_offering.course.slug,
+            term_id: @workout_offering.course_offering.term.slug,
+            id: @workout_offering.id),
+            notice: "The time limit has passed for this workout." and return
+        end
       end
       if ex1.nil?
         ex1 = @workout_offering.workout.next_exercise(

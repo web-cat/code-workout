@@ -4,7 +4,7 @@
 #
 #  id                :integer          not null, primary key
 #  negative_feedback :text
-#  weight            :float            not null
+#  weight            :float(24)        not null
 #  description       :text
 #  created_at        :datetime
 #  updated_at        :datetime

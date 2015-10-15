@@ -646,28 +646,43 @@ class ExercisesController < ApplicationController
       @answers.each do |a|
         a[:answer] = markdown(a[:answer])
       end
+    end
+    @attempt = nil
+    @workout_score = current_user.current_workout_score
+    if @workout_offering &&
+      @workout_score.workout_offering != @workout_offering
+      @workout_score = nil
+    end
+    if @workout_offering && !@workout_score
+      @workout_score = @workout_offering.score_for(current_user)
+    end
+    if @workout_score
+      @attempt = @workout_score.attempt_for(@exercise_version.exercise)
     else
-      @attempt = nil
-      @workout_score = current_user.current_workout_score
-      if @workout_offering &&
-        @workout_score.workout_offering != @workout_offering
-        @workout_score = nil
-      end
-      if @workout_offering && !@workout_score
-        @workout_score = @workout_offering.score_for(current_user)
-      end
-      if @workout_score
-        @attempt = @workout_score.attempt_for(@exercise_version.exercise)
-      else
-        @attempt = Attempt.joins{exercise_version}.
-          where{(user_id == current_user.id) &
-          (exercise_version.exercise_id == @exercise_version.exercise.id) &
-          (workout_score_id == nil)}.first
-      end
+      @attempt = Attempt.joins{exercise_version}.
+        where{(user_id == current_user.id) &
+        (exercise_version.exercise_id == @exercise_version.exercise.id) &
+        (workout_score_id == nil)}.first
     end
     @workout ||= @workout_score.workout
+    if @workout_score.andand.closed?
+      path = root_path
+      if @workout_offering
+        path = organization_workout_offering_path(
+            organization_id:
+              @workout_offering.course_offering.course.organization.slug,
+            course_id: @workout_offering.course_offering.course.slug,
+            term_id: @workout_offering.course_offering.term.slug,
+            workout_offering_id: @workout_offering.id)
+      elsif @workout
+        path = workout_path(@workout)
+      end
+      redirect_to path,
+        notice: "The time limit has passed for this workout." and return
+    end
     puts "WORKOUT PRAC", @workout, "WORKOUT PRAC"
-    @max_points = ExerciseWorkout.find_by(exercise: @exercise, workout: @workout).points
+    @max_points = @workout.exercise_workouts.
+      where(exercise: @exercise).first.points
     puts "\nMAX-POINTS", @max_points, "\nMAX-POINTS"
     @responses = ['There are no responses yet!']
     @explain = ['There are no explanations yet!']
@@ -758,8 +773,22 @@ class ExercisesController < ApplicationController
       @workout_score = @workout.score_for(current_user)
     end
 
+    if @workout_score.andand.closed?
+      p 'WARNING: attempt to evaluate exercise after time expired.'
+      return
+    end
+
     @is_perfect = false
- 
+
+    @attempt = @exercise_version.new_attempt(
+      user: current_user, workout_score: @workout_score)
+    @attempt.save
+    # FIXME: Need to make it work for multiple prompts
+    prompt = @exercise_version.prompts.first.specific
+    prompt_answer = @attempt.prompt_answers.first  # already specific here
+    @max_points =
+      @workout.exercise_workouts.where(exercise: @exercise).first.points
+
     if @exercise_version.is_mcq?
       #response_ids = params[:exercise_version][:multiple_choice_prompt][:choice_ids]
       response_ids = params[:exercise_version][:choice][:id]
@@ -776,9 +805,10 @@ class ExercisesController < ApplicationController
       @responses.each do |answer|
         answer[:answer] = markdown(answer[:answer])
       end
+      prompt_answer.choices = @responses
       @score = @exercise_version.score(@responses)
       if @workout
-        @score = @score * ExerciseWorkout.find_by(exercise: @exercise, workout: @workout).points / @exercise_version.max_mcq_score
+        @score = @score * @max_points / @exercise_version.max_mcq_score
         @score = @score.round(2)
       end
       # TODO: Enable @explain and @exercise_feedback again
@@ -787,27 +817,25 @@ class ExercisesController < ApplicationController
       # + "#{@exercise.id}:#{@exercise.name}" +
       #  ' and its feedback for you: ' +
       #  @explain.to_sentence
-      
+
       # TODO: calculate experience based on correctness and num submissions
       count_submission()
       @xp = @exercise_version.experience_on(@responses, session[:submit_num])
 
-      @attempt = record_attempt(@score, @xp, @workout_score)
-      
-      if @workout
-        exercise_points = ExerciseWorkout.find_by(exercise: @exercise, workout: @workout).points
-        if exercise_points <= @attempt.score
-          @is_perfect = true        
-        end        
+      @attempt.score = @score
+      @attempt.feedback_ready = true
+      @attempt.experience_earned = @xp
+      @attempt.save!
+      if @workout_score
+        @workout_score.record_attempt(@attempt)
       end
-      
+
+      if @max_points <= @attempt.score ||
+        !@workout_score.andand.show_feedback?
+        @is_perfect = true
+      end
+
     elsif @exercise_version.is_coding?
-      @attempt = @exercise_version.new_attempt(
-        user: current_user, workout_score: @workout_score)
-      @attempt.save
-      # FIXME: Need to make it work for multiple prompts
-      prompt = @exercise_version.prompts.first.specific
-      prompt_answer = @attempt.prompt_answers.first  # already specific here
       prompt_answer.answer = params[:exercise_version][:answer_code]
       if prompt_answer.save
         CodeWorker.new.async.perform(
@@ -820,9 +848,8 @@ class ExercisesController < ApplicationController
           'IMPROPER PROMPT'
       end
       @workout ||= @workout_score.workout
-      @max_points = ExerciseWorkout.find_by(exercise: @exercise, workout: @workout).points
     end
-    
+
     if params[:wexes]
       session[:remaining_wexes] = params[:wexes]
       if params[:wexes][1..-1].count < 1
@@ -856,7 +883,7 @@ class ExercisesController < ApplicationController
       #redirect_to exercise_practice_path(@exercise,
       #  feedback_return: true,att_id: attempt_id) and return
     end
-    
+
   end
 
 
@@ -933,54 +960,6 @@ class ExercisesController < ApplicationController
         tags_attributes: [:tag_name, :tagtype, :_destroy])
     end
 
-
-    # -------------------------------------------------------------
-    # should call count_submission before calling this method
-    def record_attempt(score, exp, workout_score)
-      exv = @exercise_version
-      previous_attempts = Attempt.where(user: workout_score.score, exercise_version: exv)      
-      if workout_score && previous_attempts.any?
-        previous_score = previous_attempts.last.score
-        workout_score.exercises_completed += 1
-        workout_score.exercises_remaining -= 1 
-      else
-        previous_score = 0.00
-      end
-      attempt = Attempt.new
-      if !session[:exercise_id] ||
-        session[:exercise_id] != params[:id] ||
-        !session[:submit_num]
-
-        session[:exercise_id] = params[:id]
-      end
-      attempt.submit_num = session[:submit_num]
-      attempt.submit_time = Time.now
-      attempt.score = score
-      attempt.feedback_ready = true
-      attempt.experience_earned = exp
-      attempt.user = current_user
-      if workout_score
-        attempt.workout_score = workout_score
-        # attempt.active_score = workout_score
-        workout_score.score += previous_score
-        workout_score.score += score
-        workout_score.save
-      end
-
-
-      if session[:current_workout]
-        wkt = Workout.find(session[:current_workout])
-        ws = WorkoutScore.find_by(user: current_user, workout: wkt)
-        attempt.workout_score = ws
-      end
-      exv.attempts << attempt
-      attempt.save!
-
-       MultipleChoicePromptAnswer.record_answer(
-         @exercise_version, @responses, attempt)
-
-       return attempt
-    end
 
     # -------------------------------------------------------------
     def count_submission

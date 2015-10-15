@@ -6,11 +6,10 @@
 #  exercise_id :integer          not null
 #  workout_id  :integer          not null
 #  position    :integer          not null
-#  points      :float            default(1.0)
+#  points      :float(24)        default(1.0)
 #  created_at  :datetime
 #  updated_at  :datetime
 #
-
 
 # =============================================================================
 # Represents a many-to-many relationship between exercises and workouts,

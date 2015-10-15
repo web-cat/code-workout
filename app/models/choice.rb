@@ -6,7 +6,7 @@
 #  multiple_choice_prompt_id :integer          not null
 #  position                  :integer          not null
 #  feedback                  :text
-#  value                     :float            not null
+#  value                     :float(24)        not null
 #  created_at                :datetime
 #  updated_at                :datetime
 #  answer                    :text             not null

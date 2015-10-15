@@ -1,17 +1,8 @@
 - size ||= 'lg'
 - user ||= current_user
-
 - workout ||= nil
 - workout = workout || @workout
 - workout_offering ||= (offering ||= nil)
-- flag1 = true
-- if @workout && @workout.course_offerings.any?
-  - @workout.course_offerings.each do |workout_course_offering|
-    - if flag1 && user_signed_in? && current_user.course_offerings.any?
-      - current_user.course_offerings.each do |user_course_offering|
-        - if flag1 && user_course_offering.id == workout_course_offering.id
-          - flag1 = false
-          - workout_offering = WorkoutOffering.find_by(course_offering: workout_course_offering)
 - workout_score ||= user ? user.current_workout_score : nil
 - if workout_score && ((workout && workout_score.workout != workout) ||      |
   (workout_offering && workout_score.workout_offering != workout_offering))  |
@@ -42,12 +33,12 @@
         = 'In ' + workout_offering.current_deadline_distance.to_s + 'hrs'
     - elsif workout_offering && workout_offering.current_deadline_distance < 0
       %i.fa.fa-folder-open
-      .due.late 
+      .due.late
         = workout_offering.current_deadline_distance.abs.to_s + ' hrs ago'
     - else
       - puts "MISSED CASE","\nMISSED CASE"
-      
-    - if workout_offering  
+
+    - if workout_offering
       = link_to workout.name,
           organization_workout_offering_path(id: workout_offering.id,
           course_id: workout_offering.course_offering.course.slug,
@@ -56,18 +47,25 @@
     - else
       = link_to workout.name, workout_path(id: workout[:id])
     %span.badge.badge-info= workout.exercises.count.to_s
-    
+
   .summary
-    .radial-progress{ 'data-progress' => score_pct }
-      .circle
-        .mask.full
-          .fill
-        .mask.half
-          .fill
-          .fill.fix
-        .shadow
-      .inset
-        .pct
+    - if !workout_score || workout_score.show_feedback?
+      .radial-progress{ 'data-progress' => score_pct }
+        .circle
+          .mask.full
+            .fill
+          .mask.half
+            .fill
+            .fill.fix
+          .shadow
+        .inset
+          .pct
+    - else
+      .radial-progress.masked
+        .circle
+          .shadow
+        .inset
+          .score= image_tag 'pct-blur.png'
   .body
     .text
       = teaser(workout.description)

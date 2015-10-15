@@ -5,7 +5,7 @@
 #  id                  :integer          not null, primary key
 #  workout_id          :integer          not null
 #  user_id             :integer          not null
-#  score               :float
+#  score               :float(24)
 #  completed           :boolean
 #  completed_at        :datetime
 #  last_attempted_at   :datetime

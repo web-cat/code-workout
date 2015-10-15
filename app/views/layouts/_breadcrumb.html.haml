@@ -1,5 +1,5 @@
 %ol.breadcrumb
-  %li  
+  %li
     = link_to 'Home', root_path
   - if @workout
     - flag1 = true
@@ -10,16 +10,16 @@
             - if flag1 && user_course_offering.id == workout_course_offering.id
               - flag1 = false
               %li= link_to 'Courses', organizations_path
-              %li= link_to workout_course_offering.course.organization.abbreviation, 
+              %li= link_to workout_course_offering.course.organization.abbreviation,
               organization_path(workout_course_offering.course.organization)
-              %li= link_to workout_course_offering.course.name, 
+              %li= link_to workout_course_offering.course.number,
               organization_course_path(workout_course_offering.course.organization,
               workout_course_offering.course)
     - if flag1
       %li= link_to 'Gym', gym_path
     - if @exercise
       %li= link_to @workout.name, workout_path(@workout)
-      %li.active= @exercise.name
+      %li.active= @exercise.display_number
     - else
       %li.active= @workout.name
 
@@ -32,20 +32,20 @@
             - if flag1 == true && user_course_offering.id == workout_course_offering.id
               - flag1 = false
               %li= link_to 'Courses', organizations_path
-              %li= link_to workout_course_offering.course.organization.abbreviation, 
+              %li= link_to workout_course_offering.course.organization.abbreviation,
               organization_path(workout_course_offering.course.organization)
-              %li= link_to workout_course_offering.course.name, 
-              organization_course_path(workout_course_offering.course.organization, 
+              %li= link_to workout_course_offering.course.number,
+              organization_course_path(workout_course_offering.course.organization,
               workout_course_offering.course)
               - break
       - if flag1
         %li= link_to 'Gym', gym_path
       - else
-        %li= link_to exercise_workout.name, workout_path(exercise_workout)
+        %li= link_to exercise_workout.display_number, workout_path(exercise_workout)
         %li.active= @exercise.name
-      - break  
-        
-        
+      - break
+
+
   - elsif @organization
     %li= link_to 'Courses', organizations_path
     - if @course

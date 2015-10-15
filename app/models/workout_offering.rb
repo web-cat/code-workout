@@ -7,16 +7,19 @@
 #  workout_id         :integer          not null
 #  created_at         :datetime
 #  updated_at         :datetime
-#  opening_date       :date
-#  soft_deadline      :date
-#  hard_deadline      :date
+#  opening_date       :datetime
+#  soft_deadline      :datetime
+#  hard_deadline      :datetime
+#  published          :boolean          default(FALSE), not null
+#  time_limit         :integer
+#  workout_policy_id  :integer
 #
 # Indexes
 #
 #  index_workout_offerings_on_course_offering_id  (course_offering_id)
 #  index_workout_offerings_on_workout_id          (workout_id)
+#  index_workout_offerings_on_workout_policy_id   (workout_policy_id)
 #
-
 
 # =============================================================================
 # Represents a many-to-many relationship between workouts and course
@@ -30,6 +33,7 @@ class WorkoutOffering < ActiveRecord::Base
   #~ Relationships ............................................................
 
   belongs_to :workout, inverse_of: :workout_offerings
+  belongs_to :workout_policy, inverse_of: :workout_offerings
   belongs_to :course_offering, inverse_of: :workout_offerings
   has_many :workout_scores, inverse_of: :workout_offering, dependent: :nullify
   has_many :student_extensions
@@ -52,9 +56,29 @@ class WorkoutOffering < ActiveRecord::Base
   def score_for(user)
     workout_scores.where(user: user).order('updated_at DESC').first
   end
-  
+
+
+  # -----------------------------------------------------------------
+  def time_limit_for(user)
+    user_extension =
+      StudentExtension.find_by(user: user, workout_offering: self)
+    user_extension.andand.time_limit || self.time_limit
+  end
+
+
+  # -----------------------------------------------------------------
+  def hard_deadline_for(user)
+    user_extension =
+      StudentExtension.find_by(user: user, workout_offering: self)
+    user_extension.andand.hard_deadline ||
+      self.hard_deadline ||
+      user_extension.andand.soft_deadline ||
+      self.soft_deadline
+  end
+
+
   # --------------------------------------------------------------------------------
-  # Describes how 'far' is the workout offering from its hard and soft deadlines. 
+  # Describes how 'far' is the workout offering from its hard and soft deadlines.
   # 4 indicates that there is more than one day remaining to soft deadline
   # 1 indicates that it is past the hard deadline
   # nil indicates that there is no valid deadline
@@ -91,21 +115,18 @@ class WorkoutOffering < ActiveRecord::Base
   # this workout offering. The method looks up if the user has
   # any extension for this workout and if so 'normalizes' her
   # deadlines for this workout offering. Course staff always
-  # have full access. 
-  
+  # have full access.
+
   def can_be_practiced_by?(user)
     now = Time.now
     user_extension = StudentExtension.find_by(user: user, workout_offering: self)
-    if user_extension
-      normalized_hard_deadline = user_extension.hard_deadline
-      normalized_soft_deadline = user_extension.soft_deadline
-    else
-      normalized_hard_deadline = hard_deadline
-      normalized_soft_deadline = soft_deadline
-    end
+    deadline = user_extension.andand.hard_deadline ||
+      self.hard_deadline ||
+      user_extension.andand.soft_deadline ||
+      self.soft_deadline
     course_offering.is_staff?(user) ||
     (((opening_date == nil) || (opening_date <= now)) &&
-      ((normalized_hard_deadline >= now) || (normalized_soft_deadline >= now)) &&
+      (now <= deadline) &&
       course_offering.is_enrolled?(user))
   end
 

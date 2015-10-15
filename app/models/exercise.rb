@@ -20,6 +20,7 @@
 #  index_exercises_on_current_version_id  (current_version_id)
 #  index_exercises_on_exercise_family_id  (exercise_family_id)
 #  index_exercises_on_external_id         (external_id) UNIQUE
+#  index_exercises_on_is_public           (is_public)
 #
 
 # =============================================================================
@@ -158,11 +159,18 @@ class Exercise < ActiveRecord::Base
   # -------------------------------------------------------------
   # getter override for name
   def display_name
-    temp = 'X' + id.to_s
+    temp = display_number
     if not name.nil?
       temp += ': ' + name
     end
     return temp
+  end
+
+
+  # -------------------------------------------------------------
+  # getter override for name
+  def display_number
+    'X' + id.to_s
   end
 
 

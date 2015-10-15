@@ -1,6 +1,10 @@
 - course_offering ||= @workout_offering.andand.course_offering
 - workout_score ||= @workout.score_for(current_user, @workout_offering)
-= render partial: "layouts/breadcrumb"
+= render partial: 'layouts/breadcrumb'
+- time_limit = (@workout_offering ? @workout_offering.time_limit_for(current_user) : nil)
+
+= render partial: 'workout_scores/time_remaining',
+  locals: { workout_score: workout_score }
 
 %h1= @workout.name
 
@@ -18,6 +22,7 @@
         %th Open
         %th Due
         %th Close
+        %th Time Limit
     %tbody
       - Time.use_zone(ActiveSupport::TimeZone["America/New_York"]) do
         - @workout.workout_offerings.each do |woff|
@@ -52,6 +57,9 @@
               pk: woff.id.to_s,
               model: 'workout_offering' } }= woff.hard_deadline
             %td= l woff.hard_deadline
+            %td
+              - if time_limit
+                = "#{n_to_s(time_limit)} minutes"
 - elsif @workout_offering
   %p.due
     - if @workout_offering.soft_deadline
@@ -60,9 +68,14 @@
     - elsif @workout_offering.hard_deadline
       Due:
       = l @workout_offering.hard_deadline
+    - if time_limit
+      = "(time limit: #{n_to_s(time_limit)} min)"
     &nbsp;&nbsp;&nbsp;Score:
     - if workout_score
-      = workout_score.score
+      - if workout_score.show_feedback?
+        = workout_score.score
+      - else
+        hidden
     - else
       0
     = '/'
@@ -76,55 +89,13 @@
 -# if score_pct == 100 && wscore.score < workout.total_points
 -#  - score_pct = 99
 
-%table.table.table-striped{ style: 'width: auto' }
-  %thead
-    %tr
-      %th Course
-      %th Open
-      %th Due
-      %th Close
-  %tbody
-    - Time.use_zone(ActiveSupport::TimeZone["America/New_York"]) do
-      - @workout.workout_offerings.each do |workout_offering|
-        %tr
-          %td= workout_offering.course_offering.display_name
-          -#%td.xeditable{ id: 'opening_date',
-            data: { type: 'text',
-            url: '/workout_offerings/' + workout_offering.id.to_s,
-            resource: 'workout_offering',
-            name: 'opening_date',
-            xeditable: "true",
-            pk: workout_offering.id.to_s,
-            model: 'workout_offering' } }= workout_offering.opening_date
-          %td
-            - if workout_offering.opening_date
-              = l workout_offering.opening_date
-          -#%td.xeditable{ id: 'soft_deadline',
-            data: { type: 'text',
-            url: '/workout_offerings/' + workout_offering.id.to_s,
-            resource: 'workout_offering',
-            name: 'soft_deadline',
-            xeditable: "true",
-            pk: workout_offering.id.to_s,
-            model: 'workout_offering' } }= workout_offering.soft_deadline
-          %td= l workout_offering.soft_deadline
-          -#%td.xeditable{ id: 'hard_deadline',
-            data: { type: 'text',
-            url: '/workout_offerings/' + workout_offering.id.to_s,
-            resource: 'workout_offering',
-            name: 'hard_deadline',
-            xeditable: "true",
-            pk: workout_offering.id.to_s,
-            model: 'workout_offering' } }= workout_offering.hard_deadline
-          %td= l workout_offering.hard_deadline
-
 - if @workout.description
   %p= markdown(@workout.description)
 
 -#= render @workout
 -#.clearfix
 
-- if @workout_offering && @workout_offering.can_be_practiced_by?(current_user)
+- if @workout_offering && @workout_offering.can_be_practiced_by?(current_user) && (workout_score.nil? || !workout_score.closed?)
   = button_to 'Start Workout',                                          |
     organization_workout_offering_practice_path(organization_id:        |
     @workout_offering.course_offering.course.organization.slug,         |
@@ -139,8 +110,12 @@
 
 %h2 Exercises
 
-- if @exs.empty?
-  .alert No exercises in this workout
+- if workout_score.nil? && @workout_offering.andand.workout_policy.andand.hide_thumbnails_before_start
+  .alert.alert-warning You must begin this workout before you can see its exercises.
+- elsif workout_score.andand.closed? && (@workout_offering.andand.workout_policy.andand.no_review_before_close || @workout_offering.andand.workout_policy.andand.hide_thumbnails_in_review_before_close)
+  .alert.alert-warning Results will be visible after the assignment closes.
+- elsif @exs.empty?
+  .alert.alert-warning No exercises in this workout
 - else
   - user = current_user
   - p "passing workout offering #{@workout_offering.inspect}"

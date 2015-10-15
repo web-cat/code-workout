@@ -5,7 +5,7 @@
 #  id                  :integer          not null, primary key
 #  workout_id          :integer          not null
 #  user_id             :integer          not null
-#  score               :float
+#  score               :float(24)
 #  completed           :boolean
 #  completed_at        :datetime
 #  last_attempted_at   :datetime
@@ -20,7 +20,6 @@
 #  index_workout_scores_on_user_id     (user_id)
 #  index_workout_scores_on_workout_id  (workout_id)
 #
-
 
 # =============================================================================
 # Represents all of the attempts on each exercise in a workout by one
@@ -85,6 +84,42 @@ class WorkoutScore < ActiveRecord::Base
 
 
   #~ Instance methods .........................................................
+
+  # -------------------------------------------------------------
+  def closed?
+    minutes_open = (Time.now - self.created_at)/60.0
+    time_limit = workout_offering.time_limit_for(user)
+
+    !time_limit.nil? && minutes_open >= time_limit
+  end
+
+
+  # -------------------------------------------------------------
+  def time_remaining
+    minutes_open = (Time.now - self.created_at)/60.0
+    time_limit = workout_offering.time_limit_for(user)
+
+    if time_limit.nil?
+      nil
+    else
+      time_limit - minutes_open
+    end
+  end
+
+
+  # -------------------------------------------------------------
+  def show_feedback?
+    if self.workout_offering &&
+      self.workout_offering.hard_deadline_for(self.user) < Time.now
+      # !workout_offering.andand.workout_policy.andand.hide_feedback_in_review_after_close
+      true
+    elsif closed?
+      !workout_offering.andand.workout_policy.andand.hide_feedback_in_review_before_close
+    else
+      !workout_offering.andand.workout_policy.andand.hide_feedback_before_finish
+    end
+  end
+
 
   # -------------------------------------------------------------
   def attempt_for(exercise)

@@ -9,7 +9,7 @@
     exercise_version_id: @exercise_version.id,
     feedback_return: true)), remote: true do |f|
     = f.semantic_errors
-    %h1= @exercise.name
+    %h1= @exercise.display_name
     - if @exercise_version.stem
       = markdown @exercise_version.stem.preamble
     - prompt = @exercise_version.prompts.first.specific
@@ -48,8 +48,19 @@
           value: prior_answer ? prior_answer.specific.answer : prompt.prepare_starter_code }
     .actions
       - if @workout_offering.nil? || @workout_offering.can_be_practiced_by?(current_user)
-        = f.submit 'Check my answer!', class: 'btn btn-primary btn-submit', id: 'primarybtn'
-      
+        - if @workout_offering.andand.workout_policy.andand.hide_feedback_before_finish
+          = f.submit 'Save my answer!', class: 'btn btn-primary btn-submit', id: 'primarybtn'
+        - else
+          = f.submit 'Check my answer!', class: 'btn btn-primary btn-submit', id: 'primarybtn'
+        - if @workout_offering
+          = button_link 'Next exercise',
+            organization_workout_offering_practice_path(exercise_id: @workout.next_exercise(@exercise, current_user, nil),
+            organization_id: @workout_offering.course_offering.course.organization.slug,
+            course_id: @workout_offering.course_offering.course.slug,
+            term_id: @workout_offering.course_offering.term.slug,
+            id: @workout_offering.id),
+            class: 'btn btn-next', id: 'nextbtn'
+
     - if session[:current_workout].nil?
       %br
       = link_to "Practice a different #{@exercise.language} exercise",     |
@@ -61,12 +72,6 @@
     #exercisefeedback
       = render partial: 'sse/ajax_feedback'
   - else
-    #exercisefeedback{style: 'display: none;'}
-
-- if @workout  
-  = button_to 'Next exercise',
-      organization_workout_offering_practice_path(exercise_id: @workout.next_exercise(@exercise, current_user, nil),
-      organization_id: @workout_offering.course_offering.course.organization.slug,
-      course_id: @workout_offering.course_offering.course.slug,
-      term_id: @workout_offering.course_offering.term.slug,
-      id: @workout_offering.id), method: :get, class: 'btn btn-next', id: 'nextbtn'
+    #exercisefeedback
+      = render partial: 'workout_scores/time_remaining',
+        locals: { workout_score: @workout_score }

@@ -10,4 +10,29 @@ class LoofahRender < Redcarpet::Render::HTML
   def postprocess(document)
     Loofah.fragment(document).scrub!(:strip).to_s.html_safe
   end
+
+#  def block_html(raw_html)
+#
+#  end
+
+#  def block_code(code, lang)
+#    p "block_code: code = #{code}"
+#    result = "<pre>#{html_escape(code)}</pre>"
+#    p "block_code: result = #{result}"
+#    result
+#  end
+#
+#  private
+#
+#    def html_escape(string)
+#      string.gsub(/['&\"<>\/]/, {
+#        '&' => '&amp;',
+#        '<' => '&lt;',
+#        '>' => '&gt;',
+#        '"' => '&quot;',
+#        "'" => '&#x27;',
+#        "/" => '&#x2F;',
+#      })
+#    end
+
 end

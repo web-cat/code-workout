@@ -266,6 +266,10 @@ class WorkoutsController < ApplicationController
         end
         current_user.current_workout_score = @workout_score
         current_user.save!
+        if @workout_score.closed?
+          redirect_to workout_path(@workout),
+            notice: "The time limit has passed for this workout." and return
+        end
       end
       redirect_to exercise_practice_path(id: ex1.id)
     else

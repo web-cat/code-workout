@@ -3,11 +3,11 @@
 # Table name: organizations
 #
 #  id           :integer          not null, primary key
-#  name         :string(255)      not null
+#  name         :string(255)      default(""), not null
 #  created_at   :datetime
 #  updated_at   :datetime
 #  abbreviation :string(255)
-#  slug         :string(255)      not null
+#  slug         :string(255)      default(""), not null
 #
 # Indexes
 #

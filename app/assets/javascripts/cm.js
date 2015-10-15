@@ -11,6 +11,7 @@ $(function() {
       theme: 'aptana',
       mode: $(codeNode).data('lang') || 'text/x-java',
       readOnly: true,
+      autofocus: false,
       lineNumbers: $(codeNode).hasClass('lineNumbers') || !$(codeNode).hasClass('noLineNumbers')
     });
   });
@@ -25,6 +26,7 @@ $(function() {
       fixedGutter: true,
       matchBrackets: true,
       /* autofocus: true, */
+      autofocus: false,
       lineNumbers: true,
       viewportMargin: 150
   	});

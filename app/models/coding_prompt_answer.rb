@@ -4,6 +4,7 @@
 #
 #  id     :integer          not null, primary key
 #  answer :text
+#  error  :text
 #
 
 # =============================================================================

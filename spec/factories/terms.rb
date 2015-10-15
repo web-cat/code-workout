@@ -9,7 +9,7 @@
 #  year       :integer          not null
 #  created_at :datetime
 #  updated_at :datetime
-#  slug       :string(255)      not null
+#  slug       :string(255)      default(""), not null
 #
 # Indexes
 #

@@ -20,15 +20,5 @@ class MultipleChoicePromptAnswer < ActiveRecord::Base
 
 
   #~ Validation ...............................................................
-  
 
-  #~ Class method .............................................................
-  def self.record_answer(exv,responses,att)
-    responses.each do |choice|
-      mcq_answer = MultipleChoicePromptAnswer.new(attempt: att, prompt: exv.prompts.first)
-      mcq_answer.choices << choice
-      mcq_answer.save!
-    end
-  end
-  
 end

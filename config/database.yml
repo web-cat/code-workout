@@ -6,12 +6,6 @@
 development:
   adapter: sqlite3
   database: db/development.sqlite3
-  # adapter: mysql2
-  # database: codeworkout
-  # username: root
-  # password: qwczzor
-  # encoding: utf8
-  # socket: /Applications/xampp/xamppfiles/var/mysql/mysql.sock
   # Pool: 16 puma threads + 10 SuckerPunch workers
   pool: 26
   timeout: 10000

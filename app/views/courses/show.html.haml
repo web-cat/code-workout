@@ -54,10 +54,6 @@
         - offering.workout_offerings.in_groups_of(2, false) do |row|
           = render row, locals: { uid: current_user.id }
           .clearfix
-        - offering.workouts.each do |workout|
-          - deadline = WorkoutOffering.find_by(course_offering: offering, workout: workout).andand.hard_deadline
-          - if deadline
-            = "\nDeadline " + user_time(current_user, deadline).to_s
 
     - if !@is_student
       .tab-pane.fade{ id: 'exercises' }
@@ -119,8 +115,9 @@
               - workout_offerings.each do |wkto|
                 %tr
                   %td= wkto.workout.name
-                  - score = wkto.score_for(current_user).andand.score
-                  - if score
+                  - workout_score = wkto.score_for(current_user)
+                  - score = workout_score.andand.score
+                  - if score && workout_score.show_feedback?
                     %td= score
                   - else
                     %td -/-
@@ -133,7 +130,7 @@
             = link_to
           = form_tag '/course_offerings/'+ offering.id.to_s + '/upload_roster', multipart: true do
             = file_field( "form", "rosterfile" )
-            = submit_tag "Submit File" 
+            = submit_tag "Submit File"
           %table.table.table-striped
             %thead
               %tr
