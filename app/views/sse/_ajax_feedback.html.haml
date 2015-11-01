@@ -22,9 +22,15 @@
 
 - if @exercise_version.is_mcq?
   - if show_feedback
+    - if @attempt.earned_full_points?
+      %p Your choice is correct!
+    - elsif @attempt.score > 0
+      %p Your choice is partially correct.
+    - else
+      %p Your choice is incorrect.
     -#= Choice.find(attempt.answer.to_i).feedback
     - @attempt.prompt_answers.first.specific.choices.each do |choice|
-      = choice.feedback
+      %p= choice.feedback
   - else
     Your answer has been saved.
 - elsif @exercise_version.is_coding?

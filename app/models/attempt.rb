@@ -103,4 +103,15 @@ class Attempt < ActiveRecord::Base
     self.save!
   end
 
+
+  # -------------------------------------------------------------
+  def earned_full_points?
+    if self.workout_score
+      self.score >= self.workout_score.workout.exercise_workouts.where(
+        exercise: exercise_version.exercise).first.points
+    else
+      sel.score >= 1.0
+    end
+  end
+
 end

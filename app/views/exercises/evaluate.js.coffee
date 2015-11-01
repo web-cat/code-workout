@@ -12,10 +12,3 @@ if is_coding
   ), 1500
 else
   $.ajax(url: "/sse/feedback_poll?att_id=#{att_id}")
-
-if is_perfect
-  $("#nextbtn").removeClass("btn-next")
-  $("#nextbtn").removeClass("btn-default")
-  $("#nextbtn").addClass("btn-primary")
-  $("#primarybtn").removeClass("btn-primary")
-  $("#primarybtn").addClass("btn-default")
