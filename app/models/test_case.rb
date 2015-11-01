@@ -50,13 +50,13 @@ class TestCase < ActiveRecord::Base
     if result.blank?
       inp = self.input
       if !inp.blank?
-        inp.gsub!(/new [a-zA-Z0-9]+(\[\])+\s*/, '')
+        inp.gsub!(/new\s+[a-zA-Z0-9]+(\s*\[\s*\])+\s*/, '')
       end
       result = coding_prompt.method_name + '(' + inp + ')'
       if pass
         outp = self.expected_output
         if !outp.blank?
-          outp.gsub!(/new [a-zA-Z0-9]+(\[\])+\s*/, '')
+          outp.gsub!(/new\s+[a-zA-Z0-9]+(\s*\[\s*\])+\s*/, '')
         end
         result += ' -> ' + outp
       end

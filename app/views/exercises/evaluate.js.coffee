@@ -15,5 +15,7 @@ else
 
 if is_perfect
   $("#nextbtn").removeClass("btn-next")
+  $("#nextbtn").removeClass("btn-default")
   $("#nextbtn").addClass("btn-primary")
   $("#primarybtn").removeClass("btn-primary")
+  $("#primarybtn").addClass("btn-default")
