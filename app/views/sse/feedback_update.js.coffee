@@ -1,3 +1,4 @@
+$("#saved_assurance").html("")
 $("#exercisefeedback").html("<%= j(render 'ajax_feedback' ) %>")
 
 attempt_score = <%= JSON.generate @attempt.score %>
