@@ -15,12 +15,12 @@
 - score_pct = workout_score ? (workout_score.score/workout.total_points * 100).round(0) : 0
 - if score_pct == 100 && workout_score.score < workout.total_points
   - score_pct = 99
-- closed = (workout_offering && workout_offering.hard_deadline < Time.now)
+- closed = (workout_offering && workout_offering.hard_deadline < Time.zone.now)
 %article.workout.thumbnail{ class: (closed ? (size + " closed") : size) }
   .title
     - if workout_offering && workout_offering.current_deadline_distance == 4
       %i.fa.fa-folder-open
-      .due.soon= workout_offering.soft_deadline.to_s.split(" ").first
+      .due.soon= user_time(current_user, workout_offering.soft_deadline).to_s.split(" ").first
     - elsif workout_offering && workout_offering.current_deadline_distance == 1
       %i.fa.fa-lock
       .due= workout_offering.soft_deadline.to_s.split(" ").first
@@ -31,12 +31,18 @@
       %i.fa.fa-folder-open
       .due.soon
         = 'In ' + workout_offering.current_deadline_distance.to_s + 'hrs'
-    - elsif workout_offering && workout_offering.current_deadline_distance < 0
+    - elsif workout_offering && workout_offering.current_deadline_distance > -24
       %i.fa.fa-folder-open
       .due.late
         = workout_offering.current_deadline_distance.abs.to_s + ' hrs ago'
+    - elsif workout_offering && workout_offering.current_deadline_distance < -24
+      %i.fa.fa-folder-open
+      .due.late
+        = (workout_offering.current_deadline_distance.abs/24).to_s + ' days ago'
     - else
-      - puts "MISSED CASE","\nMISSED CASE"
+      %i.fa.fa-folder-open
+      .due.late
+        = 'Due in a few minutes'
 
     - if workout_offering
       = link_to workout.name,
