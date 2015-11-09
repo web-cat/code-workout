@@ -10,6 +10,12 @@
     feedback_return: true)), remote: true do |f|
     = f.semantic_errors
     %h1= @exercise.display_name
+    - user_workout_score = @workout_score || WorkoutScore.find_by(workout: @workout, user: current_user)
+    - puts "USERWKTSCR", user_workout_score,"\nUSERWKTSCR"
+    - puts "USERWKTTime", user_workout_score.andand.time_remaining,"\nUSERWKTTIME"
+    - if user_workout_score.andand.time_remaining
+      = "You have #{n_to_s(user_workout_score.andand.time_remaining)} minutes remaining"
+    #countdown 
     - if @exercise_version.stem
       = markdown @exercise_version.stem.preamble
     - prompt = @exercise_version.prompts.first.specific
@@ -71,6 +77,7 @@
         random_exercise_path(language: @exercise.language) :               |
         random_exercise_path)                                              |
 .col-md-5
+  #saved_assurance
   - if @attempt
     #exercisefeedback
       = render partial: 'sse/ajax_feedback'
