@@ -1,7 +1,7 @@
 %h2 Feedback
 - show_feedback = !@attempt.workout_score || @attempt.workout_score.show_feedback?
-- @workout ||= @attempt.workout_score.workout
--# if @workout && show_feedback
+- @workout ||= @attempt.workout_score.andand.workout
+- if @workout && show_feedback
   - pts = @workout.exercise_workouts.find_by(exercise: @exercise).andand.points
   - score = @attempt.score
   - score_pct = score * 100.0 / pts
