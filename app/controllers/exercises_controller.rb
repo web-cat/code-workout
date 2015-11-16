@@ -680,10 +680,11 @@ class ExercisesController < ApplicationController
       redirect_to path,
         notice: "The time limit has passed for this workout." and return
     end
-    puts "WORKOUT PRAC", @workout, "WORKOUT PRAC"
-    @max_points = @workout.exercise_workouts.
-      where(exercise: @exercise).first.points
-    puts "\nMAX-POINTS", @max_points, "\nMAX-POINTS"
+    if @workout.exercise_workouts.where(exercise: @exercise).any?
+      @max_points = @workout.exercise_workouts.
+        where(exercise: @exercise).first.points
+      puts "\nMAX-POINTS", @max_points, "\nMAX-POINTS"
+    end
     @responses = ['There are no responses yet!']
     @explain = ['There are no explanations yet!']
     if session[:leaf_exercises]
@@ -694,6 +695,7 @@ class ExercisesController < ApplicationController
     # EOL stands for end of line
     # @wexs is the variable to hold the list of exercises of this workout
     # yet to be attempted by the user apart from the current exercise
+
     if params[:wexes] != 'EOL'
       @wexs = params[:wexes] || session[:remaining_wexes]
     else
@@ -786,9 +788,12 @@ class ExercisesController < ApplicationController
     # FIXME: Need to make it work for multiple prompts
     prompt = @exercise_version.prompts.first.specific
     prompt_answer = @attempt.prompt_answers.first  # already specific here
-    @max_points =
-      @workout.exercise_workouts.where(exercise: @exercise).first.points
-
+    if @workout.andand.exercise_workouts.andand.where(exercise: @exercise).andand.any?
+      @max_points = @workout.exercise_workouts.
+        where(exercise: @exercise).first.points
+    else # case when exercise being practised is not part of any workout
+      @max_points = 10.0 
+    end
     if @exercise_version.is_mcq?
       #response_ids = params[:exercise_version][:multiple_choice_prompt][:choice_ids]
       response_ids = params[:exercise_version][:choice][:id]
@@ -847,7 +852,7 @@ class ExercisesController < ApplicationController
           "#{prompt_answer.errors.full_messages.to_s}",
           'IMPROPER PROMPT'
       end
-      @workout ||= @workout_score.workout
+      @workout ||= @workout_score.andand.workout
     end
 
     if params[:wexes]

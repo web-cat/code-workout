@@ -12,11 +12,11 @@ module UserHelper
     if user.andand.time_zone && utc_time
       time_zone = user.time_zone
     else
-      time_zone = TimeZone.find(1)
+      time_zone = TimeZone.find_by(name: "America/New_York")
     end
     user_time_zone = TZInfo::Timezone.get(time_zone.name)
     user_time = user_time_zone.utc_to_local(utc_time)
-    return user_time.to_s.split(" ")[0] + " " + user_time.to_s.split(" ")[1]
+    #return user_time.to_s.split(" ")[0] + " " + user_time.to_s.split(" ")[1]
   end
 
   # ----------------------------------------------------------
@@ -30,7 +30,7 @@ module UserHelper
     if user.andand.time_zone && utc_time
       time_zone = user.time_zone
     else
-      time_zone = TimeZone.find(1)
+      time_zone = TimeZone.find_by(name: "America/New_York")
     end
     user_time_zone = TZInfo::Timezone.get(time_zone.name)
     utc_time = user_time_zone.local_to_utc(user_time)

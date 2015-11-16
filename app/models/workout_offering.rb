@@ -41,7 +41,7 @@ class WorkoutOffering < ActiveRecord::Base
 
   scope :visible_to_students, -> { where{
     (published == true) &
-    ((opening_date == nil) | (opening_date <= Time.now)) } }
+    ((opening_date == nil) | (opening_date <= Time.zone.now)) } }
 
 
   #~ Validation ...............................................................
@@ -84,7 +84,7 @@ class WorkoutOffering < ActiveRecord::Base
   # nil indicates that there is no valid deadline
   # Else it will return the number of hours remaining to the soft deadline
   def current_deadline_distance
-    current_time = Time.now.to_i
+    current_time = Time.zone.now.to_i
 
     if hard_deadline.nil?
       return nil
@@ -103,12 +103,37 @@ class WorkoutOffering < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def can_be_seen_by?(user)
-    now = Time.now
+    now = Time.zone.now
     course_offering.is_staff?(user) ||
     (((opening_date == nil) || (opening_date <= now)) &&
       course_offering.is_enrolled?(user))
   end
 
+  # ------------------------------------------------------------------
+  # A method to determine the latest deadline for a workout, 
+  # i.e. the date beyond which the workout is closed for all students 
+  # in the course. If there are no student extensions for a workout, 
+  # return the hard deadline. Else return the maximum deadline 
+  # extension granted to a student enrolled in the course.
+  
+  def ultimate_deadline
+    if student_extensions.any?
+      return student_extensions.maximum(:hard_deadline) || 
+        student_extensions.maximum(:soft_deadline)
+    else
+      return hard_deadline || soft_deadline;
+    end
+  end
+
+  # -------------------------------------------------------------------
+  # Method suppplementary to the ultimate_deadline method
+  # Returns a boolean indicating whether the workout is now shutdown
+  # i.e. completely out of bounds for practice for all students
+  
+  def shutdown?
+    now = Time.zone.now
+    return (now > ultimate_deadline)
+  end
 
   # -------------------------------------------------------------
   # Method that determines whether the given user can practice
@@ -118,7 +143,7 @@ class WorkoutOffering < ActiveRecord::Base
   # have full access.
 
   def can_be_practiced_by?(user)
-    now = Time.now
+    now = Time.zone.now
     user_extension = StudentExtension.find_by(user: user, workout_offering: self)
     deadline = user_extension.andand.hard_deadline ||
       self.hard_deadline ||

@@ -18,7 +18,7 @@ class WorkoutOfferingsController < ApplicationController
   # --------------------------------------------------------------
   # Controller action to add an extension for a workout offering
   # to a student.
-  def add_extenstion
+  def add_extension
     if params[:user_id] && student = User.find(params[:user_id]) && workoutoffering = WorkoutOffering.find(params[:workout_offering_id])
       if params[:soft_deadline] && params[:hard_deadline]
         normalized_hard_deadline = params[:hard_deadline]
