@@ -2,7 +2,7 @@ att_id = <%= JSON.generate @attempt.id %>
 user_id = <%= JSON.generate current_user.id %>
 is_coding = <%= JSON.generate @exercise.is_coding? %>
 is_perfect = <%= JSON.generate @is_perfect %>
-
+show_perfect = <%= JSON.generate @workout_offering.andand.show_feedback? %>
 $("#exercisefeedback").show()
 
 if is_coding
@@ -14,9 +14,4 @@ if is_coding
 else
   $.ajax(url: "/sse/feedback_poll?att_id=#{att_id}")
 
-if is_perfect
-  $("#nextbtn").removeClass("btn-next")
-  $("#nextbtn").removeClass("btn-default")
-  $("#nextbtn").addClass("btn-primary")
-  $("#primarybtn").removeClass("btn-primary")
-  $("#primarybtn").addClass("btn-default")
+console.log "SHOW PERFECT " + show_perfect

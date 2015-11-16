@@ -2,9 +2,14 @@ $("#saved_assurance").html("")
 $("#exercisefeedback").html("<%= j(render 'ajax_feedback' ) %>")
 
 attempt_score = <%= JSON.generate @attempt.score %>
-max_points = <%= JSON.generate ExerciseWorkout.find_by(exercise: @exercise, workout: @workout).andand.points %>
+is_coding = <%= JSON.generate @exercise.is_coding? %>
+max_points = <%= JSON.generate  @max_points %>
+show_perfect = <%= JSON.generate @can_show_perfect %>
 
-if attempt_score == max_points
+console.log "IS CODING " + is_coding
+console.log "SHOW PERFECT? " + show_perfect
+
+if attempt_score == max_points and is_coding and show_perfect
   console.log $("#nextbtn")
   $("#nextbtn").removeClass("btn-next")
   $("#nextbtn").removeClass("btn-default")
