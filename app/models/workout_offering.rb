@@ -154,5 +154,9 @@ class WorkoutOffering < ActiveRecord::Base
       (now <= deadline) &&
       course_offering.is_enrolled?(user))
   end
+  
+  def show_feedback?
+     workout_policy.andand.hide_feedback_before_finish ? false : true
+  end
 
 end
