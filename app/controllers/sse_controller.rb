@@ -35,9 +35,11 @@ class SseController < ApplicationController
   # -------------------------------------------------------------
   def feedback_update
     @attempt = Attempt.find_by(id: params[:att_id])
+    @can_show_feedback = session[:can_show_feedback]
     authorize! :read, @attempt
     @exercise_version = @attempt.exercise_version
     @exercise = @exercise_version.exercise
+    @max_points = ExerciseWorkout.find_by(exercise: @exercise, workout: @workout).andand.points
     respond_to do |format|
       format.js
     end

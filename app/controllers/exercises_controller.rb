@@ -685,6 +685,11 @@ class ExercisesController < ApplicationController
         where(exercise: @exercise).first.points
       puts "\nMAX-POINTS", @max_points, "\nMAX-POINTS"
     end
+    
+    @can_show_feedback = @workout_offering.andand.show_feedback?
+    puts "CAN SHOW?\n", @can_show_feedback, "\nCAN SHOW?"
+    session[:can_show_feedback] = @can_show_feedback 
+    
     @responses = ['There are no responses yet!']
     @explain = ['There are no explanations yet!']
     if session[:leaf_exercises]
@@ -779,9 +784,9 @@ class ExercisesController < ApplicationController
       p 'WARNING: attempt to evaluate exercise after time expired.'
       return
     end
-
+ 
+    # Instance variables used evaluate.js
     @is_perfect = false
-
     @attempt = @exercise_version.new_attempt(
       user: current_user, workout_score: @workout_score)
     @attempt.save
