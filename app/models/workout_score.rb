@@ -96,7 +96,7 @@ class WorkoutScore < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def time_remaining
-    minutes_open = (Time.now - self.created_at)/60.0
+    minutes_open = (Time.zone.now - self.created_at)/60.0
     time_limit = workout_offering.time_limit_for(user)
 
     if time_limit.nil?
@@ -110,7 +110,7 @@ class WorkoutScore < ActiveRecord::Base
   # -------------------------------------------------------------
   def show_feedback?
     if self.workout_offering &&
-      self.workout_offering.hard_deadline_for(self.user) < Time.now
+      self.workout_offering.hard_deadline_for(self.user) < Time.zone.now
       # !workout_offering.andand.workout_policy.andand.hide_feedback_in_review_after_close
       true
     elsif closed?
@@ -134,6 +134,7 @@ class WorkoutScore < ActiveRecord::Base
   def update_attempt(attempt, old_score)
     if self.scored_attempts.include? attempt
       self.score = self.score - old_score + attempt.score
+      self.score = self.score.round(2)
     else
       # look for other scored attempt for the same exercise
       scored = self.scored_attempts.includes(exercise_versions: :exercise).
@@ -145,17 +146,17 @@ class WorkoutScore < ActiveRecord::Base
       self.score += attempt.score
       self.scored_attempts << attempt
     end
+    self.score = self.score.round(2)
     self.save!
   end
 
 
   # -------------------------------------------------------------
   def record_attempt(attempt)
-    value = attempt.score.round(2)
+    value = attempt.score
     last_attempt = self.scored_attempts.
       where(exercise_version: attempt.exercise_version).first
     if last_attempt
-      self.score -= last_attempt.score
       last_attempt.active_score_id = nil
       last_attempt.save!
     else
@@ -166,16 +167,20 @@ class WorkoutScore < ActiveRecord::Base
         self.exercises_remaining -= 1
       end
     end
+    self.score = 0.00
+    Attempt.where(active_score_id: self.id).each do |att|
+      self.score += att.score
+    end
+    self.score += value
     attempt.active_score = self
     attempt.save!
-    self.score += value
     self.score = self.score.round(2)
-    self.last_attempted_at = Time.now
+    self.last_attempted_at = Time.zone.now
 
-#    if self.exercises_remaining == 0
-#      self.completed = true
-#      self.completed_at = Time.now
-#    end
+    if self.exercises_remaining == 0
+      self.completed = true
+      self.completed_at = Time.zone.now
+    end
 
     self.save!
   end
@@ -217,16 +222,16 @@ class WorkoutScore < ActiveRecord::Base
       last_attempt = scoring.scored_attempts.
         where(exercise_version: exercise_version).first
       if last_attempt
-        scoring.score -= last_attempt.score
+        scoring.score -= last_attempt.score.round(2)
         last_attempt.active_scored_id = nil
         last_attempt.save!
       else
         scoring.exercises_completed += 1
         scoring.exercises_remaining -= 1
       end
-      scoring.score += score
+      scoring.score += score.round(2)
     end
-    scoring.last_attempted_at = Time.now
+    scoring.last_attempted_at = Time.zone.now
     # Compensate if overshoots
     if scoring.exercises_completed > @current_workout.exercises.length
       scoring.exercises_completed = @current_workout.exercises.length
@@ -236,7 +241,7 @@ class WorkoutScore < ActiveRecord::Base
     end
     if scoring.exercises_remaining == 0
       scoring.completed = true
-      scoring.completed_at = Time.now
+      scoring.completed_at = Time.zone.now
     end
 
     scoring.save!
