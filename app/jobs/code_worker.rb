@@ -84,7 +84,7 @@ class CodeWorker
         end  # CSV end
       end
       multiplier = 1.0
-      attempt.score = correct / total
+      attempt.score = correct * multiplier / total      
       workout_score = workout_score_id &&
         WorkoutScore.find_by(id: workout_score_id)
       attempt.feedback_ready = true
