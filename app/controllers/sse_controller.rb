@@ -35,7 +35,6 @@ class SseController < ApplicationController
   # -------------------------------------------------------------
   def feedback_update
     @attempt = Attempt.find_by(id: params[:att_id])
-    @can_show_feedback = session[:can_show_feedback]
     authorize! :read, @attempt
     @exercise_version = @attempt.exercise_version
     @exercise = @exercise_version.exercise
@@ -44,7 +43,6 @@ class SseController < ApplicationController
       format.js
     end
   end
-
 
   # -------------------------------------------------------------
   def feedback_poll
