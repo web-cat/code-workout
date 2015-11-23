@@ -95,8 +95,9 @@
 -#= render @workout
 -#.clearfix
 
-- if @workout_offering && @workout_offering.can_be_practiced_by?(current_user) && (workout_score.nil? || !workout_score.closed?)
-  = button_to 'Start Workout',                                          |
+- if @workout_offering && @workout_offering.can_be_seen_by?(current_user) && (workout_score.nil? || !workout_score.closed?)
+  - button_text = @workout_offering.can_be_practiced_by?(current_user) ? 'Start Workout' : 'Review Workout' 
+  = button_to button_text,                                          |
     organization_workout_offering_practice_path(organization_id:        |
     @workout_offering.course_offering.course.organization.slug,         |
     course_id: @workout_offering.course_offering.course.slug,           |

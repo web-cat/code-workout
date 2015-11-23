@@ -161,7 +161,7 @@ class Ability
 #          o.course_offering.course_enrollments.where(user_id: user.id).any?
       end
       can [:practice], WorkoutOffering do |o|
-        o.can_be_practiced_by? user
+        o.can_be_seen_by? user
 #        now = Time.now
 #        ((o.opening_date == nil) || (o.opening_date <= now)) &&
 #          ((o.hard_deadline >= now) || (o.soft_deadline >= now)) &&

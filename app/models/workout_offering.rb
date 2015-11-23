@@ -106,7 +106,8 @@ class WorkoutOffering < ActiveRecord::Base
     now = Time.zone.now
     course_offering.is_staff?(user) ||
     (((opening_date == nil) || (opening_date <= now)) &&
-      course_offering.is_enrolled?(user))
+      course_offering.is_enrolled?(user) && 
+      (!workout_policy.andand.no_review_before_close || now <= hard_deadline))
   end
 
   # ------------------------------------------------------------------

@@ -20,6 +20,7 @@
       = markdown @exercise_version.stem.preamble
     - prompt = @exercise_version.prompts.first.specific
     = markdown prompt.question
+    - allow_write = true
     - if prompt.is_mcq?
       - answer = Choice.new
       - if prompt.allow_multiple
@@ -48,27 +49,30 @@
               label: '&nbsp;'
     - elsif prompt.is_coding?
       - prior_answer = @attempt && @attempt.prompt_answers.where(prompt: prompt.acting_as).first
-      - read_only = false
       - if prior_answer && @workout_offering
-        - if @workout_offering.can_be_practiced_by?(current_user) == false
-          - read_only = true
-      = f.input :answer_code, as: :text, class: 'code',
+        - if !@workout_offering.can_be_practiced_by?(current_user)
+          - allow_write = false
+      - if allow_write     
+        = f.input :answer_code, as: :text, class: 'code',
         input_html: { lang: 'text/x-' + (@exercise.language || 'java').downcase, readonly: true, autofocus: true,
           value: prior_answer ? prior_answer.specific.answer : prompt.prepare_starter_code }
+      - else
+        %pre{ lang: 'text/x-java' }
+          = prior_answer ? prior_answer.specific.answer : prompt.prepare_starter_code
     .actions
       - if @workout_offering.nil? || @workout_offering.can_be_practiced_by?(current_user)
         - if @workout_offering.andand.workout_policy.andand.hide_feedback_before_finish
           = f.submit 'Save my answer!', class: 'btn btn-primary btn-submit', id: 'primarybtn'
-        - else
+        - elsif allow_write
           = f.submit 'Check my answer!', class: 'btn btn-primary btn-submit', id: 'primarybtn'
-        - if @workout_offering
-          = button_link 'Next exercise',
-            organization_workout_offering_practice_path(exercise_id: @workout.next_exercise(@exercise, current_user, nil),
-            organization_id: @workout_offering.course_offering.course.organization.slug,
-            course_id: @workout_offering.course_offering.course.slug,
-            term_id: @workout_offering.course_offering.term.slug,
-            id: @workout_offering.id),
-            class: 'btn btn-next', id: 'nextbtn'
+      - if @workout_offering
+        = button_link 'Next exercise',
+          organization_workout_offering_practice_path(exercise_id: @workout.next_exercise(@exercise, current_user, nil),
+          organization_id: @workout_offering.course_offering.course.organization.slug,
+          course_id: @workout_offering.course_offering.course.slug,
+          term_id: @workout_offering.course_offering.term.slug,
+          id: @workout_offering.id),
+          class: 'btn btn-next', id: 'nextbtn'
 
     - if session[:current_workout].nil?
       %br
