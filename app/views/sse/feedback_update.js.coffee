@@ -7,7 +7,7 @@ max_points = <%= JSON.generate  @max_points %>
 show_perfect = <%= JSON.generate @can_show_perfect %>
 
 console.log "IS CODING " + is_coding
-console.log "SHOW PERFECT? " + show_perfect
+console.log "PERFECT? " + show_perfect
 
 if attempt_score == max_points and is_coding and show_perfect
   console.log $("#nextbtn")

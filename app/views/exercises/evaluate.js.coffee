@@ -2,7 +2,6 @@ att_id = <%= JSON.generate @attempt.id %>
 user_id = <%= JSON.generate current_user.id %>
 is_coding = <%= JSON.generate @exercise.is_coding? %>
 is_perfect = <%= JSON.generate @is_perfect %>
-show_perfect = <%= JSON.generate @workout_offering.andand.show_feedback? %>
 $("#exercisefeedback").show()
 
 if is_coding
@@ -13,5 +12,3 @@ if is_coding
   ), 1500
 else
   $.ajax(url: "/sse/feedback_poll?att_id=#{att_id}")
-
-console.log "SHOW PERFECT " + show_perfect
