@@ -774,7 +774,7 @@ class ExercisesController < ApplicationController
       @workout_score = @workout.score_for(current_user)
     end
 
-    if @workout_score.andand.closed?
+    if @workout_score.andand.closed? && @workout_offering.andand.can_be_practiced_by?(current_user)
       p 'WARNING: attempt to evaluate exercise after time expired.'
       return
     end
@@ -813,7 +813,6 @@ class ExercisesController < ApplicationController
       @score = @exercise_version.score(@responses)
       if @workout
         @score = @score * @max_points / @exercise_version.max_mcq_score
-        @score = @score.round(2)
       end
       # TODO: Enable @explain and @exercise_feedback again
       #@explain = @exercise_version.collate_feedback(@responses)
@@ -852,40 +851,6 @@ class ExercisesController < ApplicationController
           'IMPROPER PROMPT'
       end
       @workout ||= @workout_score.andand.workout
-    end
-
-    if params[:wexes]
-      session[:remaining_wexes] = params[:wexes]
-      if params[:wexes][1..-1].count < 1
-        # @wexs set to EOL if it has reached the last exercise in the
-        # workout. Its is set to EOL instead of null to distinguish from
-        # the latter
-        @wexs = String.new('EOL')
-      else
-        @wexs = params[:wexes][1..-1]
-      end
-      # FIXME: Horrible multiple respond_to statement must be consolidated
-      if params[:feedback_return]
-        respond_to do |format|
-          format.js
-        end
-        # redirect_to exercise_practice_path(@exercise,
-        #   wexes: params[:wexes],
-        #   feedback_return: true,att_id: @att_id),
-        #   format: :js # and return
-      else
-        respond_to do |format|
-          format.js
-        end
-        # redirect_to exercise_practice_path(id: params[:wexes].first,
-        #   wexes: @wexs,att_id: attempt_id) and return
-      end
-    else
-      respond_to do |format|
-        format.js
-      end
-      #redirect_to exercise_practice_path(@exercise,
-      #  feedback_return: true,att_id: attempt_id) and return
     end
 
   end
