@@ -557,15 +557,12 @@ class ExercisesController < ApplicationController
       version = exercise['current_version']
       @ex.versions = version['version']
       @ex.save!
-
-
       @version = ExerciseVersion.new(exercise: @ex,creator_id:
                  User.find_by(email: version['creator']).andand.id,
                  exercise: @ex,
                  position:1)
       @version.save!
       version['prompts'].each do |prompt|
-        # FIXME: Need to incorporate mcqs too.
         prompt = prompt['coding_prompt']
         @prompt = CodingPrompt.new(exercise_version: @version)
         @prompt.question = prompt['question']
@@ -686,9 +683,6 @@ class ExercisesController < ApplicationController
       puts "\nMAX-POINTS", @max_points, "\nMAX-POINTS"
     end
     
-    @can_show_feedback = @workout_offering.andand.show_feedback?
-    puts "CAN SHOW?\n", @can_show_feedback, "\nCAN SHOW?"
-    session[:can_show_feedback] = @can_show_feedback 
     
     @responses = ['There are no responses yet!']
     @explain = ['There are no explanations yet!']
