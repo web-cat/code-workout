@@ -10,13 +10,13 @@
     - body << student.email
     - body << student.first_name   
     - body << student.last_name
-    - grand_total = 0.0
+    - grand_total = 0.00
     - CourseOffering.find(@course_offering.id).workouts.each do |wkt|
       - if WorkoutScore.find_by(user_id: ce.user_id, workout: wkt)
-        - tot = WorkoutScore.find_by!(user_id: ce.user_id, workout: wkt).score
+        - tot = WorkoutScore.find_by!(user_id: ce.user_id, workout: wkt).score.round(2)
         - body << tot
         - grand_total += tot
       - else
         - body << 'Not attempted'
-    - body << grand_total.to_s
+    - body << grand_total.round(2).to_s
     = CSV.generate_line body
