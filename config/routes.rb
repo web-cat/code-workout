@@ -39,7 +39,7 @@ CodeWorkout::Application.routes.draw do
 
   get '/request_extension' => 'workout_offerings#request_extension'
   post '/add_extension' => 'workout_offerings#add_extension'
-    
+
   # All of the routes anchored at /gym
   scope :gym do
     # The top-level gym route
@@ -91,7 +91,7 @@ CodeWorkout::Application.routes.draw do
     get ':id/edit' => 'courses#edit', as: :course_edit
     get ':course_id/:term_id/:id/practice(/:exercise_id)' =>
       'workout_offerings#practice',
-      as: :workout_offering_practice     
+      as: :workout_offering_practice
     get ':course_id/:term_id/:workout_offering_id/:id' => 'exercises#practice',
       as: :workout_offering_exercise
     patch ':course_id/:term_id/:workout_offering_id/:id' => 'exercises#evaluate',
@@ -102,10 +102,10 @@ CodeWorkout::Application.routes.draw do
     post ':id/:term_id/generate_gradebook/' => 'courses#generate_gradebook',
       as: :course_gradebook
     get ':id(/:term_id)' => 'courses#show', as: :course
-    
-    
+
+
   end
-  
+
 
   resources :course_offerings, only: [ :edit, :update ] do
     post 'enroll' => :enroll, as: :enroll
