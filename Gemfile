@@ -89,6 +89,9 @@ gem 'remotipart'      # Adds support for remote mulitpart forms (file uploads)
 gem 'gravtastic'      # For Gravatar integration
 gem 'js-routes'       # Route helpers in Javascript
 gem 'awesome_print'   # For debugging/logging output
+gem 'pry'             # For actual debugging
+gem 'pry-stack_explorer'
+gem 'pry-debugger'
 
 #gems for rich text editing
 gem 'bootstrap-wysihtml5-rails'
