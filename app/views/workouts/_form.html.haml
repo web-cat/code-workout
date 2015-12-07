@@ -5,13 +5,16 @@
     .col-md-10
       = f.input :name, maxlength: 50,
         placeholder: "Enter Workout name"
-  -#.row
-    -#.col-md-4
-      -#= f.input :exercises, :as => :select,
+  .row
+    .col-md-4
+      = f.input :exercises, :as => :select,
         collection: @exers,
         label: "Related Exercises"
   -#%a.btn.btn-large{href: "#kicModal", role: "button", data: {toggle: "modal"}} Add exercise    
-  = link_to_add_association 'Add Exercise', f, :exercise_workouts, role: "button", data: { target: "#kicModal"}, partial: 'exercise_workout_fields', force_non_association_create: true
+  = f.semantic_fields_for :exercise_workout do |ew|         
+    = render 'exercise_workout_fields', f: ew
+  .links
+    = link_to_add_association 'Add Exercise', f, :exercise_workouts
   #kicModal.modal.fade
     .modal-content
       .modal-header
@@ -32,13 +35,6 @@
     .links
       = link_to_add_association 'Add Workout to Course Offering', f,:workout_offerings    
       
-  .row
-    .col-md-4
-
-    .col-md-4
-      = f.input :target_group, as: :select,
-        collection: ['Public','Class','Group','Instructor'],
-        label: "Audience"
   .row
     .col-md-4
       = f.input :points_multiplier, as: :select,

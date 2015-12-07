@@ -2,10 +2,7 @@
 .nested-fields
   = f.inputs do
     .row.darker-bkg
-      .row
-        .col-md-3
-          = render partial: 'exercises/adder', collection: Exercise.limit(4), as: :x,
-    locals: { uid: nil, wid: nil }             
+      .row             
         .col-md-3
           - puts "EXERS",@exers,"EXERS"
           = f.input :exercise,
@@ -13,8 +10,8 @@
             placeholder: "Enter exercise id",
             input_html: { class: 'col-md-10', rows: 1 }
         -# TODO: Add back the ordering specification capabilities.    
-        -#.col-md-3
-          -#= f.input :ordering, as: :select,
+        .col-md-3
+          = f.input :position, as: :select,
             collection: (1..10).to_a,
             placeholder: "Exercise index",
             input_html: { class: 'col-md-10', rows: 1 }

@@ -102,38 +102,40 @@ class WorkoutsController < ApplicationController
     msg      = params[:workout]
     exercises = msg[:exercise_workouts_attributes]
     @workout.creator_id = current_user.id
-    exercises.each_with_index do |ex, index|
+    @workout.save!
+    exercise_one =  msg[:exercise_workout]
+    exercise_one_id = exercise_one[:exercise]
+    exercise = Exercise.find(exercise_one_id)
+    exercise_workout = ExerciseWorkout.new(workout: @workout, exercise: exercise)
+    exercise_workout.position = exercise_one[:position]
+    exercise_workout.points = exercise_one[:points]
+    exercise_workout.save!
+    
+    exercises.each do |ex|
       ex_id = ex.second[:exercise_id]
       exercise = Exercise.find(ex_id)
-      @workout.save!
-      #@workout.exercises<<exercise
-
-      #wek = @workout.exercise_workouts.find_by(exercise: exercise)
-      wek = ExerciseWorkout.new
-      wek.workout = @workout
-      wek.exercise = exercise
-      wek.order = index + 1
-      wek.points = ex.second[:points]
-      wek.save
+      exercise_workout = ExerciseWorkout.new(workout: @workout, exercise: exercise)
+      exercise_workout.position = ex.second[:position]
+      exercise_workout.points = ex.second[:points]
+      exercise_workout.save!
     end
 
     course_offerings = msg[:workout_offerings_attributes]
-    course_offerings.andand.each_with_index do |co, index|
-      co_id = co.second[:course_offering_id]
-      course_offering = CourseOffering.find(co_id)
-      @workout.course_offerings<<course_offering
-      @workout.save
-      wo = @workout.workout_offerings.find_by(course_offering_id: co_id)
-      wo.opening_date = Date.parse(co.second['opening_date(3i)'] +
-        '-' + co.second['opening_date(2i)'] +
-        '-' + co.second['opening_date(1i)'])
-      wo.soft_deadline = Date.parse(co.second['soft_deadline(3i)'] +
-        '-' + co.second['soft_deadline(2i)'] +
-        '-' + co.second['soft_deadline(1i)'])
-      wo.hard_deadline = Date.parse(co.second['hard_deadline(3i)'] +
-        '-' + co.second['hard_deadline(2i)']+
-        '-' + co.second['hard_deadline(1i)'])
-      wo.save
+    course_offerings.andand.each_with_index do |course_offering, index|
+      course_offering_id = course_offering.second[:course_offering_id]
+      courseoffering = CourseOffering.find(course_offering_id)
+      @workout.course_offerings<<courseoffering
+      workout_offering = @workout.workout_offerings.find_by(course_offering: courseoffering)
+      workout_offering.opening_date = Date.parse(course_offering.second['opening_date(3i)'] +
+        '-' + course_offering.second['opening_date(2i)'] +
+        '-' + course_offering.second['opening_date(1i)'])
+      workout_offering.soft_deadline = Date.parse(course_offering.second['soft_deadline(3i)'] +
+        '-' + course_offering.second['soft_deadline(2i)'] +
+        '-' + course_offering.second['soft_deadline(1i)'])
+      workout_offering.hard_deadline = Date.parse(course_offering.second['hard_deadline(3i)'] +
+        '-' + course_offering.second['hard_deadline(2i)']+
+        '-' + course_offering.second['hard_deadline(1i)'])
+      workout_offering.save!
     end
 
     if @workout.save
@@ -295,7 +297,7 @@ class WorkoutsController < ApplicationController
     # Only allow a trusted parameter "white list" through.
     def workout_params
       params.require(:workout).permit(:name, :scrambled, :exercise_ids,
-        :description, :target_group, :points_multiplier, :opening_date,
+        :description, :target_group, :points_multiplier, :opening_date, :exercise_workout,
         :exercise_workouts_attributes, :workout_offerings_attributes,
         :soft_deadline, :hard_deadline)
     end
