@@ -55,6 +55,8 @@ group :development, :test do
   # two gems do not support Ruby 2.0 yet :-(.
   # gem 'ruby-debug-base'
   # gem 'ruby-debug-ide'
+  gem 'pry'             # For actual debugging
+  # gem 'pry-debugger'  Not sure whether there is support for ruby 2.x
 end
 gem 'factory_girl_rails'
 gem 'log_file'
@@ -89,9 +91,6 @@ gem 'remotipart'      # Adds support for remote mulitpart forms (file uploads)
 gem 'gravtastic'      # For Gravatar integration
 gem 'js-routes'       # Route helpers in Javascript
 gem 'awesome_print'   # For debugging/logging output
-gem 'pry'             # For actual debugging
-gem 'pry-stack_explorer'
-gem 'pry-debugger'
 
 #gems for rich text editing
 gem 'bootstrap-wysihtml5-rails'
