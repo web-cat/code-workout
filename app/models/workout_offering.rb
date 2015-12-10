@@ -106,34 +106,40 @@ class WorkoutOffering < ActiveRecord::Base
     now = Time.zone.now
     course_offering.is_staff?(user) ||
     (((opening_date == nil) || (opening_date <= now)) &&
-      course_offering.is_enrolled?(user) && 
-      (!workout_policy.andand.no_review_before_close || now <= hard_deadline))
+      course_offering.is_enrolled?(user) &&
+      (!workout_policy.andand.no_review_before_close || now >= hard_deadline))
   end
 
   # ------------------------------------------------------------------
-  # A method to determine the latest deadline for a workout, 
-  # i.e. the date beyond which the workout is closed for all students 
-  # in the course. If there are no student extensions for a workout, 
-  # return the hard deadline. Else return the maximum deadline 
+  # A method to determine the latest deadline for a workout,
+  # i.e. the date beyond which the workout is closed for all students
+  # in the course. If there are no student extensions for a workout,
+  # return the hard deadline. Else return the maximum deadline
   # extension granted to a student enrolled in the course.
-  
+
   def ultimate_deadline
+    deadline = hard_deadline || soft_deadline
     if student_extensions.any?
-      return student_extensions.maximum(:hard_deadline) || 
+      ext_deadline = student_extensions.maximum(:hard_deadline) ||
         student_extensions.maximum(:soft_deadline)
-    else
-      return hard_deadline || soft_deadline;
+      if ext_deadline && (!deadline || ext_deadline > deadline)
+        deadline = ext_deadline
+      end
     end
+    deadline
   end
 
   # -------------------------------------------------------------------
   # Method suppplementary to the ultimate_deadline method
   # Returns a boolean indicating whether the workout is now shutdown
   # i.e. completely out of bounds for practice for all students
-  
+
   def shutdown?
     now = Time.zone.now
-    return (now > ultimate_deadline)
+    deadline = ultimate_deadline
+    x = deadline && now > ultimate_deadline
+    puts "\n\n\n\nshutdown? = #{x}\n#{caller}\n\n\n\n"
+    x
   end
 
   # -------------------------------------------------------------
@@ -155,7 +161,7 @@ class WorkoutOffering < ActiveRecord::Base
       (now <= deadline) &&
       course_offering.is_enrolled?(user))
   end
-  
+
   def show_feedback?
      workout_policy.andand.hide_feedback_before_finish ? false : true
   end

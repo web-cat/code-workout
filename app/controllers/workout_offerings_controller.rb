@@ -64,7 +64,10 @@ class WorkoutOfferingsController < ApplicationController
         end
         current_user.current_workout_score = @workout_score
         current_user.save!
-        if @workout_score.closed?
+        if @workout_score.andand.closed? &&
+          @workout_score.andand.workout_offering.andand.workout_policy.
+          andand.no_review_before_close &&
+          !@workout_score.andand.workout_offering.andand.shutdown?
           redirect_to organization_workout_offering_path(
             organization_id:
               @workout_offering.course_offering.course.organization.slug,
