@@ -1,4 +1,13 @@
 = render partial: 'layouts/breadcrumb'
+- binding.pry
+- if @user_time_limit && (@workout_score.created_at + @user_time_limit.minutes) - Time.zone.now > 0 
+  - user_deadline = @workout_score.created_at + @user_time_limit.minutes
+  - user_deadline = user_deadline.to_s
+  - user_deadline = user_deadline.split(" ")[0] + "T" + user_deadline.split(" ")[1]
+  = javascript_include_tag("timeout")
+- else
+  - user_deadline = "" 
+    
 .col-md-7
   = semantic_form_for @exercise_version,
     url: (@workout_offering ? organization_workout_offering_exercise_evaluate_path(id: @exercise_version.exercise.id,
@@ -11,11 +20,8 @@
     = f.semantic_errors
     %h1= @exercise.display_name
     - user_workout_score = @workout_score || WorkoutScore.find_by(workout: @workout, user: current_user)
-    - puts "USERWKTSCR", user_workout_score,"\nUSERWKTSCR"
-    - puts "USERWKTTime", user_workout_score.andand.time_remaining,"\nUSERWKTTIME"
-    - if user_workout_score.andand.time_remaining
-      = "You have #{n_to_s(user_workout_score.andand.time_remaining)} minutes remaining"
-    #countdown 
+    - if @user_time_limit 
+      #timer{style: "color: red", data: {deadline: user_deadline} } 
     - if @exercise_version.stem
       = markdown @exercise_version.stem.preamble
     - prompt = @exercise_version.prompts.first.specific
@@ -89,3 +95,4 @@
     #exercisefeedback
       = render partial: 'workout_scores/time_remaining',
         locals: { workout_score: @workout_score }
+   

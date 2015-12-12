@@ -634,6 +634,11 @@ class ExercisesController < ApplicationController
     if params[:workout_offering_id]
       @workout_offering =
         WorkoutOffering.find_by(id: params[:workout_offering_id])
+      if @workout_offering.time_limit_for(current_user)
+        @user_time_limit = @workout_offering.time_limit_for(current_user)
+      else
+        @user_time_limit = nil
+      end
     else
       @workout_offering = nil
     end
