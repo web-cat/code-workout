@@ -1,0 +1,17 @@
+$ ->
+	deadline = 0
+	$("#timer").html("WORLD WITHOUT END")
+	setInterval ->
+		now = new Date()
+		time_now = new Date(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds())
+		deadline = new Date($("#timer").data("deadline"))
+		remaining = (deadline - time_now) / 1000
+		remaining = Math.floor(remaining)
+		hours = parseInt( remaining / 3600 )
+		remaining = remaining - hours * 3600
+		minutes = parseInt( remaining / 60 )
+		remaining = remaining - minutes * 60
+		seconds = remaining
+		result = seconds
+		$("#timer").html("Time remaining - " + hours + ":" + minutes + ":" + result) if remaining > 0
+	, 1000

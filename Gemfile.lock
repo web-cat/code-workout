@@ -254,6 +254,10 @@ GEM
     polyamorous (1.1.0)
       activerecord (>= 3.0)
     power_assert (0.2.2)
+    pry (0.10.3)
+      coderay (~> 1.1.0)
+      method_source (~> 0.8.1)
+      slop (~> 3.4)
     puma (2.11.2)
       rack (>= 1.1, < 2.0)
     rabl (0.11.6)
@@ -415,6 +419,7 @@ DEPENDENCIES
   omniauth-cas
   omniauth-facebook
   omniauth-google-oauth2
+  pry
   puma
   rabl
   rails

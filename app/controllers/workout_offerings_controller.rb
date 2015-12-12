@@ -14,6 +14,20 @@ class WorkoutOfferingsController < ApplicationController
 
   def requestion_extension
   end
+  
+  # -------------------------------------------------------------
+  # Action for returning the deadline for a workout offering.
+  # To be used by ajax calls from exercise practice
+  def get_time_limit
+    workout_offering_id = params[:id]
+    workout_offering = WorkoutOffering.find(workout_offering_id)
+    
+    if request.xhr?
+        render :json => {
+                            :deadline => workout_offering.soft_deadline
+                        }
+     end
+  end
 
   # --------------------------------------------------------------
   # Controller action to add an extension for a workout offering

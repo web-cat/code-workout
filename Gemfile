@@ -55,10 +55,8 @@ group :development, :test do
   # two gems do not support Ruby 2.0 yet :-(.
   # gem 'ruby-debug-base'
   # gem 'ruby-debug-ide'
-
-  #gem 'pry'             # For actual debugging
-  #gem 'pry-stack_explorer'
-  #gem 'pry-debugger'
+  gem 'pry'             # For actual debugging
+  # gem 'pry-debugger'  Not sure whether there is support for ruby 2.x
 end
 gem 'factory_girl_rails'
 gem 'log_file'
