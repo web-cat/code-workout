@@ -667,7 +667,9 @@ class ExercisesController < ApplicationController
         (workout_score_id == nil)}.first
     end
     @workout ||= @workout_score.workout
-    if @workout_score.andand.closed?
+    if @workout_score.andand.closed? &&
+      @workout_offering.andand.workout_policy.andand.no_review_before_close &&
+      !@workout_offering.andand.shutdown?
       path = root_path
       if @workout_offering
         path = organization_workout_offering_path(
@@ -687,8 +689,8 @@ class ExercisesController < ApplicationController
         where(exercise: @exercise).first.points
       puts "\nMAX-POINTS", @max_points, "\nMAX-POINTS"
     end
-    
-    
+
+
     @responses = ['There are no responses yet!']
     @explain = ['There are no explanations yet!']
     if session[:leaf_exercises]
@@ -783,7 +785,7 @@ class ExercisesController < ApplicationController
       p 'WARNING: attempt to evaluate exercise after time expired.'
       return
     end
- 
+
     # Instance variables used evaluate.js
     @is_perfect = false
     @attempt = @exercise_version.new_attempt(
@@ -796,7 +798,7 @@ class ExercisesController < ApplicationController
       @max_points = @workout.exercise_workouts.
         where(exercise: @exercise).first.points
     else # case when exercise being practised is not part of any workout
-      @max_points = 10.0 
+      @max_points = 10.0
     end
     if @exercise_version.is_mcq?
       #response_ids = params[:exercise_version][:multiple_choice_prompt][:choice_ids]

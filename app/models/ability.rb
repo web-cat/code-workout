@@ -167,7 +167,21 @@ class Ability
 #          ((o.hard_deadline >= now) || (o.soft_deadline >= now)) &&
 #          o.course_offering.course_enrollments.where(user_id: user.id).any?
       end
-      can [:practice, :evaluate], Exercise do |e|
+      can :practice, Exercise do |e|
+        now = Time.now
+        e.is_public? || WorkoutOffering.
+          joins{workout.exercises}.joins{course_offering.course_enrollments}.
+          where{
+            ((starts_on == nil) | (starts_on <= now)) &
+            course_offering.course_enrollments.user_id == user.id
+             }.any?
+#        e.workouts.workout_offerings.where(
+#          '(starts_on is NULL or starts_on < :time) and ' \
+#          '(hard_deadline >= :time or soft_deadline >= :time)',
+#          { time: Time.now }).course_offering.course_enrollments.
+#          where(user: user)
+      end
+      can :evaluate, Exercise do |e|
         now = Time.now
         WorkoutOffering.
           joins{workout.exercises}.joins{course_offering.course_enrollments}.

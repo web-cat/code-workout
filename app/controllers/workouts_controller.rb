@@ -110,7 +110,7 @@ class WorkoutsController < ApplicationController
     exercise_workout.position = exercise_one[:position]
     exercise_workout.points = exercise_one[:points]
     exercise_workout.save!
-    
+
     exercises.each do |ex|
       ex_id = ex.second[:exercise_id]
       exercise = Exercise.find(ex_id)
@@ -244,7 +244,9 @@ class WorkoutsController < ApplicationController
   # -------------------------------------------------------------
   def practice
     @workout = Workout.find_by(id: params[:id])
+    puts "\n\n\n  spot 1"
     authorize! :practice, @workout
+    puts "\n\n\n  spot 2"
     if @workout
       if !user_signed_in?
         redirect_to workout_path(@workout),
@@ -268,7 +270,10 @@ class WorkoutsController < ApplicationController
         end
         current_user.current_workout_score = @workout_score
         current_user.save!
-        if @workout_score.closed?
+        if @workout_score.andand.closed? &&
+          @workout_score.andand.workout_offering.andand.workout_policy.
+          andand.no_review_before_close &&
+          !@workout_score.andand.workout_offering.andand.shutdown?
           redirect_to workout_path(@workout),
             notice: "The time limit has passed for this workout." and return
         end
