@@ -1,13 +1,13 @@
 = render partial: 'layouts/breadcrumb'
-- binding.pry
-- if @user_time_limit && (@workout_score.created_at + @user_time_limit.minutes) - Time.zone.now > 0 
+-# binding.pry
+- if @user_time_limit && (@workout_score.created_at + @user_time_limit.minutes) - Time.zone.now > 0
   - user_deadline = @workout_score.created_at + @user_time_limit.minutes
   - user_deadline = user_deadline.to_s
   - user_deadline = user_deadline.split(" ")[0] + "T" + user_deadline.split(" ")[1]
   = javascript_include_tag("timeout")
 - else
-  - user_deadline = "" 
-    
+  - user_deadline = ""
+
 .col-md-7
   = semantic_form_for @exercise_version,
     url: (@workout_offering ? organization_workout_offering_exercise_evaluate_path(id: @exercise_version.exercise.id,
@@ -20,8 +20,8 @@
     = f.semantic_errors
     %h1= @exercise.display_name
     - user_workout_score = @workout_score || WorkoutScore.find_by(workout: @workout, user: current_user)
-    - if @user_time_limit 
-      #timer{style: "color: red", data: {deadline: user_deadline} } 
+    - if @user_time_limit
+      #timer{style: "color: red", data: {deadline: user_deadline} }
     - if @exercise_version.stem
       = markdown @exercise_version.stem.preamble
     - prompt = @exercise_version.prompts.first.specific
@@ -58,7 +58,7 @@
       - if prior_answer && @workout_offering
         - if !@workout_offering.can_be_practiced_by?(current_user)
           - allow_write = false
-      - if allow_write     
+      - if allow_write
         = f.input :answer_code, as: :text, class: 'code',
         input_html: { lang: 'text/x-' + (@exercise.language || 'java').downcase, readonly: true, autofocus: true,
           value: prior_answer ? prior_answer.specific.answer : prompt.prepare_starter_code }
@@ -95,4 +95,3 @@
     #exercisefeedback
       = render partial: 'workout_scores/time_remaining',
         locals: { workout_score: @workout_score }
-   
