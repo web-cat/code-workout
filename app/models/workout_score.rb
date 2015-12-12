@@ -185,21 +185,24 @@ class WorkoutScore < ActiveRecord::Base
     self.save!
   end
 
+
   # ------------------------------------------------------------
   # Class method to fix all workout scores using round(2) on the
   # score obtained from Attempt using active score.
   def self.score_fix
     WorkoutScore.all.each do |ws|
       sum = 0.0
-      Attempt.where(active_score: ws).each do |att|
+      ws.scored_attempts.each do |att|
         sum += att.score
       end
-      ws.score = sum
-      ws.score = ws.score.round(2)
-      ws.save!
+      ws.score = sum.round(2)
+      if !ws.save
+        puts "cannot save ws = #{ws.inspect}"
+      end
     end
   end
-  
+
+
   # -------------------------------------------------------------
   # (Final) The refactored method to record the workout score
   # when a workout's exercise has been attempted
