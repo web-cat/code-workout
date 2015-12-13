@@ -650,14 +650,14 @@ class ExercisesController < ApplicationController
     end
 
     if @exercise_version.is_mcq?
-      if Attempt.find_by(user: current_user, exercise_version: @exercise_version)
-        flash.notice = "You can't re-attempt MCQs"
-        redirect_to organization_workout_offering_practice_path(exercise_id: Exercise.find(3),
-           organization_id: @workout_offering.course_offering.course.organization.slug,
-           course_id: @workout_offering.course_offering.course.slug,
-           term_id: @workout_offering.course_offering.term.slug,
-           id: @workout_offering.id) and return
-      end
+#      if Attempt.find_by(user: current_user, exercise_version: @exercise_version)
+#        flash.notice = "You can't re-attempt MCQs"
+#        redirect_to organization_workout_offering_practice_path(exercise_id: Exercise.find(3),
+#           organization_id: @workout_offering.course_offering.course.organization.slug,
+#           course_id: @workout_offering.course_offering.course.slug,
+#           term_id: @workout_offering.course_offering.term.slug,
+#           id: @workout_offering.id) and return
+#      end
       @answers = @exercise_version.serve_choice_array
       @answers.each do |a|
         a[:answer] = markdown(a[:answer])
