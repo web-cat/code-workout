@@ -16,7 +16,6 @@ CodeWorkout::Application.routes.draw do
   get 'static_pages/mockup3'
   get 'static_pages/typography'
   get 'static_pages/thumbnails'
-  get '/workout_offering_time_limit/:id' => 'workout_offerings#get_time_limit'
   # routes anchored at /admin
   # First, we have to override some of the ActiveAdmin auto-generated
   # routes, since our user ids and file ids use restricted characters
