@@ -19,4 +19,4 @@
       - else
         - body << 'Not attempted'
     - body << grand_total.round(2).to_s
-    = CSV.generate_line body
+    = CSV.generate_line body.strip()
