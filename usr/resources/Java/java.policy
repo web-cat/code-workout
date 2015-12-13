@@ -20,6 +20,7 @@ grant codeBase "file:${resource_dir}/-" {
 
 grant {
     // Local file access permissions
+    permission java.io.FilePermission "${resource_dir}${/}-", "read";
     permission java.io.FilePermission "${work_dir}", "read,write";
     permission java.io.FilePermission
       "${work_dir}${/}-", "read,write,delete";

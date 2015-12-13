@@ -2,6 +2,13 @@ var codemirror;
 $(function() {
   $("pre").each(function() {
     var codeNode = this;
+    if ($(codeNode).data('lang') === 'plain'
+        || $(codeNode).data('lang') === 'text'
+        || $(codeNode).hasClass('example')
+        || $(codeNode).hasClass('examples'))
+    {
+        return; // do nothing
+    }
     var body = codeNode.innerText || codeNode.textContent;
     if (body != null) { body = body.replace(/(\r?\n|\r)\s*$/, ''); }
     CodeMirror(function(newEditor) {

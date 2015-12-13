@@ -64,6 +64,31 @@
             - else
               %td.fail
                 %i.fa.fa-minus-square
+  - else
+    - examples = @exercise_version.prompts.first.specific.examples
+    - if examples.any?
+      %table.table.table-striped.feedback
+        %thead
+          %tr
+            %th Example
+            %th Result
+        %tbody
+          - answer.test_case_results(true).each do |tcr|
+            - if tcr.test_case.is_example?
+              %tr
+                %td
+                  - description = tcr.display_description
+                  = description
+                  - if !tcr.pass
+                    - if !description.blank? && !description.include?('hidden')
+                      %br
+                      .out= tcr.execution_feedback
+                - if tcr.pass
+                  %td.pass
+                    %i.fa.fa-check-square
+                - else
+                  %td.fail
+                    %i.fa.fa-minus-square
 
 -# if session[:current_workout]
   - wkt = Workout.find(session[:current_workout])

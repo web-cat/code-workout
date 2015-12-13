@@ -45,8 +45,17 @@ class TestCase < ActiveRecord::Base
   #~ Instance methods .........................................................
 
   # -------------------------------------------------------------
+  def is_example?
+    return !self.description.blank? && self.description == 'example'
+  end
+
+
+  # -------------------------------------------------------------
   def display_description(pass = true)
     result = self.description
+    if result == 'example'
+      result = ''
+    end
     if result.blank?
       inp = self.input
       if !inp.blank?
@@ -123,8 +132,9 @@ class TestCase < ActiveRecord::Base
       input: self.input,
       expected_output: self.expected_output,
       negative_feedback: self.negative_feedback,
-      array: (self.expected_output.start_with?('new ') &&
-        self.expected_output.include?('[]')) ? 'Array' : ''
+      array: ((self.expected_output.start_with?('new ') &&
+        self.expected_output.include?('[]')) ||
+        self.expected_output.start_with?('array(')) ? 'Array' : ''
     }
   end
 
@@ -158,7 +168,7 @@ PYTHON_TEST
     @Test
     public void test%{id}()
     {
-        assert%{array}Equals(
+        assertEquals(
           "%{negative_feedback}",
           %{expected_output},
           subject.%{method_name}(%{input}));

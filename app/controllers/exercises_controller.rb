@@ -593,6 +593,12 @@ class ExercisesController < ApplicationController
         puts 'cannot save exercise, name = ' + e.name.to_s +
           ', external_id = ' + e.external_id.to_s + ': ' +
           e.errors.full_messages.to_s
+        if e.current_version
+          puts "    #{e.current_version.errors.full_messages.to_s}"
+          if e.current_version.prompts.any?
+            puts "    #{e.current_version.prompts.first.errors.full_messages.to_s}"
+          end
+        end
       end
     end
 
@@ -651,7 +657,7 @@ class ExercisesController < ApplicationController
            course_id: @workout_offering.course_offering.course.slug,
            term_id: @workout_offering.course_offering.term.slug,
            id: @workout_offering.id) and return
-      end 
+      end
       @answers = @exercise_version.serve_choice_array
       @answers.each do |a|
         a[:answer] = markdown(a[:answer])
@@ -787,18 +793,18 @@ class ExercisesController < ApplicationController
     elsif @workout
       @workout_score = @workout.score_for(current_user)
     end
-    
+
     if @workout_score.andand.closed? && @workout_offering.andand.can_be_practiced_by?(current_user)
       p 'WARNING: attempt to evaluate exercise after time expired.'
       return
     end
-    
+
     # Instance variables used evaluate.js
     @is_perfect = false
     @attempt = @exercise_version.new_attempt(
       user: current_user, workout_score: @workout_score)
     @attempt.save!
-    
+
     # FIXME: Need to make it work for multiple prompts
     prompt = @exercise_version.prompts.first.specific
     prompt_answer = @attempt.prompt_answers.first  # already specific here
@@ -852,12 +858,16 @@ class ExercisesController < ApplicationController
         !@workout_score.andand.show_feedback?
         @is_perfect = true
       end
-      flash.notice = "Your previous question's answer choice has been saved and scored"
-      render :js => "window.location = '" + organization_workout_offering_practice_path(exercise_id: Exercise.find(3),
+      if @is_perfect && @workout_score.andand.workout
+        flash.notice = "Your previous question's answer choice has been saved and scored"
+        render :js => "window.location = '" +
+          organization_workout_offering_practice_path(
+          exercise_id: @workout_score.workout.next_exercise(@exercise, current_user, nil),
           organization_id: @workout_offering.course_offering.course.organization.slug,
           course_id: @workout_offering.course_offering.course.slug,
           term_id: @workout_offering.course_offering.term.slug,
           id: @workout_offering.id) + "' "
+      end
     elsif @exercise_version.is_coding?
       prompt_answer.answer = params[:exercise_version][:answer_code]
       if prompt_answer.save

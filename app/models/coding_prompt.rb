@@ -61,6 +61,10 @@ class CodingPrompt < ActiveRecord::Base
   end
 
 
+  def examples
+    test_cases.select{ |tc| tc.is_example? }
+  end
+
   # -------------------------------------------------------------
   def new_answer(args)
     CodingPromptAnswer.new()

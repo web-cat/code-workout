@@ -104,10 +104,14 @@ class WorkoutOffering < ActiveRecord::Base
   # -------------------------------------------------------------
   def can_be_seen_by?(user)
     now = Time.zone.now
+    uscore = score_for(user)
     course_offering.is_staff?(user) ||
-    (((opening_date == nil) || (opening_date <= now)) &&
+      (((opening_date == nil) || (opening_date <= now)) &&
       course_offering.is_enrolled?(user) &&
-      (!workout_policy.andand.no_review_before_close || now >= hard_deadline))
+      (uscore == nil ||
+      !uscore.closed? ||
+      !workout_policy.andand.no_review_before_close ||
+      now >= hard_deadline_for(user)))
   end
 
   # ------------------------------------------------------------------
