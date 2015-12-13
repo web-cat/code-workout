@@ -1,5 +1,4 @@
 = render partial: 'layouts/breadcrumb'
-- binding.pry
 - if @user_time_limit && (@workout_score.created_at + @user_time_limit.minutes) - Time.zone.now > 0 
   - user_deadline = @workout_score.created_at + @user_time_limit.minutes
   - user_deadline = user_deadline.to_s
