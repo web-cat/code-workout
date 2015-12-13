@@ -55,8 +55,7 @@ group :development, :test do
   # two gems do not support Ruby 2.0 yet :-(.
   # gem 'ruby-debug-base'
   # gem 'ruby-debug-ide'
-  gem 'pry'             # For actual debugging
-  # gem 'pry-debugger'  Not sure whether there is support for ruby 2.x
+  gem 'pry'
 end
 gem 'factory_girl_rails'
 gem 'log_file'
@@ -111,3 +110,4 @@ gem 'capistrano-rails'
 
 #for multi-color progress bar
 gem 'css3-progress-bar-rails'
+
