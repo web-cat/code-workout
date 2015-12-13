@@ -2,7 +2,7 @@
 - @course_offering.workouts.each do |wkt|
   - headers<<wkt.name
 - headers<<'Total'
-= CSV.generate_line headers
+= CSV.generate_line(headers).strip()
 - CourseEnrollment.where(course_offering_id: @course_offering.id).each do |ce|
   - body = Array.new
   - if ce.course_role_id == CourseRole.find_by(name: 'Student').id
@@ -19,4 +19,4 @@
       - else
         - body << 'Not attempted'
     - body << grand_total.round(2).to_s
-    = CSV.generate_line body.strip()
+    = CSV.generate_line(body).strip()
