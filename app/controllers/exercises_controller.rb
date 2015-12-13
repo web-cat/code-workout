@@ -644,6 +644,14 @@ class ExercisesController < ApplicationController
     end
 
     if @exercise_version.is_mcq?
+      if Attempt.find_by(user: current_user, exercise_version: @exercise_version)
+        flash.notice = "You can't re-attempt MCQs"
+        redirect_to organization_workout_offering_practice_path(exercise_id: Exercise.find(3),
+           organization_id: @workout_offering.course_offering.course.organization.slug,
+           course_id: @workout_offering.course_offering.course.slug,
+           term_id: @workout_offering.course_offering.term.slug,
+           id: @workout_offering.id) and return
+      end 
       @answers = @exercise_version.serve_choice_array
       @answers.each do |a|
         a[:answer] = markdown(a[:answer])
@@ -745,7 +753,6 @@ class ExercisesController < ApplicationController
 
     # Tighter restrictions for the moment, should go away
     authorize! :practice, @exercise
-
     @workout = nil
     @workout_offering = nil
     if params[:workout_offering_id]
@@ -780,17 +787,18 @@ class ExercisesController < ApplicationController
     elsif @workout
       @workout_score = @workout.score_for(current_user)
     end
-
+    
     if @workout_score.andand.closed? && @workout_offering.andand.can_be_practiced_by?(current_user)
       p 'WARNING: attempt to evaluate exercise after time expired.'
       return
     end
-
+    
     # Instance variables used evaluate.js
     @is_perfect = false
     @attempt = @exercise_version.new_attempt(
       user: current_user, workout_score: @workout_score)
-    @attempt.save
+    @attempt.save!
+    
     # FIXME: Need to make it work for multiple prompts
     prompt = @exercise_version.prompts.first.specific
     prompt_answer = @attempt.prompt_answers.first  # already specific here
@@ -844,7 +852,12 @@ class ExercisesController < ApplicationController
         !@workout_score.andand.show_feedback?
         @is_perfect = true
       end
-
+      flash.notice = "Your previous question's answer choice has been saved and scored"
+      render :js => "window.location = '" + organization_workout_offering_practice_path(exercise_id: Exercise.find(3),
+          organization_id: @workout_offering.course_offering.course.organization.slug,
+          course_id: @workout_offering.course_offering.course.slug,
+          term_id: @workout_offering.course_offering.term.slug,
+          id: @workout_offering.id) + "' "
     elsif @exercise_version.is_coding?
       prompt_answer.answer = params[:exercise_version][:answer_code]
       if prompt_answer.save
