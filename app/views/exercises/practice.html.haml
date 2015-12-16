@@ -5,7 +5,7 @@
   - user_deadline = user_deadline.split(" ")[0] + "T" + user_deadline.split(" ")[1]
   = javascript_include_tag("timeout")
 - else
-  - user_deadline = ""
+  - user_deadline = " "
 
 .col-md-7
   = semantic_form_for @exercise_version,

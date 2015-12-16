@@ -19,7 +19,8 @@
 
 # This require is to prevent autoload circular dependencies, since
 # TestCaseResult is used in one of the methods.
-require 'test_case_result'
+
+ require 'test_case_result'
 
 
 # =============================================================================

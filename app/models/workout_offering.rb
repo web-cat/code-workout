@@ -102,6 +102,7 @@ class WorkoutOffering < ActiveRecord::Base
   end
 
   # -------------------------------------------------------------
+  # Indicates whether an user can access a workout in an offering
   def can_be_seen_by?(user)
     now = Time.zone.now
     uscore = score_for(user)

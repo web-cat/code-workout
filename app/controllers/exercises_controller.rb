@@ -650,16 +650,6 @@ class ExercisesController < ApplicationController
     end
 
     if @exercise_version.is_mcq?
-<<<<<<< HEAD
-#      if Attempt.find_by(user: current_user, exercise_version: @exercise_version)
-#        flash.notice = "You can't re-attempt MCQs"
-#        redirect_to organization_workout_offering_practice_path(exercise_id: Exercise.find(3),
-#           organization_id: @workout_offering.course_offering.course.organization.slug,
-#           course_id: @workout_offering.course_offering.course.slug,
-#           term_id: @workout_offering.course_offering.term.slug,
-#           id: @workout_offering.id) and return
-#      end
-=======
       if Attempt.find_by(user: current_user, exercise_version: @exercise_version)
         flash.notice = "You can't re-attempt MCQs"
         redirect_to organization_workout_offering_practice_path(exercise_id: Exercise.find(3),
@@ -667,8 +657,7 @@ class ExercisesController < ApplicationController
            course_id: @workout_offering.course_offering.course.slug,
            term_id: @workout_offering.course_offering.term.slug,
            id: @workout_offering.id) and return
-      end 
->>>>>>> 444518aa08622b5d4565b4be7a0e32c01174aec9
+      end
       @answers = @exercise_version.serve_choice_array
       @answers.each do |a|
         a[:answer] = markdown(a[:answer])
@@ -804,30 +793,15 @@ class ExercisesController < ApplicationController
     elsif @workout
       @workout_score = @workout.score_for(current_user)
     end
-<<<<<<< HEAD
-
-=======
-    
->>>>>>> 444518aa08622b5d4565b4be7a0e32c01174aec9
     if @workout_score.andand.closed? && @workout_offering.andand.can_be_practiced_by?(current_user)
       p 'WARNING: attempt to evaluate exercise after time expired.'
       return
     end
-<<<<<<< HEAD
-
-=======
-    
->>>>>>> 444518aa08622b5d4565b4be7a0e32c01174aec9
     # Instance variables used evaluate.js
     @is_perfect = false
     @attempt = @exercise_version.new_attempt(
       user: current_user, workout_score: @workout_score)
     @attempt.save!
-<<<<<<< HEAD
-
-=======
-    
->>>>>>> 444518aa08622b5d4565b4be7a0e32c01174aec9
     # FIXME: Need to make it work for multiple prompts
     prompt = @exercise_version.prompts.first.specific
     prompt_answer = @attempt.prompt_answers.first  # already specific here
@@ -838,7 +812,14 @@ class ExercisesController < ApplicationController
       @max_points = 10.0
     end
     if @exercise_version.is_mcq?
-      #response_ids = params[:exercise_version][:multiple_choice_prompt][:choice_ids]
+      if Attempt.find_by(user: current_user, exercise_version: @exercise_version)
+        flash.notice = "You can't re-attempt MCQs"
+        redirect_to organization_workout_offering_practice_path(exercise_id: Exercise.find(3),
+           organization_id: @workout_offering.course_offering.course.organization.slug,
+           course_id: @workout_offering.course_offering.course.slug,
+           term_id: @workout_offering.course_offering.term.slug,
+           id: @workout_offering.id) and return
+      end
       response_ids = params[:exercise_version][:choice][:id]
       p params
       @responses = Array.new

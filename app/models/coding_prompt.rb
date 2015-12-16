@@ -149,7 +149,8 @@ class CodingPrompt < ActiveRecord::Base
         end
       end
 
-      # TODO: Generate the test case class in code form here
+
+       # TODO: Generate the test case class in code form here
     end
   end
 

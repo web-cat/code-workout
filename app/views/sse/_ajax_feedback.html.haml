@@ -90,14 +90,5 @@
                   %td.fail
                     %i.fa.fa-minus-square
 
--# if session[:current_workout]
-  - wkt = Workout.find(session[:current_workout])
-  - if wkt.next_exercise(@exercise,current_user).nil?
-    = link_to 'Finish workout',
-      workout_evaluate_path(id: session[:current_workout])
-  - else
-    = link_to 'Next question',
-      exercise_practice_path(wkt.next_exercise(@exercise,current_user)),
-      method: :get
 = render partial: 'workout_scores/time_remaining',
   locals: { workout_score: @attempt.workout_score }
