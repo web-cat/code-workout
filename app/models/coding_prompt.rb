@@ -60,7 +60,6 @@ class CodingPrompt < ActiveRecord::Base
     true
   end
 
-
   def examples
     test_cases.select{ |tc| tc.is_example? }
   end

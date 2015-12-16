@@ -132,9 +132,14 @@ class TestCase < ActiveRecord::Base
       input: self.input,
       expected_output: self.expected_output,
       negative_feedback: self.negative_feedback,
+<<<<<<< HEAD
       array: ((self.expected_output.start_with?('new ') &&
         self.expected_output.include?('[]')) ||
         self.expected_output.start_with?('array(')) ? 'Array' : ''
+=======
+      array: (self.expected_output.start_with?('new ') &&
+        self.expected_output.include?('[]')) ? 'Array' : ''
+>>>>>>> 444518aa08622b5d4565b4be7a0e32c01174aec9
     }
   end
 
@@ -168,7 +173,11 @@ PYTHON_TEST
     @Test
     public void test%{id}()
     {
+<<<<<<< HEAD
         assertEquals(
+=======
+        assert%{array}Equals(
+>>>>>>> 444518aa08622b5d4565b4be7a0e32c01174aec9
           "%{negative_feedback}",
           %{expected_output},
           subject.%{method_name}(%{input}));
