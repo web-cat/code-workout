@@ -862,24 +862,16 @@ class ExercisesController < ApplicationController
         !@workout_score.andand.show_feedback?
         @is_perfect = true
       end
-<<<<<<< HEAD
       if @is_perfect && @workout_score.andand.workout
         flash.notice = "Your previous question's answer choice has been saved and scored"
         render :js => "window.location = '" +
           organization_workout_offering_practice_path(
           exercise_id: @workout_score.workout.next_exercise(@exercise, current_user, nil),
-=======
-      flash.notice = "Your previous question's answer choice has been saved and scored"
-      render :js => "window.location = '" + organization_workout_offering_practice_path(exercise_id: Exercise.find(3),
->>>>>>> 444518aa08622b5d4565b4be7a0e32c01174aec9
           organization_id: @workout_offering.course_offering.course.organization.slug,
           course_id: @workout_offering.course_offering.course.slug,
           term_id: @workout_offering.course_offering.term.slug,
           id: @workout_offering.id) + "' "
-<<<<<<< HEAD
       end
-=======
->>>>>>> 444518aa08622b5d4565b4be7a0e32c01174aec9
     elsif @exercise_version.is_coding?
       prompt_answer.answer = params[:exercise_version][:answer_code]
       if prompt_answer.save
