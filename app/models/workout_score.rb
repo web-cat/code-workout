@@ -97,7 +97,7 @@ class WorkoutScore < ActiveRecord::Base
   # -------------------------------------------------------------
   def time_remaining
     minutes_open = (Time.zone.now - self.created_at)/60.0
-    time_limit = workout_offering.time_limit_for(user)
+    time_limit = workout_offering.andand.time_limit_for(user)
 
     if time_limit.nil?
       nil
