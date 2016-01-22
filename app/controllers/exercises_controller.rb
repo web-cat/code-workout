@@ -303,219 +303,14 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # POST exercises/create_mcqs
   def create_mcqs
-    basex = BaseExercise.new
-    basex.user = current_user
-    basex.question_type = msg[:question_type] || 1
-    basex.versions = 1
-    csvfile = params[:form]
-    puts csvfile.fetch(:xmlfile).path
-    CSV.foreach(csvfile.fetch(:xmlfile).path) do |question|
-      if $INPUT_LINE_NUMBER > 1
-        name_ex = question[1]
-        # priority_ex=question[2]
-        question_ex = question[3][3..-5]
-
-        if !question[15].nil? && question[15].include?('p')
-          gradertext_ex = question[15][3..-5]
-        else
-          gradertext_ex = ''
-        end
-
-        if !question[5].nil? &&
-          !question[6].nil? &&
-          !question[5][3..-5].nil? &&
-          !question[6][3..-5].nil?
-
-          ex = Exercise.new
-          ex.name = name_ex
-          ex.question = question_ex
-          ex.feedback = gradertext_ex
-          ex.is_public = true
-          ex.creator_id = current_user.id
-          # if msg[:is_public] == 0
-            # ex.is_public = false
-          # end
-
-          ex.mcq_allow_multiple = true
-
-          # if msg[:mcq_allow_multiple].nil?
-            # ex.mcq_allow_multiple = false
-          # end
-
-          ex.mcq_is_scrambled = true
-          # if msg[:mcq_is_scrambled].nil?
-            # ex.mcq_is_scrambled = false
-          # end
-          ex.priority = 1
-          # TODO: Get the count of attempts from the session
-          ex.count_attempts = 5
-          ex.count_correct = 1
-          ex.user = current_user
-          ex.experience = 10
-
-          # default IRT statistics
-          ex.difficulty = 0
-          ex.discrimination = 0
-
-          ex.version = 1
-          basex.exercises << ex
-          ex.save!
-          basex.current_version = ex
-          basex.save
-
-          #   i = 0
-          #  right = 0.0
-          # total = 0.0
-          alphanum = {
-            'A' => 1, 'B' => 2, 'C' => 3, 'D' => 4, 'E' => 5,
-            'F' => 6, 'G' => 7, 'H' => 8, 'I' => 9, 'J' => 10 }
-          choices = []
-          choice1 = question[5][3..-5]
-          choices << choice1
-          choice2 = question[6][3..-5]
-          choices << choice2
-          if !question[7].nil? && question[7].include?('p')
-            choice3 = question[7][3..-5]
-            choices << choice3
-          end
-          if !question[8].nil? && question[8].include?('p')
-            choice4 = question[8][3..-5]
-            choices << choice4
-          end
-          if !question[9].nil? && question[9].include?('p')
-            choice5 = question[9][3..-5]
-            choices << choice5
-          end
-          if !question[10].nil? && question[10].include?('p')
-            choice6 = question[10][3..-5]
-            choices << choice6
-          end
-          if !question[11].nil? && question[11].include?('p')
-            choice7 = question[11][3..-5]
-            choices << choice7
-          end
-          if !question[12].nil? && question[12].include?('p')
-            choice8 = question[12][3..-5]
-            choices << choice8
-          end
-          if !question[13].nil? && question[13].include?('p')
-            choice9 = question[13][3..-5]
-            choices << choice9
-          end
-          if !question[14].nil? && question[14].include?('p')
-            choice10 = question[14][3..-5]
-            choices << choice10
-          end
-
-          if question[5] && question[6] &&
-            question[5][3..-5] && question[6][3..-5]
-            ex = Exercise.new
-            ex.name = name_ex
-            ex.question = question_ex
-            ex.feedback = gradertext_ex
-            ex.is_public = true
-
-            # if msg[:is_public] == 0
-            #   ex.is_public = false
-            # end
-
-            ex.mcq_allow_multiple = true
-
-            # if msg[:mcq_allow_multiple].nil?
-            #   ex.mcq_allow_multiple = false
-            # end
-
-            ex.mcq_is_scrambled = true
-            # if msg[:mcq_is_scrambled].nil?
-            #   ex.mcq_is_scrambled = false
-            # end
-            ex.priority = 1
-            # TODO: Get the count of attempts from the session
-            ex.count_attempts = 5
-            ex.count_correct = 1
-
-            ex.user = current_user
-            ex.experience = 10
-
-            # default IRT statistics
-            ex.difficulty = 0
-            ex.discrimination = 0
-            ex.version = 1
-            basex.exercises << ex
-            ex.save!
-            basex.current_version = ex
-            basex.save
-
-            #   i = 0
-            #  right = 0.0
-            # total = 0.0
-            alphanum = {
-              'A' => 1, 'B' => 2, 'C' => 3, 'D' => 4, 'E' => 5,
-              'F' => 6, 'G' => 7, 'H' => 8, 'I' => 9, 'J' => 10 }
-            choices = []
-            choice1 = question[5][3..-5]
-            choices << choice1
-            choice2 = question[6][3..-5]
-            choices << choice2
-            if question[7] && question[7].include?('p')
-              choice3 = question[7][3..-5]
-              choices << choice3
-            end
-            if question[8] && question[8].include?('p')
-              choice4 = question[8][3..-5]
-              choices << choice4
-            end
-            if question[9] && question[9].include?('p')
-              choice5 = question[9][3..-5]
-              choices << choice5
-            end
-            if question[10] && question[10].include?('p')
-              choice6 = question[10][3..-5]
-              choices << choice6
-            end
-            if question[11] && question[11].include?('p')
-              choice7 = question[11][3..-5]
-              choices << choice7
-            end
-            if question[12] && question[12].include?('p')
-              choice8 = question[12][3..-5]
-              choices << choice8
-            end
-            if question[13] && question[13].include?('p')
-              choice9 = question[13][3..-5]
-              choices << choice9
-            end
-            if question[14] && question[14].include?('p')
-              choice10 = question[14][3..-5]
-              choices << choice10
-            end
-            cnt = 0
-            choices.each do |choiceitem|
-              ch = Choice.create
-              ch.answer = choiceitem
-              cnt += 1
-              if alphanum[question[5]] == cnt
-                ch.value = 1
-              else
-                ch.value = -1
-              end
-
-              ch.feedback = gradertext_ex
-              ch.order = cnt
-              ex.choices << ch
-              # ch.exercise << @exercise
-              ch.save!
-            end
-
-          else
-            puts 'INVALID Question'
-            puts 'INVALID choice', choice1
-            puts 'INVALID choice', choice2
-          end
-        end # IF Valid fields
-      end # IF 1
-      redirect_to exercises_url, notice: 'Uploaded!'
-    end # CSV do
+    CSV.foreach(params[:form].fetch(:mcqfile).path, {headers: true}) do |row|
+      if row['Question'].include?('Python')
+        next
+      end
+      exercise = Exercise.new(external_id: row['ID'])
+      exercise.is_public = false
+      exercise.language = ''
+    end
   end# def
 
 
@@ -629,58 +424,41 @@ class ExercisesController < ApplicationController
       redirect_to exercises_url,
         notice: 'Choose an exercise to practice!' and return
     end
-
     # Tighter restrictions for the moment, should go away
     authorize! :practice, @exercise
-
-    if session[:current_workout]
-      @workout = Workout.find(session[:current_workout])
-    end
+    
+    student_user = params[:review_user_id] ? User.find(params[:review_user_id]) : current_user
 
     if params[:workout_offering_id]
       @workout_offering =
         WorkoutOffering.find_by(id: params[:workout_offering_id])
-      if @workout_offering.time_limit_for(current_user)
-        @user_time_limit = @workout_offering.time_limit_for(current_user)
+      @workout = @workout_offering.workout
+      if @workout_offering.time_limit_for(student_user)
+        @user_time_limit = @workout_offering.time_limit_for(student_user)
       else
         @user_time_limit = nil
       end
     else
       @workout_offering = nil
+      if params[:workout_id]
+        @workout = Workout.find(params[:workout_id])
+      end
     end
 
-    if @exercise_version.is_mcq?
-      if Attempt.find_by(user: current_user, exercise_version: @exercise_version)
-        flash.notice = "You can't re-attempt MCQs"
-        redirect_to organization_workout_offering_practice_path(exercise_id: Exercise.find(3),
-           organization_id: @workout_offering.course_offering.course.organization.slug,
-           course_id: @workout_offering.course_offering.course.slug,
-           term_id: @workout_offering.course_offering.term.slug,
-           id: @workout_offering.id) and return
-      end
-      @answers = @exercise_version.serve_choice_array
-      @answers.each do |a|
-        a[:answer] = markdown(a[:answer])
-      end
-    end
     @attempt = nil
-    @workout_score = current_user.current_workout_score
+    @workout_score = @workout_offering ? student_user.current_workout_score : 
+      @workout ? @workout.score_for(student_user, @workout_offering) : nil
     if @workout_offering &&
       @workout_score.workout_offering != @workout_offering
       @workout_score = nil
     end
     if @workout_offering && !@workout_score
-      @workout_score = @workout_offering.score_for(current_user)
+      @workout_score = @workout_offering.score_for(student_user)
     end
     if @workout_score
       @attempt = @workout_score.attempt_for(@exercise_version.exercise)
-    else
-      @attempt = Attempt.joins{exercise_version}.
-        where{(user_id == current_user.id) &
-        (exercise_version.exercise_id == @exercise_version.exercise.id) &
-        (workout_score_id == nil)}.first
     end
-    @workout ||= @workout_score.workout
+    @workout ||= @workout_score ? @workout_score.workout : nil
     if @workout_score.andand.closed? &&
       @workout_offering.andand.workout_policy.andand.no_review_before_close &&
       !@workout_offering.andand.shutdown?
@@ -698,7 +476,8 @@ class ExercisesController < ApplicationController
       redirect_to path,
         notice: "The time limit has passed for this workout." and return
     end
-    if @workout.exercise_workouts.where(exercise: @exercise).any?
+    
+    if @workout.andand.exercise_workouts.andand.where(exercise: @exercise).andand.any?
       @max_points = @workout.exercise_workouts.
         where(exercise: @exercise).first.points
       puts "\nMAX-POINTS", @max_points, "\nMAX-POINTS"
@@ -756,7 +535,12 @@ class ExercisesController < ApplicationController
       redirect_to exercises_url,
         notice: 'Choose an exercise to practice!' and return
     end
-
+    if @exercise_version.is_mcq?
+      if Attempt.find_by(user: current_user, exercise_version: @exercise_version)
+        flash.notice = "You can't re-attempt MCQs"
+        return
+      end
+    end
     # Tighter restrictions for the moment, should go away
     authorize! :practice, @exercise
     @workout = nil
@@ -797,8 +581,6 @@ class ExercisesController < ApplicationController
       p 'WARNING: attempt to evaluate exercise after time expired.'
       return
     end
-    # Instance variables used evaluate.js
-    @is_perfect = false
     @attempt = @exercise_version.new_attempt(
       user: current_user, workout_score: @workout_score)
     @attempt.save!
@@ -812,25 +594,23 @@ class ExercisesController < ApplicationController
       @max_points = 10.0
     end
     if @exercise_version.is_mcq?
-      if Attempt.find_by(user: current_user, exercise_version: @exercise_version)
-        flash.notice = "You can't re-attempt MCQs"
-        redirect_to organization_workout_offering_practice_path(exercise_id: Exercise.find(3),
-           organization_id: @workout_offering.course_offering.course.organization.slug,
-           course_id: @workout_offering.course_offering.course.slug,
-           term_id: @workout_offering.course_offering.term.slug,
-           id: @workout_offering.id) and return
-      end
       response_ids = params[:exercise_version][:choice][:id]
       p params
       @responses = Array.new
-      if @exercise_version.prompts.first.specific.allow_multiple
+      if response_ids.class == Array
+        # Remove blank responses and duplicates
+        response_ids.reject!(&:blank?)
+        response_ids.uniq!
+        response_ids.compact!      
+        # FIXME: Assumes no multi-choice answers
         response_ids.each do |r|
           @responses.push(Choice.find(r))
         end
       else
         @responses.push(Choice.find(response_ids))
       end
-      @responses = @responses.compact
+      
+      @responses.compact!
       @responses.each do |answer|
         answer[:answer] = markdown(answer[:answer])
       end
@@ -873,16 +653,25 @@ class ExercisesController < ApplicationController
           id: @workout_offering.id) + "' "
       end
     elsif @exercise_version.is_coding?
-      prompt_answer.answer = params[:exercise_version][:answer_code]
-      if prompt_answer.save
-        CodeWorker.new.async.perform(
-          @attempt.id,
-          @workout_score.andand.id)
-      else
-        puts 'IMPROPER PROMPT',
-          'unable to save prompt_answer: ' \
-          "#{prompt_answer.errors.full_messages.to_s}",
-          'IMPROPER PROMPT'
+      # prompt = @exercise_version.prompts.first.specific
+      # prompt_answer = @attempt.prompt_answers.first  # already specific here
+      @answer_code = params[:exercise_version][:answer_code]
+      @answer_code.gsub!("\r","")
+      @answer_code.gsub!("\n","")
+      binding.pry
+      @exercise_version.prompts.each_with_index do |exercise_prompt, i|
+        exercise_prompt_answer = @attempt.prompt_answers[i]
+        exercise_prompt_answer.answer = params[:exercise_version][:answer_code]
+        if prompt_answer.save
+          CodeWorker.new.async.perform(
+            @attempt.id,
+            @workout_score.andand.id)
+        else
+          puts 'IMPROPER PROMPT',
+            'unable to save prompt_answer: ' \
+            "#{prompt_answer.errors.full_messages.to_s}",
+            'IMPROPER PROMPT'
+        end
       end
       @workout ||= @workout_score.andand.workout
     end
