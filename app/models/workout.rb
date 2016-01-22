@@ -220,12 +220,8 @@ class Workout < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def score_for(user, workout_offering = nil)
-    if workout_offering
-      workout_scores.where(user: user, workout_offering: workout_offering).
-        order('updated_at DESC').first
-    else
-      workout_scores.where(user: user).order('updated_at DESC').first
-    end
+    workout_scores.where(user: user, workout_offering: workout_offering).
+      order('updated_at DESC').first
   end
 
 
