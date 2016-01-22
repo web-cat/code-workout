@@ -19,6 +19,19 @@ class ExerciseRepresenter < Representable::Decorator
   property :language_list, getter: lambda { |*| language_list.to_s }
   property :style_list, getter: lambda { |*| style_list.to_s }
   property :tag_list, getter: lambda { |*| tag_list.to_s }
+  property :exercise_family,
+      getter: lambda { |*| exercise_family.andand.name },
+      setter: lambda { |val, *|
+        if val
+          if ExerciseFamily.where(name: val).any?
+            self.exercise_family = ExerciseFamily.where(name: val).first
+          else
+            new_exercise_family = ExerciseFamily.new(name: val)
+            self.exercise_family = new_exercise_family
+            new_exercise_family.save!
+          end
+        end
+      }
   property :current_version, class: ExerciseVersion,
     setter: lambda { |val, *|
       self.current_version = val
