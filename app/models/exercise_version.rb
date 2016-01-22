@@ -84,7 +84,7 @@ class ExerciseVersion < ActiveRecord::Base
     attempt = Attempt.new(
       user: user,
       exercise_version: self,
-      submit_time: Time.now,
+      submit_time: Time.zone.now,
       submit_num: num
       )
     if args[:workout_score]
@@ -100,16 +100,16 @@ class ExerciseVersion < ActiveRecord::Base
 
   # -------------------------------------------------------------
   # FIXME: move to multiple_choice_prompt
-  def serve_choice_array
-    if self.prompts.first.specific.choices.nil?
+  def serve_choice_array(question_prompt)
+    if question_prompt.specific.choices.nil?
       return ["No answers available"]
     else
       answers = Array.new
-      raw = self.prompts.first.specific.choices.sort_by{ |a| a[:position] }
+      raw = question_prompt.specific.choices.sort_by{ |a| a[:position] }
       raw.each do |c|
         answers.push(c)
       end
-      if self..prompts.first.specific.is_scrambled
+      if question_prompt.specific.is_scrambled
         scrambled = Array.new
         until answers.empty?
           rand = Random.rand(answers.length)
@@ -121,15 +121,18 @@ class ExerciseVersion < ActiveRecord::Base
     end
   end
 
-  # -------------------------------------------------------------
+  # ----------------------------------------------------------------
   # A method to return the maximum score possible for a
   # a stand-alone mcq
   # TODO: broken :-/
+  # FIXME: Considers all multi-prompt questions to be of equal value
   def max_mcq_score
     if self.exercise.is_mcq?
       sum  = 0.0
-      self.prompts.first.specific.choices.each do |choice|
-        sum += choice.value if choice.value > 0.0
+      self.prompts.each do |question_prompt|
+        question_prompt.specific.choices.each do |choice|
+          sum += choice.value if choice.value > 0.0
+        end
       end
       puts "MAX MCQ SCORE",sum,"MAX MCQ SCORE"
       return sum

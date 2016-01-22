@@ -18,66 +18,82 @@
     feedback_return: true)), remote: true do |f|
     = f.semantic_errors
     %h1= @exercise.display_name
-    - user_workout_score = @workout_score || WorkoutScore.find_by(workout: @workout, user: current_user)
     - if @user_time_limit
       #timer{style: "color: red", data: {deadline: user_deadline} }
     - if @exercise_version.stem
       = markdown @exercise_version.stem.preamble
-    - prompt = @exercise_version.prompts.first.specific
-    = markdown prompt.question
     - allow_write = true
-    - if prompt.is_mcq?
-      - answer = Choice.new
-      - if prompt.allow_multiple
-        %h2 Choose ALL that apply:
-        .answers
-          = f.semantic_fields_for answer do |p|
-            = p.input :id,
-              as: :check_boxes,
-              collection: @answers,
-              member_value: :id,
-              member_label: :answer,
-              selected: false,
-              label: '&nbsp;'
-      - else
-        %h3 Select one answer:
+    - @exercise_version.prompts.each do |question_prompt|
+      - prompt = question_prompt.specific
+      = markdown prompt.question
+      - if prompt.is_mcq?
+        - answers = @exercise_version.serve_choice_array(question_prompt)
+        - answers.each do |a|
+          - a[:answer] = markdown(a[:answer])
+        - answer = Choice.new
+        - if prompt.allow_multiple
+          %h2 Choose ALL that apply:
+          .answers
+            = f.semantic_fields_for answer do |p|
+              = p.input :id,
+                as: :check_boxes,
+                collection: answers,
+                member_value: :id,
+                member_label: :answer,
+                selected: false,
+                label: '&nbsp;'
+        - elsif @exercise_version.prompts.count > 1
+          %h3 Select only one answer for each of the sub-questions:
+          - prior_answer = @attempt && @attempt.prompt_answers.where(prompt: prompt.acting_as).first
+          - if prior_answer
+            - answer = prior_answer.specific.choices.first || answer
+          .answers
+            = f.semantic_fields_for answer do |p|
+              = p.input :id,
+                as: :check_boxes,
+                collection: answers,
+                member_value: :id,
+                member_label: :answer,
+                label: '&nbsp;'                
+        - else
+          %h3 Select one answer:
+          - prior_answer = @attempt && @attempt.prompt_answers.where(prompt: prompt.acting_as).first
+          - if prior_answer
+            - answer = prior_answer.specific.choices.first || answer
+          .answers
+            = f.semantic_fields_for answer do |p|
+              = p.input :id,
+                as: :radio,
+                collection: answers,
+                member_value: :id,
+                member_label: :answer,
+                label: '&nbsp;'
+      - elsif prompt.is_coding?
+        - examples = prompt.examples
+        - if examples.any?
+          %p Examples:
+          %pre.examples
+            - examples.each do |example|
+              = example.display_description
+              %br
         - prior_answer = @attempt && @attempt.prompt_answers.where(prompt: prompt.acting_as).first
-        - if prior_answer
-          - answer = prior_answer.specific.choices.first || answer
-        .answers
-          = f.semantic_fields_for answer do |p|
-            = p.input :id,
-              as: :radio,
-              collection: @answers,
-              member_value: :id,
-              member_label: :answer,
-              label: '&nbsp;'
-    - elsif prompt.is_coding?
-      - examples = prompt.examples
-      - if examples.any?
-        %p Examples:
-        %pre.examples
-          - examples.each do |example|
-            = example.display_description
-            %br
-      - prior_answer = @attempt && @attempt.prompt_answers.where(prompt: prompt.acting_as).first
-      - if prior_answer && @workout_offering
-        - if !@workout_offering.can_be_practiced_by?(current_user)
-          - allow_write = false
-      - if allow_write
-        = f.input :answer_code, as: :text, class: 'code',
-        input_html: { lang: 'text/x-' + (@exercise.language || 'java').downcase, readonly: true, autofocus: true,
-          value: prior_answer ? prior_answer.specific.answer : prompt.prepare_starter_code }
-      - else
-        %pre{ lang: 'text/x-java' }
-          = prior_answer ? prior_answer.specific.answer : prompt.prepare_starter_code
+        - if prior_answer && @workout_offering
+          - if !@workout_offering.can_be_practiced_by?(current_user)
+            - allow_write = false
+        - if allow_write && params[:review_user_id].nil?
+          = f.input :answer_code, as: :text, class: 'code',
+          input_html: { lang: 'text/x-' + (@exercise.language || 'java').downcase, readonly: true, autofocus: true,
+            value: prior_answer ? prior_answer.specific.answer : prompt.prepare_starter_code}
+        - else
+          %pre{ lang: 'text/x-java' }
+            = prior_answer ? prior_answer.specific.answer : prompt.prepare_starter_code
     .actions
       - if @workout_offering.nil? || @workout_offering.can_be_practiced_by?(current_user)
-        - if @workout_offering.andand.workout_policy.andand.hide_feedback_before_finish
+        - if @workout_offering.andand.workout_policy.andand.hide_feedback_before_finish && params[:review_user_id].nil?
           = f.submit 'Save my answer!', class: 'btn btn-primary btn-submit', id: 'primarybtn'
-        - elsif allow_write
+        - elsif allow_write && params[:review_user_id].nil?
           = f.submit 'Check my answer!', class: 'btn btn-primary btn-submit', id: 'primarybtn'
-      - if @workout_offering
+      - if @workout_offering && params[:review_user_id].nil?
         = button_link 'Next exercise',
           organization_workout_offering_practice_path(exercise_id: @workout.next_exercise(@exercise, current_user, nil),
           organization_id: @workout_offering.course_offering.course.organization.slug,
@@ -85,8 +101,12 @@
           term_id: @workout_offering.course_offering.term.slug,
           id: @workout_offering.id),
           class: 'btn btn-next', id: 'nextbtn'
+      - elsif @workout && params[:review_user_id].nil?
+        = button_link 'Next exercise',
+          exercise_practice_path(@workout.next_exercise(@exercise, current_user, @workout_score), workout_id: @workout.id),
+          class: 'btn btn-next', id: 'nextbtn'
 
-    - if session[:current_workout].nil?
+    - if @workout.nil?
       %br
       = link_to "Practice a different #{@exercise.language} exercise",     |
         (@exercise.language ?                                              |
@@ -94,10 +114,9 @@
         random_exercise_path)                                              |
 .col-md-5
   #saved_assurance
+  #previous_answer.previous_answer
   - if @attempt
     #exercisefeedback
       = render partial: 'sse/ajax_feedback'
   - else
-    #exercisefeedback
-      = render partial: 'workout_scores/time_remaining',
-        locals: { workout_score: @workout_score }
+    #exercisefeedback{style: 'display: none;'}
