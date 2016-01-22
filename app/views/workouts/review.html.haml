@@ -56,7 +56,8 @@
             %td= l woff.hard_deadline
 - elsif @workout_offering
   %p
-    = 'Student: ' + review_user.first_name + review_user.last_name
+    - if  review_user.id != current_user.id
+      = 'Student: ' + review_user.first_name + " " + review_user.last_name
     - if workout_score
       Last Attempted:
       = l workout_score.last_attempted_at
