@@ -40,7 +40,7 @@ class TestCase < ActiveRecord::Base
   validates :input, presence: true
   validates :expected_output, presence: true
   validates :coding_prompt, presence: true
-  validates :weight, presence: true, numericality: { greater_than: 0 }
+  validates :weight, presence: true, numericality: { greater_than_or_equal_to: 0.0 }
 
 
   #~ Instance methods .........................................................
@@ -81,7 +81,7 @@ class TestCase < ActiveRecord::Base
       test_case: self,
       user: answer.attempt.user,
       coding_prompt_answer: answer,
-      pass: (test_results_array[7].to_i == 1)
+      pass: (test_results_array.length == 8 && test_results_array[7].to_i == 1)
       )
     if !self.negative_feedback.blank?
       tcr.execution_feedback = self.negative_feedback
@@ -133,14 +133,9 @@ class TestCase < ActiveRecord::Base
       input: self.input,
       expected_output: self.expected_output,
       negative_feedback: self.negative_feedback,
-<<<<<<< HEAD
       array: ((self.expected_output.start_with?('new ') &&
         self.expected_output.include?('[]')) ||
         self.expected_output.start_with?('array(')) ? 'Array' : ''
-=======
-      array: (self.expected_output.start_with?('new ') &&
-        self.expected_output.include?('[]')) ? 'Array' : ''
->>>>>>> 444518aa08622b5d4565b4be7a0e32c01174aec9
     }
   end
 
@@ -174,11 +169,7 @@ PYTHON_TEST
     @Test
     public void test%{id}()
     {
-<<<<<<< HEAD
         assertEquals(
-=======
-        assert%{array}Equals(
->>>>>>> 444518aa08622b5d4565b4be7a0e32c01174aec9
           "%{negative_feedback}",
           %{expected_output},
           subject.%{method_name}(%{input}));

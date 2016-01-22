@@ -103,6 +103,13 @@ class Attempt < ActiveRecord::Base
     self.save!
   end
 
+  # -------------------------------------------------------------
+  # Increase the score of an attempt by a specified amount
+  # Doesn't have all the emotional baggage of update_score 
+  def rescore(delta)
+    self.score += delta
+    self.save! 
+  end
 
   # -------------------------------------------------------------
   def earned_full_points?
