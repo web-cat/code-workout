@@ -1,18 +1,20 @@
 - size ||= 'lg'
 - start_workout ||= nil
 - user ||= current_user
+- if params[:review_user_id]
+  - user = User.find(params[:review_user_id])
 - workout_offering ||= nil
 - workout ||= workout_offering.andand.workout
 - if workout
   - workout_id ||= workout
 - else
-  - workout_id ||= session[:current_workout]
+  - workout_id ||= params[:workout_id]
   - workout ||= workout_id ? Workout.find_by(id: workout_id) : nil
 - if workout_offering
   - workout_score ||= workout_offering.score_for(user)
 - else
   - workout_score ||= workout && user && workout.score_for(user)
--#
+
 - pts = workout ? workout.exercise_workouts.where(exercise: exercise).first.andand.points : nil
 - attempt = workout_score ? workout_score.attempt_for(exercise) : nil
 - score = attempt ? attempt.score : 0
@@ -46,6 +48,15 @@
               course_id: workout_offering.course_offering.course.slug,
               term_id: workout_offering.course_offering.term.slug,
               id: workout_offering.id)
+        - elsif review && Attempt.where(exercise_version: exercise.current_version, user: user).any?
+          = link_to exercise.display_name,
+            organization_workout_offering_exercise_review_path(id: exercise.id,
+              organization_id: workout_offering.course_offering.course.organization.slug,
+              course_id: workout_offering.course_offering.course.slug,
+              term_id: workout_offering.course_offering.term.slug,
+              review_user_id: user.id, workout_offering_id: workout_offering.id)
+        - elsif review
+          = exercise.display_name
         - else
           = link_to exercise.display_name,
             organization_workout_offering_exercise_path(id: exercise.id,
@@ -55,6 +66,8 @@
               workout_offering_id: workout_offering.id)
       - else
         = exercise.display_name
+    - elsif workout
+      = link_to exercise.display_name, exercise_practice_path(exercise, workout_id: workout.id)
     - else
       = link_to exercise.display_name, exercise_practice_path(exercise)
   .summary

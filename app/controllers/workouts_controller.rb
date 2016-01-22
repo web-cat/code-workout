@@ -11,11 +11,8 @@ class WorkoutsController < ApplicationController
       redirect_to root_path,
         notice: 'Unauthorized to view all workouts' and return
     end
-#    @workouts = Workout.all
-#    @gym = Workout.order("created_at DESC").limit(12)
     @workouts = []
     @gym = []
-    #render layout: 'two_columns'
   end
 
 
@@ -46,13 +43,15 @@ class WorkoutsController < ApplicationController
     @exs = @workout.exercises
   end
 
-
+  def review
+    @exs = @workout.exercises
+  end
   # -------------------------------------------------------------
   # GET /gym
   def gym
     @gym = Workout.where(is_public: true).order('created_at DESC').
       limit(12)
-    render layout: 'two_columns'
+    # render layout: 'two_columns'
   end
 
 
@@ -252,11 +251,7 @@ class WorkoutsController < ApplicationController
         redirect_to workout_path(@workout),
           notice: "Need to Sign in to practice" and return
       end
-      ex1 = @workout.next_exercise(nil, current_user)
       session[:current_workout] = @workout.id
-      session[:workout_feedback] = Hash.new
-      session[:workout_feedback]['workout'] =
-        "You have attempted Workout #{wkt.name}"
       if current_user
         @workout_score = @workout.score_for(current_user)
         if @workout_score.nil?
@@ -278,7 +273,8 @@ class WorkoutsController < ApplicationController
             notice: "The time limit has passed for this workout." and return
         end
       end
-      redirect_to exercise_practice_path(id: ex1.id)
+      ex1 = @workout.next_exercise(nil, current_user, @workout_score)
+      redirect_to exercise_practice_path(id: ex1.id, workout_id: @workout.id)
     else
       redirect_to workouts, notice: 'Workout not found' and return
     end

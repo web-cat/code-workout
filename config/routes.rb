@@ -96,9 +96,13 @@ CodeWorkout::Application.routes.draw do
       as: :workout_offering_exercise
     patch ':course_id/:term_id/:workout_offering_id/:id' => 'exercises#evaluate',
       as: :workout_offering_exercise_evaluate
+    get ':course_id/:term_id/:workout_offering_id/review/:review_user_id/:id' => 'exercises#practice',
+      as: :workout_offering_exercise_review  
 
     get ':course_id/:term_id/:id' => 'workout_offerings#show',
       as: :workout_offering
+    get ':course_id/:term_id/review/:review_user_id/:id' => 'workout_offerings#review',
+      as: :workout_offering_review  
     post ':id/:term_id/generate_gradebook/' => 'courses#generate_gradebook',
       as: :course_gradebook
     get ':id(/:term_id)' => 'courses#show', as: :course

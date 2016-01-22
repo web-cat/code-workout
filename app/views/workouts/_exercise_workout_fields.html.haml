@@ -6,7 +6,7 @@
         .col-md-3
           - puts "EXERS",@exers,"EXERS"
           = f.input :exercise,
-            collection: Exercise.limit(4),
+            collection: Exercise.all,
             placeholder: "Enter exercise id",
             input_html: { class: 'col-md-10', rows: 1 }
         -# TODO: Add back the ordering specification capabilities.    

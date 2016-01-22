@@ -7,7 +7,7 @@
 -#= render :partial => 'exercises/search'
 - if user_signed_in? && current_user.current_workout_score
   = render partial: 'workouts/status',
-    locals: { workout_score: current_user.current_workout_score }
+    locals: { workout_score: current_user.current_workout_score , review: !params[:review_user_id].nil?}
 - elsif user_signed_in? && session[:leaf_exercises]
   = render Exercise.find(session[:leaf_exercises]),
     user: current_user, size: 'sm'
