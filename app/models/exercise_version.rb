@@ -61,16 +61,125 @@ class ExerciseVersion < ActiveRecord::Base
     prompts.first.andand.question_type
   end
 
+  # -------------------------------------------------------------------
+  # Method to correct the scoring of a MCQ whose correct choice is
+  # invalidly specified. Need to specify the ids of the correct option 
+  # and wrongly specified option.
+  # The value of the old correct option can be specified if it is not 1
+ 
+  def correct_mcq(correct_choice_id, wrong_choice_id = nil, value = 1.0)
+    if correct_choice_id.nil? || !correct_choice_id.is_a?(Integer)
+      puts "Invalid Choice ID"
+      return false
+    end
+    
+    exercise_version_id = self.id
+    correct_choice = Choice.find(correct_choice_id)
+    wrong_choice = nil    
+    if wrong_choice_id.nil?
+      all_choices = Choice.where(multiple_choice_prompt: correct_choice.multiple_choice_prompt)
+      all_choices.each do |c|
+        wrong_choice = c if c.value == 1.0 
+      end
+      binding.pry
+    end 
+    wrong_choice ||= wrong_choice_id ? Choice.find(wrong_choice_id) : nil 
+    
+    if correct_choice.multiple_choice_prompt_id != wrong_choice.multiple_choice_prompt_id
+      puts "Choices are not from the same question"
+      return false
+    end
+    correct_choice.reset_value(value)
+    wrong_choice.reset_value(0.0) if wrong_choice
+    
+    attempts.each do |attempt|
+      delta = 0.0
+      if correct_choice_id == attempt.prompt_answers[0].specific.choices[0].id && attempt.score <= 0.0
+        delta = value
+      elsif wrong_choice && wrong_choice.id == attempt.prompt_answers[0].specific.choices[0].id && attempt.score > 0.0
+        delta = -1.0 * value
+      end
+      binding.pry
+      puts attempt.id,"\n DELTA: \n", delta
+      if attempt.workout_score
+        multiplier = ExerciseWorkout.find_by(exercise: exercise, workout: attempt.workout_score.workout).points
+        if attempt.active_score
+          attempt.active_score.rescore(delta * multiplier)
+          end
+      else
+        multiplier = 10.0
+      end
+      attempt.rescore(delta * multiplier)
+    end
+    return true
+  end
+
+  # --------------------------------------------------------------------
+  # Method to correct the scoring of a Coding question where a test case
+  # is faulty. Need to specify the id of the incorrect test case.
+  # This method simply sets the weight of the faulty test case to zero
+  # and re-computes the score, updating the attempt and workout score.
+ 
+  def correct_test_case_scoring(test_case_id)
+    if test_case_id.nil? || !test_case_id.is_a?(Integer)
+      puts "Invalid test case ID"
+      return false
+    end
+    
+    faulty_test_case = TestCase.find(test_case_id)
+    
+    if faulty_test_case.coding_prompt.specific.exercise_version != self
+      puts "Test case is not from the same exercise"
+      return false
+    end
+    
+    # Neutalizing the test case henceforth
+    faulty_test_case.weight = 0.0
+    faulty_test_case.save!
+    
+    attempts.each do |attempt|
+      delta = 0.0
+      related_test_cases = faulty_test_case.coding_prompt.specific.test_cases
+      total = 0.0
+      correct = 0.0
+      # Re-calculating the score for this exercise based on recorded results
+      related_test_cases.each do |test_case|
+        if TestCaseResult.where(test_case: test_case, user: attempt.user).last.pass
+          correct += 1.0 * test_case.weight
+        end
+        total += test_case.weight
+      end
+      
+      old_score = attempt.score  
+      
+      if attempt.workout_score
+        multiplier = ExerciseWorkout.find_by(exercise: exercise, workout: attempt.workout_score.workout).points
+        new_score = correct * multiplier / total
+        delta = new_score - old_score
+        
+        if attempt.active_score
+          attempt.active_score.rescore(delta)
+        end
+      else
+        multiplier = 10.0
+        new_score = correct * multiplier / total
+        delta = new_score - old_score
+      end
+      puts attempt.id,"\n DELTA: \n", delta
+      attempt.rescore(delta)
+    end
+    return true
+  end
 
   # -------------------------------------------------------------
   def is_mcq?
-    prompts.first.andand.is_mcq?
+    exercise.is_mcq?
   end
 
 
   # -------------------------------------------------------------
   def is_coding?
-    prompts.first.andand.is_coding?
+    exercise.is_coding?
   end
 
 
@@ -181,20 +290,16 @@ class ExerciseVersion < ActiveRecord::Base
 
   # -------------------------------------------------------------
   # FIXME: split across prompts?
-  def experience_on(answered, attempt)
+  def mcq_experience_on(answered, attempt_no)
     total = score(answered)
     options = prompts.first.specific.choices.size
 
-    if (options == 0 || attempt == 0)
+    if (options == 0 || attempt_no == 0)
       return 0
-    elsif (total >= 100 && attempt == 1)
+    elsif (total >= 1.0 && attempt_no == 1)
       return self.exercise.experience
-    elsif (attempt >= options)
-      return 0
-    elsif (total >= 100)
-      return self.exercise.experience - self.exercise.experience * (attempt - 1) / options
     else
-      return self.exercise.experience / options / 4
+      return self.exercise.experience * total / options / attempt_no
     end
   end
 
