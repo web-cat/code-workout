@@ -6,7 +6,7 @@
   = javascript_include_tag("timeout")
 - else
   - user_deadline = " "
-
+= javascript_include_tag("practice")
 .col-md-7
   = semantic_form_for @exercise_version,
     url: (@workout_offering ? organization_workout_offering_exercise_evaluate_path(id: @exercise_version.exercise.id,
@@ -50,7 +50,8 @@
           .answers
             = f.semantic_fields_for answer do |p|
               = p.input :id,
-                as: :check_boxes,
+                as: :radio,
+                input_html: {name: "prompt-" + prompt.id.to_s},
                 collection: answers,
                 member_value: :id,
                 member_label: :answer,

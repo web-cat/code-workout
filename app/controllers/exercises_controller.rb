@@ -515,6 +515,7 @@ class ExercisesController < ApplicationController
   #GET /evaluate/1
   def evaluate
     # Copy/pasted from #practice method.  Should be refactored.
+    
     if params[:exercise_version_id]
       @exercise_version =
         ExerciseVersion.find_by(id: params[:exercise_version_id])
@@ -535,6 +536,7 @@ class ExercisesController < ApplicationController
       redirect_to exercises_url,
         notice: 'Choose an exercise to practice!' and return
     end
+    
     if @exercise_version.is_mcq?
       if Attempt.find_by(user: current_user, exercise_version: @exercise_version)
         flash.notice = "You can't re-attempt MCQs"
@@ -583,10 +585,11 @@ class ExercisesController < ApplicationController
     end
     @attempt = @exercise_version.new_attempt(
       user: current_user, workout_score: @workout_score)
+    
     @attempt.save!
     # FIXME: Need to make it work for multiple prompts
-    prompt = @exercise_version.prompts.first.specific
-    prompt_answer = @attempt.prompt_answers.first  # already specific here
+    # prompt = @exercise_version.prompts.first.specific
+    # prompt_answer = @attempt.prompt_answers.first  # already specific here
     if @workout.andand.exercise_workouts.andand.where(exercise: @exercise).andand.any?
       @max_points = @workout.exercise_workouts.
         where(exercise: @exercise).first.points
@@ -594,7 +597,19 @@ class ExercisesController < ApplicationController
       @max_points = 10.0
     end
     if @exercise_version.is_mcq?
-      response_ids = params[:exercise_version][:choice][:id]
+      if params[:exercise_version]
+        # Usual single prompt question
+        response_ids = params[:exercise_version][:choice][:id]
+      else
+        # Multi-prompt questions
+        prompt_keys = params.keys.select{|key| key.include?("prompt-") }
+        response_ids = prompt_keys.map{|prompt_key| params[prompt_key] }
+        
+        prompt_keys.each_with_index do |prompt_key, i|
+          @attempt.prompt_answers[i].choices << Choice.find(response_ids[i])
+        end
+      end
+          
       p params
       @responses = Array.new
       if response_ids.class == Array
@@ -614,7 +629,13 @@ class ExercisesController < ApplicationController
       @responses.each do |answer|
         answer[:answer] = markdown(answer[:answer])
       end
-      prompt_answer.choices = @responses
+      
+      # recording the answer choices
+      # FIXME: Only temporary 
+      if params[:exercise_version]
+        @attempt.prompt_answers.first.choices = @responses
+      end
+      
       @score = @exercise_version.score(@responses)
       if @workout
         @score = @score * @max_points / @exercise_version.max_mcq_score
@@ -653,15 +674,13 @@ class ExercisesController < ApplicationController
           id: @workout_offering.id) + "' "
       end
     elsif @exercise_version.is_coding?
-      # prompt = @exercise_version.prompts.first.specific
-      # prompt_answer = @attempt.prompt_answers.first  # already specific here
       @answer_code = params[:exercise_version][:answer_code]
       @answer_code.gsub!("\r","")
       @answer_code.gsub!("\n","")
       @exercise_version.prompts.each_with_index do |exercise_prompt, i|
         exercise_prompt_answer = @attempt.prompt_answers[i]
         exercise_prompt_answer.answer = params[:exercise_version][:answer_code]
-        if prompt_answer.save
+        if exercise_prompt_answer.save
           CodeWorker.new.async.perform(
             @attempt.id,
             @workout_score.andand.id)
