@@ -628,7 +628,7 @@ class ExercisesController < ApplicationController
 
       # TODO: calculate experience based on correctness and num submissions
       count_submission()
-      @xp = @exercise_version.experience_on(@responses, session[:submit_num])
+      @xp = @exercise_version.mcq_experience_on(@responses, @attempt.submit_num)
 
       @attempt.score = @score
       @attempt.feedback_ready = true
