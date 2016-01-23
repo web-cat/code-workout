@@ -658,7 +658,6 @@ class ExercisesController < ApplicationController
       @answer_code = params[:exercise_version][:answer_code]
       @answer_code.gsub!("\r","")
       @answer_code.gsub!("\n","")
-      binding.pry
       @exercise_version.prompts.each_with_index do |exercise_prompt, i|
         exercise_prompt_answer = @attempt.prompt_answers[i]
         exercise_prompt_answer.answer = params[:exercise_version][:answer_code]

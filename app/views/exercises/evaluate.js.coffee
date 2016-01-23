@@ -1,6 +1,8 @@
 att_id = <%= JSON.generate @attempt.id %>
 user_id = <%= JSON.generate current_user.id %>
 is_coding = <%= JSON.generate @exercise.is_coding? %>
+$("#exercisefeedback").show()
+
 if is_coding
   $("#saved_assurance").html("Your answer has been saved")
   $(".btn-submit").attr('disabled', 'disabled')
