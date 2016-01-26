@@ -19,7 +19,8 @@
 
 # This require is to prevent autoload circular dependencies, since
 # TestCaseResult is used in one of the methods.
-require 'test_case_result'
+
+ require 'test_case_result'
 
 
 # =============================================================================
@@ -39,7 +40,7 @@ class TestCase < ActiveRecord::Base
   validates :input, presence: true
   validates :expected_output, presence: true
   validates :coding_prompt, presence: true
-  validates :weight, presence: true, numericality: { greater_than: 0 }
+  validates :weight, presence: true, numericality: { greater_than_or_equal_to: 0.0 }
 
 
   #~ Instance methods .........................................................
@@ -80,7 +81,7 @@ class TestCase < ActiveRecord::Base
       test_case: self,
       user: answer.attempt.user,
       coding_prompt_answer: answer,
-      pass: (test_results_array[7].to_i == 1)
+      pass: (test_results_array.length == 8 && test_results_array[7].to_i == 1)
       )
     if !self.negative_feedback.blank?
       tcr.execution_feedback = self.negative_feedback

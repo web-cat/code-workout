@@ -3,7 +3,7 @@
 - workout ||= nil
 - workout = workout || @workout
 - workout_offering ||= (offering ||= nil)
-- workout_score ||= user ? user.current_workout_score : nil
+- workout_score ||= workout_offering ? user.current_workout_score : workout.score_for(current_user, workout_offering)
 - if workout_score && ((workout && workout_score.workout != workout) ||      |
   (workout_offering && workout_score.workout_offering != workout_offering))  |
   - workout_score = nil

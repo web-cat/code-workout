@@ -136,6 +136,7 @@ class Exercise < ActiveRecord::Base
   def type_name
     TYPE_NAMES[self.question_type]
   end
+  
 
 
   # -------------------------------------------------------------

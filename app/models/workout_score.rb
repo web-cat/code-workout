@@ -93,6 +93,13 @@ class WorkoutScore < ActiveRecord::Base
     !time_limit.nil? && minutes_open >= time_limit
   end
 
+  # -------------------------------------------------------------
+  # Increase the score of a workout by a specified amount 
+  def rescore(delta)
+    self.score += delta
+    self.score = self.score.round(2)
+    self.save! 
+  end
 
   # -------------------------------------------------------------
   def time_remaining

@@ -60,7 +60,6 @@ class CodingPrompt < ActiveRecord::Base
     true
   end
 
-
   def examples
     test_cases.select{ |tc| tc.is_example? }
   end
@@ -150,7 +149,8 @@ class CodingPrompt < ActiveRecord::Base
         end
       end
 
-      # TODO: Generate the test case class in code form here
+
+       # TODO: Generate the test case class in code form here
     end
   end
 

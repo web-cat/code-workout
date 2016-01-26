@@ -100,11 +100,15 @@
                   - workout_offerings.each do |wkto|
                     - score = wkto.score_for(student).andand.score
                     - if score
-                      %td= score
+                      %td= link_to score.to_s,
+          organization_workout_offering_review_path(id: wkto.id,
+          course_id: wkto.course_offering.course.slug,
+          term_id: wkto.course_offering.term.slug,
+          organization_id: wkto.course_offering.course.organization.slug, review_user_id: student.id)
                       - grand_total += score
                     - else
                       %td -/-
-                  %td= grand_total
+                  %td= grand_total.round(2)
         - else
           %table.table.table-striped
             %thead

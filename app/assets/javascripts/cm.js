@@ -1,4 +1,5 @@
 var codemirror;
+
 $(function() {
   $("pre").each(function() {
     var codeNode = this;

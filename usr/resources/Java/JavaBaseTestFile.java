@@ -14,4 +14,5 @@ public class %{class_name}Test extends codeworkout.CodeWorkoutTest
     }
 
     %{tests}
+
 }

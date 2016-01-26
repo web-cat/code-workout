@@ -11,7 +11,14 @@ class WorkoutOfferingsController < ApplicationController
     end
     render 'workouts/show'
   end
-
+  
+  def review
+    if @workout_offering
+      @workout = @workout_offering.workout
+      @exs = @workout.exercises
+    end
+    render 'workouts/review'
+  end
   # --------------------------------------------------------------
   # Controller action to add an extension for a workout offering
   # to a student.

@@ -57,5 +57,10 @@ class Choice < ActiveRecord::Base
 
 
   #~ Private instance methods .................................................
-
+  # ---------------------------------------------------------------------------
+  # Reset the value of a choice to a particular value
+  def reset_value(new_value)
+    self.value = new_value
+    self.save!
+  end
 end

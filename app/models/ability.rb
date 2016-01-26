@@ -97,6 +97,7 @@ class Ability
       # global role.
       can [:create], [Course, CourseOffering, CourseEnrollment,
         Workout, Exercise, Attempt, ResourceFile]
+      
       can [:index], [Workout, Exercise, Attempt, ResourceFile]
     end
   end
@@ -213,6 +214,7 @@ class Ability
   # -------------------------------------------------------------
   def process_workouts(user)
     can [:read, :update, :destroy], Workout, creator_id: user.id
+    can :practice, Workout, is_public: true
   end
 
 

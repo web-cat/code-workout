@@ -63,8 +63,6 @@ class CodeWorker
 
       correct = 0.0
       total = 0.0
-      # print "RESULT",result,"RESULT"
-      # puts "JAHAERYS", attempt_dir + '/results.csv'
       correct = 0.0
       total = 0.0
       answer =
@@ -84,7 +82,8 @@ class CodeWorker
         end  # CSV end
       end
       multiplier = 1.0
-      attempt.score = correct * multiplier / total      
+      attempt.score = correct * multiplier / total 
+      attempt.experience_earned = attempt.score * exv.exercise.experience / attempt.submit_num    
       workout_score = workout_score_id &&
         WorkoutScore.find_by(id: workout_score_id)
       attempt.feedback_ready = true

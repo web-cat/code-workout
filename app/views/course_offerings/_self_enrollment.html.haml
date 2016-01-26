@@ -6,7 +6,7 @@
   - elsif off.is_student?(current_user)
     = link_to 'Unenroll', course_offering_unenroll_path(off), method: :delete
 - else
-  - if off.effective_cutoff_date < Time.now
+  - if off.effective_cutoff_date < Time.zone.now
     Closed
   - elsif off.self_enrollment_allowed?
     - if user_signed_in?
