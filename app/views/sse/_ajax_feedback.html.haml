@@ -16,7 +16,7 @@
         .shadow
       .inset
         .score
-          = score
+          = score.round(2).to_s
           %span.outof>
             = "/ "  + pts.to_s
 
