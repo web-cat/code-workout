@@ -16,9 +16,9 @@
         .shadow
       .inset
         .score
-          = n_to_s(score)
+          = score
           %span.outof>
-            = "/ "  + n_to_s(pts)
+            = "/ "  + pts.to_s
 
 - if @exercise_version.is_mcq?
   - if show_feedback
