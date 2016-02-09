@@ -20,14 +20,13 @@
 - score = attempt ? attempt.score : 0
 - if !pts
   - pts = exercise.experience
-- pts = pts.to_i
 - score_pct = (score / pts * 100).round(0).to_i
-- if score.round(1) < pts
-  - score = score.round(0).to_i
+- if score.round(2) < pts
+  - score = score.round(2)
   - if score >= pts
     - score -= 1
 - else
-  - score = score.round(0).to_i
+  - score = score.round(2)
 -#
 %article.exercise.thumbnail{ class: size }
   .title
@@ -82,9 +81,9 @@
           .shadow
         .inset
           .score
-            = n_to_s(score)
+            = score.to_s
             %span.outof>
-              = "/ "  + n_to_s(pts)
+              = "/ "  + pts.to_s
     - else
       .radial-progress.masked
         .circle
