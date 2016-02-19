@@ -39,8 +39,9 @@ class WorkoutOffering < ActiveRecord::Base
   has_many :student_extensions
   has_many :users, through: :student_extensions
 
-  scope :visible_to_students, -> { where{
+  scope :visible_to_students, -> { joins{workout_policy.outer}.where{
     (published == true) &
+    ((workout_policy_id == nil) | (workout_policy.invisible_before_review == false)) &
     ((opening_date == nil) | (opening_date <= Time.zone.now)) } }
 
 
