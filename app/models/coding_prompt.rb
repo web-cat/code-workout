@@ -77,7 +77,7 @@ class CodingPrompt < ActiveRecord::Base
       FileUtils.mkdir_p(dir)
     end
     file_name = dir + '/' + self.class_name + 'Test.' +
-      Exercise.extension_of(exercise_version.exercise.language)
+      Exercise.extension_of(exercise_version.exercise.language || 'Java')
     if !File.exist?(file_name)
       generate_tests(file_name)
     end
@@ -157,7 +157,7 @@ class CodingPrompt < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def generate_tests(file_name)
-    language = exercise_version.exercise.language
+    language = exercise_version.exercise.language || "Java"
     tests = ''
     self.test_cases.each do |test_case|
       tests << test_case.to_code(language)
