@@ -1,10 +1,11 @@
 %h1 New Exercise
-
-- type = 1
-- if params[:question_type] == 'Coding Question' || params[:question_type] == 'coding' || params[:question_type] == 'coding problem'
-  - type = 2
-
-= render 'form', qtype: type
+- if params[:question_type].nil?
+  = link_to 'Create a coding problem', new_exercise_path(question_type: 'coding')
+  %br
+  = link_to 'Create an MCQ exercise', new_exercise_path(question_type: 'mcq')
+- else
+  - type = params[:question_type] == 'mcq' ? 1 : 2
+  = render 'form', qtype: type
 
 %br
 = link_to 'Back', exercises_path

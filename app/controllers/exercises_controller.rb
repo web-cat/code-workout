@@ -82,25 +82,29 @@ class ExercisesController < ApplicationController
     form_hash = msg.clone()
     arr = []
     form_hash["current_version"] = msg[:exercise_version].clone()
-    
-    msg[:coding_prompt].merge!(msg[:prompt])
-    test_cases = ""
-    msg[:coding_prompt][:test_cases_attributes].values.each do |tc|
-      test_cases = test_cases + tc.values.join(",") + "\n"
+    if msg[:question_type] == 2
+      msg[:coding_prompt].merge!(msg[:prompt])
+      test_cases = ""
+      msg[:coding_prompt][:test_cases_attributes].values.each do |tc|
+        test_cases = test_cases + tc.values.join(",") + "\n"
+      end
+      test_cases.rstrip!
+      msg[:coding_prompt].delete("test_cases_attributes")
+      form_hash.delete("coding_prompt")
+      msg[:coding_prompt]["tests"] = test_cases
+      form_hash["current_version"]["prompts"] = Array.new
+      codingprompt = {"coding_prompt" => msg[:coding_prompt].clone()}
+      form_hash["current_version"]["prompts"] << codingprompt
+    elsif msg[:question_type] == 2
+      msg[:multiple_choice_prompt].merge!(msg[:prompt])
+      form_hash.delete("multiple_choice_prompt")
+      form_hash["current_version"]["prompts"] = Array.new
+      multiplechoiceprompt = {"multiple_choice_prompt" => msg[:multiple_choice_prompt].clone()}
+      form_hash["current_version"]["prompts"] << multiplechoiceprompt
     end
-    test_cases.rstrip!
-    msg[:coding_prompt].delete("test_cases_attributes")
     form_hash.delete("prompt")
-    form_hash.delete("coding_prompt")
     form_hash.delete("exercise_version")
     form_hash.delete("question_type")
-    form_hash.delete("tag_list")
-    form_hash.delete("language_list")
-    form_hash.delete("style_list")
-    msg[:coding_prompt]["tests"] = test_cases
-    form_hash["current_version"]["prompts"] = Array.new
-    codingprompt = {"coding_prompt" => msg[:coding_prompt].clone()}
-    form_hash["current_version"]["prompts"] << codingprompt
     arr << form_hash
     exercises = ExerciseRepresenter.for_collection.new([]).from_hash(arr)
     if exercises[0].save!
