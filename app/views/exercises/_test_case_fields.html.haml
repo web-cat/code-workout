@@ -3,17 +3,17 @@
     .row.darker-bkg
       .row
         .col-md-10
-          = f.input :input,
+          = f.input :input, as: :string,
             label: "Input"
       .row
         .col-md-10
-          = f.input :expected_output,
+          = f.input :expected_output, as: :string,
             label: "Expected Output"
       .row
         .col-md-10
-          = f.input :description, as: :text,
+          = f.input :description, as: :string,
             label: "Test Description"
       .row
         .col-md-10
-          = f.input :negative_feedback, as: :text,
+          = f.input :negative_feedback, as: :string,
             label: "Failure Feedback"            

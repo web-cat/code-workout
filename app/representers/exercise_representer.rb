@@ -22,7 +22,7 @@ class ExerciseRepresenter < Representable::Decorator
   property :exercise_family,
       getter: lambda { |*| exercise_family.andand.name },
       setter: lambda { |val, *|
-        if val
+        if val.andand.length >= 1
           if ExerciseFamily.where(name: val).any?
             self.exercise_family = ExerciseFamily.where(name: val).first
           else

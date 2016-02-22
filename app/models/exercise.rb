@@ -61,8 +61,6 @@ class Exercise < ActiveRecord::Base
 
   accepts_nested_attributes_for :exercise_versions, allow_destroy: true
 
-  attr_accessor :language_list, :tag_list, :style_list
-
   #~ Hooks ....................................................................
 
   before_validation :set_defaults
