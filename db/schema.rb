@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160217060925) do
+ActiveRecord::Schema.define(version: 20160224064748) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -340,6 +340,7 @@ ActiveRecord::Schema.define(version: 20160217060925) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "time_limit"
+    t.datetime "opening_date"
   end
 
   add_index "student_extensions", ["user_id"], name: "index_student_extensions_on_user_id", using: :btree

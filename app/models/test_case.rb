@@ -47,7 +47,9 @@ class TestCase < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def is_example?
-    return !self.description.blank? && self.description == 'example'
+    return !self.description.blank? &&
+        (self.description == 'example' ||
+        self.description.start_with?('example:'))
   end
 
 
@@ -56,6 +58,8 @@ class TestCase < ActiveRecord::Base
     result = self.description
     if result == 'example'
       result = ''
+    elsif !result.blank? && result.start_with?('example:')
+      result = result.sub(/^example:\s*/, '')
     end
     if result.blank?
       inp = self.input
