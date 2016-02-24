@@ -78,6 +78,15 @@ class WorkoutOffering < ActiveRecord::Base
   end
 
 
+  # -----------------------------------------------------------------
+  def opening_date_for(user)
+    user_extension =
+      StudentExtension.find_by(user: user, workout_offering: self)
+    user_extension.andand.opening_date ||
+      self.opening_date
+  end
+
+
   # --------------------------------------------------------------------------------
   # Describes how 'far' is the workout offering from its hard and soft deadlines.
   # 4 indicates that there is more than one day remaining to soft deadline
@@ -107,8 +116,10 @@ class WorkoutOffering < ActiveRecord::Base
   def can_be_seen_by?(user)
     now = Time.zone.now
     uscore = score_for(user)
+    opens = opening_date_for(user)
+    puts "can_be_seen_by? #{user.email}: opens = #{opens}"
     course_offering.is_staff?(user) ||
-      (((opening_date == nil) || (opening_date <= now)) &&
+      (((opens == nil) || (opens <= now)) &&
       course_offering.is_enrolled?(user) &&
       (uscore == nil ||
       !uscore.closed? ||
@@ -162,8 +173,9 @@ class WorkoutOffering < ActiveRecord::Base
       self.hard_deadline ||
       user_extension.andand.soft_deadline ||
       self.soft_deadline
+    opens = user_extension.andand.opening_date || self.opening_date
     course_offering.is_staff?(user) ||
-    (((opening_date == nil) || (opening_date <= now)) &&
+    (((opens == nil) || (opens <= now)) &&
       (now <= deadline) &&
       course_offering.is_enrolled?(user))
   end
