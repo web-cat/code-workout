@@ -34,6 +34,8 @@ class WorkoutOffering < ActiveRecord::Base
 
   belongs_to :workout, inverse_of: :workout_offerings
   belongs_to :workout_policy, inverse_of: :workout_offerings
+  belongs_to :continue_from_workout, foreign_key: 'continue_from_workout_id',
+    class_name: 'WorkoutOffering'
   belongs_to :course_offering, inverse_of: :workout_offerings
   has_many :workout_scores, inverse_of: :workout_offering, dependent: :nullify
   has_many :student_extensions
@@ -117,7 +119,6 @@ class WorkoutOffering < ActiveRecord::Base
     now = Time.zone.now
     uscore = score_for(user)
     opens = opening_date_for(user)
-    puts "can_be_seen_by? #{user.email}: opens = #{opens}"
     course_offering.is_staff?(user) ||
       (((opens == nil) || (opens <= now)) &&
       course_offering.is_enrolled?(user) &&

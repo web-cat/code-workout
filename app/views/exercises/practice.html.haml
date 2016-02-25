@@ -55,7 +55,7 @@
                 collection: answers,
                 member_value: :id,
                 member_label: :answer,
-                label: '&nbsp;'                
+                label: '&nbsp;'
         - else
           %h3 Select one answer:
           - prior_answer = @attempt && @attempt.prompt_answers.where(prompt: prompt.acting_as).first
@@ -78,6 +78,10 @@
               = example.display_description
               %br
         - prior_answer = @attempt && @attempt.prompt_answers.where(prompt: prompt.acting_as).first
+        - if !prior_answer && @workout_offering.andand.continue_from_workout
+          - prior_score = @workout_offering.continue_from_workout.score_for(@student_user)
+          - prior_attempt = prior_score.attempt_for(@exercise_version.exercise)
+          - prior_answer = prior_attempt && prior_attempt.prompt_answers.where(prompt: prompt.acting_as).first
         - if prior_answer && @workout_offering
           - if !@workout_offering.can_be_practiced_by?(current_user)
             - allow_write = false

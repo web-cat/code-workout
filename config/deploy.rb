@@ -10,7 +10,7 @@ set :format, :pretty
 set :log_level, :debug
 set :pty, true
 
-set :linked_files, %w{config/database.yml config/secrets.yml db/development.sqlite3 }
+set :linked_files, %w{config/database.yml config/secrets.yml db/development.sqlite3}
 set :linked_dirs, %w{bin log usr tmp/pids tmp/cache tmp/sockets vendor/bundle public}
 
 # set :default_env, { path: "/opt/ruby/bin:$PATH" }

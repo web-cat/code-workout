@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160224064748) do
+ActiveRecord::Schema.define(version: 20160225005739) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -458,18 +458,20 @@ ActiveRecord::Schema.define(version: 20160224064748) do
   add_index "users", ["time_zone_id"], name: "index_users_on_time_zone_id", using: :btree
 
   create_table "workout_offerings", force: true do |t|
-    t.integer  "course_offering_id",                 null: false
-    t.integer  "workout_id",                         null: false
+    t.integer  "course_offering_id",                       null: false
+    t.integer  "workout_id",                               null: false
     t.datetime "created_at"
     t.datetime "updated_at"
     t.datetime "opening_date"
     t.datetime "soft_deadline"
     t.datetime "hard_deadline"
-    t.boolean  "published",          default: false, null: false
+    t.boolean  "published",                default: false, null: false
     t.integer  "time_limit"
     t.integer  "workout_policy_id"
+    t.integer  "continue_from_workout_id"
   end
 
+  add_index "workout_offerings", ["continue_from_workout_id"], name: "workout_offerings_continue_from_workout_id_fk", using: :btree
   add_index "workout_offerings", ["course_offering_id"], name: "index_workout_offerings_on_course_offering_id", using: :btree
   add_index "workout_offerings", ["workout_id"], name: "index_workout_offerings_on_workout_id", using: :btree
   add_index "workout_offerings", ["workout_policy_id"], name: "index_workout_offerings_on_workout_policy_id", using: :btree
@@ -529,5 +531,7 @@ ActiveRecord::Schema.define(version: 20160224064748) do
   add_index "workouts", ["is_public"], name: "index_workouts_on_is_public", using: :btree
 
   add_foreign_key "users", "workout_scores", name: "users_current_workout_score_id_fk", column: "current_workout_score_id"
+
+  add_foreign_key "workout_offerings", "workout_offerings", name: "workout_offerings_continue_from_workout_id_fk", column: "continue_from_workout_id"
 
 end

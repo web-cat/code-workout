@@ -26,6 +26,11 @@ server 'codeworkout.org', user: 'codeworkout', roles: %w{web app db}, my_propert
 #    forward_agent: false,
 #    auth_methods: %w(password)
 #  }
+
+set :ssh_options, {
+  port: 2222
+}
+
 # and/or per server
 # server 'example.com',
 #   user: 'user_name',
