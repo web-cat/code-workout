@@ -1,0 +1,94 @@
+---
+- external_id: if-else-mcq
+  is_public: false
+  experience: 50
+  language_list: Java
+  style_list: multiple choice, single answer
+  tag_list: conditional
+  current_version:
+    version: 1
+    creator: stoebelj@berea.edu
+    prompts:
+    - multiple_choice_prompt:
+        position: 1
+        question: |
+          Which of the following is the correct way to set up an if/else statement in Java?
+        allow_multiple: false
+        choices:
+          - answer: |
+              ~~~
+              if (condition) {
+                //do something
+              } else {
+                //do something else
+              }
+              ~~~
+            position: 1
+            value: 1
+          - answer: |
+              ~~~
+              if condition {
+                //do something
+              } else {
+                //do something else
+              }
+              ~~~
+            position: 2
+            value: 0
+          - answer: |
+              ~~~
+              if condition than{
+                //do something
+              } else {
+                //do something else
+              }
+              ~~~
+            position: 3
+            value: 0
+          - answer: A or B.
+            position: 4
+            value: 0
+          - answer: None of the above.
+            position: 4
+            value: 0
+
+- external_id: gotoClass
+  is_public: false
+  experience: 50
+  language_list: Java
+  style_list: code writing
+  tag_list: conditional
+  current_version:
+    version: 1
+    creator: stoebelj@berea.edu
+    prompts:
+    - coding_prompt:
+        position: 1
+        question: |
+           Write a function that takes in month of the year as an integer (Jan=1, Dec=12) and outputs the string "summer break!" if the month is May-July or "go to class!" for any other month. If any other number is input, output the string "invalid month".
+        class_name: Month
+        method_name: monthChecker
+        starter_code: |
+          public int monthChecker(int month)
+          {
+              ___
+          }
+        wrapper_code: |
+          public class Month
+          {
+              ___
+
+              public static class Math {}
+              public static class java
+              {
+                  public static class lang
+                  {
+                      public static class Math {}
+                  }
+              }
+          }
+        tests: |
+          "1","go to class!",example
+          "6","summer break!",example
+          "13","invalid month"
+          "-1","invalid month",hidden
