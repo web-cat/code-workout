@@ -31,6 +31,9 @@ CodeWorkout::Application.routes.draw do
     constraints: { id: /[^\/]+/ }
   ActiveAdmin.routes(self)
 
+  #for the Q&A forum
+  resources :questions
+  resources :responses
 
   get 'sse/feedback_wait'
   # get 'sse/feedback_update'
