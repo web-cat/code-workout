@@ -10,10 +10,9 @@ class QuestionsController < ApplicationController
     #post: a new question object
       #question#new is rendered
 
-    @question = Question.new
-
-    #TODO we need a route for users to ask a question about a paticular exercise.
-
+    @question = Question.new({
+      :exercise_id => params[:exercise_id]
+      })
 
   end
 
@@ -56,7 +55,7 @@ class QuestionsController < ApplicationController
 
   private
   def safe_assign
-    params.require(:question).permit(:title, :body, :tags)
+    params.require(:question).permit(:title, :body, :tags, :exercise_id)
   end
 
 end

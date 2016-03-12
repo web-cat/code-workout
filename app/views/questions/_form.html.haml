@@ -15,3 +15,8 @@
       = f.label :tags, "Tags"
     %td
       = f.text_field :tags
+
+  %tr
+    %th
+    %td
+      = f.hidden_field :exercise_id, :value => @question.exercise_id 

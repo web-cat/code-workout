@@ -65,7 +65,10 @@ CodeWorkout::Application.routes.draw do
       as: :exercise_evaluate
     post 'exercises/search' => 'exercises#search', as: :search
     # At the bottom, so the routes above take precedence over existing ids
-    resources :exercises
+    
+    resources :exercises do
+      resources :questions, :only => [:new]
+    end
 
     # /gym/workouts ...
     get  'workouts/download' => 'workouts#download'
