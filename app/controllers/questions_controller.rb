@@ -6,8 +6,10 @@ class QuestionsController < ApplicationController
   end
 
   def new
-    #pre: nothing
-    #post: a new question object
+    #pre:
+      #exercise_id (optional): the exercise this question should be associated
+      #with
+    #post: a new question object is instantiated but not saved
       #question#new is rendered
 
     @question = Question.new({
@@ -17,6 +19,11 @@ class QuestionsController < ApplicationController
   end
 
   def create
+    #pre:
+      #params: the parameters to be used to create this question
+    #post: 
+      #a new question object is saved -> redirect to index
+      #OR new question is not saved -> render new
     @question = Question.new(safe_assign)
     @question.user_id = current_user.id
 
@@ -31,10 +38,19 @@ class QuestionsController < ApplicationController
   end
 
   def edit
+    #pre:
+      #id: the id of the question to edit
+    #post:
+      #edit view is rendered
     @question = Question.find(params[:id])
   end
 
   def update
+    #pre:
+      #params: question attributes to be assigned
+    #post
+      #the question object is saved -> redirect to index
+      #OR new question is not saved -> render edit
     @question = Question.find(params[:id])
     @question.assign_attributes(safe_assign)
 
@@ -43,7 +59,7 @@ class QuestionsController < ApplicationController
       redirect_to questions_path
     else
       flash[:error] = "Error updating question."
-      render 'new'      
+      render 'edit'      
     end
   end
 
