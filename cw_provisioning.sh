@@ -10,27 +10,11 @@ sudo-pw apt-get -y update
 sudo-pw apt-get -y upgrade
 
 # Install prerequisites
-sudo-pw apt-get -y install git-core curl vim zlib1g-dev build-essential libssl-dev libreadline-dev libreadline-gplv2-dev libyaml-dev libsqlite3-dev sqlite3 libxml2-dev libxslt1-dev libcurl4-openssl-dev python-software-properties libffi-dev mysql-server ruby1.9.1-dev nodejs
-
-# follow instructions here to install rbenv
-# http://www.eq8.eu/blogs/4-installing-rbenv-on-ubuntu-machine
-cd ~
-curl -L https://raw.github.com/fesplugas/rbenv-installer/master/bin/rbenv-installer | bash
-
-# vim ~/.bashrc
-# and add
-# export RBENV_ROOT="${HOME}/.rbenv"
-# # export RBENV_ROOT="/opt/rbenv/" # some developers prefare this option I highly recommend
-#                                   # to instal rbenv to home folder of deploy user as it's
-#                                   # convention
-
-# if [ -d "${RBENV_ROOT}" ]; then
-#   export PATH="${RBENV_ROOT}/bin:${PATH}"
-#   eval "$(rbenv init -)"
-# fi
+sudo-pw apt-get -y install git-core curl zlib1g-dev build-essential libssl-dev libreadline-dev libyaml-dev libsqlite3-dev sqlite3 libxml2-dev libxslt1-dev libcurl4-openssl-dev python-software-properties libffi-dev
+sudo-pw apt-get -y install git curl vim
+sudo-pw apt-get -y install libreadline-gplv2-dev
 
 
-# Show help if `.rbenv` is not in the path:
 if [ ! $(which rbenv) ]; then
   echo "
 export RBENV_ROOT=\"\${HOME}/.rbenv\"
@@ -41,12 +25,17 @@ fi
 " >> ~/.bashrc
 fi
 
-. ~/.bashrc
+source ~/.bashrc
+
+export RBENV_ROOT="${HOME}/.rbenv"
+export PATH="${RBENV_ROOT}/bin:${PATH}"
+
+cd ~
+curl -L https://raw.github.com/fesplugas/rbenv-installer/master/bin/rbenv-installer | bash
 
 rbenv install 2.3.0
 rbenv rehash
 rbenv global 2.3.0
-rbenv version
 
 cd  ~/.rbenv  # rbenv install location (...or /opt/rbenv/)
 git pull # will pull rbenv repo
@@ -54,16 +43,24 @@ git pull # will pull rbenv repo
 cd plugins/ruby-build/
 git pull # will pull recent ruby builds
 
-rbenv rehash
-# To update ruby-gem
-gem update --system
 # Install bundler (gem manager)
-gem install bundler
-bundle install
-# (After any gem or ruby version installation)
-rbenv rehash
-# Install rails
-gem install rails --no-ri --no-rdoc
-gem list
+sudo-pw gem install bundler
 
+# Install mysql
+sudo-pw apt-get -y install mysql-server
+sudo-pw apt-get install libmysqlclient-dev
+sudo-pw apt-get -y install ruby1.9.1-dev
 gem install mysql2
+
+sudo-pw apt-get -y install nodejs
+
+# install hh history tool
+sudo-pw add-apt-repository ppa:ultradvorka/ppa
+sudo-pw apt-get update
+sudo-pw apt-get install hh
+
+sudo-pw apt-get install libncurses5-dev libreadline-dev
+wget https://github.com/dvorka/hstr/releases/download/1.10/hh-1.10-src.tgz
+tar xf hh-1.10-src.tgz
+cd hstr
+./configure && make && sudo-pw make install
