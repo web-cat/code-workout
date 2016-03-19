@@ -6,19 +6,15 @@ class ResponsesController < ApplicationController
   end
 
   def new
-    @q_id = 1
-    @response = Response.new({
-      :question_id => @q_id		
-    })
   end
 
   def create
-    @response = response.new(safe_assign)
+    @response = Response.new(safe_assign)
     @response.user_id = current_user.id
 
     if @response.save
       flash[:success] = "Response saved!"
-      redirect_to questions_path
+      redirect_to question_path(@response.question.id)
     else
       flash[:error] = "Error creating your response."
       # render :template => "questions/show"
@@ -39,7 +35,7 @@ class ResponsesController < ApplicationController
 
   private
   def safe_assign
-    params.require(:response).permit(:text)
+    params.require(:response).permit( :text, :question_id )
   end
 
 end
