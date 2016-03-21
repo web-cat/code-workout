@@ -1,2 +1,18 @@
-%h1 Questions#index
-%p Find me in app/views/questions/index.html.haml
+%h1 List of Questions
+-if @questions.size == 0
+	%em = No Questions Found
+-else
+	%table
+		%r
+			%th Title: 
+			%th User:
+			%th Posted:
+		- @questions.each do |question|
+			%tr
+				%td= link_to question.title, question
+				%td= question.user_id
+				%td= question.created_at
+				%td= link_to "Edit", edit_question_path(question)
+				%td= link_to "Delete", question, method: :delete
+
+ 

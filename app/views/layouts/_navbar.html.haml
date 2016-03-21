@@ -12,12 +12,8 @@
             %li
               .yamm-content
                 %ul.list-unstyled
-                  %li
-                    %strong Workouts
-                  %li= link_to 'Browse all', workouts_path
-                  %li
-                    %strong Exercises
-                  %li= link_to 'Browse all', exercises_path
+                  %li= link_to 'Workouts', workouts_path
+                  %li= link_to 'Exercises', exercises_path
         %li.dropdown
           %a.dropdown-toggle{ href: organizations_path,
             data: { toggle: 'dropdown' }, value: 'Course' }
@@ -27,9 +23,7 @@
               .yamm-content
                 %ul.list-unstyled
                   %li
-                    %strong Courses
-                  %li
-                    %strong= link_to 'Browse all', organizations_path
+                    %strong= link_to 'Courses', organizations_path
                   - if user_signed_in? && current_user.course_enrollments.any?
                     - term = Term.current_term
                     - current_user.courses_for_term(term).each do |c|
@@ -49,7 +43,7 @@
           %li.dropdown
             %a.dropdown-toggle{ href: '/signin',
               data: { toggle: 'dropdown' }, value: 'Sign in' }
-              Sign in
+              Log in
             %ul.dropdown-menu.signin
               %li
                 = link_to user_omniauth_authorize_path(:facebook),

@@ -1,2 +1,28 @@
-%h1 Questions#show
-%p Find me in app/views/questions/show.html.haml
+%h1
+	=@question.title
+%tr
+	- if @question.user_id != nil
+		%td 
+			=@question.user_id
+	%td= link_to "Edit", edit_question_path(@question)
+	%td= link_to "Delete", @question, method: :delete 	
+%p 	
+	=@question.body
+%p= "Posted: #{@question.created_at}" 
+- if @question.tags != nil	
+	%p
+		=@question.tags
+- if @responses.size == 0
+	%h3 No Responses
+- else
+	%h3 Responses:
+	%table
+		%tr
+			%th Text:
+			%th User:
+			%th Posted
+	- @responses.each do |response|
+		%tr
+			%td= link_to response.text, response
+			%td= response.user_id
+			%td= response.created_at 

@@ -3,6 +3,7 @@ class ResponsesController < ApplicationController
   end
 
   def show
+	@response = Response.find(params[:id])
   end
 
   def new
