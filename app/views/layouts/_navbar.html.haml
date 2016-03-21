@@ -12,8 +12,12 @@
             %li
               .yamm-content
                 %ul.list-unstyled
-                  %li= link_to 'Workouts', workouts_path
-                  %li= link_to 'Exercises', exercises_path
+		  %li
+                    %strong Workouts
+                  %li= link_to 'Browse all', workouts_path 
+		  %li
+                    %strong Workouts
+                  %li= link_to 'Browse all', exercises_path
         %li.dropdown
           %a.dropdown-toggle{ href: organizations_path,
             data: { toggle: 'dropdown' }, value: 'Course' }
@@ -43,7 +47,7 @@
           %li.dropdown
             %a.dropdown-toggle{ href: '/signin',
               data: { toggle: 'dropdown' }, value: 'Sign in' }
-              Log in
+              Sign in
             %ul.dropdown-menu.signin
               %li
                 = link_to user_omniauth_authorize_path(:facebook),
