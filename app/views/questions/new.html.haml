@@ -1,2 +1,13 @@
-%h1 Questions#new
-%p Find me in app/views/questions/new.html.haml
+=link_to questions_path do
+    .btn.btn-default
+        %span.glyphicon.glyphicon-arrow-left
+            Back
+
+%h1 Create a new Question
+
+=render(:partial => 'application/record_error_messages', :locals => {:record => @question})
+
+= form_for(@question, url: questions_path) do |f|
+
+    =render partial: 'form', :locals => {:f => f}
+    = submit_tag("Submit")

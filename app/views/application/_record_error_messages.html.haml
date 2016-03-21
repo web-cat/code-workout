@@ -1,0 +1,15 @@
+.container
+  .row
+    .col-xs-12.col-md-4.col-md-offset-4
+      - if record && record.errors.size > 0
+        #errorExplanation
+          %h2.alert-danger
+            = pluralize(record.errors.size, "error") 
+            prohibited this record from being saved.
+          %p The following problems were encountered:
+          %ul
+            - record.errors.messages.values.each do |msg|
+              - msg.each do |m|
+                %li
+                  =m
+          %ul

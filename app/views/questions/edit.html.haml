@@ -1,2 +1,15 @@
-%h1 Questions#edit
-%p Find me in app/views/questions/edit.html.haml
+=link_to questions_path do
+    .btn.btn-default
+        %span.glyphicon.glyphicon-arrow-left
+            Back
+
+%h1 Edit Question
+%h3
+    =@question.title
+
+=render(:partial => 'application/record_error_messages', :locals => {:record => @question})
+
+= form_for(@question, url: question_path(@question.id)) do |f|
+
+    =render partial: 'form', :locals => {:f => f}
+    = submit_tag("Submit")
