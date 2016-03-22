@@ -26,3 +26,12 @@
 			%td= link_to response.text, response
 			%td= response.user_id
 			%td= response.created_at 
+
+%h1 Respond to this question:
+
+= form_for(@response, url: responses_path) do |f|
+	= f.label(:text, "Your Response")
+	= f.text_area(:text, size: "40x5")
+	= f.hidden_field(:question_id, :value => @question.id)
+	= submit_tag("Submit")
+

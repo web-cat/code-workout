@@ -4,8 +4,9 @@ class QuestionsController < ApplicationController
   end
 
   def show
-	@question = Question.find(params[:id])
-	@responses = Response.all.where(question_id: params[:id])
+    @question = Question.find(params[:id])
+    @responses = Response.all.where(question_id: params[:id])
+    @response = Response.new
   end
 
   def new

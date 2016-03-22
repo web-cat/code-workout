@@ -1,2 +1,8 @@
-%h1 Responses#edit
-%p Find me in app/views/responses/edit.html.haml
+%h1 Edit Response
+
+= form_for(@response, url: response_path) do |f|
+  = f.label(:text, "Edit your response:")
+  %br/
+  = f.text_area(:text, value: @response.text)
+  = submit_tag("Submit")
+
