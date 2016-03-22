@@ -96,7 +96,7 @@
               = prior_answer ? prior_answer.specific.answer : prompt.prepare_starter_code
 
       -else
-        / show feedback for the prompt
+        / show feedback for the prompt (needs fixing)
         .alert.alert-danger This workout is closed and responses are no longer being accepted. The correct answer is displayed below.
         = f.input :answer_code, as: :text, class: 'code',
         input_html: { lang: 'text/x-' + (@exercise.language || 'java').downcase, readonly: true, autofocus: true,
