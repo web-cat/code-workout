@@ -25,73 +25,83 @@
     - allow_write = true
     - @exercise_version.prompts.each do |question_prompt|
       - prompt = question_prompt.specific
-      = markdown prompt.question
-      - if prompt.is_mcq?
-        - answers = @exercise_version.serve_choice_array(question_prompt)
-        - answers.each do |a|
-          - a[:answer] = markdown(a[:answer])
-        - answer = Choice.new
-        - if prompt.allow_multiple
-          %h2 Choose ALL that apply:
-          .answers
-            = f.semantic_fields_for answer do |p|
-              = p.input :id,
-                as: :check_boxes,
-                collection: answers,
-                member_value: :id,
-                member_label: :answer,
-                selected: false,
-                label: '&nbsp;'
-        - elsif @exercise_version.prompts.count > 1
-          %h3 Select only one answer for each of the sub-questions:
+      / render the prompts if there is still time...
+      - if @workout_offering.ultimate_deadline >= DateTime.now
+        = markdown prompt.question
+        - if prompt.is_mcq?
+          - answers = @exercise_version.serve_choice_array(question_prompt)
+          - answers.each do |a|
+            - a[:answer] = markdown(a[:answer])
+          - answer = Choice.new
+          - if prompt.allow_multiple
+            %h2 Choose ALL that apply:
+            .answers
+              = f.semantic_fields_for answer do |p|
+                = p.input :id,
+                  as: :check_boxes,
+                  collection: answers,
+                  member_value: :id,
+                  member_label: :answer,
+                  selected: false,
+                  label: '&nbsp;'
+          - elsif @exercise_version.prompts.count > 1
+            %h3 Select only one answer for each of the sub-questions:
+            - prior_answer = @attempt && @attempt.prompt_answers.where(prompt: prompt.acting_as).first
+            - if prior_answer
+              - answer = prior_answer.specific.choices.first || answer
+            .answers
+              = f.semantic_fields_for answer do |p|
+                = p.input :id,
+                  as: :radio,
+                  input_html: {name: "prompt-" + prompt.id.to_s},
+                  collection: answers,
+                  member_value: :id,
+                  member_label: :answer,
+                  label: '&nbsp;'
+          - else
+            %h3 Select one answer:
+            - prior_answer = @attempt && @attempt.prompt_answers.where(prompt: prompt.acting_as).first
+            - if prior_answer
+              - answer = prior_answer.specific.choices.first || answer
+            .answers
+              = f.semantic_fields_for answer do |p|
+                = p.input :id,
+                  as: :radio,
+                  collection: answers,
+                  member_value: :id,
+                  member_label: :answer,
+                  label: '&nbsp;'
+        - elsif prompt.is_coding?
+          - examples = prompt.examples
+          - if examples.any?
+            %p Examples:
+            %pre.examples
+              - examples.each do |example|
+                = example.display_description
+                %br
           - prior_answer = @attempt && @attempt.prompt_answers.where(prompt: prompt.acting_as).first
-          - if prior_answer
-            - answer = prior_answer.specific.choices.first || answer
-          .answers
-            = f.semantic_fields_for answer do |p|
-              = p.input :id,
-                as: :radio,
-                input_html: {name: "prompt-" + prompt.id.to_s},
-                collection: answers,
-                member_value: :id,
-                member_label: :answer,
-                label: '&nbsp;'
-        - else
-          %h3 Select one answer:
-          - prior_answer = @attempt && @attempt.prompt_answers.where(prompt: prompt.acting_as).first
-          - if prior_answer
-            - answer = prior_answer.specific.choices.first || answer
-          .answers
-            = f.semantic_fields_for answer do |p|
-              = p.input :id,
-                as: :radio,
-                collection: answers,
-                member_value: :id,
-                member_label: :answer,
-                label: '&nbsp;'
-      - elsif prompt.is_coding?
-        - examples = prompt.examples
-        - if examples.any?
-          %p Examples:
-          %pre.examples
-            - examples.each do |example|
-              = example.display_description
-              %br
-        - prior_answer = @attempt && @attempt.prompt_answers.where(prompt: prompt.acting_as).first
-        - if !prior_answer && @workout_offering.andand.continue_from_workout
-          - prior_score = @workout_offering.continue_from_workout.score_for(@student_user)
-          - prior_attempt = prior_score.attempt_for(@exercise_version.exercise)
-          - prior_answer = prior_attempt && prior_attempt.prompt_answers.where(prompt: prompt.acting_as).first
-        - if prior_answer && @workout_offering
-          - if !@workout_offering.can_be_practiced_by?(current_user)
-            - allow_write = false
-        - if allow_write && params[:review_user_id].nil?
-          = f.input :answer_code, as: :text, class: 'code',
-          input_html: { lang: 'text/x-' + (@exercise.language || 'java').downcase, readonly: true, autofocus: true,
-            value: prior_answer ? prior_answer.specific.answer : prompt.prepare_starter_code}
-        - else
-          %pre{ lang: 'text/x-java' }
-            = prior_answer ? prior_answer.specific.answer : prompt.prepare_starter_code
+          - if !prior_answer && @workout_offering.andand.continue_from_workout
+            - prior_score = @workout_offering.continue_from_workout.score_for(@student_user)
+            - prior_attempt = prior_score.attempt_for(@exercise_version.exercise)
+            - prior_answer = prior_attempt && prior_attempt.prompt_answers.where(prompt: prompt.acting_as).first
+          - if prior_answer && @workout_offering
+            - if !@workout_offering.can_be_practiced_by?(current_user)
+              - allow_write = false
+          - if allow_write && params[:review_user_id].nil?
+            = f.input :answer_code, as: :text, class: 'code',
+            input_html: { lang: 'text/x-' + (@exercise.language || 'java').downcase, readonly: true, autofocus: true,
+              value: prior_answer ? prior_answer.specific.answer : prompt.prepare_starter_code}
+          - else
+            %pre{ lang: 'text/x-java' }
+              = prior_answer ? prior_answer.specific.answer : prompt.prepare_starter_code
+
+      -else
+        / show feedback for the prompt
+        .alert.alert-danger This workout is closed and responses are no longer being accepted. The correct answer is displayed below.
+        = f.input :answer_code, as: :text, class: 'code',
+        input_html: { lang: 'text/x-' + (@exercise.language || 'java').downcase, readonly: true, autofocus: true,
+          value: prompt.feedback}
+          
     .actions
       - if @workout_offering.nil? || @workout_offering.can_be_practiced_by?(current_user)
         - if @workout_offering.andand.workout_policy.andand.hide_feedback_before_finish && params[:review_user_id].nil?
