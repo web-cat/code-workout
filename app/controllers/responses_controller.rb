@@ -22,9 +22,20 @@ class ResponsesController < ApplicationController
   end
 
   def edit
+    @response = Response.find(params[:id])
   end
 
   def update
+    @response = Response.find(params[:id])
+    @response.assign_attributes(safe_assign)
+
+    if @response.save
+      flash[:success] = "Response edit saved!"
+      redirect_to question_path(@response.question.id)
+    else
+      flash[:error] = "Error editing your response."
+      # render :template => "questions/show"
+    end
   end
 
   def delete
