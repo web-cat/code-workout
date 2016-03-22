@@ -32,6 +32,6 @@ FactoryGirl.define do
     published true
     opening_date DateTime.now
     soft_deadline 1.year.from_now
-    hard_deadline 1.years.from_now
+    hard_deadline 1.year.from_now
   end
 end
