@@ -243,9 +243,7 @@ class WorkoutsController < ApplicationController
   # -------------------------------------------------------------
   def practice
     @workout = Workout.find_by(id: params[:id])
-    puts "\n\n\n  spot 1"
     authorize! :practice, @workout
-    puts "\n\n\n  spot 2"
     if @workout
       if !user_signed_in?
         redirect_to workout_path(@workout),
