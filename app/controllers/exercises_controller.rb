@@ -105,7 +105,6 @@ class ExercisesController < ApplicationController
       multiplechoiceprompt = {"multiple_choice_prompt" => msg[:multiple_choice_prompt].clone()}
       form_hash["current_version"]["prompts"] << multiplechoiceprompt
       form_hash.delete("multiple_choice_prompt")
-      binding.pry
     end
     form_hash.delete("prompt")
     form_hash.delete("exercise_version")
@@ -220,8 +219,6 @@ class ExercisesController < ApplicationController
   # POST /exercises/upload_create
   def upload_create
     hash = YAML.load(File.read(params[:form][:file].path))
-    binding.pry
-    int = pinochet
     exercises = ExerciseRepresenter.for_collection.new([]).from_hash(hash)
     exercises.each do |e|
       if !e.save
@@ -268,14 +265,14 @@ class ExercisesController < ApplicationController
     # Tighter restrictions for the moment, should go away
     authorize! :practice, @exercise
 
-    student_user = params[:review_user_id] ? User.find(params[:review_user_id]) : current_user
+    @student_user = params[:review_user_id] ? User.find(params[:review_user_id]) : current_user
 
     if params[:workout_offering_id]
       @workout_offering =
         WorkoutOffering.find_by(id: params[:workout_offering_id])
       @workout = @workout_offering.workout
-      if @workout_offering.time_limit_for(student_user)
-        @user_time_limit = @workout_offering.time_limit_for(student_user)
+      if @workout_offering.time_limit_for(@student_user)
+        @user_time_limit = @workout_offering.time_limit_for(@student_user)
       else
         @user_time_limit = nil
       end
@@ -287,14 +284,14 @@ class ExercisesController < ApplicationController
     end
 
     @attempt = nil
-    @workout_score = @workout_offering ? student_user.current_workout_score :
-      @workout ? @workout.score_for(student_user, @workout_offering) : nil
+    @workout_score = @workout_offering ? @student_user.current_workout_score :
+      @workout ? @workout.score_for(@student_user, @workout_offering) : nil
     if @workout_offering &&
       @workout_score.workout_offering != @workout_offering
       @workout_score = nil
     end
     if @workout_offering && !@workout_score
-      @workout_score = @workout_offering.score_for(student_user)
+      @workout_score = @workout_offering.score_for(@student_user)
     end
     if @workout_score
       @attempt = @workout_score.attempt_for(@exercise_version.exercise)

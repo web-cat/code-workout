@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160217060925) do
+ActiveRecord::Schema.define(version: 20160225005739) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -336,6 +336,7 @@ ActiveRecord::Schema.define(version: 20160217060925) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "time_limit"
+    t.datetime "opening_date"
   end
 
   add_index "student_extensions", ["user_id"], name: "index_student_extensions_on_user_id"
@@ -454,16 +455,17 @@ ActiveRecord::Schema.define(version: 20160217060925) do
   add_index "users", ["time_zone_id"], name: "index_users_on_time_zone_id"
 
   create_table "workout_offerings", force: true do |t|
-    t.integer  "course_offering_id",                 null: false
-    t.integer  "workout_id",                         null: false
+    t.integer  "course_offering_id",                       null: false
+    t.integer  "workout_id",                               null: false
     t.datetime "created_at"
     t.datetime "updated_at"
     t.datetime "opening_date"
     t.datetime "soft_deadline"
     t.datetime "hard_deadline"
-    t.boolean  "published",          default: false, null: false
+    t.boolean  "published",                default: false, null: false
     t.integer  "time_limit"
     t.integer  "workout_policy_id"
+    t.integer  "continue_from_workout_id"
   end
 
   add_index "workout_offerings", ["course_offering_id"], name: "index_workout_offerings_on_course_offering_id"
