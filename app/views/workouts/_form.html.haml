@@ -7,7 +7,7 @@
         placeholder: "Enter Workout name"
 
   -#%a.btn.btn-large{href: "#kicModal", role: "button", data: {toggle: "modal"}} Add exercise    
-  = f.semantic_fields_for :exercise_workout do |ew|         
+  = f.semantic_fields_for :exercise_workouts do |ew|         
     = render 'exercise_workout_fields', f: ew
   .links
     = link_to_add_association 'Add Exercise', f, :exercise_workouts

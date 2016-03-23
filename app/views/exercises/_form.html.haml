@@ -26,22 +26,12 @@
 
   = f.input :external_id,
     placeholder: 'Enter a unique text ID for this question'
-
-  = f.semantic_fields_for :exercise_version do |ev|         
-    = render 'exercise_version_fields', f: ev
   
-  = f.semantic_fields_for Prompt.new do |ev|         
-    = render 'prompt_fields', f: ev
-
-  - if qtype == 2
-    = f.semantic_fields_for CodingPrompt.new do |cp|
-      = render 'coding_question_fields', f: cp
-  - else
-    = f.semantic_fields_for MultipleChoicePrompt.new do |mcp|
-      = render 'mcq_prompt_fields', f: mcp
-
   = f.input :question_type, as: :hidden,
     input_html: { value: qtype }
+
+  = f.semantic_fields_for :exercise_version do |ev|         
+    = render 'exercise_version_fields', f: ev, qtype: qtype
 
   .actions
     = f.submit class: 'btn btn-primary'

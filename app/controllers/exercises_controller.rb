@@ -79,10 +79,11 @@ class ExercisesController < ApplicationController
     ex = Exercise.new
     exercise_version = ExerciseVersion.new(exercise: ex)
     msg = params[:exercise] || params[:coding_question]
+    msg[:is_public] = msg[:is_public].to_i > 0
     form_hash = msg.clone()
     arr = []
     form_hash["current_version"] = msg[:exercise_version].clone()
-    if msg[:question_type] == 2
+    if msg[:question_type].to_i == 2
       msg[:coding_prompt].merge!(msg[:prompt])
       test_cases = ""
       msg[:coding_prompt][:test_cases_attributes].values.each do |tc|
@@ -90,17 +91,21 @@ class ExercisesController < ApplicationController
       end
       test_cases.rstrip!
       msg[:coding_prompt].delete("test_cases_attributes")
-      form_hash.delete("coding_prompt")
       msg[:coding_prompt]["tests"] = test_cases
       form_hash["current_version"]["prompts"] = Array.new
       codingprompt = {"coding_prompt" => msg[:coding_prompt].clone()}
       form_hash["current_version"]["prompts"] << codingprompt
-    elsif msg[:question_type] == 2
+      form_hash.delete("coding_prompt")
+    elsif msg[:question_type].to_i == 1
       msg[:multiple_choice_prompt].merge!(msg[:prompt])
-      form_hash.delete("multiple_choice_prompt")
+      msg[:multiple_choice_prompt][:is_scrambled] = msg[:multiple_choice_prompt][:is_scrambled].to_i > 0
+      msg[:multiple_choice_prompt][:allow_multiple] = msg[:allow_multiple].to_i > 0
       form_hash["current_version"]["prompts"] = Array.new
+      msg[:multiple_choice_prompt]["choices"] = msg[:multiple_choice_prompt]["choices"].values
       multiplechoiceprompt = {"multiple_choice_prompt" => msg[:multiple_choice_prompt].clone()}
       form_hash["current_version"]["prompts"] << multiplechoiceprompt
+      form_hash.delete("multiple_choice_prompt")
+      binding.pry
     end
     form_hash.delete("prompt")
     form_hash.delete("exercise_version")
@@ -215,6 +220,8 @@ class ExercisesController < ApplicationController
   # POST /exercises/upload_create
   def upload_create
     hash = YAML.load(File.read(params[:form][:file].path))
+    binding.pry
+    int = pinochet
     exercises = ExerciseRepresenter.for_collection.new([]).from_hash(hash)
     exercises.each do |e|
       if !e.save
