@@ -26,8 +26,8 @@
     - @exercise_version.prompts.each do |question_prompt|
       - prompt = question_prompt.specific
       / render the prompts if there is still time...
+      = markdown prompt.question
       - if @workout_offering.ultimate_deadline >= DateTime.now
-        = markdown prompt.question
         - if prompt.is_mcq?
           - answers = @exercise_version.serve_choice_array(question_prompt)
           - answers.each do |a|
@@ -98,9 +98,13 @@
       -else
         / show feedback for the prompt
         .alert.alert-danger This workout is closed and responses are no longer being accepted. The correct answer is displayed below.
-        = f.input :answer_code, as: :text, class: 'code',
-        input_html: { lang: 'text/x-' + (@exercise.language || 'java').downcase, readonly: true, autofocus: true,
-          value: prompt.feedback}
+        - if prompt.is_coding?
+          = f.input :answer_code, as: :text, class: 'code',
+          input_html: { lang: 'text/x-' + (@exercise.language || 'java').downcase, readonly: true, autofocus: true,
+            value: prompt.feedback}
+        -else
+          %span
+            =prompt.feedback
           
     .actions
       - if @workout_offering.nil? || @workout_offering.can_be_practiced_by?(current_user)
