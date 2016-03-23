@@ -97,7 +97,7 @@ class Ability
       # global role.
       can [:create], [Course, CourseOffering, CourseEnrollment,
         Workout, Exercise, Attempt, ResourceFile]
-      
+
       can [:index], [Workout, Exercise, Attempt, ResourceFile]
     end
   end
@@ -171,6 +171,12 @@ class Ability
       can :practice, Exercise do |e|
         now = Time.now
         e.is_public? || WorkoutOffering.
+          joins{workout.exercises}.joins{course_offering.course_enrollments}.
+          where{
+            course_offering.course_enrollments.user_id == user.id &
+            course_offering.course_enrollments.course_role_id.not_eq
+              CourseRole.STUDENT_ID
+             }.any? || WorkoutOffering.
           joins{workout.exercises}.joins{course_offering.course_enrollments}.
           where{
             ((starts_on == nil) | (starts_on <= now)) &
