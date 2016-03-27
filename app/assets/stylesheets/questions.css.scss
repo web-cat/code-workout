@@ -1,0 +1,40 @@
+// Place all the styles related to the questions controller here.
+// They will automatically be included in application.css.
+// You can use Sass (SCSS) here: http://sass-lang.com/
+.field_with_errors label { color: #AA0000; }
+
+.field_with_errors input { border: 2px solid #AA0000;}
+
+#errorExplanation { 
+    // width: 400px; 
+    padding: 0; 
+    margin: 0 auto 1.5em;
+    background-color: #FFFFFF; 
+    font-size: 12px; 
+    font-family: Helvetica;
+    border: 1px solid #AA0000; 
+}
+
+#errorExplanation h2 { 
+    font-weight: bold; 
+    font-size: 12px;
+    padding: 5px 5px 5px 15px; 
+    margin: 0; 
+    width: 100%; 
+    text-align: center;
+    font-family: Helvetica;
+ }
+
+#errorExplanation p { 
+    color: #333333; 
+    margin: 0; 
+    padding: 3px 0.5em;
+}
+
+#errorExplanation ul { 
+    margin-top: 0;  
+}
+
+#errorExplanation ul li { 
+    list-style: square;
+}

@@ -13,10 +13,9 @@
               .yamm-content
                 %ul.list-unstyled
                   %li
-                    %strong Workouts
-                  %li= link_to 'Browse all', workouts_path 
-                  %li
-                    %strong Exercises
+                    
+                  %li= link_to ', workouts_path
+                  %li                   
                   %li= link_to 'Browse all', exercises_path
         %li.dropdown
           %a.dropdown-toggle{ href: organizations_path,
@@ -27,7 +26,9 @@
               .yamm-content
                 %ul.list-unstyled
                   %li
-                    %strong= link_to 'Courses', organizations_path
+                    %strong Courses
+                  %li
+                    %strong= link_to 'Browse all', organizations_path
                   - if user_signed_in? && current_user.course_enrollments.any?
                     - term = Term.current_term
                     - current_user.courses_for_term(term).each do |c|

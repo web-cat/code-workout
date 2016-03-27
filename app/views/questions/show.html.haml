@@ -1,0 +1,37 @@
+%h1
+	=@question.title
+%tr
+	- if @question.user_id != nil
+		%td 
+			=@question.user_id
+	%td= link_to "Edit", edit_question_path(@question)
+	%td= link_to "Delete", @question, method: :delete 	
+%p 	
+	=@question.body
+%p= "Posted: #{@question.created_at}" 
+- if @question.tags != nil	
+	%p
+		=@question.tags
+- if @responses.size == 0
+	%h3 No Responses
+- else
+	%h3 Responses:
+	%table
+		%tr
+			%th Text:
+			%th User:
+			%th Posted
+	- @responses.each do |response|
+		%tr
+			%td= link_to response.text, response
+			%td= response.user_id
+			%td= response.created_at 
+
+%h1 Respond to this question:
+
+= form_for(@response, url: responses_path) do |f|
+	= f.label(:text, "Your Response")
+	= f.text_area(:text, size: "40x5")
+	= f.hidden_field(:question_id, :value => @question.id)
+	= submit_tag("Submit")
+

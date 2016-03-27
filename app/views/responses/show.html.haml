@@ -1,0 +1,8 @@
+
+%tr
+	%td= link_to "Edit", edit_response_path(@response)
+	%td= link_to "Delete", @response, method: :delete
+%p= @response.text
+%p= @response.user_id
+%p= @response.created_at
+
