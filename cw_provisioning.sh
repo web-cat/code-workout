@@ -13,8 +13,9 @@ sudo-pw apt-get -y upgrade
 sudo-pw apt-get -y install git-core curl zlib1g-dev build-essential libssl-dev libreadline-dev libyaml-dev libsqlite3-dev sqlite3 libxml2-dev libxslt1-dev libcurl4-openssl-dev python-software-properties libffi-dev
 sudo-pw apt-get -y install git curl vim
 sudo-pw apt-get -y install libreadline-gplv2-dev
-sudo-pw apt-get -y install libmysqlclient-dev
 sudo-pw apt-get -y install libpq-dev
+sudo-pw apt-get -y install python-pip
+
 
 if [ ! $(which rbenv) ]; then
   echo "
@@ -37,7 +38,6 @@ curl -L https://raw.github.com/fesplugas/rbenv-installer/master/bin/rbenv-instal
 rbenv install 2.3.0
 rbenv rehash
 rbenv global 2.3.0
-rbenv rehash
 
 cd  ~/.rbenv  # rbenv install location (...or /opt/rbenv/)
 git pull # will pull rbenv repo
@@ -50,10 +50,13 @@ sudo-pw gem install bundler
 
 # Install mysql
 sudo-pw apt-get -y install mysql-server
+sudo-pw apt-get install libmysqlclient-dev
 sudo-pw apt-get -y install ruby1.9.1-dev
 gem install mysql2
 
 sudo-pw apt-get -y install nodejs
+
+bundle update rake
 
 # install hh history tool
 sudo-pw add-apt-repository ppa:ultradvorka/ppa
