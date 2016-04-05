@@ -14,15 +14,9 @@
     label: 'Initial Editor Contents'
 
   = f.input :wrapper_code, as: :text,                                   |
-    placeholder: 'Specify "___" (three underscores) to denote where ' + |
-    'the answer code/method should be placed within the wrapper',       |
-    label: 'Testing Wrapper'                                            |
-
-  = f.input :test_script, as: :text,
-    placeholder: 'Enter as CSV',
-    label: 'Test Cases'
-
-  -#= f.semantic_fields_for :test_cases do |test_case|
+    label: 'Testing Wrapper'
+    
+  = f.semantic_fields_for :test_cases do |test_case|
     = render 'test_case_fields', f: test_case
-  -#.links
-    -#= link_to_add_association 'Add a Test Case', f, :test_cases
+  .links
+    = link_to_add_association 'Add a Test Case', f, :test_cases

@@ -61,7 +61,6 @@ class Exercise < ActiveRecord::Base
 
   accepts_nested_attributes_for :exercise_versions, allow_destroy: true
 
-
   #~ Hooks ....................................................................
 
   before_validation :set_defaults

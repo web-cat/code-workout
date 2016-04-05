@@ -61,9 +61,9 @@ class ExercisesController < ApplicationController
   # GET /exercises/new
   def new
     @exercise = Exercise.new
-    @coding_exercise = CodingQuestion.new
-    @languages = Tag.where(tagtype: Tag.language).pluck(:tag_name)
-    @areas = Tag.where(tagtype: Tag.area).pluck(:tag_name)
+    # @coding_exercise = CodingQuestion.new
+    # @languages = Tag.where(tagtype: Tag.language).pluck(:tag_name)
+    # @areas = Tag.where(tagtype: Tag.area).pluck(:tag_name)
   end
 
 
@@ -76,204 +76,38 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # POST /exercises
   def create
-    basex=BaseExercise.new
-    ex=Exercise.new
+    ex = Exercise.new
+    exercise_version = ExerciseVersion.new(exercise: ex)
     msg = params[:exercise] || params[:coding_question]
-    basex.user_id = current_user.id
-    basex.question_type = msg[:question_type] || 1
-    basex.versions = 1
-    ex.name = msg[:name].chomp.strip
-    # ex.question = ERB::Util.html_escape(msg[:question])
-    # ex.feedback = ERB::Util.html_escape(msg[:feedback])
-    ex.question = msg[:question]
-    ex.feedback = msg[:feedback]
-    ex.creator_id = current_user.id
-    ex.is_public = true
-    if msg[:is_public] == 0
-      ex.is_public = false
-    end
-
-    if msg[:mcq_allow_multiple].nil?
-      ex.mcq_allow_multiple = false
-    else
-      ex.mcq_allow_multiple = msg[:mcq_allow_multiple]
-    end
-
-    if msg[:mcq_is_scrambled].nil?
-      ex.mcq_is_scrambled = false
-    else
-      ex.mcq_is_scrambled = msg[:mcq_is_scrambled]
-    end
-    ex.priority = 0
-    # TODO: Get the count of attempts from the session
-    ex.count_attempts = 0
-    ex.count_correct = 0
-    if msg[:language_id]
-      ex.language_id = msg[:language_id].to_i
-    end
-
-    if msg[:experience]
-      ex.experience = msg[:experience]
-    else
-      ex.experience = 10
-    end
-
-    # default IRT statistics
-    ex.difficulty = 0
-    ex.discrimination = 0
-    ex.version = 1
-
-    # Populate coding question's test case
-    if msg[:coding_questions]
-      codingquestion = CodingQuestion.new
-      codingquestion.class_name =
-        msg[:coding_questions][:class_name].chomp.strip
-      codingquestion.method_name =
-        msg[:coding_questions][:method_name].chomp.strip
-      codingquestion.wrapper_code =
-        msg[:coding_questions][:wrapper_code].chomp.strip
-      codingquestion.test_script =
-        msg[:coding_questions][:test_script].chomp.strip
-      ex.coding_question = codingquestion
-      extests = msg[:coding_questions][:test_script].strip.chomp.split("\n")
-      extests.each do |tc|
-        test_case = TestCase.new
-        # FIXME:
-        test_case.test_script = 'NONE for now'
-        case_splits = tc.split(',')
-        test_case.input = case_splits[0].strip.gsub(';', ',')
-        test_case.expected_output = case_splits[1].strip
-        test_case.weight = 1.0
-        # FIXME:
-        test_case.description = case_splits[2] unless case_splits[2].nil?
-        test_case.negative_feedback = case_splits[3]
-        ex.coding_question.test_cases << test_case
+    form_hash = msg.clone()
+    arr = []
+    form_hash["current_version"] = msg[:exercise_version].clone()
+    if msg[:question_type] == 2
+      msg[:coding_prompt].merge!(msg[:prompt])
+      test_cases = ""
+      msg[:coding_prompt][:test_cases_attributes].values.each do |tc|
+        test_cases = test_cases + tc.values.join(",") + "\n"
       end
+      test_cases.rstrip!
+      msg[:coding_prompt].delete("test_cases_attributes")
+      form_hash.delete("coding_prompt")
+      msg[:coding_prompt]["tests"] = test_cases
+      form_hash["current_version"]["prompts"] = Array.new
+      codingprompt = {"coding_prompt" => msg[:coding_prompt].clone()}
+      form_hash["current_version"]["prompts"] << codingprompt
+    elsif msg[:question_type] == 2
+      msg[:multiple_choice_prompt].merge!(msg[:prompt])
+      form_hash.delete("multiple_choice_prompt")
+      form_hash["current_version"]["prompts"] = Array.new
+      multiplechoiceprompt = {"multiple_choice_prompt" => msg[:multiple_choice_prompt].clone()}
+      form_hash["current_version"]["prompts"] << multiplechoiceprompt
     end
-
-    basex.exercises << ex
-    ex.save!
-    basex.current_version = ex
-    basex.save
-    if msg[:coding_questions]
-      msg[:tag_ids].delete_if(&:empty?)
-      language = msg[:tag_ids][0]
-      Dir.chdir('usr/resources') do
-        test_end_code = generate_tests(ex.id, language,
-          msg[:coding_questions][:class_name].chomp.strip,
-          msg[:coding_questions][:method_name].chomp.strip)
-        puts 'LANGUAGE', 'LANGUAGE', language, 'LANGUAGE', 'LANGUAGE'
-        base_test_file = File.open(
-          "#{language}BaseTestFile.#{Exercise.extension_of(language)}",
-          'rb').read
-        test_base = base_test_file.gsub('baseclassclass',
-          msg[:coding_questions][:class_name].chomp.strip)
-
-        if language == 'Java'
-          first_input = ex.coding_question.test_cases[0].input
-          first_expected_output =
-            ex.coding_question.test_cases[0].expected_output
-          if first_input == 'true' || first_input == 'false'
-            puts 'BOOLEAN TYPE', 'BOOLEAN TYPE'
-            input_type = 'boolean'
-          elsif first_input.include?('"')
-            puts 'STRING TYPE', 'STRING TYPE'
-            input_type = 'String'
-          elsif first_input.include?("'")
-             puts 'CHAR TYPE', 'CHAR TYPE'
-             input_type = 'char'
-          elsif first_input.to_i.to_s == first_input
-             puts 'INT TYPE', 'INT TYPE'
-             input_type = 'int'
-          elsif first_input.to_f.to_s == first_input
-             puts 'FLOAT TYPE', 'FLOAT TYPE'
-             input_type = 'float'
-          else
-             puts 'TYPE ERROR', 'TYPE ERROR'
-             input_type = 'ERR'
-          end
-          if first_expected_output == 'true' ||
-            first_expected_output == 'false'
-            puts 'BOOLEAN TYPE', 'BOOLEAN TYPE'
-            output_type = 'boolean'
-          elsif first_expected_output.include?('"')
-            puts 'STRING TYPE', 'STRING TYPE'
-            output_type = 'String'
-          elsif first_expected_output.include?("'")
-            puts 'CHAR TYPE', 'CHAR TYPE'
-            output_type = 'char'
-          elsif first_expected_output.to_i.to_s == first_expected_output
-            puts 'INT TYPE', 'INT TYPE'
-            output_type = 'int'
-          elsif first_expected_output.to_f.to_s == first_expected_output
-            puts 'FLOAT TYPE', 'FLOAT TYPE'
-            output_type = 'float'
-          else
-            puts 'TYPE ERROR', 'TYPE ERROR'
-            output_type = 'ERR'
-          end
-          if output_type != 'ERR'
-            test_base = test_base.gsub('methodnameemandohtem',
-              msg[:coding_questions][:method_name].chomp.strip)
-            test_base = test_base.gsub('input_type',input_type)
-            test_base = test_base.gsub('output_type',output_type)
-
-            base_runner_file = File.open("JavaBaseTestRunner.java","rb").read
-            base_runner_code = base_runner_file.gsub('baseclassclass',
-              msg[:coding_questions][:class_name].chomp.strip)
-            File.open(msg[:coding_questions][:class_name].chomp.strip +
-              'TestRunner.java', "wb") { |f| f.write( base_runner_code ) }
-          end # !ERR IF
-        end # JAVA IF
-        testing_code = test_base.gsub('TTTTT', test_end_code)
-        File.open(msg[:coding_questions][:class_name].chomp.strip + 'Test.' +
-          Exercise.extension_of(language), 'wb') { |f| f.write(testing_code) }
-      end
-    end
-
-    i = 0
-    right = 0.0
-    total = 0.0
-
-    # typed in tags
-    if msg[:tags_attributes]
-      msg[:tags_attributes].each do |t|
-        Tag.tag_this_with(ex, t.second["tag_name"].to_s, Tag.skill)
-      end
-    end
-
-    # selected tags
-    msg[:tag_ids].delete_if(&:empty?)
-    puts 'TAG IDS', msg[:tag_ids], 'TAG IDS'
-    msg[:tag_ids].each do |tag_name|
-      Tag.tag_this_with(ex, tag_name.to_s, Tag.misc)
-    end
-    if msg[:choices_attributes]
-      msg[:choices_attributes].each do |c|
-        if c.second["value"] == "1"
-          right += 1
-        end
-        total += 1
-      end
-      msg[:choices_attributes].each do |c|
-        tmp = Choice.create
-        tmp.answer = ERB::Util.html_escape(c.second[:answer])
-        if( c.second["value"] == "1" )
-          tmp.value = 1/right
-        else
-          tmp.value = 0
-        end
-
-        tmp.feedback = ERB::Util.html_escape(c.second[:feedback])
-        tmp.order = i
-        ex.choices << tmp
-        #tmp.exercise << @exercise
-        tmp.save!
-
-        i=i+1
-      end
-    end
-    if ex.save!
+    form_hash.delete("prompt")
+    form_hash.delete("exercise_version")
+    form_hash.delete("question_type")
+    arr << form_hash
+    exercises = ExerciseRepresenter.for_collection.new([]).from_hash(arr)
+    if exercises[0].save!
       redirect_to ex, notice: 'Exercise was successfully created.'
     else
       #render action: 'new'
@@ -764,12 +598,11 @@ class ExercisesController < ApplicationController
     # -------------------------------------------------------------
     # Only allow a trusted parameter "white list" through.
     def exercise_params
-      params.require(:exercise_version).permit(:name, :question, :feedback,
-        :experience, :id, :is_public, :priority, :type,
+      params.require(:exercise).permit(:name, :question, :feedback,
+        :experience, :id, :is_public, :priority, :question_type,
         :exercise_version, :exercise_version_id, :commit,
-        :mcq_allow_multiple, :mcq_is_scrambled, :language, :area,
-        choices_attributes: [:answer, :order, :value, :_destroy],
-        tags_attributes: [:tag_name, :tagtype, :_destroy])
+        :mcq_allow_multiple, :mcq_is_scrambled, :languages, :styles,
+        :tag_ids)
     end
 
 

@@ -6,40 +6,39 @@
 
   = f.input :is_public,
     label: 'Share with CodeWorkout community?'
+  
+  = f.input :language_list, maxlength: 255, as: :string,
+    placeholder: 'Enter the languages associated with this question'
 
-  = f.input :tags, as: :select,
-    collection: @languages,
-    label: 'Programming language'
+  = f.input :tag_list, maxlength: 255,
+    placeholder: 'Tags'
 
-  = f.input :tags, as: :select,
-    collection: @areas,
-    label: 'Subject area'
-
-  #tags
-    = f.semantic_fields_for :tags do |t|
-      = render 'tag_fields', f: t
-    .links
-      = link_to_add_association 'Add Tag...', f, :tags
+  = f.input :style_list, maxlength: 255, as: :string,
+    placeholder: 'Styles'
 
   = f.input :experience, as: :select,
     collection: (10..100).step(10).to_a,
     label: 'Experience Points',
     hint: 'Amount gained for a correct answer'
 
-  = f.input :question,
-    placeholder: 'Enter question text',
-    input_html: { class: 'richtexteditor autogrow span10', rows: 6 }
+  = f.input :exercise_family, as: :string,
+    placeholder: 'Exercise Family'
+
+  = f.input :external_id,
+    placeholder: 'Enter a unique text ID for this question'
+
+  = f.semantic_fields_for :exercise_version do |ev|         
+    = render 'exercise_version_fields', f: ev
+  
+  = f.semantic_fields_for Prompt.new do |ev|         
+    = render 'prompt_fields', f: ev
 
   - if qtype == 2
-    = f.semantic_fields_for @exercise.coding_question do |cq|
-      = render 'coding_question_fields', f: cq
+    = f.semantic_fields_for CodingPrompt.new do |cp|
+      = render 'coding_question_fields', f: cp
   - else
-    = render 'choice_fields', f: f
-
-  = f.input :feedback,
-    label: 'Question Explanation',
-    placeholder: '(optional) Exercise explanation, given after submission',
-    input_html: { class: 'richtexteditor span10', rows: 3 }
+    = f.semantic_fields_for MultipleChoicePrompt.new do |mcp|
+      = render 'mcq_prompt_fields', f: mcp
 
   = f.input :question_type, as: :hidden,
     input_html: { value: qtype }
