@@ -1,4 +1,4 @@
-= render partial: 'layouts/breadcrumb'
+/ = render partial: 'layouts/breadcrumb'
 - if @user_time_limit && (@workout_score.created_at + @user_time_limit.minutes) - Time.zone.now > 0
   - user_deadline = @workout_score.created_at + @user_time_limit.minutes
   - user_deadline = user_deadline.to_s
@@ -10,10 +10,10 @@
 .col-md-7
   = semantic_form_for @exercise_version,
     url: (@workout_offering ? organization_workout_offering_exercise_evaluate_path(id: @exercise_version.exercise.id,
-      course_id: @workout_offering.course_offering.course.slug,
-      organization_id: @workout_offering.course_offering.course.organization.slug,
-      term_id: @workout_offering.course_offering.term.slug,
-      workout_offering_id: @workout_offering.id) : exercise_evaluate_path(@exercise_version.exercise,
+    course_id: @workout_offering.course_offering.course.slug,
+    organization_id: @workout_offering.course_offering.course.organization.slug,
+    term_id: @workout_offering.course_offering.term.slug,
+    workout_offering_id: @workout_offering.id) : exercise_evaluate_path(@exercise_version.exercise,
     exercise_version_id: @exercise_version.id,
     feedback_return: true)), remote: true do |f|
     = f.semantic_errors
@@ -117,11 +117,11 @@
         (@exercise.language ?                                              |
         random_exercise_path(language: @exercise.language) :               |
         random_exercise_path)                                              |
-.col-md-5
-  #saved_assurance
-  #previous_answer.previous_answer
-  - if @attempt
-    #exercisefeedback
-      = render partial: 'sse/ajax_feedback'
-  - else
-    #exercisefeedback{style: 'display: none;'}
+/ .col-md-5
+/   #saved_assurance
+/   #previous_answer.previous_answer
+/   - if @attempt
+/     #exercisefeedback
+/       = render partial: 'sse/ajax_feedback'
+/   - else
+/     #exercisefeedback{style: 'display: none;'}

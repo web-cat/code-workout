@@ -2,6 +2,9 @@ CodeWorkout::Application.routes.draw do
 
   root 'home#index'
 
+  post 'lti/launch'
+  post 'lti/assessment'
+
   get 'home' => 'home#index'
   get 'main' => 'home#index'
   get 'home/about'
@@ -97,12 +100,12 @@ CodeWorkout::Application.routes.draw do
     patch ':course_id/:term_id/:workout_offering_id/:id' => 'exercises#evaluate',
       as: :workout_offering_exercise_evaluate
     get ':course_id/:term_id/:workout_offering_id/review/:review_user_id/:id' => 'exercises#practice',
-      as: :workout_offering_exercise_review  
+      as: :workout_offering_exercise_review
 
     get ':course_id/:term_id/:id' => 'workout_offerings#show',
       as: :workout_offering
     get ':course_id/:term_id/review/:review_user_id/:id' => 'workout_offerings#review',
-      as: :workout_offering_review  
+      as: :workout_offering_review
     post ':id/:term_id/generate_gradebook/' => 'courses#generate_gradebook',
       as: :course_gradebook
     get ':id(/:term_id)' => 'courses#show', as: :course
@@ -130,17 +133,19 @@ CodeWorkout::Application.routes.draw do
     get 'performance' => :calc_performance, as: :calc_performance
   end
 
+  devise_for :users, :controllers => {sessions: 'sessions', registrations: 'registrations'}
+
   #OmniAuth for Facebook
-  devise_for :users,
-    controllers: { omniauth_callbacks: 'users/omniauth_callbacks' },
-    skip: [:registrations, :sessions]
-  as :user do
-    get '/signup' => 'devise/registrations#new', as: :new_user_registration
-    post '/signup' => 'devise/registrations#create', as: :user_registration
-    get '/login' => 'devise/sessions#new', as: :new_user_session
-    post '/login' => 'devise/sessions#create', as: :user_session
-    delete '/logout' => 'devise/sessions#destroy', as: :destroy_user_session
-  end
+  # devise_for :users,
+  #   controllers: { omniauth_callbacks: 'users/omniauth_callbacks' },
+  #   skip: [:registrations, :sessions]
+  # as :user do
+  #   get '/signup' => 'devise/registrations#new', as: :new_user_registration
+  #   post '/signup' => 'devise/registrations#create', as: :user_registration
+  #   get '/login' => 'devise/sessions#new', as: :new_user_session
+  #   post '/login' => 'devise/sessions#create', as: :user_session
+  #   delete '/logout' => 'devise/sessions#destroy', as: :destroy_user_session
+  # end
 
 end
 #== Route Map

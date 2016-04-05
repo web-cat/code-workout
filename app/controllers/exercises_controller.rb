@@ -1,7 +1,6 @@
 class ExercisesController < ApplicationController
   load_and_authorize_resource
 
-
   #~ Action methods ...........................................................
 
   # -------------------------------------------------------------
@@ -557,6 +556,7 @@ class ExercisesController < ApplicationController
     else
       @workout_offering = nil
     end
+
     if @workout_offering.nil? && current_user.andand.current_workout_score &&
       current_user.current_workout_score.workout.contains?(@exercise_version.exercise)
       @workout_offering = current_user.current_workout_score.workout_offering
@@ -564,38 +564,46 @@ class ExercisesController < ApplicationController
         @workout = current_user.current_workout_score.workout
       end
     end
+
     if @workout_offering && @workout.nil?
       @workout = @workout_offering.workout
     end
+
     if @workout.nil? && session[:current_workout]
       @workout = Workout.find_by(id: session[:current_workout])
       if !@workout.contains?(@exercise_version.exercise)
         @workout = nil
       end
     end
+
     @workout_score = nil
+
     if @workout_offering
       @workout_score = @workout_offering.score_for(current_user)
     elsif @workout
       @workout_score = @workout.score_for(current_user)
     end
+
     if @workout_score.andand.closed? && @workout_offering.andand.can_be_practiced_by?(current_user)
       p 'WARNING: attempt to evaluate exercise after time expired.'
       return
     end
-    @attempt = @exercise_version.new_attempt(
-      user: current_user, workout_score: @workout_score)
+
+    @attempt = @exercise_version.new_attempt(user: current_user, workout_score: @workout_score)
 
     @attempt.save!
+
     # FIXME: Need to make it work for multiple prompts
     # prompt = @exercise_version.prompts.first.specific
     # prompt_answer = @attempt.prompt_answers.first  # already specific here
+
     if @workout.andand.exercise_workouts.andand.where(exercise: @exercise).andand.any?
       @max_points = @workout.exercise_workouts.
         where(exercise: @exercise).first.points
     else # case when exercise being practised is not part of any workout
       @max_points = 10.0
     end
+
     if @exercise_version.is_mcq?
       if params[:exercise_version]
         # Usual single prompt question

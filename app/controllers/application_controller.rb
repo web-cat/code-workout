@@ -2,7 +2,8 @@ require 'application_responder'
 require 'loofah_render'
 
 class ApplicationController < ActionController::Base
-  protect_from_forgery with: :exception
+  # protect_from_forgery with: :exception
+  protect_from_forgery with: :null_session
   self.responder = ApplicationResponder
   respond_to :html
 

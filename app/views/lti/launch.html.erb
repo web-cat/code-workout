@@ -1,0 +1,26 @@
+<script>
+  (function() {
+    var TP = {};
+    <% if @tp.outcome_service? %>
+      TP.outcomeService = true;
+    <% else %>
+      TP.outcomeService = false;
+    <% end %>
+    TP.toParams = {};
+    TP.toParams.launch_params = {};
+    <% @tp.to_params.each do |key, value| %>
+      TP.toParams.launch_params.<%= key %> = "<%= value %>";
+    <% end%>
+
+    TP.ODSAParams = {};
+    TP.ODSAParams.book_folder_name = "<%= params["book_folder_name"] %>";
+    TP.ODSAParams.section_file_name = "<%= params["section_file_name"] %>";
+    TP.ODSAParams.gradeable_exercise = "<%= params["gradeable_exercise"] %>";
+    TP.ODSAParams.section_title = "<%= params["section_title"] %>";
+
+    window.ODSA = window.ODSA || {};
+    window.ODSA.TP = TP;
+  }());
+</script>
+
+<%= @section_html.html_safe %>

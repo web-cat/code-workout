@@ -1,4 +1,4 @@
-source 'https://rubygems.org'
+source 'http://rubygems.org'
 
 gem 'rails'
 gem 'bootstrap-sass', '~> 3.2.0'
@@ -56,6 +56,7 @@ group :development, :test do
   # gem 'ruby-debug-base'
   # gem 'ruby-debug-ide'
   gem 'pry'
+  gem 'thin'
 end
 gem 'factory_girl_rails'
 gem 'log_file'
@@ -111,3 +112,5 @@ gem 'capistrano-rails'
 #for multi-color progress bar
 gem 'css3-progress-bar-rails'
 
+gem 'ims-lti', '~> 1.1.8'
+gem 'json'
