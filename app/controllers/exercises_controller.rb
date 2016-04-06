@@ -7,6 +7,7 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # GET /exercises
   def index
+    @exercises = Exercise.where(is_public: true)
   end
 
 
