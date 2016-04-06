@@ -14,9 +14,10 @@ class CodeWorker
       exv = attempt.exercise_version
       prompt = exv.prompts.first.specific
       pre_lines = 0
+      answer_text = attempt.prompt_answers.first.specific.answer
+      answer_lines = answer_text ? answer_text.count("\n") : 0
       if !prompt.wrapper_code.blank?
-        code_body = prompt.wrapper_code.sub(/\b___\b/,
-          attempt.prompt_answers.first.specific.answer)
+        code_body = prompt.wrapper_code.sub(/\b___\b/, answer_text)
         if $`
           # Want pre_lines to be a count of the number of lines preceding
           # the one the match is on, so use count() instead of lines() here
@@ -54,11 +55,14 @@ class CodeWorker
       # to be more OO
 
       if language == "Java"
-        result = execute_javatest(prompt.class_name, attempt_dir, pre_lines)
+        result = execute_javatest(
+          prompt.class_name, attempt_dir, pre_lines, answer_lines)
       elsif language == "Ruby"
-        result = execute_rubytest(prompt.class_name, attempt_dir, pre_lines)
+        result = execute_rubytest(
+          prompt.class_name, attempt_dir, pre_lines, answer_lines)
       elsif language == "Python"
-        result = execute_pythontest(prompt.class_name, attempt_dir, pre_lines)
+        result = execute_pythontest(
+          prompt.class_name, attempt_dir, pre_lines, answer_lines)
       end # IF INNERMOST
 
       correct = 0.0
@@ -82,8 +86,8 @@ class CodeWorker
         end  # CSV end
       end
       multiplier = 1.0
-      attempt.score = correct * multiplier / total 
-      attempt.experience_earned = attempt.score * exv.exercise.experience / attempt.submit_num    
+      attempt.score = correct * multiplier / total
+      attempt.experience_earned = attempt.score * exv.exercise.experience / attempt.submit_num
       workout_score = workout_score_id &&
         WorkoutScore.find_by(id: workout_score_id)
       attempt.feedback_ready = true
@@ -108,7 +112,7 @@ class CodeWorker
   private
 
   # -------------------------------------------------------------
-  def execute_javatest(class_name, attempt_dir, pre_lines)
+  def execute_javatest(class_name, attempt_dir, pre_lines, answer_lines)
     cmd = CodeWorkout::Config::JAVA[:ant_cmd] % {attempt_dir: attempt_dir}
     system(cmd +
       ">> #{attempt_dir}/err.log " +
@@ -118,6 +122,8 @@ class CodeWorker
     error = ''
     logfile = attempt_dir + '/reports/compile.log'
     if File.exist?(logfile)
+      xtra = ''
+      skip = 0
       compile_out = File.foreach(logfile) do |line|
         line.chomp!
         # puts "checking line: #{line}"
@@ -131,13 +137,31 @@ class CodeWorker
         if line =~ /^Compiling/
           next
         elsif line =~ /^\S+\.java:\s*([0-9]+)\s*:\s*(?:warning:\s*)?(.*)/
-          error += "line #{$1.to_i - pre_lines}: #{$2}"
+          line_no = $1.to_i - pre_lines
+          if line_no > answer_lines
+            line_no = answer_lines
+            xtra = ', maybe a missing delimiter or closing brace?'
+          end
+          error += "line #{line_no}: #{$2}#{xtra}"
           # puts "error now: #{error}"
-        elsif line =~ /^(found|expected|required|symbol)\s*:(.*)/
-          error += "\n#{$1}: #{$2}"
+          if !xtra.empty?
+            break
+          end
+          skip = 2
+        elsif line =~ /^\s*(found|expected|required|symbol)\s*:\s*(.*)/
+          if $1 == 'symbol'
+            error += ": #{$2}"
+          else
+            error += "\n#{$1}: #{$2}"
+          end
           # puts "error now: #{error}"
-        else
           break
+        else
+          if skip == 0
+            break
+          else
+            skip = skip - 1
+          end
         end
       end
     end
@@ -156,7 +180,7 @@ class CodeWorker
 
 
   # -------------------------------------------------------------
-  def execute_rubytest(class_name, attempt_dir, pre_lines)
+  def execute_rubytest(class_name, attempt_dir, pre_lines, answer_lines)
     return 'Ruby execution is temporarily suspended.'
 #    if system("ruby #{class_name}Test.rb",
 #      [:out, :err] => 'err.log',
@@ -171,7 +195,7 @@ class CodeWorker
 
 
   # -------------------------------------------------------------
-  def execute_pythontest(class_name, attempt_dir, pre_lines)
+  def execute_pythontest(class_name, attempt_dir, pre_lines, answer_lines)
     return 'Python execution is temporarily suspended.'
 #    if system("python #{class_name}Test.py",
 #      [:out, :err] => 'err.log',
