@@ -468,9 +468,10 @@ ActiveRecord::Schema.define(version: 20160225005739) do
     t.integer  "continue_from_workout_id"
   end
 
-  add_index "workout_offerings", ["course_offering_id"], name: "index_workout_offerings_on_course_offering_id"
-  add_index "workout_offerings", ["workout_id"], name: "index_workout_offerings_on_workout_id"
-  add_index "workout_offerings", ["workout_policy_id"], name: "index_workout_offerings_on_workout_policy_id"
+  add_index "workout_offerings", ["continue_from_workout_id"], name: "workout_offerings_continue_from_workout_id_fk", using: :btree
+  add_index "workout_offerings", ["course_offering_id"], name: "index_workout_offerings_on_course_offering_id", using: :btree
+  add_index "workout_offerings", ["workout_id"], name: "index_workout_offerings_on_workout_id", using: :btree
+  add_index "workout_offerings", ["workout_policy_id"], name: "index_workout_offerings_on_workout_policy_id", using: :btree
 
   create_table "workout_owners", force: true do |t|
     t.integer "workout_id", null: false
