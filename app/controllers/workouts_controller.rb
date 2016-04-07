@@ -101,15 +101,6 @@ class WorkoutsController < ApplicationController
     msg      = params[:workout]
     exercises = msg[:exercise_workouts_attributes]
     @workout.creator_id = current_user.id
-    @workout.save!
-    exercise_one =  msg[:exercise_workout]
-    exercise_one_id = exercise_one[:exercise]
-    exercise = Exercise.find(exercise_one_id)
-    exercise_workout = ExerciseWorkout.new(workout: @workout, exercise: exercise)
-    exercise_workout.position = exercise_one[:position]
-    exercise_workout.points = exercise_one[:points]
-    exercise_workout.save!
-
     exercises.each do |ex|
       ex_id = ex.second[:exercise_id]
       exercise = Exercise.find(ex_id)
@@ -138,7 +129,7 @@ class WorkoutsController < ApplicationController
     end
 
     if @workout.save
-      redirect_to @workout, notice: 'Workout was successfully created.'
+      redirect_to root_path, notice: 'Workout was successfully created.'
     else
       render action: 'new'
     end
