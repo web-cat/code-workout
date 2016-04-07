@@ -2,8 +2,9 @@ require 'application_responder'
 require 'loofah_render'
 
 class ApplicationController < ActionController::Base
-  # protect_from_forgery with: :exception
-  protect_from_forgery with: :null_session
+  protect_from_forgery with: :exception
+  skip_before_action :verify_authenticity_token, if: :json_request?
+
   self.responder = ApplicationResponder
   respond_to :html
 
@@ -54,6 +55,12 @@ class ApplicationController < ActionController::Base
       autolink: true,
       strikethrough: true,
       lax_spacing: true).render(text)
+  end
+
+  protected
+
+  def json_request?
+    request.format.json?
   end
 
 end
