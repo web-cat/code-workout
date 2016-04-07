@@ -61,7 +61,6 @@ class Exercise < ActiveRecord::Base
 
   accepts_nested_attributes_for :exercise_versions, allow_destroy: true
 
-
   #~ Hooks ....................................................................
 
   before_validation :set_defaults
@@ -209,7 +208,6 @@ class Exercise < ActiveRecord::Base
       (current_version && current_version.prompts.first) ?
         current_version.question_type : Q_MC
     self.name ||= ''
-    self.is_public ||= true
     self.experience ||= 10
   end
 

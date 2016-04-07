@@ -25,7 +25,7 @@ class MultipleChoicePrompt < ActiveRecord::Base
   acts_as :prompt
   has_many :choices, -> { order('position ASC') },
     inverse_of: :multiple_choice_prompt, dependent: :destroy
-
+  accepts_nested_attributes_for :choices, allow_destroy: true
 
   #~ Validation ...............................................................
 

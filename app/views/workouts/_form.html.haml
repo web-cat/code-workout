@@ -5,13 +5,9 @@
     .col-md-10
       = f.input :name, maxlength: 50,
         placeholder: "Enter Workout name"
-  .row
-    .col-md-4
-      = f.input :exercises, :as => :select,
-        collection: @exers,
-        label: "Related Exercises"
+
   -#%a.btn.btn-large{href: "#kicModal", role: "button", data: {toggle: "modal"}} Add exercise    
-  = f.semantic_fields_for :exercise_workout do |ew|         
+  = f.semantic_fields_for :exercise_workouts do |ew|         
     = render 'exercise_workout_fields', f: ew
   .links
     = link_to_add_association 'Add Exercise', f, :exercise_workouts

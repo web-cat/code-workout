@@ -57,9 +57,10 @@
 - elsif @workout_offering
   %p
     - if  review_user.id != current_user.id
-      = 'Student: ' + review_user.first_name + " " + review_user.last_name
+      Student: 
+      = "#{review_user.display_name}."
     - if workout_score
-      Last Attempted:
+      &nbsp;&nbsp;&nbsp;Last Attempted:
       = l workout_score.last_attempted_at
     - elsif @workout_offering.hard_deadline
       Due:

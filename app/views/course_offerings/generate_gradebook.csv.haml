@@ -1,9 +1,9 @@
-- headers = ['E-mail','First Name','Second Name']
+- headers = ['E-mail','First Name','Surname']
 - @course_offering.workouts.each do |wkt|
   - headers<<wkt.name
 - headers<<'Total'
 = CSV.generate_line(headers).strip()
-- CourseEnrollment.where(course_offering_id: @course_offering.id).each do |ce|
+- @course_enrolled.each do |ce|
   - body = Array.new
   - if ce.course_role_id == CourseRole.find_by(name: 'Student').id
     - student =  User.find(ce.user_id)
@@ -11,7 +11,7 @@
     - body << student.first_name   
     - body << student.last_name
     - grand_total = 0.00
-    - CourseOffering.find(@course_offering.id).workouts.each do |wkt|
+    - @course_offering.workouts.each do |wkt|
       - if WorkoutScore.find_by(user_id: ce.user_id, workout: wkt)
         - tot = WorkoutScore.find_by!(user_id: ce.user_id, workout: wkt).score.round(2)
         - body << tot

@@ -1,22 +1,19 @@
-= f.inputs name: 'Multiple Choice Settings' do
-  = f.input :mcq_is_scrambled,
-    label: 'Randomize answers'
-
-  = f.input :mcq_allow_multiple,
-    label: 'Allow multiple selections'
-
-  = f.semantic_fields_for :choices do |choice|
-    = choice.inputs do
-      = choice.input :value, as: :boolean,
-        label: 'Correct'
-      = choice.input :answer, as: :text,
-        placeholder: 'Enter answer text',
-        input_html: { class: 'richtexteditor autogrow span10', rows: 1 }
-      .form-group
-        %span.form-wrapper
-          = link_to_remove_association 'Remove answer...', choice
-
-  -# The link below is commented out since it does not work correctly
-  -# when included in this partial.
-  -#.links
-    = link_to_add_association 'Add Choice', f, :choices
+.nested-fields
+  = f.inputs do
+    .row.darker-bkg
+      .row
+        .col-md-3
+          = f.input :answer, as: :string,
+            label: "Choice text"
+      .row
+        .col-md-3
+          = f.input :value, as: :number,
+            label: "Points for this choice"
+      .row
+        .col-md-3
+          = f.input :position, as: :number,
+            label: "Position"          
+      .row     
+        .col-md-3
+          = f.input :feedback, as: :string,
+            label: "Choice explanation"

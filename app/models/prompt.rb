@@ -52,7 +52,6 @@ class Prompt < ActiveRecord::Base
   acts_as_list scope: :exercise_version
   has_many :prompt_answers, inverse_of: :prompt, dependent: :destroy
   belongs_to :irt_data, dependent: :destroy
-
   # TODO: define Hint model and decide how a hint determines how it maps to
   # different types of incorrect attempts
 

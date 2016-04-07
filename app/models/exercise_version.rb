@@ -40,6 +40,7 @@ class ExerciseVersion < ActiveRecord::Base
   has_many :workouts, through:  :exercise
   has_many :prompts, -> { order('position ASC') },
     inverse_of: :exercise_version, dependent: :destroy
+  accepts_nested_attributes_for :prompts, allow_destroy: true  
   has_many :attempts, dependent: :destroy
   has_and_belongs_to_many :resource_files
   belongs_to :creator, class_name: 'User'
