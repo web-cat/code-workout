@@ -26,6 +26,7 @@ working.txt
 timezones.txt
 
 .vagrant
+/homeworks
 
 # cache files for sublime text
 *.tmlanguage.cache
