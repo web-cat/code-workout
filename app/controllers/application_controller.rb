@@ -2,8 +2,10 @@ require 'application_responder'
 require 'loofah_render'
 
 class ApplicationController < ActionController::Base
-  protect_from_forgery with: :exception
-  skip_before_action :verify_authenticity_token, if: :json_request?
+  # protect_from_forgery with: :exception
+  protect_from_forgery with: :null_session
+  # skip_before_action :verify_authenticity_token, if: :json_request?
+  skip_before_action :verify_authenticity_token
 
   self.responder = ApplicationResponder
   respond_to :html

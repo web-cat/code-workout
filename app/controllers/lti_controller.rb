@@ -1,6 +1,6 @@
 class LtiController < ApplicationController
 
-
+  # load_and_authorize_resource
   after_action :allow_iframe, only: :launch
   # the consumer keys/secrets
   $oauth_creds = {"test" => "secret"}
@@ -9,8 +9,8 @@ class LtiController < ApplicationController
     # must include the oauth proxy object
     require 'oauth/request_proxy/rack_request'
 
-    render('error') and return unless authorize!
-
+    render('error') and return unless lti_authorize!
+    puts('after lti_authorize!')
     if params[:exercise_version_id]
       @exercise_version =
         ExerciseVersion.find_by(id: params[:exercise_version_id])
@@ -21,6 +21,7 @@ class LtiController < ApplicationController
       end
       @exercise = @exercise_version.exercise
     elsif params[:id]
+    puts('params[:id]')
       @exercise = Exercise.find_by(id: params[:id])
       if !@exercise
         redirect_to exercises_url,
@@ -33,6 +34,10 @@ class LtiController < ApplicationController
     end
     # Tighter restrictions for the moment, should go away
     # authorize! :practice, @exercise
+    puts('after authorize')
+    puts(current_user.inspect)
+    puts(user_signed_in?)
+
 
     @student_user = params[:review_user_id] ? User.find(params[:review_user_id]) : current_user
 
@@ -45,6 +50,7 @@ class LtiController < ApplicationController
       else
         @user_time_limit = nil
       end
+      puts('if params[:workout_offering_id]')
     else
       @workout_offering = nil
       if params[:workout_id]
@@ -107,11 +113,9 @@ class LtiController < ApplicationController
     else
       @wexs = nil
     end
+    puts('just before render')
+    render layout: 'two_columns'
 
-    # render layout: 'two_columns'
-    render template: "exercises/practice"
-
-    # @section_html = File.read(File.join('public/OpenDSA/Books', params["book_folder_name"], '/lti_html/', "#{params['section_file_name'].to_s}.html")) and return
   end
 
   def assessment
@@ -149,7 +153,7 @@ class LtiController < ApplicationController
   end
 
   private
-    def authorize!
+    def lti_authorize!
       if key = params['oauth_consumer_key']
         if secret = $oauth_creds[key]
           @tp = IMS::LTI::ToolProvider.new(key, secret, params)

@@ -266,6 +266,8 @@ class ExercisesController < ApplicationController
     authorize! :practice, @exercise
 
     @student_user = params[:review_user_id] ? User.find(params[:review_user_id]) : current_user
+    puts("=====================")
+    puts(current_user.inspect)
 
     if params[:workout_offering_id]
       @workout_offering =

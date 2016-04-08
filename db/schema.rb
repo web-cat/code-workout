@@ -226,6 +226,18 @@ ActiveRecord::Schema.define(version: 20160225005739) do
   add_index "exercises", ["external_id"], name: "index_exercises_on_external_id", unique: true
   add_index "exercises", ["is_public"], name: "index_exercises_on_is_public"
 
+  create_table "exercises_workouts", force: true do |t|
+    t.integer  "workout_id",  null: false
+    t.integer  "exercise_id", null: false
+    t.integer  "points"
+    t.integer  "order"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "exercises_workouts", ["exercise_id"], name: "index_exercises_workouts_on_exercise_id"
+  add_index "exercises_workouts", ["workout_id"], name: "index_exercises_workouts_on_workout_id"
+
   create_table "friendly_id_slugs", force: true do |t|
     t.string   "slug",                      null: false
     t.integer  "sluggable_id",              null: false
