@@ -2,7 +2,7 @@ CodeWorkout::Application.routes.draw do
 
   root 'home#index'
 
-  post 'lti/launch', as: :lti_workout_offering_exercise
+  post 'lti/launch' => 'exercises#practice', as: :lti_workout_offering_exercise
   post 'lti/assessment'
 
   get 'home' => 'home#index'
@@ -124,20 +124,16 @@ CodeWorkout::Application.routes.draw do
     get 'performance' => :calc_performance, as: :calc_performance
   end
 
-  # devise_for :users, :controllers => {sessions: 'sessions', registrations: 'registrations'}
-
-  # OmniAuth for Facebook
+  #OmniAuth for Facebook
   devise_for :users,
-    controllers: { omniauth_callbacks: 'users/omniauth_callbacks',
-                   sessions: 'sessions',
-                   registrations: 'registrations' },
+    controllers: { omniauth_callbacks: 'users/omniauth_callbacks' },
     skip: [:registrations, :sessions]
   as :user do
-    get '/signup' => 'registrations#new', as: :new_user_registration
-    post '/signup' => 'registrations#create', as: :user_registration
-    get '/login' => 'sessions#new', as: :new_user_session
-    post '/login' => 'sessions#create', as: :user_session
-    delete '/logout' => 'sessions#destroy', as: :destroy_user_session
+    get '/signup' => 'devise/registrations#new', as: :new_user_registration
+    post '/signup' => 'devise/registrations#create', as: :user_registration
+    get '/login' => 'devise/sessions#new', as: :new_user_session
+    post '/login' => 'devise/sessions#create', as: :user_session
+    delete '/logout' => 'devise/sessions#destroy', as: :destroy_user_session
   end
 
 end

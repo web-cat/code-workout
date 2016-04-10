@@ -3,119 +3,13 @@ class LtiController < ApplicationController
   # load_and_authorize_resource
   after_action :allow_iframe, only: :launch
   # the consumer keys/secrets
-  $oauth_creds = {"test" => "secret"}
+  $oauth_creds = {"test" => "secret1"}
 
   def launch
     # must include the oauth proxy object
     require 'oauth/request_proxy/rack_request'
 
     render('error') and return unless lti_authorize!
-    puts('after lti_authorize!')
-    if params[:exercise_version_id]
-      @exercise_version =
-        ExerciseVersion.find_by(id: params[:exercise_version_id])
-      if !@exercise_version
-        redirect_to exercises_url, notice:
-          "Exercise version EV#{params[:exercise_version_id]} " +
-          "not found" and return
-      end
-      @exercise = @exercise_version.exercise
-    elsif params[:id]
-    puts('params[:id]')
-      @exercise = Exercise.find_by(id: params[:id])
-      if !@exercise
-        redirect_to exercises_url,
-          notice: "Exercise E#{params[:id]} not found" and return
-      end
-      @exercise_version = @exercise.current_version
-    else
-      redirect_to exercises_url,
-        notice: 'Choose an exercise to practice!' and return
-    end
-    # Tighter restrictions for the moment, should go away
-    # authorize! :practice, @exercise
-    puts('after authorize')
-    puts(current_user.inspect)
-    puts(user_signed_in?)
-
-
-    @student_user = params[:review_user_id] ? User.find(params[:review_user_id]) : current_user
-
-    if params[:workout_offering_id]
-      @workout_offering =
-        WorkoutOffering.find_by(id: params[:workout_offering_id])
-      @workout = @workout_offering.workout
-      if @workout_offering.time_limit_for(@student_user)
-        @user_time_limit = @workout_offering.time_limit_for(@student_user)
-      else
-        @user_time_limit = nil
-      end
-      puts('if params[:workout_offering_id]')
-    else
-      @workout_offering = nil
-      if params[:workout_id]
-        @workout = Workout.find(params[:workout_id])
-      end
-    end
-
-    @attempt = nil
-    @workout_score = @workout_offering ? @student_user.current_workout_score :
-      @workout ? @workout.score_for(@student_user, @workout_offering) : nil
-    if @workout_offering &&
-      @workout_score.workout_offering != @workout_offering
-      @workout_score = nil
-    end
-    if @workout_offering && !@workout_score
-      @workout_score = @workout_offering.score_for(@student_user)
-    end
-    if @workout_score
-      @attempt = @workout_score.attempt_for(@exercise_version.exercise)
-    end
-    @workout ||= @workout_score ? @workout_score.workout : nil
-    if @workout_score.andand.closed? &&
-      @workout_offering.andand.workout_policy.andand.no_review_before_close &&
-      !@workout_offering.andand.shutdown?
-      path = root_path
-      if @workout_offering
-        path = organization_workout_offering_path(
-            organization_id:
-              @workout_offering.course_offering.course.organization.slug,
-            course_id: @workout_offering.course_offering.course.slug,
-            term_id: @workout_offering.course_offering.term.slug,
-            workout_offering_id: @workout_offering.id)
-      elsif @workout
-        path = workout_path(@workout)
-      end
-      redirect_to path,
-        notice: "The time limit has passed for this workout." and return
-    end
-
-    if @workout.andand.exercise_workouts.andand.where(exercise: @exercise).andand.any?
-      @max_points = @workout.exercise_workouts.
-        where(exercise: @exercise).first.points
-      puts "\nMAX-POINTS", @max_points, "\nMAX-POINTS"
-    end
-
-
-    @responses = ['There are no responses yet!']
-    @explain = ['There are no explanations yet!']
-    if session[:leaf_exercises]
-      session[:leaf_exercises] << @exercise.id
-    else
-      session[:leaf_exercises] = [@exercise.id]
-    end
-    # EOL stands for end of line
-    # @wexs is the variable to hold the list of exercises of this workout
-    # yet to be attempted by the user apart from the current exercise
-
-    if params[:wexes] != 'EOL'
-      @wexs = params[:wexes] || session[:remaining_wexes]
-    else
-      @wexs = nil
-    end
-    puts('just before render')
-    render layout: 'two_columns'
-
   end
 
   def assessment
