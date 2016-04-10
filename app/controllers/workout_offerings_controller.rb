@@ -59,7 +59,9 @@ class WorkoutOfferingsController < ApplicationController
     if request.post?
       render "error", :layout => 'error' and return unless lti_authorize!
 
-      # register_login
+      session[:lti_launch] = true
+
+      # register the user if he is not yet registered.
       unless user_signed_in?
        email = params[:lis_person_contact_email_primary]
        first_name = params[:lis_person_name_given]

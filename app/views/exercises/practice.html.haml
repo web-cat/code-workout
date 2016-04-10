@@ -1,4 +1,4 @@
-- if @tp.nil?
+- if !@lti_launch
   = render partial: 'layouts/breadcrumb'
 
 - if @user_time_limit && (@workout_score.created_at + @user_time_limit.minutes) - Time.zone.now > 0
