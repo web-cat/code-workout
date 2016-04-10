@@ -59,6 +59,10 @@ class ApplicationController < ActionController::Base
       lax_spacing: true).render(text)
   end
 
+  def allow_iframe
+    response.headers.except! 'X-Frame-Options'
+  end
+
   protected
 
   def json_request?
