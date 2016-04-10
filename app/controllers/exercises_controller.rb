@@ -244,7 +244,7 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   def practice
     # lti launch
-    @tp = params[:tp]
+    @tp ||= params[:tp]
 
     if params[:exercise_version_id]
       @exercise_version =
