@@ -27,6 +27,8 @@ timezones.txt
 
 .vagrant
 /homeworks
+server.crt
+server.key
 
 # cache files for sublime text
 *.tmlanguage.cache
