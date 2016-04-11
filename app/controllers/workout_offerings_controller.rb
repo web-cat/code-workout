@@ -62,23 +62,24 @@ class WorkoutOfferingsController < ApplicationController
       session[:lti_launch] = true
 
       # register the user if he is not yet registered.
-      unless user_signed_in?
-       email = params[:lis_person_contact_email_primary]
-       first_name = params[:lis_person_name_given]
-       last_name = params[:lis_person_name_family]
-        @user = User.where(email: email).first
-        if @user.blank?
-          # TODO: should mark this as LMS user then prevent this user from login to codeworkout domian
-          @user = User.new(:email => email, :password => email, :password_confirmation => email, :first_name => first_name, :last_name => last_name)
-          @user.save
-        end
-        sign_in @user
-        lti_enroll
+      email = params[:lis_person_contact_email_primary]
+      first_name = params[:lis_person_name_given]
+      last_name = params[:lis_person_name_family]
+      @user = User.where(email: email).first
+      if @user.blank?
+        # TODO: should mark this as LMS user then prevent this user from login to codeworkout domain
+        @user = User.new(:email => email, :password => email, :password_confirmation => email, :first_name => first_name, :last_name => last_name)
+        @user.save
       end
+      sign_in @user
+      lti_enroll
 
-      # To store lti launch params in the session we need to use active_record_store session_store instead of cookie_store
+      # TODO: To store lti launch params in the session we need to use active_record_store session_store instead of cookie_store
       # session[:lti_params] = params
     end
+
+    # authenticate_user!
+    # authorize! :practice, @workout_offering
 
     if @workout_offering
       ex1 = nil
