@@ -1,0 +1,7 @@
+= semantic_form_for WorkoutOwner.new, html: { class: "form-horizontal" } do |f|
+  = f.semantic_errors
+  -#%a.btn.btn-large{href: "#kicModal", role: "button", data: {toggle: "modal"}} Add exercise    
+  = f.semantic_fields_for :owners do |owner|         
+    = render 'owner_fields', f: owner
+  .actions
+    = f.submit 'Share'

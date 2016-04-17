@@ -46,7 +46,12 @@
     .col-md-4
       = f.input :scrambled,
         label: "Randomize?",
-        input_html: { checked: 'checked', value: true}
+        input_html: { value: false}
+  .row
+    .col-md-4
+      = f.input :is_public,
+        label: "Public?",
+        input_html: {  value: false}
 
   .actions
     = f.submit 'Save'

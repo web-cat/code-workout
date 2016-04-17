@@ -1,0 +1,10 @@
+.nested-fields
+  = f.inputs do
+    .row.darker-bkg
+      .row
+        .col-md-8
+          = f.input :email, as: :email,
+            label: 'Email of user to share with',
+            input_html: { rows: 1 }
+        -#.col-md-3
+          -#= link_to_remove_association "Remove user", f

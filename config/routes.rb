@@ -60,12 +60,15 @@ CodeWorkout::Application.routes.draw do
       as: :exercise_practice
     patch 'exercises/:id/practice' => 'exercises#evaluate',
       as: :exercise_evaluate
+    
     post 'exercises/search' => 'exercises#search', as: :search
     # At the bottom, so the routes above take precedence over existing ids
     resources :exercises
 
     # /gym/workouts ...
     get  'workouts/download' => 'workouts#download'
+    get  'workouts/:id/share' => 'workouts#share'
+    post  'workouts/:id/share' => 'workouts#add_collaborators', as: :workout_owners
     get  'workouts/:id/add_exercises' => 'workouts#add_exercises'
     post 'workouts/link_exercises'  => 'workouts#link_exercises'
     get  'workouts/new_with_search/:searchkey'  => 'workouts#new_with_search',
@@ -96,12 +99,12 @@ CodeWorkout::Application.routes.draw do
       as: :workout_offering_exercise
     patch ':course_id/:term_id/:workout_offering_id/:id' => 'exercises#evaluate',
       as: :workout_offering_exercise_evaluate
-    get ':course_id/:term_id/:workout_offering_id/review/:review_user_id/:id' => 'exercises#practice',
+    get ':course_id/:term_id/:workout_offering_id/:id/review/:review_user_id' => 'exercises#practice',
       as: :workout_offering_exercise_review  
 
     get ':course_id/:term_id/:id' => 'workout_offerings#show',
       as: :workout_offering
-    get ':course_id/:term_id/review/:review_user_id/:id' => 'workout_offerings#review',
+    get ':course_id/:term_id/:id/review/:review_user_id' => 'workout_offerings#review',
       as: :workout_offering_review  
     post ':id/:term_id/generate_gradebook/' => 'courses#generate_gradebook',
       as: :course_gradebook
@@ -110,7 +113,10 @@ CodeWorkout::Application.routes.draw do
 
   end
 
-
+  get 'hints/approve_hint', as: :hint_approve
+  resources :hints
+  
+  
   resources :course_offerings, only: [ :edit, :update ] do
     post 'enroll' => :enroll, as: :enroll
     delete 'unenroll' => :unenroll, as: :unenroll

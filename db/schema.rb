@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160225005739) do
+ActiveRecord::Schema.define(version: 20160416202346) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -246,6 +246,18 @@ ActiveRecord::Schema.define(version: 20160225005739) do
     t.boolean "builtin",                       default: false, null: false
   end
 
+  create_table "hints", force: true do |t|
+    t.integer  "exercise_version_id"
+    t.integer  "user_id"
+    t.string   "body"
+    t.boolean  "curated"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "hints", ["exercise_version_id"], name: "index_hints_on_exercise_version_id"
+  add_index "hints", ["user_id"], name: "index_hints_on_user_id"
+
   create_table "identities", force: true do |t|
     t.integer  "user_id",    null: false
     t.string   "provider",   null: false
@@ -468,10 +480,9 @@ ActiveRecord::Schema.define(version: 20160225005739) do
     t.integer  "continue_from_workout_id"
   end
 
-  add_index "workout_offerings", ["continue_from_workout_id"], name: "workout_offerings_continue_from_workout_id_fk", using: :btree
-  add_index "workout_offerings", ["course_offering_id"], name: "index_workout_offerings_on_course_offering_id", using: :btree
-  add_index "workout_offerings", ["workout_id"], name: "index_workout_offerings_on_workout_id", using: :btree
-  add_index "workout_offerings", ["workout_policy_id"], name: "index_workout_offerings_on_workout_policy_id", using: :btree
+  add_index "workout_offerings", ["course_offering_id"], name: "index_workout_offerings_on_course_offering_id"
+  add_index "workout_offerings", ["workout_id"], name: "index_workout_offerings_on_workout_id"
+  add_index "workout_offerings", ["workout_policy_id"], name: "index_workout_offerings_on_workout_policy_id"
 
   create_table "workout_owners", force: true do |t|
     t.integer "workout_id", null: false

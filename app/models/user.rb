@@ -69,6 +69,7 @@ class User < ActiveRecord::Base
   has_many    :tag_user_scores, -> { includes :tag },
     inverse_of: :user, dependent: :destroy
   has_many    :resource_files, inverse_of: :user
+  has_many    :hints
   has_many    :identities, inverse_of: :user, dependent: :destroy
   has_many    :student_extensions
   has_many    :workout_offerings, through: :student_extenions

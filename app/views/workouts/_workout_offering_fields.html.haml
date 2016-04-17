@@ -2,18 +2,23 @@
   = f.inputs do
     .row.darker-bkg
       .row
-        .col-md-3
+        .col-md-4
           = f.input :course_offering, as: :select,
             collection: CourseOffering.all,
-            input_html: { class: 'col-md-10', rows: 1 }        
-        .col-md-3
+            input_html: { rows: 1 }
+        .col-md-4
+          = f.input :workout_policy, as: :select,
+            collection: WorkoutPolicy.all,
+            input_html: { rows: 1 }            
+      .row        
+        .col-md-12
           = f.input :opening_date,
-            input_html: { class: 'col-md-10', rows: 1 }
-        .col-md-2
+            input_html: { rows: 1 }
+        .col-md-12
           = f.input :soft_deadline,
-            input_html: { class: 'col-md-10', rows: 1 }
-        .col-md-2
+            input_html: { rows: 1 }
+        .col-md-12
           = f.input :hard_deadline,
-            input_html: { class: 'col-md-10', rows: 1 }
-        .col-md-2
+            input_html: { rows: 1 }
+        .col-md-3
           = link_to_remove_association "Remove course offering", f

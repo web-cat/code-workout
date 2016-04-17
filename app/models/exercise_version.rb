@@ -38,6 +38,7 @@ class ExerciseVersion < ActiveRecord::Base
   acts_as_list scope: :exercise, column: 'version'
   has_many :courses, through: :exercise
   has_many :workouts, through:  :exercise
+  has_many :hints
   has_many :prompts, -> { order('position ASC') },
     inverse_of: :exercise_version, dependent: :destroy
   accepts_nested_attributes_for :prompts, allow_destroy: true  

@@ -123,5 +123,19 @@
   - if @attempt
     #exercisefeedback
       = render partial: 'sse/ajax_feedback'
+    - if !@workout_offering.andand.workout_policy.andand.no_hints
+      Hints
+      %ul#hint
+        - @exercise_version.hints.each do |hint|
+          - if @workout_offering.andand.course_offering.is_instructor?(current_user)
+            %li
+              %div
+                = hint.body + "  "
+                - if !hint.curated?
+                  = link_to 'Approve', hint_approve_path(hint_id: hint.id)
+                = link_to 'Remove', '/hints/' + hint.id.to_s, method: :delete
+          - elsif hint.curated?
+            %li= hint.body
+            
   - else
     #exercisefeedback{style: 'display: none;'}

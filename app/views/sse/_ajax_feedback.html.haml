@@ -5,6 +5,8 @@
   - pts = @workout.exercise_workouts.find_by(exercise: @exercise).andand.points
   - score = @attempt.score
   - score_pct = score * 100.0 / pts
+  - if score == pts && Hint.where(exercise_version_id: @attempt.exercise_version_id, user: current_user).empty?
+    = link_to 'Congratulations. Please add a hint ', new_hint_path(exercise_version_id: @attempt.exercise_version_id)
   .summary
     .radial-progress{ 'data-progress' => score_pct.round() }
       .circle
