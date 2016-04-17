@@ -1,5 +1,6 @@
 class WorkoutOfferingsController < ApplicationController
-  load_and_authorize_resource
+  before_action :set_workout_offering, only: [:show, :edit, :update, :destroy, :practice]
+  #load_and_authorize_resource
 
   #~ Action methods ...........................................................
 
@@ -11,7 +12,7 @@ class WorkoutOfferingsController < ApplicationController
     end
     render 'workouts/show'
   end
-  
+
   def review
     if @workout_offering
       @workout = @workout_offering.workout
@@ -96,5 +97,8 @@ class WorkoutOfferingsController < ApplicationController
       redirect_to root_path, notice: 'Workout offering not found' and return
     end
   end
-
+  private
+  def set_workout_offering
+    @workout_offering = WorkoutOffering.find(params[:id])
+  end
 end

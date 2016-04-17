@@ -47,7 +47,7 @@ class SseController < ApplicationController
   # -------------------------------------------------------------
   def feedback_poll
     @attempt = Attempt.find_by(id: params[:att_id])
-    authorize! :read, @attempt
+    #authorize! :read, @attempt
     @exercise_version = @attempt.exercise_version
     @exercise = @exercise_version.exercise
     respond_to do |format|
