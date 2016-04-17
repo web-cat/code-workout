@@ -1,5 +1,5 @@
 att_id = <%= JSON.generate @attempt.id %>
-user_id = <%= JSON.generate current_user.id %>
+user_id = <%= JSON.generate @student_drift_user.id %>
 is_coding = <%= JSON.generate @exercise.is_coding? %>
 
 setTimeout ( ->

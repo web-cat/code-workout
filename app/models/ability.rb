@@ -13,8 +13,9 @@ class Ability
   #
   def initialize(user)
     # default abilities for anonymous, non-logged-in visitors
-    can [:read, :search, :index], [Term, Organization, Course, CourseOffering, Exercise, Workout]
+    can [:read, :index], [Term, Organization, Course, CourseOffering]
     can [:practice, :evaluate], [Exercise, Workout], is_public: true
+    can [:index, :search], [Exercise, Workout]
     if user
       # This ability allows admins impersonating other users to revert
       # back to their original user.
@@ -98,7 +99,7 @@ class Ability
       can [:create], [Course, CourseOffering, CourseEnrollment,
         Workout, Exercise, Attempt, ResourceFile]
 
-      can [:index], [Workout, Exercise, Attempt, ResourceFile]
+      #can [:index], [Workout, Exercise, Attempt, ResourceFile]
     end
   end
 
@@ -158,11 +159,12 @@ class Ability
       !user.global_role.can_manage_all_courses? &&
       !user.global_role.is_instructor?
 
-      # Still needs revision
-      can [:index, :read, :practice, :evaluate], Exercise,
-        Exercise.visible_to_user(user) do |e|
+      
+      
+      can [:read, :practice, :evaluate], Exercise do |e|
         e.visible_to?(user)
       end
+      
       can [:show], WorkoutOffering do |o|
         o.can_be_seen_by? user
 #        now = Time.now
@@ -183,12 +185,12 @@ class Ability
       can :practice, Exercise do |e|
         now = Time.now
         e.is_public? || WorkoutOffering.
-          joins{workout.exercises}.joins{course_offering.course_enrollments}.
-          where{
-            course_offering.course_enrollments.user_id == user.id &
-            course_offering.course_enrollments.course_role_id.not_eq
-              CourseRole.STUDENT_ID
-             }.any? || WorkoutOffering.
+     #    joins{workout.exercises}.joins{course_offering.course_enrollments}.
+     #    where{
+     #       course_offering.course_enrollments.user_id == user.id &
+     #       course_offering.course_enrollments.course_role_id.not_eq
+     #         CourseRole.STUDENT_ID
+     #        }.any? || WorkoutOffering.
           joins{workout.exercises}.joins{course_offering.course_enrollments}.
           where{
             ((starts_on == nil) | (starts_on <= now)) &

@@ -35,9 +35,10 @@ class SseController < ApplicationController
   # -------------------------------------------------------------
   def feedback_update
     @attempt = Attempt.find_by(id: params[:att_id])
-    authorize! :read, @attempt
+    #authorize! :read, @attempt
     @exercise_version = @attempt.exercise_version
     @exercise = @exercise_version.exercise
+    @student_drift_user =  current_user ? current_user : session[:drift_user_id]
     @max_points = ExerciseWorkout.find_by(exercise: @exercise, workout: @workout).andand.points
     respond_to do |format|
       format.js
@@ -49,6 +50,8 @@ class SseController < ApplicationController
     @attempt = Attempt.find_by(id: params[:att_id])
     #authorize! :read, @attempt
     @exercise_version = @attempt.exercise_version
+    @student_drift_user = current_user ? current_user : session[:student_drift_user_id]? User.find_by(session[:student_drift_user_id]) : User.find_by(params[:drift_user_id])
+    
     @exercise = @exercise_version.exercise
     respond_to do |format|
       format.js do

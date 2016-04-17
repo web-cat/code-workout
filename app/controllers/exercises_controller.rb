@@ -383,6 +383,21 @@ class ExercisesController < ApplicationController
     end
     # Tighter restrictions for the moment, should go away
     authorize! :practice, @exercise
+    if current_user
+      @student_drift_user = current_user
+    elsif session[:student_drift_user_id]
+      @student_drift_user = User.find(session[:student_drift_user_id])
+    else
+      user_ip = request.remote_ip.clone()
+      fake_email = user_ip.clone().gsub('.','') + Time.now.to_i.to_s + '@cw.edu'
+      fake_password = Time.now.to_i.to_s + user_ip.clone().gsub('.','') 
+      @student_drift_user = User.new(email: fake_email, slug: fake_email,
+                              current_sign_in_ip: request.remote_ip, 
+                              last_sign_in_ip: request.remote_ip, 
+                              global_role_id: 4)
+      @student_drift_user.save!
+      session[:student_drift_user_id] = @student_drift_user.id 
+    end
     @workout = nil
     @workout_offering = nil
     if params[:workout_offering_id]
@@ -395,11 +410,11 @@ class ExercisesController < ApplicationController
     else
       @workout_offering = nil
     end
-    if @workout_offering.nil? && current_user.andand.current_workout_score &&
-      current_user.current_workout_score.workout.contains?(@exercise_version.exercise)
-      @workout_offering = current_user.current_workout_score.workout_offering
+    if @workout_offering.nil? && @student_drift_user.andand.current_workout_score &&
+      @student_drift_user.current_workout_score.workout.contains?(@exercise_version.exercise)
+      @workout_offering = @student_drift_user.current_workout_score.workout_offering
       if @workout_offering.nil?
-        @workout = current_user.current_workout_score.workout
+        @workout = @student_drift_user.current_workout_score.workout
       end
     end
     if @workout_offering && @workout.nil?
@@ -413,16 +428,16 @@ class ExercisesController < ApplicationController
     end
     @workout_score = nil
     if @workout_offering
-      @workout_score = @workout_offering.score_for(current_user)
+      @workout_score = @workout_offering.score_for(@student_drift_user)
     elsif @workout
-      @workout_score = @workout.score_for(current_user)
+      @workout_score = @workout.score_for(@student_drift_user)
     end
-    if @workout_score.andand.closed? && @workout_offering.andand.can_be_practiced_by?(current_user)
+    if @workout_score.andand.closed? && @workout_offering.andand.can_be_practiced_by?(@student_drift_user)
       p 'WARNING: attempt to evaluate exercise after time expired.'
       return
     end
     @attempt = @exercise_version.new_attempt(
-      user: current_user, workout_score: @workout_score)
+      user: @student_drift_user, workout_score: @workout_score)
 
     @attempt.save!
     # FIXME: Need to make it work for multiple prompts
@@ -505,7 +520,7 @@ class ExercisesController < ApplicationController
         flash.notice = "Your previous question's answer choice has been saved and scored"
         render :js => "window.location = '" +
           organization_workout_offering_practice_path(
-          exercise_id: @workout_score.workout.next_exercise(@exercise, current_user, nil),
+          exercise_id: @workout_score.workout.next_exercise(@exercise, @student_drift_user, nil),
           organization_id: @workout_offering.course_offering.course.organization.slug,
           course_id: @workout_offering.course_offering.course.slug,
           term_id: @workout_offering.course_offering.term.slug,
