@@ -57,7 +57,6 @@ class ExercisesController < ApplicationController
   def show
   end
 
-
   # -------------------------------------------------------------
   # GET /exercises/new
   def new

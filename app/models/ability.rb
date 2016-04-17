@@ -13,8 +13,8 @@ class Ability
   #
   def initialize(user)
     # default abilities for anonymous, non-logged-in visitors
-    can [:read, :index], [Term, Organization, Course, CourseOffering]
-
+    can [:read, :search, :index], [Term, Organization, Course, CourseOffering, Exercise, Workout]
+    can [:practice, :evaluate], [Exercise, Workout], is_public: true
     if user
       # This ability allows admins impersonating other users to revert
       # back to their original user.
@@ -144,8 +144,16 @@ class Ability
   # -------------------------------------------------------------
   def process_exercises(user)
     # Everyone can search exercises
-    can [:search, :random_exercise], Exercise
-
+    can [:random_exercise], Exercise
+    can :practice, WorkoutOffering do |wo|
+      user.global_role_id <= 2
+    end      
+    can :practice, Exercise do |ex|
+      user.global_role_id <= 2
+    end
+    can :evaluate, Exercise do |ex|
+      user.global_role_id <= 2
+    end
     if !user.global_role.can_edit_system_configuration? &&
       !user.global_role.can_manage_all_courses? &&
       !user.global_role.is_instructor?
@@ -161,6 +169,7 @@ class Ability
 #        ((o.opening_date == nil) || (o.opening_date <= now)) &&
 #          o.course_offering.course_enrollments.where(user_id: user.id).any?
       end
+
       can [:review], WorkoutOffering, course_offering: {course_enrollments: {user: user, course_role: {can_manage_assignments: true}}}
       can [:practice], WorkoutOffering do |o|
         o.can_be_seen_by? user
@@ -169,6 +178,8 @@ class Ability
 #          ((o.hard_deadline >= now) || (o.soft_deadline >= now)) &&
 #          o.course_offering.course_enrollments.where(user_id: user.id).any?
       end
+      
+
       can :practice, Exercise do |e|
         now = Time.now
         e.is_public? || WorkoutOffering.

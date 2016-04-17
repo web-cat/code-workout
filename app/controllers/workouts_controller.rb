@@ -1,5 +1,5 @@
 class WorkoutsController < ApplicationController
-  before_action :set_workout, only: [:show, :edit, :update, :destroy]
+  before_action :set_workout, only: [:show, :edit, :update, :destroy, :add_collaborators]
   respond_to :html, :js
 
   #~ Action methods ...........................................................
@@ -11,7 +11,7 @@ class WorkoutsController < ApplicationController
       redirect_to root_path,
         notice: 'Unauthorized to view all workouts' and return
     end
-    @workouts = []
+    @workouts = Workout.where(is_public: true)
     @gym = []
   end
 
@@ -54,15 +54,29 @@ class WorkoutsController < ApplicationController
     # render layout: 'two_columns'
   end
 
+  def add_collaborators
+    collaborator_email = params["workout_owner"]["owners"]["email"]
+    collaborator = User.find_by!(email: collaborator_email)
+    @new_workout_owner = WorkoutOwner.new(workout: @workout, owner: collaborator)
+    @new_workout_owner.save!
+    redirect_to root_path, notice: 'Workout shared!'
+  end
 
+  def share
+  end
   # -------------------------------------------------------------
   # GET /workouts/new
   def new
     if cannot? :new, Workout
       redirect_to root_path,
-        notice: 'Unauthorized to create new workout' and return
+        notice: "Unauthorized to create new workout" and return
     end
     @workout = Workout.new
+    @available_exercises = Exercise.where(is_public: true)
+    WorkoutOwner.where(owner: current_user).each do |ownership|
+      @available_exercises = @available_exercises + ownership.workout.exercises
+    end
+    @available_exercises = @available_exercises.uniq 
   end
 
 
@@ -100,22 +114,30 @@ class WorkoutsController < ApplicationController
     @workout = Workout.new(workout_params)
     msg      = params[:workout]
     exercises = msg[:exercise_workouts_attributes]
+    
+    @workout_owner = WorkoutOwner.new(owner: current_user)
+    @workout_owner.workout = @workout
     @workout.creator_id = current_user.id
+    
+    
     exercises.each do |ex|
       ex_id = ex.second[:exercise_id]
       exercise = Exercise.find(ex_id)
+      @workout.is_public = false if exercise.is_public == false
       exercise_workout = ExerciseWorkout.new(workout: @workout, exercise: exercise)
       exercise_workout.position = ex.second[:position]
       exercise_workout.points = ex.second[:points]
       exercise_workout.save!
     end
-
+    
+    
     course_offerings = msg[:workout_offerings_attributes]
     course_offerings.andand.each_with_index do |course_offering, index|
       course_offering_id = course_offering.second[:course_offering_id]
       courseoffering = CourseOffering.find(course_offering_id)
-      @workout.course_offerings<<courseoffering
+      @workout.course_offerings << courseoffering
       workout_offering = @workout.workout_offerings.find_by(course_offering: courseoffering)
+      workout_offering.workout_policy_id = course_offering.second[:workout_policy_id]
       workout_offering.opening_date = Date.parse(course_offering.second['opening_date(3i)'] +
         '-' + course_offering.second['opening_date(2i)'] +
         '-' + course_offering.second['opening_date(1i)'])
@@ -128,7 +150,7 @@ class WorkoutsController < ApplicationController
       workout_offering.save!
     end
 
-    if @workout.save
+    if @workout.save && @workout_owner.save
       redirect_to root_path, notice: 'Workout was successfully created.'
     else
       render action: 'new'
