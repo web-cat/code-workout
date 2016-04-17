@@ -102,7 +102,7 @@ class Ability
       can [:manage], [Course, CourseOffering, CourseEnrollment,
         Exercise, Attempt, ResourceFile]
 
-      can [:index], [Workout, Exercise, Attempt, ResourceFile]
+      #can [:index], [Workout, Exercise, Attempt, ResourceFile]
     end
   end
 
@@ -162,11 +162,12 @@ class Ability
       !user.global_role.can_manage_all_courses? &&
       !user.global_role.is_instructor?
 
-      # Still needs revision
-      can [:index, :read, :practice, :evaluate], Exercise,
-        Exercise.visible_to_user(user) do |e|
+
+
+      can [:read, :practice, :evaluate], Exercise do |e|
         e.visible_to?(user)
       end
+
       can [:show], WorkoutOffering do |o|
         o.can_be_seen_by? user
 #        now = Time.now

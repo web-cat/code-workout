@@ -40,6 +40,7 @@ class SseController < ApplicationController
     @exercise_version = @attempt.exercise_version
     @exercise = @exercise_version.exercise
     @max_points = @exercise.experience
+    @student_drift_user =  current_user ? current_user : session[:drift_user_id]
     workout_score = @attempt.workout_score
     if workout_score
       @workout = workout_score.workout
@@ -55,6 +56,9 @@ class SseController < ApplicationController
   # -------------------------------------------------------------
   def feedback_poll
     @attempt = Attempt.find_by(id: params[:att_id])
+    @exercise_version = @attempt.exercise_version
+    @student_drift_user = current_user ? current_user : session[:student_drift_user_id]? User.find_by(session[:student_drift_user_id]) : User.find_by(params[:drift_user_id])
+    @exercise = @exercise_version.exercise
     authorize! :read, @attempt
     if !@attempt.feedback_ready
       respond_to do |format|
