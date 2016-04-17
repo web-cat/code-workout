@@ -40,7 +40,7 @@ class TestCase < ActiveRecord::Base
   validates :input, presence: true
   validates :expected_output, presence: true
   validates :coding_prompt, presence: true
-  validates :weight, presence: true, numericality: { greater_than_or_equal_to: 0.0 }
+  validates :weight, presence: true, numericality: { greater_than_or_equal_to: 0.01 }
 
 
   #~ Instance methods .........................................................

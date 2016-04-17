@@ -127,6 +127,7 @@ class CodingPrompt < ActiveRecord::Base
           coding_prompt: self,
           input: row[0],
           expected_output: row[1])
+        
         if tc.input && tc.input.include?(';')
           tc.input = tc.input.gsub(/;\s*/, ', ')
         end
@@ -138,7 +139,7 @@ class CodingPrompt < ActiveRecord::Base
         end
         if !row[4].blank?
           tc.weight = row[4].to_f
-          if tc.weight < 0
+          if tc.weight <= 0
             tc.weight = 1.0
           end
         end

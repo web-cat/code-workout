@@ -18,5 +18,9 @@
           = f.input :negative_feedback, as: :string,
             label: "Failure Feedback"
       .row
+        .col-md-3
+          = f.input :weight, as: :number,
+            label: "Weight"            
+      .row
         .col-md-4
           = link_to_remove_association "Remove", f

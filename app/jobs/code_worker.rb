@@ -67,8 +67,6 @@ class CodeWorker
 
       correct = 0.0
       total = 0.0
-      correct = 0.0
-      total = 0.0
       answer =
         attempt.prompt_answers.where(prompt: prompt.acting_as).first.specific
       if !File.exist?(attempt_dir + '/results.csv')
