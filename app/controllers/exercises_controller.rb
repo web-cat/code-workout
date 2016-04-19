@@ -10,7 +10,99 @@ class ExercisesController < ApplicationController
     @exercises = Exercise.where(is_public: true)
   end
 
+  # -------------------------------------------------------------
+  # PATCH /exercises/:id/convert_exercise/:language
+  def create_converted_exercise
+    #binding.pry
+    msg = params[:exercise]    
+    @exercises = Exercise.where(id: params[:id])
+    exercise_hash = ExerciseRepresenter.for_collection.new(@exercises).to_hash.first
+    exercise_hash["external_id"] = exercise_hash["external_id"] + msg[:language_list]  
+    exercise_hash["language_list"] = msg[:language_list]
+    exercise_hash["is_public"] = true 
+    exercise_hash["current_version"]["creator"] = current_user.email
+    exercise_hash["current_version"]["version"] = 1
+    # TODO: Need to make this work for multiple-prompts and MCQs
+    exercise_hash["current_version"]["prompts"].first["coding_prompt"]["question"] = msg[:prompt]["question"] if msg[:prompt]["question"]
+    exercise_hash["current_version"]["prompts"].first["coding_prompt"]["feedback"] = msg[:prompt]["feedback"] if msg[:prompt]["feedback"]
+    exercise_hash["current_version"]["prompts"].first["coding_prompt"]["starter_code"] = msg["coding_prompt"][:starter_code] if msg["coding_prompt"][:starter_code]
+    exercise_hash["current_version"]["prompts"].first["coding_prompt"]["wrapper_code"] = msg["coding_prompt"][:wrapper_code] if msg["coding_prompt"][:wrapper_code]
+    hashes = Array.new
+    hashes << exercise_hash
+    exercises = ExerciseRepresenter.for_collection.new([]).from_hash(hashes)
+    exercises.each do |e|
+      if !e.save
+        # FIXME: Add these to alert message that can be sent back to user
+        puts 'cannot save exercise, name = ' + e.name.to_s +
+          ', external_id = ' + e.external_id.to_s + ': ' +
+          e.errors.full_messages.to_s
+        if e.current_version
+          puts "    #{e.current_version.errors.full_messages.to_s}"
+          if e.current_version.prompts.any?
+            puts "    #{e.current_version.prompts.first.errors.full_messages.to_s}"
+          end
+        end
+        redirect_to root_path, notice: 'Exercise conversion failed'
+      end
+    end
+    redirect_to root_path, notice: 'Exercise converted'
+  end
 
+  def convert_exercise
+    @exercise = Exercise.find(params[:id])
+    # TODO: Must make it work for multi-prompts and MCQs
+    prompt = @exercise.current_version.prompts.first
+    @original_question = prompt.question.gsub(@exercise.language, params[:language])
+    @original_question.gsub!(@exercise.language, params[:language])
+    @original_feedback = prompt.feedback.andand.gsub(@exercise.language, params[:language])
+    @original_feedback.andand.gsub!(@exercise.language, params[:language])
+    coding_prompt = prompt.specific
+    @original_starter_code = coding_prompt.starter_code
+    @original_wrapper_code = coding_prompt.wrapper_code
+    if @exercise.language == 'Java'
+      @original_starter_code.gsub!('{','')
+      @original_wrapper_code.gsub!('{','')
+      @original_starter_code.gsub!('public ','def ') 
+      @original_wrapper_code.gsub!(/public class/,'class')
+      @original_starter_code.gsub!('char ','') 
+      @original_wrapper_code.gsub!('char ','')
+      @original_starter_code.gsub!('boolean ','') 
+      @original_wrapper_code.gsub!('boolean ','')
+      @original_starter_code.gsub!('double ','') 
+      @original_wrapper_code.gsub!('double ','')
+      @original_starter_code.gsub!('float ','') 
+      @original_wrapper_code.gsub!('float ','')
+      @original_starter_code.gsub!('int ','') 
+      @original_wrapper_code.gsub!('int ','')
+      @original_starter_code.gsub!('String ','') 
+      @original_wrapper_code.gsub!('String ','')
+    end
+    if params[:language] == 'Ruby'      
+      @original_wrapper_code.gsub!('}','end')
+      @original_starter_code.gsub!('}','end')
+      @original_wrapper_code.gsub!('null','nil')
+      @original_starter_code.gsub!('null','nil')
+      @original_wrapper_code.gsub!('None','nil')
+      @original_starter_code.gsub!('None','nil')
+    elsif params[:language] == 'Python'
+      @original_wrapper_code.gsub!("class #{coding_prompt.class_name}","class #{coding_prompt.class_name}:")
+      @original_wrapper_code.gsub!('}','')
+      @original_starter_code.gsub!('}','')
+      @original_wrapper_code.gsub!(')','):')
+      @original_starter_code.gsub!(')','):')
+      @original_starter_code.gsub!("def #{coding_prompt.method_name}(","def #{coding_prompt.method_name}(self, ")
+      @original_wrapper_code.gsub!('nil','None')
+      @original_starter_code.gsub!('nil','None')
+      @original_wrapper_code.gsub!('null','None')
+      @original_starter_code.gsub!('null','None')
+      @original_wrapper_code.gsub!('true','True')
+      @original_starter_code.gsub!('true','True')
+      @original_wrapper_code.gsub!('false','False')
+      @original_starter_code.gsub!('false','False')
+      @original_question.gsub!('true','True')
+      @original_question.gsub!('false','False')
+    end
+  end
   # -------------------------------------------------------------
   # GET /exercises/download.csv
   def download
@@ -120,6 +212,56 @@ class ExercisesController < ApplicationController
     end
   end
 
+  # -------------------------------------------------------------
+  # PUT /exercises
+  def student_create
+    ex = Exercise.new
+    exercise_version = ExerciseVersion.new(exercise: ex)
+    msg = params[:exercise].clone() || params[:coding_question]
+    msg[:is_public] = msg[:is_public].to_i > 0
+    form_hash = msg.clone()
+    arr = []
+    form_hash["current_version"] = msg[:exercise_version].clone()
+    if msg[:question_type].to_i == 2
+      msg[:coding_prompt].merge!(msg[:prompt])
+      test_cases = ""
+      msg[:coding_prompt][:test_cases_attributes].values.each do |tc|
+        test_cases = test_cases + tc.values.join(",") + "\n"
+      end
+      test_cases.rstrip!
+      msg[:coding_prompt].delete("test_cases_attributes")
+      msg[:coding_prompt]["tests"] = test_cases
+      form_hash["current_version"]["prompts"] = Array.new
+      codingprompt = {"coding_prompt" => msg[:coding_prompt].clone()}
+      form_hash["current_version"]["prompts"] << codingprompt
+      form_hash.delete("coding_prompt")
+    elsif msg[:question_type].to_i == 1
+      msg[:multiple_choice_prompt].merge!(msg[:prompt])
+      msg[:multiple_choice_prompt][:is_scrambled] = msg[:multiple_choice_prompt][:is_scrambled].to_i > 0
+      msg[:multiple_choice_prompt][:allow_multiple] = msg[:allow_multiple].to_i > 0
+      form_hash["current_version"]["prompts"] = Array.new
+      msg[:multiple_choice_prompt]["choices"] = msg[:multiple_choice_prompt]["choices"].values
+      multiplechoiceprompt = {"multiple_choice_prompt" => msg[:multiple_choice_prompt].clone()}
+      form_hash["current_version"]["prompts"] << multiplechoiceprompt
+      form_hash.delete("multiple_choice_prompt")
+    end
+    form_hash.delete("prompt")
+    form_hash.delete("exercise_version")
+    arr << form_hash
+    exercises = ExerciseRepresenter.for_collection.new([]).from_hash(arr)
+    if msg[:irt_data] && exercises.first.save!
+      # HACK!
+      # params[:irt_data] is not really IRT data but rather the course number for creating student courses
+      course = Course.find(msg[:irt_data])
+      course_ex = CourseExercise.new(course: course, contributor: current_user, exercise: exercises.first, curated: false)
+      course_ex.save
+      redirect_to ex, notice: 'Exercise was successfully created.'
+    else
+      #render action: 'new'
+      redirect_to root_path, notice:
+        "Exercise was NOT created for #{msg} #{@exercise.errors.andand.messages}"
+    end
+  end
 
   # -------------------------------------------------------------
   def random_exercise

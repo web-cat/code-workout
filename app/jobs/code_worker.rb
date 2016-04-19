@@ -76,11 +76,26 @@ class CodeWorker
         answer.save
       else
         CSV.foreach(attempt_dir + '/results.csv') do |line|
-          # find test id
-          test_id = line[2][/\d+/].to_i
-          test_case = prompt.test_cases.where(id: test_id).first
-          correct += test_case.record_result(answer, line)
-          total += test_case.weight
+          if language == "Java"
+            test_id = line[2][/\d+/].to_i
+            test_case = prompt.test_cases.where(id: test_id).first
+            correct += test_case.record_result(answer, line)
+            total += test_case.weight
+          else
+            test_id = line[0][/\d+/].to_i
+            test_case = prompt.test_cases.where(id: test_id).first
+            correct += line[1].to_i > 0 ? test_case.weight : 0
+            total += test_case.weight
+            tcr = TestCaseResult.new(
+                  test_case: test_case,
+                  user: answer.attempt.user,
+                  coding_prompt_answer: answer,
+                  pass: (line[1].to_i == 1) )
+            if !test_case.negative_feedback.blank?
+              tcr.execution_feedback = test_case.negative_feedback
+            end
+            tcr.save!
+          end  
         end  # CSV end
       end
       multiplier = 1.0
@@ -179,29 +194,31 @@ class CodeWorker
 
   # -------------------------------------------------------------
   def execute_rubytest(class_name, attempt_dir, pre_lines, answer_lines)
-    return 'Ruby execution is temporarily suspended.'
-#    if system("ruby #{class_name}Test.rb",
-#      [:out, :err] => 'err.log',
-#      chdir: attempt_dir)
-#      puts 'FINE', 'RUBY FINE'
-#      return nil
-#    else
-#      puts 'ERROR', 'RUBY ERROR'
-#      return File.read(attempt_dir + '/err.log')
-#    end
+    #return 'Ruby execution is temporarily suspended.'
+    system("ruby #{class_name}Test.rb", [:out, :err] => 'err.log', chdir: attempt_dir)
+    if File.exist?(attempt_dir + '/results.csv')
+      puts 'FINE', 'RUBY FINE'
+      puts 'RUBY FINE', "\nFINE"
+      return nil
+    else
+      puts 'ERROR', 'RUBY ERROR'
+      return File.read(attempt_dir + '/err.log')
+    end
   end
 
 
   # -------------------------------------------------------------
   def execute_pythontest(class_name, attempt_dir, pre_lines, answer_lines)
-    return 'Python execution is temporarily suspended.'
-#    if system("python #{class_name}Test.py",
-#      [:out, :err] => 'err.log',
-#      chdir: attempt_dir)
-#      return nil
-#    else
-#      return File.read(attempt_dir + '/err.log')
-#    end
+    #return 'Python execution is temporarily suspended.'
+    system("python #{class_name}Test.py", [:out, :err] => 'err.log', chdir: attempt_dir)
+
+    if File.exist?(attempt_dir + '/results.csv')
+      puts 'FINE', 'PYTHON FINE'
+      puts 'PYTHON FINE', "\nFINE"
+      return nil
+    else
+      return File.read(attempt_dir + '/err.log')
+    end
   end
 
 end

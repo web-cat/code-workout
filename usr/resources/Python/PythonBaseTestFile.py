@@ -1,22 +1,22 @@
 #!/usr/bin/env python
 import unittest
-import baseclassclass
+import %{class_name}
 
-class baseclassclassTest(unittest.TestCase):
-	f=open('baseclassclass_Python_results.csv','w') 
-	@classmethod
+class %{class_name}Test(unittest.TestCase):
+	f=open('results.csv','w') 
+	obj = %{class_name}.%{class_name}()
+        @classmethod
 	def setUpClass(cls):
 	  pass
 	    
 	@classmethod
 	def tearDownClass(cls):
-	  baseclassclassTest.f.close()
+	  %{class_name}Test.f.close()
 	
 	def setUp(self):
 	  pass
 
-
-TTTTT
+%{tests}
 
 
 if __name__ == '__main__':

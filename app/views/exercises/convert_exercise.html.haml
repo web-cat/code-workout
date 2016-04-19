@@ -1,0 +1,25 @@
+= semantic_form_for @exercise, html: { class: 'form-horizontal', method: :patch } do |f|
+  = f.semantic_errors
+  = f.input :language_list, maxlength: 10, as: :hidden,
+    placeholder: 'Enter the target language to be associated with this question',
+    input_html: {value: params[:language]}
+    
+  = f.semantic_fields_for Prompt.new do |p|
+    = p.input :question,  as: :text,
+      input_html: {value: @original_question}
+    = p.input :feedback,  as: :text,
+      input_html: {value: @original_feedback}
+
+  
+  = f.semantic_fields_for CodingPrompt.new do |cp|
+    = cp.input :starter_code, as: :text,
+      placeholder: 'Use "___" (three underscores) to denote where ' + 'the cursor should initially be placed',
+      label: 'Initial Editor Contents',
+      input_html: {value: @original_starter_code}
+
+    = cp.input :wrapper_code, as: :text,
+      label: 'Testing Wrapper',
+      input_html: {value: @original_wrapper_code}
+
+  .actions
+    = f.submit class: 'btn btn-primary'

@@ -1,0 +1,41 @@
+= semantic_form_for @exercise, html: { class: 'form-horizontal', method: :put } do |f|
+  = f.semantic_errors
+
+  = f.input :name, maxlength: 255,
+    placeholder: 'Enter question name'
+
+  = f.input :is_public, as: :hidden,
+    input_html: {value: false}
+  
+  = f.input :language_list, as: :hidden,
+    input_html: {value: 'Java'}
+
+  = f.input :tag_list, as: :hidden,
+    input_html: {value: params[:tag]}
+
+  = f.input :style_list, maxlength: 255, as: :string,
+    placeholder: 'Styles'
+
+  = f.input :experience,  as: :hidden,
+    input_html: {value: 10}
+
+  = f.input :irt_data, as: :hidden,
+    input_html: {value: @course.id}
+
+  = f.semantic_fields_for :exercise_version do |ev|         
+    = render 'exercises/exercise_version_fields', f: ev
+  
+  = f.semantic_fields_for Prompt.new do |ev|         
+    = render 'exercises/prompt_fields', f: ev
+    
+  = f.semantic_fields_for CodingPrompt.new do |cp|
+    = render 'exercises/coding_question_fields', f: cp
+
+  = f.input :question_type, as: :hidden,
+    input_html: { value: 2 }
+
+  = f.input :external_id, as: :hidden,
+    input_html: { value: current_user.id.to_s + Time.now.to_i.to_s }
+
+  .actions
+    = f.submit class: 'btn btn-primary'

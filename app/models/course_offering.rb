@@ -112,6 +112,53 @@ class CourseOffering < ActiveRecord::Base
     self.self_enrollment_allowed && effective_cutoff_date >= Time.now
   end
 
+  # ------------------------------------------------------------------
+  def total_tag_count(tag_name)
+    cnt = 0
+    workouts.each do |workout|
+      workout.exercise_workouts.each do |wex|
+        cnt += 1 if wex.exercise.tags.select {|tag| tag.name == tag_name}.any?
+      end 
+    end
+    return cnt
+  end
+
+  # ------------------------------------------------------------------
+  def total_tag_points(tag_name)
+    total = 0.0
+    workouts.each do |workout|
+      workout.exercise_workouts.each do |wex|
+        total += wex.points if wex.exercise.tags.select {|tag| tag.name == tag_name}.any?
+      end 
+    end
+    return total
+  end
+
+  # ------------------------------------------------------------------
+  def total_user_tag_points(tag_name, user)
+    total = 0.0
+    course_offering_exercises = Array.new
+    workouts.each do |workout|
+      workout.exercise_workouts.each do |wex|
+        course_offering_exercises << wex.exercise if wex.exercise.tags.select {|tag| tag.name == tag_name}.any?
+      end 
+    end
+    course_offering_exercises.uniq.each do |exercise|
+      exercise_attempts = Attempt.where(user: user, exercise_version: exercise.current_version)
+      exercise_final_attempts = exercise_attempts.reject {|attempt| attempt.active_score.nil? || !workouts.include?(attempt.workout_score.workout) }
+      exercise_final_attempts.each do |att|
+        if att.andand.score
+          total += att.andand.score
+        end
+      end
+    end
+    return total
+  end
+
+  # ---------
+  def mastered?(user, tag_name)
+     total_tag_points(tag_name) == total_user_tag_points(tag_name, user)
+  end
 
   # -------------------------------------------------------------
   # Public: Gets a relation representing all Users who are graders in

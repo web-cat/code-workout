@@ -1,20 +1,20 @@
 #!/usr/bin/env ruby
-require_relative 'baseclassclass'
+require_relative '%{class_name}'
 require 'test/unit'
 
-class baseclassclassTest < Test::Unit::TestCase
-	@@f = File.open("baseclassclass_Ruby_results.csv","w")
+class %{class_name}Test < Test::Unit::TestCase
+	@@f = File.open("results.csv","w")
 	      
 	def setup
 	  @@f.close unless @@f.closed?
-	  @@f = File.open("baseclassclass_Ruby_results.csv","a")
+	  @@f = File.open("results.csv","a")
+          @@obj = %{class_name}.new
 	end
 
 	def teardown
 	  @@f.close
 	end
 
-TTTTT
-
+        %{tests}
 
 end

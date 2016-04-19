@@ -5,8 +5,14 @@
   - pts = @workout.exercise_workouts.find_by(exercise: @exercise).andand.points
   - score = @attempt.score
   - score_pct = score * 100.0 / pts
-  - if score == pts && Hint.where(exercise_version_id: @attempt.exercise_version_id, user: @student_drift_user).empty?
-    = link_to 'Congratulations. Please add a hint ', new_hint_path(exercise_version_id: @attempt.exercise_version_id)
+  - if score == pts
+    %ul
+    - if Hint.where(exercise_version_id: @attempt.exercise_version_id, user: @student_drift_user).empty?
+      %li= link_to 'Congratulations. Please add a hint for this exercise', new_hint_path(exercise_version_id: @attempt.exercise_version_id)
+    - @exercise.tags.each do |tag|
+      - if @attempt.andand.workout_score.andand.workout_offering.andand.course_offering.mastered?(current_user, tag.name)
+        - if 3 <= @attempt.andand.workout_score.andand.workout_offering.andand.course_offering.total_tag_count(tag.name)
+          %li= link_to "Congratulations. You have mastered #{tag.name}. Please create a practice exercise for it", course_student_exercise_path(id: @attempt.andand.workout_score.andand.workout_offering.andand.course_offering.course_id, tag: tag.name)
   .summary
     .radial-progress{ 'data-progress' => score_pct.round() }
       .circle

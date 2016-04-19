@@ -37,7 +37,7 @@
       %ul.nav.nav-tabs
         %li.active
           %a{ href: '#workouts', data: { toggle: 'tab' } } Workouts
-        - if !@is_student
+        - if true
           %li
             %a{ href: '#exercises', data: { toggle: 'tab' } } Exercises
         %li
@@ -60,12 +60,15 @@
             = render row, locals: { uid: current_user.id }
             .clearfix
 
-    - if !@is_student
+    - if true
       .tab-pane.fade{ id: 'exercises' }
         %ul
-          - @course.exercises.each do |ex|
-            -# FIXME: this should use the right helper (path is now broken)
-            %li= link_to ex.name, '/exercises/' + ex.id.to_s
+          - course_exercises =  @course.course_exercises.select{|cex| cex.curated}
+          - course_exercises =  course_exercises.map(&:exercise)
+          - if course_exercises.size > 0
+            - course_exercises.in_groups_of(2, false) do |row|
+              = render row, user: current_user
+              .clearfix
 
     .tab-pane.fade{ id: 'grades' }
       -# FIXME: Funky logic for the time being

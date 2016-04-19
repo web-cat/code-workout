@@ -1,0 +1,7 @@
+- @course_exercises.each do |cex|
+  %li
+    %div
+      = link_to cex.exercise.display_name, exercise_practice_path(cex.exercise)
+      - if !cex.curated?
+        = link_to 'Approve', cex_approve_path(cex_id: cex.id)
+      = link_to 'Remove', "/courses/#{@course.id}/cex/" + cex.id.to_s, method: :delete

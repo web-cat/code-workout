@@ -1,0 +1,6 @@
+= semantic_form_for @course, html: { class: "form-horizontal", method: :patch } do |f|
+  = f.semantic_errors
+  = f.semantic_fields_for :course_exercises do |cex|         
+    = render 'course_exercise_fields', f: cex
+  .actions
+    = f.submit 'Add'

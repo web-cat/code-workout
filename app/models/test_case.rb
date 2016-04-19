@@ -150,23 +150,19 @@ class TestCase < ActiveRecord::Base
     TEST_METHOD_TEMPLATES = {
       'Ruby' => <<RUBY_TEST,
   def test%{id}
-    if %{method_name}(%{input}) ==
-      %{expected_output}
-      @@f.write("1,,%{id}\n")
+    if @@obj.%{method_name}(%{input}) == %{expected_output}
+      @@f.puts("test%{id},1,")
     else
-      @@f.write("0,\"%{negative_feedback}\",%{id}\n")
+      @@f.puts("test%{id},0,%{negative_feedback}")
     end
-    assert_equal(%{method_name}(%{input}), %{expected_output})
+    assert_equal(@@obj.%{method_name}(%{input}), %{expected_output})
   end
-
 RUBY_TEST
       'Python' => <<PYTHON_TEST,
-    def test%{id}(self):
-        if %{class_name}.%{method_name}(%{input}) == %{expected_output}:
-            %{class_name}Test.f.write("1,,%{id}\n")
-        else:
-            %{class_name}Test.f.write("0,\"%{negative_feedback}\",%{id}\n")
-        self.assertEqual(%{class_name}.%{method_name}(%{input}),%{expected_output})
+        def test%{id}(self):
+            if %{class_name}Test.obj.%{method_name}(%{input}) == %{expected_output}: %{class_name}Test.f.write("test%{id},1,,%{id}"+'\\n')
+            else: %{class_name}Test.f.write("test%{id},0,%{negative_feedback},%{id}"+ '\\n')
+            self.assertEqual(%{class_name}Test.obj.%{method_name}(%{input}),%{expected_output})
 
 PYTHON_TEST
       'Java' => <<JAVA_TEST

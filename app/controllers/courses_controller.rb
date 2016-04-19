@@ -115,7 +115,41 @@ class CoursesController < ApplicationController
     end
   end
 
+  def student_exercise
+    @course = Course.find(params[:id])
+    @exercise = Exercise.new
+  end
 
+  def add_exercise
+    @course = Course.find(params[:id])
+    @available_exercises = Exercise.where(is_public: true)
+    WorkoutOwner.where(owner: current_user).each do |ownership|
+      @available_exercises = @available_exercises + ownership.workout.exercises
+    end
+    @available_exercises = @available_exercises.uniq - @course.exercises
+    @available_exercises = @available_exercises.uniq 
+  end
+  
+  # PATCH /courses/id
+  def attach_exercise
+    @course = Course.find(params[:id])
+    exercise = Exercise.find(params[:course][:course_exercises][:exercise])
+    is_instructor = false
+    @course.course_offerings.each do |course_offering|
+      is_instructor = true if CourseEnrollment.find_by(user: current_user, course_offering: course_offering).course_role.can_manage_assignments?
+    end
+    course_ex = CourseExercise.new(course: @course, contributor: current_user, exercise: exercise, curated: is_instructor)
+    if course_ex.save 
+      redirect_to root_path, notice: 'Exercise added'
+    else
+      redirect_to root_path, alarm: 'Exercise addition failed'
+    end 
+  end
+  
+  def student_course_exercise
+    @course = Course.find(params[:id])
+  end
+  
   # -------------------------------------------------------------
   # DELETE /courses/1
   def destroy
@@ -129,8 +163,36 @@ class CoursesController < ApplicationController
     end
   end
 
-
-  # -------------------------------------------------------------
+  # --------------------------------------------------------------
+  def list_exercises
+    @course = Course.find(params[:id])
+    @course_exercises = @course.course_exercises 
+  end
+  
+  # --------------------------------------------------------------
+  def approve_course_exercise
+    @course = Course.find(params[:id])
+    @course_exercise = CourseExercise.find(params[:cex_id])
+    @course_exercise.curated = true
+    @course_exercise.exercise.is_public = true
+    @course_exercise.exercise.save
+    if @course_exercise.save
+      redirect_to root_path, notice: 'Exercise approved'
+    else
+      redirect_to root_path, notice: 'Exercise approval failed'
+    end
+  end
+  
+  # --------------------------------------------------------------
+  def remove_course_exercise
+    @course_exercise = CourseExercise.find(params[:cex_id])
+    if @course_exercise.destroy
+      redirect_to root_path, notice: 'Exercise removed'
+    else
+      redirect_to root_path, notice: 'Exercise removal failed'
+    end
+  end
+  # --------------------------------------------------------------
   def search
   end
 
@@ -164,7 +226,7 @@ class CoursesController < ApplicationController
     # Only allow a trusted parameter "white list" through.
     def course_params
       params.require(:course).
-        permit(:name, :id, :number, :organization_id, :term_id)
+        permit(:name, :id, :number, :organization_id, :term_id, :course_exercises)
     end
 
 end

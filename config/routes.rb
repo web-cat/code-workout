@@ -31,7 +31,14 @@ CodeWorkout::Application.routes.draw do
     constraints: { id: /[^\/]+/ }
   ActiveAdmin.routes(self)
 
-
+  get '/courses/:id/add_exercise' => 'courses#add_exercise', as: :course_add_exercise
+  patch '/courses/:id' => 'courses#attach_exercise'
+  get '/courses/:id' => 'courses#show', as: :course
+  get 'courses/:id/approve_course_exercise/:cex_id' => 'courses#approve_course_exercise', as: :cex_approve
+  get '/courses/:id/list_exercises' => 'courses#list_exercises', as: :course_list_exercises
+  delete 'courses/:id/cex/:cex_id' => 'courses#remove_course_exercise', as: :cex_remove
+  get '/courses/:id/student_exercise' => 'courses#student_exercise', as: :course_student_exercise
+  
   get 'sse/feedback_wait'
   # get 'sse/feedback_update'
   get 'sse/feedback_poll'
@@ -49,6 +56,8 @@ CodeWorkout::Application.routes.draw do
     get  'exercises_import' => 'exercises#upload_yaml'
     post  'exercises_yaml_create' => 'exercises#yaml_create'
     get  'exercises/upload' => 'exercises#upload', as: :exercises_upload
+    get  'exercises/:id/convert_exercise/:language' => 'exercises#convert_exercise', as: :convert_exercise
+    patch  'exercises/:id' => 'exercises#create_converted_exercise', as: :create_converted_exercise
     get  'exercises/download' => 'exercises#download', as: :exercises_download
     post 'exercises/upload_create' => 'exercises#upload_create'
     get  'exercises/upload_mcqs' => 'exercises#upload_mcqs',
@@ -60,7 +69,7 @@ CodeWorkout::Application.routes.draw do
       as: :exercise_practice
     patch 'exercises/:id/practice' => 'exercises#evaluate',
       as: :exercise_evaluate
-    
+    put 'exercises' => 'exercises#student_create'
     post 'exercises/search' => 'exercises#search', as: :search
     # At the bottom, so the routes above take precedence over existing ids
     resources :exercises
@@ -115,7 +124,6 @@ CodeWorkout::Application.routes.draw do
 
   get 'hints/approve_hint', as: :hint_approve
   resources :hints
-  
   
   resources :course_offerings, only: [ :edit, :update ] do
     post 'enroll' => :enroll, as: :enroll

@@ -156,8 +156,7 @@ class Ability
       user.global_role_id <= 2
     end
     if !user.global_role.can_edit_system_configuration? &&
-      !user.global_role.can_manage_all_courses? &&
-      !user.global_role.is_instructor?
+      !user.global_role.can_manage_all_courses?
 
       
       
@@ -218,8 +217,14 @@ class Ability
 #          where(user: user)
       end
       can :create, Exercise if user.global_role.is_instructor?
+      can :student_create, Exercise
+      can [:convert_exercise, :create_converted_exercise, :show], Exercise do |e|
+        e.is_public?
+      end
+      
       can [:update], Exercise, exercise_owners: { owner: user }
-
+      can [:student_exercise, :student_course_exercise], Course, course_offerings: {course_enrollments: {user: user}}
+      can [:add_exercise, :attach_exercise, :list_exercises, :approve_course_exercise, :remove_course_exercise], Course, course_offerings: {course_enrollments: {user: user, course_role:{ can_manage_assignments: true }}}
       can :read, Attempt, workout_score:
         { workout_offering:
           { course_offering:

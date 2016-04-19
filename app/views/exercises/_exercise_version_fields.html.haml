@@ -3,8 +3,8 @@
     .row.darker-bkg
       .row             
         .col-md-3
-          = f.input :version, as: :number,
+          = f.input :version, as: :hidden,
             input_html: {value: 1}    
         .col-md-3
-          = f.input :creator,  as: :email,
+          = f.input :creator,  as: :hidden,
             input_html: {value: current_user.email}

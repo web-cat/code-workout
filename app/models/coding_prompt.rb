@@ -99,7 +99,7 @@ class CodingPrompt < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def prompt_dir
-    'usr/resources/Java/tests/' + self.id.to_s
+    "usr/resources/#{prompt.exercise_version.exercise.language}/tests/" + self.id.to_s
   end
 
 

@@ -1,0 +1,9 @@
+.nested-fields
+  = f.inputs do
+    .row.darker-bkg
+      .row             
+        .col-md-3
+          = f.input :exercise,
+            collection: @available_exercises,
+            placeholder: "Enter exercise id",
+            input_html: { class: 'col-md-10', rows: 1 }
