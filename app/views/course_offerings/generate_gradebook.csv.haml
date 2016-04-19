@@ -8,8 +8,8 @@
   - if ce.course_role_id == CourseRole.find_by(name: 'Student').id
     - student =  User.find(ce.user_id)
     - body << student.email
-    - body << student.first_name   
-    - body << student.last_name
+    - body << (student.first_name.to_s.length > 0 ? student.first_name : nil)
+    - body << (student.last_name.to_s.length > 0 ? student.last_name : nil)
     - grand_total = 0.00
     - @course_offering.workouts.each do |wkt|
       - if WorkoutScore.find_by(user_id: ce.user_id, workout: wkt)
