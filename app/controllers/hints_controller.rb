@@ -5,14 +5,13 @@ class HintsController < ApplicationController
     if current_user.global_role_id < 3
       allow = true
     elsif params[:exercise_version_id]
-       exercise = ExerciseVersion.find(params[:exercise_version_id]).exercise
-       attempts = Attempt.where(exercise_version_id: params[:exercise_version_id], user: current_user)
-       attempts.each do |attempt|
-         ExerciseWorkout.where(exercise: exercise, workout: attempt.andand.workout_score.workout).each do |exw|
-           allow = true if attempt.score == exw.points
-         end 
-       end
-       binding.pry
+      exercise = ExerciseVersion.find(params[:exercise_version_id]).exercise
+      attempts = Attempt.where(exercise_version_id: params[:exercise_version_id], user: current_user)
+      attempts.each do |attempt|
+        ExerciseWorkout.where(exercise: exercise, workout: attempt.andand.workout_score.workout).each do |exw|
+          allow = true if attempt.score == exw.points
+        end 
+      end
     end
     if allow
       @exercise_version = ExerciseVersion.find(params[:exercise_version_id])
