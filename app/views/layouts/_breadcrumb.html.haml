@@ -41,7 +41,7 @@
       - if flag1
         %li= link_to 'Gym', gym_path
       - else
-        %li= link_to exercise_workout.display_number, workout_path(exercise_workout)
+        %li= link_to exercise_workout.name, workout_path(exercise_workout)
         %li.active= @exercise.name
       - break
 
