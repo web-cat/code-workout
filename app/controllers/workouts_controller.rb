@@ -73,7 +73,7 @@ class WorkoutsController < ApplicationController
     end
     @workout = Workout.new
     @available_exercises = Exercise.where(is_public: true)
-    @available_exercises = @available_exercises + Exercise.where(is_public: false, current_version: {creator: current_user})
+    
     WorkoutOwner.where(owner: current_user).each do |ownership|
       @available_exercises = @available_exercises + ownership.workout.exercises
     end
