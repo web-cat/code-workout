@@ -6,7 +6,7 @@ class HintsController < ApplicationController
       allow = true
     elsif params[:exercise_version_id]
       exercise = ExerciseVersion.find(params[:exercise_version_id]).exercise
-      attempts = Attempt.where(exercise_version_id: params[:exercise_version_id], user: current_user)
+      attempts = Attempt.where(exercise_version_id: params[:exercise_version_id], user: current_user).where.not(workout_score: nil)      
       attempts.each do |attempt|
         ExerciseWorkout.where(exercise: exercise, workout: attempt.andand.workout_score.workout).each do |exw|
           allow = true if attempt.score == exw.points
