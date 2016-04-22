@@ -71,9 +71,15 @@ class WorkoutScore < ActiveRecord::Base
   belongs_to :workout, inverse_of: :workout_scores
   belongs_to :workout_offering, inverse_of: :workout_scores
   belongs_to :user, inverse_of: :workout_scores
-  has_many :attempts, inverse_of: :workout_score, dependent: :nullify
-  has_many :scored_attempts, class_name: 'Attempt',
-    foreign_key: 'active_score_id', inverse_of: :active_score,
+  has_many :attempts,
+    -> { order('submit_time desc') },
+    inverse_of: :workout_score,
+    dependent: :nullify
+  has_many :scored_attempts,
+    -> { order('submit_time desc') },
+    class_name: 'Attempt',
+    foreign_key: 'active_score_id',
+    inverse_of: :active_score,
     dependent: :nullify
 
 
@@ -94,11 +100,11 @@ class WorkoutScore < ActiveRecord::Base
   end
 
   # -------------------------------------------------------------
-  # Increase the score of a workout by a specified amount 
+  # Increase the score of a workout by a specified amount
   def rescore(delta)
     self.score += delta
     self.score = self.score.round(2)
-    self.save! 
+    self.save!
   end
 
   # -------------------------------------------------------------
@@ -164,9 +170,12 @@ class WorkoutScore < ActiveRecord::Base
     last_attempt = self.scored_attempts.
       where(exercise_version: attempt.exercise_version).first
     if last_attempt
+      # clear previous active score
       last_attempt.active_score_id = nil
       last_attempt.save!
     else
+
+      # update number of exercises completed
       if self.exercises_completed < self.workout.exercises.length
         self.exercises_completed += 1
       end
@@ -174,16 +183,23 @@ class WorkoutScore < ActiveRecord::Base
         self.exercises_remaining -= 1
       end
     end
-    self.score = 0.00
+
+    # recalculate workout score
+    self.score = 0.0
     Attempt.where(active_score_id: self.id).each do |att|
       self.score += att.score
     end
     self.score += value
+
+    # record new active score
     attempt.active_score = self
     attempt.save!
-    self.score = self.score.round(2)
-    self.last_attempted_at = Time.zone.now
 
+    # update score
+    self.score = self.score.round(2)
+    self.last_attempted_at = attempt.submit_time
+
+    # update completed on this
     if self.exercises_remaining == 0
       self.completed = true
       self.completed_at = Time.zone.now
@@ -198,6 +214,24 @@ class WorkoutScore < ActiveRecord::Base
   # score obtained from Attempt using active score.
   def self.score_fix
     WorkoutScore.all.each do |ws|
+      ws.attempts.where(active_score: ws).each do |a|
+        a.active_score_id = nil
+        if !a.save
+          puts "Error clearing scored attempt #{a.id} for ws #{ws.id}"
+        end
+      end
+      ws.workout.exercises.each do |e|
+        a = ws.attempts.joins{exercise_version}.
+          where{(exercise_version.exercise_id == e.id)}.
+          order('submit_time DESC').first
+        if a
+          a.active_score = ws
+          if !a.save
+            puts "Error saving scored attempt #{a.id} for ws #{ws.id}"
+          end
+        end
+      end
+
       sum = 0.0
       ws.scored_attempts.each do |att|
         sum += att.score
@@ -207,68 +241,6 @@ class WorkoutScore < ActiveRecord::Base
         puts "cannot save ws = #{ws.inspect}"
       end
     end
-  end
-
-
-  # -------------------------------------------------------------
-  # (Final) The refactored method to record the workout score
-  # when a workout's exercise has been attempted
-  def self.record_workout_score(score, exer, wkt_id, current_user)
-    self.fail # this method needs to go away and be replaced by
-              # a better instance method
-    scoring = nil
-    if current_user && current_user.current_workout_score &&
-      current_user.current_workout_score.workout.id = wkt_id
-      scoring = current_user.current_workout_score
-    end
-    @current_workout = Workout.find(wkt_id)
-    if scoring.nil? && current_user
-      scoring = @current_workout.score_for(current_user)
-    end
-    exercise_version = exer.current_version
-    score = score.round(2)
-    # FIXME: This code repeats code in code_worker.rb and needs to be
-    # refactored, probably as a method (or constructor?) in WorkoutScore.
-    if scoring.nil?
-      scoring = WorkoutScore.new(
-        score: score,
-        exercises_completed: 1,
-        exercises_remaining: @current_workout.exercises.length - 1)
-      @current_workout.workout_scores << scoring
-      current_user.workout_scores << scoring
-      if current_user
-        scoring.save!
-        current_user.current_workout_score = scoring
-        current_user.save!
-      end
-
-    else # At least one exercise has been attempted as a part of the workout
-      last_attempt = scoring.scored_attempts.
-        where(exercise_version: exercise_version).first
-      if last_attempt
-        scoring.score -= last_attempt.score.round(2)
-        last_attempt.active_scored_id = nil
-        last_attempt.save!
-      else
-        scoring.exercises_completed += 1
-        scoring.exercises_remaining -= 1
-      end
-      scoring.score += score.round(2)
-    end
-    scoring.last_attempted_at = Time.zone.now
-    # Compensate if overshoots
-    if scoring.exercises_completed > @current_workout.exercises.length
-      scoring.exercises_completed = @current_workout.exercises.length
-    end
-    if scoring.exercises_remaining < 0
-      scoring.exercises_remaining = 0
-    end
-    if scoring.exercises_remaining == 0
-      scoring.completed = true
-      scoring.completed_at = Time.zone.now
-    end
-
-    scoring.save!
   end
 
 end
