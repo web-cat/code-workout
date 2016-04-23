@@ -30,6 +30,7 @@ class ExercisesController < ApplicationController
     hashes = Array.new
     hashes << exercise_hash
     exercises = ExerciseRepresenter.for_collection.new([]).from_hash(hashes)
+    exercise.first.owners << current_user
     exercises.each do |e|
       if !e.save
         # FIXME: Add these to alert message that can be sent back to user
@@ -203,7 +204,8 @@ class ExercisesController < ApplicationController
     form_hash.delete("question_type")
     arr << form_hash
     exercises = ExerciseRepresenter.for_collection.new([]).from_hash(arr)
-    if exercises[0].save!
+    exercise.first.owners << current_user
+    if exercises.first.save!
       redirect_to ex, notice: 'Exercise was successfully created.'
     else
       #render action: 'new'
@@ -249,6 +251,7 @@ class ExercisesController < ApplicationController
     form_hash.delete("exercise_version")
     arr << form_hash
     exercises = ExerciseRepresenter.for_collection.new([]).from_hash(arr)
+    exercises.first.owners << current_user
     if msg[:irt_data] && exercises.first.save!
       # HACK!
       # params[:irt_data] is not really IRT data but rather the course number for creating student courses
@@ -363,6 +366,7 @@ class ExercisesController < ApplicationController
     hash = YAML.load(File.read(params[:form][:file].path))
     exercises = ExerciseRepresenter.for_collection.new([]).from_hash(hash)
     exercises.each do |e|
+      e.owners << current_user
       if !e.save
         # FIXME: Add these to alert message that can be sent back to user
         puts 'cannot save exercise, name = ' + e.name.to_s +
