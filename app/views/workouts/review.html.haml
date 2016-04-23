@@ -61,7 +61,8 @@
       = "#{review_user.display_name}."
     - if workout_score
       &nbsp;&nbsp;&nbsp;Last Attempted:
-      = l workout_score.last_attempted_at
+      - if workout_score.last_attempted_at
+        = l workout_score.last_attempted_at
     - elsif @workout_offering.hard_deadline
       Due:
       = l @workout_offering.hard_deadline
