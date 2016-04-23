@@ -72,12 +72,7 @@ class WorkoutsController < ApplicationController
         notice: "Unauthorized to create new workout" and return
     end
     @workout = Workout.new
-    @available_exercises = Exercise.where(is_public: true)
-    
-    WorkoutOwner.where(owner: current_user).each do |ownership|
-      @available_exercises = @available_exercises + ownership.workout.exercises
-    end
-    @available_exercises = @available_exercises.uniq 
+    @available_exercises = current_user.available_exercises
   end
 
 

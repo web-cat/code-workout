@@ -187,6 +187,15 @@ class User < ActiveRecord::Base
       distinct
   end
 
+  # -------------------------------------------------------------
+  def available_exercises
+    avail_exercises = Exercise.where(is_public: true)
+    WorkoutOwner.where(owner: self).each do |ownership|
+      avail_exercises = avail_exercises + ownership.workout.exercises
+    end
+    avail_exercises = avail_exercises + ExerciseOwner.where(owner: self).map(&:exercise)
+    avail_exercises.uniq!
+  end
 
   # -------------------------------------------------------------
   # Gets the user's "display name", which is their full name if it is in the

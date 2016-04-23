@@ -122,12 +122,8 @@ class CoursesController < ApplicationController
 
   def add_exercise
     @course = Course.find(params[:id])
-    @available_exercises = Exercise.where(is_public: true)
-    WorkoutOwner.where(owner: current_user).each do |ownership|
-      @available_exercises = @available_exercises + ownership.workout.exercises
-    end
-    @available_exercises = @available_exercises.uniq - @course.exercises
-    @available_exercises = @available_exercises.uniq 
+    @available_exercises = current_user.available_exercises
+    @available_exercises = @available_exercises - @course.exercises
   end
   
   # PATCH /courses/id
@@ -135,7 +131,7 @@ class CoursesController < ApplicationController
     @course = Course.find(params[:id])
     exercise = Exercise.find(params[:course][:course_exercises][:exercise])
     is_instructor = false
-    @course.course_offerings.each do |course_offering|
+    @course.course_offerings.select{|co| co.term.now?}.each do |course_offering|
       is_instructor = true if CourseEnrollment.find_by(user: current_user, course_offering: course_offering).course_role.can_manage_assignments?
     end
     course_ex = CourseExercise.new(course: @course, contributor: current_user, exercise: exercise, curated: is_instructor)
@@ -175,6 +171,7 @@ class CoursesController < ApplicationController
     @course_exercise = CourseExercise.find(params[:cex_id])
     @course_exercise.curated = true
     @course_exercise.exercise.is_public = true
+    @course_exercise.exercise.owners << current_user
     @course_exercise.exercise.save
     if @course_exercise.save
       redirect_to root_path, notice: 'Exercise approved'
