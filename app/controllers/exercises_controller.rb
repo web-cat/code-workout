@@ -522,9 +522,7 @@ class ExercisesController < ApplicationController
         exercise_prompt_answer = @attempt.prompt_answers[i]
         exercise_prompt_answer.answer = params[:exercise_version][:answer_code]
         if exercise_prompt_answer.save
-          CodeWorker.new.async.perform(
-            @attempt.id,
-            @workout_score.andand.id)
+          CodeWorker.new.async.perform(@attempt.id)
         else
           puts 'IMPROPER PROMPT',
             'unable to save prompt_answer: ' \
