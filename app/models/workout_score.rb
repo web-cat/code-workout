@@ -145,67 +145,66 @@ class WorkoutScore < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def update_attempt(attempt, old_score)
-    if self.scored_attempts.include? attempt
-      self.score = self.score - old_score + attempt.score
-      self.score = self.score.round(2)
-    else
-      # look for other scored attempt for the same exercise
-      scored = self.scored_attempts.includes(exercise_versions: :exercise).
-        where(exercise: attempt.exercise_version.exercise).first
-      if scored
-        self.score -= scored.score
-        self.scored_attempts.delete(scored)
+    self.transaction do
+      if attempt.workout_score == self
+        # recalculate workout score
+        self.score = 0.0
+        self.scored_attempts.each do |att|
+          self.score += att.score
+        end
+        self.score = self.score.round(2)
+        self.save!
       end
-      self.score += attempt.score
-      self.scored_attempts << attempt
     end
-    self.score = self.score.round(2)
-    self.save!
   end
 
 
   # -------------------------------------------------------------
   def record_attempt(attempt)
-    value = attempt.score
-    last_attempt = self.scored_attempts.
-      where(exercise_version: attempt.exercise_version).first
-    if last_attempt
-      # clear previous active score
-      last_attempt.active_score_id = nil
-      last_attempt.save!
-    else
+    self.transaction do
+      scored_for_this = self.scored_attempts.
+        where(exercise_version: attempt.exercise_version)
+      last_attempt = scored_for_this.first
 
-      # update number of exercises completed
-      if self.exercises_completed < self.workout.exercises.length
-        self.exercises_completed += 1
+      # Only update if this attempt is included in score
+      if last_attempt.nil? ||
+        last_attempt.submit_time < attempt.submit_time
+
+        if last_attempt
+          # clear previous active score
+          scored_for_this.each do |a|
+            a.active_score_id = nil
+            a.save!
+          end
+        else
+          # update number of exercises completed
+          if self.exercises_completed < self.workout.exercises.length
+            self.exercises_completed += 1
+          end
+          if self.exercises_remaining > 0
+            self.exercises_remaining -= 1
+            if self.exercises_remaining == 0
+              self.completed = true
+              self.completed_at = Time.zone.now
+            end
+          end
+        end
+
+        # record new active score
+        attempt.active_score = self
+        attempt.save!
+
+        # recalculate workout score
+        self.score = 0.0
+        self.scored_attempts.each do |a|
+          self.score += a.score
+        end
+        self.score += attempt.score
+        self.score = self.score.round(2)
+        self.last_attempted_at = attempt.submit_time
+        self.save!
       end
-      if self.exercises_remaining > 0
-        self.exercises_remaining -= 1
-      end
     end
-
-    # recalculate workout score
-    self.score = 0.0
-    Attempt.where(active_score_id: self.id).each do |att|
-      self.score += att.score
-    end
-    self.score += value
-
-    # record new active score
-    attempt.active_score = self
-    attempt.save!
-
-    # update score
-    self.score = self.score.round(2)
-    self.last_attempted_at = attempt.submit_time
-
-    # update completed on this
-    if self.exercises_remaining == 0
-      self.completed = true
-      self.completed_at = Time.zone.now
-    end
-
-    self.save!
   end
 
 
