@@ -376,12 +376,6 @@ class ExercisesController < ApplicationController
         notice: 'Choose an exercise to practice!' and return
     end
 
-    if @exercise_version.is_mcq?
-      if Attempt.find_by(user: current_user, exercise_version: @exercise_version)
-        flash.notice = "You can't re-attempt MCQs"
-        return
-      end
-    end
     # Tighter restrictions for the moment, should go away
     authorize! :practice, @exercise
     @workout = nil
