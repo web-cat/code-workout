@@ -162,8 +162,10 @@ class WorkoutScore < ActiveRecord::Base
   # -------------------------------------------------------------
   def record_attempt(attempt)
     self.transaction do
-      scored_for_this = self.scored_attempts.joins{exercise_version}.
-        where{(exercise_version.exercise_id == e.id)}
+      # scored_for_this = self.scored_attempts.joins{exercise_version}.
+      #  where{(exercise_version.exercise_id == e.id)}
+      scored_for_this = self.scored_attempts.
+        where(exercise_version: attempt.exercise_version)
 
       last_attempt = scored_for_this.first
 
