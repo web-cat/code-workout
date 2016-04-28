@@ -162,8 +162,9 @@ class WorkoutScore < ActiveRecord::Base
   # -------------------------------------------------------------
   def record_attempt(attempt)
     self.transaction do
-      scored_for_this = self.scored_attempts.
-        where(exercise_version: attempt.exercise_version)
+      scored_for_this = self.scored_attempts.joins{exercise_version}.
+        where{(exercise_version.exercise_id == e.id)}
+
       last_attempt = scored_for_this.first
 
       # Only update if this attempt is included in score
@@ -199,7 +200,6 @@ class WorkoutScore < ActiveRecord::Base
         self.scored_attempts.each do |a|
           self.score += a.score
         end
-        self.score += attempt.score
         self.score = self.score.round(2)
         self.last_attempted_at = attempt.submit_time
         self.save!
@@ -209,9 +209,9 @@ class WorkoutScore < ActiveRecord::Base
 
 
   # ------------------------------------------------------------
-  # Class method to fix all workout scores using round(2) on the
-  # score obtained from Attempt using active score.
-  def self.score_fix
+  # Class method to fix all workout scores by ensuring there is only
+  # a single active score attempt for each unique exercise attempted.
+  def self.score_fix1
     WorkoutScore.all.each do |ws|
       ws.attempts.where(active_score: ws).each do |a|
         a.active_score_id = nil
@@ -231,6 +231,22 @@ class WorkoutScore < ActiveRecord::Base
         end
       end
 
+      sum = 0.0
+      ws.scored_attempts.each do |att|
+        sum += att.score
+      end
+      ws.score = sum.round(2)
+      if !ws.save
+        puts "cannot save ws = #{ws.inspect}"
+      end
+    end
+  end
+
+  # ------------------------------------------------------------
+  # Class method to fix all workout scores using round(2) on the
+  # score obtained from Attempt using active score.
+  def self.score_fix2
+    WorkoutScore.all.each do |ws|
       sum = 0.0
       ws.scored_attempts.each do |att|
         sum += att.score
