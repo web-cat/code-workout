@@ -8,7 +8,7 @@ class CodeWorker
   workers 10
 
   # -------------------------------------------------------------
-  def perform(attempt_id, workout_score_id)
+  def perform(attempt_id)
     ActiveRecord::Base.connection_pool.with_connection do
       attempt = Attempt.find(attempt_id)
       exv = attempt.exercise_version
@@ -88,14 +88,12 @@ class CodeWorker
       multiplier = 1.0
       attempt.score = correct * multiplier / total
       attempt.experience_earned = attempt.score * exv.exercise.experience / attempt.submit_num
-      workout_score = workout_score_id &&
-        WorkoutScore.find_by(id: workout_score_id)
       attempt.feedback_ready = true
-      if workout_score
-        attempt.score *= workout_score.workout.exercise_workouts.
+      if attempt.workout_score
+        attempt.score *= attempt.workout_score.workout.exercise_workouts.
           where(exercise: exv.exercise).first.points
         attempt.save!
-        workout_score.record_attempt(attempt)
+        attempt.workout_score.record_attempt(attempt)
       else
         attempt.save!
       end

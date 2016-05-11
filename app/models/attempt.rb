@@ -94,7 +94,7 @@ class Attempt < ActiveRecord::Base
   def update_score(score)
     old_score = self.score
     self.score = score
-    if self.workout_score
+    if self.active_score
       # Multiply score by points from workout, if necessary
       self.score *= self.workout_score.workout.exercise_workouts.where(
         exercise: exercise_version.exercise).first.points
@@ -105,10 +105,10 @@ class Attempt < ActiveRecord::Base
 
   # -------------------------------------------------------------
   # Increase the score of an attempt by a specified amount
-  # Doesn't have all the emotional baggage of update_score 
+  # Doesn't have all the emotional baggage of update_score
   def rescore(delta)
     self.score += delta
-    self.save! 
+    self.save!
   end
 
   # -------------------------------------------------------------

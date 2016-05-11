@@ -381,12 +381,6 @@ class ExercisesController < ApplicationController
         notice: 'Choose an exercise to practice!' and return
     end
 
-    if @exercise_version.is_mcq?
-      if Attempt.find_by(user: current_user, exercise_version: @exercise_version)
-        flash.notice = "You can't re-attempt MCQs"
-        return
-      end
-    end
     # Tighter restrictions for the moment, should go away
     authorize! :practice, @exercise
     @workout = nil
@@ -536,9 +530,7 @@ class ExercisesController < ApplicationController
         exercise_prompt_answer = @attempt.prompt_answers[i]
         exercise_prompt_answer.answer = params[:exercise_version][:answer_code]
         if exercise_prompt_answer.save
-          CodeWorker.new.async.perform(
-            @attempt.id,
-            @workout_score.andand.id)
+          CodeWorker.new.async.perform(@attempt.id)
         else
           puts 'IMPROPER PROMPT',
             'unable to save prompt_answer: ' \

@@ -10,6 +10,7 @@
 #  created_at          :datetime
 #  updated_at          :datetime
 #  time_limit          :integer
+#  opening_date        :datetime
 #
 # Indexes
 #

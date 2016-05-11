@@ -14,6 +14,7 @@
 #  name                                    :string(255)
 #  created_at                              :datetime
 #  updated_at                              :datetime
+#  invisible_before_review                 :boolean
 #
 
 class WorkoutPolicy < ActiveRecord::Base
