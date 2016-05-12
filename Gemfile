@@ -44,7 +44,7 @@ group :assets do
 end
 
 group :development, :test do
-  gem 'sqlite3'
+  # gem 'sqlite3'
   gem 'mysql2'
   gem 'rspec-rails'
   gem 'annotate'
@@ -113,5 +113,6 @@ gem 'capistrano-rails'
 #for multi-color progress bar
 gem 'css3-progress-bar-rails'
 
+gem 'immigrant'
 gem 'ims-lti', '~> 1.1.8'
 gem 'json'
