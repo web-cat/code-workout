@@ -5,9 +5,9 @@
 #   gem 'sqlite3'
 development:
    adapter: mysql2
-   database: development
-   username: app_user
-   password: app_password
+   database: codeworkout
+   username: codeworkout
+   password: codeworkout
    host: localhost
 
 # development:

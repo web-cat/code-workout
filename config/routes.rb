@@ -101,8 +101,6 @@ CodeWorkout::Application.routes.draw do
     get ':course_id/:term_id/review/:review_user_id/:id' => 'workout_offerings#review', as: :workout_offering_review
     post ':id/:term_id/generate_gradebook/' => 'courses#generate_gradebook', as: :course_gradebook
     get ':id(/:term_id)' => 'courses#show', as: :course
-
-
   end
 
 
