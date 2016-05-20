@@ -25,7 +25,7 @@ FactoryGirl.define do
     term_id 1
     label "MWF 10:00am"
     url "http://courses.cs.vt.edu/~cs2114/Fall2013"
-    self_enrollment_allowed false
+    self_enrollment_allowed true
 
     factory :course_offering2 do
       label "TR 11:00am"
