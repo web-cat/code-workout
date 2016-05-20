@@ -21,9 +21,9 @@ FactoryGirl.define do
 
   factory :term do
     season 100
-    starts_on "2015-01-15"
-    ends_on "2015-05-15"
-    year 2015
+    starts_on "2016-01-01"
+    ends_on "2016-12-31"
+    year 2016
 
     factory :term2 do
       season 400

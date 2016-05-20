@@ -5,10 +5,10 @@ namespace :db do
   task populate: [:environment, :reset] do
     FactoryGirl.create(:organization)
     FactoryGirl.create(:term)
-    FactoryGirl.create(:term2)
+    # FactoryGirl.create(:term2)
     FactoryGirl.create(:course)
     c = FactoryGirl.create(:course_offering)
-    FactoryGirl.create(:course_offering2)
+    # FactoryGirl.create(:course_offering2)
 
     FactoryGirl.create(:course_enrollment,
       user: FactoryGirl.create(:admin),
@@ -33,6 +33,9 @@ namespace :db do
     # Create a workout with one exercise, and a second exercise
     FactoryGirl.create :workout_with_exercises
     FactoryGirl.create :coding_exercise, name: 'Factorial 3'
+
+    # Create a workout_offering
+    FactoryGirl.create :workout_offering
   end
 
   desc "Reset database and then fill it with Summer I 2015 data"
