@@ -65,7 +65,6 @@ source ~/.bashrc
 
 cd /vagrant
 bundle install
-rake db:migrate
 rake db:reset
 rake db:populate
 
