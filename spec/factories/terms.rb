@@ -37,13 +37,13 @@ FactoryGirl.define do
     factory :term300 do
       season 300
       starts_on "2016-07-16"
-      ends_on "2014-08-15"
+      ends_on "2016-08-15"
     end
 
     factory :term400 do
       season 400
       starts_on "2016-08-16"
-      ends_on "2014-12-15"
+      ends_on "2016-12-15"
     end
 
     factory :term500 do
