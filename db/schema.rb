@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160512005525) do
+ActiveRecord::Schema.define(version: 20160525210736) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -522,9 +522,9 @@ ActiveRecord::Schema.define(version: 20160512005525) do
   end
 
   create_table "workout_scores", force: true do |t|
-    t.integer  "workout_id",                     null: false
-    t.integer  "user_id",                        null: false
-    t.float    "score",               limit: 24
+    t.integer  "workout_id",                         null: false
+    t.integer  "user_id",                            null: false
+    t.float    "score",                   limit: 24
     t.boolean  "completed"
     t.datetime "completed_at"
     t.datetime "last_attempted_at"
@@ -533,6 +533,8 @@ ActiveRecord::Schema.define(version: 20160512005525) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "workout_offering_id"
+    t.string   "lis_outcome_service_url"
+    t.string   "lis_result_sourcedid"
   end
 
   add_index "workout_scores", ["user_id"], name: "index_workout_scores_on_user_id", using: :btree

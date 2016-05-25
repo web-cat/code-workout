@@ -65,6 +65,8 @@ class WorkoutOfferingsController < ApplicationController
       email = params[:lis_person_contact_email_primary]
       first_name = params[:lis_person_name_given]
       last_name = params[:lis_person_name_family]
+      lis_outcome_service_url = params[:lis_outcome_service_url]
+      lis_result_sourcedid = params[:lis_result_sourcedid]
       @user = User.where(email: email).first
       if @user.blank?
         # TODO: should mark this as LMS user then prevent this user from login to codeworkout domain
@@ -100,7 +102,9 @@ class WorkoutOfferingsController < ApplicationController
             exercises_remaining: @workout_offering.workout.exercises.length,
             user: current_user,
             workout_offering: @workout_offering,
-            workout: @workout_offering.workout)
+            workout: @workout_offering.workout,
+            lis_outcome_service_url: 'https://canvas.instructure.com/api/lti/v1/tools/104462/grade_passback',
+            lis_result_sourcedid: '104462-1021270-4735909-5259314-d62d2d7b6938b85775bca6467bda47d089f87348')
           @workout_score.save!
         end
         current_user.current_workout_score = @workout_score

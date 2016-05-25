@@ -1,4 +1,6 @@
 class ExercisesController < ApplicationController
+  require 'ims/lti'
+  require 'oauth/request_proxy/rack_request'
 
   load_and_authorize_resource
 
@@ -541,6 +543,11 @@ class ExercisesController < ApplicationController
       @workout ||= @workout_score.andand.workout
     end
 
+    @tp = IMS::LTI::ToolProvider.new('test', 'secret', {
+      "lis_outcome_service_url" => "#{@workout_score.lis_outcome_service_url}",
+      "lis_result_sourcedid" => "#{@workout_score.lis_result_sourcedid}"
+      })
+    @tp.post_replace_result!(@workout_score.score / 30)
   end
 
 

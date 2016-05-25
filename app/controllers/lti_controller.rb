@@ -92,5 +92,4 @@ class LtiController < ApplicationController
       # some kind of caching solution or something to keep a short-term memory of used nonces
       false
     end
-
 end
