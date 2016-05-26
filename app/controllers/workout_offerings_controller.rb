@@ -103,8 +103,8 @@ class WorkoutOfferingsController < ApplicationController
             user: current_user,
             workout_offering: @workout_offering,
             workout: @workout_offering.workout,
-            lis_outcome_service_url: 'https://canvas.instructure.com/api/lti/v1/tools/104462/grade_passback',
-            lis_result_sourcedid: '104462-1021270-4735909-5259314-d62d2d7b6938b85775bca6467bda47d089f87348')
+            lis_outcome_service_url: lis_outcome_service_url,
+            lis_result_sourcedid: lis_result_sourcedid)
           @workout_score.save!
         end
         current_user.current_workout_score = @workout_score

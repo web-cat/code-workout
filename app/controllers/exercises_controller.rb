@@ -543,11 +543,14 @@ class ExercisesController < ApplicationController
       @workout ||= @workout_score.andand.workout
     end
 
+    total_points = ExerciseWorkout.where(workout_id: @workout_score.workout_id).sum(:points)
+    puts "Total: #{total_points}, Score: #{@workout_score.score}"
+
     @tp = IMS::LTI::ToolProvider.new('test', 'secret', {
       "lis_outcome_service_url" => "#{@workout_score.lis_outcome_service_url}",
       "lis_result_sourcedid" => "#{@workout_score.lis_result_sourcedid}"
-      })
-    @tp.post_replace_result!(@workout_score.score / 30)
+    })
+    @tp.post_replace_result!(@workout_score.score / total_points)
   end
 
 
