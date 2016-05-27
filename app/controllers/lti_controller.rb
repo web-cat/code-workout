@@ -9,7 +9,58 @@ class LtiController < ApplicationController
     # must include the oauth proxy object
     require 'oauth/request_proxy/rack_request'
 
-    render('error') and return unless lti_authorize!
+    if request.post?
+      email = params[:lis_person_contact_email_primary]
+      first_name = params[:lis_person_name_given]
+      last_name = params[:lis_person_name_family]
+      @user = User.where(email: email).first
+      if @user.blank?
+        @user = User.new(email: email, password: email, password_confirmation: email,
+          first_name: first_name, last_name: last_name)
+        @user.save
+      end
+      sign_in @user
+
+      roles = params[:roles]
+      number = params[:custom_number]
+      course_name = params[:context_title]
+      creator_id = @user.id
+
+      @course = Course.find_by(number: number)
+      if @course.blank?
+        @course = Course.new(
+          name: course_name,
+          number: number,
+          creator_id: @user.id
+        )
+        @course.save
+      end
+
+      @term = Term.current_term
+      @course_offering = CourseOffering.find_by(course_id: @course.id, term_id: @term.id)
+      if @course_offering.blank?
+        @course_offering = CourseOffering.create(
+          label: nil,
+          url: nil,
+          self_enrollment_allowed: 1,
+          term: @term
+        )
+        @course.course_offerings << @course_offering
+      end
+
+      workout_name = params[:resource_link_title]
+      @workout = Workout.find_by(name: workout_name)
+      if @workout.blank?
+        render 'Could not find workout', layout: 'error' and return
+      else
+        @workout_offering = WorkoutOffering.find_by(
+          course_offering_id: @course_offering.id, term_id: @term.id
+        )
+        if @workout_offering.blank?
+          render 'Could not find workout offering', layout: 'error' and return
+        end
+      end
+    end
   end
 
   def assessment
@@ -25,7 +76,7 @@ class LtiController < ApplicationController
     @tp = IMS::LTI::ToolProvider.new(key, $oauth_creds[key], launch_params)
 
     if !@tp.outcome_service?
-      @message = "This tool wasn't lunched as an outcome service"
+      @message = "This tool wasn't launched as an outcome service"
       render(:error)
     end
 
