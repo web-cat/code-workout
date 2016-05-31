@@ -28,13 +28,14 @@ class LtiController < ApplicationController
       course_number = params[:custom_course_number]
       course_name = params[:context_title]
       organization_slug = params[:custom_organization]
+      term_slug = params[:custom_term]
       creator_id = @user.id
 
       @organization = Organization.find_by(slug: organization_slug)
       if @organization.blank?
         redirect_to root_path, notice: 'Organization not found.' and return
       end
-      @course = Course.find_by(number: course_number)
+      @course = Course.find_by(number: course_number) or @course = Course.find_by(slug: course_number)
       if @course.blank?
         @course = Course.new(
           name: course_name,
@@ -45,38 +46,49 @@ class LtiController < ApplicationController
         @course.save
       end
 
-      @term = Term.current_term
+      @term = Term.find_by(slug: term_slug)
+      if @term.blank?
+        redirect_to root_path, notice: 'Term not found' and return
+      end
       @course_offering = CourseOffering.find_by(course_id: @course.id, term_id: @term.id)
       if @course_offering.blank?
         if roles.include? 'Instructor'
-          @course_offering = CourseOffering.create(
-            label: nil,
+          @course_offering = CourseOffering.new(
+            label: 'canvas',
             url: nil,
             self_enrollment_allowed: 1,
+            course: @course,
             term: @term
           )
+          @course_offering.save!
           @course.course_offerings << @course_offering
-          @course.save
+          @course.save!
         else
           redirect_to root_path, notice: 'Course offering not found.' and return
         end
       end
 
-      if roles.include? 'Learner'
-        if @course_offering &&
-          @course_offering.can_enroll? &&
-          @course_offering.is_enrolled?(current_user)
-          CourseEnrollment.create(
-            course_offering: @course_offering,
-            user: current_user,
-            course_role: CourseRole.student
-          )
-        end
+      course_role = 'tmp'
+      if roles.include? 'Instructor'
+        course_role = CourseRole.instructor
+      elsif roles.include? 'Learner'
+        course_role = CourseRole.learner
+      end
+
+      if @course_offering &&
+        @course_offering.can_enroll? &&
+        !@course_offering.is_enrolled?(current_user)
+        CourseEnrollment.create(
+          course_offering: @course_offering,
+          user: current_user,
+          course_role: course_role
+        )
       end
 
       workout_name = params[:resource_link_title]
       @workout = Workout.find_by(name: workout_name)
       if @workout.blank?
+        puts 'here'
         redirect_to root_path, notice: 'Workout not found.' and return
       end
       @workout_offering = WorkoutOffering.find_by(
@@ -84,8 +96,11 @@ class LtiController < ApplicationController
         workout_id: @workout.id
       )
       if @workout_offering.blank?
-        @workout_offering = @workout.workout_offerings.create()
-        @course_offering.workout_offerings << @workout_offering
+        @workout_offering = WorkoutOffering.new(
+          course_offering: @course_offering,
+          workout: @workout
+        )
+        @workout_offering.save!
       end
       ex1 = nil
       if params[:exercise_id]
