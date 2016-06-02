@@ -2,6 +2,13 @@
 # database with its default values.  The data can then be loaded with
 # the rake db:seed (or created alongside the db with db:setup).
 
+#-----------------------------------
+# Create the first lms type: canvas.
+LmsType.delete_all
+
+LmsType.create!(
+  name:                          'Canvas')
+  
 # ---------------------------------------------------------------
 # Create the default built-in roles. The order of these must match the
 # order of the IDs in models/global_role.rb.
@@ -54,11 +61,11 @@ CourseRole.create!(
   can_manage_assignments:     false,
   can_grade_submissions:      false,
   can_view_other_submissions: false)
-  
+
  # -----------------------------------------
  # Create the different timezone objects in
  # the timezones table
- 
+
 TimeZone.create!(
 name: 'America/New_York',
 zone: 'UTC -05:00',

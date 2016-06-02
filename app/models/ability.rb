@@ -97,6 +97,8 @@ class Ability
       # global role.
       can [:create], [Course, CourseOffering, CourseEnrollment,
         Workout, Exercise, Attempt, ResourceFile]
+      can [:manage], [Course, CourseOffering, CourseEnrollment,
+        Workout, Exercise, Attempt, ResourceFile]
 
       can [:index], [Workout, Exercise, Attempt, ResourceFile]
     end

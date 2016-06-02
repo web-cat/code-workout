@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160602163822) do
+ActiveRecord::Schema.define(version: 20160602185259) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -120,9 +120,11 @@ ActiveRecord::Schema.define(version: 20160602163822) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.date     "cutoff_date"
+    t.integer  "lms_instance_id"
   end
 
   add_index "course_offerings", ["course_id"], name: "index_course_offerings_on_course_id", using: :btree
+  add_index "course_offerings", ["lms_instance_id"], name: "index_course_offerings_on_lms_instance_id", using: :btree
   add_index "course_offerings", ["term_id"], name: "index_course_offerings_on_term_id", using: :btree
 
   create_table "course_offerings_workouts", id: false, force: true do |t|
@@ -293,7 +295,20 @@ ActiveRecord::Schema.define(version: 20160602163822) do
     t.string   "consumer_secret"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.string   "url"
+    t.integer  "lms_type_id"
   end
+
+  add_index "lms_instances", ["lms_type_id"], name: "lms_instances_lms_type_id_fk", using: :btree
+  add_index "lms_instances", ["url"], name: "index_lms_instances_on_url", unique: true, using: :btree
+
+  create_table "lms_types", force: true do |t|
+    t.string   "name",       null: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "lms_types", ["name"], name: "index_lms_types_on_name", unique: true, using: :btree
 
   create_table "multiple_choice_prompt_answers", force: true do |t|
   end
@@ -608,6 +623,8 @@ ActiveRecord::Schema.define(version: 20160602163822) do
   add_foreign_key "exercises", "irt_data", name: "exercises_irt_data_id_fk", column: "irt_data_id"
 
   add_foreign_key "identities", "users", name: "identities_user_id_fk"
+
+  add_foreign_key "lms_instances", "lms_types", name: "lms_instances_lms_type_id_fk"
 
   add_foreign_key "prompt_answers", "attempts", name: "prompt_answers_attempt_id_fk"
   add_foreign_key "prompt_answers", "prompts", name: "prompt_answers_prompt_id_fk"
