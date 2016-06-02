@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160525210736) do
+ActiveRecord::Schema.define(version: 20160602163822) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -286,6 +286,13 @@ ActiveRecord::Schema.define(version: 20160525210736) do
     t.float   "sum_of_scores",  limit: 24, null: false
     t.float   "difficulty",     limit: 24, null: false
     t.float   "discrimination", limit: 24, null: false
+  end
+
+  create_table "lms_instances", force: true do |t|
+    t.string   "consumer_key"
+    t.string   "consumer_secret"
+    t.datetime "created_at"
+    t.datetime "updated_at"
   end
 
   create_table "multiple_choice_prompt_answers", force: true do |t|
