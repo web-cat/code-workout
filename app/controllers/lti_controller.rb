@@ -1,4 +1,5 @@
 class LtiController < ApplicationController
+  require 'date'
 
   # load_and_authorize_resource
   after_action :allow_iframe, only: :launch
@@ -72,7 +73,7 @@ class LtiController < ApplicationController
       if roles.include? 'Instructor'
         course_role = CourseRole.instructor
       elsif roles.include? 'Learner'
-        course_role = CourseRole.learner
+        course_role = CourseRole.student
       end
 
       if @course_offering &&
@@ -91,6 +92,10 @@ class LtiController < ApplicationController
         puts 'here'
         redirect_to root_path, notice: 'Workout not found.' and return
       end
+
+      course_id = params[:custom_canvas_course_id]
+      assignment_id = params[:custom_canvas_assignment_id]
+
       @workout_offering = WorkoutOffering.find_by(
         course_offering_id: @course_offering.id,
         workout_id: @workout.id
@@ -98,7 +103,10 @@ class LtiController < ApplicationController
       if @workout_offering.blank?
         @workout_offering = WorkoutOffering.new(
           course_offering: @course_offering,
-          workout: @workout
+          workout: @workout,
+          opening_date: DateTime.now,
+          soft_deadline: @term.ends_on,
+          hard_deadline: @term.ends_on
         )
         @workout_offering.save!
       end
