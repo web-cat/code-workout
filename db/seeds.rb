@@ -3,12 +3,20 @@
 # the rake db:seed (or created alongside the db with db:setup).
 
 #-----------------------------------
-# Create the first lms type: canvas.
+# Create a seed LmsType and LmsInstance
 LmsType.delete_all
 
-LmsType.create!(
+type = LmsType.create!(
   name:                          'Canvas')
-  
+
+LmsInstance.delete_all
+LmsInstance.create!(
+  lms_type_id: type.id,
+  url: 'canvas.instructure.com',
+  consumer_key: 'canvas_key',
+  consumer_secret: 'canvas_secret'
+)
+
 # ---------------------------------------------------------------
 # Create the default built-in roles. The order of these must match the
 # order of the IDs in models/global_role.rb.

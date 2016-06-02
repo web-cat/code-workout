@@ -4,7 +4,7 @@ class LtiController < ApplicationController
   # load_and_authorize_resource
   after_action :allow_iframe, only: :launch
   # the consumer keys/secrets
-  $oauth_creds = {"test" => "secret"}
+  # $oauth_creds = {"test" => "secret"}
 
   def launch
     # must include the oauth proxy object
@@ -198,7 +198,7 @@ class LtiController < ApplicationController
   private
     def lti_authorize!
       if key = params['oauth_consumer_key']
-        if secret = $oauth_creds[key]
+        if secret = LmsInstance.find_by(consumer_key: key).andand.consumer_secret
           @tp = IMS::LTI::ToolProvider.new(key, secret, params)
         else
           @tp = IMS::LTI::ToolProvider.new(nil, nil, params)
