@@ -7,8 +7,13 @@ ActiveAdmin.register WorkoutOffering do
 
   index do
     id_column
-    column :course_offering_id, sortable: 'course_offering.label'
-    column :workout_id
+    column :course_offering_id, sortable: 'course_offering.label' do |wo|
+      link_to wo.course_offering.display_name_with_term,
+        admin_course_offering_path(wo.course_offering)
+    end
+    column :workout_id, sortable: 'workout.name' do |wo|
+      wo.workout.name
+    end
     column :opening_date
     column :soft_deadline
     column :hard_deadline
