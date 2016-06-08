@@ -52,6 +52,7 @@ class LtiController < ApplicationController
         redirect_to root_path, notice: 'Term not found' and return
       end
       @course_offering = CourseOffering.find_by(course_id: @course.id, term_id: @term.id)
+      @lms_instance = LmsInstance.find_by(consumer_key: params[:oauth_consumer_key])
       if @course_offering.blank?
         if roles.include? 'Instructor'
           @course_offering = CourseOffering.new(
@@ -59,7 +60,8 @@ class LtiController < ApplicationController
             url: nil,
             self_enrollment_allowed: 1,
             course: @course,
-            term: @term
+            term: @term,
+            lms_instance: @lms_instance
           )
           @course_offering.save!
           @course.course_offerings << @course_offering
@@ -67,6 +69,11 @@ class LtiController < ApplicationController
         else
           redirect_to root_path, notice: 'Course offering not found.' and return
         end
+      end
+
+      if @course_offering.lms_instance.blank?
+        @course_offering.lms_instance = @lms_instance
+        @course_offering.save!
       end
 
       course_role = 'tmp'
