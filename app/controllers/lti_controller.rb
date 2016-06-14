@@ -58,7 +58,7 @@ class LtiController < ApplicationController
         end
       end
 
-      @term = Term.find_by(slug: term_slug)
+      @term = Term.current_term
       if @term.blank?
         @message = 'Term not found.'
         render :error and return
