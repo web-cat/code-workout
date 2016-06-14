@@ -32,6 +32,7 @@ namespace :db do
 
     # Create a workout with one exercise, and a second exercise
     FactoryGirl.create :workout_with_exercises
+    FactoryGirl.create :workout_policy
     FactoryGirl.create :coding_exercise, name: 'Factorial 3'
   end
 
