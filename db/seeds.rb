@@ -14,7 +14,8 @@ LmsInstance.create!(
   lms_type_id: type.id,
   url: 'canvas.instructure.com',
   consumer_key: 'canvas_key',
-  consumer_secret: 'canvas_secret'
+  consumer_secret: 'canvas_secret',
+  organization_id: 1
 )
 
 # ---------------------------------------------------------------

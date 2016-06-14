@@ -25,16 +25,19 @@ class LtiController < ApplicationController
       end
       sign_in @user
 
+      @lms_instance = LmsInstance.find_by(consumer_key: params[:oauth_consumer_key])
+
       roles = params[:roles]
       course_number = params[:custom_course_number]
       course_name = params[:context_title]
-      organization_slug = params[:custom_organization]
+      organization_slug = Organization.find_by(id: @lms_instance.organization_id).slug
       term_slug = params[:custom_term]
       creator_id = @user.id
 
       @organization = Organization.find_by(slug: organization_slug)
       if @organization.blank?
-        redirect_to root_path, notice: 'Organization not found.' and return
+        @message = 'Organization not found.'
+        render 'error', layout: 'error' and return
       end
       @course = Course.find_by(number: course_number) or @course = Course.find_by(slug: course_number)
       if @course.blank?
@@ -52,7 +55,6 @@ class LtiController < ApplicationController
         redirect_to root_path, notice: 'Term not found' and return
       end
       @course_offering = CourseOffering.find_by(course_id: @course.id, term_id: @term.id)
-      @lms_instance = LmsInstance.find_by(consumer_key: params[:oauth_consumer_key])
       if @course_offering.blank?
         if roles.include? 'Instructor'
           @course_offering = CourseOffering.new(

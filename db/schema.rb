@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160602185259) do
+ActiveRecord::Schema.define(version: 20160614153123) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -297,9 +297,11 @@ ActiveRecord::Schema.define(version: 20160602185259) do
     t.datetime "updated_at"
     t.string   "url"
     t.integer  "lms_type_id"
+    t.integer  "organization_id"
   end
 
   add_index "lms_instances", ["lms_type_id"], name: "lms_instances_lms_type_id_fk", using: :btree
+  add_index "lms_instances", ["organization_id"], name: "index_lms_instances_on_organization_id", using: :btree
   add_index "lms_instances", ["url"], name: "index_lms_instances_on_url", unique: true, using: :btree
 
   create_table "lms_types", force: true do |t|
