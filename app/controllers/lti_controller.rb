@@ -11,7 +11,7 @@ class LtiController < ApplicationController
     require 'oauth/request_proxy/rack_request'
 
     if request.post?
-      render 'error', layout: 'error' and return unless lti_authorize!
+      render :error and return unless lti_authorize!
 
       # Retrieve user information and sign in the user.
       email = params[:lis_person_contact_email_primary]
@@ -29,30 +29,39 @@ class LtiController < ApplicationController
 
       roles = params[:roles]
       course_number = params[:custom_course_number]
+      course_number ||= params[:context_label].gsub(/[^a-zA-Z0-9 ]/, '')
+      course_slug = course_number.gsub(/[^a-zA-Z0-9]/, '').downcase
       course_name = params[:context_title]
       organization_slug = Organization.find_by(id: @lms_instance.organization_id).slug
       term_slug = params[:custom_term]
-      creator_id = @user.id
 
       @organization = Organization.find_by(slug: organization_slug)
       if @organization.blank?
         @message = 'Organization not found.'
-        render 'error', layout: 'error' and return
+        render :error and return
       end
       @course = Course.find_by(number: course_number) or @course = Course.find_by(slug: course_number)
       if @course.blank?
-        @course = Course.new(
-          name: course_name,
-          number: course_number,
-          creator_id: @user.id
-        )
-        @organization.courses << @course
-        @course.save
+        if roles.include? 'Instructor'
+          @course = Course.new(
+            name: course_name,
+            number: course_number,
+            creator_id: @user.id,
+            organization_id: @organization.id,
+            slug: course_slug
+          )
+          @organization.courses << @course
+          @course.save
+        else
+          @message = 'Course not found.'
+          render :error and return
+        end
       end
 
       @term = Term.find_by(slug: term_slug)
       if @term.blank?
-        redirect_to root_path, notice: 'Term not found' and return
+        @message = 'Term not found.'
+        render :error and return
       end
       @course_offering = CourseOffering.find_by(course_id: @course.id, term_id: @term.id)
       if @course_offering.blank?
@@ -69,7 +78,8 @@ class LtiController < ApplicationController
           @course.course_offerings << @course_offering
           @course.save!
         else
-          redirect_to root_path, notice: 'Course offering not found.' and return
+          @message = 'Course offering not found.'
+          render :error and return
         end
       end
 
@@ -98,8 +108,8 @@ class LtiController < ApplicationController
       workout_name = params[:resource_link_title]
       @workout = Workout.find_by(name: workout_name)
       if @workout.blank?
-        puts 'here'
-        redirect_to root_path, notice: 'Workout not found.' and return
+        @message = 'Workout not found.'
+        render :error and return
       end
 
       course_id = params[:custom_canvas_course_id]
