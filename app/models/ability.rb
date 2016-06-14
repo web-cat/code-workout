@@ -41,6 +41,7 @@ class Ability
         process_courses user
         process_exercises user
         process_workouts user
+        process_workout_offerings user
         process_resource_files user
       end
     end
@@ -96,6 +97,8 @@ class Ability
       # with respect to the course offering, rather than depending on the
       # global role.
       can [:create], [Course, CourseOffering, CourseEnrollment,
+        Workout, Exercise, Attempt, ResourceFile]
+      can [:manage], [Course, CourseOffering, CourseEnrollment,
         Workout, Exercise, Attempt, ResourceFile]
 
       can [:index], [Workout, Exercise, Attempt, ResourceFile]
@@ -224,10 +227,15 @@ class Ability
     can :practice, Workout, is_public: true
   end
 
+  def process_workout_offerings(user)
+    can :manage, WorkoutOffering, course_offering:
+      { course_enrollments:
+        { user_id: user.id, course_role:
+          { can_manage_assignments: true } } }
+  end
 
   # -------------------------------------------------------------
   def process_resource_files(user)
     can [:read, :update, :destroy], ResourceFile, user_id: user.id
   end
-
 end

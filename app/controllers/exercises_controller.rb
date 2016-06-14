@@ -1,4 +1,6 @@
 class ExercisesController < ApplicationController
+  require 'ims/lti'
+  require 'oauth/request_proxy/rack_request'
 
   load_and_authorize_resource
 
@@ -541,6 +543,17 @@ class ExercisesController < ApplicationController
       @workout ||= @workout_score.andand.workout
     end
 
+    total_points = ExerciseWorkout.where(workout_id: @workout_score.workout_id).sum(:points)
+    if lms_instance = @workout_offering.course_offering.lms_instance
+      key = lms_instance.consumer_key
+      secret = lms_instance.consumer_secret
+
+      @tp = IMS::LTI::ToolProvider.new(key, secret, {
+        "lis_outcome_service_url" => "#{@workout_score.lis_outcome_service_url}",
+        "lis_result_sourcedid" => "#{@workout_score.lis_result_sourcedid}"
+      })
+      @tp.post_replace_result!(@workout_score.score / total_points)
+    end
   end
 
 

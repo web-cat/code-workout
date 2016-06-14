@@ -2,6 +2,22 @@
 # database with its default values.  The data can then be loaded with
 # the rake db:seed (or created alongside the db with db:setup).
 
+#-----------------------------------
+# Create a seed LmsType and LmsInstance
+LmsType.delete_all
+
+type = LmsType.create!(
+  name:                          'Canvas')
+
+LmsInstance.delete_all
+LmsInstance.create!(
+  lms_type_id: type.id,
+  url: 'canvas.instructure.com',
+  consumer_key: 'canvas_key',
+  consumer_secret: 'canvas_secret',
+  organization_id: 1
+)
+
 # ---------------------------------------------------------------
 # Create the default built-in roles. The order of these must match the
 # order of the IDs in models/global_role.rb.
@@ -54,11 +70,11 @@ CourseRole.create!(
   can_manage_assignments:     false,
   can_grade_submissions:      false,
   can_view_other_submissions: false)
-  
+
  # -----------------------------------------
  # Create the different timezone objects in
  # the timezones table
- 
+
 TimeZone.create!(
 name: 'America/New_York',
 zone: 'UTC -05:00',

@@ -65,6 +65,8 @@ class WorkoutOfferingsController < ApplicationController
       email = params[:lis_person_contact_email_primary]
       first_name = params[:lis_person_name_given]
       last_name = params[:lis_person_name_family]
+      lis_outcome_service_url = params[:lis_outcome_service_url]
+      lis_result_sourcedid = params[:lis_result_sourcedid]
       @user = User.where(email: email).first
       if @user.blank?
         # TODO: should mark this as LMS user then prevent this user from login to codeworkout domain
@@ -100,7 +102,9 @@ class WorkoutOfferingsController < ApplicationController
             exercises_remaining: @workout_offering.workout.exercises.length,
             user: current_user,
             workout_offering: @workout_offering,
-            workout: @workout_offering.workout)
+            workout: @workout_offering.workout,
+            lis_outcome_service_url: lis_outcome_service_url,
+            lis_result_sourcedid: lis_result_sourcedid)
           @workout_score.save!
         end
         current_user.current_workout_score = @workout_score
