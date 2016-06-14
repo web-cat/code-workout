@@ -5,6 +5,7 @@
 
 html, body { height: 100%; }
 
+.non-scrollable { overflow-y: hidden; }
 .scrollable { overflow-y: auto; }
 .max-height { height: 100%; }
 .full-height { min-height: 100%; }
@@ -50,6 +51,7 @@ html, body { height: 100%; }
 /* Codemirror */
 
 .CodeMirror { height: auto; margin-bottom: 9px; }
+.CodeMirror-scroll { max-height: 400px; }
 /* .practice .CodeMirror { min-height: 18px * 15; } */
 
 

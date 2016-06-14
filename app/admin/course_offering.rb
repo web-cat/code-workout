@@ -1,5 +1,5 @@
 ActiveAdmin.register CourseOffering do
-  includes :course, :term
+  includes :course, :term, :lms_instance
   active_admin_import
 
   menu parent: 'University-oriented', priority: 40
@@ -42,6 +42,19 @@ ActiveAdmin.register CourseOffering do
       end
     end
 
+  end
+
+  form do |f|
+    f.semantic_errors
+    f.inputs do
+      f.input :course
+      f.input :term
+      f.input :label
+      f.input :url
+      f.input :self_enrollment_allowed
+      f.input :cutoff_date
+    end
+    f.actions
   end
 
   sidebar 'Instructors', only: :show,

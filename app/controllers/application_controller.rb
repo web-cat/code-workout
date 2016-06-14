@@ -3,6 +3,10 @@ require 'loofah_render'
 
 class ApplicationController < ActionController::Base
   protect_from_forgery with: :exception
+  # protect_from_forgery with: :null_session
+
+  skip_before_action :verify_authenticity_token
+
   self.responder = ApplicationResponder
   respond_to :html
 
@@ -53,6 +57,10 @@ class ApplicationController < ActionController::Base
       autolink: true,
       strikethrough: true,
       lax_spacing: true).render(text)
+  end
+
+  def allow_iframe
+    response.headers.except! 'X-Frame-Options'
   end
 
 end

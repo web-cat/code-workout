@@ -29,5 +29,9 @@ FactoryGirl.define do
   factory :workout_offering do
     course_offering_id 1
     workout_id 1
+    opening_date "2016-01-01 14:08:55"
+    soft_deadline "2016-12-30 14:08:55"
+    hard_deadline "2016-12-30 14:08:55"
+    published true
   end
 end

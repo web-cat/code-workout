@@ -1,0 +1,10 @@
+.row.max-height#main
+  .col-md-3.scrollable.max-height.sidebar
+    .inner.max-height
+      .below-nav#sidebar
+        = render partial: 'layouts/sidebar'
+  .col-md-9.scrollable.max-height.content
+    .inner.max-height
+      .below-nav
+        = render partial: 'layouts/flash'
+        = yield

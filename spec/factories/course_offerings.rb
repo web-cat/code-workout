@@ -22,14 +22,39 @@ FactoryGirl.define do
 
   factory :course_offering do
     course_id 1
-    term_id 1
-    label "MWF 10:00am"
     url "http://courses.cs.vt.edu/~cs2114/Fall2013"
-    self_enrollment_allowed false
+    self_enrollment_allowed true
 
-    factory :course_offering2 do
+    factory :course_offering_term_1_tr do
+      term_id 1
       label "TR 11:00am"
     end
+
+    factory :course_offering_term_1_mwf do
+      term_id 1
+      label "MWF 10:00am"
+    end
+
+    factory :course_offering_term_2_tr do
+      term_id 2
+      label "TR 11:00am"
+    end
+
+    factory :course_offering_term_2_mwf do
+      term_id 2
+      label "MWF 10:00am"
+    end
+
+    factory :course_offering_term_3_tr do
+      term_id 3
+      label "TR 11:00am"
+    end
+
+    factory :course_offering_term_3_mwf do
+      term_id 3
+      label "MWF 10:00am"
+    end
+
   end
 
 end

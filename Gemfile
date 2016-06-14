@@ -56,6 +56,7 @@ group :development, :test do
   # gem 'ruby-debug-base'
   # gem 'ruby-debug-ide'
   gem 'pry'
+  gem 'thin'
   gem 'request-log-analyzer'
 end
 gem 'factory_girl_rails'
@@ -112,3 +113,6 @@ gem 'capistrano-rails'
 #for multi-color progress bar
 gem 'css3-progress-bar-rails'
 
+gem 'immigrant'
+gem 'ims-lti', '~> 1.1.8'
+gem 'json'

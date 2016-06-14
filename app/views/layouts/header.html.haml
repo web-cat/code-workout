@@ -16,5 +16,6 @@
     /[if lt IE 9]
       %script{ src: 'http://html5shim.googlecode.com/svn/trunk/html5.js' }
 
-  %body{ class: "#{controller_name} #{action_name}" }
+  - classes = ["#{controller_name}", "#{action_name}", ("non-scrollable" if @lti_launch)]
+  %body{ class: classes }
     = yield
