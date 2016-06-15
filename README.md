@@ -3,7 +3,7 @@ Setting Up a Vagrant Environment for CodeWorkout
 
 ## Introduction:
 
-Vagrant is designed to run on multiple platforms, including Mac OS X, Microsoft Windows, Debian, Ubuntu, CentOS, RedHat and Fedora. In this document we describe how to configure and run an OpenDSA project virtual development environment through Vagrant.
+Vagrant is designed to run on multiple platforms, including Mac OS X, Microsoft Windows, Debian, Ubuntu, CentOS, RedHat and Fedora. In this document we describe how to configure and run an CodeWorkout project virtual development environment through Vagrant.
 
 ## Installation Steps:
 
