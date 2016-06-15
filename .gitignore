@@ -42,3 +42,5 @@ server.key
 # proportion of contributors will probably not be using SublimeText
 # *.sublime-project
 tasks.todo
+
+.settings
