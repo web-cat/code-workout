@@ -75,3 +75,6 @@ in db/seeds.rb instead.
       - one course offering is set up with the admin and instructor
         as instructors, and all other sample accounts as students
 
+## Upload and test programming exercises
+
+Upload exercise files at the 'gym/exercises/upload' URL from CodeWorkout's root. Then use the /gym/workouts/new URL from CodeWorkout's home to create a new workout from existing exercises and simultaneously add it to a course offering.
