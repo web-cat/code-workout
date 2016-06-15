@@ -78,3 +78,18 @@ in db/seeds.rb instead.
 ## Upload and Test Programming Exercises:
 
 Upload exercise files at the 'gym/exercises/upload' URL from CodeWorkout's root. Then use the /gym/workouts/new URL from CodeWorkout's home to create a new workout from existing exercises and simultaneously add it to a course offering.
+
+## Connect to CodeWorkout Database:
+
+During development it is convenient to connect to CodeWorkout database from your host machine using [MySQL Workbench](https://www.mysql.com/products/workbench/). Once you installed MySQL Workbench create a new connection to CodeWorkout Database in the Vagrant machine using the following setup:
+
+Connection Name: CodeWorkout
+Connection Method: Standard TCP/IP over SSH
+SSH Hostname: 192.168.33.20
+SSH Username: vagrant
+SSH Password: vagrant
+MySQL Hostname: 127.0.0.1
+MySQL Server Port: 3306
+Username: codeworkout
+Password: codeworkout
+
