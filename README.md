@@ -83,13 +83,13 @@ Upload exercise files at the 'gym/exercises/upload' URL from CodeWorkout's root.
 
 During development it is convenient to connect to CodeWorkout database from your host machine using [MySQL Workbench](https://www.mysql.com/products/workbench/). Once you installed MySQL Workbench create a new connection to CodeWorkout Database in the Vagrant machine using the following setup:
 
-Connection Name: CodeWorkout
-Connection Method: Standard TCP/IP over SSH
-SSH Hostname: 192.168.33.20
-SSH Username: vagrant
-SSH Password: vagrant
-MySQL Hostname: 127.0.0.1
-MySQL Server Port: 3306
-Username: codeworkout
-Password: codeworkout
+- Connection Name: CodeWorkout
+- Connection Method: Standard TCP/IP over SSH
+- SSH Hostname: 192.168.33.20
+- SSH Username: vagrant
+- SSH Password: vagrant
+- MySQL Hostname: 127.0.0.1
+- MySQL Server Port: 3306
+- Username: codeworkout
+- Password: codeworkout
 
