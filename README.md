@@ -3,7 +3,7 @@ Setting Up a Vagrant Environment for CodeWorkout
 
 ## Introduction:
 
-Vagrant is designed to run on multiple platforms, including Mac OS X, Microsoft Windows, Debian, Ubuntu, CentOS, RedHat and Fedora. In this document we describe how to configure and run an CodeWorkout project virtual development environment through Vagrant.
+Vagrant is designed to run on multiple platforms, including Mac OS X, Microsoft Windows, Debian, Ubuntu, CentOS, RedHat and Fedora. In this document we describe how to configure and run CodeWorkout project virtual development environment through Vagrant.
 
 ## Installation Steps:
 
@@ -75,6 +75,6 @@ in db/seeds.rb instead.
       - one course offering is set up with the admin and instructor
         as instructors, and all other sample accounts as students
 
-## Upload and test programming exercises
+## Upload and Test Programming Exercises:
 
 Upload exercise files at the 'gym/exercises/upload' URL from CodeWorkout's root. Then use the /gym/workouts/new URL from CodeWorkout's home to create a new workout from existing exercises and simultaneously add it to a course offering.
