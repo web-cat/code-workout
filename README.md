@@ -17,7 +17,7 @@ Vagrant is designed to run on multiple platforms, including Mac OS X, Microsoft 
 8. `$ ./runservers.sh`
 9. After the provisioning script is complete you can go to:
 
-  * https://192.168.33.10:9292 for CodeWorkout server
+  * https://192.168.33.20:9292 for CodeWorkout server
 
 ## Shut Down The Virtual Machine:
 
