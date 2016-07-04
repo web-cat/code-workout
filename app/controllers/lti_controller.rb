@@ -156,8 +156,7 @@ class LtiController < ApplicationController
           andand.no_review_before_close &&
           !@workout_score.andand.workout_offering.andand.shutdown?
           redirect_to organization_workout_offering_path(
-            organization_id:
-              @organization.slug,
+            organization_id: @organization.slug,
             course_id: @course.slug,
             term_id: @term.slug,
             id: @workout_offering.id,
@@ -171,8 +170,7 @@ class LtiController < ApplicationController
       end
       redirect_to organization_workout_offering_exercise_path(
         id: ex1.id,
-        organization_id:
-          @workout_offering.course_offering.course.organization.slug,
+        organization_id: @workout_offering.course_offering.course.organization.slug,
         course_id: @workout_offering.course_offering.course.slug,
         term_id: @workout_offering.course_offering.term.slug,
         workout_offering_id: @workout_offering.id,
