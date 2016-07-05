@@ -82,6 +82,20 @@ in db/seeds.rb instead.
     - `$ rake db:populate`
     - `$ ./runservers.sh`
 
+## Keep code-workout repository up to date:
+
+During development of code-workout, other developers might add new gems to the project or add new migrations etc. To keep your local version up to date with the latest version do the following:
+
+- Open a new terminal
+- `$ cd code-workout`
+- `$ git pull`
+- `$ vagrant reload`
+- `$ vagrant ssh`
+- `$ cd /vagrant`
+- `$ sudo bundle install`
+- `$ ./runservers.sh`
+
+
 ## Upload and Test Programming Exercises:
 
 - Log in using your admin account admin@codeworkout.org (pass: adminadmin)
