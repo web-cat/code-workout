@@ -84,8 +84,6 @@ in db/seeds.rb instead.
 
 ## Upload and Test Programming Exercises:
 
-Upload exercise files at the 'gym/exercises/upload' URL from CodeWorkout's root. Then use the /gym/workouts/new URL from CodeWorkout's home to create a new workout from existing exercises and simultaneously add it to a course offering.
-
 - Log in using your admin account admin@codeworkout.org (pass: adminadmin)
 - Click "Upload Exercises" in the navigation bar, then click "Choose File". Choose your exercise file and click "Submit File".
 - Click "Create Workouts" in the navigation bar to create new workouts.
