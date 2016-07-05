@@ -93,7 +93,7 @@ During development of code-workout, other developers might add new gems to the p
 - `$ vagrant ssh`
 - `$ cd /vagrant`
 - `$ sudo bundle install`
-- `$ rake db:populate`
+- `$ rake db:populate` **Note:** This step will place the database in a simple starter state.
 - `$ ./runservers.sh`
 
 
