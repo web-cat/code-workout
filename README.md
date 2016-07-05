@@ -80,15 +80,16 @@ in db/seeds.rb instead.
     - `$ vagrant ssh`
     - `$ cd /vagrant`
     - `$ rake db:populate`
+    - `$ ./runservers.sh`
 
 ## Upload and Test Programming Exercises:
 
 Upload exercise files at the 'gym/exercises/upload' URL from CodeWorkout's root. Then use the /gym/workouts/new URL from CodeWorkout's home to create a new workout from existing exercises and simultaneously add it to a course offering.
 
-- Log in using your admin account (admin@codeworkout.org pass: adminadmin)
+- Log in using your admin account admin@codeworkout.org (pass: adminadmin)
 - Click "Upload Exercises" in the navigation bar, then click "Choose File". Choose your exercise file and click "Submit File".
 - Click "Create Workouts" in the navigation bar to create new workouts.
-- Go to the admin area by clicking on the little wrench icon to the left of the admin email address in the top menu bar. Click the "University-oriented" menu and select "Workout offerings". Click on "New Workout Offering". Create your new workout offering by choosing the course offering and the workout (the one you have just created in the previous step). Then select appropriate opening, softdeadline and hard deadline dates for the workout offering and hit "Create Workout Offering" button to save it.
+- Go to the admin area by clicking on the little wrench icon to the left of the admin email address in the top menu bar. Click the "University-oriented" menu and select "Workout offerings". Click on "New Workout Offering". Create your new workout offering by choosing the course offering and the workout (the one you have just created in the previous step). Then select appropriate opening, soft deadline, and hard deadline dates for the workout offering and hit "Create Workout Offering" button to save it.
 - Log in using student account example-2@railstutorial.org (pass: hokiehokie). Then navigate to the course offering you have chosen in the previous step, you should see the new workout in the list of workouts for this course offering.
 
 ## Connect to CodeWorkout Database:
