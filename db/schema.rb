@@ -509,9 +509,9 @@ ActiveRecord::Schema.define(version: 20160614153123) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.datetime "opening_date"
-    t.datetime "soft_deadline"
-    t.datetime "hard_deadline"
-    t.boolean  "published",                default: false, null: false
+    t.datetime "soft_deadline", null: false
+    t.datetime "hard_deadline", null: false
+    t.boolean  "published",                default: true, null: false
     t.integer  "time_limit"
     t.integer  "workout_policy_id"
     t.integer  "continue_from_workout_id"

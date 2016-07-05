@@ -46,9 +46,9 @@ ActiveAdmin.register WorkoutOffering do
     f.inputs do
       f.input :course_offering
       f.input :workout
-      f.input :opening_date
-      f.input :soft_deadline
-      f.input :hard_deadline
+      f.input :opening_date, as: :datepicker
+      f.input :soft_deadline, as: :datepicker
+      f.input :hard_deadline, as: :datepicker
     end
     f.actions
   end
