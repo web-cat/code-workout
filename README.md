@@ -93,6 +93,7 @@ During development of code-workout, other developers might add new gems to the p
 - `$ vagrant ssh`
 - `$ cd /vagrant`
 - `$ sudo bundle install`
+- `$ rake db:populate`
 - `$ ./runservers.sh`
 
 
