@@ -6,6 +6,7 @@ class LtiController < ApplicationController
   # the consumer keys/secrets
   # $oauth_creds = {"test" => "secret"}
 
+  #TODO massive refactoring required -- try to reduce the number of queries needed
   def launch
     # must include the oauth proxy object
     require 'oauth/request_proxy/rack_request'
@@ -27,13 +28,13 @@ class LtiController < ApplicationController
 
       @lms_instance = LmsInstance.find_by(consumer_key: params[:oauth_consumer_key])
 
-      roles = params[:roles]
       course_number = params[:custom_course_number]
       course_number ||= params[:context_label].gsub(/[^a-zA-Z0-9 ]/, '')
       course_slug = course_number.gsub(/[^a-zA-Z0-9]/, '').downcase
       course_name = params[:context_title]
       organization_slug = Organization.find_by(id: @lms_instance.organization_id).slug
       term_slug = params[:custom_term]
+      course_label = params[:custom_label]
 
       @organization = Organization.find_by(slug: organization_slug)
       if @organization.blank?
@@ -42,7 +43,7 @@ class LtiController < ApplicationController
       end
       @course = Course.find_by(number: course_number) or @course = Course.find_by(slug: course_number)
       if @course.blank?
-        if roles.include? 'Instructor'
+        if @tp.context_instructor?
           @course = Course.new(
             name: course_name,
             number: course_number,
@@ -57,17 +58,19 @@ class LtiController < ApplicationController
           render :error and return
         end
       end
-
-      @term = Term.current_term
+      # TODO if course_offering exists, use the term that was set instead of getting the current one
+      @term = Term.find_by slug: term_slug
+      @term ||= Term.current_term
       if @term.blank?
         @message = 'Term not found.'
         render :error and return
       end
-      @course_offering = CourseOffering.find_by(course_id: @course.id, term_id: @term.id)
+      # FIXME (course, term) is not unique. Need to include label as well.
+      @course_offering = CourseOffering.find_by course_id: @course.id, term_id: @term.id, label: course_label
       if @course_offering.blank?
-        if roles.include? 'Instructor'
+        if @tp.context_instructor?
           @course_offering = CourseOffering.new(
-            label: 'canvas',
+            label: course_label,
             url: nil,
             self_enrollment_allowed: 1,
             course: @course,
@@ -89,9 +92,9 @@ class LtiController < ApplicationController
       end
 
       course_role = 'tmp'
-      if roles.include? 'Instructor'
+      if @tp.context_instructor?
         course_role = CourseRole.instructor
-      elsif roles.include? 'Learner'
+      elsif @tp.context_student?
         course_role = CourseRole.student
       end
 
