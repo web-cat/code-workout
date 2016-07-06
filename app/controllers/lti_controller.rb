@@ -26,112 +26,135 @@ class LtiController < ApplicationController
       end
       sign_in @user
 
-      @lms_instance = LmsInstance.find_by(consumer_key: params[:oauth_consumer_key])
-
-      course_number = params[:custom_course_number]
-      course_number ||= params[:context_label].gsub(/[^a-zA-Z0-9 ]/, '')
-      course_slug = course_number.gsub(/[^a-zA-Z0-9]/, '').downcase
-      course_name = params[:context_title]
-      organization_slug = Organization.find_by(id: @lms_instance.organization_id).slug
-      term_slug = params[:custom_term]
-      course_label = params[:custom_label]
-
-      @organization = Organization.find_by(slug: organization_slug)
-      if @organization.blank?
-        @message = 'Organization not found.'
-        render :error and return
-      end
-      @course = Course.find_by(number: course_number) or @course = Course.find_by(slug: course_number)
-      if @course.blank?
-        if @tp.context_instructor?
-          @course = Course.new(
-            name: course_name,
-            number: course_number,
-            creator_id: @user.id,
-            organization_id: @organization.id,
-            slug: course_slug
-          )
-          @organization.courses << @course
-          @course.save
-        else
-          @message = 'Course not found.'
-          render :error and return
-        end
-      end
-      # TODO if course_offering exists, use the term that was set instead of getting the current one
-      @term = Term.find_by slug: term_slug
-      @term ||= Term.current_term
-      if @term.blank?
-        @message = 'Term not found.'
-        render :error and return
-      end
-      # FIXME (course, term) is not unique. Need to include label as well.
-      @course_offering = CourseOffering.find_by course_id: @course.id, term_id: @term.id, label: course_label
-      if @course_offering.blank?
-        if @tp.context_instructor?
-          @course_offering = CourseOffering.new(
-            label: course_label,
-            url: nil,
-            self_enrollment_allowed: 1,
-            course: @course,
-            term: @term,
-            lms_instance: @lms_instance
-          )
-          @course_offering.save!
-          @course.course_offerings << @course_offering
-          @course.save!
-        else
-          @message = 'Course offering not found.'
-          render :error and return
-        end
-      end
-
-      if @course_offering.lms_instance.blank?
-        @course_offering.lms_instance = @lms_instance
-        @course_offering.save!
-      end
-
-      course_role = 'tmp'
-      if @tp.context_instructor?
-        course_role = CourseRole.instructor
-      elsif @tp.context_student?
-        course_role = CourseRole.student
-      end
-
-      if @course_offering &&
-        @course_offering.can_enroll? &&
-        !@course_offering.is_enrolled?(current_user)
-        CourseEnrollment.create(
-          course_offering: @course_offering,
-          user: current_user,
-          course_role: course_role
-        )
-      end
-
-      workout_name = params[:resource_link_title]
-      @workout = Workout.find_by(name: workout_name)
-      if @workout.blank?
-        @message = 'Workout not found.'
-        render :error and return
-      end
-
-      course_id = params[:custom_canvas_course_id]
+      @lms_instance = LmsInstance.find_by consumer_key: params[:oauth_consumer_key]
+      lms_id = @lms_instance.id
       assignment_id = params[:custom_canvas_assignment_id]
+      lms_assignment_id = "#{lms_id}-#{assignment_id}"
+      @workout_offering = WorkoutOffering.find_by lms_assignment_id: lms_assignment_id
 
-      @workout_offering = WorkoutOffering.find_by(
-        course_offering_id: @course_offering.id,
-        workout_id: @workout.id
-      )
       if @workout_offering.blank?
-        @workout_offering = WorkoutOffering.new(
-          course_offering: @course_offering,
-          workout: @workout,
-          opening_date: DateTime.now,
-          soft_deadline: @term.ends_on,
-          hard_deadline: @term.ends_on
+        # These two params may or may not specified by the instructor in the ToolConsumer.
+        # If not specified, infer from other information provided.
+        organization_slug = params[:custom_organization] || Organization.find_by(id: @lms_instance.organization_id).slug
+        course_number = params[:custom_course_number] || params[:context_label].gsub(/[^a-zA-Z0-9 ]/, '')
+        term_slug = params[:custom_term]
+
+        course_slug = course_number.gsub(/[^a-zA-Z0-9]/, '').downcase
+        course_name = params[:context_title]
+        coff_label = params[:custom_label] # This is required from the instructor in the ToolConsumer
+        coff_url = params[:custom_url] || nil
+
+        @organization = Organization.find_by(slug: organization_slug)
+        if @organization.blank?
+          @message = 'Organization not found.'
+          render :error and return
+        end
+
+        @course = Course.find_by(number: course_number) || Course.find_by(slug: course_slug)
+        if @course.blank?
+          if @tp.context_instructor?
+            @course = Course.new(
+              name: course_name,
+              number: course_number,
+              creator_id: @user.id,
+              organization_id: @organization.id,
+              slug: course_slug
+            )
+            @organization.courses << @course
+            @course.save
+          else
+            @message = 'Course not found.'
+            render :error and return
+          end
+        end
+
+        @term = Term.find_by(slug: term_slug) || Term.current_term
+        if @term.blank?
+          @message = 'Term not found.'
+          render :error and return
+        end
+
+        @course_offering = CourseOffering.find_by course_id: @course.id, term_id: @term.id, label: coff_label
+        if @course_offering.blank?
+          if @tp.context_instructor?
+            @course_offering = CourseOffering.new(
+              label: coff_label,
+              url: coff_url,
+              self_enrollment_allowed: 1,
+              course: @course,
+              term: @term,
+              lms_instance: @lms_instance
+            )
+            @course_offering.save!
+            @course.course_offerings << @course_offering
+            @course.save!
+          else
+            @message = 'Course offering not found.'
+            render :error and return
+          end
+        end
+
+        if @course_offering.lms_instance.blank?
+          @course_offering.lms_instance = @lms_instance
+          @course_offering.save!
+        end
+
+        course_role = 'tmp'
+        if @tp.context_instructor?
+          course_role = CourseRole.instructor
+        elsif @tp.context_student?
+          course_role = CourseRole.student
+        end
+
+        if @course_offering &&
+          @course_offering.can_enroll? &&
+          !@course_offering.is_enrolled?(current_user)
+          CourseEnrollment.create(
+            course_offering: @course_offering,
+            user: current_user,
+            course_role: course_role
+          )
+        end
+
+        workout_name = params[:resource_link_title]
+        @workout = Workout.find_by(name: workout_name)
+        if @workout.blank?
+          # session[:lms_assignment_id] = lms_assignment_id
+          # session[:from_lti] = true
+          # redirect_to '/gym/workouts/new'
+          @message = 'Workout not found. Please contact your instructor.'
+          render :error and return
+        end
+
+        @workout_offering = WorkoutOffering.find_by(
+          course_offering_id: @course_offering.id,
+          workout_id: @workout.id
         )
-        @workout_offering.save!
+        if @workout_offering.blank?
+          if @tp.context_instructor?
+            @workout_offering = WorkoutOffering.new(
+              course_offering: @course_offering,
+              workout: @workout,
+              opening_date: DateTime.now,
+              soft_deadline: @term.ends_on,
+              hard_deadline: @term.ends_on,
+              lms_assignment_id: lms_assignment_id
+            )
+            @workout_offering.save!
+          else
+            @message = 'Workout Offering not found. Please contact your instructor.'
+            render :error and return
+          end
+        end
       end
+
+      # All pieces of information are ready, ready to display the workout_offering
+      @workout ||= @workout_offering.workout
+      @course_offering ||= @workout_offering.course_offering
+      @term ||= @course_offering.term
+      @course ||= @course_offering.course
+      @organization ||= @course.organization
+
       ex1 = nil
       if params[:exercise_id]
         ex1 = Exercise.find_by(id: params[:exercise_id])
