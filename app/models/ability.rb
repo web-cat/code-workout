@@ -164,7 +164,10 @@ class Ability
 #        ((o.opening_date == nil) || (o.opening_date <= now)) &&
 #          o.course_offering.course_enrollments.where(user_id: user.id).any?
       end
-      can [:review], WorkoutOffering, course_offering: {course_enrollments: {user: user, course_role: {can_manage_assignments: true}}}
+      can [:manage], WorkoutOffering, course_offering:
+        { course_enrollments:
+          { user_id: user.id, course_role:
+            { can_manage_assignments: true } } }
       can [:practice], WorkoutOffering do |o|
         o.can_be_seen_by? user
 #        now = Time.now
@@ -214,9 +217,9 @@ class Ability
         { workout_offering:
           { course_offering:
             { course_enrollments:
-              { user: user, course_role:
+              { user_id: user.id, course_role:
                 { can_manage_assignments: true } } } } }
-      can [:create, :read], Attempt, user: user
+      can [:create, :read], Attempt, user_id: user.id
     end
   end
 
@@ -228,6 +231,8 @@ class Ability
   end
 
   def process_workout_offerings(user)
+    can :create, WorkoutOffering if user.instructor_course_offerings.any?
+
     can :manage, WorkoutOffering, course_offering:
       { course_enrollments:
         { user_id: user.id, course_role:

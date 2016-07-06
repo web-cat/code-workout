@@ -44,7 +44,7 @@ ActiveAdmin.register WorkoutOffering do
   form do |f|
     f.semantic_errors
     f.inputs do
-      f.input :course_offering
+      f.input :course_offering, collection: current_user.instructor_course_offerings
       f.input :workout
       f.input :opening_date, as: :datepicker
       f.input :soft_deadline, as: :datepicker
