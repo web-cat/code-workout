@@ -36,7 +36,7 @@
                       %li= link_to c.display_name,
                         organization_course_path(c.organization, c, term)
           - if user_signed_in?
-            - if current_user.global_role.can_edit_system_configuration? ||  current_user.instructor_course_offerings.any?
+            - if current_user.global_role.can_edit_system_configuration? ||  current_user.global_role.is_instructor?
               %li= link_to 'Upload Exercises', 'gym/exercises/upload'
               %li= link_to 'Create Workouts', '/gym/workouts/new'
 
@@ -46,7 +46,7 @@
         - if user_signed_in?
           - if current_user.global_role.can_edit_system_configuration?
             %li= link_to icon_tag_for('wrench'), admin_dashboard_path
-          - elsif current_user.instructor_course_offerings.any?
+          - elsif current_user.global_role.is_instructor?
             %li= link_to icon_tag_for('wrench'), admin_course_offerings_path
           %li= link_to current_user.email, current_user
           %li

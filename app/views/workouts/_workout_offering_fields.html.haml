@@ -4,8 +4,8 @@
       .row
         .col-md-3
           = f.input :course_offering, as: :select,
-            collection: CourseOffering.all,
-            input_html: { class: 'col-md-10', rows: 1 }        
+          collection: current_user.managed_course_offerings,
+            input_html: { class: 'col-md-10', rows: 1 }
         .col-md-3
           = f.input :opening_date,
             input_html: { class: 'col-md-10', rows: 1 }
