@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160706143029) do
+ActiveRecord::Schema.define(version: 20160707200651) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -504,14 +504,14 @@ ActiveRecord::Schema.define(version: 20160706143029) do
   add_index "users", ["time_zone_id"], name: "index_users_on_time_zone_id", using: :btree
 
   create_table "workout_offerings", force: true do |t|
-    t.integer  "course_offering_id",                       null: false
-    t.integer  "workout_id",                               null: false
+    t.integer  "course_offering_id",                      null: false
+    t.integer  "workout_id",                              null: false
     t.datetime "created_at"
     t.datetime "updated_at"
     t.datetime "opening_date"
     t.datetime "soft_deadline"
     t.datetime "hard_deadline"
-    t.boolean  "published",                default: false, null: false
+    t.boolean  "published",                default: true, null: false
     t.integer  "time_limit"
     t.integer  "workout_policy_id"
     t.integer  "continue_from_workout_id"
