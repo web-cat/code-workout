@@ -14,10 +14,16 @@ class LtiController < ApplicationController
     if request.post?
       render :error and return unless lti_authorize!
 
+      if session[:lti_launch]
+        session[:lti_params] = nil
+      end
+
       # Retrieve user information and sign in the user.
       email = params[:lis_person_contact_email_primary]
       first_name = params[:lis_person_name_given]
       last_name = params[:lis_person_name_family]
+      lis_outcome_service_url = params[:lis_outcome_service_url]
+      lis_result_sourcedid = params[:lis_result_sourcedid]
       @user = User.where(email: email).first
       if @user.blank?
         @user = User.new(email: email, password: email, password_confirmation: email,
@@ -33,16 +39,16 @@ class LtiController < ApplicationController
       @workout_offering = WorkoutOffering.find_by lms_assignment_id: lms_assignment_id
 
       if @workout_offering.blank?
-        # These two params may or may not specified by the instructor in the ToolConsumer.
+        # These params may or may not be specified by the instructor using the ToolConsumer.
         # If not specified, infer from other information provided.
         organization_slug = params[:custom_organization] || Organization.find_by(id: @lms_instance.organization_id).slug
         course_number = params[:custom_course_number] || params[:context_label].gsub(/[^a-zA-Z0-9 ]/, '')
         term_slug = params[:custom_term]
+        coff_url = params[:custom_url] || nil
 
         course_slug = course_number.gsub(/[^a-zA-Z0-9]/, '').downcase
         course_name = params[:context_title]
         coff_label = params[:custom_label] # This is required from the instructor in the ToolConsumer
-        coff_url = params[:custom_url] || nil
 
         @organization = Organization.find_by(slug: organization_slug)
         if @organization.blank?
@@ -89,7 +95,7 @@ class LtiController < ApplicationController
             @course.course_offerings << @course_offering
             @course.save!
           else
-            @message = 'Course offering not found.'
+            @message = 'Course offering not found. Please contact your instructor.'
             render :error and return
           end
         end
@@ -99,31 +105,17 @@ class LtiController < ApplicationController
           @course_offering.save!
         end
 
-        course_role = 'tmp'
-        if @tp.context_instructor?
-          course_role = CourseRole.instructor
-        elsif @tp.context_student?
-          course_role = CourseRole.student
-        end
-
-        if @course_offering &&
-          @course_offering.can_enroll? &&
-          !@course_offering.is_enrolled?(current_user)
-          CourseEnrollment.create(
-            course_offering: @course_offering,
-            user: current_user,
-            course_role: course_role
-          )
-        end
-
         workout_name = params[:resource_link_title]
         @workout = Workout.find_by(name: workout_name)
         if @workout.blank?
-          # session[:lms_assignment_id] = lms_assignment_id
-          # session[:from_lti] = true
-          # redirect_to '/gym/workouts/new'
-          @message = 'Workout not found. Please contact your instructor.'
-          render :error and return
+          lti_params = {}
+          lti_params[:lms_assignment_id] = lms_assignment_id
+          lti_params[:lis_result_sourcedid] = lis_result_sourcedid
+          lti_params[:lis_outcome_service_url] = lis_outcome_service_url
+          session[:lti_params] = lti_params
+
+          # FIXME: Creating the workout ends in nothingness. Doesn't take the user to the new workout.
+          redirect_to new_workout_path and return
         end
 
         @workout_offering = WorkoutOffering.find_by(
@@ -148,59 +140,39 @@ class LtiController < ApplicationController
         end
       end
 
-      # All pieces of information are ready, ready to display the workout_offering
+      # All pieces of information are ready, we are ready to display the workout_offering
       @workout ||= @workout_offering.workout
       @course_offering ||= @workout_offering.course_offering
       @term ||= @course_offering.term
       @course ||= @course_offering.course
       @organization ||= @course.organization
 
-      ex1 = nil
-      if params[:exercise_id]
-        ex1 = Exercise.find_by(id: params[:exercise_id])
+      if @tp.context_instructor?
+        course_role = CourseRole.instructor
+        @user.global_role = GlobalRole.instructor
+        @user.save!
+      elsif @tp.context_student?
+        course_role = CourseRole.student
       end
-      if current_user
-        lis_outcome_service_url = params[:lis_outcome_service_url]
-        lis_result_sourcedid = params[:lis_result_sourcedid]
-        @workout_score = @workout_offering.score_for(current_user)
-        if @workout_score.nil?
-          @workout_score = WorkoutScore.new(
-            score: 0,
-            exercises_completed: 0,
-            exercises_remaining: @workout.exercises.length,
-            user: current_user,
-            workout_offering: @workout_offering,
-            workout: @workout,
-            lis_outcome_service_url: lis_outcome_service_url,
-            lis_result_sourcedid: lis_result_sourcedid)
-          @workout_score.save!
-        end
-        current_user.current_workout_score = @workout_score
-        current_user.save!
-        if @workout_score.andand.closed? &&
-          @workout_score.andand.workout_offering.andand.workout_policy.
-          andand.no_review_before_close &&
-          !@workout_score.andand.workout_offering.andand.shutdown?
-          redirect_to organization_workout_offering_path(
-            organization_id: @organization.slug,
-            course_id: @course.slug,
-            term_id: @term.slug,
-            id: @workout_offering.id,
-            tp: @tp),
-            notice: "The time limit has passed for this workout." and return
-        end
+
+      if @course_offering &&
+        @course_offering.can_enroll? &&
+        !@course_offering.is_enrolled?(current_user)
+        CourseEnrollment.create(
+          course_offering: @course_offering,
+          user: current_user,
+          course_role: course_role
+        )
       end
-      if ex1.nil?
-        ex1 = @workout_offering.workout.next_exercise(
-          nil, current_user, @workout_score)
-      end
-      redirect_to organization_workout_offering_exercise_path(
-        id: ex1.id,
-        organization_id: @workout_offering.course_offering.course.organization.slug,
-        course_id: @workout_offering.course_offering.course.slug,
-        term_id: @workout_offering.course_offering.term.slug,
-        workout_offering_id: @workout_offering.id,
-        tp: @tp)
+
+      redirect_to organization_workout_offering_practice_path(
+        lis_outcome_service_url: lis_outcome_service_url,
+        lis_result_sourcedid: lis_result_sourcedid,
+        id: @workout_offering.id,
+        organization_id: @organization.id,
+        term_id: @term.id,
+        course_id: @course.id
+      )
     end
   end
 

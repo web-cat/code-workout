@@ -1,5 +1,6 @@
 class WorkoutsController < ApplicationController
   before_action :set_workout, only: [:show, :edit, :update, :destroy]
+  after_action :allow_iframe, only: [:new]
   respond_to :html, :js
 
   #~ Action methods ...........................................................
@@ -7,11 +8,11 @@ class WorkoutsController < ApplicationController
   # -------------------------------------------------------------
   # GET /workouts
   def index
-    if cannot? :index, Workout
-      redirect_to root_path,
-        notice: 'Unauthorized to view all workouts' and return
-    end
-    @workouts = []
+    # if cannot? :index, Workout
+    #   redirect_to root_path,
+    #     notice: 'Unauthorized to view all workouts' and return
+    # end
+    @workouts = Workout.where(is_public: true)
     @gym = []
   end
 
@@ -62,6 +63,7 @@ class WorkoutsController < ApplicationController
       redirect_to root_path,
         notice: 'Unauthorized to create new workout' and return
     end
+    @lti_launch = session[:lti_launch]
     @workout = Workout.new
   end
 

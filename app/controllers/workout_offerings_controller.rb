@@ -54,36 +54,37 @@ class WorkoutOfferingsController < ApplicationController
   def practice
     # must include the oauth proxy object
     require 'oauth/request_proxy/rack_request'
-
-    # lti launch
-    if request.post?
-      render "error", :layout => 'error' and return unless lti_authorize!
-
-      session[:lti_launch] = true
-
-      # register the user if he is not yet registered.
-      email = params[:lis_person_contact_email_primary]
-      first_name = params[:lis_person_name_given]
-      last_name = params[:lis_person_name_family]
-      lis_outcome_service_url = params[:lis_outcome_service_url]
-      lis_result_sourcedid = params[:lis_result_sourcedid]
-      @user = User.where(email: email).first
-      if @user.blank?
-        # TODO: should mark this as LMS user then prevent this user from login to codeworkout domain
-        @user = User.new(:email => email, :password => email, :password_confirmation => email, :first_name => first_name, :last_name => last_name)
-        @user.save
-      end
-      sign_in @user
-      lti_enroll
-
-      # TODO: To store lti launch params in the session we need to use active_record_store session_store instead of cookie_store
-      # session[:lti_params] = params
-    end
+    #
+    # # lti launch
+    # if request.post?
+    #   render "error", :layout => 'error' and return unless lti_authorize!
+    #
+    #   session[:lti_launch] = true
+    #
+    #   # register the user if he is not yet registered.
+    #   email = params[:lis_person_contact_email_primary]
+    #   first_name = params[:lis_person_name_given]
+    #   last_name = params[:lis_person_name_family]
+    #   lis_outcome_service_url = params[:lis_outcome_service_url]
+    #   lis_result_sourcedid = params[:lis_result_sourcedid]
+    #   @user = User.where(email: email).first
+    #   if @user.blank?
+    #     # TODO: should mark this as LMS user then prevent this user from login to codeworkout domain
+    #     @user = User.new(:email => email, :password => email, :password_confirmation => email, :first_name => first_name, :last_name => last_name)
+    #     @user.save
+    #   end
+    #   sign_in @user
+    #   lti_enroll
+    #
+    #   # TODO: To store lti launch params in the session we need to use active_record_store session_store instead of cookie_store
+    #   # session[:lti_params] = params
+    # end
 
     # authenticate_user!
     # authorize! :practice, @workout_offering
-
     if @workout_offering
+      lis_outcome_service_url = params[:lis_outcome_service_url]
+      lis_result_sourcedid = params[:lis_result_sourcedid]
       ex1 = nil
       if params[:exercise_id]
         ex1 = Exercise.find_by(id: params[:exercise_id])
@@ -102,9 +103,9 @@ class WorkoutOfferingsController < ApplicationController
             exercises_remaining: @workout_offering.workout.exercises.length,
             user: current_user,
             workout_offering: @workout_offering,
-            workout: @workout_offering.workout,
-            lis_outcome_service_url: lis_outcome_service_url,
-            lis_result_sourcedid: lis_result_sourcedid)
+            workout: @workout_offering.workout)
+          @workout_score.lis_outcome_service_url = lis_outcome_service_url
+          @workout_score.lis_result_sourcedid = lis_result_sourcedid
           @workout_score.save!
         end
         current_user.current_workout_score = @workout_score

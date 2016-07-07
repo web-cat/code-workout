@@ -2,7 +2,7 @@ CodeWorkout::Application.routes.draw do
 
   root 'home#index'
 
-  post 'lti/launch'# => 'workout_offerings#practice', as: :lti_workout_offering_practice
+  post 'lti/launch', as: :lti_launch # => 'workout_offerings#practice', as: :lti_workout_offering_practice
 
   post 'lti/assessment'
 
