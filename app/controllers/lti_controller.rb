@@ -3,20 +3,13 @@ class LtiController < ApplicationController
 
   # load_and_authorize_resource
   after_action :allow_iframe, only: :launch
-  # the consumer keys/secrets
-  # $oauth_creds = {"test" => "secret"}
 
-  #TODO massive refactoring required -- try to reduce the number of queries needed
   def launch
     # must include the oauth proxy object
     require 'oauth/request_proxy/rack_request'
 
     if request.post?
       render :error and return unless lti_authorize!
-
-      if session[:lti_launch]
-        session[:lti_params] = nil
-      end
 
       # Retrieve user information and sign in the user.
       email = params[:lis_person_contact_email_primary]
@@ -31,6 +24,11 @@ class LtiController < ApplicationController
         @user.save
       end
       sign_in @user
+
+      if @tp.context_instructor?
+        @user.global_role = GlobalRole.instructor
+        @user.save
+      end
 
       @lms_instance = LmsInstance.find_by consumer_key: params[:oauth_consumer_key]
       lms_id = @lms_instance.id
@@ -113,6 +111,7 @@ class LtiController < ApplicationController
           lti_params[:lis_result_sourcedid] = lis_result_sourcedid
           lti_params[:lis_outcome_service_url] = lis_outcome_service_url
           session[:lti_params] = lti_params
+          session[:lti_launch] = true
 
           # FIXME: Creating the workout ends in nothingness. Doesn't take the user to the new workout.
           redirect_to new_workout_path and return
@@ -149,8 +148,6 @@ class LtiController < ApplicationController
 
       if @tp.context_instructor?
         course_role = CourseRole.instructor
-        @user.global_role = GlobalRole.instructor
-        @user.save!
       elsif @tp.context_student?
         course_role = CourseRole.student
       end
