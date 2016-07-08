@@ -130,11 +130,27 @@ class WorkoutsController < ApplicationController
       workout_offering.hard_deadline = Date.parse(course_offering.second['hard_deadline(3i)'] +
         '-' + course_offering.second['hard_deadline(2i)']+
         '-' + course_offering.second['hard_deadline(1i)'])
+      if index == 0 && session[:lti_params]
+        workout_offering.lms_assignment_id = session[:lti_params][:lms_assignment_id]
+      end
       workout_offering.save!
     end
 
     if @workout.save
-      redirect_to root_path, notice: 'Workout was successfully created.'
+      if lti_params = session[:lti_params]
+        @workout_offering = WorkoutOffering.find_by(lms_assignment_id: lti_params[:lms_assignment_id])
+        session[:lti_launch] = true
+        redirect_to organization_workout_offering_practice_path(
+          lis_outcome_service_url: lti_params[:lis_outcome_service_url],
+          lis_result_sourcedid: lti_params[:lis_result_sourcedid],
+          id: @workout_offering.id,
+          organization_id: @workout_offering.course_offering.course.organization.id,
+          term_id: @workout_offering.course_offering.term.id,
+          course_id: @workout_offering.course_offering.course.id
+        )
+      else
+        redirect_to root_path, notice: 'Workout was successfully created.'
+      end
     else
       render action: 'new'
     end

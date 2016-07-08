@@ -103,6 +103,17 @@ class LtiController < ApplicationController
           @course_offering.save!
         end
 
+        if @tp.context_instructor? &&
+          @course_offering &&
+          @course_offering.can_enroll? &&
+          !@course_offering.is_enrolled?(current_user)
+          CourseEnrollment.create(
+            course_offering: @course_offering,
+            user: current_user,
+            course_role: CourseRole.instructor
+          )
+        end
+
         workout_name = params[:resource_link_title]
         @workout = Workout.find_by(name: workout_name)
         if @workout.blank?
@@ -146,19 +157,14 @@ class LtiController < ApplicationController
       @course ||= @course_offering.course
       @organization ||= @course.organization
 
-      if @tp.context_instructor?
-        course_role = CourseRole.instructor
-      elsif @tp.context_student?
-        course_role = CourseRole.student
-      end
-
-      if @course_offering &&
+      if @tp.context_student? &&
+        @course_offering &&
         @course_offering.can_enroll? &&
         !@course_offering.is_enrolled?(current_user)
         CourseEnrollment.create(
           course_offering: @course_offering,
           user: current_user,
-          course_role: course_role
+          course_role: CourseRole.student
         )
       end
 
