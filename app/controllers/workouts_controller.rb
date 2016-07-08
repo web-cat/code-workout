@@ -64,7 +64,10 @@ class WorkoutsController < ApplicationController
         notice: 'Unauthorized to create new workout' and return
     end
     @lti_launch = session[:lti_launch]
+    session[:lti_launch] = nil
     @workout = Workout.new
+
+    render layout: 'one_column'
   end
 
 
