@@ -1,0 +1,9 @@
+.form-group
+  = label_tag :name, 'Workout Name', class: 'col-sm-2'
+  .col-sm-10
+    = text_field_tag :name, nil, id: 'workout-name', class: 'form-control', maxlength: 50, placeholder: 'Enter Workout Name'
+%a.btn.btn-default#btn-search-ex-modal{ data: { toggle: 'modal', target: '#modal-search-ex' }} Search for Exercises to Add
+#modal-search-ex.modal.fade
+  .modal-dialog.modal-lg
+    = render 'search_exercises'
+.ex-area

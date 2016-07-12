@@ -1,0 +1,4 @@
+- if @exs.any?
+  $('.search-results').empty();
+  - @exs.in_groups_of(2, false) do |row|
+    $('.search-results').append("#{escape_javascript(render row, user: current_user)}")

@@ -46,11 +46,16 @@ class ExercisesController < ApplicationController
       @msg = 'No exercises were found for your search request. ' \
         'Try these instead...'
 #      @wos = Workout.order('RANDOM()').limit(4)
-      @exs = Exercise.order('RANDOM()').limit(16)
+      @exs = Exercise.all.shuffle.first(16)
     end
     if @exs.length == 0
       @msg = 'No public exercises are available to search right now. ' \
         'Wait for contributors to add more.'
+    end
+
+    respond_to do |format|
+      format.html
+      format.js
     end
   end
 

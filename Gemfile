@@ -58,6 +58,7 @@ group :development, :test do
   gem 'pry'
   gem 'thin'
   gem 'request-log-analyzer'
+  gem 'byebug'
 end
 gem 'factory_girl_rails'
 gem 'log_file'

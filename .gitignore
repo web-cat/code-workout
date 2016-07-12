@@ -44,3 +44,4 @@ server.key
 tasks.todo
 
 .settings
+.byebug_history
