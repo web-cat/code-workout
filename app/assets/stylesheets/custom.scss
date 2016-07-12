@@ -258,6 +258,12 @@ ul.wysihtml5-toolbar li {
 .workout.thumbnail.lg {
   .summary { padding-top: 3px; }
 }
+
+.thumbnail.single.lg{
+  @extend .thumbnail-lg;
+  width: 100%;
+}
+
 .thumbnail.closed .title,
 .thumbnail.closed .title a { color: #888; }
 .thumbnail.closed .due { background-color: #ddd; color: black; }
@@ -283,4 +289,13 @@ ul.wysihtml5-toolbar li {
   font-weight: bold;
   border-top: 1px solid black;
   border-bottom: 1px solid black;
+}
+
+.search-results {
+  padding: 20px;
+}
+
+.handle {
+  cursor: move;
+  padding-right: 5px;
 }

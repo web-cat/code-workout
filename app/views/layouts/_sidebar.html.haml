@@ -11,4 +11,6 @@
 - elsif user_signed_in? && session[:leaf_exercises]
   = render Exercise.find(session[:leaf_exercises]),
     user: current_user, size: 'sm'
+- elsif controller_name.eql?('workouts') && action_name.eql?('new')
+  = render partial: 'workouts/search_exercises'
 .clearfix

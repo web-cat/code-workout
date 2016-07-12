@@ -424,6 +424,7 @@ DEPENDENCIES
   immigrant
   ims-lti (~> 1.1.8)
   jquery-rails
+  jquery-ui-rails
   js-routes
   json
   kaminari

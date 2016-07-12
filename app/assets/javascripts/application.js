@@ -12,6 +12,7 @@
 //
 //= require modernizr.min.js
 //= require jquery
+//= require jquery-ui
 //= require jquery_ujs
 //= require bootstrap-sprockets
 //= require bootstrap-editable
@@ -22,6 +23,8 @@
 //= require bootstrap-wysihtml5
 //= require cocoon
 //= require cm
+//= require jquery-readyselector
+//= require workout_form
 
 
 // Add the route helpers directly into the window object for easy access.

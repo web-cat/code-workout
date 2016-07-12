@@ -67,7 +67,7 @@ class WorkoutsController < ApplicationController
     session[:lti_launch] = nil
     @workout = Workout.new
 
-    render layout: 'one_column'
+    render layout: 'two_columns'
   end
 
 
