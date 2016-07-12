@@ -25,28 +25,28 @@
           %a.btn{data:{dismiss: "modal"}} Close
           %a.btn.saver Save changes
 
-  #course_offerings
-    = f.semantic_fields_for :workout_offerings do |co|
-      = render 'workout_offering_fields', f: co
-    .links
-      = link_to_add_association 'Add Workout to Course Offering', f,:workout_offerings
+  / #course_offerings
+  /   = f.semantic_fields_for :workout_offerings do |co|
+  /     = render 'workout_offering_fields', f: co
+  /   .links
+  /     = link_to_add_association 'Add Workout to Course Offering', f,:workout_offerings
 
-  .row
-    .col-md-4
-      = f.input :points_multiplier, as: :select,
-        collection: (1..10).step(1).to_a,
-        label: "Experience Points",
-        hint: "Workout question points multiplier"
+  / .row
+  /   .col-md-4
+  /     = f.input :points_multiplier, as: :select,
+  /       collection: (1..10).step(1).to_a,
+  /       label: "Experience Points",
+  /       hint: "Workout question points multiplier"
   .row
     .col-md-10
       = f.input :description, label: "Workout description",
         placeholder: "(optional) Exercise explanation, given after submission",
         input_html: { class: 'richtexteditor span10', rows: 2 }
-  .row
-    .col-md-4
-      = f.input :scrambled,
-        label: "Randomize?",
-        input_html: { checked: 'checked', value: true}
+  / .row
+  /   .col-md-4
+  /     = f.input :scrambled,
+  /       label: "Randomize?",
+  /       input_html: { checked: 'checked', value: true}
 
   .actions
     = f.submit 'Save'
