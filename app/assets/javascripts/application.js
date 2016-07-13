@@ -24,6 +24,8 @@
 //= require cocoon
 //= require cm
 //= require jquery-readyselector
+//= require moment
+//= require bootstrap-datetimepicker
 //= require workout_form
 
 
