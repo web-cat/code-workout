@@ -156,6 +156,10 @@ class WorkoutsController < ApplicationController
     end
   end
 
+  def new_create
+    byebug
+  end
+
   def upload_yaml
 
   end

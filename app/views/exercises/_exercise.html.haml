@@ -69,7 +69,7 @@
       = link_to exercise.display_name, exercise_practice_path(exercise, workout_id: workout.id)
     - else
       = link_to exercise.display_name, exercise_practice_path(exercise)
-  - if !new_workout
+  - if !defined? new_workout
     .summary
       - if !attempt || !workout_score || workout_score.show_feedback?
         .radial-progress{ 'data-progress' => score_pct }
