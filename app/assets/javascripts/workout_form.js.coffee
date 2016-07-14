@@ -1,4 +1,4 @@
-$('#main').ready ->
+$('.workouts-new').ready ->
   $('.search-results').on 'click', '.add-ex', ->
     $('.empty-msg').css 'display', 'none'
     $('#ex-list').css 'display', 'block'
@@ -36,21 +36,7 @@ $('#main').ready ->
       $('.empty-msg').css 'display', 'block'
       $('#ex-list').css 'display', 'none'
 
-
-  $('#opening-datepicker').datetimepicker();
-  $('#soft-datepicker').datetimepicker useCurrent: false
-  $('#hard-datepicker').datetimepicker useCurrent: false
-
-  $('#opening-datepicker').on 'dp.change', (e) ->
-    $('#soft-datepicker').data('DateTimePicker').minDate e.date
-    $('#hard-datepicker').data('DateTimePicker').minDate e.date
-
-  $('#soft-datepicker').on 'dp.change', (e) ->
-    $('#opening-datepicker').data('DateTimePicker').maxDate e.date
-    $('#hard-datepicker').data('DateTimePicker').minDate e.date
-
-  $('#hard-datepicker').on 'dp.change', (e) ->
-    $('#soft-datepicker').data('DateTimePicker').maxDate e.date
+  init_datepickers()
 
   $('#btn-submit-wo').click ->
     if !check_completeness()
@@ -80,29 +66,62 @@ $('#main').ready ->
       processData: false
       contentType: false
       success: (data) ->
-        console.log data
+        window.location.href = data['url']
 
-  check_completeness = ->
-    complete = true
-    complete = false if $('#wo-name').val() == ''
-    complete = false if $('#ex-list li').length == 0
-    complete = false if (!$('#coff-select').val? || $('#coff-select').val() == '')
-    complete = false if !$('#opening-datepicker').data('DateTimePicker').date()?
-    complete = false if !$('#soft-datepicker').data('DateTimePicker').date()?
-    complete = false if !$('#hard-datepicker').data('DateTimePicker').date()?
+init_datepickers = ->
+  opening_datepicker = $('#opening-datepicker')
+  soft_datepicker = $('#soft-datepicker')
+  hard_datepicker = $('#hard-datepicker')
 
-    return complete
+  opening_datepicker.datetimepicker
+    useCurrent: false
+    minDate: moment()
+  soft_datepicker.datetimepicker
+    useCurrent: false
+  soft_datepicker.data('DateTimePicker').disable()
+  hard_datepicker.datetimepicker
+    useCurrent: false
+  hard_datepicker.data('DateTimePicker').disable()
 
-  get_exercises = ->
-    exs = $('#ex-list li')
-    exercises = {}
-    i = 0
-    while i < exs.length
-      ex_id = $(exs[i]).data('id')
-      ex_points = $(exs[i]).find('.points').val();
-      ex_points = '0' if ex_points == ''
-      ex_obj = { id: ex_id, points: ex_points };
-      key = i + 1
-      exercises[key.toString()] = ex_obj
-      i++
-    return exercises
+  # Handle date change events
+  opening_datepicker.on 'dp.change', (e) ->
+    if e.date?
+      soft_datepicker.data('DateTimePicker').enable()
+      soft_datepicker.data('DateTimePicker').minDate e.date
+      hard_datepicker.data('DateTimePicker').minDate e.date
+
+  soft_datepicker.on 'dp.change', (e) ->
+    if e.date?
+      hard_datepicker.data('DateTimePicker').enable()
+      opening_datepicker.data('DateTimePicker').maxDate e.date
+      hard_datepicker.data('DateTimePicker').minDate e.date
+
+  hard_datepicker.on 'dp.change', (e) ->
+    if e.date?
+      soft_datepicker.data('DateTimePicker').maxDate e.date
+
+
+check_completeness = ->
+  complete = true
+  complete = false if $('#wo-name').val() == ''
+  complete = false if $('#ex-list li').length == 0
+  complete = false if (!$('#coff-select').val? || $('#coff-select').val() == '')
+  complete = false if !$('#opening-datepicker').data('DateTimePicker').date()?
+  complete = false if !$('#soft-datepicker').data('DateTimePicker').date()?
+  complete = false if !$('#hard-datepicker').data('DateTimePicker').date()?
+
+  return complete
+
+get_exercises = ->
+  exs = $('#ex-list li')
+  exercises = {}
+  i = 0
+  while i < exs.length
+    ex_id = $(exs[i]).data('id')
+    ex_points = $(exs[i]).find('.points').val();
+    ex_points = '0' if ex_points == ''
+    ex_obj = { id: ex_id, points: ex_points };
+    key = i + 1
+    exercises[key.toString()] = ex_obj
+    i++
+  return exercises

@@ -252,6 +252,7 @@ class ExercisesController < ApplicationController
   def practice
     # lti launch
     @lti_launch = session[:lti_launch]
+    session[:lti_launch] = nil
 
     if params[:exercise_version_id]
       @exercise_version =
