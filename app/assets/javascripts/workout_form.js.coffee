@@ -4,34 +4,44 @@ $('.workouts-new').ready ->
     $('#ex-list').css 'display', 'block'
     ex_name = $(this).data('ex-name')
     ex_id = $(this).data('ex-id')
+    # exercise_row =
+    #             "<li class='list-group-item' data-id='" + ex_id + "'>" +
+    #               "<div class='row'>" +
+    #                 "<div class='col-md-1'>" +
+    #                   "<i class='handle fa fa-bars'></i>" +
+    #                 "</div>" +
+    #                 "<div class='col-md-3'>" +
+    #                   ex_name +
+    #                 "</div>" +
+    #                 "<div class='col-md-2 col-md-offset-2'>" +
+    #                   "Points" +
+    #                 "</div>" +
+    #                 "<div class='col-md-2'>" +
+    #                   "<input class='points form-control input-sm' placeholder='e.g 5' type='number' min='0' value='0' />" +
+    #                 "</div>" +
+    #                 "<div class='col-md-1 col-md-offset-1'>" +
+    #                   "<i class='delete fa fa-times'></i>" +
+    #                 "</div>" +
+    #               "</div>" +
+    #             "</li>";
     exercise_row =
-                "<li class='list-group-item' data-id='" + ex_id + "'>" +
-                  "<div class='row'>" +
-                    "<div class='col-sm-1'>" +
-                      "<i class='handle fa fa-bars'></i>" +
-                    "</div>" +
-                    "<div class='col-sm-3'>" +
-                      ex_name +
-                    "</div>" +
-                    "<div class='col-sm-2 col-sm-offset-2'>" +
-                      "Points" +
-                    "</div>" +
-                    "<div class='col-sm-2'>" +
-                      "<input class='points form-control input-sm' placeholder='e.g 5' type='number' min='0' value='0' />" +
-                    "</div>" +
-                    "<div class='col-sm-1 col-sm-offset-1'>" +
-                      "<i class='delete fa fa-times'></i>" +
-                    "</div>" +
-                  "</div>" +
-                "</li>";
-    $('#ex-list').append(exercise_row);
+      "<tr data-id='" + ex_id + "'>" +
+        "<td><i class='handle fa fa-bars'></i></td>" +
+        "<td>" + ex_name + "</td>" +
+        "<td><input class='points form-control input-sm' placeholder='e.g 5' type='number' min='0' value='0' /></td>" +
+        "<td><i class='delete fa fa-times'></i></td>" +
+      "</tr>"
+    $('#ex-list tbody').append(exercise_row);
 
-  $('#ex-list').sortable
+  sortable = $('#ex-list tbody').sortable
     handle: '.handle'
+    helper: fix_helper
 
-  $('#ex-list').on 'click', '.delete', ->
-    $(this).closest('li').remove()
-    exs = $('#ex-list li').length
+  sortable.disableSelection()
+
+  $('#ex-list tbody').on 'click', '.delete', ->
+    $(this).closest('tr').remove()
+    exs = $('#ex-list tbody tr').length
     if exs == 0
       $('.empty-msg').css 'display', 'block'
       $('#ex-list').css 'display', 'none'
@@ -67,6 +77,11 @@ $('.workouts-new').ready ->
       contentType: false
       success: (data) ->
         window.location.href = data['url']
+
+fix_helper = (e, ui) ->
+  ui.children().each ->
+    $(this).width($(this).width())
+  return ui
 
 init_datepickers = ->
   opening_datepicker = $('#opening-datepicker')
@@ -104,7 +119,7 @@ init_datepickers = ->
 check_completeness = ->
   complete = true
   complete = false if $('#wo-name').val() == ''
-  complete = false if $('#ex-list li').length == 0
+  complete = false if $('#ex-list tbody tr').length == 0
   complete = false if (!$('#coff-select').val? || $('#coff-select').val() == '')
   complete = false if !$('#opening-datepicker').data('DateTimePicker').date()?
   complete = false if !$('#soft-datepicker').data('DateTimePicker').date()?
@@ -113,7 +128,7 @@ check_completeness = ->
   return complete
 
 get_exercises = ->
-  exs = $('#ex-list li')
+  exs = $('#ex-list tbody tr')
   exercises = {}
   i = 0
   while i < exs.length
