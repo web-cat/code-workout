@@ -119,8 +119,7 @@ class WorkoutOfferingsController < ApplicationController
               @workout_offering.course_offering.course.organization.slug,
             course_id: @workout_offering.course_offering.course.slug,
             term_id: @workout_offering.course_offering.term.slug,
-            id: @workout_offering.id,
-            tp: @tp),
+            id: @workout_offering.id),
             notice: "The time limit has passed for this workout." and return
         end
       end
@@ -135,7 +134,9 @@ class WorkoutOfferingsController < ApplicationController
         course_id: @workout_offering.course_offering.course.slug,
         term_id: @workout_offering.course_offering.term.slug,
         workout_offering_id: @workout_offering.id,
-        tp: @tp)
+        lis_result_sourcedid: lis_result_sourcedid,
+        lis_outcome_service_url: lis_outcome_service_url
+      )
     else
       redirect_to root_path, notice: 'Workout offering not found' and return
     end
