@@ -72,7 +72,12 @@ class WorkoutsController < ApplicationController
     if params[:notice]
       flash.now[:notice] = params[:notice]
     end
-    render layout: 'two_columns'
+
+    if @lti_launch
+      render layout: 'one_column'
+    else
+      render layout: 'two_columns'
+    end
   end
 
 
