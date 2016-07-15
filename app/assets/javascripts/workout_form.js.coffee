@@ -4,26 +4,6 @@ $('.workouts-new').ready ->
     $('#ex-list').css 'display', 'block'
     ex_name = $(this).data('ex-name')
     ex_id = $(this).data('ex-id')
-    # exercise_row =
-    #             "<li class='list-group-item' data-id='" + ex_id + "'>" +
-    #               "<div class='row'>" +
-    #                 "<div class='col-md-1'>" +
-    #                   "<i class='handle fa fa-bars'></i>" +
-    #                 "</div>" +
-    #                 "<div class='col-md-3'>" +
-    #                   ex_name +
-    #                 "</div>" +
-    #                 "<div class='col-md-2 col-md-offset-2'>" +
-    #                   "Points" +
-    #                 "</div>" +
-    #                 "<div class='col-md-2'>" +
-    #                   "<input class='points form-control input-sm' placeholder='e.g 5' type='number' min='0' value='0' />" +
-    #                 "</div>" +
-    #                 "<div class='col-md-1 col-md-offset-1'>" +
-    #                   "<i class='delete fa fa-times'></i>" +
-    #                 "</div>" +
-    #               "</div>" +
-    #             "</li>";
     exercise_row =
       "<tr data-id='" + ex_id + "'>" +
         "<td><i class='handle fa fa-bars'></i></td>" +
