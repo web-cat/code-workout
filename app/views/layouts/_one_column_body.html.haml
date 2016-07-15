@@ -1,6 +1,10 @@
-.row.max-height#main
-  .col-md-12.scrollable.max-height.content
+.max-height#main{class: "#{controller_name}-#{action_name}"}
+  .scrollable.max-height.content
     .inner.max-height
       .below-nav
         = render partial: 'layouts/flash'
-        = yield
+        .container
+          .row
+            = render partial: 'layouts/sidebar'
+          .row
+            = yield
