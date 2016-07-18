@@ -1,14 +1,10 @@
-.modal-content
-  .modal-header
-    %h4.modal-title Search for Exercises
-  .modal-body
-    .row.search-area
-      = form_tag search_path(params[:search]), remote: true do
-        .col-md-10
-          = text_field_tag :search, nil, placeholder: 'Find exercises by name...', class: 'form-control', id: 'search-terms'
-        .col-md-2
-          = submit_tag 'Search', class: 'btn btn-inverse'
-    .row
-      .panel
-        .panel-body.search-results
-          No results to display yet.
+%h2 Search for exercises
+.row.search-area
+  = form_tag search_path(params[:search]), remote: true do
+    .col-md-9
+      = text_field_tag :search, nil, placeholder: 'e.g. recursion', class: 'form-control', id: 'search-terms'
+    .col-md-2
+      = submit_tag 'Search', class: 'btn btn-inverse'
+.row
+  .search-results
+    Enter search terms above and choose results you want to add!

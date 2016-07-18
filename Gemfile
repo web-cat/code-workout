@@ -3,6 +3,7 @@ source 'https://rubygems.org'
 gem 'rails'
 gem 'bootstrap-sass', '~> 3.2.0'
 gem 'jquery-rails'
+gem 'jquery-ui-rails'
 gem 'bootstrap-editable-rails'
 gem 'codemirror-rails'
 gem 'font-awesome-rails'
@@ -96,6 +97,10 @@ gem 'awesome_print'   # For debugging/logging output
 
 #gems for rich text editing
 gem 'bootstrap-wysihtml5-rails'
+
+#gems for datepicker
+gem 'momentjs-rails', '>= 2.9.0'
+gem 'bootstrap3-datetimepicker-rails', '~> 4.17.37'
 
 #gem for improved WHERE querying
 gem 'squeel'

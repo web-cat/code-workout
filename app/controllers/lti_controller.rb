@@ -1,3 +1,4 @@
+
 class LtiController < ApplicationController
   require 'date'
 
@@ -10,6 +11,9 @@ class LtiController < ApplicationController
 
     if request.post?
       render :error and return unless lti_authorize!
+
+      # Tell the session we're in LTI territory
+      session[:lti_launch] = true
 
       # Retrieve user information and sign in the user.
       email = params[:lis_person_contact_email_primary]
@@ -35,7 +39,6 @@ class LtiController < ApplicationController
       assignment_id = params[:custom_canvas_assignment_id]
       lms_assignment_id = "#{lms_id}-#{assignment_id}"
       @workout_offering = WorkoutOffering.find_by lms_assignment_id: lms_assignment_id
-
       if @workout_offering.blank?
         # These params may or may not be specified by the instructor using the ToolConsumer.
         # If not specified, infer from other information provided.
@@ -122,9 +125,7 @@ class LtiController < ApplicationController
           lti_params[:lis_result_sourcedid] = lis_result_sourcedid
           lti_params[:lis_outcome_service_url] = lis_outcome_service_url
           session[:lti_params] = lti_params
-          session[:lti_launch] = true
 
-          # FIXME: Creating the workout ends in nothingness. Doesn't take the user to the new workout.
           redirect_to new_workout_path and return
         end
 
@@ -151,16 +152,17 @@ class LtiController < ApplicationController
       end
 
       # All pieces of information are ready, we are ready to display the workout_offering
-      @workout ||= @workout_offering.workout
-      @course_offering ||= @workout_offering.course_offering
-      @term ||= @course_offering.term
-      @course ||= @course_offering.course
-      @organization ||= @course.organization
+      @workout = @workout_offering.workout
+      @course_offering = @workout_offering.course_offering
+      @term = @course_offering.term
+      @course = @course_offering.course
+      @organization = @course.organization
 
       if @tp.context_student? &&
         @course_offering &&
         @course_offering.can_enroll? &&
         !@course_offering.is_enrolled?(current_user)
+
         CourseEnrollment.create(
           course_offering: @course_offering,
           user: current_user,

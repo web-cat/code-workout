@@ -252,6 +252,7 @@ class ExercisesController < ApplicationController
   def practice
     # lti launch
     @lti_launch = session[:lti_launch]
+    session[:lti_launch] = nil
 
     if params[:exercise_version_id]
       @exercise_version =
@@ -304,6 +305,9 @@ class ExercisesController < ApplicationController
     end
     if @workout_offering && !@workout_score
       @workout_score = @workout_offering.score_for(@student_user)
+      @workout_score.lis_result_sourcedid = params[:lis_result_sourcedid]
+      @workout_score.lis_outcome_service_url = params[:lis_outcome_service_url]
+      @workout_score.save
     end
     if @workout_score
       @attempt = @workout_score.attempt_for(@exercise_version.exercise)

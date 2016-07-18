@@ -1,6 +1,9 @@
+require 'json'
+require 'date'
+
 class WorkoutsController < ApplicationController
   before_action :set_workout, only: [:show, :edit, :update, :destroy]
-  after_action :allow_iframe, only: [:new]
+  after_action :allow_iframe, only: [:new, :new_create]
   respond_to :html, :js
 
   #~ Action methods ...........................................................
@@ -66,8 +69,15 @@ class WorkoutsController < ApplicationController
     @lti_launch = session[:lti_launch]
     session[:lti_launch] = nil
     @workout = Workout.new
+    if params[:notice]
+      flash.now[:notice] = params[:notice]
+    end
 
-    render layout: 'one_column'
+    if @lti_launch
+      render layout: 'one_column'
+    else
+      render layout: 'two_columns'
+    end
   end
 
 
@@ -153,6 +163,64 @@ class WorkoutsController < ApplicationController
       end
     else
       render action: 'new'
+    end
+  end
+
+  def new_create
+    opening_date = DateTime.parse params[:opening_date]
+    soft_deadline = DateTime.parse params[:soft_deadline]
+    hard_deadline = DateTime.parse params[:hard_deadline]
+
+    if !(opening_date <= soft_deadline && soft_deadline <= hard_deadline)
+      err_string = 'Please check that your deadlines are in a logical order.'
+      url = url_for new_workout_path(notice: err_string)
+    else
+      @workout = Workout.new
+      @workout.creator_id = current_user.id
+      @workout.name = params[:name]
+      @workout.description = params[:description]
+      exercises = JSON.parse params[:exercises]
+      exercises.each do |key, value|
+        exercise = Exercise.find value['id']
+        exercise_workout = ExerciseWorkout.new workout: @workout, exercise: exercise
+        exercise_workout.position = key
+        exercise_workout.points = value['points']
+        exercise_workout.save!
+        @workout.exercise_workouts << exercise_workout
+      end
+
+      @course_offering = CourseOffering.find(params[:course_offering_id])
+      @workout_offering = WorkoutOffering.new workout: @workout, course_offering: @course_offering
+      @workout_offering.opening_date = DateTime.parse params[:opening_date]
+      @workout_offering.soft_deadline = DateTime.parse params[:soft_deadline]
+      @workout_offering.hard_deadline = DateTime.parse params[:hard_deadline]
+      @workout_offering.lms_assignment_id = session[:lti_params][:lms_assignment_id] if session[:lti_params]
+      @workout_offering.save!
+
+      if @workout.save
+        if lti_params = session[:lti_params]
+          session[:lti_launch] = true
+          url = url_for(
+            organization_workout_offering_practice_path(
+              lis_outcome_service_url: lti_params[:lis_outcome_service_url],
+              lis_result_sourcedid: lti_params[:lis_result_sourcedid],
+              id: @workout_offering.id,
+              organization_id: @workout_offering.course_offering.course.organization.id,
+              term_id: @workout_offering.course_offering.term.id,
+              course_id: @workout_offering.course_offering.course.id
+            )
+          )
+        else
+          url = url_for root_path(notice: 'Workout was successfully created.')
+        end
+      else
+        err_string = 'There was a problem while creating the workout.'
+        url = url_for new_workout_path(notice: err_string)
+      end
+    end
+
+    respond_to do |format|
+      format.json { render json: { url: url } }
     end
   end
 
