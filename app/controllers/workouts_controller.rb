@@ -112,61 +112,6 @@ class WorkoutsController < ApplicationController
   # -------------------------------------------------------------
   # POST /workouts
   def create
-    @workout = Workout.new(workout_params)
-    msg      = params[:workout]
-    exercises = msg[:exercise_workouts_attributes]
-    @workout.creator_id = current_user.id
-    exercises.each do |ex|
-      ex_id = ex.second[:exercise_id]
-      exercise = Exercise.find(ex_id)
-      exercise_workout = ExerciseWorkout.new(workout: @workout, exercise: exercise)
-      exercise_workout.position = ex.second[:position]
-      exercise_workout.points = ex.second[:points]
-      exercise_workout.save!
-    end
-
-    course_offerings = msg[:workout_offerings_attributes]
-    course_offerings.andand.each_with_index do |course_offering, index|
-      course_offering_id = course_offering.second[:course_offering_id]
-      courseoffering = CourseOffering.find(course_offering_id)
-      @workout.course_offerings<<courseoffering
-      workout_offering = @workout.workout_offerings.find_by(course_offering: courseoffering)
-      workout_offering.opening_date = Date.parse(course_offering.second['opening_date(3i)'] +
-        '-' + course_offering.second['opening_date(2i)'] +
-        '-' + course_offering.second['opening_date(1i)'])
-      workout_offering.soft_deadline = Date.parse(course_offering.second['soft_deadline(3i)'] +
-        '-' + course_offering.second['soft_deadline(2i)'] +
-        '-' + course_offering.second['soft_deadline(1i)'])
-      workout_offering.hard_deadline = Date.parse(course_offering.second['hard_deadline(3i)'] +
-        '-' + course_offering.second['hard_deadline(2i)']+
-        '-' + course_offering.second['hard_deadline(1i)'])
-      if index == 0 && session[:lti_params]
-        workout_offering.lms_assignment_id = session[:lti_params][:lms_assignment_id]
-      end
-      workout_offering.save!
-    end
-
-    if @workout.save
-      if lti_params = session[:lti_params]
-        @workout_offering = WorkoutOffering.find_by(lms_assignment_id: lti_params[:lms_assignment_id])
-        session[:lti_launch] = true
-        redirect_to organization_workout_offering_practice_path(
-          lis_outcome_service_url: lti_params[:lis_outcome_service_url],
-          lis_result_sourcedid: lti_params[:lis_result_sourcedid],
-          id: @workout_offering.id,
-          organization_id: @workout_offering.course_offering.course.organization.id,
-          term_id: @workout_offering.course_offering.term.id,
-          course_id: @workout_offering.course_offering.course.id
-        )
-      else
-        redirect_to root_path, notice: 'Workout was successfully created.'
-      end
-    else
-      render action: 'new'
-    end
-  end
-
-  def new_create
     opening_date = DateTime.parse params[:opening_date]
     soft_deadline = DateTime.parse params[:soft_deadline]
     hard_deadline = DateTime.parse params[:hard_deadline]
