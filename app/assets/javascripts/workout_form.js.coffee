@@ -50,7 +50,7 @@ $('.workouts-new').ready ->
     fd.append 'hard_deadline', hard
 
     $.ajax
-      url: '/gym/workouts/new_create'
+      url: '/gym/workouts/create'
       type: 'post'
       data: fd
       processData: false

@@ -1,52 +1,57 @@
-%br
-= semantic_form_for @workout, html: { class: "form-horizontal" } do |f|
-  = f.semantic_errors
+.form-horizontal
+  %h4.text-danger '*' indicates a required field.
+  .form-group
+    = label_tag :name, 'Name *', class: 'control-label col-md-2'
+    .col-md-6
+      = text_field_tag :name, nil, id: 'wo-name', class: 'req form-control', maxlength: 50, placeholder: 'e.g. Recursion exercises'
+  .form-group
+    = label_tag :description, 'Description', class: 'control-label col-md-2'
+    .col-md-6
+      %textarea#description{ placeholder: '(optional) Exercise explanation, given after submission',
+        rows: 2, class: 'form-control richtexteditor'}
+  .ex-area.form-group
+    = label_tag :ex_list, 'Exercises *', class: 'control-label col-md-2'
+    .col-md-6
+      - if @lti_launch
+        .empty-msg.text-danger Use the search bar above the form to find exercises.
+      - else
+        .empty-msg.text-danger Use the column on the left to find exercises.
+      %table.table#ex-list{ style: 'display: none;' }
+        %thead
+          %tr
+            %th #
+            %th Exercise Name
+            %th Points
+            %th Remove
+        %tbody
+
   .row
-    .col-md-10
-      = f.input :name, maxlength: 50,
-        placeholder: "Enter Workout name"
+    %h3 Add Workout to Course Offering
+  .form-group
+    = label_tag :coff_select, 'Course *', class: 'control-label col-md-2'
+    .col-md-6
+      = collection_select nil, nil, current_user.managed_course_offerings, :id, :display_name, { prompt: 'Select one of your course offerings' }, { id: 'coff-select', class: 'req form-control'}
+  .form-group
+    = label_tag :openingdate, 'Opens On *', class: 'control-label col-md-2'
+    .col-md-6
+      .input-group.date#opening-datepicker
+        %input#openingdate{ type: 'text', class: 'req form-control' }
+        %span.input-group-addon
+          %i.fa.fa-calendar
+  .form-group
+    = label_tag :softdeadline, 'Soft Deadline *', class: 'control-label col-md-2'
+    .col-md-6
+      .input-group.date#soft-datepicker
+        %input#softdeadline{ type: 'text', class: 'req form-control' }
+        %span.input-group-addon
+          %i.fa.fa-calendar
+  .form-group
+    = label_tag :openingdate, 'Hard Deadline *', class: 'control-label col-md-2'
+    .col-md-6
+      .input-group.date#hard-datepicker
+        %input#harddeadline{ type: 'text', class: 'req form-control' }
+        %span.input-group-addon
+          %i.fa.fa-calendar
 
-  -#%a.btn.btn-large{href: "#kicModal", role: "button", data: {toggle: "modal"}} Add exercise
-  = f.semantic_fields_for :exercise_workouts do |ew|
-    = render 'exercise_workout_fields', f: ew
-  .links
-    = link_to_add_association 'Add Exercise', f, :exercise_workouts
-  #kicModal.modal.fade
-    .modal-content
-      .modal-header
-        %button.close{data:{dismiss: "modal"}} &times;
-        %h4.modal-title Confirmation
-      .modal-body
-        -#= f.semantic_fields_for :exercise_workout do |ew|
-          -#= render 'exercise_workout_fields', f: ew
-        -#.links
-          -#= link_to_add_association 'Add Exercise', f, :exercise_workouts
-        .modal-footer
-          %a.btn{data:{dismiss: "modal"}} Close
-          %a.btn.saver Save changes
-
-  / #course_offerings
-  /   = f.semantic_fields_for :workout_offerings do |co|
-  /     = render 'workout_offering_fields', f: co
-  /   .links
-  /     = link_to_add_association 'Add Workout to Course Offering', f,:workout_offerings
-
-  / .row
-  /   .col-md-4
-  /     = f.input :points_multiplier, as: :select,
-  /       collection: (1..10).step(1).to_a,
-  /       label: "Experience Points",
-  /       hint: "Workout question points multiplier"
-  .row
-    .col-md-10
-      = f.input :description, label: "Workout description",
-        placeholder: "(optional) Exercise explanation, given after submission",
-        input_html: { class: 'richtexteditor span10', rows: 2 }
-  / .row
-  /   .col-md-4
-  /     = f.input :scrambled,
-  /       label: "Randomize?",
-  /       input_html: { checked: 'checked', value: true}
-
-  .actions
-    = f.submit 'Save'
+  = link_to 'Back', workouts_path, { style: 'padding-right: 10px;' }
+  %button.btn.btn-primary#btn-submit-wo Submit
