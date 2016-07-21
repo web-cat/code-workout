@@ -2,16 +2,16 @@
   %h4.text-danger '*' indicates a required field.
   .form-group
     = label_tag :name, 'Name *', class: 'control-label col-md-2'
-    .col-md-6
-      = text_field_tag :name, nil, id: 'wo-name', class: 'req form-control', maxlength: 50, placeholder: 'e.g. Recursion exercises'
+    .col-md-8
+      = text_field_tag :name, nil, id: 'wo-name', class: 'form-control', maxlength: 50, placeholder: 'e.g. Recursion exercises'
   .form-group
     = label_tag :description, 'Description', class: 'control-label col-md-2'
-    .col-md-6
+    .col-md-8
       %textarea#description{ placeholder: '(optional) Exercise explanation, given after submission',
         rows: 2, class: 'form-control richtexteditor'}
   .ex-area.form-group
     = label_tag :ex_list, 'Exercises *', class: 'control-label col-md-2'
-    .col-md-6
+    .col-md-8
       - if @lti_launch
         .empty-msg.text-danger Use the search bar above the form to find exercises.
       - else
@@ -25,33 +25,20 @@
             %th Remove
         %tbody
 
-  .row
-    %h3 Add Workout to Course Offering
   .form-group
-    = label_tag :coff_select, 'Course *', class: 'control-label col-md-2'
-    .col-md-6
-      = collection_select nil, nil, current_user.managed_course_offerings, :id, :display_name, { prompt: 'Select one of your course offerings' }, { id: 'coff-select', class: 'req form-control'}
-  .form-group
-    = label_tag :openingdate, 'Opens On *', class: 'control-label col-md-2'
-    .col-md-6
-      .input-group.date#opening-datepicker
-        %input#openingdate{ type: 'text', class: 'req form-control' }
-        %span.input-group-addon
-          %i.fa.fa-calendar
-  .form-group
-    = label_tag :softdeadline, 'Soft Deadline *', class: 'control-label col-md-2'
-    .col-md-6
-      .input-group.date#soft-datepicker
-        %input#softdeadline{ type: 'text', class: 'req form-control' }
-        %span.input-group-addon
-          %i.fa.fa-calendar
-  .form-group
-    = label_tag :openingdate, 'Hard Deadline *', class: 'control-label col-md-2'
-    .col-md-6
-      .input-group.date#hard-datepicker
-        %input#harddeadline{ type: 'text', class: 'req form-control' }
-        %span.input-group-addon
-          %i.fa.fa-calendar
+    %p.lead Add to Course Offerings
+    #workout-offering-fields.col-md-10
+      = render partial: 'workout_offering_fields', locals: { removable: false }
 
-  = link_to 'Back', workouts_path, { style: 'padding-right: 10px;' }
-  %button.btn.btn-primary#btn-submit-wo Submit
+  -# .form-group
+  -#   = button_tag type: 'button', id: 'add-offering', class: 'btn btn-success' do
+  -#     %i.fa.fa-plus{ style: 'padding-right 5px;' }
+  -#     Add to Another Course Offering
+  -#
+
+  .form-group
+    %button#btn-submit-wo.btn.btn-primary Submit
+    = link_to 'Back', workouts_path
+
+  #add-offering-form{ style: 'display: none;' }
+    = render partial: 'workout_offering_fields', locals: { removable: true }

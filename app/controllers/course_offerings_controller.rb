@@ -27,6 +27,11 @@ class CourseOfferingsController < ApplicationController
     @uploaded_roster = UploadedRoster.new
   end
 
+  # -------------------------------------------------------------
+  # GET /course_offerings/1/students
+  def students
+    @course_offering = CourseOffering.find params[:id]
+  end
 
   # -------------------------------------------------------------
   # POST /course_offerings

@@ -109,15 +109,7 @@ class WorkoutsController < ApplicationController
   end
 
   def create
-    opening_date = DateTime.parse params[:opening_date]
-    soft_deadline = DateTime.parse params[:soft_deadline]
-    hard_deadline = DateTime.parse params[:hard_deadline]
-
-    if !(opening_date <= soft_deadline && soft_deadline <= hard_deadline)
-      err_string = 'Please check that your deadlines are in a logical order.'
-      url = url_for new_workout_path(notice: err_string)
-    else
-      @workout = Workout.new
+    @workout = Workout.new
       @workout.creator_id = current_user.id
       @workout.name = params[:name]
       @workout.description = params[:description]
@@ -131,34 +123,59 @@ class WorkoutsController < ApplicationController
         @workout.exercise_workouts << exercise_workout
       end
 
-      @course_offering = CourseOffering.find(params[:course_offering_id])
-      @workout_offering = WorkoutOffering.new workout: @workout, course_offering: @course_offering
-      @workout_offering.opening_date = DateTime.parse params[:opening_date]
-      @workout_offering.soft_deadline = DateTime.parse params[:soft_deadline]
-      @workout_offering.hard_deadline = DateTime.parse params[:hard_deadline]
+    course_offerings = JSON.parse params[:course_offerings]
+    course_offerings.each do |id, offering|
+      course_offering = CourseOffering.find(id)
+      workout_policy = WorkoutPolicy.find(offering['workout_policy_id'])
+      @workout_offering = WorkoutOffering.new(
+        workout: @workout,
+        course_offering: course_offering,
+        time_limit: offering['time_limit'],
+        opening_date: DateTime.parse offering['opening_date'],
+        soft_deadline: DateTime.parse offering['soft_deadline'],
+        hard_deadline: DateTime.parse offering['hard_deadline'],
+        workout_policy: workout_policy
+      )
       @workout_offering.lms_assignment_id = session[:lti_params][:lms_assignment_id] if session[:lti_params]
       @workout_offering.save!
 
-      if @workout.save
-        if lti_params = session[:lti_params]
-          session[:lti_launch] = true
-          url = url_for(
-            organization_workout_offering_practice_path(
-              lis_outcome_service_url: lti_params[:lis_outcome_service_url],
-              lis_result_sourcedid: lti_params[:lis_result_sourcedid],
-              id: @workout_offering.id,
-              organization_id: @workout_offering.course_offering.course.organization.id,
-              term_id: @workout_offering.course_offering.term.id,
-              course_id: @workout_offering.course_offering.course.id
-            )
+      extensions = value['extensions']
+      extensions.each do |extension|
+        students = extension['students']
+        students.each do |student_id|
+          student = User.find(student_id)
+          extension = StudentExtension.new(
+            student: student,
+            workout_offering: @workout_offering,
+            opening_date: DateTime.parse extension['opening_date'],
+            soft_deadline: DateTime.parse extension['soft_deadline'],
+            hard_deadline: DateTime.parse extension['hard_deadline'],
+            time_limit: extension['time_limit']
           )
-        else
-          url = url_for root_path(notice: 'Workout was successfully created.')
+          extension.save!
         end
-      else
-        err_string = 'There was a problem while creating the workout.'
-        url = url_for new_workout_path(notice: err_string)
       end
+    end
+
+    if @workout.save
+      if lti_params = session[:lti_params]
+        session[:lti_launch] = true
+        url = url_for(
+          organization_workout_offering_practice_path(
+            lis_outcome_service_url: lti_params[:lis_outcome_service_url],
+            lis_result_sourcedid: lti_params[:lis_result_sourcedid],
+            id: @workout_offering.id,
+            organization_id: @workout_offering.course_offering.course.organization.id,
+            term_id: @workout_offering.course_offering.term.id,
+            course_id: @workout_offering.course_offering.course.id
+          )
+        )
+      else
+        url = url_for root_path(notice: 'Workout was successfully created.')
+      end
+    else
+      err_string = 'There was a problem while creating the workout.'
+      url = url_for new_workout_path(notice: err_string)
     end
 
     respond_to do |format|
