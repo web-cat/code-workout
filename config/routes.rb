@@ -111,6 +111,7 @@ CodeWorkout::Application.routes.draw do
     post 'generate_gradebook' => :generate_gradebook, as: :gradebook
     get 'add_workout' => :add_workout, as: :add_workout
     post 'store_workout/:id' => :store_workout, as: :store_workout
+    get '/students' => :students, as: :students
   end
 
   # All of the routes anchored at /users

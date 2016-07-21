@@ -1,6 +1,4 @@
 - if @exs.any?
   $('.search-results').empty();
   - @exs.in_groups_of(1, false) do |row|
-    str = "{escape_javascript(render row, user: current_user. size: 'single-lg')}"
-    str += "<div class='clearfix' />"
     $('.search-results').append("#{escape_javascript(render row, user: current_user, size: 'single-lg', new_workout: true)}")
