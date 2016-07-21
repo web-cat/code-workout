@@ -26,8 +26,8 @@
         %tbody
 
   .form-group
-    = label_tag :workout_offering_fields, 'Add to Course', class: 'control-label col-md-2'
-    #workout-offering-fields
+    %p.lead Add to Course Offerings
+    #workout-offering-fields.col-md-10
       = render partial: 'workout_offering_fields', locals: { removable: false }
 
   -# .form-group
@@ -35,5 +35,10 @@
   -#     %i.fa.fa-plus{ style: 'padding-right 5px;' }
   -#     Add to Another Course Offering
   -#
-  -# #add-offering-form{ style: 'display: none;' }
-  -#   = render partial: 'workout_offering_fields', locals: { removable: true }
+
+  .form-group
+    %button#btn-submit-wo.btn.btn-primary Submit
+    = link_to 'Back', workouts_path
+
+  #add-offering-form{ style: 'display: none;' }
+    = render partial: 'workout_offering_fields', locals: { removable: true }

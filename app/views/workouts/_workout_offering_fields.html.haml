@@ -1,29 +1,32 @@
-.form-group.col-md-8.offering{ data: { date_init: 'false' } }
-  .col-md-6
-    = collection_select nil, nil, current_user.managed_course_offerings, :id, :display_name,
-      { prompt: 'Select offering' }, { class: 'coff-select form-control input-sm' }
-  .col-md-6
-    = collection_select nil, nil, WorkoutPolicy.all, :id, :name, { prompt: 'Select policy' },
-      { id: 'policy-select', class: 'form-control input-sm' }
-  .form-horizontal
-    .form-group.form-group-sm
-      = label_tag :opening_date, 'Opening Date', class: 'control-label col-md-3'
-      .col-md-3
-        %input.opening-datepicker{ type: 'text', class: 'form-control input-sm', placeholder: 'Opening date' }
-    .form-group.form-group-sm
-      = label_tag :soft_deadline, 'Soft Deadline', class: 'control-label col-md-3'
-      .col-md-3
-        %input.soft-datepicker{ type: 'text', class: 'form-control input-sm', placeholder: 'Soft deadline' }
-    .form-group.form-group-sm
-      = label_tag :hard_deadline, 'Hard Deadline', class: 'control-label col-md-3'
-      .col-md-3
-        %input.hard-datepicker{ type: 'text', class: 'form-control input-sm', placeholder: 'Hard deadline' }
-  .col-md-2
-    %input.form-control.input-sm.input{ type: 'number', min: '0', placeholder: 'Time' }
-  - if removable
-    .col-md-1
-      %i.fa.fa-times.delete.delete-offering
-  .col-md-3
-    = button_tag type: 'button', class: 'add-extension btn btn-xs btn-default', disabled: true do
-      %i.fa.fa-plus{ style: 'padding-right: 5px;' }
-      Add Student Extensions
+.offering
+  %table.table.offering-fields
+    %thead
+      %tr
+        %th Course Offering
+        %th Workout Policy
+        %th Time Limit
+        %th Opens On
+        %th Soft Deadline
+        %th Hard Deadline
+        %th Options
+    %tbody
+      %tr.fields
+        %td
+          = collection_select nil, nil, current_user.managed_course_offerings, :id, :display_name,
+            { prompt: 'Select one' }, { class: 'coff-select form-control input-sm' }
+        %td
+          = collection_select nil, nil, WorkoutPolicy.all, :id, :name, { prompt: 'Select' },
+          { id: 'policy-select', class: 'form-control input-sm' }
+        %td
+          %input.time-limit.form-control.input-sm.input{ type: 'number', min: '0', placeholder: 'Time' }
+        %td
+          %input.opening-datepicker{ type: 'text', class: 'form-control input-sm', placeholder: 'Opening date' }
+        %td
+          %input.soft-datepicker{ type: 'text', class: 'form-control input-sm', placeholder: 'Soft deadline' }
+        %td
+          %input.hard-datepicker{ type: 'text', class: 'form-control input-sm', placeholder: 'Hard deadline' }
+        %td
+          %i.fa.fa-wheelchair-alt.action.add-extension
+          - if removable
+            |
+            %ifa.fa-times.action.delete-offering
