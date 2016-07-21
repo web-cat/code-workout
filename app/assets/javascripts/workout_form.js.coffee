@@ -21,9 +21,24 @@ $('.workouts-new').ready ->
       "</tr>"
     $('#ex-list tbody').append(exercise_row);
 
-  $('#add-offering').on 'click', ->
+  $('.add-offering').on 'click', ->
     $('#workout-offering-fields').append($('#add-offering-form').html())
     init_datepickers()
+
+  $('table.offering-fields').on 'click', '.add-extension', ->
+    course_offering_id = $(this).closest('tr').find('.coff-select').val()
+    if course_offering_id != ''
+      $(this).closest('.offering').find('.extensions').css 'display', 'inline'
+      $.ajax
+        url: '/course_offerings/' + course_offering_id + '/students'
+        type: 'get'
+        cache: true
+        dataType: 'script'
+        success: (data) ->
+          init_datepickers()
+
+  $('table.offering-fields').on 'click', '.delete-extension', ->
+    $(this).closest('tr').remove()
 
   $('#ex-list tbody').on 'click', '.delete-ex', ->
     $(this).closest('tr').remove()
@@ -38,57 +53,55 @@ $('.workouts-new').ready ->
   $('#btn-submit-wo').click ->
     handle_submit()
 
-  $('#workout-offering-fields').on 'change', '.coff-select', ->
-    disabled = $(this).val() == ''
-    $(this).closest('.offering').find('.add-extension').attr('disabled', disabled)
-
 # Leave scope of document ready -- helper methods below
+
+# Helper method for making table sortable.
 fix_helper = (e, ui) ->
   ui.children().each ->
     $(this).width($(this).width())
   return ui
 
 init_datepickers = ->
-  workout_offerings = $('#workout-offering-fields').find '.offering'
+  workout_offerings = $('.offering-fields', '#workout-offering-fields')
   for offering in workout_offerings
     do (offering) ->
-      init_offering_datepickers offering
+      field_rows = $('.fields', $(offering))
+      for field_row in field_rows
+        do (field_row) ->
+          init_offering_datepickers field_row
 
 
 init_offering_datepickers = (offering) ->
-  if !$(offering).data('date-init')
-    opening_datepicker = $(offering).find '.opening-datepicker'
-    soft_datepicker = $(offering).find '.soft-datepicker'
-    hard_datepicker = $(offering).find '.hard-datepicker'
+  opening_datepicker = $('input.opening-datepicker', $(offering))
+  soft_datepicker = $('input.soft-datepicker', $(offering))
+  hard_datepicker = $('input.hard-datepicker', $(offering))
 
-    opening_datepicker.datetimepicker
-      useCurrent: false
-      minDate: moment()
-    soft_datepicker.datetimepicker
-      useCurrent: false
-    soft_datepicker.data('DateTimePicker').disable()
-    hard_datepicker.datetimepicker
-      useCurrent: false
-    hard_datepicker.data('DateTimePicker').disable()
+  opening_datepicker.datetimepicker
+    useCurrent: false
+    minDate: moment()
+  soft_datepicker.datetimepicker
+    useCurrent: false
+  soft_datepicker.data('DateTimePicker').disable()
+  hard_datepicker.datetimepicker
+    useCurrent: false
+  hard_datepicker.data('DateTimePicker').disable()
 
-    # Handle date change events
-    opening_datepicker.on 'dp.change', (e) ->
-      if e.date?
-        soft_datepicker.data('DateTimePicker').enable()
-        soft_datepicker.data('DateTimePicker').minDate e.date
-        hard_datepicker.data('DateTimePicker').minDate e.date
+  # Handle date change events
+  opening_datepicker.on 'dp.change', (e) ->
+    if e.date?
+      soft_datepicker.data('DateTimePicker').enable()
+      soft_datepicker.data('DateTimePicker').minDate e.date
+      hard_datepicker.data('DateTimePicker').minDate e.date
 
-    soft_datepicker.on 'dp.change', (e) ->
-      if e.date?
-        hard_datepicker.data('DateTimePicker').enable()
-        opening_datepicker.data('DateTimePicker').maxDate e.date
-        hard_datepicker.data('DateTimePicker').minDate e.date
+  soft_datepicker.on 'dp.change', (e) ->
+    if e.date?
+      hard_datepicker.data('DateTimePicker').enable()
+      opening_datepicker.data('DateTimePicker').maxDate e.date
+      hard_datepicker.data('DateTimePicker').minDate e.date
 
-    hard_datepicker.on 'dp.change', (e) ->
-      if e.date?
-        soft_datepicker.data('DateTimePicker').maxDate e.date
-
-    $(offering).data('date-init', 'true')
+  hard_datepicker.on 'dp.change', (e) ->
+    if e.date?
+      soft_datepicker.data('DateTimePicker').maxDate e.date
 
 check_completeness = ->
   complete = true
@@ -107,37 +120,76 @@ get_exercises = ->
   i = 0
   while i < exs.length
     ex_id = $(exs[i]).data('id')
-    ex_points = $(exs[i]).find('.points').val();
+    ex_points = $(exs[i]).find('.points').val()
     ex_points = '0' if ex_points == ''
-    ex_obj = { id: ex_id, points: ex_points };
-    key = i + 1
-    exercises[key.toString()] = ex_obj
+    ex_obj = { id: ex_id, points: ex_points }
+    position = i + 1
+    exercises[position.toString()] = ex_obj
     i++
   return exercises
 
-handle_submit = ->
-  if !check_completeness()
-    alert 'Please fill in all required fields.'
-    return
+get_offerings = ->
+  offerings = {}
+  offering_tables = $('table', '#workout-offering-fields') # Each offering is in its own table
 
+  # The first row of each table contains offering fields. Each subsequent row
+  # contains fields for student extensions.
+  for table in offering_tables
+    #  Get input data for each offering.
+    do (table) ->
+      offering_row = $('tr', $(table)).filter ':eq(1)'  # Get the first row
+      offering_fields = $('td', $(offering_row))
+      offering_id = $('.coff-select', $(offering_fields[0])).val()
+      policy_id = $('.policy-select', $(offering_fields[1])).val()
+      time_limit = $('.time-limit', $(offering_fields[2])).val()
+      opening_date = $('.opening-datepicker', $(offering_fields[3])).data('DateTimePicker').date().toDate().toString()
+      soft_deadline = $('.soft-datepicker', $(offering_fields[4])).data('DateTimePicker').date().toDate().toString()
+      hard_deadline = $('.hard-datepicker', $(offering_fields[5])).data('DateTimePicker').date().toDate().toString()
+      offering =
+        workout_policy_id: policy_id
+        time_limit: time_limit
+        opening_date: opening_date
+        soft_deadline: soft_deadline
+        hard_deadline: hard_deadline
+      extensions = []
+      extension_rows = $('tr', $(table)).filter ':gt(1)'  # Get all rows after the first one
+      for row in extension_rows
+        # Get input data for each extension within the offering.
+        do (row) ->
+          extension_fields = $('td', $(row))
+          students = $('.student-select', $(extension_fields[0])).val()
+          time_limit = $('.time_limit', $(extension_fields[2])).val()
+          opening_date = $('.opening-datepicker', $(extension_fields[3])).data('DateTimePicker').date().toDate().toString()
+          soft_deadline = $('.soft-datepicker', $(extension_fields[4])).data('DateTimePicker').date().toDate().toString()
+          hard_deadline = $('.hard-datepicker', $(extension_fields[5])).data('DateTimePicker').date().toDate().toString()
+          extension =
+            students: students
+            time_limit: time_limit
+            opening_date: opening_date
+            soft_deadline: soft_deadline
+            hard_deadline: hard_deadline
+          extensions.push extension
+      offering['extensions'] = extensions
+      offerings[offering_id.toString()] = offering
+  return offerings
+
+handle_submit = ->
+  # if !check_completeness()
+  #   alert 'Please fill in all required fields.'
+  #   return
+  #
   name = $('#wo-name').val()
   description = $('#description').val()
   exercises = get_exercises()
-  course_offering_id = $('.coff-select').val();
-  opening_date = $('.opening-datepicker').data('DateTimePicker').date().toDate().toString()
-  soft = $('.soft-datepicker').data('DateTimePicker').date().toDate().toString()
-  hard = $('.hard-datepicker').data('DateTimePicker').date().toDate().toString()
+  course_offerings = get_offerings()
   fd = new FormData
   fd.append 'name', name
   fd.append 'description', description
   fd.append 'exercises', JSON.stringify exercises
-  fd.append 'course_offering_id', course_offering_id
-  fd.append 'opening_date', opening_date
-  fd.append 'soft_deadline', soft
-  fd.append 'hard_deadline', hard
+  fd.append 'course_offerings', JSON.stringify course_offerings
 
   $.ajax
-    url: '/gym/workouts/create'
+    url: '/gym/workouts'
     type: 'post'
     data: fd
     processData: false
