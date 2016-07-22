@@ -126,33 +126,34 @@ class WorkoutsController < ApplicationController
     course_offerings = JSON.parse params[:course_offerings]
     course_offerings.each do |id, offering|
       course_offering = CourseOffering.find(id)
-      workout_policy = WorkoutPolicy.find(offering['workout_policy_id'])
+      workout_policy = WorkoutPolicy.find_by(id: offering['workout_policy_id'])
       @workout_offering = WorkoutOffering.new(
         workout: @workout,
         course_offering: course_offering,
         time_limit: offering['time_limit'],
-        opening_date: DateTime.parse offering['opening_date'],
-        soft_deadline: DateTime.parse offering['soft_deadline'],
-        hard_deadline: DateTime.parse offering['hard_deadline'],
+        opening_date: DateTime.parse(offering['opening_date']),
+        soft_deadline: DateTime.parse(offering['soft_deadline']),
+        hard_deadline: DateTime.parse(offering['hard_deadline']),
         workout_policy: workout_policy
       )
       @workout_offering.lms_assignment_id = session[:lti_params][:lms_assignment_id] if session[:lti_params]
       @workout_offering.save!
 
-      extensions = value['extensions']
-      extensions.each do |extension|
-        students = extension['students']
+      extensions = offering['extensions']
+      extensions.each do |ext|
+        students = ext['students']
         students.each do |student_id|
           student = User.find(student_id)
-          extension = StudentExtension.new(
-            student: student,
+          byebug
+          student_extension = StudentExtension.new(
+            user: student,
             workout_offering: @workout_offering,
-            opening_date: DateTime.parse extension['opening_date'],
-            soft_deadline: DateTime.parse extension['soft_deadline'],
-            hard_deadline: DateTime.parse extension['hard_deadline'],
-            time_limit: extension['time_limit']
+            opening_date: DateTime.parse(ext['opening_date']),
+            soft_deadline: DateTime.parse(ext['soft_deadline']),
+            hard_deadline: DateTime.parse(ext['hard_deadline']),
+            time_limit: ext['time_limit']
           )
-          extension.save!
+          student_extension.save!
         end
       end
     end

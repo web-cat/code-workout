@@ -94,7 +94,7 @@
   - else
     .summary
       .btn.btn-primary.add-ex{data: { ex_id: exercise.id, ex_name: exercise.name } }
-        %i.fa.fa-plus
+        %i.fa.fa-arrow-right
   .body
     .text
       = teaser(exercise.current_version.andand.prompts.andand.first.andand.question)
