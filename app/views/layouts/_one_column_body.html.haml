@@ -4,7 +4,10 @@
       .below-nav
         = render partial: 'layouts/flash'
         .container
-          .row
-            = render partial: 'layouts/sidebar'
-          .row
+          - if controller_name.eql?('workouts') && action_name.eql?('new')
+            .row
+              = render partial: 'layouts/sidebar'
+            .row
+              = yield
+          - else
             = yield

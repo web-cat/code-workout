@@ -82,6 +82,7 @@ class WorkoutOfferingsController < ApplicationController
 
     # authenticate_user!
     # authorize! :practice, @workout_offering
+    @lti_launch = params[:lti_launch]
     if @workout_offering
       lis_outcome_service_url = params[:lis_outcome_service_url]
       lis_result_sourcedid = params[:lis_result_sourcedid]

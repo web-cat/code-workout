@@ -12,9 +12,6 @@ class LtiController < ApplicationController
     if request.post?
       render :error and return unless lti_authorize!
 
-      # Tell the session we're in LTI territory
-      session[:lti_launch] = true
-
       # Retrieve user information and sign in the user.
       email = params[:lis_person_contact_email_primary]
       first_name = params[:lis_person_name_given]
@@ -126,7 +123,7 @@ class LtiController < ApplicationController
           lti_params[:lis_outcome_service_url] = lis_outcome_service_url
           session[:lti_params] = lti_params
 
-          redirect_to new_workout_path and return
+          redirect_to new_workout_path(lti_launch: true) and return
         end
 
         @workout_offering = WorkoutOffering.find_by(
@@ -176,7 +173,8 @@ class LtiController < ApplicationController
         id: @workout_offering.id,
         organization_id: @organization.id,
         term_id: @term.id,
-        course_id: @course.id
+        course_id: @course.id,
+        lti_launch: true
       )
     end
   end

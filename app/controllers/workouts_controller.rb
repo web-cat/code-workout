@@ -66,8 +66,7 @@ class WorkoutsController < ApplicationController
       redirect_to root_path,
         notice: 'Unauthorized to create new workout' and return
     end
-    @lti_launch = session[:lti_launch]
-    session[:lti_launch] = nil
+    @lti_launch = params[:lti_launch]
     @workout = Workout.new
     if params[:notice]
       flash.now[:notice] = params[:notice]
@@ -144,7 +143,6 @@ class WorkoutsController < ApplicationController
         students = ext['students']
         students.each do |student_id|
           student = User.find(student_id)
-          byebug
           student_extension = StudentExtension.new(
             user: student,
             workout_offering: @workout_offering,
@@ -160,17 +158,7 @@ class WorkoutsController < ApplicationController
 
     if @workout.save
       if lti_params = session[:lti_params]
-        session[:lti_launch] = true
-        url = url_for(
-          organization_workout_offering_practice_path(
-            lis_outcome_service_url: lti_params[:lis_outcome_service_url],
-            lis_result_sourcedid: lti_params[:lis_result_sourcedid],
-            id: @workout_offering.id,
-            organization_id: @workout_offering.course_offering.course.organization.id,
-            term_id: @workout_offering.course_offering.term.id,
-            course_id: @workout_offering.course_offering.course.id
-          )
-        )
+        url = url_for(course_offerings_path(lti_launch: true))
       else
         url = url_for root_path(notice: 'Workout was successfully created.')
       end
