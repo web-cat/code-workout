@@ -103,7 +103,7 @@ CodeWorkout::Application.routes.draw do
   end
 
 
-  resources :course_offerings, only: [ :edit, :update ] do
+  resources :course_offerings, only: [ :edit, :update, :index, :show ] do
     post 'enroll' => :enroll, as: :enroll
     delete 'unenroll' => :unenroll, as: :unenroll
     match 'upload_roster/:action', controller: 'upload_roster',
