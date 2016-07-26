@@ -30,11 +30,11 @@
     #workout-offering-fields.col-md-10
       = render partial: 'workout_offering_fields', locals: { removable: false }
 
-  -# .form-group
-  -#   = button_tag type: 'button', id: 'add-offering', class: 'btn btn-success' do
-  -#     %i.fa.fa-plus{ style: 'padding-right 5px;' }
-  -#     Add to Another Course Offering
-  -#
+  .form-group
+    = button_tag type: 'button', id: 'add-offering', class: 'btn btn-success' do
+      %i.fa.fa-plus{ style: 'padding-right 5px;' }
+      Add to Another Course Offering
+
 
   .form-group
     %button#btn-submit-wo.btn.btn-primary Submit

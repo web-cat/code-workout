@@ -1,2 +1,2 @@
 - if @course_offering.students.any?
-  $('tbody', '.offering-fields').append("#{escape_javascript(render partial: 'workouts/student_extension_fields', locals: { students: @course_offering.students })}")
+  $('tbody', "#off-#{@course_offering.id}").append("#{escape_javascript(render partial: 'workouts/student_extension_fields', locals: { students: @course_offering.students })}")

@@ -21,11 +21,19 @@ $('.workouts-new').ready ->
       "</tr>"
     $('#ex-list tbody').append(exercise_row);
 
-  $('.add-offering').on 'click', ->
+  $('#add-offering').on 'click', ->
     $('#workout-offering-fields').append($('#add-offering-form').html())
     init_datepickers()
 
-  $('table.offering-fields').on 'click', '.add-extension', ->
+  $('#workout-offering-fields').on 'click', '.delete-offering', ->
+    $(this).closest('.offering').remove()
+
+  $('#workout-offering-fields').on 'change', '.coff-select', ->
+    val = $(this).val()
+    if val != ''
+      $(this).closest('.offering').attr('id', 'off-' + val)
+
+  $(document).on 'click', '.add-extension', ->
     course_offering_id = $(this).closest('tr').find('.coff-select').val()
     if course_offering_id != ''
       $(this).closest('.offering').find('.extensions').css 'display', 'inline'
@@ -37,7 +45,7 @@ $('.workouts-new').ready ->
         success: (data) ->
           init_datepickers()
 
-  $('table.offering-fields').on 'click', '.delete-extension', ->
+  $(document).on 'click', '.delete-extension', ->
     $(this).closest('tr').remove()
 
   $('#ex-list tbody').on 'click', '.delete-ex', ->
@@ -46,9 +54,6 @@ $('.workouts-new').ready ->
     if exs == 0
       $('.empty-msg').css 'display', 'block'
       $('#ex-list').css 'display', 'none'
-
-  $('#workout-offering-fields').on 'click', '.delete-offering', ->
-    $(this).closest('.offering').remove()
 
   $('#btn-submit-wo').click ->
     handle_submit()
@@ -76,15 +81,18 @@ init_offering_datepickers = (offering) ->
   soft_datepicker = $('input.soft-datepicker', $(offering))
   hard_datepicker = $('input.hard-datepicker', $(offering))
 
-  opening_datepicker.datetimepicker
-    useCurrent: false
-    minDate: moment()
-  soft_datepicker.datetimepicker
-    useCurrent: false
-  soft_datepicker.data('DateTimePicker').disable()
-  hard_datepicker.datetimepicker
-    useCurrent: false
-  hard_datepicker.data('DateTimePicker').disable()
+  if opening_datepicker.val() == '' || !opening_datepicker.data('DateTimePicker').date()?
+    opening_datepicker.datetimepicker
+      useCurrent: false
+      minDate: moment()
+  if soft_datepicker.val() == '' || !soft_datepicker.data('DateTimePicker').date()?
+    soft_datepicker.datetimepicker
+      useCurrent: false
+    soft_datepicker.data('DateTimePicker').disable()
+  if hard_datepicker.val() == '' || !hard_datepicker.data('DateTimePicker').date()?
+    hard_datepicker.datetimepicker
+      useCurrent: false
+    hard_datepicker.data('DateTimePicker').disable()
 
   # Handle date change events
   opening_datepicker.on 'dp.change', (e) ->
