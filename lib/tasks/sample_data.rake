@@ -14,7 +14,7 @@ namespace :db do
     FactoryGirl.create(:course_offering_term_1_mwf)
     c = FactoryGirl.create(:course_offering_term_2_tr)
     FactoryGirl.create(:course_offering_term_2_mwf)
-    FactoryGirl.create(:course_offering_term_3_tr)
+    c2 = FactoryGirl.create(:course_offering_term_3_tr)
     c3 = FactoryGirl.create(:course_offering_term_3_mwf)
 
     FactoryGirl.create(:course_enrollment,
@@ -34,13 +34,20 @@ namespace :db do
 
     FactoryGirl.create(:course_enrollment,
       user: instructor,
+      course_offering: c2,
+      course_role: CourseRole.instructor)
+
+    FactoryGirl.create(:course_enrollment,
+      user: instructor,
       course_offering: c3,
       course_role: CourseRole.instructor)
 
     50.times do |n|
       co = nil
-      if n % 2 == 0
+      if n < 16
         co = c
+      elsif n < 32
+        co = c2
       else
         co = c3
       end
