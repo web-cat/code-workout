@@ -115,15 +115,26 @@ class LtiController < ApplicationController
         end
 
         workout_name = params[:resource_link_title]
-        @workout = Workout.find_by(name: workout_name)
-        if @workout.blank?
-          lti_params = {}
-          lti_params[:lms_assignment_id] = lms_assignment_id
-          lti_params[:lis_result_sourcedid] = lis_result_sourcedid
-          lti_params[:lis_outcome_service_url] = lis_outcome_service_url
-          session[:lti_params] = lti_params
 
-          redirect_to new_workout_path(lti_launch: true) and return
+        if (/\A[0-9][0-9]-[0-9][0-9]-[0-9][0-9]/ =~ workout_name).nil?
+          @workout = Workout.find_by(name: workout_name)
+        else
+          @workout = Workout.find_by(name: workout_name[9..workout_name.length])
+        end
+
+        if @workout.blank?
+          if @tp.context_instructor?
+            lti_params = {}
+            lti_params[:lms_assignment_id] = lms_assignment_id
+            lti_params[:lis_result_sourcedid] = lis_result_sourcedid
+            lti_params[:lis_outcome_service_url] = lis_outcome_service_url
+            session[:lti_params] = lti_params
+
+            redirect_to new_workout_path(lti_launch: true) and return
+          else
+            @message = 'Workout not found. Please contact your instructor.'
+            render :error and return
+          end
         end
 
         @workout_offering = WorkoutOffering.find_by(
