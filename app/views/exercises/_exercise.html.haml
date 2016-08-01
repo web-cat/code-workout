@@ -46,14 +46,16 @@
               organization_id: workout_offering.course_offering.course.organization.slug,
               course_id: workout_offering.course_offering.course.slug,
               term_id: workout_offering.course_offering.term.slug,
-              id: workout_offering.id)
+              id: workout_offering.id,
+              lti_launch: @lti_launch)
         - elsif review && Attempt.where(exercise_version: exercise.current_version, user: user).any?
           = link_to exercise.display_name,
             organization_workout_offering_exercise_review_path(id: exercise.id,
               organization_id: workout_offering.course_offering.course.organization.slug,
               course_id: workout_offering.course_offering.course.slug,
               term_id: workout_offering.course_offering.term.slug,
-              review_user_id: user.id, workout_offering_id: workout_offering.id)
+              review_user_id: user.id, workout_offering_id: workout_offering.id,
+              lti_launch: @lti_launch)
         - elsif review
           = exercise.display_name
         - else
@@ -62,7 +64,8 @@
               organization_id: workout_offering.course_offering.course.organization.slug,
               course_id: workout_offering.course_offering.course.slug,
               term_id: workout_offering.course_offering.term.slug,
-              workout_offering_id: workout_offering.id)
+              workout_offering_id: workout_offering.id,
+              lti_launch: @lti_launch)
       - else
         = exercise.display_name
     - elsif workout

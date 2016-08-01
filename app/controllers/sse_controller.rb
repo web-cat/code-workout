@@ -34,7 +34,6 @@ class SseController < ApplicationController
 
   # -------------------------------------------------------------
   def feedback_update
-    byebug
     @attempt = Attempt.find_by(id: params[:att_id])
     @exercise_version = @attempt.exercise_version
     @exercise = @exercise_version.exercise
@@ -61,7 +60,6 @@ class SseController < ApplicationController
 
   # -------------------------------------------------------------
   def feedback_poll
-    byebug
     @attempt = Attempt.find_by(id: params[:att_id])
     authorize! :read, @attempt
     @exercise_version = @attempt.exercise_version

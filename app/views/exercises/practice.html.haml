@@ -107,11 +107,12 @@
           organization_id: @workout_offering.course_offering.course.organization.slug,
           course_id: @workout_offering.course_offering.course.slug,
           term_id: @workout_offering.course_offering.term.slug,
-          id: @workout_offering.id),
+          id: @workout_offering.id,
+          lti_launch: @lti_launch),
           class: 'btn btn-next', id: 'nextbtn'
       - elsif @workout && params[:review_user_id].nil?
         = button_link 'Next exercise',
-          exercise_practice_path(@workout.next_exercise(@exercise, current_user, @workout_score), workout_id: @workout.id),
+          exercise_practice_path(@workout.next_exercise(@exercise, current_user, @workout_score), workout_id: @workout.id, lti_launch: @lti_launch),
           class: 'btn btn-next', id: 'nextbtn'
 
     - if @workout.nil?
