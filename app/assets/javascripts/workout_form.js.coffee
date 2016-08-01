@@ -1,9 +1,6 @@
 $('.workouts-new').ready ->
-  sortable = $('#ex-list tbody').sortable
+  sortable = $('#ex-list').sortable
     handle: '.handle'
-    helper: fix_helper
-
-  sortable.disableSelection()
 
   init_datepickers()
 
@@ -12,14 +9,34 @@ $('.workouts-new').ready ->
     $('#ex-list').css 'display', 'block'
     ex_name = $(this).data('ex-name')
     ex_id = $(this).data('ex-id')
+    # exercise_row =
+    #   "<tr data-id='" + ex_id + "'>" +
+    #     "<td><i class='handle fa fa-bars'></i></td>" +
+    #     "<td>" + ex_name + "</td>" +
+    #     "<td><input class='points form-control input-sm' placeholder='e.g 5' type='number' min='0' value='0' /></td>" +
+    #     "<td><i class='action delete fa fa-times'></i></td>" +
+    #   "</tr>"
     exercise_row =
-      "<tr data-id='" + ex_id + "'>" +
-        "<td><i class='handle fa fa-bars'></i></td>" +
-        "<td>" + ex_name + "</td>" +
-        "<td><input class='points form-control input-sm' placeholder='e.g 5' type='number' min='0' value='0' /></td>" +
-        "<td><i class='delete fa fa-times'></i></td>" +
-      "</tr>"
-    $('#ex-list tbody').append(exercise_row);
+      "<li class='list-group-item' data-id='" + ex_id + "'>" +
+        "<div class='row'>" +
+          "<div class='col-md-1'>" +
+            "<i class='handle fa fa-bars'></i>" +
+          "</div>" +
+          "<div class='col-md-3'>" +
+            ex_name +
+          "</div>" +
+          "<div class='col-md-3'>" +
+            "Points" +
+          "</div>" +
+          "<div class='col-md-2'>" +
+            "<input class='points form-control input-sm' placeholder='e.g 5' type='number' min='0' value='0' />" +
+          "</div>" +
+          "<div class='col-md-1 col-md-offset-2'>" +
+            "<i class='action delete-ex fa fa-times'></i>" +
+          "</div>" +
+        "</div>" +
+      "</li>";
+    $('#ex-list').append(exercise_row);
 
   $('#add-offering').on 'click', ->
     $('#workout-offering-fields').append($('#add-offering-form').html())
@@ -48,9 +65,9 @@ $('.workouts-new').ready ->
   $(document).on 'click', '.delete-extension', ->
     $(this).closest('tr').remove()
 
-  $('#ex-list tbody').on 'click', '.delete-ex', ->
-    $(this).closest('tr').remove()
-    exs = $('#ex-list tbody tr').length
+  $('#ex-list').on 'click', '.delete-ex', ->
+    $(this).closest('li').remove()
+    exs = $('#ex-list li').length
     if exs == 0
       $('.empty-msg').css 'display', 'block'
       $('#ex-list').css 'display', 'none'
@@ -60,11 +77,11 @@ $('.workouts-new').ready ->
 
 # Leave scope of document ready -- helper methods below
 
-# Helper method for making table sortable.
-fix_helper = (e, ui) ->
-  ui.children().each ->
-    $(this).width($(this).width())
-  return ui
+# # Helper method for making table sortable.
+# fix_helper = (e, ui) ->
+#   ui.children().each ->
+#     $(this).width($(this).width())
+#   return ui
 
 init_datepickers = ->
   workout_offerings = $('.offering-fields', '#workout-offering-fields')
@@ -123,7 +140,7 @@ check_completeness = ->
   return complete
 
 get_exercises = ->
-  exs = $('#ex-list tbody tr')
+  exs = $('#ex-list li')
   exercises = {}
   i = 0
   while i < exs.length

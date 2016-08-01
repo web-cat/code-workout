@@ -2,32 +2,25 @@
   %h4.text-danger '*' indicates a required field.
   .form-group
     = label_tag :name, 'Name *', class: 'control-label col-md-2'
-    .col-md-8
+    .col-md-6
       = text_field_tag :name, nil, id: 'wo-name', class: 'form-control', maxlength: 50, placeholder: 'e.g. Recursion exercises'
   .form-group
     = label_tag :description, 'Description', class: 'control-label col-md-2'
-    .col-md-8
+    .col-md-6
       %textarea#description{ placeholder: '(optional) Exercise explanation, given after submission',
         rows: 2, class: 'form-control richtexteditor'}
   .ex-area.form-group
     = label_tag :ex_list, 'Exercises *', class: 'control-label col-md-2'
-    .col-md-8
+    .col-md-6
       - if @lti_launch
         .empty-msg.text-danger Use the search bar above the form to find exercises.
       - else
         .empty-msg.text-danger Use the column on the left to find exercises.
-      %table.table#ex-list{ style: 'display: none;' }
-        %thead
-          %tr
-            %th #
-            %th Exercise Name
-            %th Points
-            %th Remove
-        %tbody
+      %ul.list-group#ex-list{ style: 'display: none;' }
 
   .form-group
     %p.lead Add to Course Offerings
-    #workout-offering-fields.col-md-10
+    #workout-offering-fields.col-md-8
       = render partial: 'workout_offering_fields', locals: { removable: false }
 
   .form-group
