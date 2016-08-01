@@ -369,6 +369,7 @@ class ExercisesController < ApplicationController
   #GET /evaluate/1
   def evaluate
     # Copy/pasted from #practice method.  Should be refactored.
+    @lti_launch = params[:lti_launch]
 
     if params[:exercise_version_id]
       @exercise_version =
@@ -527,8 +528,24 @@ class ExercisesController < ApplicationController
           organization_id: @workout_offering.course_offering.course.organization.slug,
           course_id: @workout_offering.course_offering.course.slug,
           term_id: @workout_offering.course_offering.term.slug,
-          id: @workout_offering.id) + "' "
+          id: @workout_offering.id,
+          lti_launch: @lti_launch) + "' "
       end
+
+      # Sending only mcq score to LTI. Coding scores will be sent when
+      # feedback_poll returns with feedback ready.
+      total_points = ExerciseWorkout.where(workout_id: @workout_score.workout_id).sum(:points)
+      if lms_instance = @workout_offering.course_offering.lms_instance
+        key = lms_instance.consumer_key
+        secret = lms_instance.consumer_secret
+
+        @tp = IMS::LTI::ToolProvider.new(key, secret, {
+          "lis_outcome_service_url" => "#{@workout_score.lis_outcome_service_url}",
+          "lis_result_sourcedid" => "#{@workout_score.lis_result_sourcedid}"
+        })
+        @tp.post_replace_result!(@workout_score.score / total_points)
+      end
+
     elsif @exercise_version.is_coding?
       @answer_code = params[:exercise_version][:answer_code]
       # Why were these in here? what purpose do they serve ??????
@@ -548,18 +565,6 @@ class ExercisesController < ApplicationController
         end
       end
       @workout ||= @workout_score.andand.workout
-    end
-
-    total_points = ExerciseWorkout.where(workout_id: @workout_score.workout_id).sum(:points)
-    if lms_instance = @workout_offering.course_offering.lms_instance
-      key = lms_instance.consumer_key
-      secret = lms_instance.consumer_secret
-
-      @tp = IMS::LTI::ToolProvider.new(key, secret, {
-        "lis_outcome_service_url" => "#{@workout_score.lis_outcome_service_url}",
-        "lis_result_sourcedid" => "#{@workout_score.lis_result_sourcedid}"
-      })
-      @tp.post_replace_result!(@workout_score.score / total_points)
     end
   end
 

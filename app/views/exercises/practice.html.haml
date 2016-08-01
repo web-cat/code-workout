@@ -15,9 +15,10 @@
       course_id: @workout_offering.course_offering.course.slug,
       organization_id: @workout_offering.course_offering.course.organization.slug,
       term_id: @workout_offering.course_offering.term.slug,
-      workout_offering_id: @workout_offering.id) : exercise_evaluate_path(@exercise_version.exercise,
+      workout_offering_id: @workout_offering.id,
+      lti_launch: @lti_launch) : exercise_evaluate_path(@exercise_version.exercise,
     exercise_version_id: @exercise_version.id,
-    feedback_return: true)), remote: true do |f|
+    feedback_return: true, lti_launch: @lti_launch)), remote: true do |f|
     = f.semantic_errors
     %h1= @exercise.display_name
     - if @user_time_limit

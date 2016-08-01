@@ -37,7 +37,7 @@ CodeWorkout::Application.routes.draw do
 
 
   get 'sse/feedback_wait'
-  # get 'sse/feedback_update'
+  get 'sse/feedback_update'
   get 'sse/feedback_poll'
   post '/course_offerings/:id/upload_roster' => 'course_offerings#upload_roster'
 

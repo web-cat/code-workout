@@ -34,11 +34,26 @@ class SseController < ApplicationController
 
   # -------------------------------------------------------------
   def feedback_update
+    byebug
     @attempt = Attempt.find_by(id: params[:att_id])
-    authorize! :read, @attempt
     @exercise_version = @attempt.exercise_version
     @exercise = @exercise_version.exercise
     @max_points = ExerciseWorkout.find_by(exercise: @exercise, workout: @workout).andand.points
+
+    if @workout_score = @attempt.workout_score
+      @total_points = ExerciseWorkout.where(workout_id: @workout_score.workout_id).sum(:points)
+      if lms_instance = @workout_score.workout_offering.course_offering.lms_instance
+        key = lms_instance.consumer_key
+        secret = lms_instance.consumer_secret
+
+        @tp = IMS::LTI::ToolProvider.new(key, secret, {
+          "lis_outcome_service_url" => "#{@workout_score.lis_outcome_service_url}",
+          "lis_result_sourcedid" => "#{@workout_score.lis_result_sourcedid}"
+        })
+        @tp.post_replace_result!(@workout_score.score / @total_points)
+      end
+    end
+
     respond_to do |format|
       format.js
     end
@@ -46,15 +61,15 @@ class SseController < ApplicationController
 
   # -------------------------------------------------------------
   def feedback_poll
+    byebug
     @attempt = Attempt.find_by(id: params[:att_id])
     authorize! :read, @attempt
     @exercise_version = @attempt.exercise_version
     @exercise = @exercise_version.exercise
-    respond_to do |format|
-      format.js do
-        render action:
-          (@attempt.feedback_ready ? 'feedback_update' : 'feedback_poll')
-      end
+    if !@attempt.feedback_ready
+      render action: 'feedback_poll' and return
+    else
+      redirect_to action: 'feedback_update', att_id: params[:att_id] and return
     end
   end
 
