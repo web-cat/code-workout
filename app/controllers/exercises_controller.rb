@@ -251,8 +251,7 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   def practice
     # lti launch
-    @lti_launch = session[:lti_launch]
-    session[:lti_launch] = nil
+    @lti_launch = params[:lti_launch]
 
     if params[:exercise_version_id]
       @exercise_version =
@@ -468,7 +467,6 @@ class ExercisesController < ApplicationController
         end
       end
 
-      p params
       @responses = Array.new
       if response_ids.class == Array
         # Remove blank responses and duplicates
