@@ -20,11 +20,14 @@
         %td
           %input.time-limit.form-control.input-sm.input{ type: 'number', min: '0', placeholder: 'Time' }
         %td
-          %input.opening-datepicker{ type: 'text', class: 'form-control input-sm', placeholder: 'Opening date' }
+          %input.opening-datepicker.datepicker{ type: 'text', class: 'form-control input-sm',
+            placeholder: 'Opening date' }
         %td
-          %input.soft-datepicker{ type: 'text', class: 'form-control input-sm', placeholder: 'Soft deadline' }
+          %input.soft-datepicker.datepicker{ type: 'text', class: 'form-control input-sm',
+            placeholder: 'Soft deadline' }
         %td
-          %input.hard-datepicker{ type: 'text', class: 'form-control input-sm', placeholder: 'Hard deadline' }
+          %input.hard-datepicker.datepicker{ type: 'text', class: 'form-control input-sm',
+            placeholder: 'Hard deadline' }
         %td
           %i.fa.fa-wheelchair-alt.action.add-extension
           - if removable

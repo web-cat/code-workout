@@ -29,7 +29,9 @@ $('.workouts.new').ready ->
 
   $(document).on 'click', '.add-extension', ->
     course_offering_id = $(this).closest('tr').find('.coff-select').val()
-    if course_offering_id != ''
+    if course_offering_id == ''
+      form_alert ['You must select a course offering before adding student extensions to it.']
+    else
       $(this).closest('.offering').find('.extensions').css 'display', 'inline'
       $.ajax
         url: '/course_offerings/' + course_offering_id + '/students'
@@ -105,17 +107,6 @@ init_offering_datepickers = (offering) ->
     if e.date?
       soft_datepicker.data('DateTimePicker').maxDate e.date
 
-check_completeness = ->
-  complete = true
-  complete = false if $('#wo-name').val() == ''
-  complete = false if $('#ex-list tbody tr').length == 0
-  complete = false if (!$('.coff-select').val? || $('.coff-select').val() == '')
-  complete = false if !$('.opening-datepicker').data('DateTimePicker').date()?
-  complete = false if !$('.soft-datepicker').data('DateTimePicker').date()?
-  complete = false if !$('.hard-datepicker').data('DateTimePicker').date()?
-
-  return complete
-
 get_exercises = ->
   exs = $('#ex-list li')
   exercises = {}
@@ -175,11 +166,53 @@ get_offerings = ->
       offerings[offering_id.toString()] = offering
   return offerings
 
+form_alert = (messages) ->
+  reset_alert_area()
+
+  alert_list = $('#alerts').find '.alert ul'
+  for message in messages
+    do (message) ->
+      alert_list.append '<li>' + message + '</li>'
+
+  $('#alerts').css 'display', 'block'
+
+reset_alert_area = ->
+  $('#alerts').find('.alert').alert 'close'
+  alert_box =
+    "<div class='alert alert-danger alert-dismissable' role='alert'>" +
+      "<button class='close' data-dismiss='alert' aria-label='Close'><i class='fa fa-times'></i></button>" +
+      "<ul></ul>" +
+    "</div>";
+  $('#alerts').append alert_box
+
+check_completeness = ->
+  messages = []
+  messages.push 'Workout Name cannot be empty.' if $('#wo-name').val() == ''
+  messages.push 'Workout must have at least 1 exercise.' if $('#ex-list li').length == 0
+
+  course_offering_selects = $('#workout-offering-fields').find '.coff-select'
+  coff_errs = 0
+  for select in course_offering_selects
+    do (select) ->
+      coff_errs = coff_errs + 1 if $(select).val() == ''
+  messages.push 'You must select a Course Offering for this Workout. (x' + coff_errs + ')' if coff_errs > 0
+
+  datepickers = $('#workout-offering-fields').find 'input.datepicker'
+  datepicker_errs = 0
+  for datepicker in datepickers
+    do (datepicker) ->
+      datepicker_errs = datepicker_errs + 1 if !$(datepicker).data('DateTimePicker').date()?
+  messages.push 'Make sure you have selected opening, soft-deadline, and hard-deadline dates wherever' +
+    ' applicable. (x' + datepicker_errs + ')' if datepicker_errs > 0
+
+  return messages
+
 handle_submit = ->
-  # if !check_completeness()
-  #   alert 'Please fill in all required fields.'
-  #   return
-  #
+  messages = check_completeness()
+  if messages.length != 0
+    form_alert messages
+    return
+
   name = $('#wo-name').val()
   description = $('#description').val()
   exercises = get_exercises()
