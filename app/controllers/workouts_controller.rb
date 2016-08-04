@@ -136,7 +136,12 @@ class WorkoutsController < ApplicationController
     Exercise.all.each do |exe|
       @allexs << exe.id
     end
-    #ALL EXERCISES
+
+    if @lti_launch
+      render layout: 'one_column'
+    else
+      render layout: 'two_columns'
+    end
   end
 
   def create

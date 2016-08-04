@@ -56,7 +56,7 @@
 
   .summary
     - if defined? new_or_existing
-      = link_to "View", new_workout_path(workout: workout, lti_launch: @lti_launch), class: 'btn btn-primary'
+      = link_to "View", edit_workout_path(id: workout.id, lti_launch: @lti_launch), class: 'btn btn-primary'
     - else
       - if !workout_score || workout_score.show_feedback?
         .radial-progress{ 'data-progress' => score_pct }
