@@ -1,10 +1,10 @@
 %h2 Search for exercises
-.row.search-area
+.search-area
   = form_tag search_path(params[:search]), remote: true do
-    .col-md-9
-      = text_field_tag :search, nil, placeholder: 'e.g. recursion', class: 'form-control', id: 'search-terms'
-    .col-md-2
-      = submit_tag 'Search', class: 'btn btn-inverse'
+    .col-xs-9
+      = text_field_tag :search, nil, placeholder: 'e.g. recursion', class: 'form-control input-sm', id: 'search-terms'
+    .col-xs-3
+      = submit_tag 'Search', class: 'btn btn-inverse btn-sm'
 .row
   .search-results
     Enter search terms above and choose results you want to add!

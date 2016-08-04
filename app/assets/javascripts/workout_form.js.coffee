@@ -19,19 +19,19 @@ $('.workouts-new').ready ->
     exercise_row =
       "<li class='list-group-item' data-id='" + ex_id + "'>" +
         "<div class='row'>" +
-          "<div class='col-md-1'>" +
+          "<div class='col-xs-1'>" +
             "<i class='handle fa fa-bars'></i>" +
           "</div>" +
-          "<div class='col-md-3'>" +
+          "<div class='col-xs-3'>" +
             ex_name +
           "</div>" +
-          "<div class='col-md-3'>" +
+          "<div class='col-xs-3'>" +
             "Points" +
           "</div>" +
-          "<div class='col-md-2'>" +
+          "<div class='col-xs-2'>" +
             "<input class='points form-control input-sm' placeholder='e.g 5' type='number' min='0' value='0' />" +
           "</div>" +
-          "<div class='col-md-1 col-md-offset-2'>" +
+          "<div class='col-xs-1 col-xs-offset-2'>" +
             "<i class='action delete-ex fa fa-times'></i>" +
           "</div>" +
         "</div>" +
