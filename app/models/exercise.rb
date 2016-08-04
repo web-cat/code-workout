@@ -104,18 +104,18 @@ class Exercise < ActiveRecord::Base
   def self.search(terms, user)
     if user
       return Exercise.visible_to_user(user).
-        tagged_with(terms, wild: true, on: :tags) +
+        tagged_with(terms, any: true, wild: true, on: :tags) +
         Exercise.visible_to_user(user).
-        tagged_with(terms, wild: true, on: :languages) +
+        tagged_with(terms, any: true, wild: true, on: :languages) +
         Exercise.visible_to_user(user).
-        tagged_with(terms, wild: true, on: :styles)
+        tagged_with(terms, any: true, wild: true, on: :styles)
     else
       return Exercise.where(is_public: true).
-        tagged_with(terms, wild: true, on: :tags) +
+        tagged_with(terms, any: true, wild: true, on: :tags) +
         Exercise.where(is_public: true).
-        tagged_with(terms, wild: true, on: :languages) +
+        tagged_with(terms, any: true, wild: true, on: :languages) +
         Exercise.where(is_public: true).
-        tagged_with(terms, wild: true, on: :styles)
+        tagged_with(terms, any: true, wild: true, on: :styles)
     end
   end
 
@@ -135,7 +135,7 @@ class Exercise < ActiveRecord::Base
   def type_name
     TYPE_NAMES[self.question_type]
   end
-  
+
 
 
   # -------------------------------------------------------------
