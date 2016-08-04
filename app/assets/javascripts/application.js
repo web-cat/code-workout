@@ -26,6 +26,7 @@
 //= require jquery-readyselector
 //= require moment
 //= require bootstrap-datetimepicker
+//= require mustache.min
 //= require workout_form
 
 

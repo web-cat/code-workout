@@ -1,4 +1,4 @@
-$('.workouts-new').ready ->
+$('.workouts.new').ready ->
   sortable = $('#ex-list').sortable
     handle: '.handle'
 
@@ -9,34 +9,11 @@ $('.workouts-new').ready ->
     $('#ex-list').css 'display', 'block'
     ex_name = $(this).data('ex-name')
     ex_id = $(this).data('ex-id')
-    # exercise_row =
-    #   "<tr data-id='" + ex_id + "'>" +
-    #     "<td><i class='handle fa fa-bars'></i></td>" +
-    #     "<td>" + ex_name + "</td>" +
-    #     "<td><input class='points form-control input-sm' placeholder='e.g 5' type='number' min='0' value='0' /></td>" +
-    #     "<td><i class='action delete fa fa-times'></i></td>" +
-    #   "</tr>"
-    exercise_row =
-      "<li class='list-group-item' data-id='" + ex_id + "'>" +
-        "<div class='row'>" +
-          "<div class='col-xs-1'>" +
-            "<i class='handle fa fa-bars'></i>" +
-          "</div>" +
-          "<div class='col-xs-3'>" +
-            ex_name +
-          "</div>" +
-          "<div class='col-xs-3'>" +
-            "Points" +
-          "</div>" +
-          "<div class='col-xs-2'>" +
-            "<input class='points form-control input-sm' placeholder='e.g 5' type='number' min='0' value='0' />" +
-          "</div>" +
-          "<div class='col-xs-1 col-xs-offset-2'>" +
-            "<i class='action delete-ex fa fa-times'></i>" +
-          "</div>" +
-        "</div>" +
-      "</li>";
-    $('#ex-list').append(exercise_row);
+    data =
+      name: ex_name
+      id: ex_id
+    $.get '/assets/exercise.mustache.html', (template, textStatus, jqXHr) ->
+      $('#ex-list').append(Mustache.render($(template).filter('#exercise-template').html(), data))
 
   $('#add-offering').on 'click', ->
     $('#workout-offering-fields').append($('#add-offering-form').html())
