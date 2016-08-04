@@ -99,6 +99,27 @@ class WorkoutsController < ApplicationController
       "SELECT * FROM exercises WHERE name LIKE '%#{params[:searchkey]}%'")
   end
 
+  # -------------------------------------------------------------
+  # POST /gym/workouts/search
+  def search
+    @terms = escape_javascript(params[:search])
+    @terms = @terms.split(@terms.include?(' ') ? /\s*,\s*/ : nil)
+    @workouts = Workout.search @terms
+    @msg = ''
+    if @workouts.blank?
+      @msg = 'Your search did not match any workouts. Try these instead...'
+      @workouts = Workout.all.shuffle.first(16)
+    end
+
+    if @workouts.blank?
+      @msg = 'No public workouts exist yet. Please wait for contributors to add more.'
+    end
+
+    respond_to do |format|
+      format.html
+      format.js
+    end
+  end
 
   # -------------------------------------------------------------
   # GET /workouts/1/edit

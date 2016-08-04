@@ -83,6 +83,7 @@ CodeWorkout::Application.routes.draw do
     get  'workouts_import' => 'workouts#upload_yaml'
     post  'workouts_yaml_create' => 'workouts#yaml_create'
     get 'workouts/new_or_existing' => 'workouts#new_or_existing'
+    post 'workouts/search' => 'workouts#search', as: :workouts_search
     # At the bottom, so the routes above take precedence over existing ids
     resources :workouts
   end

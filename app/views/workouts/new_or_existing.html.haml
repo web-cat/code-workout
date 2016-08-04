@@ -1,0 +1,10 @@
+%h2 Search for workouts that might work for you!
+.row.search-area
+  = form_tag workouts_search_path(params[:search]), remote: true do
+    .col-xs-9
+      = text_field_tag :search, nil, placeholder: 'e.g. Looping', class: 'form-control input-sm', id: 'search-terms'
+    .col-xs-3
+      = submit_tag 'Search', class: 'btn btn-inverse btn-sm'
+.row
+  .search-results
+    Use the search bar to look for workouts!

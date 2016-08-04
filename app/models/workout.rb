@@ -230,9 +230,9 @@ class Workout < ActiveRecord::Base
   # -------------------------------------------------------------
   def self.search(terms)
     # FIXME: need to add visibility controls here
-    return Workout.tagged_with(terms, wild: true, on: :tags) +
-      Workout.tagged_with(terms, wild: true, on: :languages) +
-      Workout.tagged_with(terms, wild: true, on: :styles)
+    return Workout.tagged_with(terms, any: true, wild: true, on: :tags) +
+      Workout.tagged_with(terms, any: true, wild: true, on: :languages) +
+      Workout.tagged_with(terms, any: true, wild: true, on: :styles)
   end
 
 end
