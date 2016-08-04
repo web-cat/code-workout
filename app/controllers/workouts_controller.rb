@@ -79,6 +79,17 @@ class WorkoutsController < ApplicationController
     end
   end
 
+  # -------------------------------------------------------------
+  # GET /gym/workouts/existing_or_new
+  def new_or_existing
+    if cannot? :new, Workout
+      flash.now[:notice] = 'You are unauthorized to create new workouts. Choose from existing workouts instead.'
+    end
+
+    @lti_launch = params[:lti_launch]
+
+    render layout: 'one_column'
+  end
 
   # -------------------------------------------------------------
   # GET /workouts/new_with_search/:searchkey

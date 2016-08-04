@@ -64,7 +64,7 @@ CodeWorkout::Application.routes.draw do
       as: :exercise_practice
     patch 'exercises/:id/practice' => 'exercises#evaluate',
       as: :exercise_evaluate
-    post 'exercises/search' => 'exercises#search', as: :search
+    post 'exercises/search' => 'exercises#search', as: :exercises_search
     # At the bottom, so the routes above take precedence over existing ids
     resources :exercises
 
@@ -82,6 +82,7 @@ CodeWorkout::Application.routes.draw do
     get  'workouts_dummy' => 'workouts#dummy'
     get  'workouts_import' => 'workouts#upload_yaml'
     post  'workouts_yaml_create' => 'workouts#yaml_create'
+    get 'workouts/new_or_existing' => 'workouts#new_or_existing'
     # At the bottom, so the routes above take precedence over existing ids
     resources :workouts
   end

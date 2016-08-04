@@ -2,7 +2,7 @@
 %p
   Searching for:
   - @terms.each do |t|
-    = link_to t, search_path(search: t), method: :post, class: 'tag'
+    = link_to t, exercises_search_path(search: t), method: :post, class: 'tag'
 
 - uid = user_signed_in? ? current_user.id : 0
 - if not(@msg.empty?)
