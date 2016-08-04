@@ -12,7 +12,7 @@
 //
 //= require modernizr.min.js
 //= require jquery
-//= require jquery-ui
+//= require jquery-ui/sortable
 //= require jquery_ujs
 //= require bootstrap-sprockets
 //= require bootstrap-editable
