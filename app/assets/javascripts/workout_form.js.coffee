@@ -13,6 +13,7 @@ $('.workouts.new, .workouts.edit').ready ->
     data =
       name: ex_name
       id: ex_id
+      points: 0
     $.get '/assets/exercise.mustache.html', (template, textStatus, jqXHr) ->
       $('#ex-list').append(Mustache.render($(template).filter('#exercise-template').html(), data))
 
@@ -57,12 +58,14 @@ $('.workouts.new, .workouts.edit').ready ->
 
 init_exercises = ->
   exercises = $('#ex-list').data 'exercises'
+  console.log exercises
   $.get '/assets/exercise.mustache.html', (template, textStatus, jqXHr) ->
     for exercise in exercises
       do (exercise) ->
         data =
           id: exercise.id
           name: exercise.name
+          points: exercise.points
         $('#ex-list').append(Mustache.render($(template).filter('#exercise-template').html(), data))
     $('#ex-list').removeData 'exercises'
 
