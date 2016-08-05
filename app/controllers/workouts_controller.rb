@@ -161,38 +161,7 @@ class WorkoutsController < ApplicationController
       end
 
     course_offerings = JSON.parse params[:course_offerings]
-    course_offerings.each do |id, offering|
-      course_offering = CourseOffering.find(id)
-      workout_policy = WorkoutPolicy.find_by(id: offering['workout_policy_id'])
-      @workout_offering = WorkoutOffering.new(
-        workout: @workout,
-        course_offering: course_offering,
-        time_limit: offering['time_limit'],
-        opening_date: DateTime.parse(offering['opening_date']),
-        soft_deadline: DateTime.parse(offering['soft_deadline']),
-        hard_deadline: DateTime.parse(offering['hard_deadline']),
-        workout_policy: workout_policy
-      )
-      @workout_offering.lms_assignment_id = session[:lti_params][:lms_assignment_id] if session[:lti_params]
-      @workout_offering.save!
-
-      extensions = offering['extensions']
-      extensions.each do |ext|
-        students = ext['students']
-        students.each do |student_id|
-          student = User.find(student_id)
-          student_extension = StudentExtension.new(
-            user: student,
-            workout_offering: @workout_offering,
-            opening_date: DateTime.parse(ext['opening_date']),
-            soft_deadline: DateTime.parse(ext['soft_deadline']),
-            hard_deadline: DateTime.parse(ext['hard_deadline']),
-            time_limit: ext['time_limit']
-          )
-          student_extension.save!
-        end
-      end
-    end
+    parse_course_offerings(course_offerings)
 
     if @workout.save
       if lti_params = session[:lti_params]
@@ -357,6 +326,43 @@ class WorkoutsController < ApplicationController
       @remain = 10
     end
 
+    # Parses course offerings from json and adds them
+    # to the workout
+    def parse_course_offerings(course_offerings)
+      if @workout
+        course_offerings.each do |id, offering|
+          course_offering = CourseOffering.find(id)
+          workout_policy = WorkoutPolicy.find_by(id: offering['workout_policy_id'])
+          @workout_offering = WorkoutOffering.new(
+            workout: @workout,
+            course_offering: course_offering,
+            time_limit: offering['time_limit'],
+            opening_date: DateTime.parse(offering['opening_date']),
+            soft_deadline: DateTime.parse(offering['soft_deadline']),
+            hard_deadline: DateTime.parse(offering['hard_deadline']),
+            workout_policy: workout_policy
+          )
+          @workout_offering.save!
+
+          extensions = offering['extensions']
+          extensions.each do |ext|
+            students = ext['students']
+            students.each do |student_id|
+              student = User.find(student_id)
+              student_extension = StudentExtension.new(
+                user: student,
+                workout_offering: @workout_offering,
+                opening_date: DateTime.parse(ext['opening_date']),
+                soft_deadline: DateTime.parse(ext['soft_deadline']),
+                hard_deadline: DateTime.parse(ext['hard_deadline']),
+                time_limit: ext['time_limit']
+              )
+              student_extension.save!
+            end
+          end
+        end
+      end
+    end
 
     # -------------------------------------------------------------
     # Only allow a trusted parameter "white list" through.
