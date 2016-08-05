@@ -5,7 +5,7 @@
 -#      %i.fa.fa-search
 -#      Search
 -#= render :partial => 'exercises/search'
-- if controller_name.eql?('workouts') && action_name.eql?('new')
+- if controller_name.eql?('workouts') && (action_name.eql?('new') || action_name.eql?('edit'))
   = render partial: 'exercises/find_exercises_to_add'
 - elsif user_signed_in? && current_user.current_workout_score
   = render partial: 'workouts/status',

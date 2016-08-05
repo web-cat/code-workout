@@ -1,4 +1,4 @@
-$('.workouts.new').ready ->
+$('.workouts.new, .workouts.edit').ready ->
   sortable = $('#ex-list').sortable
     handle: '.handle'
 
