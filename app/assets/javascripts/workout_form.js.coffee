@@ -58,16 +58,16 @@ $('.workouts.new, .workouts.edit').ready ->
 
 init_exercises = ->
   exercises = $('#ex-list').data 'exercises'
-  console.log exercises
-  $.get '/assets/exercise.mustache.html', (template, textStatus, jqXHr) ->
-    for exercise in exercises
-      do (exercise) ->
-        data =
-          id: exercise.id
-          name: exercise.name
-          points: exercise.points
-        $('#ex-list').append(Mustache.render($(template).filter('#exercise-template').html(), data))
-    $('#ex-list').removeData 'exercises'
+  if exercises
+    $.get '/assets/exercise.mustache.html', (template, textStatus, jqXHr) ->
+      for exercise in exercises
+        do (exercise) ->
+          data =
+            id: exercise.id
+            name: exercise.name
+            points: exercise.points
+          $('#ex-list').append(Mustache.render($(template).filter('#exercise-template').html(), data))
+      $('#ex-list').removeData 'exercises'
 
 init_datepickers = ->
   workout_offerings = $('.offering-fields', '#workout-offering-fields')
@@ -229,8 +229,14 @@ handle_submit = ->
   fd.append 'exercises', JSON.stringify exercises
   fd.append 'course_offerings', JSON.stringify course_offerings
 
+  url = ''
+  if $('body').is('.workouts.new')
+    url = '/gym/workouts'
+  else if $('body').is('.workouts.edit')
+    url = '/gym/workouts/' + $('h1').data 'id'
+
   $.ajax
-    url: '/gym/workouts'
+    url: url
     type: 'post'
     data: fd
     processData: false

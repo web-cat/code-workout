@@ -1,4 +1,5 @@
 .container
-  %h1 Editing workout: #{@workout.name}
+  %h1{data: { id: @workout.id } }
+    Editing workout: #{@workout.name}
 
   = render 'form'
