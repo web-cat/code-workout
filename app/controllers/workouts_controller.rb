@@ -127,6 +127,7 @@ class WorkoutsController < ApplicationController
     if cannot? :edit, @workout
       redirect_to root_path, notice: 'Unauthorized to edit workout' and return
     end
+    @lti_launch = params[:lti_launch]
     @exs = []
     @workout.exercises.each do |exer|
       @exs << exer.id

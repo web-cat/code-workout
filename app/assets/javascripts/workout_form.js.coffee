@@ -3,6 +3,7 @@ $('.workouts.new, .workouts.edit').ready ->
     handle: '.handle'
 
   init_datepickers()
+  init_exercises()
 
   $('.search-results').on 'click', '.add-ex', ->
     $('.empty-msg').css 'display', 'none'
@@ -54,13 +55,16 @@ $('.workouts.new, .workouts.edit').ready ->
   $('#btn-submit-wo').click ->
     handle_submit()
 
-# Leave scope of document ready -- helper methods below
-
-# # Helper method for making table sortable.
-# fix_helper = (e, ui) ->
-#   ui.children().each ->
-#     $(this).width($(this).width())
-#   return ui
+init_exercises = ->
+  exercises = $('#ex-list').data 'exercises'
+  $.get '/assets/exercise.mustache.html', (template, textStatus, jqXHr) ->
+    for exercise in exercises
+      do (exercise) ->
+        data =
+          id: exercise.id
+          name: exercise.name
+        $('#ex-list').append(Mustache.render($(template).filter('#exercise-template').html(), data))
+    $('#ex-list').removeData 'exercises'
 
 init_datepickers = ->
   workout_offerings = $('.offering-fields', '#workout-offering-fields')
@@ -70,7 +74,6 @@ init_datepickers = ->
       for field_row in field_rows
         do (field_row) ->
           init_offering_datepickers field_row
-
 
 init_offering_datepickers = (offering) ->
   opening_datepicker = $('input.opening-datepicker', $(offering))
