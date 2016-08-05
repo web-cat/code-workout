@@ -3,7 +3,7 @@ require 'date'
 
 class WorkoutsController < ApplicationController
   before_action :set_workout, only: [:show, :edit, :update, :destroy]
-  after_action :allow_iframe, only: [:new, :new_create]
+  after_action :allow_iframe, only: [:new, :new_create, :edit]
   respond_to :html, :js
 
   #~ Action methods ...........................................................
@@ -147,21 +147,8 @@ class WorkoutsController < ApplicationController
 
   def create
     @workout = Workout.new
-      @workout.creator_id = current_user.id
-      @workout.name = params[:name]
-      @workout.description = params[:description]
-      exercises = JSON.parse params[:exercises]
-      exercises.each do |key, value|
-        exercise = Exercise.find value['id']
-        exercise_workout = ExerciseWorkout.new workout: @workout, exercise: exercise
-        exercise_workout.position = key
-        exercise_workout.points = value['points']
-        exercise_workout.save!
-        @workout.exercise_workouts << exercise_workout
-      end
-
-    course_offerings = JSON.parse params[:course_offerings]
-    parse_course_offerings(course_offerings)
+    @workout.creator_id = current_user.id
+    create_or_update
 
     if @workout.save
       if lti_params = session[:lti_params]
@@ -250,16 +237,26 @@ class WorkoutsController < ApplicationController
 
   # -------------------------------------------------------------
   # PATCH/PUT /workouts/1
+  # def update
+  #   if cannot? :update, @workout
+  #     redirect_to root_path,
+  #       notice: 'Unauthorized to update workout' and return
+  #   end
+  #   if @workout.update(workout_params)
+  #     redirect_to @workout, notice: 'Workout was successfully updated.'
+  #   else
+  #     render action: 'edit'
+  #   end
+  # end
+
   def update
     if cannot? :update, @workout
       redirect_to root_path,
         notice: 'Unauthorized to update workout' and return
     end
-    if @workout.update(workout_params)
-      redirect_to @workout, notice: 'Workout was successfully updated.'
-    else
-      render action: 'edit'
-    end
+
+    create_or_update
+    @workout.save!
   end
 
 
@@ -324,6 +321,25 @@ class WorkoutsController < ApplicationController
       @xp = 30
       @xptogo = 60
       @remain = 10
+    end
+
+    def create_or_update
+      @workout.name = params[:name]
+      @workout.description = params[:description]
+      exercises = JSON.parse params[:exercises]
+      exercises.each do |key, value|
+        exercise = Exercise.find value['id']
+        exercise_workout = ExerciseWorkout.find_by workout: @workout, exercise: exercise
+        if exercise_workout.blank?
+          exercise_workout = ExerciseWorkout.new workout: @workout, exercise: exercise
+        end
+        exercise_workout.position = key
+        exercise_workout.points = value['points']
+        exercise_workout.save!
+      end
+
+      course_offerings = JSON.parse params[:course_offerings]
+      parse_course_offerings(course_offerings)
     end
 
     # Parses course offerings from json and adds them

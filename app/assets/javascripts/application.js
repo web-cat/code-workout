@@ -17,7 +17,6 @@
 //= require bootstrap-sprockets
 //= require bootstrap-editable
 //= require bootstrap-editable-rails
-//= require bootstrap.min
 //= require js-routes
 //= require codemirror
 //= require codemirror/modes/clike

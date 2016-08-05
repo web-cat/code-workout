@@ -232,12 +232,14 @@ handle_submit = ->
   url = ''
   if $('body').is('.workouts.new')
     url = '/gym/workouts'
+    type = 'post'
   else if $('body').is('.workouts.edit')
     url = '/gym/workouts/' + $('h1').data 'id'
+    type = 'patch'
 
   $.ajax
     url: url
-    type: 'post'
+    type: type
     data: fd
     processData: false
     contentType: false
