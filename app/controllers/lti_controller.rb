@@ -116,10 +116,10 @@ class LtiController < ApplicationController
 
         workout_name = params[:resource_link_title]
 
-        if (/\A[0-9][0-9]-[0-9][0-9]-[0-9][0-9]/ =~ workout_name).nil?
+        if (/\A[0-9][0-9].[0-9][0-9].[0-9][0-9] -/ =~ workout_name).nil?
           @workout = Workout.find_by(name: workout_name)
         else
-          @workout = Workout.find_by(name: workout_name[9..workout_name.length])
+          @workout = Workout.find_by(name: workout_name[11..workout_name.length])
         end
 
         if @workout.blank?
