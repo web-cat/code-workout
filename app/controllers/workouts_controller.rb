@@ -326,6 +326,8 @@ class WorkoutsController < ApplicationController
     def create_or_update
       @workout.name = params[:name]
       @workout.description = params[:description]
+      workout_policy = WorkoutPolicy.find_by id: params[:policy_id]
+      time_limit = params[:time_limit]
       exercises = JSON.parse params[:exercises]
       exercises.each do |key, value|
         exercise = Exercise.find value['id']
@@ -339,20 +341,19 @@ class WorkoutsController < ApplicationController
       end
 
       course_offerings = JSON.parse params[:course_offerings]
-      parse_course_offerings(course_offerings)
+      parse_course_offerings(course_offerings, time_limit, workout_policy)
     end
 
     # Parses course offerings from json and adds them
     # to the workout
-    def parse_course_offerings(course_offerings)
+    def parse_course_offerings(course_offerings, time_limit, workout_policy)
       if @workout
         course_offerings.each do |id, offering|
           course_offering = CourseOffering.find(id)
-          workout_policy = WorkoutPolicy.find_by(id: offering['workout_policy_id'])
           @workout_offering = WorkoutOffering.new(
             workout: @workout,
             course_offering: course_offering,
-            time_limit: offering['time_limit'],
+            time_limit: time_limit,
             opening_date: DateTime.parse(offering['opening_date']),
             soft_deadline: DateTime.parse(offering['soft_deadline']),
             hard_deadline: DateTime.parse(offering['hard_deadline']),

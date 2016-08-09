@@ -21,6 +21,15 @@
           Use the column on the left to find exercises.
       %ul.list-group#ex-list{ style: "display: #{@workout.andand.exercise_workouts.any? ? 'block;' : 'none;'}",
         data: { exercises: (@workout.andand.exercise_workouts.any? ? @workout.exercise_workouts.to_json : false) } }
+  .form-group
+    = label_tag :policy_select, 'Policy', class: 'control-label col-xs-2'
+    .col-xs-4
+      = collection_select nil, nil, WorkoutPolicy.all, :id, :name, { prompt: 'Select' },
+      { id: 'policy-select', class: 'form-control input-sm' }
+  .form-group
+    = label_tag :time_limit, 'Time Limit', class: 'control-label col-xs-2'
+    .col-xs-4
+      %input#time-limit.form-control.input-sm.input{ type: 'number', min: '0', placeholder: 'Time' }
 
   .form-group
     %p.lead Add to Course Offerings

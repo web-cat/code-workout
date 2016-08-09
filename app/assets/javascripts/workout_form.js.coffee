@@ -139,14 +139,10 @@ get_offerings = ->
       offering_row = $('tr', $(table)).filter ':eq(1)'  # Get the first row
       offering_fields = $('td', $(offering_row))
       offering_id = $('.coff-select', $(offering_fields[0])).val()
-      policy_id = $('.policy-select', $(offering_fields[1])).val()
-      time_limit = $('.time-limit', $(offering_fields[2])).val()
-      opening_date = $('.opening-datepicker', $(offering_fields[3])).data('DateTimePicker').date().toDate().toString()
-      soft_deadline = $('.soft-datepicker', $(offering_fields[4])).data('DateTimePicker').date().toDate().toString()
-      hard_deadline = $('.hard-datepicker', $(offering_fields[5])).data('DateTimePicker').date().toDate().toString()
+      opening_date = $('.opening-datepicker', $(offering_fields[1])).data('DateTimePicker').date().toDate().toString()
+      soft_deadline = $('.soft-datepicker', $(offering_fields[2])).data('DateTimePicker').date().toDate().toString()
+      hard_deadline = $('.hard-datepicker', $(offering_fields[3])).data('DateTimePicker').date().toDate().toString()
       offering =
-        workout_policy_id: policy_id
-        time_limit: time_limit
         opening_date: opening_date
         soft_deadline: soft_deadline
         hard_deadline: hard_deadline
@@ -221,11 +217,15 @@ handle_submit = ->
 
   name = $('#wo-name').val()
   description = $('#description').val()
+  time_limit = $('#time-limit').val()
+  policy_id = $('#policy-select').val()
   exercises = get_exercises()
   course_offerings = get_offerings()
   fd = new FormData
   fd.append 'name', name
   fd.append 'description', description
+  fd.append 'time_limit', time_limit
+  fd.append 'policy_id', policy_id
   fd.append 'exercises', JSON.stringify exercises
   fd.append 'course_offerings', JSON.stringify course_offerings
 
