@@ -357,6 +357,7 @@ class WorkoutsController < ApplicationController
     # to the workout
     def parse_course_offerings(course_offerings, time_limit, workout_policy)
       if @workout
+        byebug
         course_offerings.each do |id, offering|
           course_offering = CourseOffering.find(id)
           if @workout_offering = WorkoutOffering.find_by(workout: @workout, course_offering: course_offering)

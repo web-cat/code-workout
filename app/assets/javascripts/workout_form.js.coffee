@@ -148,33 +148,43 @@ get_offerings = ->
       offering_row = $('tr', $(table)).filter ':eq(1)'  # Get the first row
       offering_fields = $('td', $(offering_row))
       offering_id = $('.coff-select', $(offering_fields[0])).val()
-      opening_date = $('.opening-datepicker', $(offering_fields[1])).data('DateTimePicker').date().toDate().toString()
-      soft_deadline = $('.soft-datepicker', $(offering_fields[2])).data('DateTimePicker').date().toDate().toString()
-      hard_deadline = $('.hard-datepicker', $(offering_fields[3])).data('DateTimePicker').date().toDate().toString()
-      offering =
-        opening_date: opening_date
-        soft_deadline: soft_deadline
-        hard_deadline: hard_deadline
-      extensions = []
-      extension_rows = $('tr', $(table)).filter ':gt(1)'  # Get all rows after the first one
-      for row in extension_rows
-        # Get input data for each extension within the offering.
-        do (row) ->
-          extension_fields = $('td', $(row))
-          students = $('.student-select', $(extension_fields[0])).val()
-          time_limit = $('.time_limit', $(extension_fields[2])).val()
-          opening_date = $('.opening-datepicker', $(extension_fields[3])).data('DateTimePicker').date().toDate().toString()
-          soft_deadline = $('.soft-datepicker', $(extension_fields[4])).data('DateTimePicker').date().toDate().toString()
-          hard_deadline = $('.hard-datepicker', $(extension_fields[5])).data('DateTimePicker').date().toDate().toString()
-          extension =
-            students: students
-            time_limit: time_limit
-            opening_date: opening_date
-            soft_deadline: soft_deadline
-            hard_deadline: hard_deadline
-          extensions.push extension
-      offering['extensions'] = extensions
-      offerings[offering_id.toString()] = offering
+      if offering_id != ''
+        opening_datepicker = $('.opening-datepicker', $(offering_fields[1])).data('DateTimePicker').date()
+        soft_datepicker = $('.soft-datepicker', $(offering_fields[2])).data('DateTimePicker').date()
+        hard_datepicker = $('.hard-datepicker', $(offering_fields[3])).data('DateTimePicker').date()
+
+        opening_date = if opening_datepicker? then opening_datepicker.toDate().toString() else null
+        soft_deadline = if soft_datepicker? then soft_datepicker.toDate().toString() else null
+        hard_deadline = if hard_datepicker? then hard_datepicker.toDate().toString() else null
+
+        offering =
+          opening_date: opening_date
+          soft_deadline: soft_deadline
+          hard_deadline: hard_deadline
+        extensions = []
+        extension_rows = $('tr', $(table)).filter ':gt(1)'  # Get all rows after the first one
+        for row in extension_rows
+          # Get input data for each extension within the offering.
+          do (row) ->
+            extension_fields = $('td', $(row))
+            students = $('.student-select', $(extension_fields[0])).val()
+            time_limit = $('.time_limit', $(extension_fields[2])).val()
+            opening_datepicker = $('.opening-datepicker', $(extension_fields[3])).data('DateTimePicker').date()
+            soft_datepicker = $('.soft-datepicker', $(extension_fields[4])).data('DateTimePicker').date()
+            hard_datepicker = $('.hard-datepicker', $(extension_fields[5])).data('DateTimePicker').date()
+
+            opening_date = if opening_datepicker? then opening_datepicker.toDate().toString() else null
+            soft_deadline = if soft_datepicker? then soft_datepicker.toDate().toString() else null
+            hard_deadline = if hard_datepicker? then hard_datepicker.toDate().toString() else null
+            extension =
+              students: students
+              time_limit: time_limit
+              opening_date: opening_date
+              soft_deadline: soft_deadline
+              hard_deadline: hard_deadline
+            extensions.push extension
+        offering['extensions'] = extensions
+        offerings[offering_id.toString()] = offering
   return offerings
 
 form_alert = (messages) ->
@@ -201,20 +211,13 @@ check_completeness = ->
   messages.push 'Workout Name cannot be empty.' if $('#wo-name').val() == ''
   messages.push 'Workout must have at least 1 exercise.' if $('#ex-list li').length == 0
 
-  course_offering_selects = $('#workout-offering-fields').find '.coff-select'
-  coff_errs = 0
-  for select in course_offering_selects
-    do (select) ->
-      coff_errs = coff_errs + 1 if $(select).val() == ''
-  messages.push 'You must select a Course Offering for this Workout. (x' + coff_errs + ')' if coff_errs > 0
-
-  datepickers = $('#workout-offering-fields').find 'input.datepicker'
-  datepicker_errs = 0
-  for datepicker in datepickers
-    do (datepicker) ->
-      datepicker_errs = datepicker_errs + 1 if !$(datepicker).data('DateTimePicker').date()?
-  messages.push 'Make sure you have selected opening, soft-deadline, and hard-deadline dates wherever' +
-    ' applicable. (x' + datepicker_errs + ')' if datepicker_errs > 0
+  if $('body').hasClass '.workouts.new'
+    course_offering_selects = $('#workout-offering-fields').find '.coff-select'
+    coff_errs = 0
+    for select in course_offering_selects
+      do (select) ->
+        coff_errs = coff_errs + 1 if $(select).val() == ''
+    messages.push 'You must select a Course Offering for this Workout. (x' + coff_errs + ')' if coff_errs > 0
 
   return messages
 
