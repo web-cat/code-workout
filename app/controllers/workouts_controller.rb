@@ -359,15 +359,16 @@ class WorkoutsController < ApplicationController
       if @workout
         course_offerings.each do |id, offering|
           course_offering = CourseOffering.find(id)
-          @workout_offering = WorkoutOffering.new(
-            workout: @workout,
-            course_offering: course_offering,
-            time_limit: time_limit,
-            opening_date: DateTime.parse(offering['opening_date']),
-            soft_deadline: DateTime.parse(offering['soft_deadline']),
-            hard_deadline: DateTime.parse(offering['hard_deadline']),
-            workout_policy: workout_policy
-          )
+          if @workout_offering = WorkoutOffering.find_by(workout: @workout, course_offering: course_offering)
+            @workout_offering = WorkoutOffering.new
+          end
+          @workout_offering.workout = @workout
+          @workout_offering.course_offering = course_offering
+          @workout_offering.time_limit = time_limit
+          @workout_offering.opening_date = DateTime.parse(offering['opening_date'])
+          @workout_offering.soft_deadline = DateTime.parse(offering['soft_deadline'])
+          @workout_offering.hard_deadline = DateTime.parse(offering['hard_deadline'])
+          @workout_offering.workout_policy = workout_policy
           @workout_offering.save!
 
           extensions = offering['extensions']
