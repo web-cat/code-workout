@@ -21,7 +21,7 @@
           Use the column on the left to find exercises.
 
       %ul.list-group#ex-list{ style: "display: #{@workout.andand.exercise_workouts.any? ? 'block;' : 'none;'}",
-        data: { exercises: "#{@exercises.to_json}" } }
+        data: { exercises: "#{@exercises.to_json}", removed_exercises: "#{[].to_json}" } }
   .form-group
     = label_tag :policy_select, 'Policy', class: 'control-label col-xs-2'
     .col-xs-4

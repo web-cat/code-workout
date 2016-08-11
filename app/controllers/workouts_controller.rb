@@ -333,6 +333,10 @@ class WorkoutsController < ApplicationController
       @workout.description = params[:description]
       workout_policy = WorkoutPolicy.find_by id: params[:policy_id]
       time_limit = params[:time_limit]
+      removed_exercises = params[:removed_exercises].split ','
+      removed_exercises.each do |exercise_workout_id|
+        @workout.exercise_workouts.destroy exercise_workout_id
+      end
       exercises = JSON.parse params[:exercises]
       exercises.each do |key, value|
         exercise = Exercise.find value['id']

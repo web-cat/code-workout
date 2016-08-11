@@ -47,7 +47,15 @@ $('.workouts.new, .workouts.edit').ready ->
     $(this).closest('tr').remove()
 
   $('#ex-list').on 'click', '.delete-ex', ->
-    $(this).closest('li').remove()
+    ex_row = $(this).closest 'li'
+    ex_workout_id = ex_row.data 'exercise-workout-id'
+    console.log ex_workout_id
+    if ex_workout_id? && ex_workout_id != ''
+      ex_list = $('#ex-list')
+      removed_exercises = ex_list.data 'removed-exercises'
+      removed_exercises.push ex_workout_id
+      ex_list.data('removed_exercises', removed_exercises)
+    ex_row.remove()
     exs = $('#ex-list li').length
     if exs == 0
       $('.empty-msg').css 'display', 'block'
@@ -220,6 +228,7 @@ handle_submit = ->
   description = $('#description').val()
   time_limit = $('#time-limit').val()
   policy_id = $('#policy-select').val()
+  removed_exercises = $('#ex-list').data 'removed-exercises'
   exercises = get_exercises()
   course_offerings = get_offerings()
   fd = new FormData
@@ -229,6 +238,7 @@ handle_submit = ->
   fd.append 'policy_id', policy_id
   fd.append 'exercises', JSON.stringify exercises
   fd.append 'course_offerings', JSON.stringify course_offerings
+  fd.append 'removed_exercises', removed_exercises
 
   url = ''
   if $('body').is('.workouts.new')
