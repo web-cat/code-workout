@@ -64,6 +64,7 @@ init_exercises = ->
         do (exercise) ->
           data =
             id: exercise.id
+            exercise_workout_id: exercise.exercise_workout_id
             name: exercise.name
             points: exercise.points
           $('#ex-list').append(Mustache.render($(template).filter('#exercise-template').html(), data))

@@ -132,10 +132,15 @@ class WorkoutsController < ApplicationController
     @workout.exercises.each do |exer|
       @exs << exer.id
     end
-    # Workout's EXERCISES
-    @allexs = []
-    Exercise.all.each do |exe|
-      @allexs << exe.id
+
+    @exercises = []
+    @workout.exercise_workouts.each do |ex|
+      ex_data = {}
+      ex_data[:name] = ex.exercise.name
+      ex_data[:points] = ex.points
+      ex_data[:id] = ex.exercise_id
+      ex_data[:exercise_workout_id] = ex.id
+      @exercises.push(ex_data)
     end
 
     if @lti_launch
