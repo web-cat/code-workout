@@ -70,6 +70,7 @@ class Workout < ActiveRecord::Base
 
 
   #~ Hooks ....................................................................
+  scope :visible_to_user, -> (u) { where { (creator_id == u.id) | (is_public == true) } }
 
   # paginates_per 1
 
@@ -228,11 +229,19 @@ class Workout < ActiveRecord::Base
   #~ Class methods ............................................................
 
   # -------------------------------------------------------------
-  def self.search(terms)
-    # FIXME: need to add visibility controls here
-    return Workout.tagged_with(terms, any: true, wild: true, on: :tags) +
-      Workout.tagged_with(terms, any: true, wild: true, on: :languages) +
-      Workout.tagged_with(terms, any: true, wild: true, on: :styles)
+  def self.search(terms, user)
+    if user
+      return Workout.visible_to_user(user)
+        .tagged_with(terms, any: true, wild: true, on: :tags) +
+        Workout.visible_to_user(user)
+        .tagged_with(terms, any: true, wild: true, on: :languages) +
+        Workout.visible_to_user(user)
+        .tagged_with(terms, any: true, wild: true, on: :styles)
+    else
+      return Workout.tagged_with(terms, any: true, wild: true, on: :tags) +
+        Workout.tagged_with(terms, any: true, wild: true, on: :languages) +
+        Workout.tagged_with(terms, any: true, wild: true, on: :styles)
+    end
   end
 
 end

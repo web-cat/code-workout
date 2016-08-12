@@ -104,11 +104,11 @@ class WorkoutsController < ApplicationController
   def search
     @terms = escape_javascript(params[:search])
     @terms = @terms.split(@terms.include?(' ') ? /\s*,\s*/ : nil)
-    @workouts = Workout.search @terms
-    @msg = ''
+    @workouts = Workout.search @terms, current_user
+
     if @workouts.blank?
       @msg = 'Your search did not match any workouts. Try these instead...'
-      @workouts = Workout.all.shuffle.first(16)
+      @workouts = Workout.visible_to_user(current_user).shuffle.first(16)
     end
 
     if @workouts.blank?
