@@ -4,24 +4,37 @@
   .form-group
     = label_tag :name, 'Name *', class: 'control-label col-xs-2'
     .col-lg-7.col-md-6.col-xs-7
-      = text_field_tag :name, nil, id: 'wo-name', class: 'form-control', maxlength: 50, placeholder: 'e.g. Recursion exercises'
+      = text_field_tag :name, nil, id: 'wo-name', class: 'form-control', maxlength: 50,
+        placeholder: 'e.g. Recursion exercises', value: @workout.present? ? @workout.name : ''
   .form-group
     = label_tag :description, 'Description', class: 'control-label col-xs-2'
     .col-lg-7.col-md-6.col-xs-7
       %textarea#description{ placeholder: '(optional) Exercise explanation, given after submission',
-        rows: 2, class: 'form-control richtexteditor'}
+        rows: 2, class: 'form-control richtexteditor', value: @workout.present? ? @workout.name : '' }
   .ex-area.form-group
     = label_tag :ex_list, 'Exercises *', class: 'control-label col-xs-2'
     .col-lg-7.col-md-6.col-xs-7
-      - if @lti_launch
-        .empty-msg.text-danger Use the search bar above the form to find exercises.
-      - else
-        .empty-msg.text-danger Use the column on the left to find exercises.
-      %ul.list-group#ex-list{ style: 'display: none;' }
+      .empty-msg.text-danger{ style: "display: #{@workout.andand.exercise_workouts.any? ? 'none;' : 'block;'}" }
+        - if @lti_launch
+          Use the search bar above the form to find exercises.
+        - else
+          Use the column on the left to find exercises.
+
+      %ul.list-group#ex-list{ style: "display: #{@workout.andand.exercise_workouts.any? ? 'block;' : 'none;'}",
+        data: { exercises: "#{@exercises.to_json}", removed_exercises: "#{[].to_json}" } }
+  .form-group
+    = label_tag :policy_select, 'Policy', class: 'control-label col-xs-2'
+    .col-xs-4
+      = collection_select nil, nil, WorkoutPolicy.all, :id, :name, { prompt: 'Select' },
+      { id: 'policy-select', class: 'form-control input-sm' }
+  .form-group
+    = label_tag :time_limit, 'Time Limit', class: 'control-label col-xs-2'
+    .col-xs-4
+      %input#time-limit.form-control.input-sm.input{ type: 'number', min: '0', placeholder: 'Time' }
 
   .form-group
     %p.lead Add to Course Offerings
-    #workout-offering-fields.col-lg-9.col-md-6.col-xs-9
+    #workout-offering-fields.col-lg-9.col-md-6.col-xs-9{ data: { can_update: "#{@can_update}" } }
       = render partial: 'workout_offering_fields', locals: { removable: false }
 
   .form-group

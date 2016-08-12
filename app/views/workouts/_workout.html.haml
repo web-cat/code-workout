@@ -39,7 +39,7 @@
       %i.fa.fa-folder-open
       .due.late
         = (workout_offering.current_deadline_distance.abs/24).to_s + ' days ago'
-    - else
+    - elsif workout_offering
       %i.fa.fa-folder-open
       .due.late
         = 'Due in a few minutes'
@@ -55,23 +55,26 @@
     %span.badge.badge-info= workout.exercises.count.to_s
 
   .summary
-    - if !workout_score || workout_score.show_feedback?
-      .radial-progress{ 'data-progress' => score_pct }
-        .circle
-          .mask.full
-            .fill
-          .mask.half
-            .fill
-            .fill.fix
-          .shadow
-        .inset
-          .pct
+    - if defined? new_or_existing
+      = link_to "View", edit_workout_path(id: workout.id, lti_launch: @lti_launch), class: 'btn btn-primary'
     - else
-      .radial-progress.masked
-        .circle
-          .shadow
-        .inset
-          .score= image_tag 'pct-blur.png'
+      - if !workout_score || workout_score.show_feedback?
+        .radial-progress{ 'data-progress' => score_pct }
+          .circle
+            .mask.full
+              .fill
+            .mask.half
+              .fill
+              .fill.fix
+            .shadow
+          .inset
+            .pct
+      - else
+        .radial-progress.masked
+          .circle
+            .shadow
+          .inset
+            .score= image_tag 'pct-blur.png'
   .body
     .text
       = teaser(workout.description)

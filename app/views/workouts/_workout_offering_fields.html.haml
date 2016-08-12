@@ -3,11 +3,9 @@
     %thead
       %tr
         %th Course Offering
-        %th Workout Policy
-        %th Time Limit
         %th Opens On
-        %th Soft Deadline
-        %th Hard Deadline
+        %th Due Date
+        %th Accepts Until
         %th Options
     %tbody
       %tr.fields
@@ -15,19 +13,14 @@
           = collection_select nil, nil, current_user.managed_course_offerings, :id, :display_name,
             { prompt: 'Select one' }, { class: 'coff-select form-control input-sm' }
         %td
-          = collection_select nil, nil, WorkoutPolicy.all, :id, :name, { prompt: 'Select' },
-          { id: 'policy-select', class: 'form-control input-sm' }
-        %td
-          %input.time-limit.form-control.input-sm.input{ type: 'number', min: '0', placeholder: 'Time' }
-        %td
           %input.opening-datepicker.datepicker{ type: 'text', class: 'form-control input-sm',
-            placeholder: 'Opening date' }
+            placeholder: 'Set date' }
         %td
           %input.soft-datepicker.datepicker{ type: 'text', class: 'form-control input-sm',
-            placeholder: 'Soft deadline' }
+            placeholder: 'Set date' }
         %td
           %input.hard-datepicker.datepicker{ type: 'text', class: 'form-control input-sm',
-            placeholder: 'Hard deadline' }
+            placeholder: 'Set date' }
         %td
           %i.fa.fa-wheelchair-alt.action.add-extension
           - if removable

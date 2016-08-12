@@ -27,6 +27,11 @@ namespace :db do
       last_name:  'Teacher',
       email:      "example-1@railstutorial.org")
 
+    instructor2 = FactoryGirl.create(:instructor_user,
+      first_name: 'Another',
+      last_name: 'Teacher',
+      email: 'example-2@railstutorial.org')
+
     FactoryGirl.create(:course_enrollment,
       user: instructor,
       course_offering: c,
@@ -55,7 +60,7 @@ namespace :db do
         user: FactoryGirl.create(:confirmed_user,
           first_name: Faker::Name.first_name,
           last_name:  Faker::Name.last_name,
-          email:      "example-#{n+2}@railstutorial.org"),
+          email:      "example-#{n+3}@railstutorial.org"),
         course_offering: co)
     end
 
