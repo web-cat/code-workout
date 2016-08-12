@@ -1,7 +1,5 @@
-%h1 Editing workout
+.container
+  %h1{data: { id: @workout.id } }
+    Editing workout: #{@workout.name}
 
-= render 'form'
-
-= link_to 'Show', @workout
-\|
-= link_to 'Back', workouts_path
+  = render 'form'

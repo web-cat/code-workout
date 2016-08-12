@@ -46,14 +46,16 @@
               organization_id: workout_offering.course_offering.course.organization.slug,
               course_id: workout_offering.course_offering.course.slug,
               term_id: workout_offering.course_offering.term.slug,
-              id: workout_offering.id)
+              id: workout_offering.id,
+              lti_launch: @lti_launch)
         - elsif review && Attempt.where(exercise_version: exercise.current_version, user: user).any?
           = link_to exercise.display_name,
             organization_workout_offering_exercise_review_path(id: exercise.id,
               organization_id: workout_offering.course_offering.course.organization.slug,
               course_id: workout_offering.course_offering.course.slug,
               term_id: workout_offering.course_offering.term.slug,
-              review_user_id: user.id, workout_offering_id: workout_offering.id)
+              review_user_id: user.id, workout_offering_id: workout_offering.id,
+              lti_launch: @lti_launch)
         - elsif review
           = exercise.display_name
         - else
@@ -62,34 +64,40 @@
               organization_id: workout_offering.course_offering.course.organization.slug,
               course_id: workout_offering.course_offering.course.slug,
               term_id: workout_offering.course_offering.term.slug,
-              workout_offering_id: workout_offering.id)
+              workout_offering_id: workout_offering.id,
+              lti_launch: @lti_launch)
       - else
         = exercise.display_name
     - elsif workout
       = link_to exercise.display_name, exercise_practice_path(exercise, workout_id: workout.id)
     - else
       = link_to exercise.display_name, exercise_practice_path(exercise)
-  .summary
-    - if !attempt || !workout_score || workout_score.show_feedback?
-      .radial-progress{ 'data-progress' => score_pct }
-        .circle
-          .mask.full
-            .fill
-          .mask.half
-            .fill
-            .fill.fix
-          .shadow
-        .inset
-          .score
-            = score.to_s
-            %span.outof>
-              = "/ "  + pts.to_s
-    - else
-      .radial-progress.masked
-        .circle
-          .shadow
-        .inset
-          .score= image_tag 'pct-blur.png'
+  - if !defined? new_workout
+    .summary
+      - if !attempt || !workout_score || workout_score.show_feedback?
+        .radial-progress{ 'data-progress' => score_pct }
+          .circle
+            .mask.full
+              .fill
+            .mask.half
+              .fill
+              .fill.fix
+            .shadow
+          .inset
+            .score
+              = score.to_s
+              %span.outof>
+                = "/ "  + pts.to_s
+      - else
+        .radial-progress.masked
+          .circle
+            .shadow
+          .inset
+            .score= image_tag 'pct-blur.png'
+  - else
+    .summary
+      .btn.btn-primary.add-ex{data: { ex_id: exercise.id, ex_name: exercise.name } }
+        %i.fa.fa-arrow-right
   .body
     .text
       = teaser(exercise.current_version.andand.prompts.andand.first.andand.question)
@@ -97,7 +105,7 @@
     = difficulty_image(exercise.experience.to_i)
     .taglist
       - exercise.tags.each do |t|
-        = link_to t.name, search_path(search: t.name),
+        = link_to t.name, exercises_search_path(search: t.name),
           method: :post, class: 'tag'
     -#
       - attempt = nil

@@ -6,12 +6,16 @@ class CourseOfferingsController < ApplicationController
   # -------------------------------------------------------------
   # GET /course_offerings
   def index
+    @course_offerings = current_user.managed_course_offerings
+    @lti_launch = params[:lti_launch]
+    render layout: 'one_column'
   end
-
 
   # -------------------------------------------------------------
   # GET /course_offerings/1
   def show
+    @lti_launch = params[:lti_launch]
+    render layout: 'one_column'
   end
 
 
@@ -27,11 +31,25 @@ class CourseOfferingsController < ApplicationController
     @uploaded_roster = UploadedRoster.new
   end
 
+  # -------------------------------------------------------------
+  # GET /course_offerings/1/students
+  def students
+    @course_offering = CourseOffering.find params[:id]
+
+    respond_to do |format|
+      format.js
+    end
+  end
 
   # -------------------------------------------------------------
   # POST /course_offerings
   def create
     @course_offering = CourseOffering.new(course_offering_params)
+    CourseEnrollment.create(
+      course_offering: @course_offering,
+      user: current_user,
+      course_role: CourseRole.instructor
+    )
 
     if @course_offering.save
       redirect_to organization_course_path(
@@ -90,14 +108,14 @@ class CourseOfferingsController < ApplicationController
       redirect_to root_path
     end
   end
-  
+
   # -------------------------------------------------------------
   # GET /course_offerings/:id/upload_roster
   # Method to enroll students from an uploaded roster.
   # TODO: Needs to be redone so that it will read an actual CSV
   #       file of student enrollment info and not just a list of
   #       e-mail addresses.
-  
+
   def upload_roster
     form_contents = params[:form]
     puts form_contents.fetch(:rosterfile).path

@@ -1,10 +1,13 @@
 class ExercisesController < ApplicationController
+  require 'ims/lti'
+  require 'oauth/request_proxy/rack_request'
+
   load_and_authorize_resource
 
-
   #~ Action methods ...........................................................
-
+  after_action :allow_iframe, only: :practice
   # -------------------------------------------------------------
+
   # GET /exercises
   def index
     @exercises = Exercise.where(is_public: true)
@@ -43,11 +46,16 @@ class ExercisesController < ApplicationController
       @msg = 'No exercises were found for your search request. ' \
         'Try these instead...'
 #      @wos = Workout.order('RANDOM()').limit(4)
-      @exs = Exercise.order('RANDOM()').limit(16)
+      @exs = Exercise.all.shuffle.first(16)
     end
     if @exs.length == 0
       @msg = 'No public exercises are available to search right now. ' \
         'Wait for contributors to add more.'
+    end
+
+    respond_to do |format|
+      format.html
+      format.js
     end
   end
 
@@ -241,8 +249,10 @@ class ExercisesController < ApplicationController
 
 
   # -------------------------------------------------------------
-  # GET/POST /practice/1
   def practice
+    # lti launch
+    @lti_launch = params[:lti_launch]
+
     if params[:exercise_version_id]
       @exercise_version =
         ExerciseVersion.find_by(id: params[:exercise_version_id])
@@ -263,7 +273,7 @@ class ExercisesController < ApplicationController
       redirect_to exercises_url,
         notice: 'Choose an exercise to practice!' and return
     end
-    # Tighter restrictions for the moment, should go away
+
     authorize! :practice, @exercise
 
     @student_user = params[:review_user_id] ? User.find(params[:review_user_id]) : current_user
@@ -287,12 +297,16 @@ class ExercisesController < ApplicationController
     @attempt = nil
     @workout_score = @workout_offering ? @student_user.current_workout_score :
       @workout ? @workout.score_for(@student_user, @workout_offering) : nil
-    if @workout_offering &&
+
+    if @workout_offering && @workout_score &&
       @workout_score.workout_offering != @workout_offering
       @workout_score = nil
     end
     if @workout_offering && !@workout_score
       @workout_score = @workout_offering.score_for(@student_user)
+      @workout_score.lis_result_sourcedid = params[:lis_result_sourcedid]
+      @workout_score.lis_outcome_service_url = params[:lis_outcome_service_url]
+      @workout_score.save
     end
     if @workout_score
       @attempt = @workout_score.attempt_for(@exercise_version.exercise)
@@ -319,7 +333,6 @@ class ExercisesController < ApplicationController
     if @workout.andand.exercise_workouts.andand.where(exercise: @exercise).andand.any?
       @max_points = @workout.exercise_workouts.
         where(exercise: @exercise).first.points
-      puts "\nMAX-POINTS", @max_points, "\nMAX-POINTS"
     end
 
 
@@ -339,7 +352,9 @@ class ExercisesController < ApplicationController
     else
       @wexs = nil
     end
+
     render layout: 'two_columns'
+
   end
 
 
@@ -354,6 +369,7 @@ class ExercisesController < ApplicationController
   #GET /evaluate/1
   def evaluate
     # Copy/pasted from #practice method.  Should be refactored.
+    @lti_launch = params[:lti_launch]
 
     if params[:exercise_version_id]
       @exercise_version =
@@ -390,6 +406,7 @@ class ExercisesController < ApplicationController
     else
       @workout_offering = nil
     end
+
     if @workout_offering.nil? && current_user.andand.current_workout_score &&
       current_user.current_workout_score.workout.contains?(@exercise_version.exercise)
       @workout_offering = current_user.current_workout_score.workout_offering
@@ -397,38 +414,46 @@ class ExercisesController < ApplicationController
         @workout = current_user.current_workout_score.workout
       end
     end
+
     if @workout_offering && @workout.nil?
       @workout = @workout_offering.workout
     end
+
     if @workout.nil? && session[:current_workout]
       @workout = Workout.find_by(id: session[:current_workout])
       if !@workout.contains?(@exercise_version.exercise)
         @workout = nil
       end
     end
+
     @workout_score = nil
+
     if @workout_offering
       @workout_score = @workout_offering.score_for(current_user)
     elsif @workout
       @workout_score = @workout.score_for(current_user)
     end
+
     if @workout_score.andand.closed? && @workout_offering.andand.can_be_practiced_by?(current_user)
       p 'WARNING: attempt to evaluate exercise after time expired.'
       return
     end
-    @attempt = @exercise_version.new_attempt(
-      user: current_user, workout_score: @workout_score)
+
+    @attempt = @exercise_version.new_attempt(user: current_user, workout_score: @workout_score)
 
     @attempt.save!
+
     # FIXME: Need to make it work for multiple prompts
     # prompt = @exercise_version.prompts.first.specific
     # prompt_answer = @attempt.prompt_answers.first  # already specific here
+
     if @workout.andand.exercise_workouts.andand.where(exercise: @exercise).andand.any?
       @max_points = @workout.exercise_workouts.
         where(exercise: @exercise).first.points
     else # case when exercise being practised is not part of any workout
       @max_points = 10.0
     end
+
     if @exercise_version.is_mcq?
       if params[:exercise_version]
         # Usual single prompt question
@@ -443,7 +468,6 @@ class ExercisesController < ApplicationController
         end
       end
 
-      p params
       @responses = Array.new
       if response_ids.class == Array
         # Remove blank responses and duplicates
@@ -504,8 +528,24 @@ class ExercisesController < ApplicationController
           organization_id: @workout_offering.course_offering.course.organization.slug,
           course_id: @workout_offering.course_offering.course.slug,
           term_id: @workout_offering.course_offering.term.slug,
-          id: @workout_offering.id) + "' "
+          id: @workout_offering.id,
+          lti_launch: @lti_launch) + "' "
       end
+
+      # Sending only mcq score to LTI. Coding scores will be sent when
+      # feedback_poll returns with feedback ready.
+      total_points = ExerciseWorkout.where(workout_id: @workout_score.workout_id).sum(:points)
+      if lms_instance = @workout_offering.course_offering.lms_instance
+        key = lms_instance.consumer_key
+        secret = lms_instance.consumer_secret
+
+        @tp = IMS::LTI::ToolProvider.new(key, secret, {
+          "lis_outcome_service_url" => "#{@workout_score.lis_outcome_service_url}",
+          "lis_result_sourcedid" => "#{@workout_score.lis_result_sourcedid}"
+        })
+        @tp.post_replace_result!(@workout_score.score / total_points)
+      end
+
     elsif @exercise_version.is_coding?
       @answer_code = params[:exercise_version][:answer_code]
       # Why were these in here? what purpose do they serve ??????
@@ -526,7 +566,6 @@ class ExercisesController < ApplicationController
       end
       @workout ||= @workout_score.andand.workout
     end
-
   end
 
 
@@ -564,10 +603,8 @@ class ExercisesController < ApplicationController
     redirect_to exercises_url, notice: 'Exercise was successfully destroyed.'
   end
 
-
   #~ Private instance methods .................................................
   private
-
     # -------------------------------------------------------------
     def create_new_version
       newexercise = Exercise.new

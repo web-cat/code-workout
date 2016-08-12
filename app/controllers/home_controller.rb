@@ -4,6 +4,9 @@ class HomeController < ApplicationController
   respond_to :js, only: [:new_course_modal]
 
   def index
+    if params[:notice]
+      flash.now[:notice] = params[:notice]
+    end
   end
 
   def about

@@ -27,6 +27,7 @@ class CourseOffering < ActiveRecord::Base
 
   belongs_to :course, inverse_of: :course_offerings
   belongs_to :term, inverse_of: :course_offerings
+  belongs_to :lms_instance, inverse_of: :course_offerings
   has_many :workout_offerings, inverse_of: :course_offering,
     dependent: :destroy
   has_many :workouts, through: :workout_offerings
@@ -57,7 +58,7 @@ class CourseOffering < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def display_name
-    "#{course.number} (#{label})"
+    "#{course.organization.abbreviation} #{term.slug} #{course.number} (#{label})"
   end
 
   def name
