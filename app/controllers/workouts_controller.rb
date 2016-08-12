@@ -127,6 +127,19 @@ class WorkoutsController < ApplicationController
     if cannot? :edit, @workout
       redirect_to root_path, notice: 'Unauthorized to edit workout' and return
     end
+    @can_update = false
+    @workout.workout_offerings.each do |wo|
+      wo.course_offering.course_enrollments.each do |e|
+        if e.user_id == current_user.id && e.course_role.can_manage_assignments
+          @can_update = true
+        end
+      end
+    end
+
+    if @workout.creator_id == current_user.id
+      @can_update = true
+    end
+
     @lti_launch = params[:lti_launch]
     @exs = []
     @workout.exercises.each do |exer|
@@ -331,6 +344,7 @@ class WorkoutsController < ApplicationController
     def create_or_update
       @workout.name = params[:name]
       @workout.description = params[:description]
+      @workout.is_public = true
       workout_policy = WorkoutPolicy.find_by id: params[:policy_id]
       time_limit = params[:time_limit]
       removed_exercises = params[:removed_exercises].split ','
@@ -357,18 +371,18 @@ class WorkoutsController < ApplicationController
     # to the workout
     def parse_course_offerings(course_offerings, time_limit, workout_policy)
       if @workout
-        byebug
         course_offerings.each do |id, offering|
           course_offering = CourseOffering.find(id)
-          if @workout_offering = WorkoutOffering.find_by(workout: @workout, course_offering: course_offering)
+          @workout_offering = WorkoutOffering.find_by(workout: @workout, course_offering: course_offering)
+          if @workout_offering.blank?
             @workout_offering = WorkoutOffering.new
           end
           @workout_offering.workout = @workout
           @workout_offering.course_offering = course_offering
           @workout_offering.time_limit = time_limit
-          @workout_offering.opening_date = DateTime.parse(offering['opening_date'])
-          @workout_offering.soft_deadline = DateTime.parse(offering['soft_deadline'])
-          @workout_offering.hard_deadline = DateTime.parse(offering['hard_deadline'])
+          @workout_offering.opening_date = DateTime.parse(offering['opening_date']) if offering['opening_date']
+          @workout_offering.soft_deadline = DateTime.parse(offering['soft_deadline']) if offering['soft_deadline']
+          @workout_offering.hard_deadline = DateTime.parse(offering['hard_deadline']) if offering['hard_deadline']
           @workout_offering.workout_policy = workout_policy
           @workout_offering.save!
 
@@ -377,14 +391,13 @@ class WorkoutsController < ApplicationController
             students = ext['students']
             students.each do |student_id|
               student = User.find(student_id)
-              student_extension = StudentExtension.new(
-                user: student,
-                workout_offering: @workout_offering,
-                opening_date: DateTime.parse(ext['opening_date']),
-                soft_deadline: DateTime.parse(ext['soft_deadline']),
-                hard_deadline: DateTime.parse(ext['hard_deadline']),
-                time_limit: ext['time_limit']
-              )
+              student_extension = StudentExtension.new
+              student_extenion.user = student
+              student_extenion.workout_offering = @workout_offering
+              student_extenion.opening_date = DateTime.parse(ext['opening_date']) if ext['opening_date']
+              student_extenion.soft_deadline = DateTime.parse(ext['soft_deadline']) if ext['soft_deadline']
+              student_extenion.hard_deadline = DateTime.parse(ext['hard_deadline']) if ext['hard_deadline']
+              student_extenion.time_limit = ext['time_limit']
               student_extension.save!
             end
           end

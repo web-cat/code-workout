@@ -243,13 +243,13 @@ handle_submit = ->
   fd.append 'course_offerings', JSON.stringify course_offerings
   fd.append 'removed_exercises', removed_exercises
 
-  url = ''
   if $('body').is('.workouts.new')
     url = '/gym/workouts'
     type = 'post'
   else if $('body').is('.workouts.edit')
-    url = '/gym/workouts/' + $('h1').data 'id'
-    type = 'patch'
+    can_update = $('#workout-offering-fields').data 'can-update'
+    url = if can_update == true then '/gym/workouts/' + $('h1').data 'id' else '/gym/workouts'
+    type = if can_update == true then 'patch' else 'post'
 
   $.ajax
     url: url
