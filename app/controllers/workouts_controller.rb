@@ -344,7 +344,7 @@ class WorkoutsController < ApplicationController
     def create_or_update
       @workout.name = params[:name]
       @workout.description = params[:description]
-      @workout.is_public = true
+      @workout.is_public = params[:is_public]
       workout_policy = WorkoutPolicy.find_by id: params[:policy_id]
       time_limit = params[:time_limit]
       removed_exercises = params[:removed_exercises].split ','

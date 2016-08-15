@@ -249,6 +249,7 @@ handle_submit = ->
   description = $('#description').val()
   time_limit = $('#time-limit').val()
   policy_id = $('#policy-select').val()
+  is_public = $('#is-public').is ':checked'
   removed_exercises = $('#ex-list').data 'removed-exercises'
   exercises = get_exercises()
   course_offerings = get_offerings()
@@ -260,6 +261,7 @@ handle_submit = ->
   fd.append 'exercises', JSON.stringify exercises
   fd.append 'course_offerings', JSON.stringify course_offerings
   fd.append 'removed_exercises', removed_exercises
+  fd.append 'is_public', is_public
 
   if $('body').is('.workouts.new')
     url = '/gym/workouts'

@@ -29,15 +29,19 @@
       %ul.list-group#ex-list{ style: "display: #{@workout.andand.exercise_workouts.any? ? 'block;' : 'none;'}",
         data: { exercises: "#{@exercises.to_json}", removed_exercises: "#{[].to_json}" } }
   .form-group
-    = label_tag :policy_select, 'Policy', class: 'control-label col-xs-2'
-    .col-xs-4
+    = label_tag :policy_select, 'Policy', class: 'control-label col-xs-1'
+    .col-xs-2
       = collection_select nil, nil, WorkoutPolicy.all, :id, :name, { prompt: 'Select' },
       { id: 'policy-select', class: 'form-control input-sm' }
-  .form-group
-    = label_tag :time_limit, 'Time', class: 'control-label col-xs-2'
-    .col-xs-4
+    = label_tag :time_limit, 'Time', class: 'control-label col-xs-1'
+    .col-xs-3
       %input#time-limit.form-control.input-sm.input{ type: 'number', min: '0',
         placeholder: 'Leave blank for no time limit.' }
+
+  .form-group
+    = label_tag :is_public, 'Public?', class: 'control-label col-xs-2'
+    .col-xs-1
+      = check_box_tag 'is-public', 'is_public', true, class: 'form-control', id: 'is-public'
 
   .form-group
     %p.lead Add to Course Offerings
