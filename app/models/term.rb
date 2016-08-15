@@ -73,7 +73,7 @@ class Term < ActiveRecord::Base
   # -------------------------------------------------------------
   def self.current_term
     result = Term.
-      where('starts_on <= :now and :now <= ends_on', now: DateTime.now).
+      where('starts_on <= :now and :now <= ends_on', now: Date.today).
       first
     return result ? result : Term.first
   end
