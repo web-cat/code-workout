@@ -1,11 +1,17 @@
-%div#alerts{style: 'display: none;'}
+.row
+  .col-xs-9#alerts{style: 'display: none;'}
 .form-horizontal
   %h4.text-danger '*' indicates a required field.
   .form-group
     = label_tag :name, 'Name *', class: 'control-label col-xs-2'
     .col-lg-7.col-md-6.col-xs-7
       = text_field_tag :name, nil, id: 'wo-name', class: 'form-control', maxlength: 50,
-        placeholder: 'e.g. Recursion exercises', value: @workout.present? ? @workout.name : ''
+        placeholder: 'e.g. Recursion exercises', value: @workout.present? ? @workout.name : '',
+        data: { old_name: @workout.present? ? @workout.name : '' }
+    .row
+      .col-xs-offset-2.col-lg-7.col-md-6.col-xs-7#clone-msg{ style: 'display: none; color: red; font-size: small;' }
+        You do not have permission to edit this workout. If you put in a new name, we can create a clone with your
+        new settings.
   .form-group
     = label_tag :description, 'Description', class: 'control-label col-xs-2'
     .col-lg-7.col-md-6.col-xs-7
@@ -38,10 +44,13 @@
       = render partial: 'workout_offering_fields', locals: { removable: false }
 
   .form-group
-    = button_tag type: 'button', id: 'add-offering', class: 'btn btn-success' do
+    = button_tag type: 'button', id: 'add-offering', class: 'btn btn-success btn-sm' do
       %i.fa.fa-plus{ style: 'padding-right 5px;' }
       Add to Another Course Offering
-
+  .form-group
+    = button_tag type: 'button', id: 'add-extension', class: 'btn btn-inverse btn-sm' do
+      %i.fa.fa-plus{ style: 'padding-right 5px;' }
+      Add Student Extension
 
   .form-group
     %button#btn-submit-wo.btn.btn-primary Submit

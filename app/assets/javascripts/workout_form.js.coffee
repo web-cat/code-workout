@@ -4,6 +4,10 @@ $('.workouts.new, .workouts.edit').ready ->
 
   init_datepickers()
   init_exercises()
+  validate_name()
+
+  $('#wo-name').change ->
+    validate_name()
 
   $('.search-results').on 'click', '.add-ex', ->
     $('.empty-msg').css 'display', 'none'
@@ -63,6 +67,19 @@ $('.workouts.new, .workouts.edit').ready ->
 
   $('#btn-submit-wo').click ->
     handle_submit()
+
+validate_name = ->
+  can_update = $('#workout-offering-fields').data 'can-update'
+  name_field = $('#wo-name')
+  if can_update == false
+    if name_field.val() == name_field.data 'old-name'
+      $('#clone-msg').css 'display', 'block'
+      return false
+    else
+      $('#clone-msg').css 'display', 'none'
+      return true
+
+  return true
 
 init_exercises = ->
   exercises = $('#ex-list').data 'exercises'
@@ -209,6 +226,7 @@ reset_alert_area = ->
 check_completeness = ->
   messages = []
   messages.push 'Workout Name cannot be empty.' if $('#wo-name').val() == ''
+  messages.push 'Change the name of the workout so you can create a clone with your settings.' if !validate_name()
   messages.push 'Workout must have at least 1 exercise.' if $('#ex-list li').length == 0
 
   if $('body').hasClass '.workouts.new'
