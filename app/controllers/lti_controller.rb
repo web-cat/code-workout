@@ -43,9 +43,9 @@ class LtiController < ApplicationController
         course_number = params[:custom_course_number] || params[:context_label].gsub(/[^a-zA-Z0-9 ]/, '')
         term_slug = params[:custom_term]
         coff_url = params[:custom_url] || nil
+        course_name = params[:custom_course_name] || params[:context_title]
 
         course_slug = course_number.gsub(/[^a-zA-Z0-9]/, '').downcase
-        course_name = params[:context_title]
         coff_label = params[:custom_label] # This is required from the instructor in the ToolConsumer
 
         @organization = Organization.find_by(slug: organization_slug)
