@@ -99,7 +99,7 @@ class Ability
       can [:create], [Course, CourseOffering, CourseEnrollment,
         Workout, Exercise, Attempt, ResourceFile]
       can [:manage], [Course, CourseOffering, CourseEnrollment,
-        Workout, Exercise, Attempt, ResourceFile]
+        Exercise, Attempt, ResourceFile]
 
       can [:index], [Workout, Exercise, Attempt, ResourceFile]
     end
@@ -227,6 +227,11 @@ class Ability
   # -------------------------------------------------------------
   def process_workouts(user)
     can [:read, :update, :destroy], Workout, creator_id: user.id
+    can :update, Workout, workout_offerings:
+      { course_offering:
+        { course_enrollments:
+          { user_id: user.id, course_role:
+            { can_manage_assignments: true } } } }
     can :practice, Workout, is_public: true
   end
 
