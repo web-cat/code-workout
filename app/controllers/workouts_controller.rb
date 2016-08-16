@@ -124,21 +124,23 @@ class WorkoutsController < ApplicationController
   # -------------------------------------------------------------
   # GET /workouts/1/edit
   def edit
-    if cannot? :edit, @workout
-      redirect_to root_path, notice: 'Unauthorized to edit workout' and return
-    end
-    @can_update = false
-    @workout.workout_offerings.each do |wo|
-      wo.course_offering.course_enrollments.each do |e|
-        if e.user_id == current_user.id && e.course_role.can_manage_assignments
-          @can_update = true
-        end
-      end
+    # if cannot? :edit, @workout
+    #   redirect_to root_path, notice: 'Unauthorized to edit workout' and return
+    # end
+    # @can_update = false
+    # @workout.workout_offerings.each do |wo|
+    #   wo.course_offering.course_enrollments.each do |e|
+    #     if e.user_id == current_user.id && e.course_role.can_manage_assignments
+    #       @can_update = true
+    #     end
+    #   end
+    # end
+
+    if current_user.global_role.is_regular_user? && current_user.managed_course_offerings.blank?
+      redirect_to root_path, notice: 'You are not authorized to edit workouts.' and return
     end
 
-    if @workout.creator_id == current_user.id
-      @can_update = true
-    end
+    @can_update = can? :edit, @workout
 
     @lti_launch = params[:lti_launch]
     @exs = []

@@ -43,7 +43,7 @@ namespace :db do
       course_role: CourseRole.instructor)
 
     FactoryGirl.create(:course_enrollment,
-      user: instructor,
+      user: instructor2,
       course_offering: c3,
       course_role: CourseRole.instructor)
 
