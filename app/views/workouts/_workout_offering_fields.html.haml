@@ -1,28 +1,18 @@
-.offering
-  %table.table.offering-fields
-    %thead
-      %tr
-        %th Course Offering
-        %th Opens On
-        %th Due Date
-        %th Accepts Until
-        %th Options
-    %tbody
-      %tr.fields
-        %td
-          = collection_select nil, nil, current_user.managed_course_offerings, :id, :display_name,
-            { prompt: 'Select one' }, { class: 'coff-select form-control input-sm' }
-        %td
-          %input.opening-datepicker.datepicker{ type: 'text', class: 'form-control input-sm',
-            placeholder: 'Set date' }
-        %td
-          %input.soft-datepicker.datepicker{ type: 'text', class: 'form-control input-sm',
-            placeholder: 'Set date' }
-        %td
-          %input.hard-datepicker.datepicker{ type: 'text', class: 'form-control input-sm',
-            placeholder: 'Set date' }
-        %td
-          %i.fa.fa-wheelchair-alt.action.add-extension
-          - if removable
-            |
-            %ifa.fa-times.action.delete-offering
+%tr.offering.fields
+  %td
+    = collection_select nil, nil, current_user.managed_course_offerings, :id, :display_name,
+      { prompt: 'Select one' }, { class: 'coff-select form-control input-sm' }
+  %td
+    %input.opening-datepicker.datepicker{ type: 'text', class: 'form-control input-sm',
+      placeholder: 'Set date' }
+  %td
+    %input.soft-datepicker.datepicker{ type: 'text', class: 'form-control input-sm',
+      placeholder: 'Set date' }
+  %td
+    %input.hard-datepicker.datepicker{ type: 'text', class: 'form-control input-sm',
+      placeholder: 'Set date' }
+  %td
+    %i.fa.fa-wheelchair-alt.action.add-extension
+    - if removable
+      |
+      %ifa.fa-times.action.delete-offering

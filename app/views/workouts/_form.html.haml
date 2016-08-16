@@ -45,8 +45,17 @@
 
   .form-group
     %p.lead Add to Course Offerings
-    #workout-offering-fields.col-lg-9.col-md-6.col-xs-9{ data: { can_update: "#{@can_update}" } }
-      = render partial: 'workout_offering_fields', locals: { removable: false }
+    .col-lg-9.col-md-6.col-xs-9{ data: { can_update: "#{@can_update}" } }
+      %table#workout-offering-fields.table
+        %thead
+          %tr
+            %th Course Offering
+            %th Opens On
+            %th Due Date
+            %th Accepts Until
+            %th Options
+        %tbody
+          = render partial: 'workout_offering_fields', locals: { removable: false }
 
   .form-group
     = button_tag type: 'button', id: 'add-offering', class: 'btn btn-success btn-sm' do
@@ -61,5 +70,6 @@
     %button#btn-submit-wo.btn.btn-primary Submit
     = link_to 'Back', workouts_path
 
-  #add-offering-form{ style: 'display: none;' }
-    = render partial: 'workout_offering_fields', locals: { removable: true }
+  %table#add-offering-form{ style: 'display: none;' }
+    %tbody
+      = render partial: 'workout_offering_fields', locals: { removable: true }
