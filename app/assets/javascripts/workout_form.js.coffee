@@ -41,13 +41,15 @@ $('.workouts.new, .workouts.edit').ready ->
       row.find('.add-extension').prop 'disabled', true
 
   $('#workout-offering-fields').on 'click', '.add-extension', ->
-    $.ajax
-      url: '/course_offerings/' + course_offering_id + '/students'
-      type: 'get'
-      cache: true
-      dataType: 'script'
-      success: (data) ->
-        init_datepickers()
+    course_offering = $(this).closest('tr').find('.coff-select option:selected').text()
+    # $.ajax
+    #   url: '/course_offerings/' + course_offering_id + '/students'
+    #   type: 'get'
+    #   cache: true
+    #   dataType: 'script'
+    #   success: (data) ->
+    #     init_datepickers()
+    $('#extension-modal #modal-header').append 'Searching for students from ' + course_offering
 
   $(document).on 'click', '.delete-extension', ->
     $(this).closest('tr').remove()

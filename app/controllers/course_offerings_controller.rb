@@ -33,7 +33,7 @@ class CourseOfferingsController < ApplicationController
 
   # -------------------------------------------------------------
   # GET /course_offerings/1/students
-  def students
+  def search_students
     @course_offering = CourseOffering.find params[:id]
 
     respond_to do |format|

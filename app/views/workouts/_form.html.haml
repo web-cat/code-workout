@@ -71,3 +71,18 @@
   %table#add-offering-form{ style: 'display: none;' }
     %tbody
       = render partial: 'workout_offering_fields', locals: { removable: true }
+
+  #extension-modal.modal.fade{role: 'dialog', tabindex: '-1' }
+    .modal-dialog.modal-lg
+      .modal-content
+        .modal-header
+          %p.lead#modal-header
+        .modal-body
+          .col-xs-10
+            = text_field_tag 'searchkey', nil, placeholder: 'e.g John Smith or jsmith9@vt.edu or john',
+              class: 'form-control'
+          .col-xs-2
+            = button_tag 'Search', id: 'btn-student-search', class: 'btn'
+          %br
+          #student-search-results
+            No results yet.
