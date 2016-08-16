@@ -12,7 +12,8 @@
     %input.hard-datepicker.datepicker{ type: 'text', class: 'form-control input-sm',
       placeholder: 'Set date' }
   %td
-    %i.fa.fa-wheelchair-alt.action.add-extension
+    = button_tag type: 'button', class: 'add-extension btn btn-sm', disabled: true do
+      Add Extension
+  %td
     - if removable
-      |
-      %ifa.fa-times.action.delete-offering
+      %i.fa.fa-times.action.delete-offering

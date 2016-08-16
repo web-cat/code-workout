@@ -53,7 +53,8 @@
             %th Opens On
             %th Due Date
             %th Accepts Until
-            %th Options
+            %th Student Extensions
+            %th Remove
         %tbody
           = render partial: 'workout_offering_fields', locals: { removable: false }
 
@@ -61,10 +62,7 @@
     = button_tag type: 'button', id: 'add-offering', class: 'btn btn-success btn-sm' do
       %i.fa.fa-plus{ style: 'padding-right 5px;' }
       Add to Another Course Offering
-  .form-group
-    = button_tag type: 'button', id: 'add-extension', class: 'btn btn-inverse btn-sm' do
-      %i.fa.fa-plus{ style: 'padding-right 5px;' }
-      Add Student Extension
+  #extensions{style: 'display: none;'}
 
   .form-group
     %button#btn-submit-wo.btn.btn-primary Submit

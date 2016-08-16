@@ -30,22 +30,24 @@ $('.workouts.new, .workouts.edit').ready ->
 
   $('#workout-offering-fields').on 'change', '.coff-select', ->
     val = $(this).val()
-    if val != ''
-      $(this).closest('tr').attr('id', 'off-' + val)
+    row = $(this).closest 'tr'
 
-  $(document).on 'click', '.add-extension', ->
-    course_offering_id = $(this).closest('tr').find('.coff-select').val()
-    if course_offering_id == ''
-      form_alert ['You must select a course offering before adding student extensions to it.']
+    if val != ''
+      row.attr('id', 'off-' + val)
+      row.find('.add-extension').addClass 'btn-primary'
+      row.find('.add-extension').prop 'disabled', false
     else
-      $(this).closest('.offering').find('.extensions').css 'display', 'inline'
-      $.ajax
-        url: '/course_offerings/' + course_offering_id + '/students'
-        type: 'get'
-        cache: true
-        dataType: 'script'
-        success: (data) ->
-          init_datepickers()
+      row.find('.add-extension').removeClass 'btn-primary'
+      row.find('.add-extension').prop 'disabled', true
+
+  $('#workout-offering-fields').on 'click', '.add-extension', ->
+    $.ajax
+      url: '/course_offerings/' + course_offering_id + '/students'
+      type: 'get'
+      cache: true
+      dataType: 'script'
+      success: (data) ->
+        init_datepickers()
 
   $(document).on 'click', '.delete-extension', ->
     $(this).closest('tr').remove()
