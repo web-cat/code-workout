@@ -43,6 +43,7 @@ $('.workouts.new, .workouts.edit').ready ->
   $('#workout-offering-fields').on 'click', '.add-extension', ->
     course_offering = $(this).closest('tr').find('.coff-select option:selected').text()
     course_offering_id = $(this).closest('tr').find('.coff-select').val()
+    clear_student_search()
     $('#extension-modal #modal-header').append 'Searching for students from <u>' + course_offering + '</u>'
     listen_for_search(course_offering_id)
 
@@ -66,6 +67,12 @@ $('.workouts.new, .workouts.edit').ready ->
 
   $('#btn-submit-wo').click ->
     handle_submit()
+
+clear_student_search = ->
+  $('#extension-modal #modal-header').empty()
+  $('#msg').empty()
+  $('#results').empty()
+  $('#terms').val('')
 
 listen_for_search = (course_offering_id) ->
   $('#btn-student-search').click ->
