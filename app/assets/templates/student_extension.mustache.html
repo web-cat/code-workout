@@ -1,0 +1,11 @@
+<script id='extension-template' type='text/html'>
+  <tr class='extension fields' data-course-offering-id='{{ course_offering_id }}' data-student-id='{{ student_id }}'>
+    <td>{{ course_offering_display }}</td>
+    <td>{{ student_display }}</td>
+    <td><input class='opening-datepicker datepicker form-control input input-sm' placeholder='Blank for default'></td>
+    <td><input class='soft-datepicker datepicker form-control input input-sm' placeholder='Blank for default'></td>
+    <td><input class='hard-datepicker datepicker form-control input input-sm' placeholder='Blank for default'></td>
+    <td><input class='form-control time-limit input-sm input' type='number' min='0' placeholder='Blank for default'></td>
+    <td><i class='action delete-extension fa fa-times'></i></td>
+  </tr>
+</script>
