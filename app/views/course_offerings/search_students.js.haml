@@ -1,0 +1,7 @@
+$('#extension-modal #msg').empty();
+$('#extension-modal #results').empty();
+- if @students.any?
+  - if defined? @msg
+    $('#msg').append("#{@msg}")
+  - @students.each do |student|
+    $('#results').append("<a href='#' class='list-group-item list-group-item-action'>#{student.display_name} (#{student.email_without_domain})</a>")
