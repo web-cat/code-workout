@@ -43,9 +43,9 @@ class CourseOfferingsController < ApplicationController
       @students = @students + @course_offering_students
         .where("first_name like ? or last_name like ? or email like ?", "%#{term}%", "%#{term}%", "%#{term}%")
     end
-    
+
     if @students.blank?
-      @msg = 'Your search returned no results.'
+      @msg = 'Your search returned no results. Here are all the students enrolled in the course.'
       @students = @course_offering_students
     end
 

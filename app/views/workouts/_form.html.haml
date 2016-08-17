@@ -58,6 +58,21 @@
         %tbody
           = render partial: 'workout_offering_fields', locals: { removable: false }
 
+  .form-group#extensions{ style: 'display: none;' }
+    %p.lead Student Extensions
+    .col-lg-9.col-md-6.col-xs-9
+      %table#student-extension-fields.table
+        %thead
+          %tr
+            %th Course Offering
+            %th Student
+            %th Opens On
+            %th Due Date
+            %th Accepts Until
+            %th Time Limit
+            %th Remove
+        %tbody
+
   .form-group
     = button_tag type: 'button', id: 'add-offering', class: 'btn btn-success btn-sm' do
       %i.fa.fa-plus{ style: 'padding-right 5px;' }
@@ -78,9 +93,9 @@
         .modal-header
           %p.lead#modal-header
         .modal-body
-          .row
+          .form-group
             .col-xs-10
-              = text_field_tag 'terms', nil, placeholder: 'e.g John Smith or jsmith9@vt.edu or john',
+              = text_field_tag 'terms', nil, placeholder: 'e.g John Smith or jsmith9@vt.edu or john. Blank for all students.',
                 class: 'form-control'
             .col-xs-2
               = button_tag 'Search', id: 'btn-student-search', class: 'btn'

@@ -44,8 +44,28 @@ $('.workouts.new, .workouts.edit').ready ->
     course_offering = $(this).closest('tr').find('.coff-select option:selected').text()
     course_offering_id = $(this).closest('tr').find('.coff-select').val()
     clear_student_search()
+    $('#extension-modal').data('course-offering', { id: course_offering_id, display: course_offering } )
     $('#extension-modal #modal-header').append 'Searching for students from <u>' + course_offering + '</u>'
-    listen_for_search(course_offering_id)
+    $('#btn-student-search').click ->
+      search_students(course_offering_id)
+    $('#terms').keydown (e) ->
+      if e.keyCode == 13
+        search_students(course_offering_id)
+
+  $('#results').on 'click', 'a', ->
+    course_offering = $('#extension-modal').data('course-offering')
+    student =
+      id: $(this).data('student-id')
+      display: $(this).text()
+    data =
+      course_offering_id: course_offering.id
+      course_offering_display: course_offering.display
+      student_display: student.display
+      student_id: student.id
+    $.get '/assets/student_extension.mustache.html', (template, textStatus, jqXHr) ->
+      $('#student-extension-fields').append(Mustache.render($(template).filter('#extension-template').html(), data))
+    $('#extension-modal').modal('hide')
+    $('#extensions').css 'display', 'block'
 
   $(document).on 'click', '.delete-extension', ->
     $(this).closest('tr').remove()
@@ -74,9 +94,29 @@ clear_student_search = ->
   $('#results').empty()
   $('#terms').val('')
 
-listen_for_search = (course_offering_id) ->
+listen_for_extension = ->
+  course_offering = $('#extension-modal').data('course-offering')
   $('#btn-student-search').click ->
-    search_students(course_offering_id)
+    search_students(course_offering.id)
+  $('#terms').keydown (e) ->
+    if e.keyCode == 13
+      search_students(course_offering.id)
+
+listen_for_student_select = ->
+  $('#results').on 'click', 'a', ->
+    course_offering = $('#extension-modal').data('course-offering')
+    student =
+      id: $(this).data('student-id')
+      display: $(this).text()
+    data =
+      course_offering_id: course_offering.id
+      course_offering_display: course_offering.display
+      student_display: student.display
+      student_id: student.id
+    $.get '/assets/student_extension.mustache.html', (template, textStatus, jqXHr) ->
+      $('#student-extension-fields').append(Mustache.render($(template).filter('#extension-template').html(), data))
+    $('#extension-modal').modal('hide')
+    $('#extensions').css 'display', 'block'
 
 search_students = (course_offering_id) ->
   $.ajax
