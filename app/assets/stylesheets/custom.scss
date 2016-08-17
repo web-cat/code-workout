@@ -308,3 +308,12 @@ ul.wysihtml5-toolbar li {
   color: red;
   font-size: small;
 }
+
+.modal-dialog {
+  overflow-y: initial !important
+}
+
+.modal-body {
+  height: 400px;
+  overflow-y: auto;
+}

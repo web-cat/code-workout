@@ -4,10 +4,10 @@ $('.workouts.new, .workouts.edit').ready ->
 
   init_datepickers()
   init_exercises()
-  validate_name()
+  validate_workout_name()
 
   $('#wo-name').change ->
-    validate_name()
+    validate_workout_name()
 
   $('.search-results').on 'click', '.add-ex', ->
     $('.empty-msg').css 'display', 'none'
@@ -42,14 +42,9 @@ $('.workouts.new, .workouts.edit').ready ->
 
   $('#workout-offering-fields').on 'click', '.add-extension', ->
     course_offering = $(this).closest('tr').find('.coff-select option:selected').text()
-    # $.ajax
-    #   url: '/course_offerings/' + course_offering_id + '/students'
-    #   type: 'get'
-    #   cache: true
-    #   dataType: 'script'
-    #   success: (data) ->
-    #     init_datepickers()
-    $('#extension-modal #modal-header').append 'Searching for students from ' + course_offering
+    course_offering_id = $(this).closest('tr').find('.coff-select').val()
+    $('#extension-modal #modal-header').append 'Searching for students from <u>' + course_offering + '</u>'
+    listen_for_search(course_offering_id)
 
   $(document).on 'click', '.delete-extension', ->
     $(this).closest('tr').remove()
@@ -72,7 +67,21 @@ $('.workouts.new, .workouts.edit').ready ->
   $('#btn-submit-wo').click ->
     handle_submit()
 
-validate_name = ->
+listen_for_search = (course_offering_id) ->
+  $('#btn-student-search').click ->
+    search_students(course_offering_id)
+
+search_students = (course_offering_id) ->
+  $.ajax
+    url: '/course_offerings/' + course_offering_id + '/search_students'
+    type: 'get'
+    data: { terms: $('#terms').val() }
+    cache: true
+    dataType: 'script'
+    success: (data) ->
+      # init_datepickers()
+
+validate_workout_name = ->
   can_update = $('#workout-offering-fields').data 'can-update'
   name_field = $('#wo-name')
   if can_update == false
@@ -251,7 +260,7 @@ reset_alert_area = ->
 check_completeness = ->
   messages = []
   messages.push 'Workout Name cannot be empty.' if $('#wo-name').val() == ''
-  messages.push 'Change the name of the workout so you can create a clone with your settings.' if !validate_name()
+  messages.push 'Change the name of the workout so you can create a clone with your settings.' if !validate_workout_name()
   messages.push 'Workout must have at least 1 exercise.' if $('#ex-list li').length == 0
 
   if $('body').hasClass '.workouts.new'
