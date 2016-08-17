@@ -11,6 +11,7 @@ ActiveAdmin.register LmsInstance do
     column :lms_type
     column :consumer_key
     column :consumer_secret
+    column :organization_id
     column :created_at
     actions
   end
@@ -20,6 +21,7 @@ ActiveAdmin.register LmsInstance do
     f.inputs do
       f.input :lms_type
       f.input :url
+      f.input :organization_id
       f.input :consumer_key
       f.input :consumer_secret
     end
