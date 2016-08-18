@@ -217,12 +217,13 @@ get_offerings = ->
           opening_date: opening_date
           soft_deadline: soft_deadline
           hard_deadline: hard_deadline
+          extensions: []
 
         offerings[offering_id.toString()] = offering
   return offerings
 
-get_extensions = ->
-  extensions = []
+get_offerings_with_extensions = ->
+  offerings = get_offerings()
   extension_rows = $('tr', '#student-extension-fields tbody')
   for extension_row in extension_rows
     do (extension_row) ->
@@ -239,15 +240,15 @@ get_extensions = ->
       hard_deadline = if hard_datepicker? then hard_datepicker.toDate().toString() else null
 
       extension =
-        course_offering_id: course_offering_id
         student_id: student_id
         time_limit: time_limit
         opening_date: opening_date
         soft_deadline: soft_deadline
         hard_deadline: hard_deadline
-      extensions.push extension
 
-  return extensions
+      offerings[course_offering_id.toString()]['extensions'].push extension
+
+  return offerings
 
 # get_offerings = ->
 #   offerings = {}
@@ -348,15 +349,13 @@ handle_submit = ->
   is_public = $('#is-public').is ':checked'
   removed_exercises = $('#ex-list').data 'removed-exercises'
   exercises = get_exercises()
-  course_offerings = get_offerings()
-  extensions = get_extensions()
+  course_offerings = get_offerings_with_extensions()
   fd = new FormData
   fd.append 'name', name
   fd.append 'description', description
   fd.append 'time_limit', time_limit
   fd.append 'policy_id', policy_id
   fd.append 'exercises', JSON.stringify exercises
-  fd.append 'extensions', JSON.stringify extensions
   fd.append 'course_offerings', JSON.stringify course_offerings
   fd.append 'removed_exercises', removed_exercises
   fd.append 'is_public', is_public

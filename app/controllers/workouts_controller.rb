@@ -388,21 +388,19 @@ class WorkoutsController < ApplicationController
           @workout_offering.workout_policy = workout_policy
           @workout_offering.save!
 
-          # extensions = offering['extensions']
-          # extensions.each do |ext|
-          #   students = ext['students']
-          #   students.each do |student_id|
-          #     student = User.find(student_id)
-          #     student_extension = StudentExtension.new
-          #     student_extenion.user = student
-          #     student_extenion.workout_offering = @workout_offering
-          #     student_extenion.opening_date = DateTime.parse(ext['opening_date']) if ext['opening_date']
-          #     student_extenion.soft_deadline = DateTime.parse(ext['soft_deadline']) if ext['soft_deadline']
-          #     student_extenion.hard_deadline = DateTime.parse(ext['hard_deadline']) if ext['hard_deadline']
-          #     student_extenion.time_limit = ext['time_limit']
-          #     student_extension.save!
-          #   end
-          # end
+          extensions = offering['extensions']
+          extensions.each do |ext|
+            student_id = ext['student_id']
+            student = User.find(student_id)
+            student_extension = StudentExtension.new
+            student_extension.user = student
+            student_extension.workout_offering = @workout_offering
+            student_extension.opening_date = DateTime.parse(ext['opening_date']) if ext['opening_date']
+            student_extension.soft_deadline = DateTime.parse(ext['soft_deadline']) if ext['soft_deadline']
+            student_extension.hard_deadline = DateTime.parse(ext['hard_deadline']) if ext['hard_deadline']
+            student_extension.time_limit = ext['time_limit']
+            student_extension.save!
+          end
         end
       end
     end
