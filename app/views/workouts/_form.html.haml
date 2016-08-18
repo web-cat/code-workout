@@ -41,7 +41,8 @@
   .form-group
     = label_tag :is_public, 'Public?', class: 'control-label col-xs-2'
     .col-xs-1
-      = check_box_tag 'is-public', 'is_public', true, class: 'form-control', id: 'is-public'
+      .checkbox
+        = check_box_tag 'is-public', 'is_public', true, id: 'is-public'
 
   .form-group
     %p.lead Add to Course Offerings
@@ -53,10 +54,16 @@
             %th Opens On
             %th Due Date
             %th Accepts Until
+            %th Publish?
             %th Student Extensions
             %th Remove
         %tbody
           = render partial: 'workout_offering_fields', locals: { removable: false }
+
+  .form-group
+    = button_tag type: 'button', id: 'add-offering', class: 'btn btn-success btn-sm' do
+      %i.fa.fa-plus{ style: 'padding-right 5px;' }
+      Add to Course Offering
 
   .form-group#extensions{ style: 'display: none;' }
     %p.lead Student Extensions
@@ -72,12 +79,6 @@
             %th Time Limit
             %th Remove
         %tbody
-
-  .form-group
-    = button_tag type: 'button', id: 'add-offering', class: 'btn btn-success btn-sm' do
-      %i.fa.fa-plus{ style: 'padding-right 5px;' }
-      Add to Another Course Offering
-  #extensions{style: 'display: none;'}
 
   .form-group
     %button#btn-submit-wo.btn.btn-primary Submit

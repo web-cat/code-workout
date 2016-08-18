@@ -12,6 +12,8 @@
     %input.hard-datepicker.datepicker{ type: 'text', class: 'form-control input-sm',
       placeholder: 'Set date' }
   %td
+    = check_box_tag 'published', 'published', true, class: 'form-control published'
+  %td
     = button_tag type: 'button', class: 'add-extension btn btn-sm',
       disabled: true, data: { toggle: 'modal', target: '#extension-modal' } do
       Add Extension

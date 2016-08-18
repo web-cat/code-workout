@@ -212,11 +212,13 @@ get_offerings = ->
         opening_date = if opening_datepicker? then opening_datepicker.toDate().toString() else null
         soft_deadline = if soft_datepicker? then soft_datepicker.toDate().toString() else null
         hard_deadline = if hard_datepicker? then hard_datepicker.toDate().toString() else null
+        published = $('.published', $(offering_fields[4])).is ':checked'
 
         offering =
           opening_date: opening_date
           soft_deadline: soft_deadline
           hard_deadline: hard_deadline
+          published: published
           extensions: []
 
         offerings[offering_id.toString()] = offering

@@ -382,6 +382,7 @@ class WorkoutsController < ApplicationController
           @workout_offering.workout = @workout
           @workout_offering.course_offering = course_offering
           @workout_offering.time_limit = time_limit
+          @workout_offering.published = offering['published']
           @workout_offering.opening_date = DateTime.parse(offering['opening_date']) if offering['opening_date']
           @workout_offering.soft_deadline = DateTime.parse(offering['soft_deadline']) if offering['soft_deadline']
           @workout_offering.hard_deadline = DateTime.parse(offering['hard_deadline']) if offering['hard_deadline']
