@@ -64,9 +64,10 @@ $('.workouts.new, .workouts.edit').ready ->
       student_display: student.display
       student_id: student.id
     template = Mustache.render($(window.student_extension_template).filter('#extension-template').html(), data)
-    $('#student-extension-fields').append(template)
+    $('#student-extension-fields tbody').append(template)
     $('#extension-modal').modal('hide')
     $('#extensions').css 'display', 'block'
+    init_datepickers()
 
   $(document).on 'click', '.delete-extension', ->
     $(this).closest('tr').remove()
@@ -74,7 +75,6 @@ $('.workouts.new, .workouts.edit').ready ->
   $('#ex-list').on 'click', '.delete-ex', ->
     ex_row = $(this).closest 'li'
     ex_workout_id = ex_row.data 'exercise-workout-id'
-    console.log ex_workout_id
     if ex_workout_id? && ex_workout_id != ''
       ex_list = $('#ex-list')
       removed_exercises = ex_list.data 'removed-exercises'
@@ -100,30 +100,6 @@ clear_student_search = ->
   $('#msg').empty()
   $('#results').empty()
   $('#terms').val('')
-
-listen_for_extension = ->
-  course_offering = $('#extension-modal').data('course-offering')
-  $('#btn-student-search').click ->
-    search_students(course_offering.id)
-  $('#terms').keydown (e) ->
-    if e.keyCode == 13
-      search_students(course_offering.id)
-
-listen_for_student_select = ->
-  $('#results').on 'click', 'a', ->
-    course_offering = $('#extension-modal').data('course-offering')
-    student =
-      id: $(this).data('student-id')
-      display: $(this).text()
-    data =
-      course_offering_id: course_offering.id
-      course_offering_display: course_offering.display
-      student_display: student.display
-      student_id: student.id
-    $.get '/assets/student_extension.mustache.html', (template, textStatus, jqXHr) ->
-      $('#student-extension-fields').append(Mustache.render($(template).filter('#extension-template').html(), data))
-    $('#extension-modal').modal('hide')
-    $('#extensions').css 'display', 'block'
 
 search_students = (course_offering_id) ->
   $.ajax
@@ -162,15 +138,22 @@ init_exercises = ->
     $('#ex-list').removeData 'exercises'
 
 init_datepickers = ->
-  workout_offerings = $('tr', '#workout-offering-fields tbody')
-  for offering in workout_offerings
+  offerings = $('tr', '#workout-offering-fields tbody')
+  for offering in offerings
     do (offering) ->
-      init_offering_datepickers offering
+      init_row_datepickers offering
 
-init_offering_datepickers = (offering) ->
-  opening_datepicker = $('input.opening-datepicker', $(offering))
-  soft_datepicker = $('input.soft-datepicker', $(offering))
-  hard_datepicker = $('input.hard-datepicker', $(offering))
+  extensions = $('tr', '#student-extension-fields tbody')
+  console.log extensions
+  for extension in extensions
+    do (extension) ->
+      init_row_datepickers extension
+
+init_row_datepickers = (row) ->
+  console.log row
+  opening_datepicker = $('input.opening-datepicker', $(row))
+  soft_datepicker = $('input.soft-datepicker', $(row))
+  hard_datepicker = $('input.hard-datepicker', $(row))
 
   if opening_datepicker.val() == '' || !opening_datepicker.data('DateTimePicker').date()?
     opening_datepicker.datetimepicker

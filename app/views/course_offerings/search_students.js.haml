@@ -4,4 +4,4 @@ $('#extension-modal #results').empty();
   - if defined? @msg
     $('#msg').append("<p>#{@msg}</p>")
   - @students.each do |student|
-    $('#results').append("<a href='#' data-student-id='#{student.id}' class='list-group-item list-group-item-action'>#{student.display_name} (#{student.email_without_domain})</a>")
+    $('#results').append("<a href='#' data-student-id='#{student.id}' class='list-group-item list-group-item-action'>#{student.display_name}</a>")

@@ -1,6 +1,6 @@
 %tr.offering.fields
   %td
-    = collection_select nil, nil, current_user.managed_course_offerings, :id, :display_name,
+    = collection_select nil, nil, current_user.managed_course_offerings, :id, :display_name_with_term,
       { prompt: 'Select one' }, { class: 'coff-select form-control input-sm' }
   %td
     %input.opening-datepicker.datepicker{ type: 'text', class: 'form-control input-sm',
