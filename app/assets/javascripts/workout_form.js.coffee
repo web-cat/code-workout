@@ -144,13 +144,11 @@ init_datepickers = ->
       init_row_datepickers offering
 
   extensions = $('tr', '#student-extension-fields tbody')
-  console.log extensions
   for extension in extensions
     do (extension) ->
       init_row_datepickers extension
 
 init_row_datepickers = (row) ->
-  console.log row
   opening_datepicker = $('input.opening-datepicker', $(row))
   soft_datepicker = $('input.soft-datepicker', $(row))
   hard_datepicker = $('input.hard-datepicker', $(row))
@@ -222,6 +220,34 @@ get_offerings = ->
 
         offerings[offering_id.toString()] = offering
   return offerings
+
+get_extensions = ->
+  extensions = []
+  extension_rows = $('tr', '#student-extension-fields tbody')
+  for extension_row in extension_rows
+    do (extension_row) ->
+      extension_fields = $('td', $(extension_row))
+      student_id = $(extension_row).data 'student-id'
+      course_offering_id = $(extension_row).data 'course-offering-id'
+      time_limit = $('.time_limit', $(extension_fields[5])).val()
+      opening_datepicker = $('.opening-datepicker', $(extension_fields[2])).data('DateTimePicker').date()
+      soft_datepicker = $('.soft-datepicker', $(extension_fields[3])).data('DateTimePicker').date()
+      hard_datepicker = $('.hard-datepicker', $(extension_fields[4])).data('DateTimePicker').date()
+
+      opening_date = if opening_datepicker? then opening_datepicker.toDate().toString() else null
+      soft_deadline = if soft_datepicker? then soft_datepicker.toDate().toString() else null
+      hard_deadline = if hard_datepicker? then hard_datepicker.toDate().toString() else null
+
+      extension =
+        course_offering_id: course_offering_id
+        student_id: student_id
+        time_limit: time_limit
+        opening_date: opening_date
+        soft_deadline: soft_deadline
+        hard_deadline: hard_deadline
+      extensions.push extension
+
+  return extensions
 
 # get_offerings = ->
 #   offerings = {}
@@ -323,12 +349,14 @@ handle_submit = ->
   removed_exercises = $('#ex-list').data 'removed-exercises'
   exercises = get_exercises()
   course_offerings = get_offerings()
+  extensions = get_extensions()
   fd = new FormData
   fd.append 'name', name
   fd.append 'description', description
   fd.append 'time_limit', time_limit
   fd.append 'policy_id', policy_id
   fd.append 'exercises', JSON.stringify exercises
+  fd.append 'extensions', JSON.stringify extensions
   fd.append 'course_offerings', JSON.stringify course_offerings
   fd.append 'removed_exercises', removed_exercises
   fd.append 'is_public', is_public
