@@ -5,9 +5,9 @@ set :stage, :production
 # Supports bulk-adding hosts to roles, the primary
 # server in each group is considered to be the first
 # unless any hosts have the primary property set.
-role :app, %w{codeworkout@codeworkout.org}
-role :web, %w{codeworkout@codeworkout.org}
-role :db,  %w{codeworkout@codeworkout.org}
+role :app, %w{codeworkout@codeworkout.cs.vt.edu}
+role :web, %w{codeworkout@codeworkout.cs.vt.edu}
+role :db,  %w{codeworkout@codeworkout.cs.vt.edu}
 
 # Extended Server Syntax
 # ======================
