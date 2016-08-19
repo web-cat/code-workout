@@ -129,12 +129,8 @@ class WorkoutsController < ApplicationController
     end
 
     @can_update = can? :edit, @workout
-
+    @time_limit = @workout.workout_offerings.first.andand.time_limit
     @lti_launch = params[:lti_launch]
-    @exs = []
-    @workout.exercises.each do |exer|
-      @exs << exer.id
-    end
 
     @exercises = []
     @workout.exercise_workouts.each do |ex|

@@ -39,7 +39,7 @@
     = label_tag :time_limit, 'Time', class: 'control-label col-xs-1'
     .col-xs-3
       %input#time-limit.form-control.input-sm.input{ type: 'number', min: '0',
-        placeholder: 'Leave blank for no time limit.' }
+        placeholder: 'Leave blank for no time limit.', value: @time_limit ? "#{@time_limit}" : '' }
 
   .form-group
     = label_tag :is_public, 'Public?', class: 'control-label col-xs-2'
