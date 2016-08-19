@@ -265,6 +265,8 @@ class WorkoutsController < ApplicationController
 
     create_or_update
     @workout.save!
+    redirect_to root_path,
+      notice: 'Workout was updated successfully.' and return
   end
 
 
@@ -354,44 +356,7 @@ class WorkoutsController < ApplicationController
       end
 
       course_offerings = JSON.parse params[:course_offerings]
-      parse_course_offerings(course_offerings, time_limit, workout_policy)
-    end
-
-    # Parses course offerings from json and adds them
-    # to the workout
-    def parse_course_offerings(course_offerings, time_limit, workout_policy)
-      if @workout
-        course_offerings.each do |id, offering|
-          course_offering = CourseOffering.find(id)
-          @workout_offering = WorkoutOffering.find_by(workout: @workout, course_offering: course_offering)
-          if @workout_offering.blank?
-            @workout_offering = WorkoutOffering.new
-          end
-          @workout_offering.workout = @workout
-          @workout_offering.course_offering = course_offering
-          @workout_offering.time_limit = time_limit
-          @workout_offering.published = offering['published']
-          @workout_offering.opening_date = DateTime.parse(offering['opening_date']) if offering['opening_date']
-          @workout_offering.soft_deadline = DateTime.parse(offering['soft_deadline']) if offering['soft_deadline']
-          @workout_offering.hard_deadline = DateTime.parse(offering['hard_deadline']) if offering['hard_deadline']
-          @workout_offering.workout_policy = workout_policy
-          @workout_offering.save!
-
-          extensions = offering['extensions']
-          extensions.each do |ext|
-            student_id = ext['student_id']
-            student = User.find(student_id)
-            student_extension = StudentExtension.new
-            student_extension.user = student
-            student_extension.workout_offering = @workout_offering
-            student_extension.opening_date = DateTime.parse(ext['opening_date']) if ext['opening_date']
-            student_extension.soft_deadline = DateTime.parse(ext['soft_deadline']) if ext['soft_deadline']
-            student_extension.hard_deadline = DateTime.parse(ext['hard_deadline']) if ext['hard_deadline']
-            student_extension.time_limit = ext['time_limit']
-            student_extension.save!
-          end
-        end
-      end
+      @workout.add_workout_offerings(course_offerings, time_limit, workout_policy)
     end
 
     # -------------------------------------------------------------
