@@ -1,4 +1,5 @@
 $('.workouts.new, .workouts.edit').ready ->
+  window.codeworkout ?= {}
   sortable = $('#ex-list').sortable
     handle: '.handle'
 
@@ -18,7 +19,7 @@ $('.workouts.new, .workouts.edit').ready ->
       name: ex_name
       id: ex_id
       points: 0
-    template = Mustache.render($(window.exercise_template).filter('#exercise-template').html(), data)
+    template = Mustache.render($(window.codeworkout.exercise_template).filter('#exercise-template').html(), data)
     $('#ex-list').append(template)
 
   $('#add-offering').on 'click', ->
@@ -62,7 +63,7 @@ $('.workouts.new, .workouts.edit').ready ->
       course_offering_display: course_offering.display
       student_display: student.display
       student_id: student.id
-    template = Mustache.render($(window.student_extension_template).filter('#extension-template').html(), data)
+    template = Mustache.render($(window.codeworkout.student_extension_template).filter('#extension-template').html(), data)
     $('#student-extension-fields tbody').append(template)
     $('#extension-modal').modal('hide')
     $('#extensions').css 'display', 'block'
@@ -90,11 +91,11 @@ $('.workouts.new, .workouts.edit').ready ->
 
 init_templates = ->
   $.get '/assets/exercise.mustache.html', (template, textStatus, jqXHr) ->
-    window.exercise_template = template
+    window.codeworkout.exercise_template = template
     if $('body').is '.workouts.edit'
       init_exercises()
   $.get '/assets/student_extension.mustache.html', (template, textStatus, jqXHr) ->
-    window.student_extension_template = template
+    window.codeworkout.student_extension_template = template
 
 clear_student_search = ->
   $('#extension-modal #modal-header').empty()
@@ -135,7 +136,7 @@ init_exercises = ->
           exercise_workout_id: exercise.exercise_workout_id
           name: exercise.name
           points: exercise.points
-        $('#ex-list').append(Mustache.render($(window.exercise_template).filter('#exercise-template').html(), data))
+        $('#ex-list').append(Mustache.render($(window.codeworkout.exercise_template).filter('#exercise-template').html(), data))
     $('#ex-list').removeData 'exercises'
 
 init_datepickers = ->
