@@ -46,8 +46,8 @@
 
   .form-group
     %p.lead Add to Course Offerings
-    .col-lg-9.col-md-6.col-xs-9{ data: { can_update: "#{@can_update}" } }
-      %table#workout-offering-fields.table
+    .col-lg-9.col-md-6.col-xs-9
+      %table#workout-offering-fields.table{ data: { can_update: "#{@can_update}" } }
         %thead
           %tr
             %th Course Offering

@@ -4,7 +4,6 @@ $('.workouts.new, .workouts.edit').ready ->
 
   init_templates()
   init_datepickers()
-  init_exercises()
   validate_workout_name()
 
   $('#wo-name').change ->
@@ -92,6 +91,8 @@ $('.workouts.new, .workouts.edit').ready ->
 init_templates = ->
   $.get '/assets/exercise.mustache.html', (template, textStatus, jqXHr) ->
     window.exercise_template = template
+    if $('body').is '.workouts.edit'
+      init_exercises()
   $.get '/assets/student_extension.mustache.html', (template, textStatus, jqXHr) ->
     window.student_extension_template = template
 
@@ -252,57 +253,6 @@ get_offerings_with_extensions = ->
 
   return offerings
 
-# get_offerings = ->
-#   offerings = {}
-#   offering_tables = $('table', '#workout-offering-fields') # Each offering is in its own table
-#
-#   # The first row of each table contains offering fields. Each subsequent row
-#   # contains fields for student extensions.
-#   for table in offering_tables
-#     #  Get input data for each offering.
-#     do (table) ->
-#       offering_row = $('tr', $(table)).filter ':eq(1)'  # Get the first row
-#       offering_fields = $('td', $(offering_row))
-#       offering_id = $('.coff-select', $(offering_fields[0])).val()
-#       if offering_id != ''
-#         opening_datepicker = $('.opening-datepicker', $(offering_fields[1])).data('DateTimePicker').date()
-#         soft_datepicker = $('.soft-datepicker', $(offering_fields[2])).data('DateTimePicker').date()
-#         hard_datepicker = $('.hard-datepicker', $(offering_fields[3])).data('DateTimePicker').date()
-#
-#         opening_date = if opening_datepicker? then opening_datepicker.toDate().toString() else null
-#         soft_deadline = if soft_datepicker? then soft_datepicker.toDate().toString() else null
-#         hard_deadline = if hard_datepicker? then hard_datepicker.toDate().toString() else null
-#
-#         offering =
-#           opening_date: opening_date
-#           soft_deadline: soft_deadline
-#           hard_deadline: hard_deadline
-#         extensions = []
-#         extension_rows = $('tr', $(table)).filter ':gt(1)'  # Get all rows after the first one
-#         for row in extension_rows
-#           # Get input data for each extension within the offering.
-#           do (row) ->
-#             extension_fields = $('td', $(row))
-#             students = $('.student-select', $(extension_fields[0])).val()
-#             time_limit = $('.time_limit', $(extension_fields[2])).val()
-#             opening_datepicker = $('.opening-datepicker', $(extension_fields[3])).data('DateTimePicker').date()
-#             soft_datepicker = $('.soft-datepicker', $(extension_fields[4])).data('DateTimePicker').date()
-#             hard_datepicker = $('.hard-datepicker', $(extension_fields[5])).data('DateTimePicker').date()
-#
-#             opening_date = if opening_datepicker? then opening_datepicker.toDate().toString() else null
-#             soft_deadline = if soft_datepicker? then soft_datepicker.toDate().toString() else null
-#             hard_deadline = if hard_datepicker? then hard_datepicker.toDate().toString() else null
-#             extension =
-#               students: students
-#               time_limit: time_limit
-#               opening_date: opening_date
-#               soft_deadline: soft_deadline
-#               hard_deadline: hard_deadline
-#             extensions.push extension
-#         offering['extensions'] = extensions
-#         offerings[offering_id.toString()] = offering
-#   return offerings
-
 form_alert = (messages) ->
   reset_alert_area()
 
@@ -362,10 +312,10 @@ handle_submit = ->
   fd.append 'removed_exercises', removed_exercises
   fd.append 'is_public', is_public
 
-  if $('body').is('.workouts.new')
+  if $('body').is '.workouts.new' 
     url = '/gym/workouts'
     type = 'post'
-  else if $('body').is('.workouts.edit')
+  else if $('body').is '.workouts.edit' 
     can_update = $('#workout-offering-fields').data 'can-update'
     url = if can_update == true then '/gym/workouts/' + $('h1').data 'id' else '/gym/workouts'
     type = if can_update == true then 'patch' else 'post'
