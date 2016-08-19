@@ -1,6 +1,8 @@
 = javascript_tag do
   window.codeworkout = window.codeworkout || {}
   window.codeworkout.lti_launch = "#{@lti_launch}"
+  window.codeworkout.removed_exercises = "#{[].to_json}"
+  window.codeworkout.removed_offerings = "#{[].to_json}"
 .row
   .col-xs-9.alert-msg#alerts{style: 'display: none;'}
 .form-horizontal
@@ -30,7 +32,7 @@
           Use the column on the left to find exercises.
 
       %ul.list-group#ex-list{ style: "display: #{@workout.andand.exercise_workouts.any? ? 'block;' : 'none;'}",
-        data: { exercises: "#{@exercises.to_json}", removed_exercises: "#{[].to_json}" } }
+        data: { exercises: "#{@exercises.to_json}" } }
   .form-group
     = label_tag :policy_select, 'Policy', class: 'control-label col-xs-1'
     .col-xs-2

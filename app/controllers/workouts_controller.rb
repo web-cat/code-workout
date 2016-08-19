@@ -263,8 +263,10 @@ class WorkoutsController < ApplicationController
 
     create_or_update
     @workout.save!
-    redirect_to root_path,
-      notice: 'Workout was updated successfully.' and return
+
+    respond_to do |format|
+      format.json { render json: { url: url_for(root_path(notice: 'Workout was updated successfully.')) } }
+    end
   end
 
 
@@ -337,7 +339,7 @@ class WorkoutsController < ApplicationController
       @workout.is_public = params[:is_public]
       workout_policy = WorkoutPolicy.find_by id: params[:policy_id]
       time_limit = params[:time_limit]
-      removed_exercises = params[:removed_exercises].split ','
+      removed_exercises = JSON.parse params[:removed_exercises]
       removed_exercises.each do |exercise_workout_id|
         @workout.exercise_workouts.destroy exercise_workout_id
       end
