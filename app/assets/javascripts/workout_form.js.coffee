@@ -311,11 +311,14 @@ handle_submit = ->
   fd.append 'course_offerings', JSON.stringify course_offerings
   fd.append 'removed_exercises', removed_exercises
   fd.append 'is_public', is_public
+  # Tells the server whether this form is being submitted through LTI or not.
+  # The window.codeworkout namespace was declared in the workouts/_form partial.
+  fd.append 'lti_launch', window.codeworkout.lti_launch if window.codeworkout.lti_launch != ''
 
-  if $('body').is '.workouts.new' 
+  if $('body').is '.workouts.new'
     url = '/gym/workouts'
     type = 'post'
-  else if $('body').is '.workouts.edit' 
+  else if $('body').is '.workouts.edit'
     can_update = $('#workout-offering-fields').data 'can-update'
     url = if can_update == true then '/gym/workouts/' + $('h1').data 'id' else '/gym/workouts'
     type = if can_update == true then 'patch' else 'post'

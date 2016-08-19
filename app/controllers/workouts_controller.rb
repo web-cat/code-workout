@@ -156,10 +156,12 @@ class WorkoutsController < ApplicationController
   def create
     @workout = Workout.new
     @workout.creator_id = current_user.id
+    @lti_launch = params[:lti_launch]
     create_or_update
 
     if @workout.save
-      if lti_params = session[:lti_params]
+      if @lti_launch
+        lti_params = session[:lti_params]
         url = url_for(course_offerings_path(lti_launch: true))
       else
         url = url_for root_path(notice: 'Workout was successfully created.')
