@@ -142,6 +142,14 @@ class WorkoutsController < ApplicationController
       @exercises.push(ex_data)
     end
 
+    @workout_offerings = []
+    @managed_workout_offerings = current_user.managed_workout_offerings(@workout)
+    @managed_workout_offerings.each do |proxy|
+      proxy.each do |offering|
+        @workout_offerings << offering
+      end
+    end
+
     if @lti_launch
       render layout: 'one_column'
     else
