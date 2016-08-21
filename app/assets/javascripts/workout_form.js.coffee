@@ -1,5 +1,6 @@
 $('.workouts.new, .workouts.edit').ready ->
   window.codeworkout ?= {}
+  window.codeworkout.removed_exercises = []
   sortable = $('#ex-list').sortable
     handle: '.handle'
 
@@ -77,9 +78,7 @@ $('.workouts.new, .workouts.edit').ready ->
     ex_workout_id = ex_row.data 'exercise-workout-id'
     if ex_workout_id? && ex_workout_id != ''
       ex_list = $('#ex-list')
-      removed_exercises = JSON.parse(window.codeworkout.removed_exercises)
-      removed_exercises.push ex_workout_id
-      window.codeworkout.removed_exercises = removed_exercises
+      window.codeworkout.removed_exercises.push ex_workout_id
     ex_row.remove()
     exs = $('#ex-list li').length
     if exs == 0
@@ -310,7 +309,6 @@ handle_submit = ->
   fd.append 'policy_id', policy_id
   fd.append 'exercises', JSON.stringify exercises
   fd.append 'course_offerings', JSON.stringify course_offerings
-  console.log window.codeworkout.removed_exercises
   fd.append 'removed_exercises', JSON.stringify window.codeworkout.removed_exercises
   fd.append 'is_public', is_public
   # Tells the server whether this form is being submitted through LTI or not.
