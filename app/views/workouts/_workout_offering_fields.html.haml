@@ -4,13 +4,13 @@
       { prompt: 'Select one', selected: workout_offering.andand.course_offering_id }, { class: 'coff-select form-control input-sm', disabled: disabled }
   %td
     %input.opening-datepicker.datepicker{ type: 'text', class: 'form-control input-sm',
-      placeholder: 'Set date', data: { date: workout_offering.andand.opening_date } }
+      placeholder: 'Set date', data: { date: workout_offering.andand.opening_date.andand.to_i } }
   %td
     %input.soft-datepicker.datepicker{ type: 'text', class: 'form-control input-sm',
-      placeholder: 'Set date', data: { date: workout_offering.andand.soft_deadline } }
+      placeholder: 'Set date', data: { date: workout_offering.andand.soft_deadline.andand.to_i } }
   %td
     %input.hard-datepicker.datepicker{ type: 'text', class: 'form-control input-sm',
-      placeholder: 'Set date', data: { date: workout_offering.andand.hard_deadline } }
+      placeholder: 'Set date', data: { date: workout_offering.andand.hard_deadline.andand.to_i } }
   %td
     = check_box_tag 'published', 'published', workout_offering.andand.published, class: 'form-control published'
   %td

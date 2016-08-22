@@ -63,10 +63,12 @@
             %th Remove
         %tbody
           - if @workout_offerings.blank?
-            = render partial: 'workout_offering_fields', locals: { removable: false, disabled: false, workout_offering: nil }
+            = render partial: 'workout_offering_fields', locals: { removable: false, disabled: false,
+              workout_offering: nil }
           - else
             - @workout_offerings.each do |offering|
-              = render partial: 'workout_offering_fields', locals: { removable: true, disabled: true, workout_offering: offering }
+              = render partial: 'workout_offering_fields', locals: { removable: true, disabled: true,
+                workout_offering: offering }
   .form-group
     = button_tag type: 'button', id: 'add-offering', class: 'btn btn-success btn-sm' do
       %i.fa.fa-plus{ style: 'padding-right 5px;' }
