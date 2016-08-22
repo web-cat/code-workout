@@ -15,6 +15,7 @@ set :linked_dirs, %w{bin log usr tmp vendor/bundle public}
 
 # set :default_env, { path: "/opt/ruby/bin:$PATH" }
 # set :keep_releases, 5
+set :rails_env, ENV['RAILS_ENV'] || fetch(:stage) || "production"
 
 namespace :deploy do
 

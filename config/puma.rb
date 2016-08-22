@@ -5,7 +5,7 @@ daemonize
 app_dir = File.expand_path('../..', __FILE__)
 
 # Default to production
-rails_env = ENV['RAILS_ENV'] || "production"
+rails_env = rails_env || ENV['RAILS_ENV'] || "production"
 environment rails_env
 
 # Set up socket location
