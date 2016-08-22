@@ -382,6 +382,11 @@ class WorkoutsController < ApplicationController
         exercise_workout.save!
       end
 
+      removed_extensions = JSON.parse params[:removed_extensions]
+      removed_extensions.each do |extension_id|
+        StudentExtension.destroy extension_id
+      end
+
       removed_offerings = JSON.parse params[:removed_offerings]
       removed_offerings.each do |workout_offering_id|
         @workout.workout_offerings.destroy workout_offering_id

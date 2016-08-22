@@ -2,6 +2,7 @@ $('.workouts.new, .workouts.edit').ready ->
   window.codeworkout ?= {}
   window.codeworkout.removed_exercises = []
   window.codeworkout.removed_offerings = []
+  window.codeworkout.removed_extensions = []
 
   sortable = $('#ex-list').sortable
     handle: '.handle'
@@ -32,9 +33,15 @@ $('.workouts.new, .workouts.edit').ready ->
   $('#workout-offering-fields').on 'click', '.delete-offering', ->
     row = $(this).closest 'tr'
     workout_offering_id = row.data 'id'
-    if workout_offering_id? && workout_offering_id != ''
-      window.codeworkout.removed_offerings.push workout_offering_id
-    row.remove()
+    course_offering_id = row.find('.coff-select').val()
+    delete_confirmed = false
+    if course_offering_id != ''
+      delete_confirmed = remove_extensions_if_any parseInt(course_offering_id)
+
+    if delete_confirmed
+      if workout_offering_id? && workout_offering_id != ''
+        window.codeworkout.removed_offerings.push workout_offering_id
+      row.remove()
 
   $('#workout-offering-fields').on 'change', '.coff-select', ->
     val = $(this).val()
@@ -93,6 +100,29 @@ $('.workouts.new, .workouts.edit').ready ->
   $('#btn-submit-wo').click ->
     handle_submit()
 
+remove_extensions_if_any = (course_offering_id) ->
+  extensions = $('#student-extension-fields tbody').find 'tr'
+  to_remove = []
+  for extension in extensions
+    do (extension) ->
+      offering = $(extension).data 'course-offering-id'
+      if offering == course_offering_id
+        to_remove.push $(extension).index()
+
+  if to_remove.length > 0
+    if confirm 'Removing this workout offering will also remove ' + to_remove.length + ' student extension(s).'
+      for index in to_remove
+        do (index) ->
+          id = $($(extensions)[index]).data 'id'
+          if id? && id != ''
+            window.codeworkout.removed_extensions.push id
+          $(extensions)[index].remove()
+      return true
+    else
+      return false
+  else
+    return true
+
 init_templates = ->
   $.get '/assets/exercise.mustache.html', (template, textStatus, jqXHr) ->
     window.codeworkout.exercise_template = template
@@ -138,8 +168,8 @@ init_student_extensions = ->
     $('#extensions').css 'display', 'block'
     for extension in student_extensions
       do (extension) ->
-        console.log extension
         data =
+          id: extension.id
           course_offering_id: extension.course_offering_id
           course_offering_display: extension.course_offering_display
           student_id: extension.student_id
@@ -365,6 +395,7 @@ handle_submit = ->
   fd.append 'course_offerings', JSON.stringify course_offerings
   fd.append 'removed_exercises', JSON.stringify window.codeworkout.removed_exercises
   fd.append 'removed_offerings', JSON.stringify window.codeworkout.removed_offerings
+  fd.append 'removed_extensions', JSON.stringify window.codeworkout.removed_extensions
   fd.append 'is_public', is_public
   # Tells the server whether this form is being submitted through LTI or not.
   # The window.codeworkout namespace was declared in the workouts/_form partial.
