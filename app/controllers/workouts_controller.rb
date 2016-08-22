@@ -363,6 +363,11 @@ class WorkoutsController < ApplicationController
         exercise_workout.save!
       end
 
+      removed_offerings = JSON.parse params[:removed_offerings]
+      removed_offerings.each do |workout_offering_id|
+        @workout.workout_offerings.destroy workout_offering_id
+      end
+
       course_offerings = JSON.parse params[:course_offerings]
       @workout.add_workout_offerings(course_offerings, time_limit, workout_policy)
     end

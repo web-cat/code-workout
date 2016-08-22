@@ -1,7 +1,8 @@
-%tr.offering.fields
+%tr.offering.fields{ data: { id: workout_offering.andand.id } }
   %td
     = collection_select nil, nil, current_user.managed_course_offerings, :id, :display_name_with_term,
-      { prompt: 'Select one', selected: workout_offering.andand.course_offering_id }, { class: 'coff-select form-control input-sm', disabled: disabled }
+      { prompt: 'Select one', selected: workout_offering.andand.course_offering_id },
+      { class: 'coff-select form-control input-sm', disabled: disabled }
   %td
     %input.opening-datepicker.datepicker{ type: 'text', class: 'form-control input-sm',
       placeholder: 'Set date', data: { date: workout_offering.andand.opening_date.andand.to_i } }

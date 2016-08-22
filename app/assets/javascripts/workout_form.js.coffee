@@ -1,6 +1,8 @@
 $('.workouts.new, .workouts.edit').ready ->
   window.codeworkout ?= {}
   window.codeworkout.removed_exercises = []
+  window.codeworkout.removed_offerings = []
+
   sortable = $('#ex-list').sortable
     handle: '.handle'
 
@@ -28,7 +30,10 @@ $('.workouts.new, .workouts.edit').ready ->
     init_datepickers()
 
   $('#workout-offering-fields').on 'click', '.delete-offering', ->
-    $(this).closest('tr').remove()
+    row = $(this).closest 'tr'
+    workout_offering_id = row.data 'id'
+    window.codeworkout.removed_offerings.push workout_offering_id
+    row.remove()
 
   $('#workout-offering-fields').on 'change', '.coff-select', ->
     val = $(this).val()
@@ -336,6 +341,7 @@ handle_submit = ->
   fd.append 'exercises', JSON.stringify exercises
   fd.append 'course_offerings', JSON.stringify course_offerings
   fd.append 'removed_exercises', JSON.stringify window.codeworkout.removed_exercises
+  fd.append 'removed_offerings', JSON.stringify window.codeworkout.removed_offerings
   fd.append 'is_public', is_public
   # Tells the server whether this form is being submitted through LTI or not.
   # The window.codeworkout namespace was declared in the workouts/_form partial.
