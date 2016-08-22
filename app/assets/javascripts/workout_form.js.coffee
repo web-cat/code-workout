@@ -84,7 +84,15 @@ $('.workouts.new, .workouts.edit').ready ->
     init_datepickers()
 
   $(document).on 'click', '.delete-extension', ->
-    $(this).closest('tr').remove()
+    row = $(this).closest('tr')
+    extension_id = row.data 'id'
+    if extension_id? && extension_id != ''
+      window.codeworkout.removed_extensions.push extension_id
+
+    row.remove()
+    extensions = $('#student-extension-fields tbody').find 'tr'
+    if extensions.length == 0
+      $('#extensions').css 'display', 'none'
 
   $('#ex-list').on 'click', '.delete-ex', ->
     ex_row = $(this).closest 'li'
@@ -117,6 +125,9 @@ remove_extensions_if_any = (course_offering_id) ->
           if id? && id != ''
             window.codeworkout.removed_extensions.push id
           $(extensions)[index].remove()
+
+      if extensions.length == 0
+        $('#extensions').css 'display', 'none'
       return true
     else
       return false
