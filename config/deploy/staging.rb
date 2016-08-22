@@ -1,4 +1,6 @@
 set :stage, :staging
+set :branch, :staging
+set :rails_env, 'staging'
 
 # Simple Role Syntax
 # ==================
