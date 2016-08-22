@@ -176,7 +176,7 @@ validate_workout_name = ->
 init_student_extensions = ->
   student_extensions = $('#extensions').data 'student-extensions'
   if student_extensions
-    $('#extensions').css 'display', 'block'
+    $('#extensions').css 'display', 'block' if student_extensions.length > 0
     for extension in student_extensions
       do (extension) ->
         data =

@@ -15,8 +15,8 @@
   %td
     = check_box_tag 'published', 'published', workout_offering.andand.published, class: 'form-control published'
   %td
-    = button_tag type: 'button', class: 'add-extension btn btn-sm',
-      disabled: true, data: { toggle: 'modal', target: '#extension-modal' } do
+    = button_tag type: 'button', class: 'add-extension btn btn-sm ' + (disabled ? 'btn-primary' : ''),
+      disabled: !disabled, data: { toggle: 'modal', target: '#extension-modal' } do
       Add Extension
   %td
     - if removable
