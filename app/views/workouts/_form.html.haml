@@ -74,7 +74,7 @@
       %i.fa.fa-plus{ style: 'padding-right 5px;' }
       Add to Course Offering
 
-  .form-group#extensions{ style: 'display: none;' }
+  .form-group#extensions{ style: 'display: none;', data: { student_extensions: "#{@student_extensions.to_json}" } }
     %p.lead Student Extensions
     .col-lg-9.col-md-6.col-xs-9
       %table#student-extension-fields.table

@@ -150,6 +150,23 @@ class WorkoutsController < ApplicationController
       end
     end
 
+    @student_extensions = []
+    @workout_offerings.each do |workout_offering|
+      workout_offering.student_extensions.each do |e|
+        ext = {}
+        ext[:id] = e.id
+        ext[:student_id] = e.user.id
+        ext[:student_display] = e.user.display_name
+        ext[:course_offering_id] = e.workout_offering.course_offering_id
+        ext[:course_offering_display] = e.workout_offering.course_offering.display_name_with_term
+        ext[:opening_date] = e.opening_date.andand.to_i
+        ext[:soft_deadline] = e.soft_deadline.andand.to_i
+        ext[:hard_deadline] = e.hard_deadline.andand.to_i
+        ext[:time_limit] = e.time_limit
+        @student_extensions.push(ext)
+      end
+    end
+
     if @lti_launch
       render layout: 'one_column'
     else
@@ -347,10 +364,12 @@ class WorkoutsController < ApplicationController
       @workout.is_public = params[:is_public]
       workout_policy = WorkoutPolicy.find_by id: params[:policy_id]
       time_limit = params[:time_limit]
+
       removed_exercises = JSON.parse params[:removed_exercises]
       removed_exercises.each do |exercise_workout_id|
         @workout.exercise_workouts.destroy exercise_workout_id
       end
+
       exercises = JSON.parse params[:exercises]
       exercises.each do |key, value|
         exercise = Exercise.find value['id']
