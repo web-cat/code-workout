@@ -32,7 +32,8 @@ $('.workouts.new, .workouts.edit').ready ->
   $('#workout-offering-fields').on 'click', '.delete-offering', ->
     row = $(this).closest 'tr'
     workout_offering_id = row.data 'id'
-    window.codeworkout.removed_offerings.push workout_offering_id
+    if workout_offering_id? && workout_offering_id != ''
+      window.codeworkout.removed_offerings.push workout_offering_id
     row.remove()
 
   $('#workout-offering-fields').on 'change', '.coff-select', ->
@@ -82,7 +83,6 @@ $('.workouts.new, .workouts.edit').ready ->
     ex_row = $(this).closest 'li'
     ex_workout_id = ex_row.data 'exercise-workout-id'
     if ex_workout_id? && ex_workout_id != ''
-      ex_list = $('#ex-list')
       window.codeworkout.removed_exercises.push ex_workout_id
     ex_row.remove()
     exs = $('#ex-list li').length
@@ -100,6 +100,8 @@ init_templates = ->
       init_exercises()
   $.get '/assets/student_extension.mustache.html', (template, textStatus, jqXHr) ->
     window.codeworkout.student_extension_template = template
+    if $('body').is '.workouts.edit'
+      init_student_extensions()
 
 clear_student_search = ->
   $('#extension-modal #modal-header').empty()
@@ -130,6 +132,27 @@ validate_workout_name = ->
 
   return true
 
+init_student_extensions = ->
+  student_extensions = $('#extensions').data 'student-extensions'
+  if student_extensions
+    $('#extensions').css 'display', 'block'
+    for extension in student_extensions
+      do (extension) ->
+        console.log extension
+        data =
+          course_offering_id: extension.course_offering_id
+          course_offering_display: extension.course_offering_display
+          student_id: extension.student_id
+          student_display: extension.student_display
+          time_limit: extension.time_limit
+          opening_date: extension.opening_date
+          soft_deadline: extension.soft_deadline
+          hard_deadline: extension.hard_deadline
+        template =
+            $(Mustache.render($(window.codeworkout.student_extension_template).filter('#extension-template').html(), data))
+        $('#student-extension-fields tbody').append template
+        init_row_datepickers template
+
 init_exercises = ->
   exercises = $('#ex-list').data 'exercises'
   if exercises
@@ -149,10 +172,10 @@ init_datepickers = ->
     do (offering) ->
       init_row_datepickers offering
 
-  # extensions = $('tr', '#student-extension-fields tbody')
-  # for extension in extensions
-  #   do (extension) ->
-  #     init_row_datepickers extension
+  extensions = $('tr', '#student-extension-fields tbody')
+  for extension in extensions
+    do (extension) ->
+      init_row_datepickers extension
 
 init_row_datepickers = (row) ->
   opening_datepicker = $('input.opening-datepicker', $(row))
@@ -187,7 +210,7 @@ init_row_datepickers = (row) ->
 
   # Set existing values, if applicable
   if $('body').is '.workouts.edit'
-    if opening_datepicker.data('date')?
+    if opening_datepicker.data('date')? && opening_datepicker.data('date') != ''
       opening_date = moment.unix(parseInt(opening_datepicker.data('date')))
       if opening_date.isBefore moment()
         opening_datepicker.data('DateTimePicker').minDate opening_date
@@ -199,7 +222,7 @@ init_row_datepickers = (row) ->
     else if hard_datepicker.data('DateTimePicker').date()?
       opening_datepicker.data('DateTimePicker').maxDate hard_datepicker.data('DateTimePicker').date()
 
-    if soft_datepicker.data('date')?
+    if soft_datepicker.data('date')? && soft_datepicker.data('date') != ''
       soft_date = moment.unix(parseInt(soft_datepicker.data('date')))
       soft_datepicker.data('DateTimePicker').defaultDate soft_date
     if opening_datepicker.data('DateTimePicker').date()?
@@ -207,7 +230,7 @@ init_row_datepickers = (row) ->
     if hard_datepicker.data('DateTimePicker').date()?
       soft_datepicker.data('DateTimePicker').maxDate hard_datepicker.data('DateTimePicker').date()
 
-    if hard_datepicker.data('date')?
+    if hard_datepicker.data('date')? && hard_datepicker.data('date') != ''
       hard_date = moment.unix(parseInt(hard_datepicker.data('date')))
       hard_datepicker.data('DateTimePicker').defaultDate hard_date
     if soft_datepicker.data('DateTimePicker').date()?

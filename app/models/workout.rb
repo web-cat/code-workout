@@ -239,7 +239,10 @@ class Workout < ActiveRecord::Base
       extensions.each do |ext|
         student_id = ext['student_id']
         student = User.find(student_id)
-        student_extension = StudentExtension.new
+        student_extension = StudentExtension.find_by user: student, workout_offering: workout_offering
+        if student_extension.blank?
+          student_extension = StudentExtension.new
+        end
         student_extension.user = student
         student_extension.workout_offering = workout_offering
         student_extension.opening_date = DateTime.parse(ext['opening_date']) if ext['opening_date']
