@@ -129,12 +129,8 @@ class WorkoutsController < ApplicationController
     end
 
     @can_update = can? :edit, @workout
-
+    @time_limit = @workout.workout_offerings.first.andand.time_limit
     @lti_launch = params[:lti_launch]
-    @exs = []
-    @workout.exercises.each do |exer|
-      @exs << exer.id
-    end
 
     @exercises = []
     @workout.exercise_workouts.each do |ex|
@@ -144,6 +140,31 @@ class WorkoutsController < ApplicationController
       ex_data[:id] = ex.exercise_id
       ex_data[:exercise_workout_id] = ex.id
       @exercises.push(ex_data)
+    end
+
+    @workout_offerings = []
+    @managed_workout_offerings = current_user.managed_workout_offerings(@workout)
+    @managed_workout_offerings.each do |proxy|
+      proxy.each do |offering|
+        @workout_offerings << offering
+      end
+    end
+
+    @student_extensions = []
+    @workout_offerings.each do |workout_offering|
+      workout_offering.student_extensions.each do |e|
+        ext = {}
+        ext[:id] = e.id
+        ext[:student_id] = e.user.id
+        ext[:student_display] = e.user.display_name
+        ext[:course_offering_id] = e.workout_offering.course_offering_id
+        ext[:course_offering_display] = e.workout_offering.course_offering.display_name_with_term
+        ext[:opening_date] = e.opening_date.andand.to_i
+        ext[:soft_deadline] = e.soft_deadline.andand.to_i
+        ext[:hard_deadline] = e.hard_deadline.andand.to_i
+        ext[:time_limit] = e.time_limit
+        @student_extensions.push(ext)
+      end
     end
 
     if @lti_launch
@@ -156,10 +177,12 @@ class WorkoutsController < ApplicationController
   def create
     @workout = Workout.new
     @workout.creator_id = current_user.id
+    @lti_launch = params[:lti_launch]
     create_or_update
 
     if @workout.save
-      if lti_params = session[:lti_params]
+      if @lti_launch
+        lti_params = session[:lti_params]
         url = url_for(course_offerings_path(lti_launch: true))
       else
         url = url_for root_path(notice: 'Workout was successfully created.')
@@ -265,6 +288,10 @@ class WorkoutsController < ApplicationController
 
     create_or_update
     @workout.save!
+
+    respond_to do |format|
+      format.json { render json: { url: url_for(root_path(notice: 'Workout was updated successfully.')) } }
+    end
   end
 
 
@@ -337,10 +364,12 @@ class WorkoutsController < ApplicationController
       @workout.is_public = params[:is_public]
       workout_policy = WorkoutPolicy.find_by id: params[:policy_id]
       time_limit = params[:time_limit]
-      removed_exercises = params[:removed_exercises].split ','
+
+      removed_exercises = JSON.parse params[:removed_exercises]
       removed_exercises.each do |exercise_workout_id|
         @workout.exercise_workouts.destroy exercise_workout_id
       end
+
       exercises = JSON.parse params[:exercises]
       exercises.each do |key, value|
         exercise = Exercise.find value['id']
@@ -353,45 +382,18 @@ class WorkoutsController < ApplicationController
         exercise_workout.save!
       end
 
-      course_offerings = JSON.parse params[:course_offerings]
-      parse_course_offerings(course_offerings, time_limit, workout_policy)
-    end
-
-    # Parses course offerings from json and adds them
-    # to the workout
-    def parse_course_offerings(course_offerings, time_limit, workout_policy)
-      if @workout
-        course_offerings.each do |id, offering|
-          course_offering = CourseOffering.find(id)
-          @workout_offering = WorkoutOffering.find_by(workout: @workout, course_offering: course_offering)
-          if @workout_offering.blank?
-            @workout_offering = WorkoutOffering.new
-          end
-          @workout_offering.workout = @workout
-          @workout_offering.course_offering = course_offering
-          @workout_offering.time_limit = time_limit
-          @workout_offering.published = offering['published']
-          @workout_offering.opening_date = DateTime.parse(offering['opening_date']) if offering['opening_date']
-          @workout_offering.soft_deadline = DateTime.parse(offering['soft_deadline']) if offering['soft_deadline']
-          @workout_offering.hard_deadline = DateTime.parse(offering['hard_deadline']) if offering['hard_deadline']
-          @workout_offering.workout_policy = workout_policy
-          @workout_offering.save!
-
-          extensions = offering['extensions']
-          extensions.each do |ext|
-            student_id = ext['student_id']
-            student = User.find(student_id)
-            student_extension = StudentExtension.new
-            student_extension.user = student
-            student_extension.workout_offering = @workout_offering
-            student_extension.opening_date = DateTime.parse(ext['opening_date']) if ext['opening_date']
-            student_extension.soft_deadline = DateTime.parse(ext['soft_deadline']) if ext['soft_deadline']
-            student_extension.hard_deadline = DateTime.parse(ext['hard_deadline']) if ext['hard_deadline']
-            student_extension.time_limit = ext['time_limit']
-            student_extension.save!
-          end
-        end
+      removed_extensions = JSON.parse params[:removed_extensions]
+      removed_extensions.each do |extension_id|
+        StudentExtension.destroy extension_id
       end
+
+      removed_offerings = JSON.parse params[:removed_offerings]
+      removed_offerings.each do |workout_offering_id|
+        @workout.workout_offerings.destroy workout_offering_id
+      end
+
+      course_offerings = JSON.parse params[:course_offerings]
+      @workout.add_workout_offerings(course_offerings, time_limit, workout_policy)
     end
 
     # -------------------------------------------------------------

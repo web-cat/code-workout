@@ -1,4 +1,9 @@
 $('.workouts.new, .workouts.edit').ready ->
+  window.codeworkout ?= {}
+  window.codeworkout.removed_exercises = []
+  window.codeworkout.removed_offerings = []
+  window.codeworkout.removed_extensions = []
+
   sortable = $('#ex-list').sortable
     handle: '.handle'
 
@@ -18,7 +23,7 @@ $('.workouts.new, .workouts.edit').ready ->
       name: ex_name
       id: ex_id
       points: 0
-    template = Mustache.render($(window.exercise_template).filter('#exercise-template').html(), data)
+    template = Mustache.render($(window.codeworkout.exercise_template).filter('#exercise-template').html(), data)
     $('#ex-list').append(template)
 
   $('#add-offering').on 'click', ->
@@ -26,7 +31,17 @@ $('.workouts.new, .workouts.edit').ready ->
     init_datepickers()
 
   $('#workout-offering-fields').on 'click', '.delete-offering', ->
-    $(this).closest('tr').remove()
+    row = $(this).closest 'tr'
+    workout_offering_id = row.data 'id'
+    course_offering_id = row.find('.coff-select').val()
+    delete_confirmed = false
+    if course_offering_id != ''
+      delete_confirmed = remove_extensions_if_any parseInt(course_offering_id)
+
+    if delete_confirmed
+      if workout_offering_id? && workout_offering_id != ''
+        window.codeworkout.removed_offerings.push workout_offering_id
+      row.remove()
 
   $('#workout-offering-fields').on 'change', '.coff-select', ->
     val = $(this).val()
@@ -62,23 +77,28 @@ $('.workouts.new, .workouts.edit').ready ->
       course_offering_display: course_offering.display
       student_display: student.display
       student_id: student.id
-    template = Mustache.render($(window.student_extension_template).filter('#extension-template').html(), data)
+    template = Mustache.render($(window.codeworkout.student_extension_template).filter('#extension-template').html(), data)
     $('#student-extension-fields tbody').append(template)
     $('#extension-modal').modal('hide')
     $('#extensions').css 'display', 'block'
     init_datepickers()
 
   $(document).on 'click', '.delete-extension', ->
-    $(this).closest('tr').remove()
+    row = $(this).closest('tr')
+    extension_id = row.data 'id'
+    if extension_id? && extension_id != ''
+      window.codeworkout.removed_extensions.push extension_id
+
+    row.remove()
+    extensions = $('#student-extension-fields tbody').find 'tr'
+    if extensions.length == 0
+      $('#extensions').css 'display', 'none'
 
   $('#ex-list').on 'click', '.delete-ex', ->
     ex_row = $(this).closest 'li'
     ex_workout_id = ex_row.data 'exercise-workout-id'
     if ex_workout_id? && ex_workout_id != ''
-      ex_list = $('#ex-list')
-      removed_exercises = ex_list.data 'removed-exercises'
-      removed_exercises.push ex_workout_id
-      ex_list.data('removed_exercises', removed_exercises)
+      window.codeworkout.removed_exercises.push ex_workout_id
     ex_row.remove()
     exs = $('#ex-list li').length
     if exs == 0
@@ -88,13 +108,41 @@ $('.workouts.new, .workouts.edit').ready ->
   $('#btn-submit-wo').click ->
     handle_submit()
 
+remove_extensions_if_any = (course_offering_id) ->
+  extensions = $('#student-extension-fields tbody').find 'tr'
+  to_remove = []
+  for extension in extensions
+    do (extension) ->
+      offering = $(extension).data 'course-offering-id'
+      if offering == course_offering_id
+        to_remove.push $(extension).index()
+
+  if to_remove.length > 0
+    if confirm 'Removing this workout offering will also remove ' + to_remove.length + ' student extension(s).'
+      for index in to_remove
+        do (index) ->
+          id = $($(extensions)[index]).data 'id'
+          if id? && id != ''
+            window.codeworkout.removed_extensions.push id
+          $(extensions)[index].remove()
+
+      if extensions.length == 0
+        $('#extensions').css 'display', 'none'
+      return true
+    else
+      return false
+  else
+    return true
+
 init_templates = ->
   $.get '/assets/exercise.mustache.html', (template, textStatus, jqXHr) ->
-    window.exercise_template = template
+    window.codeworkout.exercise_template = template
     if $('body').is '.workouts.edit'
       init_exercises()
   $.get '/assets/student_extension.mustache.html', (template, textStatus, jqXHr) ->
-    window.student_extension_template = template
+    window.codeworkout.student_extension_template = template
+    if $('body').is '.workouts.edit'
+      init_student_extensions()
 
 clear_student_search = ->
   $('#extension-modal #modal-header').empty()
@@ -125,6 +173,27 @@ validate_workout_name = ->
 
   return true
 
+init_student_extensions = ->
+  student_extensions = $('#extensions').data 'student-extensions'
+  if student_extensions
+    $('#extensions').css 'display', 'block' if student_extensions.length > 0
+    for extension in student_extensions
+      do (extension) ->
+        data =
+          id: extension.id
+          course_offering_id: extension.course_offering_id
+          course_offering_display: extension.course_offering_display
+          student_id: extension.student_id
+          student_display: extension.student_display
+          time_limit: extension.time_limit
+          opening_date: extension.opening_date
+          soft_deadline: extension.soft_deadline
+          hard_deadline: extension.hard_deadline
+        template =
+            $(Mustache.render($(window.codeworkout.student_extension_template).filter('#extension-template').html(), data))
+        $('#student-extension-fields tbody').append template
+        init_row_datepickers template
+
 init_exercises = ->
   exercises = $('#ex-list').data 'exercises'
   if exercises
@@ -135,7 +204,7 @@ init_exercises = ->
           exercise_workout_id: exercise.exercise_workout_id
           name: exercise.name
           points: exercise.points
-        $('#ex-list').append(Mustache.render($(window.exercise_template).filter('#exercise-template').html(), data))
+        $('#ex-list').append(Mustache.render($(window.codeworkout.exercise_template).filter('#exercise-template').html(), data))
     $('#ex-list').removeData 'exercises'
 
 init_datepickers = ->
@@ -161,28 +230,54 @@ init_row_datepickers = (row) ->
   if soft_datepicker.val() == '' || !soft_datepicker.data('DateTimePicker').date()?
     soft_datepicker.datetimepicker
       useCurrent: false
-    soft_datepicker.data('DateTimePicker').disable()
   if hard_datepicker.val() == '' || !hard_datepicker.data('DateTimePicker').date()?
     hard_datepicker.datetimepicker
       useCurrent: false
-    hard_datepicker.data('DateTimePicker').disable()
 
   # Handle date change events
   opening_datepicker.on 'dp.change', (e) ->
     if e.date?
-      soft_datepicker.data('DateTimePicker').enable()
       soft_datepicker.data('DateTimePicker').minDate e.date
       hard_datepicker.data('DateTimePicker').minDate e.date
 
   soft_datepicker.on 'dp.change', (e) ->
     if e.date?
-      hard_datepicker.data('DateTimePicker').enable()
       opening_datepicker.data('DateTimePicker').maxDate e.date
       hard_datepicker.data('DateTimePicker').minDate e.date
 
   hard_datepicker.on 'dp.change', (e) ->
     if e.date?
       soft_datepicker.data('DateTimePicker').maxDate e.date
+
+  # Set existing values, if applicable
+  if $('body').is '.workouts.edit'
+    if opening_datepicker.data('date')? && opening_datepicker.data('date') != ''
+      opening_date = moment.unix(parseInt(opening_datepicker.data('date')))
+      if opening_date.isBefore moment()
+        opening_datepicker.data('DateTimePicker').minDate opening_date
+      else
+        opening_datepicker.data('DateTimePicker').minDate moment()
+      opening_datepicker.data('DateTimePicker').defaultDate opening_date
+    if soft_datepicker.data('DateTimePicker').date()?
+      opening_datepicker.data('DateTimePicker').maxDate soft_datepicker.data('DateTimePicker').date()
+    else if hard_datepicker.data('DateTimePicker').date()?
+      opening_datepicker.data('DateTimePicker').maxDate hard_datepicker.data('DateTimePicker').date()
+
+    if soft_datepicker.data('date')? && soft_datepicker.data('date') != ''
+      soft_date = moment.unix(parseInt(soft_datepicker.data('date')))
+      soft_datepicker.data('DateTimePicker').defaultDate soft_date
+    if opening_datepicker.data('DateTimePicker').date()?
+      soft_datepicker.data('DateTimePicker').minDate opening_datepicker.data('DateTimePicker').date()
+    if hard_datepicker.data('DateTimePicker').date()?
+      soft_datepicker.data('DateTimePicker').maxDate hard_datepicker.data('DateTimePicker').date()
+
+    if hard_datepicker.data('date')? && hard_datepicker.data('date') != ''
+      hard_date = moment.unix(parseInt(hard_datepicker.data('date')))
+      hard_datepicker.data('DateTimePicker').defaultDate hard_date
+    if soft_datepicker.data('DateTimePicker').date()?
+      hard_datepicker.data('DateTimePicker').minDate soft_datepicker.data('DateTimePicker').date()
+    else if opening_datepicker.data('DateTimePicker').date()?
+      hard_datepicker.data('DateTimePicker').minDate opening_datepicker.data('DateTimePicker').date()
 
 get_exercises = ->
   exs = $('#ex-list li')
@@ -309,13 +404,18 @@ handle_submit = ->
   fd.append 'policy_id', policy_id
   fd.append 'exercises', JSON.stringify exercises
   fd.append 'course_offerings', JSON.stringify course_offerings
-  fd.append 'removed_exercises', removed_exercises
+  fd.append 'removed_exercises', JSON.stringify window.codeworkout.removed_exercises
+  fd.append 'removed_offerings', JSON.stringify window.codeworkout.removed_offerings
+  fd.append 'removed_extensions', JSON.stringify window.codeworkout.removed_extensions
   fd.append 'is_public', is_public
+  # Tells the server whether this form is being submitted through LTI or not.
+  # The window.codeworkout namespace was declared in the workouts/_form partial.
+  fd.append 'lti_launch', window.codeworkout.lti_launch if window.codeworkout.lti_launch != ''
 
-  if $('body').is '.workouts.new' 
+  if $('body').is '.workouts.new'
     url = '/gym/workouts'
     type = 'post'
-  else if $('body').is '.workouts.edit' 
+  else if $('body').is '.workouts.edit'
     can_update = $('#workout-offering-fields').data 'can-update'
     url = if can_update == true then '/gym/workouts/' + $('h1').data 'id' else '/gym/workouts'
     type = if can_update == true then 'patch' else 'post'

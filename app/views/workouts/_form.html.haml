@@ -1,3 +1,7 @@
+= javascript_tag do
+  window.codeworkout = window.codeworkout || {}
+  window.codeworkout.lti_launch = "#{@lti_launch}"
+
 .row
   .col-xs-9.alert-msg#alerts{style: 'display: none;'}
 .form-horizontal
@@ -27,7 +31,7 @@
           Use the column on the left to find exercises.
 
       %ul.list-group#ex-list{ style: "display: #{@workout.andand.exercise_workouts.any? ? 'block;' : 'none;'}",
-        data: { exercises: "#{@exercises.to_json}", removed_exercises: "#{[].to_json}" } }
+        data: { exercises: "#{@exercises.to_json}" } }
   .form-group
     = label_tag :policy_select, 'Policy', class: 'control-label col-xs-1'
     .col-xs-2
@@ -36,7 +40,7 @@
     = label_tag :time_limit, 'Time', class: 'control-label col-xs-1'
     .col-xs-3
       %input#time-limit.form-control.input-sm.input{ type: 'number', min: '0',
-        placeholder: 'Leave blank for no time limit.' }
+        placeholder: 'Leave blank for no time limit.', value: @time_limit ? "#{@time_limit}" : '' }
 
   .form-group
     = label_tag :is_public, 'Public?', class: 'control-label col-xs-2'
@@ -58,14 +62,19 @@
             %th Student Extensions
             %th Remove
         %tbody
-          = render partial: 'workout_offering_fields', locals: { removable: false }
-
+          - if @workout_offerings.blank?
+            = render partial: 'workout_offering_fields', locals: { removable: false, disabled: false,
+              workout_offering: nil }
+          - else
+            - @workout_offerings.each do |offering|
+              = render partial: 'workout_offering_fields', locals: { removable: true, disabled: true,
+                workout_offering: offering }
   .form-group
     = button_tag type: 'button', id: 'add-offering', class: 'btn btn-success btn-sm' do
       %i.fa.fa-plus{ style: 'padding-right 5px;' }
       Add to Course Offering
 
-  .form-group#extensions{ style: 'display: none;' }
+  .form-group#extensions{ style: 'display: none;', data: { student_extensions: "#{@student_extensions.to_json}" } }
     %p.lead Student Extensions
     .col-lg-9.col-md-6.col-xs-9
       %table#student-extension-fields.table
@@ -86,7 +95,7 @@
 
   %table#add-offering-form{ style: 'display: none;' }
     %tbody
-      = render partial: 'workout_offering_fields', locals: { removable: true }
+      = render partial: 'workout_offering_fields', locals: { removable: false, disabled: false, workout_offering: nil }
 
   #extension-modal.modal.fade{role: 'dialog', tabindex: '-1' }
     .modal-dialog.modal-lg{ style: 'overflow-y: scroll; max-height:85% margin-top: 50px; margin-bottom:50px;' }
