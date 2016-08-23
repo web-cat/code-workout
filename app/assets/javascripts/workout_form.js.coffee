@@ -230,15 +230,17 @@ init_row_datepickers = (row) ->
   if soft_datepicker.val() == '' || !soft_datepicker.data('DateTimePicker').date()?
     soft_datepicker.datetimepicker
       useCurrent: false
+      minDate: opening_datepicker.data('DateTimePicker').minDate()
   if hard_datepicker.val() == '' || !hard_datepicker.data('DateTimePicker').date()?
     hard_datepicker.datetimepicker
       useCurrent: false
+      minDate: soft_datepicker.data('DateTimePicker').minDate()
 
   # Handle date change events
   opening_datepicker.on 'dp.change', (e) ->
     if e.date?
       soft_datepicker.data('DateTimePicker').minDate e.date
-      hard_datepicker.data('DateTimePicker').minDate e.date
+      disable_dates hard_datepicker, soft_datepicker, opening_datepicker, 'minDate'
 
   soft_datepicker.on 'dp.change', (e) ->
     if e.date?
@@ -248,6 +250,7 @@ init_row_datepickers = (row) ->
   hard_datepicker.on 'dp.change', (e) ->
     if e.date?
       soft_datepicker.data('DateTimePicker').maxDate e.date
+      disable_dates opening_datepicker, soft_datepicker, hard_datepicker, 'maxDate'
 
   # Set existing values, if applicable
   if $('body').is '.workouts.edit'
@@ -258,26 +261,28 @@ init_row_datepickers = (row) ->
       else
         opening_datepicker.data('DateTimePicker').minDate moment()
       opening_datepicker.data('DateTimePicker').defaultDate opening_date
-    if soft_datepicker.data('DateTimePicker').date()?
-      opening_datepicker.data('DateTimePicker').maxDate soft_datepicker.data('DateTimePicker').date()
-    else if hard_datepicker.data('DateTimePicker').date()?
-      opening_datepicker.data('DateTimePicker').maxDate hard_datepicker.data('DateTimePicker').date()
 
     if soft_datepicker.data('date')? && soft_datepicker.data('date') != ''
       soft_date = moment.unix(parseInt(soft_datepicker.data('date')))
       soft_datepicker.data('DateTimePicker').defaultDate soft_date
-    if opening_datepicker.data('DateTimePicker').date()?
-      soft_datepicker.data('DateTimePicker').minDate opening_datepicker.data('DateTimePicker').date()
-    if hard_datepicker.data('DateTimePicker').date()?
-      soft_datepicker.data('DateTimePicker').maxDate hard_datepicker.data('DateTimePicker').date()
 
     if hard_datepicker.data('date')? && hard_datepicker.data('date') != ''
       hard_date = moment.unix(parseInt(hard_datepicker.data('date')))
       hard_datepicker.data('DateTimePicker').defaultDate hard_date
-    if soft_datepicker.data('DateTimePicker').date()?
-      hard_datepicker.data('DateTimePicker').minDate soft_datepicker.data('DateTimePicker').date()
-    else if opening_datepicker.data('DateTimePicker').date()?
-      hard_datepicker.data('DateTimePicker').minDate opening_datepicker.data('DateTimePicker').date()
+
+    disable_dates opening_datepicker, soft_datepicker, hard_datepicker, 'maxDate'
+    disable_dates soft_datepicker, opening_datepicker, undefined, 'minDate'
+    disable_dates soft_datepicker, hard_datepicker, undefined, 'maxDate'
+    disable_dates hard_datepicker, soft_datepicker, opening_datepicker, 'minDate'
+
+disable_dates = (this_datepicker, preferred_datepicker, backup_datepicker, min_max) ->
+  preferred_date = if preferred_datepicker? then preferred_datepicker.data('DateTimePicker').date() else undefined
+  backup_date = if backup_datepicker? then backup_datepicker.data('DateTimePicker').date() else undefined
+
+  if preferred_date?
+    this_datepicker.data('DateTimePicker')[min_max](preferred_date)
+  else if backup_date?
+    this_datepicker.data('DateTimePicker')[min_max](backup_date)
 
 get_exercises = ->
   exs = $('#ex-list li')
