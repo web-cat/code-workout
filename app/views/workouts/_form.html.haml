@@ -95,7 +95,7 @@
 
   %table#add-offering-form{ style: 'display: none;' }
     %tbody
-      = render partial: 'workout_offering_fields', locals: { removable: false, disabled: false, workout_offering: nil }
+      = render partial: 'workout_offering_fields', locals: { removable: true, disabled: false, workout_offering: nil }
 
   #extension-modal.modal.fade{role: 'dialog', tabindex: '-1' }
     .modal-dialog.modal-lg{ style: 'overflow-y: scroll; max-height:85% margin-top: 50px; margin-bottom:50px;' }
