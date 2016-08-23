@@ -12,10 +12,12 @@ namespace :db do
     FactoryGirl.create(:course)
     FactoryGirl.create(:course_offering_term_1_tr)
     FactoryGirl.create(:course_offering_term_1_mwf)
-    c = FactoryGirl.create(:course_offering_term_2_tr)
+    FactoryGirl.create(:course_offering_term_2_tr)
     FactoryGirl.create(:course_offering_term_2_mwf)
-    c2 = FactoryGirl.create(:course_offering_term_3_tr)
+    FactoryGirl.create(:course_offering_term_3_tr)
     c3 = FactoryGirl.create(:course_offering_term_3_mwf)
+    c = FactoryGirl.create(:course_offering_term_4_mwf)
+    c2 = FactoryGirl.create(:course_offering_term_4_tr)
 
     FactoryGirl.create(:course_enrollment,
       user: FactoryGirl.create(:admin),

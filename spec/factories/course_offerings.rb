@@ -55,6 +55,15 @@ FactoryGirl.define do
       label "MWF 10:00am"
     end
 
+    factory :course_offering_term_4_mwf do
+      term_id 4
+      label "MWF 10:00am"
+    end
+
+    factory :course_offering_term_4_tr do
+      term_id 4
+      label "TR 10:00am"
+    end
   end
 
 end
