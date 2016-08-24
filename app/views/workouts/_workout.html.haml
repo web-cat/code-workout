@@ -76,6 +76,12 @@
           .inset
             .score= image_tag 'pct-blur.png'
   .body
+    - if workout_offering.andand.course_offering.is_manager?(current_user)
+      = link_to 'Edit Workout',
+        organization_edit_workout_path(course_id: workout_offering.course_offering.course.slug,
+          term_id: workout_offering.course_offering.term.slug,
+          organization_id: workout_offering.course_offering.course.organization.slug,
+          workout_offering_id: workout_offering.id)
     .text
       = teaser(workout.description)
   .info
