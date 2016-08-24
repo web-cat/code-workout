@@ -5,8 +5,7 @@ daemonize
 app_dir = File.expand_path('../..', __FILE__)
 
 # Default to production
-rails_env = rails_env || ENV['RAILS_ENV'] || fetch(:rails_env) ||
-  fetch(:stage) || "production"
+rails_env = rails_env || ENV['RAILS_ENV'] || "production"
 puts "Running in evironment #{rails_env}"
 environment rails_env
 
@@ -24,8 +23,12 @@ state_path "#{app_dir}/tmp/pids/puma.state"
 activate_control_app
 
 on_worker_boot do
-  require 'active_record'
   ActiveRecord::Base.connection.disconnect! rescue ActiveRecord::ConnectionNotEstablished
-  ActiveRecord::Base.establish_connection(
-    YAML.load_file("#{app_dir}/config/database.yml")[rails_env])
+  ActiveSupport.on_load(:active_record) do
+    ActiveRecord::Base.establish_connection
+  end
+end
+
+before_fork do
+  ActiveRecord::Base.connection.disconnect! rescue ActiveRecord::ConnectionNotEstablished
 end
