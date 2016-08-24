@@ -15,7 +15,7 @@
 - score_pct = workout_score ? (workout_score.score/workout.total_points * 100).round(0) : 0
 - if score_pct == 100 && workout_score.score < workout.total_points
   - score_pct = 99
-- closed = (workout_offering && workout_offering.hard_deadline < Time.zone.now)
+- closed = (workout_offering.andand.hard_deadline && workout_offering.andand.hard_deadline < Time.zone.now)
 %article.workout.thumbnail{ class: (closed ? (size + " closed") : size) }
   .title
     - if workout_offering && workout_offering.current_deadline_distance == 4
