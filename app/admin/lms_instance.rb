@@ -3,7 +3,7 @@ ActiveAdmin.register LmsInstance do
   active_admin_import
 
   menu parent: 'LMS config', priority: 20
-  permit_params :url, :lms_type_id, :consumer_key, :consumer_secret
+  permit_params :url, :lms_type_id, :organization_id, :consumer_key, :consumer_secret
 
   index do
     id_column
