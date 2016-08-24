@@ -21,7 +21,7 @@ ActiveAdmin.register LmsInstance do
     f.inputs do
       f.input :lms_type
       f.input :url
-      f.input :organization_id
+      f.input :organization
       f.input :consumer_key
       f.input :consumer_secret
     end
