@@ -135,11 +135,11 @@ remove_extensions_if_any = (course_offering_id) ->
     return true
 
 init_templates = ->
-  $.get '/exercise.mustache.html', (template, textStatus, jqXHr) ->
+  $.get '/assets/exercise.mustache.html', (template, textStatus, jqXHr) ->
     window.codeworkout.exercise_template = template
     if $('body').is '.workouts.edit'
       init_exercises()
-  $.get '/student_extension.mustache.html', (template, textStatus, jqXHr) ->
+  $.get '/assets/student_extension.mustache.html', (template, textStatus, jqXHr) ->
     window.codeworkout.student_extension_template = template
     if $('body').is '.workouts.edit'
       init_student_extensions()
