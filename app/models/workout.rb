@@ -218,7 +218,7 @@ class Workout < ActiveRecord::Base
     return [earned, remaining, gap, earned_per, remaining_per, gap_per]
   end
 
-  def add_workout_offerings(course_offerings, time_limit, workout_policy)
+  def add_workout_offerings(course_offerings, common)
     course_offerings.each do |id, offering|
       course_offering = CourseOffering.find(id)
       workout_offering = WorkoutOffering.find_by(workout: self, course_offering: course_offering)
@@ -227,12 +227,12 @@ class Workout < ActiveRecord::Base
       end
       workout_offering.workout = self
       workout_offering.course_offering = course_offering
-      workout_offering.time_limit = time_limit
-      workout_offering.published = offering['published']
+      workout_offering.time_limit = common[:time_limit]
+      workout_offering.published = common[:published]
       workout_offering.opening_date = DateTime.parse(offering['opening_date']) if offering['opening_date']
       workout_offering.soft_deadline = DateTime.parse(offering['soft_deadline']) if offering['soft_deadline']
       workout_offering.hard_deadline = DateTime.parse(offering['hard_deadline']) if offering['hard_deadline']
-      workout_offering.workout_policy = workout_policy
+      workout_offering.workout_policy = common[:workout_policy]
       workout_offering.save!
 
       extensions = offering['extensions']

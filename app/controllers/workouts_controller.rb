@@ -370,6 +370,11 @@ class WorkoutsController < ApplicationController
       @workout.is_public = params[:is_public]
       workout_policy = WorkoutPolicy.find_by id: params[:policy_id]
       time_limit = params[:time_limit]
+      published = params[:published]
+      common = {}
+      common[:workout_policy] = workout_policy
+      common[:time_limit] = time_limit
+      common[:published] = published
 
       removed_exercises = JSON.parse params[:removed_exercises]
       removed_exercises.each do |exercise_workout_id|
@@ -399,7 +404,7 @@ class WorkoutsController < ApplicationController
       end
 
       course_offerings = JSON.parse params[:course_offerings]
-      @workout.add_workout_offerings(course_offerings, time_limit, workout_policy)
+      @workout.add_workout_offerings(course_offerings, common)
     end
 
     # -------------------------------------------------------------
