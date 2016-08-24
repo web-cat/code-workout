@@ -134,6 +134,7 @@ class WorkoutsController < ApplicationController
 
     @workout_offering = WorkoutOffering.find(params[:workout_offering_id])
     @workout = @workout_offering.workout
+    @course = Course.find(params[:course_id])
     @can_update = can? :edit, @workout
     @time_limit = @workout.workout_offerings.first.andand.time_limit
     @lti_launch = params[:lti_launch]
@@ -149,7 +150,7 @@ class WorkoutsController < ApplicationController
     end
 
     @workout_offerings = []
-    @managed_workout_offerings = current_user.managed_workout_offerings(@workout)
+    @managed_workout_offerings = current_user.managed_workout_offerings(@workout, @course)
     @managed_workout_offerings.each do |proxy|
       proxy.each do |offering|
         @workout_offerings << offering

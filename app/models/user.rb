@@ -164,11 +164,11 @@ class User < ActiveRecord::Base
       map(&:course_offering)
   end
 
-  def managed_workout_offerings(workout)
+  def managed_workout_offerings(workout, course)
     course_enrollments.joins(course_offering: :workout_offerings).
       where(course_roles:
         { can_manage_course: true }, course_offering:
-          { workout_offerings:
+          { course: course, workout_offerings:
             { workout: workout } }
       ).map { |e| e.course_offering.workout_offerings }
   end
