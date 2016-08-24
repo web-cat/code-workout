@@ -33,7 +33,7 @@ $('.workouts.new, .workouts.edit').ready ->
   $('#workout-offering-fields').on 'click', '.delete-offering', ->
     row = $(this).closest 'tr'
     workout_offering_id = row.data 'id'
-    course_offering_id = row.find('.coff-select').val()
+    course_offering_id = row.find('.course-offering').data 'course-offering-id'
     delete_confirmed = false
     if course_offering_id != ''
       delete_confirmed = remove_extensions_if_any parseInt(course_offering_id)
@@ -56,8 +56,8 @@ $('.workouts.new, .workouts.edit').ready ->
       row.find('.add-extension').prop 'disabled', true
 
   $('#workout-offering-fields').on 'click', '.add-extension', ->
-    course_offering = $(this).closest('tr').find('.coff-select option:selected').text()
-    course_offering_id = $(this).closest('tr').find('.coff-select').val()
+    course_offering = $(this).closest('tr').find('.course-offering small').text()
+    course_offering_id = $(this).closest('tr').find('.course-offering').data 'course-offering-id'
     clear_student_search()
     $('#extension-modal').data('course-offering', { id: course_offering_id, display: course_offering } )
     $('#extension-modal #modal-header').append 'Searching for students from <u>' + course_offering + '</u>'
@@ -304,7 +304,7 @@ get_offerings = ->
   for offering_row in offering_rows
     do (offering_row) ->
       offering_fields = $('td', $(offering_row))
-      offering_id = $('.coff-select', $(offering_fields[0])).val()
+      offering_id = $(offering_fields[0]).data 'course-offering-id'
       if offering_id != ''
         opening_datepicker = $('.opening-datepicker', $(offering_fields[1])).data('DateTimePicker').date()
         soft_datepicker = $('.soft-datepicker', $(offering_fields[2])).data('DateTimePicker').date()
@@ -378,13 +378,13 @@ check_completeness = ->
   messages.push 'Change the name of the workout so you can create a clone with your settings.' if !validate_workout_name()
   messages.push 'Workout must have at least 1 exercise.' if $('#ex-list li').length == 0
 
-  if $('body').hasClass '.workouts.new'
-    course_offering_selects = $('#workout-offering-fields').find '.coff-select'
-    coff_errs = 0
-    for select in course_offering_selects
-      do (select) ->
-        coff_errs = coff_errs + 1 if $(select).val() == ''
-    messages.push 'You must select a Course Offering for this Workout. (x' + coff_errs + ')' if coff_errs > 0
+  # if $('body').hasClass '.workouts.new'
+  #   course_offering_selects = $('#workout-offering-fields').find '.coff-select'
+  #   coff_errs = 0
+  #   for select in course_offering_selects
+  #     do (select) ->
+  #       coff_errs = coff_errs + 1 if $(select).val() == ''
+  #   messages.push 'You must select a Course Offering for this Workout. (x' + coff_errs + ')' if coff_errs > 0
 
   return messages
 

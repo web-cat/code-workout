@@ -15,7 +15,7 @@
 - score_pct = workout_score ? (workout_score.score/workout.total_points * 100).round(0) : 0
 - if score_pct == 100 && workout_score.score < workout.total_points
   - score_pct = 99
-- closed = (workout_offering && workout_offering.hard_deadline < Time.zone.now)
+- closed = (workout_offering.andand.hard_deadline && workout_offering.andand.hard_deadline < Time.zone.now)
 %article.workout.thumbnail{ class: (closed ? (size + " closed") : size) }
   .title
     - if workout_offering && workout_offering.current_deadline_distance == 4
@@ -76,6 +76,12 @@
           .inset
             .score= image_tag 'pct-blur.png'
   .body
+    - if workout_offering.andand.course_offering.is_manager?(current_user)
+      = link_to 'Edit Workout',
+        organization_edit_workout_path(course_id: workout_offering.course_offering.course.slug,
+          term_id: workout_offering.course_offering.term.slug,
+          organization_id: workout_offering.course_offering.course.organization.slug,
+          workout_offering_id: workout_offering.id)
     .text
       = teaser(workout.description)
   .info

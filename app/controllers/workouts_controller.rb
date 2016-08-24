@@ -2,7 +2,7 @@ require 'json'
 require 'date'
 
 class WorkoutsController < ApplicationController
-  before_action :set_workout, only: [:show, :edit, :update, :destroy]
+  before_action :set_workout, only: [:show, :update, :destroy]
   after_action :allow_iframe, only: [:new, :new_create, :edit]
   respond_to :html, :js
 
@@ -68,6 +68,10 @@ class WorkoutsController < ApplicationController
     end
     @lti_launch = params[:lti_launch]
     @workout = Workout.new
+    @course = Course.find params[:course_id]
+    @term = Term.find params[:term_id]
+    @course_offerings = CourseOffering.for_course_in_term @course, @term
+
     if params[:notice]
       flash.now[:notice] = params[:notice]
     end
@@ -128,6 +132,8 @@ class WorkoutsController < ApplicationController
       redirect_to root_path, notice: 'You are not authorized to edit workouts.' and return
     end
 
+    @workout_offering = WorkoutOffering.find(params[:workout_offering_id])
+    @workout = @workout_offering.workout
     @can_update = can? :edit, @workout
     @time_limit = @workout.workout_offerings.first.andand.time_limit
     @lti_launch = params[:lti_launch]

@@ -85,7 +85,7 @@ CodeWorkout::Application.routes.draw do
     get 'workouts/new_or_existing' => 'workouts#new_or_existing'
     post 'workouts/search' => 'workouts#search', as: :workouts_search
     # At the bottom, so the routes above take precedence over existing ids
-    resources :workouts
+    resources :workouts, except: [ :new, :edit ]
   end
 
   # All of the routes anchored at /courses
@@ -94,6 +94,8 @@ CodeWorkout::Application.routes.draw do
     post 'find' => 'courses#find', as: :course_find
     get 'new' => 'courses#new'
     get ':id/edit' => 'courses#edit', as: :course_edit
+    get ':course_id/:term_id/workouts/new' => 'workouts#new', as: :new_workout
+    get ':course_id/:term_id/:workout_offering_id/edit_workout' => 'workouts#edit', as: :edit_workout
     get ':course_id/:term_id/:id/practice(/:exercise_id)' => 'workout_offerings#practice', as: :workout_offering_practice
     get ':course_id/:term_id/:workout_offering_id/:id' => 'exercises#practice', as: :workout_offering_exercise
     patch ':course_id/:term_id/:workout_offering_id/:id' => 'exercises#evaluate', as: :workout_offering_exercise_evaluate

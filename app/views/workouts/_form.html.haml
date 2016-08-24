@@ -62,13 +62,17 @@
             %th Student Extensions
             %th Remove
         %tbody
-          - if @workout_offerings.blank?
-            = render partial: 'workout_offering_fields', locals: { removable: false, disabled: false,
-              workout_offering: nil }
+          - if action_name.eql? 'new'
+            - @course_offerings.each do |co|
+              = render partial: 'workout_offering_fields', locals: { removable: true, workout_offering: nil, course_offering: co }
           - else
-            - @workout_offerings.each do |offering|
-              = render partial: 'workout_offering_fields', locals: { removable: true, disabled: true,
-                workout_offering: offering }
+            - if @workout_offerings.blank?
+              = render partial: 'workout_offering_fields', locals: { removable: false,
+                course_offering: nil, workout_offering: nil }
+            - else
+              - @workout_offerings.each do |offering|
+                = render partial: 'workout_offering_fields', locals: { removable: true,
+                  course_offering: offering.course_offering, workout_offering: offering }
   .form-group
     = button_tag type: 'button', id: 'add-offering', class: 'btn btn-success btn-sm' do
       %i.fa.fa-plus{ style: 'padding-right 5px;' }
@@ -95,7 +99,7 @@
 
   %table#add-offering-form{ style: 'display: none;' }
     %tbody
-      = render partial: 'workout_offering_fields', locals: { removable: true, disabled: false, workout_offering: nil }
+      = render partial: 'workout_offering_fields', locals: { removable: true, workout_offering: nil, course_offering: nil }
 
   #extension-modal.modal.fade{role: 'dialog', tabindex: '-1' }
     .modal-dialog.modal-lg{ style: 'overflow-y: scroll; max-height:85% margin-top: 50px; margin-bottom:50px;' }

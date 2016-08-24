@@ -1,8 +1,7 @@
 %tr.offering.fields{ data: { id: workout_offering.andand.id } }
-  %td
-    = collection_select nil, nil, current_user.managed_course_offerings, :id, :display_name_with_term,
-      { prompt: 'Select one', selected: workout_offering.andand.course_offering_id },
-      { class: 'coff-select form-control input-sm', disabled: disabled }
+  %td.course-offering{ data: { course_offering_id: course_offering.andand.id } }
+    %small{style: 'font-size: small;'}
+      = course_offering.andand.display_name_with_term
   %td
     %input.opening-datepicker.datepicker{ type: 'text', class: 'form-control input-sm',
       placeholder: 'Set date', data: { date: workout_offering.andand.opening_date.andand.to_i } }
@@ -15,8 +14,8 @@
   %td
     = check_box_tag 'published', 'published', workout_offering.andand.published, class: 'form-control published'
   %td
-    = button_tag type: 'button', class: 'add-extension btn btn-sm ' + (disabled ? 'btn-primary' : ''),
-      disabled: !disabled, data: { toggle: 'modal', target: '#extension-modal' } do
+    = button_tag type: 'button', class: 'add-extension btn btn-sm btn-primary',
+      data: { toggle: 'modal', target: '#extension-modal' } do
       Add Extension
   %td
     - if removable

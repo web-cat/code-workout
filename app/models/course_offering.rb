@@ -45,6 +45,7 @@ class CourseOffering < ActiveRecord::Base
   scope :managed_by_user, -> (u) { joins{course_enrollments}.
    where{ course_enrollments.user == u &&
     course_enrollments.course_role_id == CourseRole::INSTRUCTOR_ID } }
+  scope :for_course_in_term, -> (c, t) { where { (course == c && term == t) } }
 
 
   #~ Validation ...............................................................

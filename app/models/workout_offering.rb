@@ -104,6 +104,10 @@ class WorkoutOffering < ActiveRecord::Base
       return nil
     end
 
+    if soft_deadline.nil?
+      return nil
+    end
+
     if hard_deadline.to_i < current_time
       return 1
     end
