@@ -226,7 +226,6 @@ init_row_datepickers = (row) ->
   if opening_datepicker.val() == '' || !opening_datepicker.data('DateTimePicker').date()?
     opening_datepicker.datetimepicker
       useCurrent: false
-      minDate: moment()
   if soft_datepicker.val() == '' || !soft_datepicker.data('DateTimePicker').date()?
     soft_datepicker.datetimepicker
       useCurrent: false
@@ -313,7 +312,6 @@ get_offerings = ->
         opening_date = if opening_datepicker? then opening_datepicker.toDate().toString() else null
         soft_deadline = if soft_datepicker? then soft_datepicker.toDate().toString() else null
         hard_deadline = if hard_datepicker? then hard_datepicker.toDate().toString() else null
-        published = $('.published', $(offering_fields[4])).is ':checked'
 
         offering =
           opening_date: opening_date
@@ -399,6 +397,7 @@ handle_submit = ->
   time_limit = $('#time-limit').val()
   policy_id = $('#policy-select').val()
   is_public = $('#is-public').is ':checked'
+  published = $('#published').is ':checked'
   removed_exercises = $('#ex-list').data 'removed-exercises'
   exercises = get_exercises()
   course_offerings = get_offerings_with_extensions()
@@ -413,6 +412,7 @@ handle_submit = ->
   fd.append 'removed_offerings', JSON.stringify window.codeworkout.removed_offerings
   fd.append 'removed_extensions', JSON.stringify window.codeworkout.removed_extensions
   fd.append 'is_public', is_public
+  fd.append 'published', published
   # Tells the server whether this form is being submitted through LTI or not.
   # The window.codeworkout namespace was declared in the workouts/_form partial.
   fd.append 'lti_launch', window.codeworkout.lti_launch if window.codeworkout.lti_launch != ''

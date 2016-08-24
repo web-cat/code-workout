@@ -12,8 +12,6 @@
     %input.hard-datepicker.datepicker{ type: 'text', class: 'form-control input-sm',
       placeholder: 'Set date', data: { date: workout_offering.andand.hard_deadline.andand.to_i } }
   %td
-    = check_box_tag 'published', 'published', workout_offering.andand.published, class: 'form-control published'
-  %td
     = button_tag type: 'button', class: 'add-extension btn btn-sm btn-primary',
       data: { toggle: 'modal', target: '#extension-modal' } do
       Add Extension
