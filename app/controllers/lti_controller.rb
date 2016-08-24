@@ -130,7 +130,12 @@ class LtiController < ApplicationController
             lti_params[:lis_outcome_service_url] = lis_outcome_service_url
             session[:lti_params] = lti_params
 
-            redirect_to new_workout_path(lti_launch: true) and return
+            redirect_to organization_new_workout_path(
+              lti_launch: true,
+              course_id: @course.slug,
+              term_id: @term.slug,
+              organization_id: @organization.slug
+            ) and return
           else
             @message = 'Workout not found. Please contact your instructor.'
             render :error and return
