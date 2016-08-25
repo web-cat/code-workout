@@ -73,15 +73,12 @@
             - @course_offerings.each do |co|
               = render partial: 'workout_offering_fields', locals: { removable: true, workout_offering: nil, course_offering: co }
           - else
-            - if @workout_offerings.blank?
-              = render partial: 'workout_offering_fields', locals: { removable: false,
-                course_offering: nil, workout_offering: nil }
-            - else
-              - @workout_offerings.each do |offering|
-                = render partial: 'workout_offering_fields', locals: { removable: true,
-                  course_offering: offering.course_offering, workout_offering: offering }
+            - @workout_offerings.each do |offering|
+              = render partial: 'workout_offering_fields', locals: { removable: true,
+                course_offering: offering.course_offering, workout_offering: offering }
   .form-group
-    = button_tag type: 'button', id: 'add-offering', class: 'btn btn-success btn-sm' do
+    = button_tag type: 'button', id: 'add-offering', class: 'btn btn-success btn-sm',
+      data: { toggle: 'modal', target: '#offerings-modal' } do
       %i.fa.fa-plus{ style: 'padding-right 5px;' }
       Add to Course Offering
 
@@ -124,4 +121,18 @@
             #msg
               No results yet
             #results-area
-              .list-group#results
+              .list-group#students
+
+  #offerings-modal.modal.fade{role: 'dialog', tabindex: '-1' }
+    .modal-dialog.modal-lg{ style: 'overflow-y: scroll; max-height:85% margin-top: 50px; margin-bottom:50px;' }
+      .modal-content
+        .modal-header
+          %p.lead Add this workout to another offering of this course.
+        .modal-body
+          #msg
+            - if @unused_course_offerings.blank?
+              All course offerings already offer this workout.
+          #course-offerings.list-group
+            - @unused_course_offerings.andand.each do |co|
+              %a.list-group-item.action{ href: '#', data: { course_offering_id: co.id } }
+                = co.display_name_with_term

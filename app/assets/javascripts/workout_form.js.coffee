@@ -26,14 +26,23 @@ $('.workouts.new, .workouts.edit').ready ->
     template = Mustache.render($(window.codeworkout.exercise_template).filter('#exercise-template').html(), data)
     $('#ex-list').append(template)
 
-  $('#add-offering').on 'click', ->
-    $('#workout-offering-fields tbody').append($('#add-offering-form tbody').html())
-    init_datepickers()
+  $('#course-offerings').on 'click', 'a', ->
+    course_offering_id = $(this).data 'course-offering-id'
+    course_offering_display = $(this).text().trim()
+    row = $($('#add-offering-form tbody').html())
+    row_fields = row.find('td')
+    $(row_fields[0]).data 'course-offering-id', course_offering_id
+    $(row_fields[0]).find('.display').html course_offering_display
+    init_row_datepickers row
+    $(this).remove()
+    $('#offerings-modal').modal 'hide'
+    $('#workout-offering-fields tbody').append row
 
   $('#workout-offering-fields').on 'click', '.delete-offering', ->
     row = $(this).closest 'tr'
     workout_offering_id = row.data 'id'
     course_offering_id = row.find('.course-offering').data 'course-offering-id'
+    course_offering_display = row.find('.course-offering .display').text()
     delete_confirmed = false
     if course_offering_id != ''
       delete_confirmed = remove_extensions_if_any parseInt(course_offering_id)
@@ -42,18 +51,12 @@ $('.workouts.new, .workouts.edit').ready ->
       if workout_offering_id? && workout_offering_id != ''
         window.codeworkout.removed_offerings.push workout_offering_id
       row.remove()
-
-  $('#workout-offering-fields').on 'change', '.coff-select', ->
-    val = $(this).val()
-    row = $(this).closest 'tr'
-
-    if val != ''
-      row.attr('id', 'off-' + val)
-      row.find('.add-extension').addClass 'btn-primary'
-      row.find('.add-extension').prop 'disabled', false
-    else
-      row.find('.add-extension').removeClass 'btn-primary'
-      row.find('.add-extension').prop 'disabled', true
+      $('#offerings-modal #msg').empty()
+      unused_row =
+        "<a class='list-group-item action' data-course-offering-id='" + course_offering_id + "'>" +
+          course_offering_display +
+        "</a>";
+      $('#offerings-modal #course-offerings').append unused_row
 
   $('#workout-offering-fields').on 'click', '.add-extension', ->
     course_offering = $(this).closest('tr').find('.course-offering small').text()
@@ -67,7 +70,7 @@ $('.workouts.new, .workouts.edit').ready ->
       if e.keyCode == 13
         search_students(course_offering_id)
 
-  $('#results').on 'click', 'a', ->
+  $('#students').on 'click', 'a', ->
     course_offering = $('#extension-modal').data('course-offering')
     student =
       id: $(this).data('student-id')
@@ -375,14 +378,6 @@ check_completeness = ->
   messages.push 'Workout Name cannot be empty.' if $('#wo-name').val() == ''
   messages.push 'Change the name of the workout so you can create a clone with your settings.' if !validate_workout_name()
   messages.push 'Workout must have at least 1 exercise.' if $('#ex-list li').length == 0
-
-  # if $('body').hasClass '.workouts.new'
-  #   course_offering_selects = $('#workout-offering-fields').find '.coff-select'
-  #   coff_errs = 0
-  #   for select in course_offering_selects
-  #     do (select) ->
-  #       coff_errs = coff_errs + 1 if $(select).val() == ''
-  #   messages.push 'You must select a Course Offering for this Workout. (x' + coff_errs + ')' if coff_errs > 0
 
   return messages
 

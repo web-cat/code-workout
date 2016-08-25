@@ -153,6 +153,10 @@ class WorkoutsController < ApplicationController
 
     @workout_offerings = current_user.managed_workout_offerings_in_term(@workout, @course, @term).flatten
 
+    course_offerings = CourseOffering.for_course_in_term @course, @term
+    used_course_offerings = @workout_offerings.flat_map(&:course_offering)
+    @unused_course_offerings = course_offerings - used_course_offerings
+
     @student_extensions = []
     @workout_offerings.each do |workout_offering|
       workout_offering.student_extensions.each do |e|
