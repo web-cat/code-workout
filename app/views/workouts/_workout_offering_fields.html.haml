@@ -16,5 +16,4 @@
       data: { toggle: 'modal', target: '#extension-modal' } do
       Add Extension
   %td
-    - if removable
-      %i.fa.fa-times.action.delete-offering
+    %i.fa.fa-times.action.delete-offering{ data: { removable: "#{removable}" } }

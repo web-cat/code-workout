@@ -43,20 +43,24 @@ $('.workouts.new, .workouts.edit').ready ->
     workout_offering_id = row.data 'id'
     course_offering_id = row.find('.course-offering').data 'course-offering-id'
     course_offering_display = row.find('.course-offering .display').text()
-    delete_confirmed = false
-    if course_offering_id != ''
-      delete_confirmed = remove_extensions_if_any parseInt(course_offering_id)
+    removable = $(this).data 'removable'
+    if removable
+      delete_confirmed = false
+      if course_offering_id != ''
+        delete_confirmed = remove_extensions_if_any parseInt(course_offering_id)
 
-    if delete_confirmed
-      if workout_offering_id? && workout_offering_id != ''
-        window.codeworkout.removed_offerings.push workout_offering_id
-      row.remove()
-      $('#offerings-modal #msg').empty()
-      unused_row =
-        "<a class='list-group-item action' data-course-offering-id='" + course_offering_id + "'>" +
-          course_offering_display +
-        "</a>";
-      $('#offerings-modal #course-offerings').append unused_row
+      if delete_confirmed
+        if workout_offering_id? && workout_offering_id != ''
+          window.codeworkout.removed_offerings.push workout_offering_id
+        row.remove()
+        $('#offerings-modal #msg').empty()
+        unused_row =
+          "<a class='list-group-item action' data-course-offering-id='" + course_offering_id + "'>" +
+            course_offering_display +
+          "</a>";
+        $('#offerings-modal #course-offerings').append unused_row
+    else
+      alert 'Cannot delete this workout. Some students have already attempted it.'
 
   $('#workout-offering-fields').on 'click', '.add-extension', ->
     course_offering = $(this).closest('tr').find('.course-offering small').text()
@@ -80,11 +84,11 @@ $('.workouts.new, .workouts.edit').ready ->
       course_offering_display: course_offering.display
       student_display: student.display
       student_id: student.id
-    template = Mustache.render($(window.codeworkout.student_extension_template).filter('#extension-template').html(), data)
+    template = $(Mustache.render($(window.codeworkout.student_extension_template).filter('#extension-template').html(), data))
     $('#student-extension-fields tbody').append(template)
     $('#extension-modal').modal('hide')
     $('#extensions').css 'display', 'block'
-    init_datepickers()
+    init_row_datepickers template
 
   $(document).on 'click', '.delete-extension', ->
     row = $(this).closest('tr')
@@ -149,8 +153,8 @@ init_templates = ->
 
 clear_student_search = ->
   $('#extension-modal #modal-header').empty()
-  $('#msg').empty()
-  $('#results').empty()
+  $('#extension-modal .msg').empty()
+  $('#students').empty()
   $('#terms').val('')
 
 search_students = (course_offering_id) ->
@@ -258,10 +262,6 @@ init_row_datepickers = (row) ->
   if $('body').is '.workouts.edit'
     if opening_datepicker.data('date')? && opening_datepicker.data('date') != ''
       opening_date = moment.unix(parseInt(opening_datepicker.data('date')))
-      if opening_date.isBefore moment()
-        opening_datepicker.data('DateTimePicker').minDate opening_date
-      else
-        opening_datepicker.data('DateTimePicker').minDate moment()
       opening_datepicker.data('DateTimePicker').defaultDate opening_date
 
     if soft_datepicker.data('date')? && soft_datepicker.data('date') != ''
