@@ -128,12 +128,13 @@ class WorkoutsController < ApplicationController
   # -------------------------------------------------------------
   # GET /workouts/1/edit
   def edit
-    if current_user.global_role.is_regular_user? && current_user.managed_course_offerings.blank?
+    @workout_offering = WorkoutOffering.find(params[:workout_offering_id])
+    @workout = @workout_offering.workout
+
+    if cannot? :edit, @workout
       redirect_to root_path, notice: 'You are not authorized to edit workouts.' and return
     end
 
-    @workout_offering = WorkoutOffering.find(params[:workout_offering_id])
-    @workout = @workout_offering.workout
     @course = Course.find(params[:course_id])
     @can_update = can? :edit, @workout
     @time_limit = @workout.workout_offerings.first.andand.time_limit
