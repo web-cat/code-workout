@@ -52,7 +52,7 @@
       -# FIXME: definitely busted!
       - @course_offerings.each do |offering|
         - if @is_student
-          - offering.workout_offerings.visible_to_students.in_groups_of(2, false) do |row|
+          - offering.workout_offerings.select{ |i| i.can_be_seen_by? current_user }.in_groups_of(2, false) do |row|
             = render row, locals: { uid: current_user.id }
             .clearfix
         - else
@@ -77,7 +77,7 @@
           %h2= offering.display_name
         - workout_offerings = offering.workout_offerings
         - if @is_student
-          - workout_offerings = workout_offerings.visible_to_students
+          - workout_offerings = workout_offerings.select{ |i| i.can_be_seen_by? current_user }
         - if can? :generate_gradebook, offering
           = button_to 'Download section grades',
             course_offering_gradebook_path(offering, format: :csv)
@@ -181,4 +181,3 @@
           %td
             = render partial: 'course_offerings/self_enrollment',
               locals: { off: off }
-
