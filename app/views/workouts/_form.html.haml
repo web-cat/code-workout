@@ -1,6 +1,8 @@
 = javascript_tag do
   window.codeworkout = window.codeworkout || {}
   window.codeworkout.lti_launch = "#{@lti_launch}"
+  window.codeworkout.extension_template_path = "#{asset_path 'student_extension.mustache.html'}"
+  window.codeworkout.exercise_template_path = "#{asset_path 'exercise.mustache.html'}"
 
 .row
   .col-xs-9.alert-msg#alerts{style: 'display: none;'}
@@ -120,7 +122,7 @@
           .col-xs-2
             = button_tag 'Search', id: 'btn-student-search', class: 'btn'
         #student-search-results
-          #msg
+          .msg
             No results yet
           #results-area
             .list-group#students
@@ -131,42 +133,10 @@
       .modal-header
         %p.lead Add this workout to another offering of this course.
       .modal-body
-        #msg
+        .msg
           - if @unused_course_offerings.blank?
             All course offerings already offer this workout.
         #course-offerings.list-group
           - @unused_course_offerings.andand.each do |co|
             %a.list-group-item.action{ href: '#', data: { course_offering_id: co.id } }
               = co.display_name_with_term
-
-%script#exercise-template{ type: 'text/html' }
-  %li.list-group-item{ data: { id: '{{ id }}', exercise_workout_id: ' {{ exercise_workout_id }}' } }
-    .row
-      .col-xs-1
-        %i.handle.fa.fa-bars
-      .col-xs-3 {{ name }}
-      .col-xs-3 Points
-      .col-xs-2
-        %input.points.form-control.input-sm{ placeholder: 'e.g. 5', type: 'number', min: '0', value: '{{ points }}' }
-      .col-xs-1.col-xs-offset-2
-        %i.action.delete-ex.fa.fa-times
-
-%script#extension-template{ type: 'text/html' }
-  %tr.extension.fields{ data: { id: '{{ id }}', course_offering_id: '{{ course_offering_id }}',
-    student_id: '{{ student_id }}' } }
-    %td{ style: 'font-size: small;' } {{ course_offering_display }}
-    %td{ style: 'font-size: small;' } {{ student_display }}
-    %td
-      %input.opening-datepicker.datepicker.form-control.input.input-sm{ placeholder: 'Blank for default',
-        data: { date: '{{ opening_date }}' } }
-    %td
-      %input.soft-datepicker.datepicker.form-control.input.input-sm{ placeholder: 'Blank for default',
-        data: { date: '{{ soft_deadline }}' } }
-    %td
-      %input.hard-datepicker.datepicker.form-control.input.input-sm{ placeholder: 'Blank for default',
-        data: { date: '{{ hard_deadline }}' } }
-    %td
-      %input.form-control.time-limit.input.input-sm{ val: '{{ time_limit }}', type: 'number', min: '0',
-        placeholder: 'Blank for default' }
-    %td
-      %i.action.delete-extension.fa.fa-times

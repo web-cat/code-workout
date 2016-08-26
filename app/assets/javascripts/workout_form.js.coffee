@@ -5,9 +5,6 @@ $('.workouts.new, .workouts.edit').ready ->
   window.codeworkout.removed_extensions = []
 
   init_templates()
-  if $('body').is '.workouts.edit'
-    init_exercises()
-    init_student_extensions()
   init_datepickers()
   validate_workout_name()
 
@@ -56,7 +53,7 @@ $('.workouts.new, .workouts.edit').ready ->
         if workout_offering_id? && workout_offering_id != ''
           window.codeworkout.removed_offerings.push workout_offering_id
         row.remove()
-        $('#offerings-modal #msg').empty()
+        $('#offerings-modal .msg').empty()
         unused_row =
           "<a class='list-group-item action' data-course-offering-id='" + course_offering_id + "'>" +
             course_offering_display +
@@ -145,8 +142,14 @@ remove_extensions_if_any = (course_offering_id) ->
     return true
 
 init_templates = ->
-  window.codeworkout.exercise_template = $('#exercise-template')
-  window.codeworkout.student_extension_template = $('#extension-template')
+  $.get window.codeworkout.exercise_template_path, (template, textStatus, jqXHr) ->
+    window.codeworkout.exercise_template = template
+    if $('body').is '.workouts.edit'
+      init_exercises()
+  $.get window.codeworkout.extension_template_path, (template, textStatus, jqXHr) ->
+    window.codeworkout.student_extension_template = template
+    if $('body').is '.workouts.edit'
+      init_student_extensions()
 
 clear_student_search = ->
   $('#extension-modal #modal-header').empty()
