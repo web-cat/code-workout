@@ -4,12 +4,15 @@ $('.workouts.new, .workouts.edit').ready ->
   window.codeworkout.removed_offerings = []
   window.codeworkout.removed_extensions = []
 
-  sortable = $('#ex-list').sortable
-    handle: '.handle'
-
   init_templates()
+  if $('body').is '.workouts.edit'
+    init_exercises()
+    init_student_extensions()
   init_datepickers()
   validate_workout_name()
+
+  sortable = $('#ex-list').sortable
+    handle: '.handle'
 
   $('#wo-name').change ->
     validate_workout_name()
@@ -142,14 +145,8 @@ remove_extensions_if_any = (course_offering_id) ->
     return true
 
 init_templates = ->
-  $.get '/assets/exercise.mustache.html', (template, textStatus, jqXHr) ->
-    window.codeworkout.exercise_template = template
-    if $('body').is '.workouts.edit'
-      init_exercises()
-  $.get '/assets/student_extension.mustache.html', (template, textStatus, jqXHr) ->
-    window.codeworkout.student_extension_template = template
-    if $('body').is '.workouts.edit'
-      init_student_extensions()
+  window.codeworkout.exercise_template = $('#exercise-template')
+  window.codeworkout.student_extension_template = $('#extension-template')
 
 clear_student_search = ->
   $('#extension-modal #modal-header').empty()
