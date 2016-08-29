@@ -39,10 +39,12 @@
     .col-xs-2
       = collection_select nil, nil, WorkoutPolicy.all, :id, :name, { prompt: 'Select' },
       { id: 'policy-select', class: 'form-control input-sm' }
+    .col-xs-1
+      %i.fa.fa-info-circle.action{ data: { toggle: 'modal', target: '#policy-help-modal' } }
     = label_tag :time_limit, 'Time', class: 'control-label col-xs-1'
-    .col-xs-3
+    .col-xs-2
       %input#time-limit.form-control.input-sm.input{ type: 'number', min: '0',
-        placeholder: 'Leave blank for no time limit.', value: @time_limit ? "#{@time_limit}" : '' }
+        placeholder: 'Leave blank for none.', value: @time_limit ? "#{@time_limit}" : '' }
 
   .form-group
     = label_tag :is_public, 'Available in Gym?', class: 'control-label col-xs-2'
@@ -140,3 +142,21 @@
           - @unused_course_offerings.andand.each do |co|
             %a.list-group-item.action{ href: '#', data: { course_offering_id: co.id } }
               = co.display_name_with_term
+
+#policy-help-modal.modal.fade{role: 'dialog', tabindex: '-1' }
+  .modal-dialog.modal-md{ style: 'overflow-y: scroll; max-height:85% margin-top: 50px; margin-bottom:50px;' }
+    .modal-content
+      .modal-header
+        %p.lead Workout Policy Information
+      .modal-body
+        %table.table
+          %thead
+            %th Name
+            %th Description
+          %tbody
+            - WorkoutPolicy.all.each do |policy|
+              %tr
+                %td
+                  = policy.name
+                %td
+                  = policy.description
