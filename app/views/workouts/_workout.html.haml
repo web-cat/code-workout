@@ -56,7 +56,11 @@
 
   .summary
     - if defined? new_or_existing
-      = link_to "View", edit_workout_path(id: workout.id, lti_launch: @lti_launch), class: 'btn btn-primary'
+      - if workout_offering
+        = link_to 'Edit', organization_edit_workout_path(course_id: workout_offering.course_offering.course.slug,
+          term_id: workout_offering.course_offering.term.slug,
+          organization_id: workout_offering.course_offering.course.organization.slug,
+          workout_offering_id: workout_offering.id), class: 'btn btn-primary'
     - else
       - if !workout_score || workout_score.show_feedback?
         .radial-progress{ 'data-progress' => score_pct }
@@ -76,12 +80,6 @@
           .inset
             .score= image_tag 'pct-blur.png'
   .body
-    - if workout_offering.andand.course_offering.is_manager?(current_user)
-      = link_to 'Edit Workout',
-        organization_edit_workout_path(course_id: workout_offering.course_offering.course.slug,
-          term_id: workout_offering.course_offering.term.slug,
-          organization_id: workout_offering.course_offering.course.organization.slug,
-          workout_offering_id: workout_offering.id)
     .text
       = teaser(workout.description)
   .info

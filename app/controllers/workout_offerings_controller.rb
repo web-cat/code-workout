@@ -15,6 +15,10 @@ class WorkoutOfferingsController < ApplicationController
   def show
     if @workout_offering
       @workout = @workout_offering.workout
+      @course = Course.find params[:course_id]
+      @term = Term.find params[:term_id]
+      @organization = Organization.find params[:organization_id]
+      @course_offering = CourseOffering.find_by @course, @term
       @exs = @workout.exercises
     end
     render 'workouts/show'

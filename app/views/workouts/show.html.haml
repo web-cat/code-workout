@@ -96,18 +96,28 @@
 -#= render @workout
 -#.clearfix
 
-- if @workout_offering && @workout_offering.can_be_seen_by?(current_user) && (workout_score.nil? || !workout_score.closed?)
-  - button_text = @workout_offering.can_be_practiced_by?(current_user) ? 'Start Workout' : 'Review Workout'
-  = button_to button_text,                                          |
-    organization_workout_offering_practice_path(organization_id:        |
-    @workout_offering.course_offering.course.organization.slug,         |
-    course_id: @workout_offering.course_offering.course.slug,           |
-    term_id: @workout_offering.course_offering.term.slug,               |
-    id: @workout_offering.id),                                          |
-    method: :get, btn: 'primary'                                        |
-- elsif @workout_offering.nil?
-  = button_to 'Start Workout', practice_workout_path(params[:id]),
-    method: :get, btn: 'primary'
+.row
+  .col-xs-2.col-md-1
+    - if @workout_offering && @workout_offering.can_be_seen_by?(current_user) && (workout_score.nil? || !workout_score.closed?)
+      - button_text = @workout_offering.can_be_practiced_by?(current_user) ? 'Start Workout' : 'Review Workout'
+      = button_to button_text,                                          |
+        organization_workout_offering_practice_path(organization_id:        |
+        @workout_offering.course_offering.course.organization.slug,         |
+        course_id: @workout_offering.course_offering.course.slug,           |
+        term_id: @workout_offering.course_offering.term.slug,               |
+        id: @workout_offering.id),                                          |
+        method: :get, btn: 'primary'                                        |
+    - elsif @workout_offering.nil?
+      = button_to 'Start Workout', practice_workout_path(params[:id]),
+        method: :get, btn: 'primary'
+  .col-xs-2.col-md-1
+    - if @course_offering.is_manager? (current_user)
+      = link_to 'Edit Workout',
+        organization_edit_workout_path(organization_id: @organization.slug,
+          course_id: @course.slug,
+          term_id: @term.slug,
+          workout_offering_id: @workout_offering.id),
+        class: 'btn btn-default'
   %br
 
 %h2 Exercises

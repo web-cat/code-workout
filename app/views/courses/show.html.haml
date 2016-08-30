@@ -49,7 +49,7 @@
   %div.tab-content.under-collapsible
 
     .tab-pane.fade.in.active{ id: 'workouts' }
-      -# FIXME: definitely busted!
+      -# FIXME: definitely busted
       - @course_offerings.each do |offering|
         - if @is_student
           - offering.workout_offerings.select{ |i| i.can_be_seen_by? current_user }.in_groups_of(2, false) do |row|
@@ -59,6 +59,10 @@
           - offering.workout_offerings.in_groups_of(2, false) do |row|
             = render row, locals: { uid: current_user.id }
             .clearfix
+      - if !@is_student
+        = link_to 'Add Workout', organization_new_or_existing_workout_path(organization_id: @organization.slug,
+          course_id: @course.slug,
+          term_id: @term.slug), class: 'btn btn-default'
 
     - if !@is_student
       .tab-pane.fade{ id: 'exercises' }
