@@ -173,6 +173,13 @@ class User < ActiveRecord::Base
       ).map { |e| e.course_offering.workout_offerings }
   end
 
+  def managed_workouts
+    course_enrollments.joins(course_offering: :workout_offerings).
+      where(course_roles:
+        { can_manage_course: true }
+      ).flat_map { |e| e.course_offering.workout_offerings }.map(&:workout)
+  end
+
   # -------------------------------------------------------------
   def course_offerings_for_term(term, course)
     conditions = { term: term, 'users.id' => self }

@@ -266,11 +266,16 @@ class Workout < ActiveRecord::Base
   # -------------------------------------------------------------
   def self.search(terms, user)
     if user
-      return Workout.visible_to_user(user)
+      available_workouts = Workout.where(
+        id: (Workout.visible_to_user(user) + user.managed_workouts)
+        .map(&:id)
+      )
+
+      return available_workouts
         .tagged_with(terms, any: true, wild: true, on: :tags) +
-        Workout.visible_to_user(user)
+        available_workouts
         .tagged_with(terms, any: true, wild: true, on: :languages) +
-        Workout.visible_to_user(user)
+        available_workouts
         .tagged_with(terms, any: true, wild: true, on: :styles)
     else
       return Workout.tagged_with(terms, any: true, wild: true, on: :tags) +
