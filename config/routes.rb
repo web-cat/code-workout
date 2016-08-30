@@ -82,7 +82,6 @@ CodeWorkout::Application.routes.draw do
     get  'workouts_dummy' => 'workouts#dummy'
     get  'workouts_import' => 'workouts#upload_yaml'
     post  'workouts_yaml_create' => 'workouts#yaml_create'
-    get 'workouts/new_or_existing' => 'workouts#new_or_existing'
     post 'workouts/search' => 'workouts#search', as: :workouts_search
     # At the bottom, so the routes above take precedence over existing ids
     resources :workouts, except: [ :new, :edit ]
@@ -95,6 +94,7 @@ CodeWorkout::Application.routes.draw do
     get 'new' => 'courses#new'
     get ':id/edit' => 'courses#edit', as: :course_edit
     get ':course_id/:term_id/workouts/new' => 'workouts#new', as: :new_workout
+    get ':course_id/:term_id/workouts/new_or_existing' => 'workouts#new_or_existing', as: :new_or_existing_workout
     get ':course_id/:term_id/:workout_offering_id/edit_workout' => 'workouts#edit', as: :edit_workout
     get ':course_id/:term_id/:id/practice(/:exercise_id)' => 'workout_offerings#practice', as: :workout_offering_practice
     get ':course_id/:term_id/:workout_offering_id/:id' => 'exercises#practice', as: :workout_offering_exercise
