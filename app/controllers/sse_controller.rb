@@ -1,5 +1,7 @@
 class SseController < ApplicationController
   include ActionController::Live
+  require 'ims/lti'
+  require 'oauth/request_proxy/rack_request'
 
   # -------------------------------------------------------------
   def feedback_wait
