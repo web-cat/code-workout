@@ -47,7 +47,9 @@
             xeditable: "true",
             pk: woff.id.to_s,
             model: 'workout_offering' } }= woff.soft_deadline
-          %td= l user_time(current_user, woff.soft_deadline)
+          %td
+            - if woff.soft_deadline
+              = l user_time(current_user, woff.soft_deadline)
           -#%td.xeditable{ id: 'hard_deadline',
             data: { type: 'text',
             url: '/workout_offerings/' + woff.id.to_s,
@@ -56,7 +58,9 @@
             xeditable: "true",
             pk: woff.id.to_s,
             model: 'workout_offering' } }= woff.hard_deadline
-          %td= l user_time(current_user, woff.hard_deadline)
+          %td
+            - if woff.hard_deadline
+              = l user_time(current_user, woff.hard_deadline)
           %td
             - if time_limit
               = "#{n_to_s(time_limit)} minutes"

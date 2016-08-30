@@ -1,12 +1,15 @@
 require 'tzinfo'
 module UserHelper
-  
+
   # ----------------------------------------------------------
   # For a given user and an input time in UTC, returns a time
-  # converted to user's preferred timezone (if it exists) 
-  
+  # converted to user's preferred timezone (if it exists)
+
   def user_time(user, utc_time)
-    
+    if utc_time.nil?
+      return ''
+    end
+
     # Timezone in which datetime string is returned is either the
     # user's timezone or the East Coast time
     if user.andand.time_zone && utc_time
@@ -21,9 +24,12 @@ module UserHelper
 
   # ----------------------------------------------------------
   # For a given user and his/her time local, returns a time
-  # converted to UTC 
-  
+  # converted to UTC
+
   def user_utc_time(user, user_time)
+    if utc_time.nil?
+      return ''
+    end
     
     # Timezone in which datetime is returned is either the
     # user's timezone or the East Coast time
@@ -36,5 +42,5 @@ module UserHelper
     utc_time = user_time_zone.local_to_utc(user_time)
     return utc_time
   end
-  
+
 end
