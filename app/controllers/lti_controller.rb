@@ -54,7 +54,8 @@ class LtiController < ApplicationController
           render :error and return
         end
 
-        @course = Course.find_by(number: course_number) || Course.find_by(slug: course_slug)
+        @course = Course.find_by(number: course_number, organization: @organization) ||
+          Course.find_by(slug: course_slug, organization: @organization)
         if @course.blank?
           if @tp.context_instructor?
             @course = Course.new(
@@ -147,20 +148,15 @@ class LtiController < ApplicationController
           workout_id: @workout.id
         )
         if @workout_offering.blank?
-          if @tp.context_instructor?
-            @workout_offering = WorkoutOffering.new(
-              course_offering: @course_offering,
-              workout: @workout,
-              opening_date: DateTime.now,
-              soft_deadline: @term.ends_on,
-              hard_deadline: @term.ends_on,
-              lms_assignment_id: lms_assignment_id
-            )
-            @workout_offering.save!
-          else
-            @message = 'Workout Offering not found. Please contact your instructor.'
-            render :error and return
-          end
+          @workout_offering = WorkoutOffering.new(
+            course_offering: @course_offering,
+            workout: @workout,
+            opening_date: DateTime.now,
+            soft_deadline: @term.ends_on,
+            hard_deadline: @term.ends_on,
+            lms_assignment_id: lms_assignment_id
+          )
+          @workout_offering.save!
         end
       end
 
