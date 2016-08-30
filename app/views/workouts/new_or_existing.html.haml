@@ -1,9 +1,20 @@
 %h2 Search for workouts that work for you.
 .row.search-area
-  = form_tag workouts_search_path(params[:search]), remote: true do
-    .col-xs-9
+  = form_tag workouts_search_path(params[:search]), remote: true, class: 'form-horizontal' do
+    .col-xs-7
       = text_field_tag :search, nil, placeholder: 'e.g. Looping', class: 'form-control input-sm', id: 'search-terms'
+    .col-xs-1
+      = submit_tag 'Search', class: 'btn btn-default btn-sm'
     .col-xs-3
-      = submit_tag 'Search', class: 'btn btn-inverse btn-sm'
+      = link_to 'None of these work, create a Workout instead.',
+        organization_new_workout_path(organization_id: @organization.slug,
+        course_id: @course.slug,
+        term_id: @term.slug), class: 'btn btn-success btn-sm'
 .row.search-results
-  Use the search bar above to find workouts!
+  - if @default_results.blank?
+    Use the search bar above to find workouts!
+  - else
+    Here are workouts that are commonly used in this course:
+    %br
+    - @default_results.in_groups_of(2, false) do |row|
+      = render row, user: current_user, new_or_existing: true

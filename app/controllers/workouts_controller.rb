@@ -91,6 +91,13 @@ class WorkoutsController < ApplicationController
     end
 
     @lti_launch = params[:lti_launch]
+    @course = Course.find params[:course_id]
+    @term = Term.find params[:term_id]
+    @organization = Organization.find params[:organization_id]
+
+    @default_results = @course.course_offerings.joins(workout_offerings: :workout)
+      .flat_map(&:workout_offerings)
+      .map(&:workout).uniq
 
     render layout: 'one_column'
   end
@@ -112,7 +119,8 @@ class WorkoutsController < ApplicationController
 
     if @workouts.blank?
       @msg = 'Your search did not match any workouts. Try these instead...'
-      @workouts = Workout.visible_to_user(current_user).shuffle.first(16)
+      @workouts = (Workout.visible_to_user(current_user) + current_user.managed_workouts)
+        .uniq.shuffle.first(16)
     end
 
     if @workouts.blank?
