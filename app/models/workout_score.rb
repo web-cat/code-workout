@@ -123,6 +123,7 @@ class WorkoutScore < ActiveRecord::Base
   # -------------------------------------------------------------
   def show_feedback?
     if self.workout_offering &&
+      self.workout_offering.hard_deadline_for(self.user) &&
       self.workout_offering.hard_deadline_for(self.user) < Time.zone.now
       # !workout_offering.andand.workout_policy.andand.hide_feedback_in_review_after_close
       true

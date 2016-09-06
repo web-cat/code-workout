@@ -183,7 +183,7 @@ class WorkoutOffering < ActiveRecord::Base
     opens = user_extension.andand.opening_date || self.opening_date
     course_offering.is_staff?(user) ||
     (((opens == nil) || (opens <= now)) &&
-      (now <= deadline) &&
+      ((deadline == nil) || (now <= deadline)) &&
       course_offering.is_enrolled?(user))
   end
 
