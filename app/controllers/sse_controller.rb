@@ -43,7 +43,8 @@ class SseController < ApplicationController
 
     if @workout_score = @attempt.workout_score
       @total_points = ExerciseWorkout.where(workout_id: @workout_score.workout_id).sum(:points)
-      if lms_instance = @workout_score.workout_offering.course_offering.lms_instance
+      unless @workout_score.lis_outcome_service_url.nil? || @workout_score.lis_result_sourcedid.nil? 
+        lms_instance = @workout_score.workout_offering.course_offering.lms_instance
         key = lms_instance.consumer_key
         secret = lms_instance.consumer_secret
 
