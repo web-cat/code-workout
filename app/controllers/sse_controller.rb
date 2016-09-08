@@ -43,7 +43,7 @@ class SseController < ApplicationController
 
     if @workout_score = @attempt.workout_score
       @total_points = ExerciseWorkout.where(workout_id: @workout_score.workout_id).sum(:points)
-      unless @workout_score.lis_outcome_service_url.nil? || @workout_score.lis_result_sourcedid.nil? 
+      unless @workout_score.lis_outcome_service_url.nil? || @workout_score.lis_result_sourcedid.nil?
         lms_instance = @workout_score.workout_offering.course_offering.lms_instance
         key = lms_instance.consumer_key
         secret = lms_instance.consumer_secret
@@ -68,7 +68,9 @@ class SseController < ApplicationController
     @exercise_version = @attempt.exercise_version
     @exercise = @exercise_version.exercise
     if !@attempt.feedback_ready
-      render action: 'feedback_poll' and return
+      respond_to do |format|
+        format.js
+      end
     else
       redirect_to action: 'feedback_update', att_id: params[:att_id] and return
     end

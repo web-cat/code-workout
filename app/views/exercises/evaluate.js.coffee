@@ -7,10 +7,9 @@ if att_id
     $("#saved_assurance").html("Your answer has been saved.  You can move on to another exercise if you don't want to wait for more feedback.")
     $(".btn-submit").attr('disabled', 'disabled')
     $("#exercisefeedback").html('<h2>Feedback</h2><i class="fa fa-spinner fa-spin fa-2x"></i>')
-    # setTimeout ( ->
-    #   $.ajax(url: "/sse/feedback_poll?att_id=#{att_id}")
-    # ), 1500
-    $.ajax(url: "/sse/feedback_poll?att_id=#{att_id}")
+    setTimeout ( ->
+      $.ajax(url: "/sse/feedback_poll?att_id=#{att_id}")
+    ), 1500
   else
     $.ajax(url: "/sse/feedback_poll?att_id=#{att_id}")
 else
