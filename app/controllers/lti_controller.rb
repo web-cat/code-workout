@@ -157,6 +157,9 @@ class LtiController < ApplicationController
             lms_assignment_id: lms_assignment_id
           )
           @workout_offering.save!
+        else
+          @workout_offering.lms_assignment_id = lms_assignment_id
+          @workout_offering.save!
         end
       end
 
