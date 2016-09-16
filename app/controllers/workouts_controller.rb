@@ -70,7 +70,7 @@ class WorkoutsController < ApplicationController
     @workout = Workout.new
     @course = Course.find params[:course_id]
     @term = Term.find params[:term_id]
-    @course_offerings = CourseOffering.for_course_in_term @course, @term
+    @course_offerings = current_user.managed_course_offerings @course, @term
 
     if params[:notice]
       flash.now[:notice] = params[:notice]

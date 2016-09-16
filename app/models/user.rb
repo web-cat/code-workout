@@ -133,14 +133,23 @@ class User < ActiveRecord::Base
 
   # -------------------------------------------------------------
   # Public: Gets a relation representing all of the CourseOfferings that
-  # this user can manage.
+  # this user can manage. If a course and term are passed,
+  # filters the list by course and term as well.
   #
   # Returns a relation representing all of the CourseOfferings that this
   # user can manage
   #
-  def managed_course_offerings
-    course_enrollments.where(course_roles: { can_manage_course: true }).
-      map(&:course_offering)
+  def managed_course_offerings(course=nil, term=nil)
+    if course.nil? || term.nil?
+      course_enrollments.where(course_roles: { can_manage_course: true }).
+        map(&:course_offering)
+    else
+      course_enrollments.joins(:course_offering).
+        where(course_roles:
+          { can_manage_course: true }, course_offering:
+            { course: course, term: term }
+        ).map(&:course_offering)
+    end
   end
 
 
