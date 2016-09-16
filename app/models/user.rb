@@ -183,9 +183,8 @@ class User < ActiveRecord::Base
     course_enrollments.joins(course_offering: :workout_offerings).
       where(course_roles:
         { can_manage_course: true }, course_offering:
-          { course: course, term: term, workout_offerings:
-            { workout: workout } }
-      ).map { |e| e.course_offering.workout_offerings }
+          { course: course, term: term }
+      ).map { |e| e.course_offering.workout_offerings.where(workout: workout) }
   end
 
   def managed_workouts
