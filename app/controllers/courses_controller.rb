@@ -24,7 +24,6 @@ class CoursesController < ApplicationController
       render 'show_terms'
     else
       @term = Term.find(params[:term_id])
-        
       @course_offerings =
         current_user.andand.course_offerings_for_term(@term, @course)
       @is_student = !user_signed_in? ||

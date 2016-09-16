@@ -140,9 +140,15 @@ class User < ActiveRecord::Base
   # user can manage
   #
   def managed_course_offerings(course=nil, term=nil)
-    if course.nil? || term.nil?
+    if course.nil? && term.nil?
       course_enrollments.where(course_roles: { can_manage_course: true }).
         map(&:course_offering)
+    elsif course.nil?
+      course_enrollments.joins(:course_offering).
+        where(course_roles:
+          { can_manage_course: true }, course_offering:
+            { term: term }
+        ).map(&:course_offering)
     else
       course_enrollments.joins(:course_offering).
         where(course_roles:
