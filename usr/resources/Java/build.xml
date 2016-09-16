@@ -10,6 +10,7 @@
   <echo message="ant.home = ${ant.home}"/>
   <!-- timeout is in milliseconds -->
   <property name="exec.timeout" value="120000"/>
+  <property name="build.compiler" value="modern"/>
 
   <path id="codeworkout.classpath">
     <pathelement location="${resource_dir}/JavaTddPluginSupport.jar"/>
