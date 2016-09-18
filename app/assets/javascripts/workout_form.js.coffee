@@ -4,9 +4,7 @@ $('.workouts.new, .workouts.edit').ready ->
   window.codeworkout.removed_offerings = []
   window.codeworkout.removed_extensions = []
 
-  init_templates()
-  init_datepickers()
-  validate_workout_name()
+  init()
 
   sortable = $('#ex-list').sortable
     handle: '.handle'
@@ -114,6 +112,13 @@ $('.workouts.new, .workouts.edit').ready ->
 
   $('#btn-submit-wo').click ->
     handle_submit()
+
+init = ->
+  description = $('textarea#description').data 'value'
+  $('textarea#description').val description
+  init_templates()
+  init_datepickers()
+  validate_workout_name()
 
 remove_extensions_if_any = (course_offering_id) ->
   extensions = $('#student-extension-fields tbody').find 'tr'

@@ -22,7 +22,7 @@
     = label_tag :description, 'Description', class: 'control-label col-xs-2'
     .col-lg-7.col-md-6.col-xs-7
       %textarea#description{ placeholder: '(optional) Exercise explanation, given after submission',
-        rows: 2, class: 'form-control richtexteditor', value: @workout.present? ? @workout.name : '' }
+        rows: 2, class: 'form-control richtexteditor', data: { value: @workout.present? ? @workout.description : ''} }
   .ex-area.form-group
     = label_tag :ex_list, 'Exercises *', class: 'control-label col-xs-2'
     .col-lg-7.col-md-6.col-xs-7
