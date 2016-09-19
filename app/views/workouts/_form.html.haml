@@ -3,6 +3,9 @@
   window.codeworkout.lti_launch = "#{@lti_launch}"
   window.codeworkout.extension_template_path = "#{asset_path 'student_extension.mustache.html'}"
   window.codeworkout.exercise_template_path = "#{asset_path 'exercise.mustache.html'}"
+  window.codeworkout.organization_id = "#{@organization.slug}"
+  window.codeworkout.course_id = "#{@course.slug}"
+  window.codeworkout.term_id = "#{@term.slug}"
 
 .row
   .col-xs-9.alert-msg#alerts{style: 'display: none;'}

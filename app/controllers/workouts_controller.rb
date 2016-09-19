@@ -70,6 +70,7 @@ class WorkoutsController < ApplicationController
     @workout = Workout.new
     @course = Course.find params[:course_id]
     @term = Term.find params[:term_id]
+    @organization = Organization.find params[:organization_id]
     @course_offerings = current_user.managed_course_offerings @course, @term
 
     if params[:notice]
@@ -147,6 +148,7 @@ class WorkoutsController < ApplicationController
     @term = Term.find(params[:term_id])
     @can_update = can? :edit, @workout
     @time_limit = @workout.workout_offerings.first.andand.time_limit
+    @organization = Organization.find params[:organization_id]
     @lti_launch = params[:lti_launch]
 
     @exercises = []
@@ -200,7 +202,12 @@ class WorkoutsController < ApplicationController
         lti_params = session[:lti_params]
         url = url_for(course_offerings_path(lti_launch: true))
       else
-        url = url_for root_path(notice: 'Workout was successfully created.')
+        url = url_for(organization_course_path(
+            organization_id: params[:organization_id],
+            term_id: params[:term_id],
+            id: params[:course_id]
+          )
+        )
       end
     else
       err_string = 'There was a problem while creating the workout.'
@@ -305,7 +312,14 @@ class WorkoutsController < ApplicationController
     @workout.save!
 
     respond_to do |format|
-      format.json { render json: { url: url_for(root_path(notice: 'Workout was updated successfully.')) } }
+      format.json { render json: { url:
+         url_for(organization_course_path(
+            organization_id: params[:organization_id],
+            term_id: params[:term_id],
+            id: params[:course_id]
+          )
+        )
+      } }
     end
   end
 

@@ -413,6 +413,9 @@ handle_submit = ->
   fd.append 'removed_extensions', JSON.stringify window.codeworkout.removed_extensions
   fd.append 'is_public', is_public
   fd.append 'published', published
+  fd.append 'term_id', window.codeworkout.term_id
+  fd.append 'organization_id', window.codeworkout.organization_id
+  fd.append 'course_id', window.codeworkout.course_id
   # Tells the server whether this form is being submitted through LTI or not.
   # The window.codeworkout namespace was declared in the workouts/_form partial.
   fd.append 'lti_launch', window.codeworkout.lti_launch if window.codeworkout.lti_launch != ''
