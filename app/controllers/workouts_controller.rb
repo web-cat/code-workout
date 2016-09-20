@@ -195,19 +195,24 @@ class WorkoutsController < ApplicationController
     @workout = Workout.new
     @workout.creator_id = current_user.id
     @lti_launch = params[:lti_launch]
-    create_or_update
+    workout_offering_id = create_or_update
 
     if @workout.save
       if @lti_launch
         lti_params = session[:lti_params]
         url = url_for(course_offerings_path(lti_launch: true))
       else
-        url = url_for(organization_course_path(
-            organization_id: params[:organization_id],
-            term_id: params[:term_id],
-            id: params[:course_id]
+        if workout_offering_id.nil?
+          url = url_for(workout_path(id: @workout.id))
+        else
+          url = url_for(organization_workout_offering_path(
+              organization_id: params[:organization_id],
+              term_id: params[:term_id],
+              course_id: params[:course_id],
+              id: workout_offering_id
+            )
           )
-        )
+        end
       end
     else
       err_string = 'There was a problem while creating the workout.'
@@ -308,18 +313,23 @@ class WorkoutsController < ApplicationController
         notice: 'Unauthorized to update workout' and return
     end
 
-    create_or_update
+    workout_offering_id = create_or_update
     @workout.save!
 
-    respond_to do |format|
-      format.json { render json: { url:
-         url_for(organization_course_path(
-            organization_id: params[:organization_id],
-            term_id: params[:term_id],
-            id: params[:course_id]
-          )
+    if workout_offering_id.nil?
+      url = url_for(workout_path(id: @workout.id))
+    else
+      url = url_for(organization_workout_offering_path(
+          organization_id: params[:organization_id],
+          term_id: params[:term_id],
+          course_id: params[:course_id],
+          id: workout_offering_id
         )
-      } }
+      )
+    end
+
+    respond_to do |format|
+      format.json { render json: { url: url } }
     end
   end
 
@@ -427,7 +437,8 @@ class WorkoutsController < ApplicationController
       end
 
       course_offerings = JSON.parse params[:course_offerings]
-      @workout.add_workout_offerings(course_offerings, common)
+      workout_offerings = @workout.add_workout_offerings(course_offerings, common)
+      return workout_offerings.first
     end
 
     # -------------------------------------------------------------

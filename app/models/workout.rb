@@ -219,6 +219,7 @@ class Workout < ActiveRecord::Base
   end
 
   def add_workout_offerings(course_offerings, common)
+    workout_offerings = [] # Workout offerings added from this submission.
     course_offerings.each do |id, offering|
       course_offering = CourseOffering.find(id)
       workout_offering = WorkoutOffering.find_by(workout: self, course_offering: course_offering)
@@ -234,7 +235,7 @@ class Workout < ActiveRecord::Base
       workout_offering.hard_deadline = DateTime.parse(offering['hard_deadline']) if offering['hard_deadline']
       workout_offering.workout_policy = common[:workout_policy]
       workout_offering.save!
-
+      workout_offerings << workout_offering.id
       extensions = offering['extensions']
       extensions.each do |ext|
         student_id = ext['student_id']
@@ -252,6 +253,8 @@ class Workout < ActiveRecord::Base
         student_extension.save!
       end
     end
+
+    return workout_offerings
   end
 
   # -------------------------------------------------------------
