@@ -15,6 +15,10 @@
               %li= link_to workout_course_offering.course.number,
               organization_course_path(workout_course_offering.course.organization,
               workout_course_offering.course)
+              %li= link_to workout_course_offering.term.display_name, |
+              organization_course_path(organization_id: workout_course_offering.course.organization.slug,
+              id: workout_course_offering.course.slug,
+              term_id: workout_course_offering.term.slug)
     - if flag1
       %li= link_to 'Gym', gym_path
     - if @exercise
