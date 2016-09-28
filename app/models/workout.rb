@@ -39,7 +39,7 @@ class Workout < ActiveRecord::Base
   #~ Relationships ............................................................
 
   acts_as_taggable_on :tags, :languages, :styles
-	has_many :exercise_workouts, -> { order("'position' ASC") },
+	has_many :exercise_workouts, -> { order("position ASC") },
 	  inverse_of: :workout, dependent: :destroy
   has_many :exercises, through:  :exercise_workouts
 	has_many :workout_scores, inverse_of: :workout, dependent: :destroy

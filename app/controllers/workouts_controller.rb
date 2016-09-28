@@ -421,7 +421,7 @@ class WorkoutsController < ApplicationController
         if exercise_workout.blank?
           exercise_workout = ExerciseWorkout.new workout: @workout, exercise: exercise
         end
-        exercise_workout.position = key
+        exercise_workout.set_list_position key
         exercise_workout.points = value['points']
         exercise_workout.save!
       end
