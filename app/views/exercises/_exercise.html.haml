@@ -20,7 +20,10 @@
 - score = attempt ? attempt.score : 0
 - if !pts
   - pts = exercise.experience
-- score_pct = (score / pts * 100).round(0).to_i
+- if !pts || pts == 0
+  - score_pct = 0
+- else
+  - score_pct = (score / pts * 100).round(0).to_i
 - if score.round(2) < pts
   - score = score.round(2)
   - if score >= pts

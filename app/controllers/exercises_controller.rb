@@ -539,11 +539,12 @@ class ExercisesController < ApplicationController
         key = lms_instance.consumer_key
         secret = lms_instance.consumer_secret
 
+        result = total_points > 0 ? @workout_score.score / total_points : 0
         @tp = IMS::LTI::ToolProvider.new(key, secret, {
           "lis_outcome_service_url" => "#{@workout_score.lis_outcome_service_url}",
           "lis_result_sourcedid" => "#{@workout_score.lis_result_sourcedid}"
         })
-        @tp.post_replace_result!(@workout_score.score / total_points)
+        @tp.post_replace_result!(result)
       end
 
     elsif @exercise_version.is_coding?

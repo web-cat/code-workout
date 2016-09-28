@@ -4,7 +4,7 @@
 - if @workout && show_feedback
   - pts = @workout.exercise_workouts.find_by(exercise: @exercise).andand.points
   - score = @attempt.score
-  - score_pct = score * 100.0 / pts
+  - score_pct = pts > 0 ? score * 100.0 / pts : 0
   .summary
     .radial-progress{ 'data-progress' => score_pct.round() }
       .circle
