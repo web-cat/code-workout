@@ -1,4 +1,6 @@
-source 'https://rubygems.org'
+source 'http://rubygems.org'
+
+ruby '2.2.3', :engine => 'jruby', :engine_version => '9.0.5.0'
 
 gem 'rails'
 gem 'bootstrap-sass', '~> 3.2.0'
@@ -27,7 +29,8 @@ gem 'active_record-acts_as'
 gem 'acts_as_list'
 gem 'acts-as-taggable-on'
 gem 'representable'
-gem 'redcarpet'
+gem 'kramdown'
+  # gem 'redcarpet'
 gem 'loofah'
 gem 'truncate_html'
 gem 'puma'
@@ -35,8 +38,9 @@ gem 'tzinfo' # For timezone support
 
 # For JSON support
 gem 'rabl'
-gem 'oj'
-gem 'oj_mimic_json'
+gem 'json_pure'
+  #gem 'oj'
+  #gem 'oj_mimic_json'
 
 group :assets do
   gem 'sass-rails'
@@ -44,9 +48,9 @@ group :assets do
   gem 'autoprefixer-rails'
 end
 
+gem 'activerecord-jdbcmysql-adapter'
 group :development, :test do
-  gem 'sqlite3'
-  gem 'mysql2'
+  gem 'activerecord-jdbcsqlite3-adapter'
   gem 'rspec-rails'
   gem 'annotate'
   gem 'rails-erd', github: 'voormedia/rails-erd'
@@ -57,9 +61,13 @@ group :development, :test do
   # gem 'ruby-debug-base'
   # gem 'ruby-debug-ide'
   gem 'pry'
-  gem 'thin'
   gem 'request-log-analyzer'
-  gem 'byebug'
+
+  # We're using puma, not thin
+  # gem 'thin'
+
+  # Not supported on jruby
+  # gem 'byebug'
 end
 gem 'factory_girl_rails'
 gem 'log_file'
@@ -69,7 +77,6 @@ group :test do
 end
 
 group :production, :staging do
-  gem 'mysql2'
 end
 
 group :doc do
@@ -120,6 +127,5 @@ gem 'capistrano3-puma', github: 'seuros/capistrano-puma'
 #for multi-color progress bar
 gem 'css3-progress-bar-rails'
 
-gem 'immigrant'
 gem 'ims-lti', '~> 1.1.8'
 gem 'json'
