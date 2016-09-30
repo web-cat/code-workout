@@ -127,5 +127,8 @@ gem 'capistrano3-puma', github: 'seuros/capistrano-puma'
 #for multi-color progress bar
 gem 'css3-progress-bar-rails'
 
+# JS runtime for coffeescript views.
+gem 'therubyrhino'
+
 gem 'ims-lti', '~> 1.1.8'
 gem 'json'
