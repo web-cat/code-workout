@@ -1,6 +1,3 @@
-require 'json'
-require 'date'
-
 class WorkoutsController < ApplicationController
   before_action :set_workout, only: [:show, :update, :destroy]
   after_action :allow_iframe, only: [:new, :new_create, :edit]

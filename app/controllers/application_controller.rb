@@ -1,5 +1,7 @@
 require 'application_responder'
-require 'loofah_render'
+require 'kramdown'
+require 'loofah'
+require 'json/pure'
 
 class ApplicationController < ActionController::Base
   protect_from_forgery with: :exception
@@ -48,15 +50,22 @@ class ApplicationController < ActionController::Base
   # -------------------------------------------------------------
   helper_method :markdown
   def markdown(text)
-    markdown = Redcarpet::Markdown.new(
-      LoofahRender.new(
-        safe_links_only: true, xhtml: true),
-      no_intra_emphasis: true,
-      tables: true,
-      fenced_code_blocks: true,
-      autolink: true,
-      strikethrough: true,
-      lax_spacing: true).render(text)
+    # markdown = Redcarpet::Markdown.new(
+    #   LoofahRender.new(
+    #     safe_links_only: true, xhtml: true),
+    #   no_intra_emphasis: true,
+    #   tables: true,
+    #   fenced_code_blocks: true,
+    #   autolink: true,
+    #   strikethrough: true,
+    #   lax_spacing: true).render(text)
+    unless text.blank?
+      markdown = Kramdown::Document.new(text).to_html
+      markdown = Loofah.fragment(text).scrub!(:strip).to_s.html_safe
+      return markdown
+    else
+      return  ""
+    end
   end
 
   def allow_iframe
