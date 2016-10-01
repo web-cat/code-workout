@@ -1,11 +1,4 @@
-#ruby=2.2.3
 source 'http://rubygems.org'
-
-if RUBY_PLATFORM == 'java'
-  ruby '2.2.3', :engine => 'jruby', :engine_version => '9.0.5.0'
-else
-  ruby '2.2.3'
-end
 
 gem 'rails'
 gem 'bootstrap-sass', '~> 3.2.0'
@@ -55,7 +48,7 @@ group :assets do
   gem 'autoprefixer-rails'
 end
 
-gem 'mysql2', platforms: :ruby
+gem 'mysql2', '= 0.3.15', platforms: :ruby
 gem 'activerecord-jdbcmysql-adapter', platforms: :jruby
 group :development, :test do
   gem 'sqlite3', platforms: :ruby
