@@ -60,8 +60,9 @@ class ApplicationController < ActionController::Base
     #   strikethrough: true,
     #   lax_spacing: true).render(text)
     unless text.blank?
-      Loofah.fragment(Kramdown::Document.new(text).to_html).
-        scrub!(:strip).to_s.html_safe
+      Loofah.fragment(Kramdown::Document.new(text,
+        entity_output: :as_input).
+        to_html).scrub!(:strip).to_s.html_safe
     else
       ''
     end
