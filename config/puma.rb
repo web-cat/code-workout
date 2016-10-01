@@ -1,13 +1,29 @@
-# workers 4
-threads 8, 8
-# daemonize
+# Default to production
+rails_env = rails_env || ENV['RAILS_ENV'] || 'production'
+environment rails_env
+
+if RUBY_PLATFORM == 'java'
+  # In jruby, only use threads
+  if rails_env == 'production'
+    threads 20, 120
+  else
+    threads 2, 8
+  end
+else
+  # For MRI, use workers instead of threads for greater parallelism
+  if rails_env == 'production'
+    workers 20
+    threads 2, 2
+    daemonize
+    preload_app!
+  else
+    # development settings are smaller; at least two workers, for SSE
+    workers 2
+    threads 2, 4
+  end
+end
 
 app_dir = File.expand_path('../..', __FILE__)
-
-# Default to production
-rails_env = rails_env || ENV['RAILS_ENV'] || "production"
-puts "Running in evironment #{rails_env}"
-environment rails_env
 
 # Set up socket location
 bind "unix://#{app_dir}/tmp/sockets/puma.sock"
@@ -16,6 +32,9 @@ bind "unix://#{app_dir}/tmp/sockets/puma.sock"
 stdout_redirect "#{app_dir}/log/puma.stdout.log",
   "#{app_dir}/log/puma.stderr.log",
   true
+
+puts "Running in evironment #{rails_env}"
+puts "Running on platform #{RUBY_PLATFORM}"
 
 # Set master PID and state locations
 pidfile "#{app_dir}/tmp/pids/puma.pid"
