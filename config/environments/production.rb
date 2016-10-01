@@ -47,7 +47,7 @@ CodeWorkout::Application.configure do
   # config.force_ssl = true
 
   # Set to :debug to see everything in the log.
-  config.log_level = :warn
+  config.log_level = :info
 
   config.log_formatter = proc do |severity, datetime, progname, msg|
     if severity == 'DEBUG' && msg.blank?
