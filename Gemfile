@@ -1,6 +1,11 @@
+#ruby=2.2.3
 source 'http://rubygems.org'
 
-ruby '2.2.3', :engine => 'jruby', :engine_version => '9.0.5.0'
+if RUBY_PLATFORM == 'java'
+  ruby '2.2.3', :engine => 'jruby', :engine_version => '9.0.5.0'
+else
+  ruby '2.2.3'
+end
 
 gem 'rails'
 gem 'bootstrap-sass', '~> 3.2.0'
@@ -32,13 +37,15 @@ gem 'representable'
 gem 'kramdown'
   # gem 'redcarpet'
 gem 'loofah'
-gem 'truncate_html'
+gem 'truncate_html',
+  github: 'LevoLeague/truncate_html', branch: 'fix/non-breaking-spaces'
 gem 'puma'
 gem 'tzinfo' # For timezone support
 
 # For JSON support
 gem 'rabl'
-gem 'json_pure'
+gem 'json', platforms: :ruby
+gem 'json_pure', platforms: :jruby
   #gem 'oj'
   #gem 'oj_mimic_json'
 
@@ -48,9 +55,11 @@ group :assets do
   gem 'autoprefixer-rails'
 end
 
-gem 'activerecord-jdbcmysql-adapter'
+gem 'mysql2', platforms: :ruby
+gem 'activerecord-jdbcmysql-adapter', platforms: :jruby
 group :development, :test do
-  gem 'activerecord-jdbcsqlite3-adapter'
+  gem 'sqlite3', platforms: :ruby
+  gem 'activerecord-jdbcsqlite3-adapter', platforms: :jruby
   gem 'rspec-rails'
   gem 'annotate'
   gem 'rails-erd', github: 'voormedia/rails-erd'
@@ -90,6 +99,7 @@ gem 'omniauth'
 gem 'omniauth-facebook'
 gem 'omniauth-google-oauth2'
 gem 'omniauth-cas'
+gem 'ims-lti', '~> 1.1.8'
 gem 'cancancan'
 gem 'activeadmin', github: 'activeadmin'
 gem "active_admin_import" , github: 'activeadmin-plugins/active_admin_import'
@@ -128,7 +138,5 @@ gem 'capistrano3-puma', github: 'seuros/capistrano-puma'
 gem 'css3-progress-bar-rails'
 
 # JS runtime for coffeescript views.
-gem 'therubyrhino'
-
-gem 'ims-lti', '~> 1.1.8'
-gem 'json'
+gem 'therubyracer', platforms: :ruby
+gem 'therubyrhino', platforms: :jruby
