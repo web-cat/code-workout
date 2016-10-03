@@ -5,7 +5,12 @@ require "#{Rails.root}/usr/resources/config"
 
 class CodeWorker
   include SuckerPunch::Job
-  workers 10
+
+  # Reducing to 2 workers, since it seems that each puma process will
+  # have its own job queue and its own set of sucker punch worker threads.
+  # We'll get parallelism through puma processes instead of sucker punch
+  # workers.
+  workers 2 # 10
 
   # -------------------------------------------------------------
   def perform(attempt_id)
