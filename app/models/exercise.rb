@@ -160,7 +160,7 @@ class Exercise < ActiveRecord::Base
   # getter override for name
   def display_name
     temp = display_number
-    if not name.nil?
+    if !name.blank?
       temp += ': ' + name
     end
     return temp

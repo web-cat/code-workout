@@ -23,12 +23,14 @@
     %h1= @exercise.display_name
     - if @user_time_limit
       #timer{style: "color: red", data: {deadline: user_deadline} }
-    - if @exercise_version.stem
-      = markdown @exercise_version.stem.preamble
+    - if @exercise_version.stem && !@exercise_version.stem.preamble.blank?
+      - cache @exercise_version.stem.preamble do
+        = markdown @exercise_version.stem.preamble
     - allow_write = true
     - @exercise_version.prompts.each do |question_prompt|
       - prompt = question_prompt.specific
-      = markdown prompt.question
+      - cache prompt.question do
+        = markdown prompt.question
       - if prompt.is_mcq?
         - answers = @exercise_version.serve_choice_array(question_prompt)
         - answers.each do |a|
