@@ -28,4 +28,12 @@
 #
 class Error < ActiveRecord::Base
 #  belongs_to :usable, polymorphic: true
+
+  def trace=(t)
+    if !t.blank?
+      t = t.truncate(2048)
+    end
+    super(t)
+  end
+
 end
