@@ -1,7 +1,7 @@
 require 'application_responder'
 require 'kramdown'
 require 'loofah'
-require 'json/pure'
+require RUBY_PLATFORM == 'java' ? 'json/pure' : 'json'
 
 class ApplicationController < ActionController::Base
   protect_from_forgery with: :exception
