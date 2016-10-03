@@ -39,7 +39,8 @@ class Workout < ActiveRecord::Base
   #~ Relationships ............................................................
 
   acts_as_taggable_on :tags, :languages, :styles
-	has_many :exercise_workouts, -> { order("'position' ASC") },
+	has_many :exercise_workouts,
+	  -> { includes(:exercise).order("'position' ASC") },
 	  inverse_of: :workout, dependent: :destroy
   has_many :exercises, through:  :exercise_workouts
 	has_many :workout_scores, inverse_of: :workout, dependent: :destroy
@@ -186,7 +187,7 @@ class Workout < ActiveRecord::Base
   # -------------------------------------------------------------
   def highest_difficulty
     diff = 0
-    self.exercises.each do |x|
+    self.exercises.includes(:irt_data).references(:all).each do |x|
       x_diff = x.andand.irt_data.andand.difficulty || 0
       if x_diff > diff
         diff = x_diff
