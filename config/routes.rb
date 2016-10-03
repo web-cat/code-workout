@@ -94,6 +94,7 @@ CodeWorkout::Application.routes.draw do
     get 'new' => 'courses#new'
     get ':id/edit' => 'courses#edit', as: :course_edit
     get ':course_id/:term_id/workouts/new' => 'workouts#new', as: :new_workout
+    get ':course_id/:term_id/workouts/:workout_id/clone' => 'workouts#clone', as: :clone_workout
     get ':course_id/:term_id/workouts/new_or_existing' => 'workouts#new_or_existing', as: :new_or_existing_workout
     get ':course_id/:term_id/:workout_offering_id/edit_workout' => 'workouts#edit', as: :edit_workout
     get ':course_id/:term_id/:id/practice(/:exercise_id)' => 'workout_offerings#practice', as: :workout_offering_practice

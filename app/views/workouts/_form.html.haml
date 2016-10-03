@@ -76,7 +76,7 @@
             %th Student Extensions
             %th Remove
         %tbody
-          - if action_name.eql? 'new'
+          - if ['new', 'clone'].include? action_name
             - @course_offerings.each do |co|
               = render partial: 'workout_offering_fields', locals: { removable: true,
                 workout_offering: nil, course_offering: co }

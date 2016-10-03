@@ -28,6 +28,7 @@
 //= require bootstrap-datetimepicker
 //= require mustache.min
 //= require workout_form
+//= require new_or_existing
 
 
 // Add the route helpers directly into the window object for easy access.

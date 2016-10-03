@@ -163,7 +163,7 @@ class WorkoutsController < ApplicationController
 
     @workout_offerings = current_user.managed_workout_offerings_in_term(@workout, @course, @term).flatten
 
-    course_offerings = CourseOffering.for_course_in_term @course, @term
+    course_offerings = current_user.managed_course_offerings @course, @term
     used_course_offerings = @workout_offerings.flat_map(&:course_offering)
     @unused_course_offerings = course_offerings - used_course_offerings
 
@@ -183,6 +183,35 @@ class WorkoutsController < ApplicationController
         @student_extensions.push(ext)
       end
     end
+
+    if @lti_launch
+      render layout: 'one_column'
+    else
+      render layout: 'two_columns'
+    end
+  end
+
+  def clone
+    @workout = Workout.find params[:workout_id]
+    @course = Course.find params[:course_id]
+    @term = Term.find(params[:term_id])
+    @can_update = can? :edit, @workout
+    @time_limit = @workout.workout_offerings.first.andand.time_limit
+    @organization = Organization.find params[:organization_id]
+    @lti_launch = params[:lti_launch]
+
+    @exercises = []
+    @workout.exercise_workouts.each do |ex|
+      ex_data = {}
+      ex_data[:name] = ex.exercise.name
+      ex_data[:points] = ex.points
+      ex_data[:id] = ex.exercise_id
+      ex_data[:exercise_workout_id] = ex.id
+      @exercises.push(ex_data)
+    end
+
+    @course_offerings = current_user.managed_course_offerings @course, @term
+    @unused_course_offerings = nil
 
     if @lti_launch
       render layout: 'one_column'

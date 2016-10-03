@@ -4,7 +4,7 @@
       .below-nav
         = render partial: 'layouts/flash'
         .container
-          - if controller_name.eql?('workouts') && action_name.eql?('new')
+          - if controller_name.eql?('workouts') && ['new', 'edit', 'clone'].include?(action_name)
             .row
               = render partial: 'layouts/sidebar'
             .row

@@ -55,11 +55,15 @@
     %span.badge.badge-info= workout.exercises.count.to_s
 
   .summary
-    - if defined?(new_or_existing) && workout_offering
-      = link_to 'Edit', organization_edit_workout_path(course_id: workout_offering.course_offering.course.slug,
-        term_id: workout_offering.course_offering.term.slug,
-        organization_id: workout_offering.course_offering.course.organization.slug,
-        workout_offering_id: workout_offering.id), class: 'btn btn-primary'
+    - if defined?(new_or_existing)
+      - if can_update && workout_offering
+        = link_to 'Edit', organization_edit_workout_path(course_id: workout_offering.course_offering.course.slug,
+          term_id: workout_offering.course_offering.term.slug,
+          organization_id: workout_offering.course_offering.course.organization.slug,
+          workout_offering_id: workout_offering.id), class: 'btn btn-sm btn-primary'
+      - else
+        %button.btn.btn-sm.btn-primary.btn-clone{ data: { workout_id: workout.id } }
+          Clone
     - else
       - if !workout_score || workout_score.show_feedback?
         .radial-progress{ 'data-progress' => score_pct }

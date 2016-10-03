@@ -1,4 +1,4 @@
-$('.workouts.new, .workouts.edit').ready ->
+$('.workouts.new, .workouts.edit, .workouts.clone').ready ->
   window.codeworkout ?= {}
   window.codeworkout.removed_exercises = []
   window.codeworkout.removed_offerings = []
@@ -149,7 +149,7 @@ remove_extensions_if_any = (course_offering_id) ->
 init_templates = ->
   $.get window.codeworkout.exercise_template_path, (template, textStatus, jqXHr) ->
     window.codeworkout.exercise_template = template
-    if $('body').is '.workouts.edit'
+    if $('body').is('.workouts.edit') || $('body').is('.workouts.clone')
       init_exercises()
   $.get window.codeworkout.extension_template_path, (template, textStatus, jqXHr) ->
     window.codeworkout.student_extension_template = template
@@ -423,9 +423,9 @@ handle_submit = ->
   if $('body').is '.workouts.new'
     url = '/gym/workouts'
     type = 'post'
-  else if $('body').is '.workouts.edit'
+  else if $('body').is('.workouts.edit') || $('body').is('.workouts.clone')
     can_update = $('#workout-offering-fields').data 'can-update'
-    url = if can_update == true then '/gym/workouts/' + $('h1').data 'id' else '/gym/workouts'
+    url = if can_update == true then '/gym/workouts/' + $('h1').data('id') else '/gym/workouts'
     type = if can_update == true then 'patch' else 'post'
 
   $.ajax
