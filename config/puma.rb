@@ -6,6 +6,8 @@ if RUBY_PLATFORM == 'java'
   # In jruby, only use threads
   if rails_env == 'production'
     threads 20, 120
+  elsif rails_env == 'staging'
+    threads 8, 20
   else
     threads 2, 8
   end
@@ -14,6 +16,11 @@ else
   if rails_env == 'production'
     workers 20
     threads 2, 2
+    daemonize
+    preload_app!
+  elsif rails_env == 'staging'
+    workers 4
+    threads 2, 8
     daemonize
     preload_app!
   else

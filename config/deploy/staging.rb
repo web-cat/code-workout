@@ -1,5 +1,5 @@
 set :stage, :staging
-set :branch, :staging
+set :branch, 'jruby-migration' #:staging
 set :rails_env, 'staging'
 
 # Simple Role Syntax
