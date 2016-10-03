@@ -231,9 +231,9 @@ init_datepickers = ->
       init_row_datepickers extension
 
 init_row_datepickers = (row) ->
-  opening_datepicker = $('input.opening-datepicker', $(row))
-  soft_datepicker = $('input.soft-datepicker', $(row))
-  hard_datepicker = $('input.hard-datepicker', $(row))
+  opening_datepicker = $('.input-group.opening-datepicker', $(row))
+  soft_datepicker = $('.input-group.soft-datepicker', $(row))
+  hard_datepicker = $('.input-group.hard-datepicker', $(row))
 
   if opening_datepicker.val() == '' || !opening_datepicker.data('DateTimePicker').date()?
     opening_datepicker.datetimepicker
