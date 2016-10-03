@@ -146,20 +146,20 @@ CodeWorkout::Application.routes.draw do
     # devise routes?
 
     # Password routes for Recoverable, if User model has :recoverable configured
-    get '/password/new(.:format)' => 'devise/passwords#new',
-      as: :new_user_password
-    get '/password/edit(.:format)' => 'devise/passwords#edit',
-      as: :edit_user_password
-    put '/users/password(.:format)' => 'devise/passwords#update',
-      as: :user_password
-    post '/users/password(.:format)' => 'devise/passwords#create'
+#    get '/password/new(.:format)' => 'devise/passwords#new',
+#      as: :new_user_password
+#    get '/password/edit(.:format)' => 'devise/passwords#edit',
+#      as: :edit_user_password
+#    put '/users/password(.:format)' => 'devise/passwords#update',
+#      as: :user_password
+#    post '/users/password(.:format)' => 'devise/passwords#create'
 
     # Confirmation routes for Confirmable, if User model has :confirmable configured
-    get '/users/confirmation/new(.:format)' => 'devise/confirmations#new',
-      as: :new_user_confirmation
-    get '/users/confirmation(.:format)' => 'devise/confirmations#show',
-      as: :user_confirmation
-    post '/users/confirmation(.:format)' => 'devise/confirmations#create'
+#    get '/users/confirmation/new(.:format)' => 'devise/confirmations#new',
+#      as: :new_user_confirmation
+#    get '/users/confirmation(.:format)' => 'devise/confirmations#show',
+#      as: :user_confirmation
+#    post '/users/confirmation(.:format)' => 'devise/confirmations#create'
   end
 
 end
