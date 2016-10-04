@@ -46,7 +46,7 @@ end
 
 group :development, :test do
   gem 'sqlite3'
-  gem 'mysql2'
+  gem 'mysql2', '= 0.3.15'
   gem 'rspec-rails'
   gem 'annotate'
   gem 'rails-erd', github: 'voormedia/rails-erd'
@@ -67,7 +67,7 @@ group :test do
 end
 
 group :production, :staging do
-  gem 'mysql2'
+  gem 'mysql2', '= 0.3.15'
 end
 
 group :doc do

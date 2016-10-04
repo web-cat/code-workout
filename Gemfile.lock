@@ -440,7 +440,7 @@ DEPENDENCIES
   log_file
   loofah
   momentjs-rails (>= 2.9.0)
-  mysql2
+  mysql2 (= 0.3.15)
   nokogiri
   oj
   oj_mimic_json
