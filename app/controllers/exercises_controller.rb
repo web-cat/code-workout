@@ -304,9 +304,11 @@ class ExercisesController < ApplicationController
     end
     if @workout_offering && !@workout_score
       @workout_score = @workout_offering.score_for(@student_user)
-      @workout_score.lis_result_sourcedid = params[:lis_result_sourcedid]
-      @workout_score.lis_outcome_service_url = params[:lis_outcome_service_url]
-      @workout_score.save
+      if @workout_score
+        @workout_score.lis_result_sourcedid = params[:lis_result_sourcedid]
+        @workout_score.lis_outcome_service_url = params[:lis_outcome_service_url]
+        @workout_score.save
+      end
     end
     if @workout_score
       @attempt = @workout_score.attempt_for(@exercise_version.exercise)
