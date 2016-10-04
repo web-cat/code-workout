@@ -15,6 +15,8 @@ class CodeWorker
   # -------------------------------------------------------------
   def perform(attempt_id)
     ActiveRecord::Base.connection_pool.with_connection do
+      start_time = Time.now
+
       attempt = Attempt.find(attempt_id)
       exv = attempt.exercise_version
       prompt = exv.prompts.first.specific
@@ -107,6 +109,8 @@ class CodeWorker
 #        "record_#{current_attempt}_attempt", extra: :nothing) do
 #        puts "SKYFALL"
 #      end
+
+      Rails.logger.info "[pid:#{Process.pid}/thread:#{Thread.current.object_id}] processed attempt #{attempt_id} in #{Time.now - start_time}s"
     end
   end
 
