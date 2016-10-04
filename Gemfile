@@ -14,8 +14,6 @@ gem 'sucker_punch', '~> 1.0'
 # gem 'jbuilder', '~> 1.2'
 gem 'haml', '>= 3.1.4'
 gem 'haml-rails'
-gem 'coffee-rails', '~> 4.0.0'
-gem 'coffee-script-source'
 gem 'test-unit', '~> 3.0.9'
 gem 'nokogiri'
 gem 'csv_shaper'
@@ -35,12 +33,16 @@ gem 'truncate_html',
 gem 'puma'
 gem 'tzinfo' # For timezone support
 
+# for CoffeeScript in views and assets:
+gem 'coffee-rails', '~> 4.0.0'
+gem 'coffee-script-source'
+gem 'therubyracer', platforms: :ruby
+gem 'therubyrhino', platforms: :jruby
+
 # For JSON support
 gem 'rabl'
 gem 'json', platforms: :ruby
 gem 'json_pure', platforms: :jruby
-  #gem 'oj'
-  #gem 'oj_mimic_json'
 
 group :assets do
   gem 'sass-rails'
@@ -129,7 +131,3 @@ gem 'capistrano3-puma', github: 'seuros/capistrano-puma'
 
 #for multi-color progress bar
 gem 'css3-progress-bar-rails'
-
-# JS runtime for coffeescript views.
-gem 'therubyracer', platforms: :ruby
-gem 'therubyrhino', platforms: :jruby

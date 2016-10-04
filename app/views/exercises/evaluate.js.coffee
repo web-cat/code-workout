@@ -1,6 +1,6 @@
-att_id = <%= JSON.generate @attempt.andand.id %>
-user_id = <%= JSON.generate current_user.id %>
-is_coding = <%= JSON.generate @exercise.is_coding? %>
+att_id = <%= @attempt.andand.id.to_json %>
+user_id = <%= current_user.id.to_json %>
+is_coding = <%= @exercise.is_coding?.to_json %>
 if att_id
   $("#exercisefeedback").show()
   if is_coding
