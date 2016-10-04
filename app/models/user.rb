@@ -194,6 +194,7 @@ class User < ActiveRecord::Base
       ).flat_map { |e| e.course_offering.workout_offerings }.map(&:workout)
   end
 
+
   # -------------------------------------------------------------
   def course_offerings_for_term(term, course)
     conditions = { term: term, 'users.id' => self }
