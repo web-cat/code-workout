@@ -24,13 +24,13 @@
     - if @user_time_limit
       #timer{style: "color: red", data: {deadline: user_deadline} }
     - if @exercise_version.stem && !@exercise_version.stem.preamble.blank?
-      - cache @exercise_version.stem.preamble do
+      - cache @exercise_version.stem do
         = markdown @exercise_version.stem.preamble
     - allow_write = true
     - @exercise_version.prompts.each do |question_prompt|
+      - cache question_prompt do
+        = markdown question_prompt.question
       - prompt = question_prompt.specific
-      - cache prompt.question do
-        = markdown prompt.question
       - if prompt.is_mcq?
         - answers = @exercise_version.serve_choice_array(question_prompt)
         - answers.each do |a|
