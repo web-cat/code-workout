@@ -33,7 +33,7 @@
   - score = score.round(2)
 -#
 
-- cache [exercise, exercise.current_version, new_workout, score, pts, size] do
+- cache [exercise, exercise.current_version, workout, workout_offering, new_workout, start_workout, score, pts, size] do
   %article.exercise.thumbnail{ class: size }
     .title
       - if exercise.is_mcq?
