@@ -121,9 +121,7 @@ class CodeWorker
   # -------------------------------------------------------------
   def execute_javatest(class_name, attempt_dir, pre_lines, answer_lines)
     cmd = CodeWorkout::Config::JAVA[:ant_cmd] % {attempt_dir: attempt_dir}
-    system(cmd +
-      ">> #{attempt_dir}/err.log " +
-      "2>> #{attempt_dir}/err.log")
+    system(cmd + '>> err.log 2>> err.log')
 
     # Parse compiler output for error messages to determine success
     error = ''

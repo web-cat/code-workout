@@ -1,9 +1,13 @@
 <project name="codeworkout-java" default="run" basedir="../../..">
 
+  <echo message="java.home = ${java.home}"/>
+  <echo message="attempt_dir = ${attempt_dir}"/>
   <echo message="user.dir = ${user.dir}"/>
-  <property name="resource_dir" value="${user.dir}/usr/resources/Java"/>
+  <property name="app.dir" value="${user.dir}/../../../.."/>
+  <echo message="app.dir = ${app.dir}"/>
+  <!--property name="resource_dir" value="${app.dir}/usr/resources/Java"/-->
   <echo message="resource_dir = ${resource_dir}"/>
-  <property name="work_dir"   value="${user.dir}/${attempt_dir}"/>
+  <!--property name="work_dir"   value="."/-->
   <echo message="work_dir = ${work_dir}"/>
   <property name="report_dir"   value="${work_dir}/reports"/>
   <echo message="report_dir = ${report_dir}"/>
@@ -47,26 +51,23 @@
            haltonerror="no"
            haltonfailure="no"
            filtertrace="no"
-           fork="yes"
-           forkmode="once"
            timeout="${exec.timeout}"
-    	   dir="${work_dir}"
            tempdir="${work_dir}">
       <classpath refid="codeworkout.classpath"/>
       <jvmarg value="-ea"/>
-      <jvmarg value="-Djava.security.manager"/>
-      <jvmarg value="-Dstudent.TestCase.trimStackTraces=true"/>
-      <jvmarg value="-Djava.security.policy==file:${resource_dir}/java.policy"/>
-      <jvmarg value="-Dreport_dir=${report_dir}"/>
-      <jvmarg value="-Dwork_dir=${work_dir}"/>
-      <jvmarg value="-Dresource_dir=${resource_dir}"/>
-      <jvmarg value="-Dant.home=${ant.home}"/>
-      <jvmarg value="-Dstudent.TestCase.trimStackTraces=false"/>
-      <jvmarg value="-Dstudent.testingsupport.junit4.AdaptiveTimeout.ceiling=3000"/>
-      <jvmarg value="-Dstudent.testingsupport.junit4.AdaptiveTimeout.maximum=4000"/>
-      <jvmarg value="-Dstudent.testingsupport.junit4.AdaptiveTimeout.logfile=${report_dir}/timeout.csv"/>
-      <jvmarg value="-Dstudent.testingsupport.junit4.AdaptiveTimeout.user=${attempt_dir}"/>
-      <jvmarg value="-Dnet.sf.webcat.plugins.javatddplugin.CsvJUnitResultFormatter.prefix=${attempt_dir}"/>
+      <sysproperty key="java.security.manager" value=""/>
+      <sysproperty key="student.TestCase.trimStackTraces" value="true"/>
+      <sysproperty key="java.security.policy" value="=file:${resource_dir}/java.policy"/>
+      <sysproperty key="report_dir" value="${report_dir}"/>
+      <sysproperty key="work_dir" value="${work_dir}"/>
+      <sysproperty key="resource_dir" value="${resource_dir}"/>
+      <sysproperty key="ant.home" value="${ant.home}"/>
+      <sysproperty key="student.TestCase.trimStackTraces" value="false"/>
+      <sysproperty key="student.testingsupport.junit4.AdaptiveTimeout.ceiling" value="3000"/>
+      <sysproperty key="student.testingsupport.junit4.AdaptiveTimeout.maximum" value="4000"/>
+      <sysproperty key="student.testingsupport.junit4.AdaptiveTimeout.logfile" value="${report_dir}/timeout.csv"/>
+      <sysproperty key="student.testingsupport.junit4.AdaptiveTimeout.user" value="${attempt_dir}"/>
+      <sysproperty key="net.sf.webcat.plugins.javatddplugin.CsvJUnitResultFormatter.prefix" value="${attempt_dir}"/>
       <formatter
         classname="net.sf.webcat.plugins.javatddplugin.CsvJUnitResultFormatter"
         extension=".csv"/>
