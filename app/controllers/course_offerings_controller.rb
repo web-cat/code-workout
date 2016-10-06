@@ -47,6 +47,8 @@ class CourseOfferingsController < ApplicationController
     if @students.blank?
       @msg = 'Your search returned no results. Here are all the students enrolled in the course.'
       @students = @course_offering_students
+    else
+      @msg = "#{@students.count} results returned:"
     end
 
     if @students.blank?
