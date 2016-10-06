@@ -206,6 +206,10 @@ class WorkoutScore < ActiveRecord::Base
         self.score = self.score.round(2)
         self.last_attempted_at = attempt.submit_time
         self.save!
+
+        if self.lis_outcome_service_url && self.lis_result_sourcedid
+          update_lti
+        end
       end
     end
   end
@@ -261,4 +265,20 @@ class WorkoutScore < ActiveRecord::Base
     end
   end
 
+  private
+
+  def update_lti
+    if lms_instance = self.workout_offering.course_offering.lms_instance
+      total_points = ExerciseWorkout.where(workout_id: self.workout_id).sum(:points)
+      key = lms_instance.consumer_key
+      secret = lms_instance.consumer_secret
+
+      result = total_points > 0 ? self.score / total_points : 0
+      tp = IMS::LTI::ToolProvider.new(key, secret, {
+        "lis_outcome_service_url" => "#{self.lis_outcome_service_url}",
+        "lis_result_sourcedid" => "#{self.lis_result_sourcedid}"
+      })
+      tp.post_replace_result!(result)
+    end
+  end
 end
