@@ -287,6 +287,11 @@ class ExercisesController < ApplicationController
       else
         @user_time_limit = nil
       end
+
+      if !@workout_offering.course_offering.is_enrolled?(current_user)
+        redirect_to root_path,
+          flash: { error: 'You are not enrolled in that course offering, so you cannot attempt its workouts.' } and return
+      end
     else
       @workout_offering = nil
       if params[:workout_id]
