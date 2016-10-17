@@ -44,7 +44,14 @@ class WorkoutsController < ApplicationController
   # -------------------------------------------------------------
   # GET /workouts/1
   def show
-    @exs = @workout.exercises
+    if can? :read, @workout
+      @exs = @workout.exercises
+    else
+      redirect_to gym_path, flash: {
+        error: 'You do not have permission to access that non-public workout.
+          Have a look at these popular workouts instead.'
+      }
+    end
   end
 
   def review
