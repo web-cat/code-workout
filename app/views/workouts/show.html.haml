@@ -99,14 +99,23 @@
 .col-md-4
   .btn-group
     - if @workout_offering && @workout_offering.can_be_seen_by?(current_user) && (workout_score.nil? || !workout_score.closed?)
-      - button_text = @workout_offering.can_be_practiced_by?(current_user) ? 'Start Workout' : 'Review Workout'
-      = link_to button_text,                                          |
-        organization_workout_offering_practice_path(organization_id:        |
-        @workout_offering.course_offering.course.organization.slug,         |
-        course_id: @workout_offering.course_offering.course.slug,           |
-        term_id: @workout_offering.course_offering.term.slug,               |
-        id: @workout_offering.id),                                          |
-        class: 'btn btn-primary'
+      - button_text = nil
+      - if @workout_offering.can_be_practiced_by? current_user
+        - button_text ='Start Workout'
+      - elsif @workout_offering.andand.workout_policy.andand.no_review_before_close
+        %p
+          You can review your work on this workout once everyone has
+          completed it.
+      - else
+        - button_text = 'Review Workout'
+      - if button_text
+        = link_to button_text,                                              |
+          organization_workout_offering_practice_path(organization_id:      |
+          @workout_offering.course_offering.course.organization.slug,       |
+          course_id: @workout_offering.course_offering.course.slug,         |
+          term_id: @workout_offering.course_offering.term.slug,             |
+          id: @workout_offering.id),                                        |
+          class: 'btn btn-primary'
     - elsif @workout_offering.nil?
       = link_to 'Start Workout', practice_workout_path(params[:id]), |
         class: 'btn btn-primary'
