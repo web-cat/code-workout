@@ -287,6 +287,11 @@ class ExercisesController < ApplicationController
       else
         @user_time_limit = nil
       end
+
+      if !@workout_offering.course_offering.is_enrolled?(current_user)
+        redirect_to root_path,
+          flash: { error: 'You are not enrolled in that course offering, so you cannot attempt its workouts.' } and return
+      end
     else
       @workout_offering = nil
       if params[:workout_id]
@@ -533,22 +538,6 @@ class ExercisesController < ApplicationController
           id: @workout_offering.id,
           lti_launch: @lti_launch) + "' "
       end
-
-      # Sending only mcq score to LTI. Coding scores will be sent when
-      # feedback_poll returns with feedback ready.
-      total_points = ExerciseWorkout.where(workout_id: @workout_score.workout_id).sum(:points)
-      if lms_instance = @workout_offering.course_offering.lms_instance
-        key = lms_instance.consumer_key
-        secret = lms_instance.consumer_secret
-
-        result = total_points > 0 ? @workout_score.score / total_points : 0
-        @tp = IMS::LTI::ToolProvider.new(key, secret, {
-          "lis_outcome_service_url" => "#{@workout_score.lis_outcome_service_url}",
-          "lis_result_sourcedid" => "#{@workout_score.lis_result_sourcedid}"
-        })
-        @tp.post_replace_result!(result)
-      end
-
     elsif @exercise_version.is_coding?
       @answer_code = params[:exercise_version][:answer_code]
       # Why were these in here? what purpose do they serve ??????

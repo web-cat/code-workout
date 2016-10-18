@@ -43,26 +43,8 @@ class SseController < ApplicationController
     workout_score = @attempt.workout_score
     if workout_score
       @workout = workout_score.workout
-      total_points = @workout.total_points
       @max_points = @workout.exercise_workouts.where(exercise: @exercise).
         first.points
-
-      if workout_score.lis_outcome_service_url &&
-        workout_score.lis_result_sourcedid
-        lms_instance =
-          workout_score.workout_offering.course_offering.lms_instance
-        key = lms_instance.consumer_key
-        secret = lms_instance.consumer_secret
-
-        result = total_points > 0 ? workout_score.score / total_points : 0
-
-        tp = IMS::LTI::ToolProvider.new(key, secret, {
-          "lis_outcome_service_url" =>
-            "#{workout_score.lis_outcome_service_url}",
-          "lis_result_sourcedid" => "#{workout_score.lis_result_sourcedid}"
-          })
-        tp.post_replace_result!(result)
-      end
     end
 
     respond_to do |format|

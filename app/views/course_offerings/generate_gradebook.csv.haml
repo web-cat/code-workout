@@ -12,8 +12,9 @@
     - body << (student.last_name.to_s.length > 0 ? student.last_name : nil)
     - grand_total = 0.00
     - @course_offering.workouts.each do |wkt|
-      - if WorkoutScore.find_by(user_id: ce.user_id, workout: wkt)
-        - tot = WorkoutScore.find_by!(user_id: ce.user_id, workout: wkt).score.round(2)
+      - workout_offering = @course_offering.workout_offerings.find_by(workout: wkt)
+      - if workout_score = WorkoutScore.find_by(user_id: ce.user_id, workout: wkt, workout_offering: workout_offering)
+        - tot = workout_score.score.round(2)
         - body << tot
         - grand_total += tot
       - else
