@@ -59,7 +59,7 @@ class SseController < ApplicationController
         tp = IMS::LTI::ToolProvider.new(key, secret, {
           "lis_outcome_service_url" =>
             "#{workout_score.lis_outcome_service_url}",
-          "lis_result_sourcedid" => "#{@workout_score.lis_result_sourcedid}"
+          "lis_result_sourcedid" => "#{workout_score.lis_result_sourcedid}"
           })
         tp.post_replace_result!(result)
       end
