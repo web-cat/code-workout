@@ -1,18 +1,18 @@
 $ ->
 	deadline = 0
 	$("#timer").html("Time remaining ...")
-	setInterval ->
-		now = new Date()
-		time_now = new Date(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds())
-		deadline = new Date($("#timer").data("deadline"))
-		remaining = (deadline - time_now) / 1000
-		remaining = Math.floor(remaining)
-		hours = parseInt( remaining / 3600 )
-		remaining = remaining - hours * 3600
-		minutes = parseInt( remaining / 60 )
-		remaining = remaining - minutes * 60
-		seconds = remaining
-		result = seconds
-		$("#timer").html("Time remaining - " + hours + ":" + minutes + ":" + result) if remaining > 0
-	, 1000
-
+	now = moment.utc()
+	deadline = moment.utc($('#timer').data('deadline'))
+	remaining = deadline.diff(now)
+	duration = moment.duration(remaining, 'milliseconds')
+	one_second = 1000
+	interval = setInterval ->
+		if duration > 0
+			duration = moment.duration(duration - one_second, 'milliseconds')
+			hours = ('0' + duration.hours()).slice -2
+			minutes = ('0' + duration.minutes()).slice -2
+			seconds = ('0' + duration.seconds()).slice -2
+			$("#timer").html("Time remaining - " + hours + ":" + minutes + ":" + seconds)
+		else
+			clearInterval(interval)
+	, one_second
