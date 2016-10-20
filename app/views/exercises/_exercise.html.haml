@@ -45,7 +45,7 @@
       - else
         %i.fa-pencil-square-o
       - if workout_offering
-        - if workout_offering.can_be_seen_by?(user)
+        - if workout_offering.can_be_seen_by?(user) || current_user.global_role.is_admin? || workout_offering.course_offering.is_manager?(current_user)
           - if start_workout
             = link_to exercise.display_name,
               organization_workout_offering_practice_path(exercise_id: exercise.id,

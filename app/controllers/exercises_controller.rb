@@ -319,7 +319,8 @@ class ExercisesController < ApplicationController
       @attempt = @workout_score.attempt_for(@exercise_version.exercise)
     end
     @workout ||= @workout_score ? @workout_score.workout : nil
-    if @workout_score.andand.closed? &&
+    manages_course = !current_user.global_role.is_admin? || !@workout_offering.andand.course_offering.is_manager?(current_user)
+    if !manages_course && @workout_score.andand.closed? &&
       @workout_offering.andand.workout_policy.andand.no_review_before_close &&
       !@workout_offering.andand.shutdown?
       path = root_path
@@ -329,7 +330,7 @@ class ExercisesController < ApplicationController
               @workout_offering.course_offering.course.organization.slug,
             course_id: @workout_offering.course_offering.course.slug,
             term_id: @workout_offering.course_offering.term.slug,
-            workout_offering_id: @workout_offering.id)
+            id: @workout_offering.id)
       elsif @workout
         path = workout_path(@workout)
       end
