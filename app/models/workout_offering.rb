@@ -174,6 +174,7 @@ class WorkoutOffering < ActiveRecord::Base
   # have full access.
 
   def can_be_practiced_by?(user)
+    workout_score = user.workout_scores.find_by(workout_offering: self)
     now = Time.zone.now
     user_extension = StudentExtension.find_by(user: user, workout_offering: self)
     deadline = user_extension.andand.hard_deadline ||
@@ -184,6 +185,7 @@ class WorkoutOffering < ActiveRecord::Base
     course_offering.is_staff?(user) ||
     (((opens == nil) || (opens <= now)) &&
       ((deadline == nil) || (now <= deadline)) &&
+      !workout_score.andand.closed? &&
       course_offering.is_enrolled?(user))
   end
 
