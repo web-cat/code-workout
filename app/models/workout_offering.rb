@@ -185,7 +185,7 @@ class WorkoutOffering < ActiveRecord::Base
     course_offering.is_staff?(user) ||
     (((opens == nil) || (opens <= now)) &&
       ((deadline == nil) || (now <= deadline)) &&
-      !workout_score.andand.closed? &&
+      (!workout_score.andand.closed?) &&
       course_offering.is_enrolled?(user))
   end
 
