@@ -123,7 +123,7 @@
 
 - if workout_score.nil? && @workout_offering.andand.workout_policy.andand.hide_thumbnails_before_start
   .alert.alert-warning You must begin this workout before you can see its exercises.
-- elsif workout_score.andand.closed? && !@workout_offering.andand.shutdown? && (@workout_offering.andand.workout_policy.andand.no_review_before_close || @workout_offering.andand.workout_policy.andand.hide_thumbnails_in_review_before_close)
+- elsif !current_user.is_admin? && !course_offering.is_manager?(current_user) && workout_score.andand.closed? && !@workout_offering.andand.shutdown? && (@workout_offering.andand.workout_policy.andand.no_review_before_close || @workout_offering.andand.workout_policy.andand.hide_thumbnails_in_review_before_close)
   .alert.alert-warning Results will be visible after the assignment closes.
 - elsif @exs.empty?
   .alert.alert-warning No exercises in this workout
