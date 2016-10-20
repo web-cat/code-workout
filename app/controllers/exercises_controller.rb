@@ -343,8 +343,8 @@ class ExercisesController < ApplicationController
         @user_deadline = nil
       else
         @user_deadline = @workout_score.created_at + @user_time_limit.minutes
-        @user_deadline = user_deadline.to_s
-        @user_deadline = user_deadline.split(" ")[0] + "T" + user_deadline.split(" ")[1]
+        @user_deadline = @user_deadline.to_s
+        @user_deadline = @user_deadline.split(" ")[0] + "T" + @user_deadline.split(" ")[1]
       end
     elsif !@workout_offering.andand.can_be_practiced_by? (current_user)
       @msg = 'This assignment is now closed and no longer accepting submissions.'

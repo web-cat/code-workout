@@ -17,7 +17,7 @@
     = f.semantic_errors
     %h1= @exercise.display_name
     - if @user_time_limit
-      #timer.alert.alert-warning{ {deadline: @user_deadline} }
+      #timer.alert.alert-warning{ data: {deadline: @user_deadline} }
         = "#{@msg}"
     - if @exercise_version.stem && !@exercise_version.stem.preamble.blank?
       - cache @exercise_version.stem do
