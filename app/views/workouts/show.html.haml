@@ -96,9 +96,11 @@
 -#= render @workout
 -#.clearfix
 
+- manages_course = current_user.global_role.is_admin? || course_offering.is_manager?(current_user)
+
 .col-md-4
   .btn-group
-    - if @workout_offering && @workout_offering.can_be_seen_by?(current_user) && (workout_score.nil? || !workout_score.closed?) || (current_user.global_role.is_admin? || course_offering.is_manager?(current_user))
+    - if @workout_offering && @workout_offering.can_be_seen_by?(current_user) && (workout_score.nil? || !workout_score.closed?) || manages_course
       - button_text = @workout_offering.can_be_practiced_by?(current_user) ? 'Start Workout' : 'Review Workout'
       = link_to button_text,                                          |
         organization_workout_offering_practice_path(organization_id:        |
@@ -121,9 +123,9 @@
 
 %h2 Exercises
 
-- if workout_score.nil? && @workout_offering.andand.workout_policy.andand.hide_thumbnails_before_start
+- if !manages_course && workout_score.nil? && @workout_offering.andand.workout_policy.andand.hide_thumbnails_before_start
   .alert.alert-warning You must begin this workout before you can see its exercises.
-- elsif !current_user.global_role.is_admin? && !course_offering.is_manager?(current_user) && workout_score.andand.closed? && !@workout_offering.andand.shutdown? && (@workout_offering.andand.workout_policy.andand.no_review_before_close || @workout_offering.andand.workout_policy.andand.hide_thumbnails_in_review_before_close)
+- elsif !manages_course && workout_score.andand.closed? && !@workout_offering.andand.shutdown? && (@workout_offering.andand.workout_policy.andand.no_review_before_close || @workout_offering.andand.workout_policy.andand.hide_thumbnails_in_review_before_close)
   .alert.alert-warning Results will be visible after the assignment closes.
 - elsif @exs.empty?
   .alert.alert-warning No exercises in this workout
