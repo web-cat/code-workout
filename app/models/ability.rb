@@ -228,17 +228,23 @@ class Ability
   def process_workouts(user)
     can [:read, :update, :destroy], Workout, creator_id: user.id
     can :create, Workout if user.instructor_course_offerings.any?
-    can [:update, :read], Workout, workout_offerings:
+    can :update, Workout, workout_offerings:
       { course_offering:
         { course_enrollments:
           { user_id: user.id, course_role:
             { can_manage_assignments: true } } } }
+    can :read, Workout, workout_offerings:
+      { course_offering:
+        { course_enrollments:
+          { user_id: user.id } } }
     can :practice, Workout, is_public: true
   end
 
   def process_workout_offerings(user)
     can :create, WorkoutOffering if user.instructor_course_offerings.any?
-
+    can :read, WorkoutOffering, course_offering:
+      { course_enrollments:
+        { user_id: user.id } }
     can :manage, WorkoutOffering, course_offering:
       { course_enrollments:
         { user_id: user.id, course_role:
