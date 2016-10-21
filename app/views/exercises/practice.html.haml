@@ -1,13 +1,8 @@
 - if !@lti_launch
   = render partial: 'layouts/breadcrumb'
 
-- if @user_time_limit && (@workout_score.created_at + @user_time_limit.minutes) - Time.zone.now > 0
-  - user_deadline = @workout_score.created_at + @user_time_limit.minutes
-  - user_deadline = user_deadline.to_s
-  - user_deadline = user_deadline.split(" ")[0] + "T" + user_deadline.split(" ")[1]
-  = javascript_include_tag("timeout")
-- else
-  - user_deadline = " "
+- if @user_deadline
+  = javascript_include_tag('timeout')
 = javascript_include_tag("practice")
 .col-md-7
   = semantic_form_for @exercise_version,
@@ -22,7 +17,8 @@
     = f.semantic_errors
     %h1= @exercise.display_name
     - if @user_time_limit
-      #timer{style: "color: red", data: {deadline: user_deadline} }
+      #timer.alert.alert-warning{ data: {deadline: @user_deadline} }
+        = "#{@msg}"
     - if @exercise_version.stem && !@exercise_version.stem.preamble.blank?
       - cache @exercise_version.stem do
         = markdown @exercise_version.stem.preamble

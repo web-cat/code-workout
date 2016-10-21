@@ -1,6 +1,5 @@
 $ ->
 	deadline = 0
-	$("#timer").html("Time remaining ...")
 	now = moment.utc()
 	deadline = moment.utc($('#timer').data('deadline'))
 	remaining = deadline.diff(now)
@@ -15,4 +14,7 @@ $ ->
 			$("#timer").html("Time remaining - " + hours + ":" + minutes + ":" + seconds)
 		else
 			clearInterval(interval)
+			$('#timer').html 'The time limit has passed. The assignment is closed and no longer accepting submissions.'
+			$('.btn-submit').fadeOut 300, ->
+				$(this).remove();
 	, one_second
