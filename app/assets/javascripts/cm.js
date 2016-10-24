@@ -47,7 +47,7 @@ function prepareEditor() {
   });
 }
 
-$(document).ready(function() {
+$('.exercises.practice').ready(function() {
   prepareEditor();
 
   $('.btn-reset').on('click', function() {

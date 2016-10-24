@@ -112,11 +112,11 @@
           term_id: @workout_offering.course_offering.term.slug,
           id: @workout_offering.id,
           lti_launch: @lti_launch),
-          class: 'btn btn-success btn-next', id: 'nextbtn'
+          class: 'btn btn-info btn-next', id: 'nextbtn'
       - elsif @workout && params[:review_user_id].nil?
         = button_link 'Next exercise',
           exercise_practice_path(@workout.next_exercise(@exercise, current_user, @workout_score), workout_id: @workout.id, lti_launch: @lti_launch),
-          class: 'btn btn-success btn-next', id: 'nextbtn'
+          class: 'btn btn-info btn-next', id: 'nextbtn'
 
     - if @workout.nil?
       %br
@@ -138,7 +138,7 @@
     .modal-content
       .modal-header
         %button.close{ type: 'button', data: { dismiss: 'modal' }, aria_hidden: true } &times
-        %h4.modal-title#resetModalLabel Confirm Reset
+        %p.lead.modal-title#resetModalLabel Confirm Reset
 
       .modal-body
         %p You are about to reset the editor to this exercise's original state. Your current work will be lost.
