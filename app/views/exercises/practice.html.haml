@@ -102,7 +102,7 @@
         - elsif allow_write && params[:review_user_id].nil?
           = f.submit 'Check my answer!', class: 'btn btn-primary btn-submit', id: 'primarybtn'
       - if coding_questions
-        %div.btn.btn-default{ data: { toggle: 'modal', target: '#confirm-reset' } } Reset to Starter Code
+        %div.btn.btn-default{ data: { toggle: 'modal', target: '#confirm-reset' } } Reset
       - if @workout_offering && params[:review_user_id].nil?
         = button_link 'Next exercise',
           organization_workout_offering_practice_path(exercise_id: @workout.next_exercise(@exercise, current_user, nil),
