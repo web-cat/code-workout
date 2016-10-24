@@ -23,6 +23,7 @@
       - cache @exercise_version.stem do
         = markdown @exercise_version.stem.preamble
     - allow_write = true
+    - coding_questions = false
     - @exercise_version.prompts.each do |question_prompt|
       - cache question_prompt do
         = markdown question_prompt.question
@@ -71,6 +72,7 @@
                 member_label: :answer,
                 label: '&nbsp;'
       - elsif prompt.is_coding?
+        - coding_questions = true
         - examples = prompt.examples
         - if examples.any?
           %p Examples:
@@ -89,7 +91,8 @@
         - if allow_write && params[:review_user_id].nil?
           = f.input :answer_code, as: :text, class: 'code',
           input_html: { lang: 'text/x-' + (@exercise.language || 'java').downcase, readonly: true, autofocus: true,
-            value: prior_answer ? prior_answer.specific.answer : prompt.prepare_starter_code}
+            value: prior_answer ? prior_answer.specific.answer : prompt.prepare_starter_code,
+            data: { starter_code: prompt.prepare_starter_code } }
         - else
           %pre{ lang: 'text/x-java' }
             = prior_answer ? prior_answer.specific.answer : prompt.prepare_starter_code
@@ -99,6 +102,8 @@
           = f.submit 'Save my answer!', class: 'btn btn-primary btn-submit', id: 'primarybtn'
         - elsif allow_write && params[:review_user_id].nil?
           = f.submit 'Check my answer!', class: 'btn btn-primary btn-submit', id: 'primarybtn'
+      - if coding_questions
+        %div.btn.btn-default{ data: { toggle: 'modal', target: '#confirm-reset' } } Reset to Starter Code
       - if @workout_offering && params[:review_user_id].nil?
         = button_link 'Next exercise',
           organization_workout_offering_practice_path(exercise_id: @workout.next_exercise(@exercise, current_user, nil),
@@ -107,11 +112,11 @@
           term_id: @workout_offering.course_offering.term.slug,
           id: @workout_offering.id,
           lti_launch: @lti_launch),
-          class: 'btn btn-next', id: 'nextbtn'
+          class: 'btn btn-info btn-next', id: 'nextbtn'
       - elsif @workout && params[:review_user_id].nil?
         = button_link 'Next exercise',
           exercise_practice_path(@workout.next_exercise(@exercise, current_user, @workout_score), workout_id: @workout.id, lti_launch: @lti_launch),
-          class: 'btn btn-next', id: 'nextbtn'
+          class: 'btn btn-info btn-next', id: 'nextbtn'
 
     - if @workout.nil?
       %br
@@ -127,3 +132,19 @@
       = render partial: 'sse/ajax_feedback'
   - else
     #exercisefeedback{style: 'display: none;'}
+
+.modal.fade#confirm-reset{ tabindex: '-1', role: 'dialog', aria_labelledby: 'resetModalLabel', aria_hidden: true }
+  .modal-dialog
+    .modal-content
+      .modal-header
+        %button.close{ type: 'button', data: { dismiss: 'modal' }, aria_hidden: true } &times
+        %p.lead.modal-title#resetModalLabel Confirm Reset
+
+      .modal-body
+        %p You are about to reset the editor to this exercise's original state. Your current work will be lost.
+        %p Continue?
+        %p.debug-url
+
+      .modal-footer
+        %button.btn.btn-default{ data: { dismiss: 'modal' }, type: 'button' } Cancel
+        %button.btn.btn-danger.btn-reset Reset Editor
