@@ -182,10 +182,10 @@ class WorkoutScore < ActiveRecord::Base
           end
         else
           # update number of exercises completed
-          if self.exercises_completed < self.workout.exercises.length
+          if self.exercises_completed && self.exercises_completed < self.workout.exercises.length
             self.exercises_completed += 1
           end
-          if self.exercises_remaining > 0
+          if self.exercises_remaining && self.exercises_remaining > 0
             self.exercises_remaining -= 1
             if self.exercises_remaining == 0
               self.completed = true
