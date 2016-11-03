@@ -309,13 +309,11 @@ class ExercisesController < ApplicationController
     end
     if @workout_offering && !@workout_score
       @workout_score = @workout_offering.score_for(@student_user)
-      if @workout_score
-        @workout_score.lis_result_sourcedid = params[:lis_result_sourcedid]
-        @workout_score.lis_outcome_service_url = params[:lis_outcome_service_url]
-        @workout_score.save
-      end
     end
     if @workout_score
+      @workout_score.lis_result_sourcedid ||= params[:lis_result_sourcedid]
+      @workout_score.lis_outcome_service_url ||= params[:lis_outcome_service_url]
+      @workout_score.save
       @attempt = @workout_score.attempt_for(@exercise_version.exercise)
     end
     @workout ||= @workout_score ? @workout_score.workout : nil
@@ -346,12 +344,13 @@ class ExercisesController < ApplicationController
         @user_deadline = @workout_score.created_at + @user_time_limit.minutes
         @user_deadline = @user_deadline.to_s
         @user_deadline = @user_deadline.split(" ")[0] + "T" + @user_deadline.split(" ")[1]
+        @msg = 'Time remaining - ##:##'
       end
     elsif !@workout_offering.andand.can_be_practiced_by? (current_user)
       @msg = 'This assignment is now closed and no longer accepting submissions.'
     end
 
-    @msg ||= 'Time remaining...'
+    @msg ||= nil
 
     if @workout.andand.exercise_workouts.andand.where(exercise: @exercise).andand.any?
       @max_points = @workout.exercise_workouts.
