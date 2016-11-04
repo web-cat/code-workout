@@ -317,7 +317,7 @@ class ExercisesController < ApplicationController
       @attempt = @workout_score.attempt_for(@exercise_version.exercise)
     end
     @workout ||= @workout_score ? @workout_score.workout : nil
-    manages_course = current_user.global_role.is_admin? || @workout_offering.andand.course_offering.is_manager?(current_user)
+    manages_course = current_user.global_role.is_admin? || @workout_offering.andand.course_offering.andand.is_manager?(current_user)
     if !manages_course && @workout_score.andand.closed? &&
       @workout_offering.andand.workout_policy.andand.no_review_before_close &&
       !@workout_offering.andand.shutdown?

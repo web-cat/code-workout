@@ -90,7 +90,7 @@
 
 %h2 Exercises
 
-- manages_course = current_user.global_role.is_admin? || course_offering.is_manager?(current_user)
+- manages_course = current_user.global_role.is_admin? || course_offering.andand.is_manager?(current_user)
 
 - if !manages_course && workout_score.nil? && @workout_offering.andand.workout_policy.andand.hide_thumbnails_before_start
   .alert.alert-warning You must begin this workout before you can see its exercises.
