@@ -346,7 +346,7 @@ class ExercisesController < ApplicationController
         @user_deadline = @user_deadline.split(" ")[0] + "T" + @user_deadline.split(" ")[1]
         @msg = 'Time remaining - ##:##'
       end
-    elsif !@workout_offering.andand.can_be_practiced_by? (current_user)
+    elsif @workout_offering && !@workout_offering.andand.can_be_practiced_by?(current_user)
       @msg = 'This assignment is now closed and no longer accepting submissions.'
     end
 
