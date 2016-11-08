@@ -14,10 +14,10 @@ Vagrant is designed to run on multiple platforms, including Mac OS X, Microsoft 
 5. `$ vagrant up`
 6. `$ vagrant ssh`
 7. `$ cd /vagrant`
-8. `$ ./runservers.sh`
+8. `$ rails server`
 9. After the provisioning script is complete you can go to:
 
-  * https://192.168.33.20:9292 for CodeWorkout server
+  * https://192.168.33.20:3000 for CodeWorkout server
 
 ## Shut Down The Virtual Machine:
 
@@ -35,7 +35,7 @@ If you decided to shut down the virtual machine using `vagrant halt`, you have t
 2. `$ vagrant up`
 3. `$ vagrant ssh`
 4. `$ cd /vagrant`
-5. `$ ./runservers.sh`
+5. `$ rails server`
 
 ## Reprovision The Virtual Machine:
 
@@ -80,7 +80,7 @@ in db/seeds.rb instead.
     - `$ vagrant ssh`
     - `$ cd /vagrant`
     - `$ rake db:populate`
-    - `$ ./runservers.sh`
+    - `$ rails server`
 
 ## Keep code-workout repository up to date:
 
@@ -94,7 +94,7 @@ During development of code-workout, other developers might add new gems to the p
 - `$ cd /vagrant`
 - `$ sudo bundle install`
 - `$ rake db:populate` **Note:** This step will place the database in a simple starter state.
-- `$ ./runservers.sh`
+- `$ rails server`
 
 
 ## Upload and Test Programming Exercises:
