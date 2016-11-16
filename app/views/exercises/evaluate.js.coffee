@@ -9,7 +9,7 @@ if att_id
     $("#exercisefeedback").html('<h2>Feedback</h2><i class="fa fa-spinner fa-spin fa-2x"></i>')
     setTimeout ( ->
       $.ajax(url: "/sse/feedback_poll?att_id=#{att_id}")
-    ), 4000
+    ), 2000
   else
     $.ajax(url: "/sse/feedback_poll?att_id=#{att_id}")
 else

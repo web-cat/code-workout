@@ -1,4 +1,7 @@
 # app/workers/code_worker.rb
+
+require 'net/http'
+require 'uri'
 require 'csv'
 require 'fileutils'
 require "#{Rails.root}/usr/resources/config"
@@ -120,8 +123,14 @@ class CodeWorker
 
   # -------------------------------------------------------------
   def execute_javatest(class_name, attempt_dir, pre_lines, answer_lines)
-    cmd = CodeWorkout::Config::JAVA[:ant_cmd] % {attempt_dir: attempt_dir}
-    system(cmd + '>> err.log 2>> err.log')
+    if CodeWorkout::Config::JAVA.key? :daemon_url
+      url = CodeWorkout::Config::JAVA[:daemon_url] % {attempt_dir: attempt_dir}
+      response = Net::HTTP.get_response(URI.parse(url))
+      puts "%{url} => response %{response.code}"
+    else
+      cmd = CodeWorkout::Config::JAVA[:ant_cmd] % {attempt_dir: attempt_dir}
+      system(cmd + '>> err.log 2>> err.log')
+    end
 
     # Parse compiler output for error messages to determine success
     error = ''
@@ -132,20 +141,14 @@ class CodeWorker
       compile_out = File.foreach(logfile) do |line|
         line.chomp!
         # puts "checking line: #{line}"
-        m = /^\s*\[javac\]\s/.match(line)
-        if m
-          line = m.post_match
-        else
-          break
-        end
-        # puts "javac output: #{line}"
-        if line =~ /^Compiling/
-          next
-        elsif line =~ /^\S+\.java:\s*([0-9]+)\s*:\s*(?:warning:\s*)?(.*)/
+        if line =~ /^\S+\.java:\s*([0-9]+)\s*:\s*(?:warning:\s*)?(.*)/
           line_no = $1.to_i - pre_lines
           if line_no > answer_lines
             line_no = answer_lines
             xtra = ', maybe a missing delimiter or closing brace?'
+          end
+          if !error.blank?
+            error += '. '
           end
           error += "line #{line_no}: #{$2}#{xtra}"
           # puts "error now: #{error}"
