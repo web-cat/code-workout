@@ -73,8 +73,7 @@ class WorkoutOffering < ActiveRecord::Base
 
   # -----------------------------------------------------------------
   def hard_deadline_for(user)
-    user_extension =
-      StudentExtension.find_by(user: user, workout_offering: self)
+    user_extension = student_extensions.where(user: user).first
     user_extension.andand.hard_deadline ||
       self.hard_deadline ||
       user_extension.andand.soft_deadline ||

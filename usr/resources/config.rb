@@ -20,6 +20,7 @@ module CodeWorkout
 #        "-Djava.security.manager=net.sf.webcat.plugins.javatddplugin.ProfilingSecurityManager " \
 #        "-DProfilingSecurityManager.output=security.txt " \
 #        "LOCALCLASSPATH=#{APP_DIR}/usr/resources/Java/JavaTddPluginSupport.jar " \
+#        "ant -logger org.apache.tools.ant.listener.ProfileLogger " \
 #        "--execdebug " \
       ant_cmd: "cd \"%{attempt_dir}\" ; ANT_OPTS=\"-ea " \
         "-Dant.home=#{ANT_HOME} " \
@@ -27,7 +28,7 @@ module CodeWorkout
         "-Dwork_dir=#{APP_DIR}/%{attempt_dir} " \
         "-Djava.security.manager " \
         "-Djava.security.policy==file:#{APP_DIR}/usr/resources/Java/java.policy\" " \
-        "ant -logger org.apache.tools.ant.listener.ProfileLogger " \
+        "ant " \
         "-Dattempt_dir=%{attempt_dir} " \
         "-Dbasedir=. " \
         "-l ant.log " \
