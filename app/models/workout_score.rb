@@ -135,13 +135,16 @@ class WorkoutScore < ActiveRecord::Base
 
 
   # -------------------------------------------------------------
-  def attempt_for(exercise)
+  def scoring_attempt_for(exercise)
     workout_score = self
     Attempt.joins{exercise_version}.
       where{(active_score_id == workout_score.id) &
       (exercise_version.exercise_id == exercise.id)}.first
   end
 
+  def previous_attempt_for(exercise)
+    attempts.first
+  end
 
   # -------------------------------------------------------------
   def update_attempt(attempt, old_score)
