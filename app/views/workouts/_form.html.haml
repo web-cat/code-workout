@@ -52,16 +52,26 @@
   .form-group
     = label_tag :is_public, 'Available in Gym?', class: 'control-label col-xs-2'
     .col-xs-8
-      = check_box_tag 'is-public', 'is_public', @workout.present? ? @workout.is_public : false, id: 'is-public'
-      %small.col-xs-offset-1.text.text-warning
+      .col-xs-1
+        = check_box_tag 'is-public', 'is_public', @workout.present? ? @workout.is_public : false, id: 'is-public'
+      %small.col-xs-11.text.text-warning
         Checking this box makes the Workout visible in the Gym for all users to practice or use in their courses.
 
   .form-group
     = label_tag :published, 'Visible to students?', class: 'control-label col-xs-2'
     .col-xs-8
-      = check_box_tag 'published', 'published', defined?(@published) ? @published : true, id: 'published'
-      %small.col-xs-offset-1.text.text-warning
+      .col-xs-1
+        = check_box_tag 'published', 'published', defined?(@published) ? @published : true, id: 'published'
+      %small.col-xs-11.text.text-warning
         Checking this box makes the Workout Offerings you create visible to students in your courses.
+
+  .form-group
+    = label_tag :most_recent, 'Use most recent attempt?', class: 'control-label col-xs-2'
+    .col-xs-8
+      .col-xs-1
+        = check_box_tag 'most_recent', 'most_recent', defined?(@most_recent) ? @most_recent : true, id: 'most_recent'
+      %small.col-xs-11.text.text-warning
+        Check this box to use a student's most recent attempt for the current score. Leave it blank to use the student's highest scoring attempt.
 
   .form-group
     %p.lead Add to Course Offerings

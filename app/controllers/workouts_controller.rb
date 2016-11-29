@@ -156,6 +156,7 @@ class WorkoutsController < ApplicationController
     @can_update = can? :edit, @workout
     @time_limit = @workout.workout_offerings.first.andand.time_limit
     @published = @workout.workout_offerings.first.andand.published
+    @most_recent = @workout.workout_offerings.first.andand.most_recent
     @policy = @workout.workout_offerings.first.andand.workout_policy
     @organization = Organization.find params[:organization_id]
     @lti_launch = params[:lti_launch]
@@ -439,13 +440,12 @@ class WorkoutsController < ApplicationController
       @workout.name = params[:name]
       @workout.description = params[:description]
       @workout.is_public = params[:is_public]
-      workout_policy = WorkoutPolicy.find_by id: params[:policy_id]
-      time_limit = params[:time_limit]
-      published = params[:published]
-      common = {}
-      common[:workout_policy] = workout_policy
-      common[:time_limit] = time_limit
-      common[:published] = published
+      
+      common = {}   # params that are common among all offerings of this workout
+      common[:workout_policy] = WorkoutPolicy.find_by id: params[:policy_id]
+      common[:time_limit] = params[:time_limit]
+      common[:published] = params[:published]
+      common[:most_recent] = params[:most_recent]
 
       removed_exercises = JSON.parse params[:removed_exercises]
       removed_exercises.each do |exercise_workout_id|
