@@ -143,7 +143,8 @@ class WorkoutScore < ActiveRecord::Base
   end
 
   def previous_attempt_for(exercise)
-    attempts.first
+    attempts.joins{exercise_version}.
+      where{exercise_version.exercise_id == exercise.id}.first
   end
 
   # -------------------------------------------------------------
