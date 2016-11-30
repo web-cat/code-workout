@@ -132,7 +132,7 @@
                   - if score && workout_score.show_feedback?
                     %td= score
                   - else
-                    %td -/-
+                    %td.textblur -/-
 
     - if !@is_student
       .tab-pane.fade{ id: 'roster' }

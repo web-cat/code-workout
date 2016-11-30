@@ -318,14 +318,15 @@ ul.wysihtml5-toolbar li {
   overflow-y: auto;
 }
 
-input.datepicker {
-  min-width: 18ch;
-}
-
-input.time-limit {
+input.datepicker, input.time-limit {
   min-width: 18ch;
 }
 
 .btn-group a {
   margin: 2px !important;
+}
+
+.textblur {
+  color: transparent;
+  text-shadow: 0 0 3px #000000;
 }
