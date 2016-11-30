@@ -172,11 +172,19 @@ class WorkoutScore < ActiveRecord::Base
 
       last_attempt = scored_for_this.first
 
-      # Only update if this attempt is included in score
-      if last_attempt.nil? ||
-        last_attempt.submit_time < attempt.submit_time
+      record_score = last_attempt ? (self.workout_offering.andand.most_recent) ?
+        (attempt.submit_time > last_attempt.submit_time) :
+        (attempt.score >= last_attempt.score) : true
 
-        if !last_attempt
+      # Only update if this attempt is included in score
+      if record_score
+        if last_attempt
+          # clear previous active score
+          scored_for_this.each do |a|
+            a.active_score_id = nil
+            a.save!
+          end
+        else
           # update number of exercises completed
           if self.exercises_completed && self.exercises_completed < self.workout.exercises.length
             self.exercises_completed += 1
@@ -190,23 +198,13 @@ class WorkoutScore < ActiveRecord::Base
           end
         end
 
-        # recalculate workout score
-        score = 0.0
-        self.scored_attempts.each do |a|
-          score += a.score
-        end
+        attempt.active_score = self
+        attempt.save!
 
-        if self.workout_offering.andand.most_recent || score >= self.score
-          if last_attempt
-            # clear previous active score
-            scored_for_this.each do |a|
-              a.active_score_id = nil
-              a.save!
-            end
-          end
-          self.score = score.round(2)
-          attempt.active_score_id = self.id
-          attempt.save!
+        # recalculate workout score
+        self.score = 0.0
+        self.scored_attempts.each do |a|
+          self.score += a.score
         end
 
         self.last_attempted_at = attempt.submit_time
