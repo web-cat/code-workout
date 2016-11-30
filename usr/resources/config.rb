@@ -25,7 +25,9 @@ module CodeWorkout
       ant_cmd: "cd \"%{attempt_dir}\" ; ANT_OPTS=\"-ea " \
         "-Dant.home=#{ANT_HOME} " \
         "-Dresource_dir=#{APP_DIR}/usr/resources/Java " \
-        "-Dwork_dir=#{APP_DIR}/%{attempt_dir} \" " \
+        "-Dwork_dir=#{APP_DIR}/%{attempt_dir} " \
+        "-Djava.security.manager " \
+        "-Djava.security.policy==file:#{APP_DIR}/usr/resources/Java/java.policy\" " \
         "ant " \
         "-Dattempt_dir=%{attempt_dir} " \
         "-Dbasedir=. " \
