@@ -206,6 +206,7 @@ class WorkoutScore < ActiveRecord::Base
         self.scored_attempts.each do |a|
           self.score += a.score
         end
+        self.score = self.score.round(2)
 
         self.last_attempted_at = attempt.submit_time
         self.save!
