@@ -1,12 +1,12 @@
 -# FIXME: Funky logic for the time being
--#- if @course_offerings.size > 1 && !@is_student
+-#- if course_offerings.size > 1 && !is_student
   -#= button_to 'Download grades (all sections)',
     -# course_gradebook_path(@course, format: :csv)
-- @course_offerings.each do |offering|
-  -if @course_offerings.size > 1
+- course_offerings.each do |offering|
+  -if course_offerings.size > 1
     %h2= offering.display_name
   - workout_offerings = offering.workout_offerings
-  - if @is_student
+  - if is_student
     - workout_offerings = workout_offerings.select{ |i| i.can_be_seen_by? current_user }
   - if can? :generate_gradebook, offering
     = button_to 'Download section grades',
