@@ -1,0 +1,4 @@
+%ul
+  - @course.exercises.each do |ex|
+    -# FIXME: this should use the right helper (path is now broken)
+    %li= link_to ex.name, '/exercises/' + ex.id.to_s

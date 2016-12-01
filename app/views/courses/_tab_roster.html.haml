@@ -1,0 +1,23 @@
+- @course_offerings.each do |offering|
+  - if @course_offerings.size > 1
+    %h2= offering.display_name
+    = link_to
+  = form_tag '/course_offerings/'+ offering.id.to_s + '/upload_roster', multipart: true do
+    = file_field( "form", "rosterfile" )
+    = submit_tag "Submit File"
+  %table.table.table-striped
+    %thead
+      %tr
+        %th Image
+        %th Last name
+        %th First name
+        %th Email
+        %th Role
+        %th
+          %i.fa.fa-cog
+    %tbody#roster
+      - @sec = offering.course_enrollments.               |
+        page(params[:page]).per(params[:per])             |
+      = render @sec
+  - if @sec.is_a?(Array)
+    #roster_paginator= paginate @sec, remote: true
