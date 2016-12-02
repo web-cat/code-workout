@@ -178,7 +178,7 @@ class WorkoutScore < ActiveRecord::Base
           (attempt.submit_time > last_attempt.submit_time) :
           (attempt.score > last_attempt.score ||
           (attempt.score == last_attempt.score &&
-          attempt.submit_time > last_attempt.submit_time)) :
+          attempt.submit_time > last_attempt.submit_time))) :
         true
 
       # Only update if this attempt is included in score
