@@ -173,9 +173,13 @@ class WorkoutScore < ActiveRecord::Base
 
       last_attempt = scored_for_this.first
 
-      record_score = last_attempt ? (self.workout_offering.andand.most_recent) ?
-        (attempt.submit_time > last_attempt.submit_time) :
-        (attempt.score >= last_attempt.score) : true
+      record_score = last_attempt ? (
+        (self.workout_offering.andand.most_recent) ?
+          (attempt.submit_time > last_attempt.submit_time) :
+          (attempt.score > last_attempt.score ||
+          (attempt.score == last_attempt.score &&
+          attempt.submit_time > last_attempt.submit_time)) :
+        true
 
       # Only update if this attempt is included in score
       if record_score
@@ -209,7 +213,10 @@ class WorkoutScore < ActiveRecord::Base
         end
         self.score = self.score.round(2)
 
-        self.last_attempted_at = attempt.submit_time
+        if !self.last_attempted_at ||
+          self.last_attempted_at < attempt.submit_time
+          self.last_attempted_at = attempt.submit_time
+        end
         self.save!
 
         if self.lis_outcome_service_url && self.lis_result_sourcedid
@@ -293,14 +300,14 @@ class WorkoutScore < ActiveRecord::Base
         # Clear the total score
         ws.score = 0.0
         ws.exercises_completed = 0
-        ws.exercises_remaining = workout.exercises.count
+        ws.exercises_remaining = ws.workout.exercises.count
         ws.save!
 
         # Re-record every attempt, which should correctly set the
         # active score for each exercise, and recompute the total score
         ws.attempts.each do |a|
           if a.feedback_ready
-            record_attempt(a)
+            ws.record_attempt(a)
           end
         end
       end
