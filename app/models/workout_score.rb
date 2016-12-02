@@ -96,7 +96,7 @@ class WorkoutScore < ActiveRecord::Base
     minutes_open = (Time.zone.now - self.created_at)/60.0
     time_limit = workout_offering.time_limit_for(user)
 
-    !time_limit.nil? && minutes_open >= time_limit
+    time_limit && self.created_at && minutes_open >= time_limit
   end
 
   # -------------------------------------------------------------
@@ -248,6 +248,7 @@ class WorkoutScore < ActiveRecord::Base
     end
   end
 
+
   # ------------------------------------------------------------
   # Class method to fix all workout scores using round(2) on the
   # score obtained from Attempt using active score.
@@ -263,6 +264,59 @@ class WorkoutScore < ActiveRecord::Base
       end
     end
   end
+
+
+  # ------------------------------------------------------------
+  # Class method to fix all workout scores by ensuring there is only
+  # a single active score attempt for each unique exercise attempted.
+  def self.retotal_for(workout_offering_id)
+    scores = WorkoutScore.where(workout_offering_id: workout_offering_id)
+    scores.each do |ws|
+      ws.transaction do
+
+        # Clear all active scores
+        ws.attempts.where(active_score: ws).each do |a|
+          if a.active_score_id
+            a.active_score_id = nil
+            if !a.save
+              puts "Error clearing scored attempt #{a.id} for ws #{ws.id}"
+            end
+          end
+        end
+
+        # Clear the total score
+        ws.score = 0.0
+        ws.exercises_completed = 0
+        ws.exercises_remaining = workout.exercises.count
+        ws.save!
+
+        # Re-record every attempt, which should correctly set the
+        # active score for each exercise, and recompute the total score
+        ws.attempts.each do |a|
+          if a.feedback_ready
+            record_attempt(a)
+          end
+        end
+      end
+    end
+  end
+
+
+  # ------------------------------------------------------------
+  def self.grade_unprocessed_attempts(exercise_version_id)
+    attempts = Attempt.where(
+      exercise_version_id: exercise_version_id, feedback_ready: nil)
+    attempts.each do |a|
+      if a.workout_score
+        # This "regrade" is done synchronously, since it is probably done
+        # interactively from the rails console, and we want to wait for each
+        # to be done, not just flood a queue and then quit.
+        CodeWorker.new.perform(a.id)
+        puts "#{a.id} => #{a.score}"
+      end
+    end
+  end
+
 
   private
 
