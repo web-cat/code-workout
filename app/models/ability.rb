@@ -140,6 +140,11 @@ class Ability
       can :manage, CourseEnrollment do |enrollment|
         enrollment.course_offering.is_manager? user
       end
+
+      # A user can request tab content on the course page through AJAX if they are enrolled in an offering of the course
+      can :tab_content, Course do |course|
+        course.course_offerings.any? { |co| co.is_enrolled? (user) }
+      end
     end
   end
 
