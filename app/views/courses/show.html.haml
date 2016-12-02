@@ -54,14 +54,17 @@
 
     - if !@is_student
       .tab-pane.fade{ id: 'tab_exercises', data: { needs_update: 'true' } }
-        -# = render 'tab_exercises'
+        .col-xs-offset-6
+          %i.fa.fa-spinner.fa-spin.fa-2x
 
     .tab-pane.fade{ id: 'tab_grades', data: { needs_update: 'true' } }
-      -# = render 'tab_grades', course_offerings: @course_offerings, is_student: @is_student
+      .col-xs-offset-6
+        %i.fa.fa-spinner.fa-spin.fa-2x
 
     - if !@is_student
       .tab-pane.fade{ id: 'tab_roster', data: { needs_update: 'true' } }
-        -# = render 'tab_roster'
+        .col-xs-offset-6
+          %i.fa.fa-spinner.fa-spin.fa-2x
 
 -else
 

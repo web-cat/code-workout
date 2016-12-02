@@ -1,6 +1,5 @@
 $('.courses.show').ready ->
   $('a[data-toggle="tab"]').on 'shown.bs.tab', (e) ->
-    console.log $(e.target).attr('href')
     tab_id = $(e.target).attr('href')
     tab_id = tab_id.slice(1, tab_id.length)
     needs_update = $('#' + tab_id).data 'needs-update'
