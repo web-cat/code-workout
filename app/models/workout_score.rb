@@ -135,13 +135,17 @@ class WorkoutScore < ActiveRecord::Base
 
 
   # -------------------------------------------------------------
-  def attempt_for(exercise)
+  def scoring_attempt_for(exercise)
     workout_score = self
     Attempt.joins{exercise_version}.
       where{(active_score_id == workout_score.id) &
       (exercise_version.exercise_id == exercise.id)}.first
   end
 
+  def previous_attempt_for(exercise)
+    attempts.joins{exercise_version}.
+      where{exercise_version.exercise_id == exercise.id}.first
+  end
 
   # -------------------------------------------------------------
   def update_attempt(attempt, old_score)
@@ -169,10 +173,12 @@ class WorkoutScore < ActiveRecord::Base
 
       last_attempt = scored_for_this.first
 
-      # Only update if this attempt is included in score
-      if last_attempt.nil? ||
-        last_attempt.submit_time < attempt.submit_time
+      record_score = last_attempt ? (self.workout_offering.andand.most_recent) ?
+        (attempt.submit_time > last_attempt.submit_time) :
+        (attempt.score >= last_attempt.score) : true
 
+      # Only update if this attempt is included in score
+      if record_score
         if last_attempt
           # clear previous active score
           scored_for_this.each do |a|
@@ -193,7 +199,6 @@ class WorkoutScore < ActiveRecord::Base
           end
         end
 
-        # record new active score
         attempt.active_score = self
         attempt.save!
 
@@ -203,6 +208,7 @@ class WorkoutScore < ActiveRecord::Base
           self.score += a.score
         end
         self.score = self.score.round(2)
+
         self.last_attempted_at = attempt.submit_time
         self.save!
 

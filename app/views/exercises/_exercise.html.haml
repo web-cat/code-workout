@@ -17,7 +17,7 @@
   - workout_score ||= workout && user && workout.score_for(user)
 
 - pts = workout ? workout.exercise_workouts.where(exercise: exercise).first.andand.points : nil
-- attempt = workout_score ? workout_score.attempt_for(exercise) : nil
+- attempt = workout_score ? workout_score.scoring_attempt_for(exercise) : nil
 - score = attempt ? attempt.score : 0
 - if !pts
   - pts = exercise.experience

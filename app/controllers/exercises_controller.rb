@@ -314,7 +314,7 @@ class ExercisesController < ApplicationController
       @workout_score.lis_result_sourcedid ||= params[:lis_result_sourcedid]
       @workout_score.lis_outcome_service_url ||= params[:lis_outcome_service_url]
       @workout_score.save
-      @attempt = @workout_score.attempt_for(@exercise_version.exercise)
+      @attempt = @workout_score.previous_attempt_for(@exercise_version.exercise)
     end
     @workout ||= @workout_score ? @workout_score.workout : nil
     manages_course = current_user.global_role.is_admin? || @workout_offering.andand.course_offering.andand.is_manager?(current_user)

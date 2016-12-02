@@ -219,6 +219,9 @@ class Workout < ActiveRecord::Base
     return [earned, remaining, gap, earned_per, remaining_per, gap_per]
   end
 
+  # ----------------------------------------------------------------------------
+  # Updates or creates offerings for this workout in the specified courses.
+  # The common hash contains options for each offering that are common among them.
   def add_workout_offerings(course_offerings, common)
     workout_offerings = [] # Workout offerings added from this submission.
     course_offerings.each do |id, offering|
@@ -231,6 +234,7 @@ class Workout < ActiveRecord::Base
       workout_offering.course_offering = course_offering
       workout_offering.time_limit = common[:time_limit]
       workout_offering.published = common[:published]
+      workout_offering.most_recent = common[:most_recent]
       workout_offering.opening_date = DateTime.parse(offering['opening_date']) if offering['opening_date']
       workout_offering.soft_deadline = DateTime.parse(offering['soft_deadline']) if offering['soft_deadline']
       workout_offering.hard_deadline = DateTime.parse(offering['hard_deadline']) if offering['hard_deadline']
