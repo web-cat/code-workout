@@ -59,7 +59,7 @@
     - if  review_user.id != current_user.id
       Student:
       = "#{review_user.display_name}."
-    - if workout_score
+    - if workout_score.last_attempted_at
       &nbsp;&nbsp;&nbsp;Last Attempted:
       = l workout_score.last_attempted_at
     - elsif @workout_offering.hard_deadline
