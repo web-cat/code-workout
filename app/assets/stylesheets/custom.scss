@@ -275,9 +275,10 @@ ul.wysihtml5-toolbar li {
 .tab-content { margin-top: 1em; }
 .tab-content.under-collapsible { padding-left: 15px; padding-right: 15px; }
 
-.feedback .pass, .feedback .fail { text-align: center; vertical-align: middle; }
+.feedback .pass, .feedback .fail, .feedback .unknown { text-align: center; vertical-align: middle; }
 .feedback .pass { color: #468847; }
 .feedback .fail { color: #dd514c; }
+.feedback .unknown { color: #f89406; }
 .feedback .out { font-style: italic; }
 /* img.difficulty { float: right; } */
 .form-control.inline { display: inline-block; width: auto; }
