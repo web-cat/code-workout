@@ -2,6 +2,8 @@
 - start_workout ||= nil
 - new_workout ||= nil
 - user ||= current_user
+- review ||= false
+
 - if params[:review_user_id]
   - user = User.find(params[:review_user_id])
 - workout_offering ||= nil
@@ -33,7 +35,8 @@
   - score = score.round(2)
 -#
 
-- cache [exercise, exercise.current_version, workout, workout_offering, new_workout, start_workout, score, pts, size] do
+- cache [exercise, exercise.current_version, workout, workout_offering, new_workout, start_workout,
+  score, pts, size, review, workout_score] do
   %article.exercise.thumbnail{ class: size }
     .title
       - if exercise.is_mcq?
