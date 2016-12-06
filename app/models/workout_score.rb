@@ -93,6 +93,7 @@ class WorkoutScore < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def closed?
+    # FIXME: doesn't take into account deadline
     minutes_open = (Time.zone.now - self.created_at)/60.0
     time_limit = workout_offering.time_limit_for(user)
 
@@ -101,6 +102,7 @@ class WorkoutScore < ActiveRecord::Base
 
   # -------------------------------------------------------------
   # Increase the score of a workout by a specified amount
+  # FIXME: misnamed method.  Used in ExerciseVersion code, though.
   def rescore(delta)
     self.score += delta
     self.score = self.score.round(2)
@@ -121,6 +123,7 @@ class WorkoutScore < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def show_feedback?
+    # FIXME: broken, needs fixing!
     if self.workout_offering &&
       self.workout_offering.hard_deadline_for(self.user) &&
       self.workout_offering.hard_deadline_for(self.user) < Time.zone.now
@@ -142,10 +145,13 @@ class WorkoutScore < ActiveRecord::Base
       (exercise_version.exercise_id == exercise.id)}.first
   end
 
+
+  # -------------------------------------------------------------
   def previous_attempt_for(exercise)
     attempts.joins{exercise_version}.
       where{exercise_version.exercise_id == exercise.id}.first
   end
+
 
   # -------------------------------------------------------------
   def update_attempt(attempt, old_score)
@@ -186,8 +192,7 @@ class WorkoutScore < ActiveRecord::Base
         if last_attempt
           # clear previous active score
           scored_for_this.each do |a|
-            a.active_score_id = nil
-            a.save!
+            self.scored_attempts.delete(a)
           end
         else
           # update number of exercises completed
@@ -198,13 +203,12 @@ class WorkoutScore < ActiveRecord::Base
             self.exercises_remaining -= 1
             if self.exercises_remaining == 0
               self.completed = true
-              self.completed_at = Time.zone.now
+              self.completed_at = attempt.submit_time
             end
           end
         end
 
-        attempt.active_score = self
-        attempt.save!
+        self.scored_attempts << attempt
 
         # recalculate workout score
         self.score = 0.0
@@ -221,6 +225,31 @@ class WorkoutScore < ActiveRecord::Base
 
         if self.lis_outcome_service_url && self.lis_result_sourcedid
           update_lti
+        end
+      end
+    end
+  end
+
+
+  # ------------------------------------------------------------
+  # Completely recalculate the current score from scratch
+  def retotal
+    self.transaction do
+
+      # Clear all active scores
+      self.scored_attempts.clear
+
+      # Clear the total score
+      self.score = 0.0
+      self.exercises_completed = 0
+      self.exercises_remaining = self.workout.exercises.count
+      self.save!
+
+      # Re-record every attempt, which should correctly set the
+      # active score for each exercise, and recompute the total score
+      self.attempts.each do |a|
+        if a.feedback_ready
+          self.record_attempt(a)
         end
       end
     end
@@ -285,32 +314,7 @@ class WorkoutScore < ActiveRecord::Base
   def self.retotal_for(workout_offering_id)
     scores = WorkoutScore.where(workout_offering_id: workout_offering_id)
     scores.each do |ws|
-      ws.transaction do
-
-        # Clear all active scores
-        ws.attempts.where(active_score: ws).each do |a|
-          if a.active_score_id
-            a.active_score_id = nil
-            if !a.save
-              puts "Error clearing scored attempt #{a.id} for ws #{ws.id}"
-            end
-          end
-        end
-
-        # Clear the total score
-        ws.score = 0.0
-        ws.exercises_completed = 0
-        ws.exercises_remaining = ws.workout.exercises.count
-        ws.save!
-
-        # Re-record every attempt, which should correctly set the
-        # active score for each exercise, and recompute the total score
-        ws.attempts.each do |a|
-          if a.feedback_ready
-            ws.record_attempt(a)
-          end
-        end
-      end
+      ws.retotal
     end
   end
 
