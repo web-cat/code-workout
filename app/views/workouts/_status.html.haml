@@ -1,5 +1,6 @@
 - workout_score ||= nil
 - exs ||= nil
+- review ||= false
 - if workout_score
   - exs = workout_score.workout.exercises
   - cache [workout_score, workout_score.workout, workout_score.workout_offering] do
@@ -9,7 +10,7 @@
   -if exs.empty?
     .alert No exercises remaining
   - else
-    - cache ["exthumbs", workout_score, workout_score.andand.workout, exs] do
+    - cache ["exthumbs", workout_score, workout_score.andand.workout, exs, review] do
       = render exs,
         user: current_user,
         workout_score: workout_score,

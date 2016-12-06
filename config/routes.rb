@@ -93,6 +93,7 @@ CodeWorkout::Application.routes.draw do
     post 'find' => 'courses#find', as: :course_find
     get 'new' => 'courses#new'
     get ':id/edit' => 'courses#edit', as: :course_edit
+    get ':course_id/:term_id/tab_content/:tab' => 'courses#tab_content'
     get ':course_id/:term_id/workouts/new' => 'workouts#new', as: :new_workout
     get ':course_id/:term_id/workouts/:workout_id/clone' => 'workouts#clone', as: :clone_workout
     get ':course_id/:term_id/workouts/new_or_existing' => 'workouts#new_or_existing', as: :new_or_existing_workout

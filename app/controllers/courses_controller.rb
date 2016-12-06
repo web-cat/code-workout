@@ -37,6 +37,22 @@ class CoursesController < ApplicationController
     end
   end
 
+  # -------------------------------------------------------------
+  # GET /courses/vt/:course_id/:term_id
+  def tab_content
+    @course = Course.find params[:course_id]
+    @term = Term.find params[:term_id]
+    @course_offerings = current_user.andand.course_offerings_for_term(@term, @course)
+    @is_student = !user_signed_in? ||
+      !current_user.global_role.is_admin? &&
+      (@course_offerings.any? {|co| co.is_student? current_user } ||
+      !@course_offerings.any? {|co| co.is_staff? current_user })
+    @tab = params[:tab]
+
+    respond_to do |format|
+      format.js
+    end
+  end
 
   # -------------------------------------------------------------
   # GET /courses/new

@@ -93,14 +93,16 @@ class WorkoutScore < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def closed?
+    # FIXME: doesn't take into account deadline
     minutes_open = (Time.zone.now - self.created_at)/60.0
     time_limit = workout_offering.time_limit_for(user)
 
-    !time_limit.nil? && minutes_open >= time_limit
+    time_limit && self.created_at && minutes_open >= time_limit
   end
 
   # -------------------------------------------------------------
   # Increase the score of a workout by a specified amount
+  # FIXME: misnamed method.  Used in ExerciseVersion code, though.
   def rescore(delta)
     self.score += delta
     self.score = self.score.round(2)
@@ -121,6 +123,7 @@ class WorkoutScore < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def show_feedback?
+    # FIXME: broken, needs fixing!
     if self.workout_offering &&
       self.workout_offering.hard_deadline_for(self.user) &&
       self.workout_offering.hard_deadline_for(self.user) < Time.zone.now
@@ -135,11 +138,18 @@ class WorkoutScore < ActiveRecord::Base
 
 
   # -------------------------------------------------------------
-  def attempt_for(exercise)
+  def scoring_attempt_for(exercise)
     workout_score = self
     Attempt.joins{exercise_version}.
       where{(active_score_id == workout_score.id) &
       (exercise_version.exercise_id == exercise.id)}.first
+  end
+
+
+  # -------------------------------------------------------------
+  def previous_attempt_for(exercise)
+    attempts.joins{exercise_version}.
+      where{exercise_version.exercise_id == exercise.id}.first
   end
 
 
@@ -169,15 +179,20 @@ class WorkoutScore < ActiveRecord::Base
 
       last_attempt = scored_for_this.first
 
-      # Only update if this attempt is included in score
-      if last_attempt.nil? ||
-        last_attempt.submit_time < attempt.submit_time
+      record_score = last_attempt ? (
+        (self.workout_offering.andand.most_recent) ?
+          (attempt.submit_time > last_attempt.submit_time) :
+          (attempt.score > last_attempt.score ||
+          (attempt.score == last_attempt.score &&
+          attempt.submit_time > last_attempt.submit_time))) :
+        true
 
+      # Only update if this attempt is included in score
+      if record_score
         if last_attempt
           # clear previous active score
           scored_for_this.each do |a|
-            a.active_score_id = nil
-            a.save!
+            self.scored_attempts.delete(a)
           end
         else
           # update number of exercises completed
@@ -188,14 +203,12 @@ class WorkoutScore < ActiveRecord::Base
             self.exercises_remaining -= 1
             if self.exercises_remaining == 0
               self.completed = true
-              self.completed_at = Time.zone.now
+              self.completed_at = attempt.submit_time
             end
           end
         end
 
-        # record new active score
-        attempt.active_score = self
-        attempt.save!
+        self.scored_attempts << attempt
 
         # recalculate workout score
         self.score = 0.0
@@ -203,11 +216,40 @@ class WorkoutScore < ActiveRecord::Base
           self.score += a.score
         end
         self.score = self.score.round(2)
-        self.last_attempted_at = attempt.submit_time
+
+        if !self.last_attempted_at ||
+          self.last_attempted_at < attempt.submit_time
+          self.last_attempted_at = attempt.submit_time
+        end
         self.save!
 
         if self.lis_outcome_service_url && self.lis_result_sourcedid
           update_lti
+        end
+      end
+    end
+  end
+
+
+  # ------------------------------------------------------------
+  # Completely recalculate the current score from scratch
+  def retotal
+    self.transaction do
+
+      # Clear all active scores
+      self.scored_attempts.clear
+
+      # Clear the total score
+      self.score = 0.0
+      self.exercises_completed = 0
+      self.exercises_remaining = self.workout.exercises.count
+      self.save!
+
+      # Re-record every attempt, which should correctly set the
+      # active score for each exercise, and recompute the total score
+      self.attempts.each do |a|
+        if a.feedback_ready
+          self.record_attempt(a)
         end
       end
     end
@@ -248,6 +290,7 @@ class WorkoutScore < ActiveRecord::Base
     end
   end
 
+
   # ------------------------------------------------------------
   # Class method to fix all workout scores using round(2) on the
   # score obtained from Attempt using active score.
@@ -263,6 +306,34 @@ class WorkoutScore < ActiveRecord::Base
       end
     end
   end
+
+
+  # ------------------------------------------------------------
+  # Class method to fix all workout scores by ensuring there is only
+  # a single active score attempt for each unique exercise attempted.
+  def self.retotal_for(workout_offering_id)
+    scores = WorkoutScore.where(workout_offering_id: workout_offering_id)
+    scores.each do |ws|
+      ws.retotal
+    end
+  end
+
+
+  # ------------------------------------------------------------
+  def self.grade_unprocessed_attempts(exercise_version_id)
+    attempts = Attempt.where(
+      exercise_version_id: exercise_version_id, feedback_ready: nil)
+    attempts.each do |a|
+      if a.workout_score
+        # This "regrade" is done synchronously, since it is probably done
+        # interactively from the rails console, and we want to wait for each
+        # to be done, not just flood a queue and then quit.
+        CodeWorker.new.perform(a.id)
+        puts "#{a.id} => #{a.score}"
+      end
+    end
+  end
+
 
   private
 

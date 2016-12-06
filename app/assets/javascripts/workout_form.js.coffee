@@ -398,6 +398,7 @@ handle_submit = ->
   policy_id = $('#policy-select').val()
   is_public = $('#is-public').is ':checked'
   published = $('#published').is ':checked'
+  most_recent = $('#most_recent').is ':checked'
   removed_exercises = $('#ex-list').data 'removed-exercises'
   exercises = get_exercises()
   course_offerings = get_offerings_with_extensions()
@@ -413,6 +414,7 @@ handle_submit = ->
   fd.append 'removed_extensions', JSON.stringify window.codeworkout.removed_extensions
   fd.append 'is_public', is_public
   fd.append 'published', published
+  fd.append 'most_recent', most_recent
   fd.append 'term_id', window.codeworkout.term_id
   fd.append 'organization_id', window.codeworkout.organization_id
   fd.append 'course_id', window.codeworkout.course_id

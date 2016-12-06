@@ -314,7 +314,7 @@ class ExercisesController < ApplicationController
       @workout_score.lis_result_sourcedid ||= params[:lis_result_sourcedid]
       @workout_score.lis_outcome_service_url ||= params[:lis_outcome_service_url]
       @workout_score.save
-      @attempt = @workout_score.attempt_for(@exercise_version.exercise)
+      @attempt = @workout_score.previous_attempt_for(@exercise_version.exercise)
     end
     @workout ||= @workout_score ? @workout_score.workout : nil
     manages_course = current_user.global_role.is_admin? || @workout_offering.andand.course_offering.andand.is_manager?(current_user)
@@ -336,10 +336,11 @@ class ExercisesController < ApplicationController
         notice: "The time limit has passed for this workout." and return
     end
 
+    @msg = nil
+    @user_deadline = nil
     if @user_time_limit
       if @workout_score.andand.closed?
         @msg = 'The time limit has passed. This assignment is closed and no longer accepting submissions.'
-        @user_deadline = nil
       else
         @user_deadline = @workout_score.created_at + @user_time_limit.minutes
         @user_deadline = @user_deadline.to_s
@@ -349,8 +350,6 @@ class ExercisesController < ApplicationController
     elsif @workout_offering && !@workout_offering.andand.can_be_practiced_by?(current_user)
       @msg = 'This assignment is now closed and no longer accepting submissions.'
     end
-
-    @msg ||= nil
 
     if @workout.andand.exercise_workouts.andand.where(exercise: @exercise).andand.any?
       @max_points = @workout.exercise_workouts.

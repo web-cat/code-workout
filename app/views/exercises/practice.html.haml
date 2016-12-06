@@ -4,7 +4,7 @@
 - if @user_deadline
   = javascript_include_tag('timeout')
 = javascript_include_tag("practice")
-.col-md-7
+.col-md-7#user-deadline{ data: { deadline: @user_deadline } }
   = semantic_form_for @exercise_version,
     url: (@workout_offering ? organization_workout_offering_exercise_evaluate_path(id: @exercise_version.exercise.id,
       course_id: @workout_offering.course_offering.course.slug,
@@ -17,7 +17,7 @@
     = f.semantic_errors
     %h1= @exercise.display_name
     - if @msg
-      #timer.alert.alert-warning{ data: { deadline: @user_deadline } }
+      #timer.alert.alert-warning
         = "#{@msg}"
     - if @exercise_version.stem && !@exercise_version.stem.preamble.blank?
       - cache @exercise_version.stem do
@@ -83,7 +83,7 @@
         - prior_answer = @attempt && @attempt.prompt_answers.where(prompt: prompt.acting_as).first
         - if !prior_answer && @workout_offering.andand.continue_from_workout
           - prior_score = @workout_offering.continue_from_workout.score_for(@student_user)
-          - prior_attempt = prior_score.attempt_for(@exercise_version.exercise)
+          - prior_attempt = prior_score.previous_attempt_for(@exercise_version.exercise)
           - prior_answer = prior_attempt && prior_attempt.prompt_answers.where(prompt: prompt.acting_as).first
         - if prior_answer && @workout_offering
           - if !@workout_offering.can_be_practiced_by?(current_user)

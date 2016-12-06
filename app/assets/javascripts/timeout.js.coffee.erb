@@ -1,7 +1,7 @@
 $ ->
 	deadline = 0
 	now = moment.utc()
-	deadline = moment.utc($('#timer').data('deadline'))
+	deadline = moment.utc($('#user-deadline').data('deadline'))
 	remaining = deadline.diff(now)
 	duration = moment.duration(remaining, 'milliseconds')
 	one_second = 1000
