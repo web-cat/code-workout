@@ -307,17 +307,20 @@ class ExercisesController < ApplicationController
       @workout_score.workout_offering != @workout_offering
       @workout_score = nil
     end
+
     if @workout_offering && !@workout_score
       @workout_score = @workout_offering.score_for(@student_user)
     end
+
     if @workout_score
       @workout_score.lis_result_sourcedid ||= params[:lis_result_sourcedid]
       @workout_score.lis_outcome_service_url ||= params[:lis_outcome_service_url]
       @workout_score.save
-      @attempt = @workout_score.previous_attempt_for(@exercise_version.exercise)
     end
+
     @workout ||= @workout_score ? @workout_score.workout : nil
     manages_course = current_user.global_role.is_admin? || @workout_offering.andand.course_offering.andand.is_manager?(current_user)
+
     if !manages_course && @workout_score.andand.closed? &&
       @workout_offering.andand.workout_policy.andand.no_review_before_close &&
       !@workout_offering.andand.shutdown?
@@ -338,9 +341,11 @@ class ExercisesController < ApplicationController
 
     @msg = nil
     @user_deadline = nil
+    student_review = false
     if @user_time_limit
       if @workout_score.andand.closed?
         @msg = 'The time limit has passed. This assignment is closed and no longer accepting submissions.'
+        student_review = true
       else
         @user_deadline = @workout_score.created_at + @user_time_limit.minutes
         @user_deadline = @user_deadline.to_s
@@ -349,6 +354,14 @@ class ExercisesController < ApplicationController
       end
     elsif @workout_offering && !@workout_offering.andand.can_be_practiced_by?(current_user)
       @msg = 'This assignment is now closed and no longer accepting submissions.'
+      student_review = true
+    end
+
+    # display the scored attempt if in review mode (for students or instructors)
+    if @workout_score
+      @attempt = (params[:review_user_id] || student_review) ?
+        @workout_score.scoring_attempt_for(@exercise_version.exercise) :
+        @workout_score.previous_attempt_for(@exercise_version.exercise)
     end
 
     if @workout.andand.exercise_workouts.andand.where(exercise: @exercise).andand.any?
