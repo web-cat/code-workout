@@ -347,7 +347,9 @@ class ExercisesController < ApplicationController
         @msg = 'The time limit has passed. This assignment is closed and no longer accepting submissions.'
         student_review = true
       else
-        @user_deadline = @workout_score.created_at + @user_time_limit.minutes
+        # @user_deadline = @workout_score.created_at + @user_time_limit.minutes
+        @user_deadline = [@workout_score.created_at + @user_time_limit.minutes,
+          @workout_score.workout_offering.hard_deadline_for(current_user)].min
         @user_deadline = @user_deadline.to_s
         @user_deadline = @user_deadline.split(" ")[0] + "T" + @user_deadline.split(" ")[1]
         @msg = 'Time remaining - ##:##'

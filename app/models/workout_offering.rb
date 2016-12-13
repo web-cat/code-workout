@@ -161,7 +161,7 @@ class WorkoutOffering < ActiveRecord::Base
     now = Time.zone.now
     deadline = ultimate_deadline
     x = deadline && now > ultimate_deadline
-    puts "\n\n\n\nshutdown? = #{x}\n#{caller}\n\n\n\n"
+#    puts "\n\n\n\nshutdown? = #{x}\n#{caller}\n\n\n\n"
     x
   end
 

@@ -93,11 +93,17 @@ class WorkoutScore < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def closed?
-    # FIXME: doesn't take into account deadline
-    minutes_open = (Time.zone.now - self.created_at)/60.0
-    time_limit = workout_offering.time_limit_for(user)
+    if !workout_offering
+      false
+    end
 
-    time_limit && self.created_at && minutes_open >= time_limit
+    now = Time.zone.now
+    minutes_open = (now - self.created_at)/60.0
+    time_limit = workout_offering.time_limit_for(user)
+    hard_deadline = workout_offering.hard_deadline_for(user)
+
+    (time_limit && self.created_at && minutes_open >= time_limit) ||
+        (hard_deadline && now > hard_deadline)
   end
 
   # -------------------------------------------------------------
@@ -111,10 +117,18 @@ class WorkoutScore < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def time_remaining
-    time_limit = workout_offering.andand.time_limit_for(user)
+    if !workout_offering
+      nil
+    end
+    time_limit = workout_offering.time_limit_for(user)
 
     if time_limit
-      time_limit - (Time.zone.now - self.created_at)/60.0
+      now = Time.zone.now
+      remaining = time_limit - (now - self.created_at)/60.0
+      until_deadline = (workout_offering.hard_deadline_for(user) - now)/60.0
+
+      # return the lesser of the two possible limits
+      [remaining, until_deadline].min
     else
       nil
     end
@@ -123,14 +137,18 @@ class WorkoutScore < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def show_feedback?
-    # FIXME: broken, needs fixing!
-    if self.workout_offering &&
-      self.workout_offering.hard_deadline_for(self.user) &&
-      self.workout_offering.hard_deadline_for(self.user) < Time.zone.now
-      # !workout_offering.andand.workout_policy.andand.hide_feedback_in_review_after_close
+    if !self.workout_offering
       true
-    elsif closed?
-      !workout_offering.andand.workout_policy.andand.hide_feedback_in_review_before_close
+    end
+
+    if self.closed?
+      if workout_offering.shutdown?
+        # FIXME: ???
+        # true
+        !workout_offering.andand.workout_policy.andand.hide_feedback_in_review_before_close
+      else
+        !workout_offering.andand.workout_policy.andand.hide_feedback_in_review_before_close
+      end
     else
       !workout_offering.andand.workout_policy.andand.hide_feedback_before_finish
     end
