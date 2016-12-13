@@ -61,10 +61,13 @@ class CourseOffering < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def display_name
-    "#{course.organization.abbreviation} #{term.slug} #{course.number} (#{label})"
+    "#{course.number} (#{label})"
   end
 
+
+  # -------------------------------------------------------------
   def name
+    # FIXME: remove this method and use one of the other display_* methods
     self.course.name + ' - ' + self.term.display_name
   end
 
@@ -72,6 +75,12 @@ class CourseOffering < ActiveRecord::Base
   # -------------------------------------------------------------
   def display_name_with_term
     "#{course.number} (#{term.display_name}, #{label})"
+  end
+
+
+  # -------------------------------------------------------------
+  def display_name_with_org_and_term
+    "#{course.organization.abbreviation} #{course.number} (#{term.display_name}, #{label})"
   end
 
 
