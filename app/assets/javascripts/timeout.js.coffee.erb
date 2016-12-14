@@ -1,13 +1,13 @@
 $ ->
 	deadline = 0
-	now = moment.utc()
 	deadline = moment.utc($('#user-deadline').data('deadline'))
-	remaining = deadline.diff(now)
+	remaining = deadline.diff(moment.utc())
 	duration = moment.duration(remaining, 'milliseconds')
 	one_second = 1000
 	interval = setInterval ->
 		if duration > 0
-			duration = moment.duration(duration - one_second, 'milliseconds')
+			remaining = deadline.diff(moment.utc())
+			duration = moment.duration(remaining, 'milliseconds')
 			hours = ('0' + duration.hours()).slice -2
 			minutes = ('0' + duration.minutes()).slice -2
 			seconds = ('0' + duration.seconds()).slice -2

@@ -125,10 +125,18 @@ class WorkoutScore < ActiveRecord::Base
     if time_limit
       now = Time.zone.now
       remaining = time_limit - (now - self.created_at)/60.0
-      until_deadline = (workout_offering.hard_deadline_for(user) - now)/60.0
+      hard_deadline = workout_offering.hard_deadline_for(user)
+
+      if hard_deadline
+        until_deadline = (hard_deadline - now)/60.0
+      end
 
       # return the lesser of the two possible limits
-      [remaining, until_deadline].min
+      if until_deadline
+        return [remaining, until_deadline].min
+      else
+        return remaining
+      end
     else
       nil
     end
