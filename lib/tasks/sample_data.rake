@@ -16,8 +16,8 @@ namespace :db do
     FactoryGirl.create(:course_offering_term_2_mwf)
     FactoryGirl.create(:course_offering_term_3_tr)
     c3 = FactoryGirl.create(:course_offering_term_3_mwf)
-    c = FactoryGirl.create(:course_offering_term_4_mwf)
-    c2 = FactoryGirl.create(:course_offering_term_4_tr)
+    c = FactoryGirl.create(:course_offering_term_5_mwf)
+    c2 = FactoryGirl.create(:course_offering_term_5_tr)
 
     FactoryGirl.create(:course_enrollment,
       user: FactoryGirl.create(:admin),
