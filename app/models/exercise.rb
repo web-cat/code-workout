@@ -101,21 +101,35 @@ class Exercise < ActiveRecord::Base
   #~ Class methods ............................................................
 
   # -------------------------------------------------------------
-  def self.search(terms, user)
+  def self.search(terms, user = nil)
+    # first, turn all ids of the form X4 to just the number
+    ids = []
+    terms.each do |t|
+      if t =~ /(X|x)\d+/
+        ids.append t[1..-1]
+      end
+    end
+    r = terms.join("|")
     if user
-      return Exercise.visible_to_user(user).
+      result = Exercise.visible_to_user(user).
         tagged_with(terms, any: true, wild: true, on: :tags) +
         Exercise.visible_to_user(user).
         tagged_with(terms, any: true, wild: true, on: :languages) +
         Exercise.visible_to_user(user).
-        tagged_with(terms, any: true, wild: true, on: :styles)
+        tagged_with(terms, any: true, wild: true, on: :styles) +
+        Exercise.visible_to_user(user).
+        where('(name regexp (?)) or (exercises.id in (?))', r, ids)
+      return result.uniq
     else
-      return Exercise.where(is_public: true).
+      result = Exercise.where(is_public: true).
         tagged_with(terms, any: true, wild: true, on: :tags) +
         Exercise.where(is_public: true).
         tagged_with(terms, any: true, wild: true, on: :languages) +
         Exercise.where(is_public: true).
-        tagged_with(terms, any: true, wild: true, on: :styles)
+        tagged_with(terms, any: true, wild: true, on: :styles) +
+        Exercise.where(is_public: true).
+        where('(name regexp (?)) or (exercises.id in (?))', r, ids)
+      return result.uniq
     end
   end
 
