@@ -354,6 +354,8 @@ class ExercisesController < ApplicationController
         end
         @user_deadline = @user_deadline.to_s
         @user_deadline = @user_deadline.split(" ")[0] + "T" + @user_deadline.split(" ")[1]
+        @server_now = Time.zone.now.to_s
+        @server_now = @server_now.split(" ")[0] + "T" + @server_now.split(" ")[1]
         @msg = 'Time remaining - ##:##'
       end
     elsif @workout_offering && !@workout_offering.andand.can_be_practiced_by?(current_user)
