@@ -155,8 +155,8 @@ class LtiController < ApplicationController
             course_offering: @course_offering,
             workout: @workout,
             opening_date: DateTime.now,
-            soft_deadline: @term.ends_on,
-            hard_deadline: @term.ends_on,
+            soft_deadline: nil,
+            hard_deadline: nil,
             lms_assignment_id: lms_assignment_id
           )
           @workout_offering.save!
