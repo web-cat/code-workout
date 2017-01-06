@@ -239,7 +239,14 @@ class WorkoutsController < ApplicationController
     if @workout.save
       if @lti_launch
         lti_params = session[:lti_params]
-        url = url_for(course_offerings_path(lti_launch: true))
+        url = url_for(organization_workout_offering_path(
+            organization_id: params[:organization_id],
+            course_id: params[:course_id],
+            term_id: params[:term_id],
+            id: workout_offering_id,
+            lti_launch: true
+          )
+        )
       else
         if workout_offering_id.nil?
           url = url_for(workout_path(id: @workout.id))
@@ -255,7 +262,12 @@ class WorkoutsController < ApplicationController
       end
     else
       err_string = 'There was a problem while creating the workout.'
-      url = url_for new_workout_path(notice: err_string)
+      url = url_for organization_new_workout_path(
+        organization_id: params[:organization_id],
+        term_id: params[:term_id],
+        course_id: params[:course_id],
+        notice: err_string
+      )
     end
 
     respond_to do |format|
@@ -440,7 +452,7 @@ class WorkoutsController < ApplicationController
       @workout.name = params[:name]
       @workout.description = params[:description]
       @workout.is_public = params[:is_public]
-      
+
       common = {}   # params that are common among all offerings of this workout
       common[:workout_policy] = WorkoutPolicy.find_by id: params[:policy_id]
       common[:time_limit] = params[:time_limit]

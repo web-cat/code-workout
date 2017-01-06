@@ -20,36 +20,36 @@
 FactoryGirl.define do
 
   factory :term do
-    year 2016
+    year 2017
 
     factory :term100 do
       season 100
-      starts_on "2016-01-01"
-      ends_on "2016-05-31"
+      starts_on "2017-01-01"
+      ends_on "2017-05-31"
     end
 
     factory :term200 do
       season 200
-      starts_on "2016-06-01"
-      ends_on "2016-07-15"
+      starts_on "2017-06-01"
+      ends_on "2017-07-15"
     end
 
     factory :term300 do
       season 300
-      starts_on "2016-07-16"
-      ends_on "2016-08-15"
+      starts_on "2017-07-16"
+      ends_on "2017-08-15"
     end
 
     factory :term400 do
       season 400
-      starts_on "2016-08-16"
-      ends_on "2016-12-15"
+      starts_on "2017-08-16"
+      ends_on "2017-12-15"
     end
 
     factory :term500 do
       season 500
-      starts_on "2016-12-16"
-      ends_on "2016-12-31"
+      starts_on "2017-12-16"
+      ends_on "2017-12-31"
     end
   end
 end
