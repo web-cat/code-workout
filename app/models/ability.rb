@@ -124,10 +124,13 @@ class Ability
 
       # A user can manage a CourseOffering if they are enrolled in that
       # offering and have a CourseRole where can_manage_course? is true.
-      can [:manage], CourseOffering,
-        CourseOffering.managed_by_user(user) do |co|
-        co.is_manager? user
-      end
+      # can [:manage], CourseOffering,
+      #   CourseOffering.managed_by_user(user) do |co|
+      #   co.is_manager? user
+      # end
+      can :manage, CourseOffering, course_enrollments:
+        { user_id: user.id, course_role:
+          { can_manage_assignments: true} }
 
       # A user can grade a CourseOffering if they are enrolled in that
       # offering and have a CourseRole where can_grade_submissions? is true.
