@@ -2,7 +2,7 @@ class ExercisesController < ApplicationController
   require 'ims/lti'
   require 'oauth/request_proxy/rack_request'
 
-  load_and_authorize_resource
+  load_and_authorize_resource except: [:random_exercise]
 
   #~ Action methods ...........................................................
   after_action :allow_iframe, only: :practice
@@ -132,6 +132,10 @@ class ExercisesController < ApplicationController
 
   # -------------------------------------------------------------
   def random_exercise
+    unless user_signed_in?
+      redirect_to root_path,
+        notice: 'You must be signed in to practice an exercise. Sign up or sign in now!' and return
+    end
     exercise_dump = []
     Exercise.where(is_public: true).each do |exercise|
       if params[:language] ?

@@ -10,26 +10,26 @@ namespace :db do
     FactoryGirl.create(:term400)
     FactoryGirl.create(:term500)
     FactoryGirl.create(:course)
-    FactoryGirl.create(:course_offering_term_1_tr)
-    FactoryGirl.create(:course_offering_term_1_mwf)
-    FactoryGirl.create(:course_offering_term_2_tr)
+    c = FactoryGirl.create(:course_offering_term_1_tr)
+    c2 = FactoryGirl.create(:course_offering_term_1_mwf)
+    c3 = FactoryGirl.create(:course_offering_term_2_tr)
     FactoryGirl.create(:course_offering_term_2_mwf)
     FactoryGirl.create(:course_offering_term_3_tr)
-    c3 = FactoryGirl.create(:course_offering_term_3_mwf)
-    c = FactoryGirl.create(:course_offering_term_5_mwf)
-    c2 = FactoryGirl.create(:course_offering_term_5_tr)
+    FactoryGirl.create(:course_offering_term_3_mwf)
+    FactoryGirl.create(:course_offering_term_5_mwf)
+    FactoryGirl.create(:course_offering_term_5_tr)
 
     FactoryGirl.create(:course_enrollment,
       user: FactoryGirl.create(:admin),
       course_offering: c,
       course_role: CourseRole.instructor)
 
-    instructor = FactoryGirl.create(:instructor_user,
+    instructor = FactoryGirl.create(:confirmed_user,
       first_name: 'Ima',
       last_name:  'Teacher',
       email:      "example-1@railstutorial.org")
 
-    instructor2 = FactoryGirl.create(:instructor_user,
+    instructor2 = FactoryGirl.create(:confirmed_user,
       first_name: 'Another',
       last_name: 'Teacher',
       email: 'example-2@railstutorial.org')
