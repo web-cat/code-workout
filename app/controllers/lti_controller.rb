@@ -20,8 +20,8 @@ class LtiController < ApplicationController
       lis_result_sourcedid = params[:lis_result_sourcedid]
       @user = User.where(email: email).first
       if @user.blank?
-        @user = User.new(email: email, password: email, password_confirmation: email,
-          first_name: first_name, last_name: last_name)
+        @user = User.new(email: email, first_name: first_name, last_name: last_name)
+        @user.skip_password_validation = true
         @user.save
       end
       sign_in @user

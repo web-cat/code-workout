@@ -106,6 +106,7 @@ class User < ActiveRecord::Base
     where{ (id == u.id) |
     (course_enrollments.course_role_id != CourseRole::STUDENT_ID) } }
 
+  attr_accessor :skip_password_validation
 
   #~ Class methods ............................................................
 
@@ -353,6 +354,9 @@ class User < ActiveRecord::Base
     # taken from: http://www.chicagoinformatics.com/index.php/2012/09/
     # user-administration-for-devise/
     def password_required?
+      # only set when creating a new user through LTI
+      return false if skip_password_validation
+
       (!password.blank? && !password_confirmation.blank?) || new_record?
     end
 
