@@ -10,7 +10,7 @@
       %label
         = f.check_box :remember_me, checked: true, style: 'margin-top: 6px;'
         Remember me
-      other
 
   = f.actions do
-    = f.submit 'Sign in', class: 'btn btn-primary'
+    = f.submit 'Sign in', class: 'btn btn-primary btn-sm'
+    = link_to 'Forgot your password?', new_password_path, class: 'btn btn-default btn-sm'
