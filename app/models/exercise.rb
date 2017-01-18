@@ -17,6 +17,7 @@
 #
 # Indexes
 #
+#  exercises_irt_data_id_fk               (irt_data_id)
 #  index_exercises_on_current_version_id  (current_version_id)
 #  index_exercises_on_exercise_family_id  (exercise_family_id)
 #  index_exercises_on_external_id         (external_id) UNIQUE

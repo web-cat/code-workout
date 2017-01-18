@@ -8,6 +8,11 @@
 #  created_at  :datetime
 #  updated_at  :datetime
 #
+# Indexes
+#
+#  course_exercises_course_id_fk    (course_id)
+#  course_exercises_exercise_id_fk  (exercise_id)
+#
 
 # =============================================================================
 # Represents a many-to-many relationship between courses and exercises,

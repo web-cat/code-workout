@@ -9,11 +9,12 @@
 #  year       :integer          not null
 #  created_at :datetime
 #  updated_at :datetime
-#  slug       :string(255)      default(""), not null
+#  slug       :string(255)      not null
 #
 # Indexes
 #
 #  index_terms_on_slug             (slug) UNIQUE
+#  index_terms_on_starts_on        (starts_on)
 #  index_terms_on_year_and_season  (year,season)
 #
 
