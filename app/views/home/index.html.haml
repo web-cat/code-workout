@@ -42,9 +42,9 @@
         = succeed ',' do
           = link_to 'Java', random_exercise_path(language: 'Java')
         = succeed ', or ' do
-          = link_to 'Ruby', random_exercise_path(language: 'Ruby')
+          = link_to 'Ruby', python_ruby_modal_path, remote: :true
         = succeed '.' do
-          = link_to 'Python', random_exercise_path(language: 'Python')
+          = link_to 'Python', python_ruby_modal_path, remote: :true
 
 .row.blurb
   .col-md-4

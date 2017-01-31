@@ -12,6 +12,7 @@ CodeWorkout::Application.routes.draw do
   get 'home/license'
   get 'home/contact'
   get 'home/new_course_modal', as: :new_course_modal
+  get 'home/python_ruby_modal', as: :python_ruby_modal
 
   get 'static_pages/home'
   get 'static_pages/help'
