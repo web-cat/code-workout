@@ -129,6 +129,7 @@ class Ability
       #   CourseOffering.managed_by_user(user) do |co|
       #   co.is_manager? user
       # end
+      can :create, [CourseOffering, Course, Organization]
       can :manage, CourseOffering, course_enrollments:
         { user_id: user.id, course_role:
           { can_manage_assignments: true} }

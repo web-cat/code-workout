@@ -18,6 +18,16 @@ class OrganizationsController < ApplicationController
       distinct
   end
 
+  def search
+    if params[:term]
+      @organizations = Organization.where('name LIKE ? or abbreviation LIKE ?', "#{params[:term]}%", "#{params[:term]}%")
+    else
+      @organizations = Organization.all
+    end
+
+    @organizations = Organization.all
+    render json: @organizations.to_json and return
+  end
 
   # -------------------------------------------------------------
   def show
@@ -37,6 +47,9 @@ class OrganizationsController < ApplicationController
       find(params[:id])
   end
 
+  def new_or_existing
+    render layout: 'one_column'
+  end
 
   #~ Private instance methods .................................................
   private

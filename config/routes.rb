@@ -109,6 +109,8 @@ CodeWorkout::Application.routes.draw do
     get ':id(/:term_id)' => 'courses#show', as: :course
   end
 
+  get 'organizations/new_or_existing'
+  get 'organizations/search'
 
   resources :course_offerings, only: [ :edit, :update, :index, :show ] do
     post 'enroll' => :enroll, as: :enroll

@@ -1,0 +1,41 @@
+:javascript
+  $(function() {
+    autocomplete = $('.select-org').autocomplete({
+      minLength: 2,
+      source: '<%= organizations_search_path %>',
+      focus: function(event, ui) {
+        $('.select-org').val(ui.item.name);
+        console.log(ui);
+        return false;
+      },
+      select: function(event, ui) {
+        $('.select-org').val(ui.item.name);
+        $('.org-id').val(ui.item.slug);
+        return false;
+      }
+    })
+    autocomplete.data('ui-autocomplete')._renderItem = function(ul, item) {
+      return $( "<li class='list-group-item'></li>" )
+               .append(item.name)
+               .appendTo( ul );
+    }
+
+    autocomplete.data('ui-autocomplete')._renderMenu = function(ul, items) {
+      var that  = this;
+      $.each(items, function(index, item) {
+        that._renderItemData(ul, item);
+      });
+      $(ul).addClass('list-group');
+    }
+  });
+%h2#head
+  Choose or create an organization
+
+%p.lead
+  Type in the first few letters of your organization to search for it.
+  %br
+  If you cannot find it, you may create an organization by typing in a new
+  name.
+.ui-widget
+  %input.form-control.select-org
+  %input.org-id{ name: 'organization[id]', type: 'hidden' }

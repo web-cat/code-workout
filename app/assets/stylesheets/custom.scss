@@ -336,3 +336,12 @@ input.datepicker, input.time-limit {
   color: transparent;
   text-shadow: 0 0 3px #000000;
 }
+
+.ui-state-focus {
+  background-color: #f89406 !important;
+  color: white !important;
+}
+
+.ui-menu-item {
+  @extend .action;
+}
