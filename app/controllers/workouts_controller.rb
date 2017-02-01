@@ -300,6 +300,24 @@ class WorkoutsController < ApplicationController
     end
   end
 
+  def find_offering
+    @user = User.find(params[:user_id])
+    @term = Term.find(params[:term_id])
+    @course = Course.find(params[:course_id])
+
+    # Find all workouts with the specified name, then find the relevant
+    # set of workout_offerings
+    @workouts = Workout.where name: params[workout_name]
+    workout_offerings = []
+    @workouts.each do |w|
+      workout_offerings << w.workout_offerings.joins(:course_offering).
+        where(course_offering:
+          { term: @term, course: @course }
+        )
+    end
+    workout_offerings = workout_offerings.flatten.uniq
+  end
+
   def upload_yaml
 
   end
