@@ -20,12 +20,11 @@ class OrganizationsController < ApplicationController
 
   def search
     if params[:term]
-      @organizations = Organization.where('name LIKE ? or abbreviation LIKE ?', "#{params[:term]}%", "#{params[:term]}%")
+      @organizations = Organization.where('name LIKE ? or abbreviation LIKE ? or slug LIKE ?', "%#{params[:term]}%", "%#{params[:term]}%", "%#{params[:term]}%")
     else
       @organizations = Organization.all
     end
 
-    @organizations = Organization.all
     render json: @organizations.to_json and return
   end
 
