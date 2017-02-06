@@ -1,4 +1,4 @@
-%h2#head
+%h1#head
   Choose or create an organization
 
 %p
@@ -7,10 +7,33 @@
   If you cannot find it, you may create an organization by typing in a new
   name.
 .form-horizontal
-  .ui-widget
-    .form-group
-      .col-md-6
-        %input.form-control.select-org
-      .col-md-6
-        %small.new-msg.col-xs-11.text.text-warning{ style: 'display: none' }
-          To add a new organization, type in a name and abbreviation, like: My University (MY)
+  .form-group
+    = label_tag :organization, 'Organization Name', class: 'control-label col-xs-3'
+    .col-xs-12.col-md-5
+      .ui-widget
+        = text_field_tag :organization, nil, id: 'organization', class: 'form-control input-sm',
+          placeholder: 'Start typing your organization name'
+    .col-xs-4
+      %button.new-org#btn-org.btn.btn-default.btn-sm{ style: 'display: none' }
+        Cancel
+    %small.new-org#hint.col-md-5.col-xs-12.text.text-warning{ style: 'display: none' }
+      To add a new organization, type in a name and abbreviation, like: Monsters University (MU)
+
+  .form-group.new-org{ style: 'display: none' }
+    = label_tag :slug, 'Organization ID', class: 'control-label col-xs-3'
+    .col-xs-2
+      = text_field_tag :slug, nil, id: 'org-slug', class: 'form-control input-sm', maxlength: 6,
+        placeholder: "e.g 'mu'"
+    .col-xs-1
+      %button#btn-unique.btn.btn-default.btn-sm
+        Available?
+    .col-xs-1
+      %i#uniqueness.fa.fa-question-circle{ aria_hidden: 'true' }
+    %small.col-xs-4#hint.text.text-warning
+      Enter a lowercase
+      %strong
+        unique
+      ID for your organization
+
+  .form-group.new-org{ style: 'display: none' }
+    %button.col-xs-offset-1#btn-submit-org.btn.btn-primary Submit

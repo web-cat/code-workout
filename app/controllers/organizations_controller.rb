@@ -19,6 +19,11 @@ class OrganizationsController < ApplicationController
   end
 
   def search
+    if params[:slug] && params[:term]
+      organization_exists = Organization.exists?(slug: params[:term]) # in this case, will return true or false
+      render json: organization_exists.to_json and return
+    end
+    
     if params[:term]
       @organizations = Organization.where('name LIKE ? or abbreviation LIKE ? or slug LIKE ?', "%#{params[:term]}%", "%#{params[:term]}%", "%#{params[:term]}%")
     else
