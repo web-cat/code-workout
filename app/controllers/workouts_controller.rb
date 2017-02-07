@@ -301,21 +301,48 @@ class WorkoutsController < ApplicationController
   end
 
   def find_offering
-    @user = User.find(params[:user_id])
-    @term = Term.find(params[:term_id])
-    @course = Course.find(params[:course_id])
+    @user = User.find params[:user_id]
+    @term = Term.find params[:term_id]
+    @course = Course.find params[:course_id]
 
-    # Find all workouts with the specified name, then find the relevant
-    # set of workout_offerings
-    @workouts = Workout.where name: params[workout_name]
-    workout_offerings = []
+    # Find all workouts with the specified name
+    @workouts = Workout.where('lower(name) = ?', params[:workout_name].downcase)
+
+    # Find workout offerings in the specified course and term,
+    # filtering by the user's enrollment in each term
+    workout_offerings = WorkoutOffering.none
     @workouts.each do |w|
-      workout_offerings << w.workout_offerings.joins(:course_offering).
+      workout_offerings << w.workout_offerings.joins(course_offering: :course_enrollments).
         where(course_offering:
-          { term: @term, course: @course }
+          { term: @term, course: @course, course_enrollments:
+            { user: @user } }
         )
     end
-    workout_offerings = workout_offerings.flatten.uniq
+
+    enrolled_workout_offerings =
+      workout_offerings.joins(course_offering: :course_enrollments).
+        where(course_offering:
+          { course_enrollments:
+            { user: @term } }
+        )
+
+    unless enrolled_workout_offerings.blank?
+      @workout_offering = enrolled_workout_offerings.first
+      redirect_to organization_workout_offering_practice_path(
+        lis_outcome_service_url: params[:lis_outcome_service_url],
+        lis_result_sourcedid: params[:lis_result_sourcedid],
+        id: @workout_offering.id,
+        organization_id: params[:organization_id],
+        term_id: params[:term_id],
+        course_id: params[:course_id],
+        lti_launch: true
+      )
+    else
+      # TODO: Bring up view for unenrolled students and allow them to
+      # self enroll where appropriate
+      @message = 'No enrollment detected'
+      render 'lti/error' and return
+    end
   end
 
   def upload_yaml

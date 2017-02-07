@@ -12,6 +12,7 @@ class LtiController < ApplicationController
     if request.post?
       render :error and return unless lti_authorize!
 
+<<<<<<< e8d50a5860cd52b92e7e8427cc76f5a6664bb257
       @lms_instance = LmsInstance.find_by(consumer_key: params[:oauth_consumer_key])
 
       # Retrieve user information and sign in the user.
@@ -29,6 +30,13 @@ class LtiController < ApplicationController
         end
       end
 
+=======
+      # Retrieve user information and sign in the user
+      email = params[:lis_person_contact_email_primary]
+      first_name = params[:lis_person_name_given]
+      last_name = params[:lis_person_name_family]
+      @user = User.where(email: email).first
+>>>>>>> Enrolled students and instructors get directed to the appropriate
       if @user.blank?
         if params[:custom_canvas_user_login_id]
           email = params[:custom_canvas_user_login_id]
@@ -80,7 +88,7 @@ class LtiController < ApplicationController
       if (/\A[0-9][0-9].[0-9][0-9].[0-9][0-9] -/ =~ resource_link_title).nil?
         workout_name = resource_link_title
       else
-        workout_name = resource_link_title[11..resource_link_title.length])
+        workout_name = resource_link_title[11..resource_link_title.length]
       end
 
       if @organization.blank?
@@ -88,9 +96,9 @@ class LtiController < ApplicationController
         render 'lti/error' and return
       end
 
-      @course = Course.find_by(slug: params[:course_slug], organization: @organization)
+      @course = Course.find_by(slug: course_slug, organization: @organization)
       if @course.blank?
-        if params[:instructor]
+        if @tp.context_instructor?
           @course = Course.new(
             name: course_name,
             number: course_number,
@@ -112,13 +120,14 @@ class LtiController < ApplicationController
         render 'lti/error' and return
       end
 
-      redirect_to find_workout_offering_path(
+      redirect_to organization_find_workout_offering_path(
         organization_id: @organization.slug,
         term_id: @term.slug,
         workout_name: workout_name,
         user_id: @user.id,
         course_id: @course.slug,
-        instructor: @tp.context_instructor?
+        lis_outcome_service_url: params[:lis_outcome_service_url],
+        lis_result_sourcedid: params[:lis_result_sourcedid]
       )
     end
   end
