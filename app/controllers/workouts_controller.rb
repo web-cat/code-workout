@@ -343,8 +343,11 @@ class WorkoutsController < ApplicationController
     else
       # TODO: Bring up view for unenrolled students and allow them to
       # self enroll where appropriate
-      workout_offerings.uniq!
-      @available_course_offerings = workout_offerings.map &:course_offering
+      @available_workout_offerings = workout_offerings.uniq { |wo|
+        wo.course_offering
+      }.select { |wo|
+        wo.course_offering.self_enrollment_allowed?
+      }
       render 'course_offerings/available_offerings' and return
     end
   end
