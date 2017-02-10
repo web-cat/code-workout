@@ -1,0 +1,11 @@
+= inside_layout 'header' do
+  .container
+    - if @available_course_offerings.any?
+      %h1 Section selection
+      %p Click on the section you belong in to proceed to the assignment.
+      %ul.list-group
+        - @available_course_offerings.each do |o|
+          %a.list-group-item.action{ href: '#' }
+            = o.display_name_with_term
+    - else
+      %h2 No available offerings

@@ -310,21 +310,24 @@ class WorkoutsController < ApplicationController
 
     # Find workout offerings in the specified course and term,
     # filtering by the user's enrollment in each term
-    workout_offerings = WorkoutOffering.none
+    workout_offerings = []
     @workouts.each do |w|
       workout_offerings << w.workout_offerings.joins(course_offering: :course_enrollments).
         where(course_offering:
-          { term: @term, course: @course, course_enrollments:
-            { user: @user } }
+          { term: @term, course: @course }
         )
     end
 
+    workout_offerings = workout_offerings.flatten.uniq
+
+    # enrolled_workout_offerings =
+    #   workout_offerings.joins(course_offering: :course_enrollments).
+    #     where(course_offering:
+    #       { course_enrollments:
+    #         { user: @user } }
+    #     )
     enrolled_workout_offerings =
-      workout_offerings.joins(course_offering: :course_enrollments).
-        where(course_offering:
-          { course_enrollments:
-            { user: @term } }
-        )
+      workout_offerings.select { |wo| @user.is_enrolled?(wo.course_offering) }
 
     unless enrolled_workout_offerings.blank?
       @workout_offering = enrolled_workout_offerings.first
@@ -340,8 +343,9 @@ class WorkoutsController < ApplicationController
     else
       # TODO: Bring up view for unenrolled students and allow them to
       # self enroll where appropriate
-      @message = 'No enrollment detected'
-      render 'lti/error' and return
+      workout_offerings.uniq!
+      @available_course_offerings = workout_offerings.map &:course_offering
+      render 'course_offerings/available_offerings' and return
     end
   end
 
