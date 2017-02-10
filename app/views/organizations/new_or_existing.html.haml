@@ -17,13 +17,13 @@
       %button.new-org#btn-org.btn.btn-default.btn-sm{ style: 'display: none' }
         Cancel
     %small.new-org#hint.col-md-5.col-xs-12.text.text-warning{ style: 'display: none' }
-      To add a new organization, type in a name and abbreviation, like: Monsters University (MU)
+      To add a new organization, type in a name, like: Monsters University
 
   .form-group.new-org{ style: 'display: none' }
-    = label_tag :slug, 'Organization ID', class: 'control-label col-xs-3'
+    = label_tag :abbr, 'Abbreviation', class: 'control-label col-xs-3'
     .col-xs-2
-      = text_field_tag :slug, nil, id: 'org-slug', class: 'form-control input-sm', maxlength: 6,
-        placeholder: "e.g 'mu'"
+      = text_field_tag :abbr, nil, id: 'abbr', class: 'form-control input-sm', maxlength: 6,
+        placeholder: "suggested: MU"
     .col-xs-1
       %button#btn-unique.btn.btn-default.btn-sm
         Available?

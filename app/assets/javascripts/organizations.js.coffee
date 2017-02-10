@@ -2,15 +2,12 @@ $(document).ready ->
   $('#term_id').change ->
     window.location.href = '?term_id=' + $('#term_id').val()
 
-  autcomplete = $('#organization').autocomplete
+  autocomplete = $('#organization').autocomplete
     minLength: 2
+    autoFocus: true
     source: '/organizations/search'
     response: (event, ui) ->
-      ui.content.unshift({ name: '+ Add new organization' })
-    focus: (event, ui) ->
-      if ui.item.slug?
-        $('#organization').val ui.item.name
-        $('#organization').data 'org-id', ui.item.slug
+      ui.content.push({ name: '+ Add new organization' })
     select: (event, ui) ->
       if ui.item.slug?
         $('#organization').val ui.item.name
@@ -25,20 +22,28 @@ $(document).ready ->
         $('#btn-org').css 'display', 'block'
       return false
 
-  autcomplete.data('ui-autocomplete')._renderItem = (ul, item) ->
+  autocomplete.data('ui-autocomplete')._renderItem = (ul, item) ->
     return $('<li class="list-group-item"></li>')
       .append(item.name)
       .appendTo(ul)
 
-  autcomplete.data('ui-autocomplete')._renderMenu = (ul, items) ->
+  autocomplete.data('ui-autocomplete')._renderMenu = (ul, items) ->
     that = this
     $.each items, (index, item) ->
       that._renderItemData(ul, item)
     $(ul).addClass 'list-group'
 
+  $('#organization').on 'blur', ->
+    val = $('#organization').val()
+    selection = $('#organization').data 'org-id'
+    if !selection?
+      placeholder = get_abbr_suggestion val
+      $('#abbr').attr 'placeholder', "suggested: #{placeholder}"
+
   $('#btn-org').on 'click', ->
     if $(this).text() == 'Cancel'
       $('.new-org').css 'display', 'none'
+      $('#organization').val ''
       $('#organization').autocomplete 'enable'
     else if $(this).text() == 'Continue'
       selection = $('#organization').data 'org-id'
@@ -49,13 +54,27 @@ $(document).ready ->
     validate_name name
 
   $('#btn-unique').on 'click', ->
-    term = $('#org-slug').val()
+    term = $('#abbr').val()
     validate_slug term
 
   $('#btn-submit-org').on 'click', ->
     validate()
 
-validate_slug = (term) ->
+get_abbr_suggestion = (org_name)->
+  lowers = ['the', 'and', 'for', 'at', 'in', 'of']
+  org_name = org_name.toLowerCase()
+  console.log "Full lower case: #{org_name}"
+  replace_func = (txt)->
+    if txt.trim() in lowers
+      return txt.toLowerCase()
+    else
+      return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+  title_case = org_name.replace(/([^\W_]+[^\s-]*) */g, replace_func)
+  matches = title_case.match /([A-Z\-])+/g
+  acronym = matches.join ''
+  return acronym
+
+validate_slug = (term)->
   uniqueness = $('#uniqueness')
   uniqueness.removeClass()
   if term == ''
@@ -77,15 +96,8 @@ validate_slug = (term) ->
           uniqueness.addClass 'fa fa-times-circle text-danger'
           return false
 
-validate_name = (name) ->
-  org_pattern = /// ^   # start of line
-    [a-zA-Z\s*]+        # one or more words
-    \s*                 # followed by optional white space
-    \([A-Z]{2,6}\)      # followed by 2 to 6 capitalised letters in paranthesis
-    $ ///               # end of line
-
-  valid = name.match org_pattern
-  if !valid or name == ''
+validate_name = (name)->
+  if name == ''
     # add the class to trigger the animation
     # then remove it, so that the animation can re-run next time
     $('#hint').addClass 'shake'
@@ -97,5 +109,5 @@ validate_name = (name) ->
     return true
 
 validate = ->
-  valid = validate_slug($('#org-slug').val()) &&
+  valid = validate_slug($('#abbr').val()) &&
     validate_name($('#organization').val())
