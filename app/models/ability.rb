@@ -37,6 +37,8 @@ class Ability
         end
         can [:edit, :update], User, id: user.id
 
+        can :new_or_existing, Organization
+
         process_global_role user
         process_instructor user
         process_courses user
@@ -150,6 +152,9 @@ class Ability
       can :tab_content, Course do |course|
         course.course_offerings.any? { |co| co.is_enrolled? (user) }
       end
+
+      # A user can search for courses if they are signed in
+      can :search, Course
     end
   end
 

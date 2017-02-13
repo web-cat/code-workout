@@ -147,10 +147,19 @@ class CoursesController < ApplicationController
 
   # -------------------------------------------------------------
   def search
+    if params[:term]
+      @courses = Course.where('lower(name) like ? or lower(number) like ? or slug like ?',
+        "%#{params[:term].downcase}%", "%#{params[:term].downcase}%", "%#{params[:term]}%")
+    else
+      @courses = Course.all
+    end
+
+    render json: @courses and return
   end
 
 
   # -------------------------------------------------------------
+  # TODO: Not certain what this method achieves (also not sure about 'Course.search')
   def find
     @courses = Course.search(params[:search])
     redirect_to courses_search_path(courses: @courses, listing: true),

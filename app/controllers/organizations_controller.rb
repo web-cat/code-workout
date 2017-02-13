@@ -23,9 +23,10 @@ class OrganizationsController < ApplicationController
       organization_exists = Organization.exists?(slug: params[:term]) # in this case, will return true or false
       render json: organization_exists.to_json and return
     end
-    
+
     if params[:term]
-      @organizations = Organization.where('name LIKE ? or abbreviation LIKE ? or slug LIKE ?', "%#{params[:term]}%", "%#{params[:term]}%", "%#{params[:term]}%")
+      @organizations = Organization.where('lower(name) like ? or lower(abbreviation) like ? or slug like ?',
+        "%#{params[:term].downcase}%", "%#{params[:term].downcase}%", "%#{params[:term]}%")
     else
       @organizations = Organization.all
     end
@@ -52,7 +53,26 @@ class OrganizationsController < ApplicationController
   end
 
   def new_or_existing
+    authorize! :new_or_existing, Organization, message: 'You must be signed in to start the course setup process.'
     render layout: 'one_column'
+  end
+
+  def create
+    @organization = Organization.new(
+      name: params[:name],
+      abbreviation: params[:abbreviation],
+      slug: params[:abbreviation].downcase
+    )
+
+    if @organization.save
+      success = true
+    else
+      success = false
+    end
+
+    result = { success: success, id: @organization.slug }
+
+    render json: result and return
   end
 
   #~ Private instance methods .................................................

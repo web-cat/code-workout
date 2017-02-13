@@ -1,0 +1,13 @@
+%h2 Find your course
+%p
+  Type in the first few letters of your course to search for it.
+  %br
+  If you cannot find it, you may create a course by typing in a new
+  name.
+.form-horizontal
+  .form-group
+    = label_tag :course, 'Course Name', class: 'control-label col-xs-3'
+    .col-xs-12.col-md-5
+      .ui-widget
+        = text_field_tag :course, nil, id: 'course', class: 'form-control input-sm',
+          placeholder: 'Start typing your course name'

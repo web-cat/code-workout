@@ -2,7 +2,7 @@ $(document).ready ->
   $('#term_id').change ->
     window.location.href = '?term_id=' + $('#term_id').val()
 
-  autocomplete = $('#organization').autocomplete
+  org_autocomplete = $('#organization').autocomplete
     minLength: 2
     autoFocus: true
     source: '/organizations/search'
@@ -12,8 +12,7 @@ $(document).ready ->
       if ui.item.slug?
         $('#organization').val ui.item.name
         $('#organization').data 'org-id', ui.item.slug
-        $('#btn-org').text 'Continue'
-        $('#btn-org').css 'display', 'block'
+        setup_course_fields ui.item.slug
       else
         $('#organization').removeData 'org-id'
         $('.new-org').css 'display', 'block'
@@ -22,12 +21,12 @@ $(document).ready ->
         $('#btn-org').css 'display', 'block'
       return false
 
-  autocomplete.data('ui-autocomplete')._renderItem = (ul, item) ->
+  org_autocomplete.data('ui-autocomplete')._renderItem = (ul, item) ->
     return $('<li class="list-group-item"></li>')
       .append(item.name)
       .appendTo(ul)
 
-  autocomplete.data('ui-autocomplete')._renderMenu = (ul, items) ->
+  org_autocomplete.data('ui-autocomplete')._renderMenu = (ul, items) ->
     that = this
     $.each items, (index, item) ->
       that._renderItemData(ul, item)
@@ -53,17 +52,21 @@ $(document).ready ->
     name = $('#organization').val()
     validate_name name
 
-  $('#btn-unique').on 'click', ->
-    term = $('#abbr').val()
-    validate_slug term
+  keyup_thread = null
+  $('#abbr').keyup ->
+    clearTimeout keyup_thread
+    thread = setTimeout ->
+      term = $('#abbr').val()
+      validate_slug term.toLowerCase()
+    , 1000
 
   $('#btn-submit-org').on 'click', ->
-    validate()
+    handle_submit_organization()
 
 get_abbr_suggestion = (org_name)->
   lowers = ['the', 'and', 'for', 'at', 'in', 'of']
+
   org_name = org_name.toLowerCase()
-  console.log "Full lower case: #{org_name}"
   replace_func = (txt)->
     if txt.trim() in lowers
       return txt.toLowerCase()
@@ -111,3 +114,46 @@ validate_name = (name)->
 validate = ->
   valid = validate_slug($('#abbr').val()) &&
     validate_name($('#organization').val())
+
+handle_submit_organization = ->
+  valid = validate()
+  if valid
+    name = $('#organization').val()
+    abbr = $('#abbr').val()
+    $.ajax
+      url: '/organizations/'
+      type: 'post'
+      data: { name: name, abbreviation: abbr }
+      dataType: 'json'
+      success: (data)->
+        if data['success']
+          setup_course_fields data['id']
+
+setup_course_fields = (id)->
+  $('.org-setup :input').attr 'disabled', true
+  $('.course-setup').css 'display', 'block'
+  course_autocomplete = $('#course').autocomplete
+    minLength: 2
+    autoFocus: true
+    source: '/courses/' + id + '/search'
+    response: (event, ui) ->
+      ui.content.push({ name: '+ Add new course' })
+    select: (event, ui) ->
+      if ui.item.slug?
+        $('#course').val ui.item.name
+        $('#course').data 'course-id', ui.item.slug
+      else
+        $('#course').removeData 'org-id'
+        $('#course').autocomplete 'disable'
+      return false
+
+  course_autocomplete.data('ui-autocomplete')._renderItem = (ul, item) ->
+    return $('<li class="list-group-item"></li>')
+      .append(item.name)
+      .appendTo(ul)
+
+  course_autocomplete.data('ui-autocomplete')._renderMenu = (ul, items) ->
+    that = this
+    $.each items, (index, item) ->
+      that._renderItemData(ul, item)
+    $(ul).addClass 'list-group'
