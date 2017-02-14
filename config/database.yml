@@ -10,6 +10,13 @@ development:
    password: codeworkout
    host: localhost
 
+debugging:
+   adapter: mysql2
+   database: codeworkout
+   username: codeworkout
+   password: codeworkout
+   host: localhost
+
 # development:
 #   adapter: sqlite3
 #   database: db/development.sqlite3
