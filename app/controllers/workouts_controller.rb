@@ -58,7 +58,7 @@ class WorkoutsController < ApplicationController
     workouts = Workout.where('lower(name) = ? and is_public = true', params[:resource_name].downcase)
     @workout = workouts.first
     if @workout
-      redirect_to practice_workout_path(id: @workout.id) and return
+      redirect_to practice_workout_path(id: @workout.id, lti_launch: true) and return
     else
       @message = 'Sorry, there are no public workouts with that name.'
       render 'lti/error' and return
@@ -436,7 +436,7 @@ class WorkoutsController < ApplicationController
         end
       end
       ex1 = @workout.next_exercise(nil, current_user, @workout_score)
-      redirect_to exercise_practice_path(id: ex1.id, workout_id: @workout.id)
+      redirect_to exercise_practice_path(id: ex1.id, workout_id: @workout.id, lti_launch: params[:lti_launch])
     else
       redirect_to workouts, notice: 'Workout not found' and return
     end
