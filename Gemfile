@@ -75,11 +75,6 @@ group :doc do
   gem 'sdoc', require: false
 end
 
-group :debugging do
-  gem 'thin'
-  gem 'byebug'
-end
-
 # Gems for authentication and authorization.
 gem 'devise'
 gem 'omniauth'
