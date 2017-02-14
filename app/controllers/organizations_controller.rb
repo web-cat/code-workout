@@ -19,12 +19,11 @@ class OrganizationsController < ApplicationController
   end
 
   def search
-    if params[:slug] && params[:term]
-      organization_exists = Organization.exists?(slug: params[:term]) # in this case, will return true or false
-      render json: organization_exists.to_json and return
-    end
-
-    if params[:term]
+    if params[:suggestion] && params[:term]
+      @organizations = Organization.where('slug like ?', "#{params[:term]}%").order('slug asc')
+    elsif params[:slug] && params[:term]
+      @organizations = Organization.find_by(slug: params[:term]) # leaving the name pluralized for rendering
+    elsif params[:term]
       @organizations = Organization.where('lower(name) like ? or lower(abbreviation) like ? or slug like ?',
         "%#{params[:term].downcase}%", "%#{params[:term].downcase}%", "%#{params[:term]}%")
     else

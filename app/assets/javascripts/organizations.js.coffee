@@ -37,7 +37,6 @@ $(document).ready ->
     selection = $('#organization').data 'org-id'
     if !selection?
       placeholder = get_abbr_suggestion val
-      $('#abbr').attr 'placeholder', "suggested: #{placeholder}"
 
   $('#btn-org').on 'click', ->
     if $(this).text() == 'Cancel'
@@ -55,8 +54,10 @@ $(document).ready ->
   keyup_thread = null
   $('#abbr').keyup ->
     clearTimeout keyup_thread
-    thread = setTimeout ->
+    keyup_thread = setTimeout ->
       term = $('#abbr').val()
+      if term == ''
+        $('#org-hint').text ''
       validate_slug term.toLowerCase()
     , 1000
 
@@ -73,9 +74,28 @@ get_abbr_suggestion = (org_name)->
     else
       return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
   title_case = org_name.replace(/([^\W_]+[^\s-]*) */g, replace_func)
+  words = title_case.split ' '
   matches = title_case.match /([A-Z\-])+/g
   acronym = matches.join ''
-  return acronym
+  $.ajax
+    url: '/organizations/search'
+    type: 'get'
+    dataType: 'json'
+    data: { suggestion: true, term: acronym.toLowerCase() }
+    success: (data)->
+      if data.length == 0
+        $('#abbr').attr 'placeholder', "suggested: #{acronym}"
+      else
+        val = data[data.length - 1].name
+        split = val.split ''
+        ind = split[split.length - 1]
+        if isNaN(ind)
+          acronym = acronym + "1"
+          $('#abbr').attr 'placeholder', "suggested: #{acronym}"
+        else
+          ind = parseInt(int) + 1
+          acronym = acronym + "" + ind
+          $('#abbr').attr 'placeholder', "suggested: #{acronym}"
 
 validate_slug = (term)->
   uniqueness = $('#uniqueness')
@@ -92,11 +112,14 @@ validate_slug = (term)->
       data: { slug: true, term: term }
       success: (data) ->
         uniqueness.removeClass 'fa-spinner'
-        if !data
+        if !data?
           uniqueness.addClass 'fa fa-check-circle text-success'
           return true
         else
           uniqueness.addClass 'fa fa-times-circle text-danger'
+          org_name = data['name']
+          msg = "Sorry, that abbreviation is being used by #{org_name}"
+          $('#org-hint').text msg
           return false
 
 validate_name = (name)->
