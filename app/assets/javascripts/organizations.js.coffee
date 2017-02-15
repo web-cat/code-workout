@@ -14,11 +14,12 @@ $(document).ready ->
         $('#organization').data 'org-id', ui.item.slug
         setup_course_fields ui.item.slug
       else
-        $('#organization').removeData 'org-id'
+        organization = $('#organization')
+        organization.removeData 'org-id'
         $('.new-org').css 'display', 'block'
-        $('#organization').autocomplete 'disable'
-        $('#btn-org').text 'Cancel'
-        $('#btn-org').css 'display', 'block'
+        organization.autocomplete 'disable'
+        val = organization.val()
+        get_abbr_suggestion val
       return false
 
   org_autocomplete.data('ui-autocomplete')._renderItem = (ul, item) ->
@@ -36,7 +37,7 @@ $(document).ready ->
     val = $('#organization').val()
     selection = $('#organization').data 'org-id'
     if !selection?
-      placeholder = get_abbr_suggestion val
+      get_abbr_suggestion val
 
   $('#btn-org').on 'click', ->
     if $(this).text() == 'Cancel'
@@ -76,26 +77,27 @@ get_abbr_suggestion = (org_name)->
   title_case = org_name.replace(/([^\W_]+[^\s-]*) */g, replace_func)
   words = title_case.split ' '
   matches = title_case.match /([A-Z\-])+/g
-  acronym = matches.join ''
-  $.ajax
-    url: '/organizations/search'
-    type: 'get'
-    dataType: 'json'
-    data: { suggestion: true, term: acronym.toLowerCase() }
-    success: (data)->
-      if data.length == 0
-        $('#abbr').attr 'placeholder', "suggested: #{acronym}"
-      else
-        val = data[data.length - 1].name
-        split = val.split ''
-        ind = split[split.length - 1]
-        if isNaN(ind)
-          acronym = acronym + "1"
+  if matches?
+    acronym = matches.join ''
+    $.ajax
+      url: '/organizations/search'
+      type: 'get'
+      dataType: 'json'
+      data: { suggestion: true, term: acronym.toLowerCase() }
+      success: (data)->
+        if data.length == 0
           $('#abbr').attr 'placeholder', "suggested: #{acronym}"
         else
-          ind = parseInt(int) + 1
-          acronym = acronym + "" + ind
-          $('#abbr').attr 'placeholder', "suggested: #{acronym}"
+          val = data[data.length - 1].name
+          split = val.split ''
+          ind = split[split.length - 1]
+          if isNaN(ind)
+            acronym = acronym + "1"
+            $('#abbr').attr 'placeholder', "suggested: #{acronym}"
+          else
+            ind = parseInt(int) + 1
+            acronym = acronym + "" + ind
+            $('#abbr').attr 'placeholder', "suggested: #{acronym}"
 
 validate_slug = (term)->
   uniqueness = $('#uniqueness')
@@ -114,11 +116,12 @@ validate_slug = (term)->
         uniqueness.removeClass 'fa-spinner'
         if !data?
           uniqueness.addClass 'fa fa-check-circle text-success'
+          $('#org-hint').text ''
           return true
         else
           uniqueness.addClass 'fa fa-times-circle text-danger'
           org_name = data['name']
-          msg = "Sorry, that abbreviation is being used by #{org_name}"
+          msg = "Sorry, that abbreviation is being used by #{org_name}."
           $('#org-hint').text msg
           return false
 

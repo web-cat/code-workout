@@ -147,11 +147,12 @@ class CoursesController < ApplicationController
 
   # -------------------------------------------------------------
   def search
+    @organization = Organization.find params[:organization_id]
     if params[:term]
-      @courses = Course.where('lower(name) like ? or lower(number) like ? or slug like ?',
+      @courses = @organization.courses.where('lower(name) like ? or lower(number) like ? or slug like ?',
         "%#{params[:term].downcase}%", "%#{params[:term].downcase}%", "%#{params[:term]}%")
     else
-      @courses = Course.all
+      @courses = @organization.courses
     end
 
     render json: @courses and return
