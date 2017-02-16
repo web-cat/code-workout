@@ -121,24 +121,22 @@ class CourseOfferingsController < ApplicationController
       success = false
     end
 
-    respond_to do |format|
-      format.html {
-        if success
-          redirect_to organization_course_path(
-            @course_offering.course.organization,
-            @course_offering.course,
-            @course_offering.term),
-            notice: 'You are now enrolled in ' +
-              "#{@course_offering.display_name}."
-        else
-          flash[:warning] = 'Unable to enroll in that course.'
-          redirect_to root_path
-        end
-      }
-
-      format.json {
-        render json: { success: (success.kind_of?(CourseEnrollment) ? true : success) }
-      }
+    if params[:iframe]
+      respond_to do |format|
+        format.json { render json: success }
+      end
+    else
+      if success
+        redirect_to organization_course_path(
+          @course_offering.course.organization,
+          @course_offering.course,
+          @course_offering.term),
+          notice: 'You are now enrolled in ' +
+            "#{@course_offering.display_name}."
+      else
+        flash[:warning] = 'Unable to enroll in that course.'
+        redirect_to root_path
+      end
     end
   end
 

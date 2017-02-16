@@ -1,19 +1,20 @@
 = inside_layout 'header' do
+  = javascript_include_tag('available_offerings')
   .container
     - if @available_workout_offerings.any?
       %h1 Section selection
       %p Click on your course section to proceed to the assignment.
       %ul.list-group
         - @available_workout_offerings.each do |wo|
-          = link_to wo.course_offering.display_name_with_term,
-            organization_workout_offering_practice_path(id: wo.id,
+          - practice_url = url_for organization_workout_offering_practice_path(id: wo.id,
             lis_outcome_service_url: params[:lis_outcome_service_url],
             lis_result_sourcedid: params[:lis_result_sourcedid],
             organization_id: params[:organization_id],
             term_id: params[:term_id],
             course_id: params[:course_id],
-            lti_launch: true),
-            class: 'list-group-item'
+            lti_launch: true)
+          %a{ data: { practice_url: practice_url, course_offering_id: wo.course_offering.id, user_id: current_user.id }, class: 'course-offering list-group-item action' }
+            = wo.course_offering.display_name_with_term
 
       .text.text-danger
         If you cannot find your course section, ask your instructor which one you are enrolled in.

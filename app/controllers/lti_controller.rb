@@ -12,7 +12,6 @@ class LtiController < ApplicationController
     if request.post?
       render :error and return unless lti_authorize!
 
-<<<<<<< e8d50a5860cd52b92e7e8427cc76f5a6664bb257
       @lms_instance = LmsInstance.find_by(consumer_key: params[:oauth_consumer_key])
 
       # Retrieve user information and sign in the user.
@@ -30,13 +29,6 @@ class LtiController < ApplicationController
         end
       end
 
-=======
-      # Retrieve user information and sign in the user
-      email = params[:lis_person_contact_email_primary]
-      first_name = params[:lis_person_name_given]
-      last_name = params[:lis_person_name_family]
-      @user = User.where(email: email).first
->>>>>>> Enrolled students and instructors get directed to the appropriate
       if @user.blank?
         if params[:custom_canvas_user_login_id]
           email = params[:custom_canvas_user_login_id]

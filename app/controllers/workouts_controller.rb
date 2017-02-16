@@ -320,12 +320,6 @@ class WorkoutsController < ApplicationController
 
     workout_offerings = workout_offerings.flatten.uniq
 
-    # enrolled_workout_offerings =
-    #   workout_offerings.joins(course_offering: :course_enrollments).
-    #     where(course_offering:
-    #       { course_enrollments:
-    #         { user: @user } }
-    #     )
     enrolled_workout_offerings =
       workout_offerings.select { |wo| @user.is_enrolled?(wo.course_offering) }
 
