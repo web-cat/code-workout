@@ -118,6 +118,8 @@ class LtiController < ApplicationController
         workout_name: workout_name,
         user_id: @user.id,
         course_id: @course.slug,
+        context: @tp.context_instructor?,
+        label: params[:custom_label], # can be nil
         lis_outcome_service_url: params[:lis_outcome_service_url],
         lis_result_sourcedid: params[:lis_result_sourcedid]
       )

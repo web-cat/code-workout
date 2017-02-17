@@ -306,17 +306,21 @@ class WorkoutsController < ApplicationController
     @course = Course.find params[:course_id]
 
     # Find all workouts with the specified name
-    @workouts = Workout.where('lower(name) = ?', params[:workout_name].downcase)
+    workouts = Workout.where('lower(name) = ?', params[:workout_name].downcase)
+
+    if workouts.blank?
+      @message = 'Unfortunately, there are no workouts with that name. Please contact your instructor.'
+      render 'lti/error' and return
+    end
+
+    @workout = workouts.first
 
     # Find workout offerings in the specified course and term,
     # filtering by the user's enrollment in each term
-    workout_offerings = []
-    @workouts.each do |w|
-      workout_offerings << w.workout_offerings.joins(course_offering: :course_enrollments).
-        where(course_offering:
-          { term: @term, course: @course }
-        )
-    end
+    workout_offerings = @workout.workout_offerings.joins(:course_offering).
+      where(course_offering:
+        { term: @term, course: @course }
+      )
 
     workout_offerings = workout_offerings.flatten.uniq
 
@@ -332,11 +336,10 @@ class WorkoutsController < ApplicationController
         organization_id: params[:organization_id],
         term_id: params[:term_id],
         course_id: params[:course_id],
+        context: params[:context],
         lti_launch: true
       )
     else
-      # TODO: Bring up view for unenrolled students and allow them to
-      # self enroll where appropriate
       @available_workout_offerings = workout_offerings.uniq { |wo|
         wo.course_offering
       }.select { |wo|
