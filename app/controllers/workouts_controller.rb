@@ -324,11 +324,44 @@ class WorkoutsController < ApplicationController
 
     workout_offerings = workout_offerings.flatten.uniq
 
-    enrolled_workout_offerings =
-      workout_offerings.select { |wo| @user.is_enrolled?(wo.course_offering) }
+    if workout_offerings.blank?
+      if params[:context]
+        if param[:label]
+          @course_offering = CourseOffering.find_by(course: @course, term: @term, label: params[:label])
+        end
 
-    unless enrolled_workout_offerings.blank?
+        @course_offerings = CourseOffering.find(course: @course, term: @term)
+        if @course_offerings.blank?
+          @course_offering ||= CourseOffering.create(
+            course: @course,
+            term: @term,
+            label: "#{@user.label_name} - #{@term.display_name}"
+          )
+        else
+          @course_offerings.each do |co|
+            if !@user.is_enrolled?(co) &&
+              co.can_enroll?(@user)
+              CourseEnrollment.create(
+                user: @user,
+                course_offering: co,
+                course_role: CourseRole.instructor
+              )
+            end
+
+            @workout_offering = WorkoutOffering.create(
+              workout: @workout,
+              course_offering: co
+            )
+          end
+        end
+      end
+    else
+      enrolled_workout_offerings =
+        workout_offerings.select { |wo| @user.is_enrolled?(wo.course_offering) }
       @workout_offering = enrolled_workout_offerings.first
+    end
+
+    if @workout_offering
       redirect_to organization_workout_offering_practice_path(
         lis_outcome_service_url: params[:lis_outcome_service_url],
         lis_result_sourcedid: params[:lis_result_sourcedid],
@@ -336,7 +369,6 @@ class WorkoutsController < ApplicationController
         organization_id: params[:organization_id],
         term_id: params[:term_id],
         course_id: params[:course_id],
-        context: params[:context],
         lti_launch: true
       )
     else

@@ -260,6 +260,14 @@ class User < ActiveRecord::Base
       (first_name.blank? ? last_name : (first_name + ' ' + last_name))
   end
 
+  # -------------------------------------------------------------
+  # Gets the user's "label name", which is their last name, first name, or email_without_domain,
+  # in decreasing order of preference
+  def label_name
+    last_name.blank? :
+      (first_name.blank? ? email_without_domain : first_name) : last_name
+  end
+
 
   # -------------------------------------------------------------
   # Gets the username (without the domain) of the e-mail address, if possible.
