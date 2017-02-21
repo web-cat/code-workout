@@ -161,8 +161,11 @@ class User < ActiveRecord::Base
   #
   # Returns a relation representing all of the CourseOfferings that this
   # user can manage
+  # params = {term, course} (optional)
   #
-  def managed_course_offerings(course=nil, term=nil)
+  def managed_course_offerings(options = {})
+    course = options[:course]
+    term = options[:term]
     if course.nil? && term.nil?
       course_enrollments.where(course_roles: { can_manage_course: true }).
         map(&:course_offering)
@@ -171,6 +174,12 @@ class User < ActiveRecord::Base
         where(course_roles:
           { can_manage_course: true }, course_offering:
             { term: term }
+        ).map(&:course_offering)
+    elsif term.nil?
+      course_enrollments.joins(:course_offering).
+        where(course_roles:
+          { can_manage_course: true }, course_offering:
+            { course: course }
         ).map(&:course_offering)
     else
       course_enrollments.joins(:course_offering).
@@ -262,9 +271,9 @@ class User < ActiveRecord::Base
 
   # -------------------------------------------------------------
   # Gets the user's "label name", which is their last name, first name, or email_without_domain,
-  # in decreasing order of preference
+  # in decreasing order of preference. For use in auto-generated course_offering labels
   def label_name
-    last_name.blank? :
+    last_name.blank? ?
       (first_name.blank? ? email_without_domain : first_name) : last_name
   end
 
