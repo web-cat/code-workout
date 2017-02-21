@@ -1,5 +1,6 @@
 require 'json'
 require 'date'
+require 'wannabe_bool'
 
 class WorkoutsController < ApplicationController
   include ArrayHelper
@@ -315,47 +316,56 @@ class WorkoutsController < ApplicationController
 
     @workout = workouts.first
 
-    # Find workout offerings in the specified course and term,
-    # filtering by the user's enrollment in each term
-    workout_offerings = @workout.workout_offerings.joins(:course_offering).
-      where(course_offering:
-        { term: @term, course: @course }
-      )
+    if params[:context].to_b
+      workout_offerings = @user.managed_workout_offerings_in_term(@workout, @course, @term)
+      workout_offerings = workout_offerings.flatten.uniq
 
-    workout_offerings = workout_offerings.flatten.uniq
-
-    if workout_offerings.blank?
-      if params[:context]
-        if param[:label]
-          @course_offering = CourseOffering.find_by(course: @course, term: @term, label: params[:label])
-        end
-
-        @course_offerings = CourseOffering.find(course: @course, term: @term)
+      if workout_offerings.blank?
+        @course_offerings = @user.managed_course_offerings(course: @course, term: @term)
         if @course_offerings.blank?
-          @course_offering ||= CourseOffering.create(
+          @course_offering = CourseOffering.create(
             course: @course,
             term: @term,
-            label: "#{@user.label_name} - #{@term.display_name}"
+            label: "#{@user.label_name} - #{@term.display_name}",
+            self_enrollment_allowed: true
+          )
+
+          @course_enrollment = CourseEnrollment.create(
+            user: @user,
+            course_offering: @course_offering,
+            course_role: CourseRole.instructor
+          )
+
+          @workout_offering = WorkoutOffering.create(
+            workout: @workout,
+            course_offering: @course_offering,
+            opening_date: DateTime.now,
+            soft_deadline: nil,
+            hard_deadline: nil
           )
         else
           @course_offerings.each do |co|
-            if !@user.is_enrolled?(co) &&
-              co.can_enroll?(@user)
-              CourseEnrollment.create(
-                user: @user,
-                course_offering: co,
-                course_role: CourseRole.instructor
-              )
-            end
-
             @workout_offering = WorkoutOffering.create(
               workout: @workout,
-              course_offering: co
+              course_offering: co,
+              opening_date: DateTime.now,
+              soft_deadline: nil,
+              hard_deadline: nil
             )
           end
         end
+      else
+        @workout_offering = workout_offerings.first
       end
     else
+      # Find workout offerings in the specified course and term
+      workout_offerings = @workout.workout_offerings.joins(:course_offering).
+        where(course_offering:
+          { term: @term, course: @course }
+        )
+
+      workout_offerings = workout_offerings.flatten.uniq
+
       enrolled_workout_offerings =
         workout_offerings.select { |wo| @user.is_enrolled?(wo.course_offering) }
       @workout_offering = enrolled_workout_offerings.first
