@@ -14,30 +14,45 @@ $(document).ready ->
       get_abbr_suggestion val
 
   $('#btn-org').on 'click', ->
-    if $(this).text() == 'Cancel'
-      $('.new-org').css 'display', 'none'
-      $('#organization').val ''
-      $('#organization').autocomplete 'enable'
-    else if $(this).text() == 'Continue'
-      selection = $('#organization').data 'org-id'
-      window.location = '/courses/' + selection
+    $('.new-org').css 'display', 'none'
+    $('#organization').val ''
+    $('#organization').autocomplete 'enable'
+
+  $('#btn-course').on 'click', ->
+    $('.new-course').css 'display', 'none'
+    $('#course').val ''
+    $('#course').autocomplete 'enable'
 
   $('#btn-add').on 'click', ->
     name = $('#organization').val()
-    validate_name name
+    validate_name name, ORGANIZATION
 
-  keyup_thread = null
+  org_keyup = null
   $('#abbr').keyup ->
-    clearTimeout keyup_thread
-    keyup_thread = setTimeout ->
+    clearTimeout org_keyup
+    org_keyup = setTimeout ->
       term = $('#abbr').val()
       if term == ''
         $('#org-hint').text ''
-      validate_slug term.toLowerCase()
+      validate_org_slug term
     , 1000
+
+  course_keyup = null
+  $('#number').keyup ->
+    clearTimeout course_keyup
+    course_keyup = setTimeout ->
+      term = $('#number').val()
+      if term == ''
+        $('#course-hint').text ''
+      validate_course_number term
+    , 1000
+
 
   $('#btn-submit-org').on 'click', ->
     handle_submit_organization()
+
+  $('#btn-submit-course').on 'click', ->
+    handle_submit_course()
 
 get_abbr_suggestion = (org_name)->
   lowers = ['the', 'and', 'for', 'at', 'in', 'of']
@@ -73,7 +88,8 @@ get_abbr_suggestion = (org_name)->
             acronym = acronym + "" + ind
             $('#abbr').attr 'placeholder', "suggested: #{acronym}"
 
-validate_slug = (term)->
+validate_org_slug = (term)->
+  term = term.toLowerCase()
   uniqueness = $('#uniqueness')
   uniqueness.removeClass()
   if term == ''
@@ -99,21 +115,60 @@ validate_slug = (term)->
           $('#org-hint').text msg
           return false
 
-validate_name = (name)->
+validate_name = (name, field)->
   if name == ''
     # add the class to trigger the animation
     # then remove it, so that the animation can re-run next time
-    $('#hint').addClass 'shake'
+    hint_to_shake = if field == ORGANIZATION then '#hint' else '#new-course-hint'
+    $(hint_to_shake).addClass 'shake'
     setTimeout ->
-      $('#hint').removeClass 'shake'
+      $(hint_to_shake).removeClass 'shake'
     , 1000
     return false
   else
     return true
 
-validate = ->
-  valid = validate_slug($('#abbr').val()) &&
-    validate_name($('#organization').val())
+validate_course_number = (number)->
+  r = /// ^         # beginning of line
+    ([A-Z]{2,})     # 2 or more letters
+    \s*             # followed by optional whitespace
+    ([0-9]{3,})     # followed by 3 or more digits
+  $ ///             # end of line
+
+  if number != '' and number.match(r)
+    $('#course-valid').removeClass().addClass('fa fa-spinner')
+    $('#course-hint').empty()
+    slug = number.toLowerCase()
+    slug = slug.replace(/\s+/g, '')
+    org_id = $('#organization').data 'org-id'
+    $.ajax
+      url: '/courses/' + org_id + '/search'
+      type: 'get'
+      dataType: 'json'
+      data: { term: slug, slug: true }
+      success: (data)->
+        if data?
+          $('#course-valid').removeClass().addClass 'fa fa-times-circle text-danger'
+          org_name = $('#organization').val()
+          msg = "Sorry, that course number is in use by <em>#{data.name}</em> at #{org_name}"
+          $('#course-hint').html msg
+        else
+          $('#course-valid').removeClass().addClass 'fa fa-check-circle text-success'
+          $('#course-hint').empty()
+  else
+    $('#course-valid').removeClass()
+    $('#course-valid').addClass 'fa fa-times-circle text-danger'
+    $('#course-hint').html 'Please follow this format: <em>CS 1114</em>'
+
+validate = (field)->
+  if field == ORGANIZATION
+    valid = validate_org_slug($('#abbr').val()) &&
+      validate_name($('#organization').val(), field)
+  else
+    valid = validate_course_number($('#number').val()) &&
+      validate_name($('#course').val(), field)
+
+  return valid
 
 setup_autocomplete = (url, field_id)->
   if field_id == COURSE
@@ -125,18 +180,16 @@ setup_autocomplete = (url, field_id)->
     autoFocus: true
     source: url
     response: (event, ui) ->
-      ui.content.push({ name: '+ Add new' })
+      ui.content.push({ name: '+ Add new' }) #empty number
     select: (event, ui)->
       return handle_select_from_autocomplete event, ui, field_id
 
-  autocomplete.data('ui-autocomplete')._renderItem = (ul, items)->
-    return $('<li class="list-group-item"></li>')
-      .append(item.name)
-      .appendTo(ul)
-
   autocomplete.data('ui-autocomplete')._renderItem = (ul, item) ->
+    val = item.name
+    if item.number?
+      val = "#{item.number} - #{item.name}"
     return $('<li class="list-group-item"></li>')
-      .append(item.name)
+      .append(val)
       .appendTo(ul)
 
 # Handle the select event from either autocomplete (organization or course), since
@@ -152,7 +205,10 @@ handle_select_from_autocomplete = (event, ui, field_id)->
     additional_fields = '.new-course'
 
   if ui.item.slug?
-    field.val ui.item.name
+    val = ui.item.name
+    if ui.item.number?
+      val = "#{ui.item.number} - #{ui.item.name}"
+    field.val val
     field.data data, ui.item.slug
     if field_id == ORGANIZATION
       setup_autocomplete '/courses/' + ui.item.slug + '/search', COURSE
@@ -165,8 +221,13 @@ handle_select_from_autocomplete = (event, ui, field_id)->
       get_abbr_suggestion val
   return false
 
+handle_submit_course = ->
+  valid = validate(COURSE)
+  if valid
+    console.log valid
+
 handle_submit_organization = ->
-  valid = validate()
+  valid = validate(ORGANIZATION)
   if valid
     name = $('#organization').val()
     abbr = $('#abbr').val()
@@ -177,4 +238,5 @@ handle_submit_organization = ->
       dataType: 'json'
       success: (data)->
         if data['success']
+          $('#organization').data 'org-id', data['id']
           setup_autocomplete '/courses/' + data['id'] + '/search', COURSE

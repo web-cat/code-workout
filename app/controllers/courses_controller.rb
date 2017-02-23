@@ -148,7 +148,9 @@ class CoursesController < ApplicationController
   # -------------------------------------------------------------
   def search
     @organization = Organization.find params[:organization_id]
-    if params[:term]
+    if params[:term] && params[:slug]
+      @courses = Course.find_by(organization: @organization, slug: params[:term])
+    elsif params[:term]
       @courses = @organization.courses.where('lower(name) like ? or lower(number) like ? or slug like ?',
         "%#{params[:term].downcase}%", "%#{params[:term].downcase}%", "%#{params[:term]}%")
     else
