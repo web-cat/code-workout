@@ -224,7 +224,24 @@ handle_select_from_autocomplete = (event, ui, field_id)->
 handle_submit_course = ->
   valid = validate(COURSE)
   if valid
-    console.log valid
+    org_id = $('#organization').data 'org-id'
+    course_name = $('#course').val()
+    course_number = $('#number').val()
+    # enforce the format 'CS 1114' (including the space)
+    dept = course_number.match(/^([A-Z]+)/g)
+    number = course_number.match(/([0-9]+)$/g)
+    course_number = "#{dept} #{number}"
+    slug = course_number.replace('/\s+/', '')
+    $.ajax
+      url: "/courses/#{org_id}/create"
+      type: 'post'
+      dataType: 'json'
+      data: { course: { number: course_number, slug: slug, name: course_name } }
+      success: (data)->
+        if data['success']?
+          window.location.href = data['url']
+        else
+          console.log data['message']
 
 handle_submit_organization = ->
   valid = validate(ORGANIZATION)

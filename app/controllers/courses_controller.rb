@@ -70,49 +70,25 @@ class CoursesController < ApplicationController
   # -------------------------------------------------------------
   # POST /courses
   def create
-    form = params[:course]
-    offering = form[:course_offering]
-    @course = Course.find_by(number: form[:number])
-
-    if @course.nil?
-      org = Organization.find_by(id: form[:organization_id])
-      if !org
-        flash[:error] = "Organization #{form[:organization_id]} " +
-          'could not be found.'
-        redirect_to root_path and return
-      end
-      @course = Course.new(
-        name: form[:name].to_s,
-        number: form[:number].to_s,
-        creator_id: current_user.id,
-        organization: org)
-        org.courses << @course
-        org.save
-    else
-      @course.course_offerings do |c|
-        if c.term == offering[:term].to_s
-          redirect_to new_course_path,
-            alert: 'A course offering with this number for this ' +
-            'term already exists.' and return
-        end
-      end
-    end
-
-    tmp = CourseOffering.create(
-      label: offering[:label].andand.to_s,
-      url: offering[:url].andand.to_s,
-      self_enrollment_allowed:
-        offering[:self_enrollment_allowed].andand.to_i == '1',
-      term: Term.find_by(id: offering[:term].andand.to_i))
-    @course.course_offerings << tmp
+    create_params = params[:course]
+    @organization = Organization.find(params[:organization_id])
+    @course = Course.new(
+      name: create_params[:name],
+      number: create_params[:number],
+      slug: create_params[:slug],
+      organization: @organization
+    )
 
     if @course.save
-      redirect_to organization_course_path(
-        @course.organization,
-        @course,
-        tmp.term), notice: "#{tmp.display_name} was successfully created."
+      url = url_for(organization_course_path(
+          id: @course.id,
+          organization_id: @organization.id
+        )
+      )
+      render json: { success: true, url: url } and return
     else
-      render action: 'new'
+      render json: { success: false, error:
+        "There was a problem while creating your course. Please check your fields and try again." } and return
     end
   end
 
