@@ -1,7 +1,8 @@
-= semantic_form_for @course_offering, html: { class: "form-horizontal col-xs-10" } do |f|
+- url = url_for(organization_course_offering_create_path(course_id: params[:course_id], organization_id: params[:organization_id]))
+= semantic_form_for @course_offering, url: url, html: { class: "form-horizontal col-xs-10" } do |f|
   = f.semantic_errors
   = f.inputs do
-    = f.input :label, input_html: { placeholder: "#{@current_user.display_name} #{Term.current_term.display_name}" }
+    = f.input :label, input_html: { placeholder: "e.g. MWF 10:00am" }
     = f.input :term
     = f.input :url
     = f.input :cutoff_date

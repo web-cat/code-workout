@@ -1,4 +1,9 @@
 %h1 New Course Offering
 
+%p.lead
+  Creating an offering of
+  = @course.name
+  at
+  = @organization.name
 .container
   = render 'form'
