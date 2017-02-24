@@ -80,9 +80,10 @@ class CoursesController < ApplicationController
     )
 
     if @course.save
-      url = url_for(organization_course_path(
-          id: @course.id,
-          organization_id: @organization.id
+      url = url_for(organization_new_course_offering_path(
+          course_id: @course.id,
+          organization_id: @organization.id,
+          new_course: true
         )
       )
       render json: { success: true, url: url } and return

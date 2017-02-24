@@ -22,6 +22,11 @@ class CourseOfferingsController < ApplicationController
   # -------------------------------------------------------------
   # GET /course_offerings/new
   def new
+    @organization = Organization.find(params[:organization_id])
+    @course = Course.find(params[:course_id])
+    if params[:new_course]
+      flash.now[:success] = "#{@course.name} was successfully created in #{@organization.name}"
+    end
   end
 
 
