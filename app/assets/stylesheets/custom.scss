@@ -346,6 +346,7 @@ input.datepicker, input.time-limit {
   @extend .action;
 }
 
+// shake animation for form validations and hints
 .shake {
   animation: shake 0.82s cubic-bezier(.36, .07, .19, .97) both;
   transform: translate3d(0, 0, 0);
@@ -369,4 +370,14 @@ input.datepicker, input.time-limit {
   40%, 60% {
     transform: translate3d(4px, 0, 0);
   }
+}
+
+// overriding bootstrap for the sign-in form
+.btn-social.list-group-item {
+  color: white;
+}
+
+.btn-social.list-group-item a:hover :focus{
+  background-color: inherit;
+  color: inherit;
 }
