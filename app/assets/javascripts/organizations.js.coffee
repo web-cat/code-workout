@@ -5,6 +5,7 @@ $(document).ready ->
   $('#term_id').change ->
     window.location.href = '?term_id=' + $('#term_id').val()
 
+$('.organizations.new_or_existing').ready ->
   setup_autocomplete '/organizations/search', ORGANIZATION
 
   $('#organization').on 'blur', ->
@@ -19,9 +20,14 @@ $(document).ready ->
     $('#organization').autocomplete 'enable'
 
   $('#btn-course').on 'click', ->
-    $('.new-course').css 'display', 'none'
-    $('#course').val ''
-    $('#course').autocomplete 'enable'
+    if $(this).text() == 'Cancel'
+      $('.new-course').css 'display', 'none'
+      $('#course').val ''
+      $('#course').autocomplete 'enable'
+    else if $(this).text() == 'Continue'
+      org = $('#organization').data 'org-id'
+      course = $('#course').data 'course-id'
+      window.location.href = "/courses/#{org}/#{course}/new_offering"
 
   $('#btn-add').on 'click', ->
     name = $('#organization').val()
@@ -212,13 +218,19 @@ handle_select_from_autocomplete = (event, ui, field_id)->
     field.data data, ui.item.slug
     if field_id == ORGANIZATION
       setup_autocomplete '/courses/' + ui.item.slug + '/search', COURSE
+    else if field_id == COURSE
+      $('#btn-course').text 'Continue'
+      $('#btn-course').css 'display', 'block'
   else
-    field.removeData data
-    field.autocomplete 'disable'
-    $(additional_fields).css 'display', 'block'
     if field_id == ORGANIZATION
       val = field.val()
       get_abbr_suggestion val
+    else if field_id == COURSE
+      $('#btn-course').text('Cancel')
+
+    field.removeData data
+    field.autocomplete 'disable'
+    $(additional_fields).css 'display', 'block'
   return false
 
 handle_submit_course = ->
