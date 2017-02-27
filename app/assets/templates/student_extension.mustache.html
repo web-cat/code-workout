@@ -3,30 +3,18 @@
     <td style='font-size: small;'>{{ course_offering_display }}</td>
     <td style='font-size: small;'>{{ student_display }}</td>
     <td>
-      <div class="input-group date opening-datepicker" data-date='{{ opening_date }}'>
-        <input class='datepicker form-control' type='text' placeholder='Set date'/>
-        <span class='input-group-addon'>
-          <span class="glyphicon glyphicon-calendar"/>
-        </span>
-      </div>
+      <input class='datepicker flatpickr opening-datepicker form-control' type='text' placeholder='Set date'
+        data-date='{{ opening_date }}'/>
     </td>
     <td>
-      <div class="input-group date soft-datepicker" data-date='{{ soft_deadline }}'>
-        <input class='datepicker form-control' type='text' placeholder='Set date'/>
-        <span class='input-group-addon'>
-          <span class="glyphicon glyphicon-calendar"/>
-        </span>
-      </div>
+      <input class='datepicker soft-datepicker form-control' type='text' placeholder='Set date'
+        data-date='{{ soft_deadline}}'/>
     </td>
     <td>
-      <div class="input-group date hard-datepicker" data-date='{{ hard_deadline }}'>
-        <input class='datepicker form-control' type='text' placeholder='Set date'/>
-        <span class='input-group-addon'>
-          <span class="glyphicon glyphicon-calendar"/>
-        </span>
-      </div>
+      <input class='datepicker hard-datepicker form-control' type='text' placeholder='Set date'
+        data-date = '{{ hard_deadline }}'/>
     </td>
-    <td><input class='form-control time-limit input-sm input' value='{{ time_limit }}' type='number' min='0' placeholder='Blank for default'></td>
+    <td><input class='form-control time-limit input-sm input' value='{{ time_limit }}' type='number' min='0' placeholder='Optional'></td>
     <td><i class='action delete-extension fa fa-times'></i></td>
   </tr>
 </script>

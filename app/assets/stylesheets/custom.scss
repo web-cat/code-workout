@@ -324,8 +324,31 @@ ul.wysihtml5-toolbar li {
   overflow-y: auto;
 }
 
-input.datepicker, input.time-limit {
-  min-width: 18ch;
+// Rules for form inputs
+// Mostly rules for complex forms like the workout-edit form
+input {
+  &.datepicker {
+    min-width: 20ch;
+
+    &:read-only {
+      background-color: white;
+      @extend .action;
+    }
+  }
+
+  &.time-limit {
+    min-width: 10ch;
+  }
+
+  &.points {
+    min-width: 10ch;
+  }
+
+  &[type=number]::-webkit-inner-spin-button,
+  &[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
 }
 
 .btn-group a {
@@ -375,9 +398,9 @@ input.datepicker, input.time-limit {
 // overriding bootstrap for the sign-in form
 .btn-social.list-group-item {
   color: white;
-}
 
-.btn-social.list-group-item a:hover :focus{
-  background-color: inherit;
-  color: inherit;
+  a:hover :focus {
+    background-color: inherit;
+    color: inherit;
+  }
 }

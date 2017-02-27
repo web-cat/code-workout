@@ -198,9 +198,9 @@ init_student_extensions = ->
           student_id: extension.student_id
           student_display: extension.student_display
           time_limit: extension.time_limit
-          opening_date: extension.opening_date
-          soft_deadline: extension.soft_deadline
-          hard_deadline: extension.hard_deadline
+          opening_date: extension.opening_date * 1000
+          soft_deadline: extension.soft_deadline * 1000
+          hard_deadline: extension.hard_deadline * 1000
         template =
             $(Mustache.render($(window.codeworkout.student_extension_template).filter('#extension-template').html(), data))
         $('#student-extension-fields tbody').append template
@@ -211,10 +211,13 @@ init_exercises = ->
   if exercises
     for exercise in exercises
       do (exercise) ->
+        name = "X#{exercise.id}"
+        if exercise.name
+          name = name + ": #{exercise.name}"
         data =
           id: exercise.id
           exercise_workout_id: exercise.exercise_workout_id
-          name: exercise.name
+          name: name
           points: exercise.points
         $('#ex-list').append(Mustache.render($(window.codeworkout.exercise_template).filter('#exercise-template').html(), data))
     $('#ex-list').removeData 'exercises'
@@ -231,65 +234,54 @@ init_datepickers = ->
       init_row_datepickers extension
 
 init_row_datepickers = (row) ->
-  opening_datepicker = $('.input-group.opening-datepicker', $(row))
-  soft_datepicker = $('.input-group.soft-datepicker', $(row))
-  hard_datepicker = $('.input-group.hard-datepicker', $(row))
+  opening_input = $('.opening-datepicker', $(row))
+  soft_input = $('.soft-datepicker', $(row))
+  hard_input = $('.hard-datepicker', $(row))
 
-  if opening_datepicker.val() == '' || !opening_datepicker.data('DateTimePicker').date()?
-    opening_datepicker.datetimepicker
-      useCurrent: false
-  if soft_datepicker.val() == '' || !soft_datepicker.data('DateTimePicker').date()?
-    soft_datepicker.datetimepicker
-      useCurrent: false
-      minDate: opening_datepicker.data('DateTimePicker').minDate()
-  if hard_datepicker.val() == '' || !hard_datepicker.data('DateTimePicker').date()?
-    hard_datepicker.datetimepicker
-      useCurrent: false
-      minDate: soft_datepicker.data('DateTimePicker').minDate()
-
-  # Handle date change events
-  opening_datepicker.on 'dp.change', (e) ->
-    if e.date?
-      soft_datepicker.data('DateTimePicker').minDate e.date
-      disable_dates hard_datepicker, soft_datepicker, opening_datepicker, 'minDate'
-
-  soft_datepicker.on 'dp.change', (e) ->
-    if e.date?
-      opening_datepicker.data('DateTimePicker').maxDate e.date
-      hard_datepicker.data('DateTimePicker').minDate e.date
-
-  hard_datepicker.on 'dp.change', (e) ->
-    if e.date?
-      soft_datepicker.data('DateTimePicker').maxDate e.date
-      disable_dates opening_datepicker, soft_datepicker, hard_datepicker, 'maxDate'
+  opening_datepicker = null
+  soft_datepicker = null
+  hard_datepicker = null
+  if opening_input.val() == ''
+    opening_datepicker = opening_input.flatpickr
+      enableTime: true
+      altInput: true
+      altFormat: 'M j, Y h:i K'
+      onChange: (selectedDates, dateStr, instance) ->
+        if selectedDates.length
+          date = selectedDates[0].getTime()
+          opening_input.data 'date', date
+  if soft_input.val() == ''
+    soft_datepicker = soft_input.flatpickr
+      enableTime: true
+      altInput: true
+      altFormat: 'M j, Y h:i K'
+      onChange: (selectedDates, dateStr, instance) ->
+        if selectedDates.length
+          date = selectedDates[0].getTime()
+          soft_input.data 'date', date
+  if hard_input.val() == ''
+    hard_datepicker = hard_input.flatpickr
+      enableTime: true
+      altInput: true
+      altFormat: 'M j, Y h:i K'
+      onChange: (selectedDates, dateStr, instance) ->
+        if selectedDates.length
+          date = selectedDates[0].getTime()
+          hard_input.data 'date', date
 
   # Set existing values, if applicable
   if $('body').is '.workouts.edit'
-    if opening_datepicker.data('date')? && opening_datepicker.data('date') != ''
-      opening_date = moment.unix(parseInt(opening_datepicker.data('date')))
-      opening_datepicker.data('DateTimePicker').defaultDate opening_date
+    if opening_input.data('date')? && opening_input.data('date') != ''
+      date = parseInt(opening_input.data('date'))
+      opening_datepicker.setDate(date, false)
 
-    if soft_datepicker.data('date')? && soft_datepicker.data('date') != ''
-      soft_date = moment.unix(parseInt(soft_datepicker.data('date')))
-      soft_datepicker.data('DateTimePicker').defaultDate soft_date
+    if soft_input.data('date')? && soft_input.data('date') != ''
+      date = parseInt(soft_input.data('date'))
+      soft_datepicker.setDate(date, false)
 
-    if hard_datepicker.data('date')? && hard_datepicker.data('date') != ''
-      hard_date = moment.unix(parseInt(hard_datepicker.data('date')))
-      hard_datepicker.data('DateTimePicker').defaultDate hard_date
-
-    disable_dates opening_datepicker, soft_datepicker, hard_datepicker, 'maxDate'
-    disable_dates soft_datepicker, opening_datepicker, undefined, 'minDate'
-    disable_dates soft_datepicker, hard_datepicker, undefined, 'maxDate'
-    disable_dates hard_datepicker, soft_datepicker, opening_datepicker, 'minDate'
-
-disable_dates = (this_datepicker, preferred_datepicker, backup_datepicker, min_max) ->
-  preferred_date = if preferred_datepicker? then preferred_datepicker.data('DateTimePicker').date() else undefined
-  backup_date = if backup_datepicker? then backup_datepicker.data('DateTimePicker').date() else undefined
-
-  if preferred_date?
-    this_datepicker.data('DateTimePicker')[min_max](preferred_date)
-  else if backup_date?
-    this_datepicker.data('DateTimePicker')[min_max](backup_date)
+    if hard_input.data('date')? && hard_input.data('date') != ''
+      date = parseInt(hard_input.data('date'))
+      hard_datepicker.setDate(date, false)
 
 get_exercises = ->
   exs = $('#ex-list li')
@@ -313,13 +305,9 @@ get_offerings = ->
       offering_fields = $('td', $(offering_row))
       offering_id = $(offering_fields[0]).data 'course-offering-id'
       if offering_id != ''
-        opening_datepicker = $('.opening-datepicker', $(offering_fields[1])).data('DateTimePicker').date()
-        soft_datepicker = $('.soft-datepicker', $(offering_fields[2])).data('DateTimePicker').date()
-        hard_datepicker = $('.hard-datepicker', $(offering_fields[3])).data('DateTimePicker').date()
-
-        opening_date = if opening_datepicker? then opening_datepicker.toDate().toString() else null
-        soft_deadline = if soft_datepicker? then soft_datepicker.toDate().toString() else null
-        hard_deadline = if hard_datepicker? then hard_datepicker.toDate().toString() else null
+        opening_date = $('.opening-datepicker', $(offering_fields[1])).data('date')
+        soft_deadline = $('.soft-datepicker', $(offering_fields[2])).data('date')
+        hard_deadline = $('.hard-datepicker', $(offering_fields[3])).data('date')
 
         offering =
           opening_date: opening_date
@@ -329,6 +317,7 @@ get_offerings = ->
           extensions: []
 
         offerings[offering_id.toString()] = offering
+  console.log offerings
   return offerings
 
 get_offerings_with_extensions = ->
@@ -340,14 +329,9 @@ get_offerings_with_extensions = ->
       student_id = $(extension_row).data 'student-id'
       course_offering_id = $(extension_row).data 'course-offering-id'
       time_limit = $('.time-limit', $(extension_fields[5])).val()
-      opening_datepicker = $('.opening-datepicker', $(extension_fields[2])).data('DateTimePicker').date()
-      soft_datepicker = $('.soft-datepicker', $(extension_fields[3])).data('DateTimePicker').date()
-      hard_datepicker = $('.hard-datepicker', $(extension_fields[4])).data('DateTimePicker').date()
-
-      opening_date = if opening_datepicker? then opening_datepicker.toDate().toString() else null
-      soft_deadline = if soft_datepicker? then soft_datepicker.toDate().toString() else null
-      hard_deadline = if hard_datepicker? then hard_datepicker.toDate().toString() else null
-
+      opening_date = $('.opening-datepicker', $(extension_fields[2])).data('date')
+      soft_deadline = $('.soft-datepicker', $(extension_fields[3])).data('date')
+      hard_deadline = $('.hard-datepicker', $(extension_fields[4])).data('date')
       extension =
         student_id: student_id
         time_limit: time_limit
