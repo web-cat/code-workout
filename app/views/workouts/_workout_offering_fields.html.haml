@@ -4,15 +4,15 @@
       = course_offering.andand.display_name_with_term
   %td
     - date = workout_offering.andand.opening_date.andand.to_i
-    %input.datepicker.opening-datepicker{ type: 'text', class: 'form-control', placeholder: 'Set date',
+    %input.datepicker.opening-datepicker{ type: 'text', class: 'form-control input-sm', placeholder: 'Set date',
       data: { date: (date ? date * 1000 : nil) } }
   %td
     - date = workout_offering.andand.soft_deadline.andand.to_i
-    %input.datepicker.soft-datepicker{ type: 'text', class: 'form-control', placeholder: 'Set date',
+    %input.datepicker.soft-datepicker{ type: 'text', class: 'form-control input-sm', placeholder: 'Set date',
       data: { date: (date ? date * 1000 : nil) } }
   %td
     - date = workout_offering.andand.hard_deadline.andand.to_i
-    %input.datepicker.hard-datepicker{ type: 'text', class: 'form-control', placeholder: 'Set date',
+    %input.datepicker.hard-datepicker{ type: 'text', class: 'form-control input-sm', placeholder: 'Set date',
       data: { date: (date ? date * 1000 : nil) } }
   %td
     = button_tag type: 'button', class: 'add-extension btn btn-sm btn-primary',

@@ -245,7 +245,7 @@ init_row_datepickers = (row) ->
     opening_datepicker = opening_input.flatpickr
       enableTime: true
       altInput: true
-      altFormat: 'M j, Y h:i K'
+      altFormat: 'M j, Y - h:i K'
       onChange: (selectedDates, dateStr, instance) ->
         if selectedDates.length
           date = selectedDates[0].getTime()
@@ -254,7 +254,7 @@ init_row_datepickers = (row) ->
     soft_datepicker = soft_input.flatpickr
       enableTime: true
       altInput: true
-      altFormat: 'M j, Y h:i K'
+      altFormat: 'M j, Y - h:i K'
       onChange: (selectedDates, dateStr, instance) ->
         if selectedDates.length
           date = selectedDates[0].getTime()
@@ -263,7 +263,7 @@ init_row_datepickers = (row) ->
     hard_datepicker = hard_input.flatpickr
       enableTime: true
       altInput: true
-      altFormat: 'M j, Y h:i K'
+      altFormat: 'M j, Y - h:i K'
       onChange: (selectedDates, dateStr, instance) ->
         if selectedDates.length
           date = selectedDates[0].getTime()
