@@ -46,8 +46,8 @@
       %i.fa.fa-info-circle.action{ data: { toggle: 'modal', target: '#policy-help-modal' } }
     = label_tag :time_limit, 'Time', class: 'control-label col-xs-1'
     .col-xs-2
-      %input#time-limit.form-control.input-sm.input{ type: 'number', min: '0',
-        placeholder: 'Leave blank for none.', value: @time_limit ? "#{@time_limit}" : '' }
+      %input#time-limit.time-limit.form-control.input-sm.input{ type: 'number', min: '0',
+        placeholder: 'Optional', value: @time_limit ? "#{@time_limit}" : '' }
 
   .form-group
     = label_tag :is_public, 'Available in Gym?', class: 'control-label col-xs-2'

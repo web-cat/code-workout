@@ -3,7 +3,7 @@ require 'date'
 
 class WorkoutsController < ApplicationController
   before_action :set_workout, only: [:show, :update, :destroy]
-  after_action :allow_iframe, only: [:new, :new_create, :edit]
+  after_action :allow_iframe, only: [:new, :new_create, :edit, :embed]
   respond_to :html, :js
 
   #~ Action methods ...........................................................
@@ -51,6 +51,17 @@ class WorkoutsController < ApplicationController
         error: 'You do not have permission to access that non-public workout.
           Have a look at these popular workouts instead.'
       }
+    end
+  end
+
+  def embed
+    workouts = Workout.where('lower(name) = ? and is_public = true', params[:resource_name].downcase)
+    @workout = workouts.first
+    if @workout
+      redirect_to practice_workout_path(id: @workout.id, lti_launch: true) and return
+    else
+      @message = 'Sorry, there are no public workouts with that name.'
+      render 'lti/error' and return
     end
   end
 
@@ -239,7 +250,14 @@ class WorkoutsController < ApplicationController
     if @workout.save
       if @lti_launch
         lti_params = session[:lti_params]
-        url = url_for(course_offerings_path(lti_launch: true))
+        url = url_for(organization_workout_offering_path(
+            organization_id: params[:organization_id],
+            course_id: params[:course_id],
+            term_id: params[:term_id],
+            id: workout_offering_id,
+            lti_launch: true
+          )
+        )
       else
         if workout_offering_id.nil?
           url = url_for(workout_path(id: @workout.id))
@@ -255,7 +273,12 @@ class WorkoutsController < ApplicationController
       end
     else
       err_string = 'There was a problem while creating the workout.'
-      url = url_for new_workout_path(notice: err_string)
+      url = url_for organization_new_workout_path(
+        organization_id: params[:organization_id],
+        term_id: params[:term_id],
+        course_id: params[:course_id],
+        notice: err_string
+      )
     end
 
     respond_to do |format|
@@ -390,10 +413,6 @@ class WorkoutsController < ApplicationController
     @workout = Workout.find_by(id: params[:id])
     authorize! :practice, @workout
     if @workout
-      if !user_signed_in?
-        redirect_to workout_path(@workout),
-          notice: "Need to Sign in to practice" and return
-      end
       session[:current_workout] = @workout.id
       if current_user
         @workout_score = @workout.score_for(current_user)
@@ -417,7 +436,7 @@ class WorkoutsController < ApplicationController
         end
       end
       ex1 = @workout.next_exercise(nil, current_user, @workout_score)
-      redirect_to exercise_practice_path(id: ex1.id, workout_id: @workout.id)
+      redirect_to exercise_practice_path(id: ex1.id, workout_id: @workout.id, lti_launch: params[:lti_launch])
     else
       redirect_to workouts, notice: 'Workout not found' and return
     end
@@ -440,7 +459,7 @@ class WorkoutsController < ApplicationController
       @workout.name = params[:name]
       @workout.description = params[:description]
       @workout.is_public = params[:is_public]
-      
+
       common = {}   # params that are common among all offerings of this workout
       common[:workout_policy] = WorkoutPolicy.find_by id: params[:policy_id]
       common[:time_limit] = params[:time_limit]

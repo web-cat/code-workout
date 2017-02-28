@@ -2,23 +2,26 @@
 #
 # Table name: workout_scores
 #
-#  id                  :integer          not null, primary key
-#  workout_id          :integer          not null
-#  user_id             :integer          not null
-#  score               :float(24)
-#  completed           :boolean
-#  completed_at        :datetime
-#  last_attempted_at   :datetime
-#  exercises_completed :integer
-#  exercises_remaining :integer
-#  created_at          :datetime
-#  updated_at          :datetime
-#  workout_offering_id :integer
+#  id                      :integer          not null, primary key
+#  workout_id              :integer          not null
+#  user_id                 :integer          not null
+#  score                   :float(24)
+#  completed               :boolean
+#  completed_at            :datetime
+#  last_attempted_at       :datetime
+#  exercises_completed     :integer
+#  exercises_remaining     :integer
+#  created_at              :datetime
+#  updated_at              :datetime
+#  workout_offering_id     :integer
+#  lis_outcome_service_url :string(255)
+#  lis_result_sourcedid    :string(255)
 #
 # Indexes
 #
-#  index_workout_scores_on_user_id     (user_id)
-#  index_workout_scores_on_workout_id  (workout_id)
+#  index_workout_scores_on_user_id        (user_id)
+#  index_workout_scores_on_workout_id     (workout_id)
+#  workout_scores_workout_offering_id_fk  (workout_offering_id)
 #
 
 # =============================================================================
@@ -125,10 +128,18 @@ class WorkoutScore < ActiveRecord::Base
     if time_limit
       now = Time.zone.now
       remaining = time_limit - (now - self.created_at)/60.0
-      until_deadline = (workout_offering.hard_deadline_for(user) - now)/60.0
+      hard_deadline = workout_offering.hard_deadline_for(user)
+
+      if hard_deadline
+        until_deadline = (hard_deadline - now)/60.0
+      end
 
       # return the lesser of the two possible limits
-      [remaining, until_deadline].min
+      if until_deadline
+        return [remaining, until_deadline].min
+      else
+        return remaining
+      end
     else
       nil
     end

@@ -22,6 +22,11 @@ class CourseOfferingsController < ApplicationController
   # -------------------------------------------------------------
   # GET /course_offerings/new
   def new
+    @organization = Organization.find(params[:organization_id])
+    @course = Course.find(params[:course_id])
+    if params[:new_course]
+      flash.now[:success] = "#{@course.name} was successfully created in #{@organization.name}"
+    end
   end
 
 
@@ -64,20 +69,28 @@ class CourseOfferingsController < ApplicationController
   # POST /course_offerings
   def create
     @course_offering = CourseOffering.new(course_offering_params)
-    CourseEnrollment.create(
-      course_offering: @course_offering,
-      user: current_user,
-      course_role: CourseRole.instructor
-    )
+
+    # until we figure out how to use formtastic hidden fields
+    @course = Course.find(params[:course_id])
+    @course_offering.course = @course
 
     if @course_offering.save
+      CourseEnrollment.create(
+        course_offering: @course_offering,
+        user: current_user,
+        course_role: CourseRole.instructor
+      )
+
       redirect_to organization_course_path(
         @course_offering.course.organization,
         @course_offering.course,
         @course_offering.term),
         notice: "#{@course_offering.display_name} was successfully created."
     else
-      render action: 'new'
+      redirect_to organization_new_course_offering_path(
+        organization_id: params[:organization_id],
+        course_id: params[:course_id]
+      )
     end
   end
 

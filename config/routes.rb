@@ -12,6 +12,7 @@ CodeWorkout::Application.routes.draw do
   get 'home/license'
   get 'home/contact'
   get 'home/new_course_modal', as: :new_course_modal
+  get 'home/python_ruby_modal', as: :python_ruby_modal
 
   get 'static_pages/home'
   get 'static_pages/help'
@@ -69,6 +70,7 @@ CodeWorkout::Application.routes.draw do
     resources :exercises
 
     # /gym/workouts ...
+    get  'workouts/embed' => 'workouts#embed'
     get  'workouts/download' => 'workouts#download'
     get  'workouts/:id/add_exercises' => 'workouts#add_exercises'
     post 'workouts/link_exercises'  => 'workouts#link_exercises'
@@ -92,7 +94,10 @@ CodeWorkout::Application.routes.draw do
     get 'search' => 'courses#search', as: :courses_search
     post 'find' => 'courses#find', as: :course_find
     get 'new' => 'courses#new'
+    post 'create' => 'courses#create', as: :courses_create
     get ':id/edit' => 'courses#edit', as: :course_edit
+    get ':course_id/new_offering' => 'course_offerings#new', as: :new_course_offering
+    post ':course_id/create_offering' => 'course_offerings#create', as: :course_offering_create
     get ':course_id/:term_id/tab_content/:tab' => 'courses#tab_content'
     get ':course_id/:term_id/workouts/new' => 'workouts#new', as: :new_workout
     get ':course_id/:term_id/workouts/:workout_id/clone' => 'workouts#clone', as: :clone_workout
@@ -108,6 +113,10 @@ CodeWorkout::Application.routes.draw do
     get ':id(/:term_id)' => 'courses#show', as: :course
   end
 
+  # Organization routes, separate from courses
+  get 'organizations/new_or_existing'
+  get 'organizations/search'
+  resources :organizations, only: :create
 
   resources :course_offerings, only: [ :edit, :update, :index, :show ] do
     post 'enroll' => :enroll, as: :enroll
@@ -131,9 +140,13 @@ CodeWorkout::Application.routes.draw do
 
   #OmniAuth for Facebook
   devise_for :users,
-    controllers: { omniauth_callbacks: 'users/omniauth_callbacks' },
+    controllers: { omniauth_callbacks: 'users/omniauth_callbacks', registrations: 'registrations' },
     skip: [:registrations, :sessions]
   as :user do
+    get '/new_password' => 'devise/passwords#new', as: :new_password
+    get '/edit_password' => 'devise/passwords#edit', as: :edit_password
+    put '/update_password' => 'devise/passwords#update', as: :update_password
+    post '/create_password' => 'devise/passwords#create', as: :create_password
     get '/signup' => 'devise/registrations#new', as: :new_user_registration
     post '/signup' => 'devise/registrations#create', as: :user_registration
     get '/login' => 'devise/sessions#new', as: :new_user_session

@@ -469,3 +469,6 @@ DEPENDENCIES
   tzinfo
   uglifier (>= 1.3.0)
   wannabe_bool
+
+BUNDLED WITH
+   1.13.2

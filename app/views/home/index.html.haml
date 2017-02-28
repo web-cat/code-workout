@@ -26,7 +26,10 @@
         = succeed ',' do
           %strong Teachers
         want to use CodeWorkout in your course?
-      = button_link 'Create your course', new_course_modal_path, color: 'primary', size: 'lg', remote: true
+      - if user_signed_in?
+        = button_link 'Create your course', organizations_new_or_existing_path, color: 'primary', size: 'lg'
+      - else
+        = button_link 'Create your course', new_course_modal_path, color: 'primary', size: 'lg', remote: true
 
   .row
     .pitch.col-md-4.col-md-offset-8
@@ -42,9 +45,9 @@
         = succeed ',' do
           = link_to 'Java', random_exercise_path(language: 'Java')
         = succeed ', or ' do
-          = link_to 'Ruby', random_exercise_path(language: 'Ruby')
+          = link_to 'Ruby', python_ruby_modal_path, remote: :true
         = succeed '.' do
-          = link_to 'Python', random_exercise_path(language: 'Python')
+          = link_to 'Python', python_ruby_modal_path, remote: :true
 
 .row.blurb
   .col-md-4

@@ -4,7 +4,7 @@
 - if @user_deadline
   = javascript_include_tag('timeout')
 = javascript_include_tag("practice")
-.col-md-7#user-deadline{ data: { deadline: @user_deadline } }
+.col-md-7#user-deadline{ data: { deadline: @user_deadline, server_now: @server_now } }
   = semantic_form_for @exercise_version,
     url: (@workout_offering ? organization_workout_offering_exercise_evaluate_path(id: @exercise_version.exercise.id,
       course_id: @workout_offering.course_offering.course.slug,

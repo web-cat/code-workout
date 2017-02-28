@@ -22,9 +22,9 @@
 #  last_name                :string(255)
 #  global_role_id           :integer          not null
 #  avatar                   :string(255)
-#  slug                     :string(255)      default(""), not null
-#  current_workout_score_id :integer
+#  slug                     :string(255)      not null
 #  time_zone_id             :integer
+#  current_workout_score_id :integer
 #
 # Indexes
 #
@@ -84,7 +84,7 @@ class User < ActiveRecord::Base
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, and :timeoutable
   devise :database_authenticatable, :omniauthable, :registerable,
-    :recoverable, :rememberable, :trackable, :validatable,  # :confirmable,
+    :recoverable, :rememberable, :trackable, #:validatable,  # :confirmable,
     :omniauth_providers => [:facebook, :google_oauth2, :cas]
 
   before_create :set_default_role
@@ -106,6 +106,7 @@ class User < ActiveRecord::Base
     where{ (id == u.id) |
     (course_enrollments.course_role_id != CourseRole::STUDENT_ID) } }
 
+  attr_accessor :skip_password_validation
 
   #~ Class methods ............................................................
 
@@ -353,6 +354,9 @@ class User < ActiveRecord::Base
     # taken from: http://www.chicagoinformatics.com/index.php/2012/09/
     # user-administration-for-devise/
     def password_required?
+      # only set when creating a new user through LTI
+      return false if skip_password_validation
+
       (!password.blank? && !password_confirmation.blank?) || new_record?
     end
 

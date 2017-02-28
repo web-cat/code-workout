@@ -18,6 +18,20 @@ class OrganizationsController < ApplicationController
       distinct
   end
 
+  def search
+    if params[:suggestion] && params[:term]
+      @organizations = Organization.where('slug like ?', "#{params[:term]}%").order('slug asc')
+    elsif params[:slug] && params[:term]
+      @organizations = Organization.find_by(slug: params[:term]) # leaving the name pluralized for rendering
+    elsif params[:term]
+      @organizations = Organization.where('lower(name) like ? or lower(abbreviation) like ? or slug like ?',
+        "%#{params[:term].downcase}%", "%#{params[:term].downcase}%", "%#{params[:term]}%")
+    else
+      @organizations = Organization.all
+    end
+
+    render json: @organizations.to_json and return
+  end
 
   # -------------------------------------------------------------
   def show
@@ -37,6 +51,28 @@ class OrganizationsController < ApplicationController
       find(params[:id])
   end
 
+  def new_or_existing
+    authorize! :new_or_existing, Organization, message: 'You must be signed in to start the course setup process.'
+    render layout: 'one_column'
+  end
+
+  def create
+    @organization = Organization.new(
+      name: params[:name],
+      abbreviation: params[:abbreviation],
+      slug: params[:abbreviation].downcase
+    )
+
+    if @organization.save
+      success = true
+    else
+      success = false
+    end
+
+    result = { success: success, id: @organization.slug }
+
+    render json: result and return
+  end
 
   #~ Private instance methods .................................................
   private

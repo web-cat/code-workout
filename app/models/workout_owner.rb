@@ -9,6 +9,7 @@
 # Indexes
 #
 #  index_workout_owners_on_workout_id_and_owner_id  (workout_id,owner_id) UNIQUE
+#  workout_owners_owner_id_fk                       (owner_id)
 #
 
 # =============================================================================

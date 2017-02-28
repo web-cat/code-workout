@@ -20,16 +20,16 @@ class LtiController < ApplicationController
       lis_result_sourcedid = params[:lis_result_sourcedid]
       @user = User.where(email: email).first
       if @user.blank?
-        @user = User.new(email: email, password: email, password_confirmation: email,
-          first_name: first_name, last_name: last_name)
+        @user = User.new(email: email, first_name: first_name, last_name: last_name)
+        @user.skip_password_validation = true
         @user.save
       end
       sign_in @user
 
-      if @tp.context_instructor?
-        @user.global_role = GlobalRole.instructor
-        @user.save
-      end
+      # if @tp.context_instructor?
+      #   @user.global_role = GlobalRole.instructor
+      #   @user.save
+      # end
 
       @lms_instance = LmsInstance.find_by consumer_key: params[:oauth_consumer_key]
       lms_id = @lms_instance.id
@@ -104,6 +104,9 @@ class LtiController < ApplicationController
           @course_offering.save!
         end
 
+        # Need to check instructor enrollment here so that permissions are
+        # set for creating workouts (if the workout does not already
+        # exist).
         if @tp.context_instructor? &&
           @course_offering &&
           @course_offering.can_enroll? &&
@@ -152,8 +155,8 @@ class LtiController < ApplicationController
             course_offering: @course_offering,
             workout: @workout,
             opening_date: DateTime.now,
-            soft_deadline: @term.ends_on,
-            hard_deadline: @term.ends_on,
+            soft_deadline: nil,
+            hard_deadline: nil,
             lms_assignment_id: lms_assignment_id
           )
           @workout_offering.save!
@@ -170,6 +173,9 @@ class LtiController < ApplicationController
       @course = @course_offering.course
       @organization = @course.organization
 
+      # Users accessing the workout after it has been created will be enrolled here
+      role = @tp.context_instructor? ? CourseRole.instructor : CourseRole.student
+
       if @tp.context_student? &&
         @course_offering &&
         @course_offering.can_enroll? &&
@@ -178,7 +184,7 @@ class LtiController < ApplicationController
         CourseEnrollment.create(
           course_offering: @course_offering,
           user: current_user,
-          course_role: CourseRole.student
+          course_role: role
         )
       end
 

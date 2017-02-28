@@ -12,7 +12,7 @@
 - workout ||= workout_score.andand.workout
 - workout ||= workout_offering.andand.workout
 - workout_offering ||= workout_score.andand.workout_offering
-- score_pct = workout_score ? (workout_score.score/workout.total_points * 100).round(0) : 0
+- score_pct = workout_score ? ((workout.total_points > 0) ? (workout_score.score/workout.total_points * 100).round(0) : 0) : 0
 - if score_pct == 100 && workout_score.score < workout.total_points
   - score_pct = 99
 - closed = (workout_offering.andand.hard_deadline && workout_offering.andand.hard_deadline < Time.zone.now)

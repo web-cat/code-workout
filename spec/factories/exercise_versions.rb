@@ -13,6 +13,8 @@
 #
 # Indexes
 #
+#  exercise_versions_creator_id_fk         (creator_id)
+#  exercise_versions_irt_data_id_fk        (irt_data_id)
 #  index_exercise_versions_on_exercise_id  (exercise_id)
 #  index_exercise_versions_on_stem_id      (stem_id)
 #

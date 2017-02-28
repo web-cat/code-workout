@@ -14,6 +14,8 @@ class Ability
   def initialize(user)
     # default abilities for anonymous, non-logged-in visitors
     can [:read, :index], [Term, Organization, Course, CourseOffering]
+    can [:random_exercise, :practice, :evaluate], Exercise, is_public: true
+    can [:practice, :read], Workout, is_public: true
 
     if user
       # This ability allows admins impersonating other users to revert
@@ -35,6 +37,8 @@ class Ability
             course_role_id != CourseRole::STUDENT_ID}.any?
         end
         can [:edit, :update], User, id: user.id
+
+        can :new_or_existing, Organization
 
         process_global_role user
         process_instructor user
@@ -101,7 +105,7 @@ class Ability
       can [:manage], [Course, CourseOffering, CourseEnrollment,
         Exercise, Attempt, ResourceFile]
 
-      can [:index], [Workout, Exercise, Attempt, ResourceFile]
+      #can [:index], [Workout, Exercise, Attempt, ResourceFile]
     end
   end
 
@@ -124,10 +128,14 @@ class Ability
 
       # A user can manage a CourseOffering if they are enrolled in that
       # offering and have a CourseRole where can_manage_course? is true.
-      can [:manage], CourseOffering,
-        CourseOffering.managed_by_user(user) do |co|
-        co.is_manager? user
-      end
+      # can [:manage], CourseOffering,
+      #   CourseOffering.managed_by_user(user) do |co|
+      #   co.is_manager? user
+      # end
+      can :create, [CourseOffering, Course, Organization]
+      can :manage, CourseOffering, course_enrollments:
+        { user_id: user.id, course_role:
+          { can_manage_assignments: true} }
 
       # A user can grade a CourseOffering if they are enrolled in that
       # offering and have a CourseRole where can_grade_submissions? is true.
@@ -145,6 +153,9 @@ class Ability
       can :tab_content, Course do |course|
         course.course_offerings.any? { |co| co.is_enrolled? (user) }
       end
+
+      # A user can search for courses if they are signed in
+      can :search, Course
     end
   end
 
@@ -158,11 +169,12 @@ class Ability
       !user.global_role.can_manage_all_courses? &&
       !user.global_role.is_instructor?
 
-      # Still needs revision
-      can [:index, :read, :practice, :evaluate], Exercise,
-        Exercise.visible_to_user(user) do |e|
+
+
+      can [:read, :practice, :evaluate], Exercise do |e|
         e.visible_to?(user)
       end
+
       can [:show], WorkoutOffering do |o|
         o.can_be_seen_by? user
 #        now = Time.now

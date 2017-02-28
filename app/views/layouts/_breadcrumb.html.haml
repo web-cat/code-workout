@@ -3,22 +3,34 @@
     = link_to 'Home', root_path
   - if @workout
     - flag1 = true
-    - if @workout.course_offerings.any?
-      - @workout.course_offerings.each do |workout_course_offering|
-        - if user_signed_in? && current_user.course_offerings.any?
-          - current_user.course_offerings.each do |user_course_offering|
-            - if flag1 && user_course_offering.id == workout_course_offering.id
-              - flag1 = false
-              %li= link_to 'Courses', organizations_path
-              %li= link_to workout_course_offering.course.organization.abbreviation,
-              organization_path(workout_course_offering.course.organization)
-              %li= link_to workout_course_offering.course.number,
-              organization_course_path(workout_course_offering.course.organization,
-              workout_course_offering.course)
-              %li= link_to workout_course_offering.term.display_name, |
-              organization_course_path(organization_id: workout_course_offering.course.organization.slug,
-              id: workout_course_offering.course.slug,
-              term_id: workout_course_offering.term.slug)
+    - if @workout_offering
+      %li= link_to 'Courses', organizations_path
+      %li= link_to @workout_offering.course_offering.course.organization.abbreviation,
+      organization_path(@workout_offering.course_offering.course.organization)
+      %li= link_to @workout_offering.course_offering.course.number,
+      organization_course_path(@workout_offering.course_offering.course.organization,
+      @workout_offering.course_offering.course)
+      %li= link_to @workout_offering.course_offering.term.display_name, |
+      organization_course_path(organization_id: @workout_offering.course_offering.course.organization.slug,
+      id: @workout_offering.course_offering.course.slug,
+      term_id: @workout_offering.course_offering.term.slug)
+    -else
+      - if @workout.course_offerings.any?
+        - @workout.course_offerings.each do |workout_course_offering|
+          - if user_signed_in? && current_user.course_offerings.any?
+            - current_user.course_offerings.each do |user_course_offering|
+              - if flag1 && user_course_offering.id == workout_course_offering.id
+                - flag1 = false
+                %li= link_to 'Courses', organizations_path
+                %li= link_to workout_course_offering.course.organization.abbreviation,
+                organization_path(workout_course_offering.course.organization)
+                %li= link_to workout_course_offering.course.number,
+                organization_course_path(workout_course_offering.course.organization,
+                workout_course_offering.course)
+                %li= link_to workout_course_offering.term.display_name, |
+                organization_course_path(organization_id: workout_course_offering.course.organization.slug,
+                id: workout_course_offering.course.slug,
+                term_id: workout_course_offering.term.slug)
     - if flag1
       %li= link_to 'Gym', gym_path
     - if @exercise

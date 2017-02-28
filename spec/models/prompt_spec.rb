@@ -17,6 +17,7 @@
 #
 #  index_prompts_on_actable_id           (actable_id)
 #  index_prompts_on_exercise_version_id  (exercise_version_id)
+#  prompts_irt_data_id_fk                (irt_data_id)
 #
 
 require 'spec_helper'
