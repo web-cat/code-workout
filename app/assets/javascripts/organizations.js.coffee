@@ -62,37 +62,16 @@ $('.organizations.new_or_existing').ready ->
 
 get_abbr_suggestion = (org_name)->
   lowers = ['the', 'and', 'for', 'at', 'in', 'of']
-
-  org_name = org_name.toLowerCase()
-  replace_func = (txt)->
-    if txt.trim() in lowers
-      return txt.toLowerCase()
-    else
-      return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
-  title_case = org_name.replace(/([^\W_]+[^\s-]*) */g, replace_func)
-  words = title_case.split ' '
-  matches = title_case.match /([A-Z\-])+/g
-  if matches?
-    acronym = matches.join ''
-    $.ajax
-      url: '/organizations/search'
-      type: 'get'
-      dataType: 'json'
-      data: { suggestion: true, term: acronym.toLowerCase() }
-      success: (data)->
-        if data.length == 0
-          $('#abbr').attr 'placeholder', "suggested: #{acronym}"
-        else
-          val = data[data.length - 1].name
-          split = val.split ''
-          ind = split[split.length - 1]
-          if isNaN(ind)
-            acronym = acronym + "1"
-            $('#abbr').attr 'placeholder', "suggested: #{acronym}"
-          else
-            ind = parseInt(int) + 1
-            acronym = acronym + "" + ind
-            $('#abbr').attr 'placeholder', "suggested: #{acronym}"
+  $.ajax
+    url: '/organizations/abbr_suggestion'
+    type: 'get'
+    dataType: 'json'
+    data: { name: org_name }
+    success: (data)->
+      if data['abbr']
+        $('#abbr').attr 'placeholder', data['abbr']
+      else
+        $('#org-hint').text data['msg']
 
 validate_org_slug = (term)->
   term = term.toLowerCase()

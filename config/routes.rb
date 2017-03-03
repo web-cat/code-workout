@@ -114,9 +114,13 @@ CodeWorkout::Application.routes.draw do
   end
 
   # Organization routes, separate from courses
-  get 'organizations/new_or_existing'
-  get 'organizations/search'
-  resources :organizations, only: :create
+  resources :organizations, only: :create do
+    collection do
+      get 'new_or_existing'
+      get 'search'
+      get 'abbr_suggestion'
+    end
+  end
 
   resources :course_offerings, only: [ :edit, :update, :index, :show ] do
     post 'enroll' => :enroll, as: :enroll

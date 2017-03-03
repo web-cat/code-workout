@@ -27,7 +27,7 @@
           %strong Teachers
         want to use CodeWorkout in your course?
       - if user_signed_in?
-        = button_link 'Create your course', organizations_new_or_existing_path, color: 'primary', size: 'lg'
+        = button_link 'Create your course', new_or_existing_organizations_path, color: 'primary', size: 'lg'
       - else
         = button_link 'Create your course', new_course_modal_path, color: 'primary', size: 'lg', remote: true
 
