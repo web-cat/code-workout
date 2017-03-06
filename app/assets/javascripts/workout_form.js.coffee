@@ -17,8 +17,11 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
     $('#ex-list').css 'display', 'block'
     ex_name = $(this).data('ex-name')
     ex_id = $(this).data('ex-id')
+    name = "X#{ex_id}"
+    if ex_name
+      name = name + ': ex_name'
     data =
-      name: ex_name
+      name: name
       id: ex_id
       points: 0
     template = Mustache.render($(window.codeworkout.exercise_template).filter('#exercise-template').html(), data)
