@@ -19,7 +19,7 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
     ex_id = $(this).data('ex-id')
     name = "X#{ex_id}"
     if ex_name
-      name = name + ': ex_name'
+      name = name + ": #{ex_name}"
     data =
       name: name
       id: ex_id
