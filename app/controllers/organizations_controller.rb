@@ -1,5 +1,5 @@
 class OrganizationsController < ApplicationController
-
+include AbbrHelper
   # -------------------------------------------------------------
   def index
     if params[:term_id]
@@ -19,9 +19,7 @@ class OrganizationsController < ApplicationController
   end
 
   def search
-    if params[:suggestion] && params[:term]
-      @organizations = Organization.where('slug like ?', "#{params[:term]}%").order('slug asc')
-    elsif params[:slug] && params[:term]
+    if params[:slug] && params[:term]
       @organizations = Organization.find_by(slug: params[:term]) # leaving the name pluralized for rendering
     elsif params[:term]
       @organizations = Organization.where('lower(name) like ? or lower(abbreviation) like ? or slug like ?',
@@ -31,6 +29,46 @@ class OrganizationsController < ApplicationController
     end
 
     render json: @organizations.to_json and return
+  end
+
+  def abbr_suggestion
+    unless params[:name]
+      render json: nil and return
+    end
+
+    name = to_title_case(params[:name])
+    strategies = ['caps', 'states', 'lowers']
+    success = false
+    abbr = nil
+
+    for strategy in strategies
+      case strategy
+      when 'caps'
+        abbr = caps_strategy(name)
+        unless (abbr && Organization.exists?(slug: abbr.downcase))
+          success = true
+          break
+        end
+      when 'states'
+        abbr = states_strategy(name)
+        unless (abbr && Organization.exists?(slug: abbr.downcase))
+          success = true
+          break
+        end
+      when 'lowers'
+        abbr = lowers_strategy(name)
+        unless (abbr && Organization.exists?(slug: abbr.downcase))
+          success = true
+          break
+        end
+      end
+    end
+
+    if abbr && success
+      render json: { abbr: abbr } and return
+    else
+      render json: { abbr: nil, msg: 'Could not auto-generate a unique abbreviation. Please enter a suitable one yourself.'} and return
+    end
   end
 
   # -------------------------------------------------------------
@@ -58,7 +96,7 @@ class OrganizationsController < ApplicationController
 
   def create
     @organization = Organization.new(
-      name: params[:name],
+      name: to_title_case(params[:name]),
       abbreviation: params[:abbreviation],
       slug: params[:abbreviation].downcase
     )
