@@ -13,11 +13,6 @@ html, body { height: 100%; }
 .below-nav { padding: 60px 10px 0; }
 .breadcrumb { margin-bottom: 15px; }
 
-@media only screen and (max-width: 991px) {
-  .sidebar { height: 50%; }
-  .below-nav { height: 100%; overflow-y: auto; }
-}
-
 .sidebar, .content, .maincol {
   padding-left: 0px;
   padding-right: 0px;
