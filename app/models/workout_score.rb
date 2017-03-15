@@ -363,11 +363,13 @@ class WorkoutScore < ActiveRecord::Base
     end
   end
 
-
-  private
-
+  # Sends scores to the appropriate LTI consumer
+  # -------------------------------------------------------------
   def update_lti
-    if lms_instance = self.workout_offering.course_offering.lms_instance
+    if self.workout_offering.course_offering.lms_instance &&
+      self.lis_outcome_service_url && self.lis_result_sourcedid
+
+      lms_instance = self.workout_offering.course_offering.lms_instance
       total_points = ExerciseWorkout.where(workout_id: self.workout_id).sum(:points)
       key = lms_instance.consumer_key
       secret = lms_instance.consumer_secret

@@ -316,6 +316,10 @@ class ExercisesController < ApplicationController
       @workout_score.lis_result_sourcedid ||= params[:lis_result_sourcedid]
       @workout_score.lis_outcome_service_url ||= params[:lis_outcome_service_url]
       @workout_score.save
+
+      if !@workout_score.score.nil?
+        @workout_score.update_lti
+      end
     end
 
     @workout ||= @workout_score ? @workout_score.workout : nil
