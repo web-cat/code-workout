@@ -12,18 +12,50 @@ class LtiController < ApplicationController
     if request.post?
       render :error and return unless lti_authorize!
 
+      @lms_instance = LmsInstance.find_by consumer_key: params[:oauth_consumer_key]
+
       # Retrieve user information and sign in the user.
-      email = params[:lis_person_contact_email_primary]
-      first_name = params[:lis_person_name_given]
-      last_name = params[:lis_person_name_family]
-      lis_outcome_service_url = params[:lis_outcome_service_url]
-      lis_result_sourcedid = params[:lis_result_sourcedid]
-      @user = User.where(email: email).first
+
+      # First check if we can find a user using the LtiIdentity
+      lti_user_id = params[:user_id]
+      @lti_identity = LtiIdentity.find_by(lms_instance: @lms_instance, lti_user_id: lti_user_id)
+      if @lti_identity
+        @user = @lti_identity.user
+      else
+        # If not, check both email parameters
+        email = params[:lis_person_contact_email_primary]
+        @user = User.find_by(email: params[:lis_person_contact_email_primary])
+        if @user.blank?
+          @user = User.find_by(email: params[:custom_canvas_user_login_id])
+        else
+      end
+
+      # If this condition is true, it means we haven't found a user so far,
+      # meaning we need to create a new one
       if @user.blank?
         @user = User.new(email: email, first_name: first_name, last_name: last_name)
         @user.skip_password_validation = true
         @user.save
+        @lti_identity = LtiIdentity.new(user: @user, lms_instance: @lms_instance, lti_user_id: lti_user_id)
+        @lti_identity.save
+      else
+        # We've found a user, so we'll check for incomplete fields and give them values
+        # before proceeding
+        if @user.first_name.blank?
+          @user.first_name = params[:lis_person_name_given]
+        end
+
+        if @user.last_name.blank?
+          @user.last_name = params[:lis_person_name_family]
+        end
+
+        if @user.lti_identity.blank?
+          @lti_identity = LtiIdentity.new(user: @user, lms_instance: @lms_instance, lti_user_id: lti_user_id)
+          @lti_identity.save
+        end
       end
+
+      # We have a user, sign them in
       sign_in @user
 
       # if @tp.context_instructor?
@@ -31,9 +63,10 @@ class LtiController < ApplicationController
       #   @user.save
       # end
 
-      @lms_instance = LmsInstance.find_by consumer_key: params[:oauth_consumer_key]
       lms_id = @lms_instance.id
       assignment_id = params[:custom_canvas_assignment_id]
+      lis_outcome_service_url = params[:lis_outcome_service_url]
+      lis_result_sourcedid = params[:lis_result_sourcedid]
       lms_assignment_id = "#{lms_id}-#{assignment_id}"
       @workout_offering = WorkoutOffering.find_by lms_assignment_id: lms_assignment_id
       if @workout_offering.blank?
