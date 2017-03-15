@@ -12,7 +12,7 @@ class LtiController < ApplicationController
     if request.post?
       render :error and return unless lti_authorize!
 
-      @lms_instance = LmsInstance.find_by consumer_key: params[:oauth_consumer_key]
+      @lms_instance = LmsInstance.find_by(consumer_key: params[:oauth_consumer_key])
 
       # Retrieve user information and sign in the user.
 
@@ -23,21 +23,28 @@ class LtiController < ApplicationController
         @user = @lti_identity.user
       else
         # If not, check both email parameters
-        email = params[:lis_person_contact_email_primary]
         @user = User.find_by(email: params[:lis_person_contact_email_primary])
-        if @user.blank?
+        if @user.blank? && params[:custom_canvas_user_login_id]
           @user = User.find_by(email: params[:custom_canvas_user_login_id])
-        else
+        end
       end
 
-      # If this condition is true, it means we haven't found a user so far,
-      # meaning we need to create a new one
       if @user.blank?
-        @user = User.new(email: email, first_name: first_name, last_name: last_name)
+        if params[:custom_canvas_user_login_id]
+          email = params[:custom_canvas_user_login_id]
+        else
+          email = params[:lis_person_contact_email_primary]
+        end
+
+        @user = User.new(
+          email: email,
+          first_name: params[:lis_person_name_given],
+          last_name: params[:lis_person_name_family]
+        )
         @user.skip_password_validation = true
-        @user.save
+        @user.save!
         @lti_identity = LtiIdentity.new(user: @user, lms_instance: @lms_instance, lti_user_id: lti_user_id)
-        @lti_identity.save
+        @lti_identity.save!
       else
         # We've found a user, so we'll check for incomplete fields and give them values
         # before proceeding
@@ -49,10 +56,12 @@ class LtiController < ApplicationController
           @user.last_name = params[:lis_person_name_family]
         end
 
-        if @user.lti_identity.blank?
+        if !@user.lti_identities.where(lms_instance: @lms_instance).andand.first
           @lti_identity = LtiIdentity.new(user: @user, lms_instance: @lms_instance, lti_user_id: lti_user_id)
-          @lti_identity.save
+          @lti_identity.save!
         end
+
+        @user.save!
       end
 
       # We have a user, sign them in
@@ -115,6 +124,11 @@ class LtiController < ApplicationController
         @course_offering = CourseOffering.find_by course_id: @course.id, term_id: @term.id, label: coff_label
         if @course_offering.blank?
           if @tp.context_instructor?
+            if coff_label.nil?
+              @message = 'You must specify a label for your course offering.'
+              render :error and return
+            end
+
             @course_offering = CourseOffering.new(
               label: coff_label,
               url: coff_url,
@@ -151,12 +165,12 @@ class LtiController < ApplicationController
           )
         end
 
-        workout_name = params[:resource_link_title]
+        workout_name = params[:resource_link_title].downcase
 
         if (/\A[0-9][0-9].[0-9][0-9].[0-9][0-9] -/ =~ workout_name).nil?
-          @workout = Workout.find_by(name: workout_name)
+          @workout = Workout.where('lower(name) = ?', workout_name).andand.first
         else
-          @workout = Workout.find_by(name: workout_name[11..workout_name.length])
+          @workout = Workout.where('lower(name) = ?', workout_name[11..workout_name.length])
         end
 
         if @workout.blank?
