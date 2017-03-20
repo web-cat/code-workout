@@ -14,7 +14,7 @@ class Ability
   def initialize(user)
     # default abilities for anonymous, non-logged-in visitors
     can [:read, :index], [Term, Organization, Course, CourseOffering]
-    can [:random_exercise, :practice, :evaluate], Exercise, is_public: true
+    can [:search, :random_exercise, :practice, :evaluate], Exercise, is_public: true
     can [:practice, :read], Workout, is_public: true
 
     if user
