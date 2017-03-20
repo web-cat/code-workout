@@ -156,7 +156,7 @@ class WorkoutOffering < ActiveRecord::Base
   end
 
   # -------------------------------------------------------------------
-  # Method suppplementary to the ultimate_deadline method
+  # Method supplementary to the ultimate_deadline method
   # Returns a boolean indicating whether the workout is now shutdown
   # i.e. completely out of bounds for practice for all students
 
@@ -195,4 +195,28 @@ class WorkoutOffering < ActiveRecord::Base
      workout_policy.andand.hide_feedback_before_finish ? false : true
   end
 
+  # ----------------------------------------------------------------
+  # Re-score all workout_scores for this offering based on its 'most_recent'
+  # value.
+  def rescore_all
+    workout_scores.each do |workout_score|
+      scored_for_this = workout_score.scored_attempts
+      scored_for_this.each do |a|
+        workout_score.scored_attempts.delete(a)
+      end
+
+      exercise_versions = workout_score.attempts.map(&:exercise_version)
+      exercise_versions.each do |ex|
+        if most_recent
+          att = workout_score.attempts.where(exercise_version: ex).max_by(&:created_at)
+        else
+          att = workout_score.attempts.where(exercise_version: ex).max_by(&:score)
+        end
+
+        workout_score.scored_attempts << att
+      end
+
+      workout_score.recalculate_score!
+    end
+  end
 end

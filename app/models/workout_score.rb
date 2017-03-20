@@ -238,24 +238,30 @@ class WorkoutScore < ActiveRecord::Base
         end
 
         self.scored_attempts << attempt
-
-        # recalculate workout score
-        self.score = 0.0
-        self.scored_attempts.each do |a|
-          self.score += a.score
-        end
-        self.score = self.score.round(2)
-
-        if !self.last_attempted_at ||
-          self.last_attempted_at < attempt.submit_time
-          self.last_attempted_at = attempt.submit_time
-        end
-        self.save!
-
-        if self.lis_outcome_service_url && self.lis_result_sourcedid
-          update_lti
-        end
       end
+    end
+
+    # Moving this outside the transaction for now.
+    # If the transaction didn't succeed, no harm done, the score
+    # will 'recalculate' to the same value.
+    recalculate_score!(attempt: attempt)
+  end
+
+  def recalculate_score!(options = {})
+    self.score = 0.0
+    self.scored_attempts.each do |a|
+      self.score += a.score
+    end
+    self.score = self.score.round(2)
+
+    if options[:attempt] && (!self.last_attempted_at ||
+      self.last_attempted_at < attempt.submit_time)
+      self.last_attempted_at = attempt.submit_time
+    end
+    self.save!
+
+    if self.lis_outcome_service_url && self.lis_result_sourcedid
+      update_lti
     end
   end
 
