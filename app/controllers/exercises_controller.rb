@@ -300,8 +300,11 @@ class ExercisesController < ApplicationController
     end
 
     @attempt = nil
-    @workout_score = @workout_offering ? @student_user.current_workout_score :
+    @workout_score = @workout_offering ? @workout_offering.score_for(@student_user) :
       @workout ? @workout.score_for(@student_user, @workout_offering) : nil
+
+    @student_user.current_workout_score = @workout_score
+    @student_user.save!
 
     if @workout_offering && @workout_score &&
       @workout_score.workout_offering != @workout_offering
