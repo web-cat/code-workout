@@ -303,8 +303,10 @@ class ExercisesController < ApplicationController
     @workout_score = @workout_offering ? @workout_offering.score_for(@student_user) :
       @workout ? @workout.score_for(@student_user, @workout_offering) : nil
 
-    @student_user.current_workout_score = @workout_score
-    @student_user.save!
+    if signed_in?(@student_user)
+      @student_user.current_workout_score = @workout_score
+      @student_user.save!
+    end
 
     if @workout_offering && @workout_score &&
       @workout_score.workout_offering != @workout_offering
