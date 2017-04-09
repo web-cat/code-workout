@@ -200,7 +200,7 @@ class WorkoutScore < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def record_attempt(attempt)
-    self.transaction do
+    self.with_lock do
       # scored_for_this = self.scored_attempts.joins{exercise_version}.
       #  where{(exercise_version.exercise_id == e.id)}
       scored_for_this = self.scored_attempts.
@@ -239,22 +239,28 @@ class WorkoutScore < ActiveRecord::Base
 
         self.scored_attempts << attempt
 
-        # recalculate workout score
-        self.score = 0.0
-        self.scored_attempts.each do |a|
-          self.score += a.score
-        end
-        self.score = self.score.round(2)
+        recalculate_score!(attempt: attempt)
+      end
+    end
+  end
 
-        if !self.last_attempted_at ||
-          self.last_attempted_at < attempt.submit_time
-          self.last_attempted_at = attempt.submit_time
-        end
-        self.save!
+  def recalculate_score!(options = {})
+    self.with_lock do
+      attempt = options[:attempt]
+      self.score = 0.0
+      self.scored_attempts.each do |a|
+        self.score += a.score
+      end
+      self.score = self.score.round(2)
 
-        if self.lis_outcome_service_url && self.lis_result_sourcedid
-          update_lti
-        end
+      if attempt && (!self.last_attempted_at ||
+        self.last_attempted_at < attempt.submit_time)
+        self.last_attempted_at = attempt.submit_time
+      end
+      self.save!
+
+      if self.lis_outcome_service_url && self.lis_result_sourcedid
+        update_lti
       end
     end
   end
@@ -363,11 +369,13 @@ class WorkoutScore < ActiveRecord::Base
     end
   end
 
-
-  private
-
+  # Sends scores to the appropriate LTI consumer
+  # -------------------------------------------------------------
   def update_lti
-    if lms_instance = self.workout_offering.course_offering.lms_instance
+    if self.workout_offering.course_offering.lms_instance &&
+      self.lis_outcome_service_url && self.lis_result_sourcedid
+
+      lms_instance = self.workout_offering.course_offering.lms_instance
       total_points = ExerciseWorkout.where(workout_id: self.workout_id).sum(:points)
       key = lms_instance.consumer_key
       secret = lms_instance.consumer_secret

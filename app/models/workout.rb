@@ -235,7 +235,11 @@ class Workout < ActiveRecord::Base
       workout_offering.course_offering = course_offering
       workout_offering.time_limit = common[:time_limit]
       workout_offering.published = common[:published]
-      workout_offering.most_recent = common[:most_recent]
+      if common[:most_recent] != workout_offering.most_recent
+        workout_offering.most_recent = common[:most_recent]
+        workout_offering.save!
+        workout_offering.rescore_all
+      end
       workout_offering.opening_date = DateTime.strptime(offering['opening_date'].to_s, '%Q') if offering['opening_date']
       workout_offering.soft_deadline = DateTime.strptime(offering['soft_deadline'].to_s, '%Q') if offering['soft_deadline']
       workout_offering.hard_deadline = DateTime.strptime(offering['hard_deadline'].to_s, '%Q') if offering['hard_deadline']

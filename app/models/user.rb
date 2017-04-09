@@ -75,6 +75,7 @@ class User < ActiveRecord::Base
 
   belongs_to  :current_workout_score, class_name: 'WorkoutScore'
   has_many    :test_case_results, inverse_of: :user, dependent: :destroy
+  has_many    :lti_identities
 
 
   #~ Hooks ....................................................................

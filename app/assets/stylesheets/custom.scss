@@ -13,11 +13,6 @@ html, body { height: 100%; }
 .below-nav { padding: 60px 10px 0; }
 .breadcrumb { margin-bottom: 15px; }
 
-@media only screen and (max-width: 991px) {
-  .sidebar { height: 50%; }
-  .below-nav { height: 100%; overflow-y: auto; }
-}
-
 .sidebar, .content, .maincol {
   padding-left: 0px;
   padding-right: 0px;
@@ -40,18 +35,18 @@ html, body { height: 100%; }
 /* yamm */
 
 .dropdown-menu { border-radius: 6px; }
-.yamm .navbar-right .dropdown-menu.signin { right: 0; }
+.yamm .navbar-right .dropdown-menu.auth { right: 0; }
 
-.dropdown-menu.signin { width: 30%; }
-.signin .yamm-content { padding: 5px 30px; }
-.signin .yamm-content .form-horizontal .form-group label.control-label {
+.dropdown-menu.auth { width: 30%; }
+.auth .yamm-content { padding: 5px 30px; }
+.auth .yamm-content .form-horizontal .form-group label.control-label {
   width: 20%;
 }
-.signin .yamm-content .form-horizontal .form-group .form-wrapper {
+.auth .yamm-content .form-horizontal .form-group .form-wrapper {
   width: 80%;
 }
-.signin .yamm-content .form-horizontal .form-group { margin-bottom: 5px; }
-.dropdown-menu.signin .btn { margin: 5px 15px; font-size: larger; }
+.auth .yamm-content .form-horizontal .form-group { margin-bottom: 5px; }
+.dropdown-menu.auth .btn { margin: 5px 15px; font-size: larger; }
 
 /* Codemirror */
 

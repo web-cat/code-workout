@@ -49,10 +49,16 @@
               %i.fa.fa-sign-out
         - else
           %li.dropdown
+            %a.dropdown-toggle{ href: '/signup',
+              data: { toggle: 'dropdown' }, value: 'Sign up' }
+              Sign Up
+            .dropdown-menu.auth
+              = render 'home/sign_up'
+          %li.dropdown
             %a.dropdown-toggle{ href: '/signin',
               data: { toggle: 'dropdown' }, value: 'Sign in' }
               Sign in
-            .dropdown-menu.signin
+            .dropdown-menu.auth
               = render 'home/sign_in'
           -#%li= link_to 'Sign Up', new_user_registration_path
           -#%li= link_to 'Sign In', new_user_session_path

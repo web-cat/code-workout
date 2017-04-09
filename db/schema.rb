@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20161129200944) do
+ActiveRecord::Schema.define(version: 20170314235543) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -311,6 +311,17 @@ ActiveRecord::Schema.define(version: 20161129200944) do
   end
 
   add_index "lms_types", ["name"], name: "index_lms_types_on_name", unique: true, using: :btree
+
+  create_table "lti_identities", force: true do |t|
+    t.string   "lti_user_id"
+    t.integer  "user_id"
+    t.integer  "lms_instance_id"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "lti_identities", ["lms_instance_id"], name: "index_lti_identities_on_lms_instance_id", using: :btree
+  add_index "lti_identities", ["user_id"], name: "index_lti_identities_on_user_id", using: :btree
 
   create_table "multiple_choice_prompt_answers", force: true do |t|
   end
