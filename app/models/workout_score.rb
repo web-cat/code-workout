@@ -97,7 +97,7 @@ class WorkoutScore < ActiveRecord::Base
   # -------------------------------------------------------------
   def closed?
     if !workout_offering
-      false
+      return false
     end
 
     now = Time.zone.now
@@ -149,7 +149,7 @@ class WorkoutScore < ActiveRecord::Base
   # -------------------------------------------------------------
   def show_feedback?
     if !self.workout_offering
-      true
+      return true
     end
 
     if self.closed?
