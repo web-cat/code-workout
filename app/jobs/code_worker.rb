@@ -64,13 +64,47 @@ class CodeWorker
       # This "switch" based on language type needs to be refactored
       # to be more OO
 
-      if language == "Java"
-        result = execute_javatest(
-          prompt.class_name, attempt_dir, pre_lines, answer_lines)
-      elsif language == "Ruby"
+      static_all_or_nothing_failed = false
+      if language == 'Java'
+
+        # kludgy static analysis barf
+        result = nil
+        if prompt.id = 203
+          # puts "\n\n\nanswer_text = #{answer_text}\n"
+          nctext = answer_text
+          nctext.gsub!(/(\/\*([^*]|(\*+[^*\/]))*\*+\/)|(\/\/[^\r\n]*)/, '')
+          # puts "\n\n\nctext = #{nctext}\n\n\n"
+
+          # no for loop
+          # no while loop
+          # no parseLong()
+          # no parseInt()
+          # no valueOf()
+          # no nextLong()
+          if nctext =~ /\bfor\b/
+            result = 'for loops are not allowed'
+          elsif nctext =~ /\bwhile\b/
+            result = 'while loops are not allowed'
+          elsif nctext =~ /(?<!\bthis)\.parseLong\s*\(/
+            result = 'Long.parseLong() may not be used'
+          elsif nctext =~ /(?<!\bthis)\.parseInt\s*\(/
+            result = 'Integer.parseInt() may not be used'
+          elsif nctext =~ /(?<!\bthis)\.valueOf\s*\(/
+            result = 'Integer.valueOf() or Long.valueOf() may not be used'
+          elsif nctext =~ /(?<!\bthis)\.nextLong\s*\(/
+            result = 'Scanner.nextLong() may not be used'
+          end
+        end
+        if result
+          static_all_or_nothing_failed = true
+        else
+          result = execute_javatest(
+            prompt.class_name, attempt_dir, pre_lines, answer_lines)
+        end
+      elsif language == 'Ruby'
         result = execute_rubytest(
           prompt.class_name, attempt_dir, pre_lines, answer_lines)
-      elsif language == "Python"
+      elsif language == 'Python'
         result = execute_pythontest(
           prompt.class_name, attempt_dir, pre_lines, answer_lines)
       end # IF INNERMOST
@@ -81,18 +115,30 @@ class CodeWorker
       total = 0.0
       answer =
         attempt.prompt_answers.where(prompt: prompt.acting_as).first.specific
-      if !File.exist?(attempt_dir + '/results.csv')
+      if static_all_or_nothing_failed || !File.exist?(attempt_dir + '/results.csv')
         answer.error = result
         # puts "CODE-ERROR-FEEDBACK", answer.error, "CODE-ERROR-FEEDBACK"
         total = 1.0
         answer.save
       else
+        all_or_nothing_failed = false
         CSV.foreach(attempt_dir + '/results.csv') do |line|
           # find test id
           test_id = line[2][/\d+/].to_i
           test_case = prompt.test_cases.where(id: test_id).first
-          correct += test_case.record_result(answer, line)
-          total += test_case.weight
+          tc_score = test_case.record_result(answer, line)
+          if test_case.all_or_nothing?
+            tcr = TestCaseResult.find(attempt: attempt, test_case: test_case).first
+            if !tcr.pass?
+              all_or_nothing_failed = true
+              correct = 0.0
+            end
+          else
+            if !all_or_nothing_failed
+              correct += tc_score
+            end
+            total += test_case.weight
+          end
         end  # CSV end
       end
       multiplier = 1.0
@@ -173,6 +219,7 @@ class CodeWorker
         end
       end
     end
+
     if error.blank?
       error = nil
     else

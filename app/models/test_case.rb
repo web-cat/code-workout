@@ -34,6 +34,12 @@ class TestCase < ActiveRecord::Base
   belongs_to :coding_prompt, inverse_of: :test_cases
   has_many :test_case_results, inverse_of: :test_case, dependent: :destroy
 
+  scope :only_examples, -> { where(example: true) }
+  scope :only_hidden, -> { where(hidden: true) }
+  scope :only_static, -> { where(static: true) }
+  scope :only_dynamic, -> { where(static: false) }
+  scope :only_all_or_nothing, -> { where(all_or_nothing: false) }
+
 
   #~ Validation ...............................................................
 
@@ -47,20 +53,24 @@ class TestCase < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def is_example?
-    return !self.description.blank? &&
-        (self.description == 'example' ||
-        self.description.start_with?('example:'))
+    # return !self.description.blank? &&
+        # (self.description == 'example' ||
+        # self.description.start_with?('example:'))
+    self.example
   end
 
 
   # -------------------------------------------------------------
   def display_description(pass = true)
     result = self.description
-    if result == 'example'
-      result = ''
-    elsif !result.blank? && result.start_with?('example:')
-      result = result.sub(/^example:\s*/, '')
+    if self.hidden?
+      result = 'hidden'
     end
+    # if result == 'example'
+      # result = ''
+    # elsif !result.blank? && result.start_with?('example:')
+      # result = result.sub(/^example:\s*/, '')
+    # end
     if result.blank?
       inp = self.input
       if !inp.blank?
