@@ -377,7 +377,6 @@ class WorkoutsController < ApplicationController
 
     workout_offering_id = create_or_update
     @workout.save!
-
     if workout_offering_id.nil?
       url = url_for(workout_path(id: @workout.id))
     else

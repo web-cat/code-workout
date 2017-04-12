@@ -235,14 +235,14 @@ class Workout < ActiveRecord::Base
       workout_offering.course_offering = course_offering
       workout_offering.time_limit = common[:time_limit]
       workout_offering.published = common[:published]
-      if common[:most_recent] != workout_offering.most_recent
+      if common[:most_recent].to_b != workout_offering.most_recent
         workout_offering.most_recent = common[:most_recent]
         workout_offering.save!
         workout_offering.rescore_all
       end
-      workout_offering.opening_date = DateTime.strptime(offering['opening_date'].to_s, '%Q') if offering['opening_date']
-      workout_offering.soft_deadline = DateTime.strptime(offering['soft_deadline'].to_s, '%Q') if offering['soft_deadline']
-      workout_offering.hard_deadline = DateTime.strptime(offering['hard_deadline'].to_s, '%Q') if offering['hard_deadline']
+      workout_offering.opening_date = DateTime.strptime(offering['opening_date'].to_s, '%Q') if offering['opening_date'].present?
+      workout_offering.soft_deadline = DateTime.strptime(offering['soft_deadline'].to_s, '%Q') if offering['soft_deadline'].present?
+      workout_offering.hard_deadline = DateTime.strptime(offering['hard_deadline'].to_s, '%Q') if offering['hard_deadline'].present?
       workout_offering.workout_policy = common[:workout_policy]
       workout_offering.save!
       workout_offerings << workout_offering.id
@@ -256,10 +256,10 @@ class Workout < ActiveRecord::Base
         end
         student_extension.user = student
         student_extension.workout_offering = workout_offering
-        student_extension.opening_date = DateTime.strptime(ext['opening_date'].to_s, '%Q') if ext['opening_date']
-        student_extension.soft_deadline = DateTime.strptime(ext['soft_deadline'].to_s, '%Q') if ext['soft_deadline']
-        student_extension.hard_deadline = DateTime.strptime(ext['hard_deadline'].to_s, '%Q') if ext['hard_deadline']
-        student_extension.time_limit = ext['time_limit']
+        student_extension.opening_date = DateTime.strptime(ext['opening_date'].to_s, '%Q') if ext['opening_date'].present?
+        student_extension.soft_deadline = DateTime.strptime(ext['soft_deadline'].to_s, '%Q') if ext['soft_deadline'].present?
+        student_extension.hard_deadline = DateTime.strptime(ext['hard_deadline'].to_s, '%Q') if ext['hard_deadline'].present?
+        student_extension.time_limit = ext['time_limit'].present?
         student_extension.save!
       end
     end
