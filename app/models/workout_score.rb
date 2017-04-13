@@ -372,7 +372,8 @@ class WorkoutScore < ActiveRecord::Base
   # Sends scores to the appropriate LTI consumer
   # -------------------------------------------------------------
   def update_lti
-    if self.workout_offering.andand.course_offering.lms_instance &&
+    if self.workout_offering.andand.course_offering &&
+      self.workout_offering.course_offering.lms_instance &&
       self.lis_outcome_service_url && self.lis_result_sourcedid
 
       lms_instance = self.workout_offering.course_offering.lms_instance

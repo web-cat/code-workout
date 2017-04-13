@@ -26,6 +26,7 @@ class CoursesController < ApplicationController
       @term = Term.find(params[:term_id])
       @course_offerings =
         current_user.andand.course_offerings_for_term(@term, @course)
+      @course_offering = @course_offerings.andand.first
       @is_student = !user_signed_in? ||
         !current_user.global_role.is_admin? &&
         (@course_offerings.any? {|co| co.is_student? current_user } ||

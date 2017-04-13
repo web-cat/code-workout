@@ -1,6 +1,4 @@
-%ol.breadcrumb
-  %li= link_to 'Home', root_path
-  %li.active= 'Gym'
+= render 'layouts/breadcrumb'
 
 %h1 The Gym
 - if @gym.empty?
