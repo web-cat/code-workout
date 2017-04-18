@@ -23,7 +23,7 @@
       .due.soon= user_time(current_user, workout_offering.soft_deadline).to_s.split(" ").first
     - elsif workout_offering && workout_offering.current_deadline_distance == 1
       %i.fa.fa-lock
-      .due= workout_offering.soft_deadline.to_s.split(" ").first
+      .due= user_time(current_user, workout_offering.soft_deadline).to_s.split(" ").first
     - elsif workout_offering && workout_offering.current_deadline_distance.nil?
       %i.fa.fa-folder-open
       .due Open

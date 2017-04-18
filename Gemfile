@@ -45,6 +45,8 @@ group :assets do
 end
 
 group :development, :test do
+  gem 'thin'
+  gem 'byebug'
   gem 'sqlite3'
   gem 'mysql2', '= 0.3.15'
   gem 'rspec-rails'

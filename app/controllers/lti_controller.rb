@@ -195,7 +195,7 @@ class LtiController < ApplicationController
 
         @workout_offering = WorkoutOffering.find_by(
           course_offering_id: @course_offering.id,
-          workout_id: @workout.id
+          workout_id: @workout.first.id
         )
         if @workout_offering.blank?
           @workout_offering = WorkoutOffering.new(
