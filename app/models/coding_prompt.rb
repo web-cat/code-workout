@@ -144,7 +144,7 @@ class CodingPrompt < ActiveRecord::Base
         end
         if !row[2].blank?
           desc = row[2]
-          if desc.is_blank?
+          if desc.blank?
             #ignore
           elsif desc == 'example'
             tc.example = true
@@ -162,7 +162,7 @@ class CodingPrompt < ActiveRecord::Base
             if desc.sub!(/^static:\s*/i, '')
               tc.static = true
             end
-            if !desc.is_blank?
+            if !desc.blank?
               tc.description = desc
             end
           end
