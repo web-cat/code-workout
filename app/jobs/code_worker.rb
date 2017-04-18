@@ -69,7 +69,7 @@ class CodeWorker
 
         # kludgy static analysis barf
         result = nil
-        if prompt.id = 203
+        if prompt.id == 203
           # puts "\n\n\nanswer_text = #{answer_text}\n"
           nctext = answer_text
           nctext.gsub!(/(\/\*([^*]|(\*+[^*\/]))*\*+\/)|(\/\/[^\r\n]*)/, '')
