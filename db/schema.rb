@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170314235543) do
+ActiveRecord::Schema.define(version: 20170420144021) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -189,10 +189,11 @@ ActiveRecord::Schema.define(version: 20170314235543) do
     t.integer  "stem_id"
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer  "exercise_id", null: false
-    t.integer  "version",     null: false
+    t.integer  "exercise_id",                          null: false
+    t.integer  "version",                              null: false
     t.integer  "creator_id"
     t.integer  "irt_data_id"
+    t.text     "text_representation", limit: 16777215
   end
 
   add_index "exercise_versions", ["creator_id"], name: "exercise_versions_creator_id_fk", using: :btree
