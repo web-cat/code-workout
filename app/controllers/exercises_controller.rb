@@ -228,7 +228,12 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # POST /exercises/upload_create
   def upload_create
-    hash = YAML.load(File.read(params[:form][:file].path))
+    if params[:exercise_version]['text_representation'].present?
+      hash = YAML.load(params[:exercise_version]['text_representation'])
+    else
+      hash = YAML.load(File.read(params[:form][:file].path))
+    end
+
     exercises = ExerciseRepresenter.for_collection.new([]).from_hash(hash)
     exercises.each do |e|
       if !e.save
