@@ -1,0 +1,9 @@
+= semantic_form_for @exercise_version, url: exercises_yaml_create_path do |f|
+  = f.semantic_errors
+
+  = f.input :text_representation, maxlength: 16.megabytes - 1, as: :text,
+    input_html: { class: 'code', autofocus: true, data: { lang: 'text/x-yaml' } },
+    label: 'YAML Representation of the Exercise'
+
+  .actions
+    = f.submit class: 'btn btn-primary'
