@@ -1,19 +1,22 @@
-.nested-fields
-  = f.inputs do
-    .row.darker-bkg
-      .row
-        .col-md-3
-          = f.input :course_offering, as: :select,
-            collection: CourseOffering.all,
-            input_html: { class: 'col-md-10', rows: 1 }        
-        .col-md-3
-          = f.input :opening_date,
-            input_html: { class: 'col-md-10', rows: 1 }
-        .col-md-2
-          = f.input :soft_deadline,
-            input_html: { class: 'col-md-10', rows: 1 }
-        .col-md-2
-          = f.input :hard_deadline,
-            input_html: { class: 'col-md-10', rows: 1 }
-        .col-md-2
-          = link_to_remove_association "Remove course offering", f
+%tr.offering.fields{ data: { id: workout_offering.andand.id } }
+  %td.course-offering{ data: { course_offering_id: course_offering.andand.id } }
+    %small.display{style: 'font-size: small;'}
+      = course_offering.andand.display_name_with_term
+  %td
+    - date = workout_offering.andand.opening_date.andand.to_i
+    %input.datepicker.opening-datepicker{ type: 'text', class: 'form-control input-sm', placeholder: 'Set date',
+      data: { date: (date ? date * 1000 : nil) } }
+  %td
+    - date = workout_offering.andand.soft_deadline.andand.to_i
+    %input.datepicker.soft-datepicker{ type: 'text', class: 'form-control input-sm', placeholder: 'Set date',
+      data: { date: (date ? date * 1000 : nil) } }
+  %td
+    - date = workout_offering.andand.hard_deadline.andand.to_i
+    %input.datepicker.hard-datepicker{ type: 'text', class: 'form-control input-sm', placeholder: 'Set date',
+      data: { date: (date ? date * 1000 : nil) } }
+  %td
+    = button_tag type: 'button', class: 'add-extension btn btn-sm btn-primary',
+      data: { toggle: 'modal', target: '#extension-modal' } do
+      Add Extension
+  %td
+    %i.fa.fa-times.action.delete-offering{ data: { removable: "#{removable}" } }

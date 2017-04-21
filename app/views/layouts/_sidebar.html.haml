@@ -5,10 +5,16 @@
 -#      %i.fa.fa-search
 -#      Search
 -#= render :partial => 'exercises/search'
-- if user_signed_in? && current_user.current_workout_score
+- user ||= current_user
+- workout_score = (@workout_score || user.andand.current_workout_score) || nil
+- if controller_name.eql?('workouts') && ['new', 'edit', 'clone'].include?(action_name)
+  = render partial: 'exercises/find_exercises_to_add'
+- elsif user_signed_in? && user.current_workout_score
   = render partial: 'workouts/status',
-    locals: { workout_score: current_user.current_workout_score , review: !params[:review_user_id].nil?}
+    locals: { workout_score: workout_score, review: params[:review_user_id].present? }
 - elsif user_signed_in? && session[:leaf_exercises]
   = render Exercise.find(session[:leaf_exercises]),
-    user: current_user, size: 'sm'
+    user: user, size: 'sm'
+- elsif !user
+  = render @exercise, user: nil, size: 'sm'
 .clearfix

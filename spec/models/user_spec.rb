@@ -22,9 +22,9 @@
 #  last_name                :string(255)
 #  global_role_id           :integer          not null
 #  avatar                   :string(255)
-#  slug                     :string(255)      default(""), not null
-#  current_workout_score_id :integer
+#  slug                     :string(255)      not null
 #  time_zone_id             :integer
+#  current_workout_score_id :integer
 #
 # Indexes
 #

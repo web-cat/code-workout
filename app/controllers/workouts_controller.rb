@@ -1,5 +1,9 @@
+require 'json'
+require 'date'
+
 class WorkoutsController < ApplicationController
-  before_action :set_workout, only: [:show, :edit, :update, :destroy]
+  before_action :set_workout, only: [:show, :update, :destroy]
+  after_action :allow_iframe, only: [:new, :new_create, :edit, :embed]
   respond_to :html, :js
 
   #~ Action methods ...........................................................
@@ -7,11 +11,11 @@ class WorkoutsController < ApplicationController
   # -------------------------------------------------------------
   # GET /workouts
   def index
-    if cannot? :index, Workout
-      redirect_to root_path,
-        notice: 'Unauthorized to view all workouts' and return
-    end
-    @workouts = []
+    # if cannot? :index, Workout
+    #   redirect_to root_path,
+    #     notice: 'Unauthorized to view all workouts' and return
+    # end
+    @workouts = Workout.where(is_public: true)
     @gym = []
   end
 
@@ -40,7 +44,25 @@ class WorkoutsController < ApplicationController
   # -------------------------------------------------------------
   # GET /workouts/1
   def show
-    @exs = @workout.exercises
+    if can? :read, @workout
+      @exs = @workout.exercises
+    else
+      redirect_to gym_path, flash: {
+        error: 'You do not have permission to access that non-public workout.
+          Have a look at these popular workouts instead.'
+      }
+    end
+  end
+
+  def embed
+    workouts = Workout.where('lower(name) = ? and is_public = true', params[:resource_name].downcase)
+    @workout = workouts.first
+    if @workout
+      redirect_to practice_workout_path(id: @workout.id, lti_launch: true) and return
+    else
+      @message = 'Sorry, there are no public workouts with that name.'
+      render 'lti/error' and return
+    end
   end
 
   def review
@@ -62,9 +84,42 @@ class WorkoutsController < ApplicationController
       redirect_to root_path,
         notice: 'Unauthorized to create new workout' and return
     end
+    @lti_launch = params[:lti_launch]
     @workout = Workout.new
+    @course = Course.find params[:course_id]
+    @term = Term.find params[:term_id]
+    @organization = Organization.find params[:organization_id]
+    @course_offerings = current_user.managed_course_offerings @course, @term
+
+    if params[:notice]
+      flash.now[:notice] = params[:notice]
+    end
+
+    if @lti_launch
+      render layout: 'one_column'
+    else
+      render layout: 'two_columns'
+    end
   end
 
+  # -------------------------------------------------------------
+  # GET /gym/workouts/existing_or_new
+  def new_or_existing
+    if cannot? :new, Workout
+      flash.now[:notice] = 'You are unauthorized to create new workouts. Choose from existing workouts instead.'
+    end
+
+    @lti_launch = params[:lti_launch]
+    @course = Course.find params[:course_id]
+    @term = Term.find params[:term_id]
+    @organization = Organization.find params[:organization_id]
+
+    @default_results = @course.course_offerings.joins(workout_offerings: :workout)
+      .flat_map(&:workout_offerings)
+      .map(&:workout).uniq
+
+    render layout: 'one_column'
+  end
 
   # -------------------------------------------------------------
   # GET /workouts/new_with_search/:searchkey
@@ -74,64 +129,160 @@ class WorkoutsController < ApplicationController
       "SELECT * FROM exercises WHERE name LIKE '%#{params[:searchkey]}%'")
   end
 
+  # -------------------------------------------------------------
+  # POST /gym/workouts/search
+  def search
+    @terms = escape_javascript(params[:search])
+    @terms = @terms.split(@terms.include?(' ') ? /\s*,\s*/ : nil)
+    @workouts = Workout.search @terms, current_user
+
+    if @workouts.blank?
+      @msg = 'Your search did not match any workouts. Try these instead...'
+      @workouts = (Workout.visible_to_user(current_user) + current_user.managed_workouts)
+        .uniq.shuffle.first(16)
+    end
+
+    if @workouts.blank?
+      @msg = 'No public workouts exist yet. Please wait for contributors to add more.'
+    end
+
+    respond_to do |format|
+      format.html
+      format.js
+    end
+  end
 
   # -------------------------------------------------------------
   # GET /workouts/1/edit
   def edit
+    @workout_offering = WorkoutOffering.find(params[:workout_offering_id])
+    @workout = @workout_offering.workout
+
     if cannot? :edit, @workout
-      redirect_to root_path, notice: 'Unauthorized to edit workout' and return
+      redirect_to root_path, notice: 'You are not authorized to edit workouts.' and return
     end
-    @exs = []
-    @workout.exercises.each do |exer|
-      @exs << exer.id
+
+    @course = Course.find(params[:course_id])
+    @term = Term.find(params[:term_id])
+    @can_update = can? :edit, @workout
+    @time_limit = @workout.workout_offerings.first.andand.time_limit
+    @published = @workout.workout_offerings.first.andand.published
+    @most_recent = @workout.workout_offerings.first.andand.most_recent
+    @policy = @workout.workout_offerings.first.andand.workout_policy
+    @organization = Organization.find params[:organization_id]
+    @lti_launch = params[:lti_launch]
+
+    @exercises = []
+    @workout.exercise_workouts.each do |ex|
+      ex_data = {}
+      ex_data[:name] = ex.exercise.name
+      ex_data[:points] = ex.points
+      ex_data[:id] = ex.exercise_id
+      ex_data[:exercise_workout_id] = ex.id
+      @exercises.push(ex_data)
     end
-    # Workout's EXERCISES
-    @allexs = []
-    Exercise.all.each do |exe|
-      @allexs << exe.id
+
+    @workout_offerings = current_user.managed_workout_offerings_in_term(@workout, @course, @term).flatten
+
+    course_offerings = current_user.managed_course_offerings @course, @term
+    used_course_offerings = @workout_offerings.flat_map(&:course_offering)
+    @unused_course_offerings = course_offerings - used_course_offerings
+
+    @student_extensions = []
+    @workout_offerings.each do |workout_offering|
+      workout_offering.student_extensions.each do |e|
+        ext = {}
+        ext[:id] = e.id
+        ext[:student_id] = e.user.id
+        ext[:student_display] = e.user.display_name
+        ext[:course_offering_id] = e.workout_offering.course_offering_id
+        ext[:course_offering_display] = e.workout_offering.course_offering.display_name_with_term
+        ext[:opening_date] = e.opening_date.andand.to_i
+        ext[:soft_deadline] = e.soft_deadline.andand.to_i
+        ext[:hard_deadline] = e.hard_deadline.andand.to_i
+        ext[:time_limit] = e.time_limit
+        @student_extensions.push(ext)
+      end
     end
-    #ALL EXERCISES
+
+    if @lti_launch
+      render layout: 'one_column'
+    else
+      render layout: 'two_columns'
+    end
   end
 
+  def clone
+    @workout = Workout.find params[:workout_id]
+    @course = Course.find params[:course_id]
+    @term = Term.find(params[:term_id])
+    @can_update = can? :edit, @workout
+    @time_limit = @workout.workout_offerings.first.andand.time_limit
+    @organization = Organization.find params[:organization_id]
+    @lti_launch = params[:lti_launch]
 
-  # -------------------------------------------------------------
-  # POST /workouts
+    @exercises = []
+    @workout.exercise_workouts.each do |ex|
+      ex_data = {}
+      ex_data[:name] = ex.exercise.name
+      ex_data[:points] = ex.points
+      ex_data[:id] = ex.exercise_id
+      ex_data[:exercise_workout_id] = ex.id
+      @exercises.push(ex_data)
+    end
+
+    @course_offerings = current_user.managed_course_offerings @course, @term
+    @unused_course_offerings = nil
+
+    if @lti_launch
+      render layout: 'one_column'
+    else
+      render layout: 'two_columns'
+    end
+  end
+
   def create
-    @workout = Workout.new(workout_params)
-    msg      = params[:workout]
-    exercises = msg[:exercise_workouts_attributes]
+    @workout = Workout.new
     @workout.creator_id = current_user.id
-    exercises.each do |ex|
-      ex_id = ex.second[:exercise_id]
-      exercise = Exercise.find(ex_id)
-      exercise_workout = ExerciseWorkout.new(workout: @workout, exercise: exercise)
-      exercise_workout.position = ex.second[:position]
-      exercise_workout.points = ex.second[:points]
-      exercise_workout.save!
-    end
-
-    course_offerings = msg[:workout_offerings_attributes]
-    course_offerings.andand.each_with_index do |course_offering, index|
-      course_offering_id = course_offering.second[:course_offering_id]
-      courseoffering = CourseOffering.find(course_offering_id)
-      @workout.course_offerings<<courseoffering
-      workout_offering = @workout.workout_offerings.find_by(course_offering: courseoffering)
-      workout_offering.opening_date = Date.parse(course_offering.second['opening_date(3i)'] +
-        '-' + course_offering.second['opening_date(2i)'] +
-        '-' + course_offering.second['opening_date(1i)'])
-      workout_offering.soft_deadline = Date.parse(course_offering.second['soft_deadline(3i)'] +
-        '-' + course_offering.second['soft_deadline(2i)'] +
-        '-' + course_offering.second['soft_deadline(1i)'])
-      workout_offering.hard_deadline = Date.parse(course_offering.second['hard_deadline(3i)'] +
-        '-' + course_offering.second['hard_deadline(2i)']+
-        '-' + course_offering.second['hard_deadline(1i)'])
-      workout_offering.save!
-    end
+    @lti_launch = params[:lti_launch]
+    workout_offering_id = create_or_update
 
     if @workout.save
-      redirect_to root_path, notice: 'Workout was successfully created.'
+      if @lti_launch
+        lti_params = session[:lti_params]
+        url = url_for(organization_workout_offering_path(
+            organization_id: params[:organization_id],
+            course_id: params[:course_id],
+            term_id: params[:term_id],
+            id: workout_offering_id,
+            lti_launch: true
+          )
+        )
+      else
+        if workout_offering_id.nil?
+          url = url_for(workout_path(id: @workout.id))
+        else
+          url = url_for(organization_workout_offering_path(
+              organization_id: params[:organization_id],
+              term_id: params[:term_id],
+              course_id: params[:course_id],
+              id: workout_offering_id
+            )
+          )
+        end
+      end
     else
-      render action: 'new'
+      err_string = 'There was a problem while creating the workout.'
+      url = url_for organization_new_workout_path(
+        organization_id: params[:organization_id],
+        term_id: params[:term_id],
+        course_id: params[:course_id],
+        notice: err_string
+      )
+    end
+
+    respond_to do |format|
+      format.json { render json: { url: url } }
     end
   end
 
@@ -206,15 +357,40 @@ class WorkoutsController < ApplicationController
 
   # -------------------------------------------------------------
   # PATCH/PUT /workouts/1
+  # def update
+  #   if cannot? :update, @workout
+  #     redirect_to root_path,
+  #       notice: 'Unauthorized to update workout' and return
+  #   end
+  #   if @workout.update(workout_params)
+  #     redirect_to @workout, notice: 'Workout was successfully updated.'
+  #   else
+  #     render action: 'edit'
+  #   end
+  # end
+
   def update
     if cannot? :update, @workout
       redirect_to root_path,
         notice: 'Unauthorized to update workout' and return
     end
-    if @workout.update(workout_params)
-      redirect_to @workout, notice: 'Workout was successfully updated.'
+
+    workout_offering_id = create_or_update
+    @workout.save!
+    if workout_offering_id.nil?
+      url = url_for(workout_path(id: @workout.id))
     else
-      render action: 'edit'
+      url = url_for(organization_workout_offering_path(
+          organization_id: params[:organization_id],
+          term_id: params[:term_id],
+          course_id: params[:course_id],
+          id: workout_offering_id
+        )
+      )
+    end
+
+    respond_to do |format|
+      format.json { render json: { url: url } }
     end
   end
 
@@ -236,10 +412,6 @@ class WorkoutsController < ApplicationController
     @workout = Workout.find_by(id: params[:id])
     authorize! :practice, @workout
     if @workout
-      if !user_signed_in?
-        redirect_to workout_path(@workout),
-          notice: "Need to Sign in to practice" and return
-      end
       session[:current_workout] = @workout.id
       if current_user
         @workout_score = @workout.score_for(current_user)
@@ -263,7 +435,7 @@ class WorkoutsController < ApplicationController
         end
       end
       ex1 = @workout.next_exercise(nil, current_user, @workout_score)
-      redirect_to exercise_practice_path(id: ex1.id, workout_id: @workout.id)
+      redirect_to exercise_practice_path(id: ex1.id, workout_id: @workout.id, lti_launch: params[:lti_launch])
     else
       redirect_to workouts, notice: 'Workout not found' and return
     end
@@ -282,6 +454,48 @@ class WorkoutsController < ApplicationController
       @remain = 10
     end
 
+    def create_or_update
+      @workout.name = params[:name]
+      @workout.description = params[:description]
+      @workout.is_public = params[:is_public]
+
+      common = {}   # params that are common among all offerings of this workout
+      common[:workout_policy] = WorkoutPolicy.find_by id: params[:policy_id]
+      common[:time_limit] = params[:time_limit]
+      common[:published] = params[:published]
+      common[:most_recent] = params[:most_recent]
+
+      removed_exercises = JSON.parse params[:removed_exercises]
+      removed_exercises.each do |exercise_workout_id|
+        @workout.exercise_workouts.destroy exercise_workout_id
+      end
+
+      exercises = JSON.parse params[:exercises]
+      exercises.each do |key, value|
+        exercise = Exercise.find value['id']
+        exercise_workout = ExerciseWorkout.find_by workout: @workout, exercise: exercise
+        if exercise_workout.blank?
+          exercise_workout = ExerciseWorkout.new workout: @workout, exercise: exercise
+        end
+        exercise_workout.set_list_position key
+        exercise_workout.points = value['points']
+        exercise_workout.save!
+      end
+
+      removed_extensions = JSON.parse params[:removed_extensions]
+      removed_extensions.each do |extension_id|
+        StudentExtension.destroy extension_id
+      end
+
+      removed_offerings = JSON.parse params[:removed_offerings]
+      removed_offerings.each do |workout_offering_id|
+        @workout.workout_offerings.destroy workout_offering_id
+      end
+
+      course_offerings = JSON.parse params[:course_offerings]
+      workout_offerings = @workout.add_workout_offerings(course_offerings, common)
+      return workout_offerings.first
+    end
 
     # -------------------------------------------------------------
     # Only allow a trusted parameter "white list" through.

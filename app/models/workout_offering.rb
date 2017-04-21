@@ -10,14 +10,17 @@
 #  opening_date             :datetime
 #  soft_deadline            :datetime
 #  hard_deadline            :datetime
-#  published                :boolean          default(FALSE), not null
+#  published                :boolean          default(TRUE), not null
 #  time_limit               :integer
 #  workout_policy_id        :integer
 #  continue_from_workout_id :integer
+#  lms_assignment_id        :string(255)
+#  most_recent              :boolean          default(TRUE)
 #
 # Indexes
 #
 #  index_workout_offerings_on_course_offering_id  (course_offering_id)
+#  index_workout_offerings_on_lms_assignment_id   (lms_assignment_id) UNIQUE
 #  index_workout_offerings_on_workout_id          (workout_id)
 #  index_workout_offerings_on_workout_policy_id   (workout_policy_id)
 #  workout_offerings_continue_from_workout_id_fk  (continue_from_workout_id)
@@ -73,8 +76,7 @@ class WorkoutOffering < ActiveRecord::Base
 
   # -----------------------------------------------------------------
   def hard_deadline_for(user)
-    user_extension =
-      StudentExtension.find_by(user: user, workout_offering: self)
+    user_extension = student_extensions.where(user: user).first
     user_extension.andand.hard_deadline ||
       self.hard_deadline ||
       user_extension.andand.soft_deadline ||
@@ -101,6 +103,10 @@ class WorkoutOffering < ActiveRecord::Base
     current_time = Time.zone.now.to_i
 
     if hard_deadline.nil?
+      return nil
+    end
+
+    if soft_deadline.nil?
       return nil
     end
 
@@ -150,7 +156,7 @@ class WorkoutOffering < ActiveRecord::Base
   end
 
   # -------------------------------------------------------------------
-  # Method suppplementary to the ultimate_deadline method
+  # Method supplementary to the ultimate_deadline method
   # Returns a boolean indicating whether the workout is now shutdown
   # i.e. completely out of bounds for practice for all students
 
@@ -158,7 +164,7 @@ class WorkoutOffering < ActiveRecord::Base
     now = Time.zone.now
     deadline = ultimate_deadline
     x = deadline && now > ultimate_deadline
-    puts "\n\n\n\nshutdown? = #{x}\n#{caller}\n\n\n\n"
+#    puts "\n\n\n\nshutdown? = #{x}\n#{caller}\n\n\n\n"
     x
   end
 
@@ -170,6 +176,7 @@ class WorkoutOffering < ActiveRecord::Base
   # have full access.
 
   def can_be_practiced_by?(user)
+    workout_score = user.workout_scores.find_by(workout_offering: self)
     now = Time.zone.now
     user_extension = StudentExtension.find_by(user: user, workout_offering: self)
     deadline = user_extension.andand.hard_deadline ||
@@ -179,7 +186,8 @@ class WorkoutOffering < ActiveRecord::Base
     opens = user_extension.andand.opening_date || self.opening_date
     course_offering.is_staff?(user) ||
     (((opens == nil) || (opens <= now)) &&
-      (now <= deadline) &&
+      ((deadline == nil) || (now <= deadline)) &&
+      (!workout_score.andand.closed?) &&
       course_offering.is_enrolled?(user))
   end
 
@@ -187,4 +195,28 @@ class WorkoutOffering < ActiveRecord::Base
      workout_policy.andand.hide_feedback_before_finish ? false : true
   end
 
+  # ----------------------------------------------------------------
+  # Re-score all workout_scores for this offering based on its 'most_recent'
+  # value.
+  def rescore_all
+    workout_scores.each do |workout_score|
+      scored_for_this = workout_score.scored_attempts
+      scored_for_this.each do |a|
+        workout_score.scored_attempts.delete(a)
+      end
+
+      exercise_versions = workout_score.attempts.map(&:exercise_version)
+      exercise_versions.each do |ex|
+        if most_recent
+          att = workout_score.attempts.where(exercise_version: ex).max_by(&:created_at)
+        else
+          att = workout_score.attempts.where(exercise_version: ex).max_by(&:score)
+        end
+
+        workout_score.scored_attempts << att
+      end
+
+      workout_score.recalculate_score!
+    end
+  end
 end

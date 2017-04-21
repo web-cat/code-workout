@@ -202,6 +202,12 @@ ActiveAdmin.setup do |config|
   #         html_options: { target: :blank }
   #     end
   #   end
+  config.namespace :admin do |admin|
+    admin.build_menu do |menu|
+      menu.add :label => "Back to CodeWorkout", :url => "/", :priority => 0
+    end
+  end
+
 
   # == Download Links
   #

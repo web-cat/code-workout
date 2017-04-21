@@ -9,35 +9,48 @@
 #  year       :integer          not null
 #  created_at :datetime
 #  updated_at :datetime
-#  slug       :string(255)      default(""), not null
+#  slug       :string(255)      not null
 #
 # Indexes
 #
 #  index_terms_on_slug             (slug) UNIQUE
+#  index_terms_on_starts_on        (starts_on)
 #  index_terms_on_year_and_season  (year,season)
 #
 
 FactoryGirl.define do
 
   factory :term do
-    season 100
-    starts_on "2015-01-15"
-    ends_on "2015-05-15"
-    year 2015
+    year 2017
 
-    factory :term2 do
-      season 400
-      starts_on "2014-08-15"
-      ends_on "2014-12-15"
-      year 2014
+    factory :term100 do
+      season 100
+      starts_on "2017-01-01"
+      ends_on "2017-05-31"
     end
 
-    factory :term3 do
+    factory :term200 do
       season 200
-      starts_on "2013-05-15"
-      ends_on "2013-06-30"
-      year 2013
+      starts_on "2017-06-01"
+      ends_on "2017-07-15"
+    end
+
+    factory :term300 do
+      season 300
+      starts_on "2017-07-16"
+      ends_on "2017-08-15"
+    end
+
+    factory :term400 do
+      season 400
+      starts_on "2017-08-16"
+      ends_on "2017-12-15"
+    end
+
+    factory :term500 do
+      season 500
+      starts_on "2017-12-16"
+      ends_on "2017-12-31"
     end
   end
-
 end

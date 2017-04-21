@@ -10,14 +10,17 @@
 #  opening_date             :datetime
 #  soft_deadline            :datetime
 #  hard_deadline            :datetime
-#  published                :boolean          default(FALSE), not null
+#  published                :boolean          default(TRUE), not null
 #  time_limit               :integer
 #  workout_policy_id        :integer
 #  continue_from_workout_id :integer
+#  lms_assignment_id        :string(255)
+#  most_recent              :boolean          default(TRUE)
 #
 # Indexes
 #
 #  index_workout_offerings_on_course_offering_id  (course_offering_id)
+#  index_workout_offerings_on_lms_assignment_id   (lms_assignment_id) UNIQUE
 #  index_workout_offerings_on_workout_id          (workout_id)
 #  index_workout_offerings_on_workout_policy_id   (workout_policy_id)
 #  workout_offerings_continue_from_workout_id_fk  (continue_from_workout_id)
@@ -29,5 +32,9 @@ FactoryGirl.define do
   factory :workout_offering do
     course_offering_id 1
     workout_id 1
+    opening_date "2016-01-01 14:08:55"
+    soft_deadline "2016-12-30 14:08:55"
+    hard_deadline "2016-12-30 14:08:55"
+    published true
   end
 end

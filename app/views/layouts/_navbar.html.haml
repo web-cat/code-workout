@@ -41,35 +41,24 @@
         - if user_signed_in?
           - if current_user.global_role.can_edit_system_configuration?
             %li= link_to icon_tag_for('wrench'), admin_dashboard_path
+          - elsif current_user.global_role.is_instructor?
+            %li= link_to icon_tag_for('wrench'), admin_course_offerings_path
           %li= link_to current_user.email, current_user
           %li
             = link_to destroy_user_session_path, method: :delete do
               %i.fa.fa-sign-out
         - else
           %li.dropdown
+            %a.dropdown-toggle{ href: '/signup',
+              data: { toggle: 'dropdown' }, value: 'Sign up' }
+              Sign Up
+            .dropdown-menu.auth
+              = render 'home/sign_up'
+          %li.dropdown
             %a.dropdown-toggle{ href: '/signin',
               data: { toggle: 'dropdown' }, value: 'Sign in' }
               Sign in
-            %ul.dropdown-menu.signin
-              %li
-                = link_to user_omniauth_authorize_path(:facebook),
-                  class: 'btn btn-social btn-facebook' do
-                  %i.fa.fa-facebook
-                  Sign in with Facebook
-              %li
-                = link_to user_omniauth_authorize_path(:google_oauth2),
-                  class: 'btn btn-social btn-google-plus' do
-                  %i.fa.fa-google
-                  Sign in with Google
-              %li
-                = link_to user_omniauth_authorize_path(:cas),
-                  class: 'btn btn-social btn-vt' do
-                  -#%i.fa.fa-google
-                  %span VT
-                  Sign in with Virginia Tech CAS
-              %li
-                %div
-                  .yamm-content
-                    = render '/devise/sessions/new'
+            .dropdown-menu.auth
+              = render 'home/sign_in'
           -#%li= link_to 'Sign Up', new_user_registration_path
           -#%li= link_to 'Sign In', new_user_session_path

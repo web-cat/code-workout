@@ -3,7 +3,7 @@
 # Table name: workouts
 #
 #  id                :integer          not null, primary key
-#  name              :string(255)      default(""), not null
+#  name              :string(255)      not null
 #  scrambled         :boolean          default(FALSE)
 #  created_at        :datetime
 #  updated_at        :datetime
@@ -17,6 +17,7 @@
 #
 #  index_workouts_on_external_id  (external_id) UNIQUE
 #  index_workouts_on_is_public    (is_public)
+#  workouts_creator_id_fk         (creator_id)
 #
 
 # =============================================================================
@@ -39,7 +40,8 @@ class Workout < ActiveRecord::Base
   #~ Relationships ............................................................
 
   acts_as_taggable_on :tags, :languages, :styles
-	has_many :exercise_workouts, -> { order("'position' ASC") },
+	has_many :exercise_workouts,
+	  -> { includes(:exercise).order("'position' ASC") },
 	  inverse_of: :workout, dependent: :destroy
   has_many :exercises, through:  :exercise_workouts
 	has_many :workout_scores, inverse_of: :workout, dependent: :destroy
@@ -70,6 +72,7 @@ class Workout < ActiveRecord::Base
 
 
   #~ Hooks ....................................................................
+  scope :visible_to_user, -> (u) { where { (creator_id == u.id) | (is_public == true) } }
 
   # paginates_per 1
 
@@ -185,7 +188,7 @@ class Workout < ActiveRecord::Base
   # -------------------------------------------------------------
   def highest_difficulty
     diff = 0
-    self.exercises.each do |x|
+    self.exercises.includes(:irt_data).references(:all).each do |x|
       x_diff = x.andand.irt_data.andand.difficulty || 0
       if x_diff > diff
         diff = x_diff
@@ -217,6 +220,52 @@ class Workout < ActiveRecord::Base
     return [earned, remaining, gap, earned_per, remaining_per, gap_per]
   end
 
+  # ----------------------------------------------------------------------------
+  # Updates or creates offerings for this workout in the specified courses.
+  # The common hash contains options for each offering that are common among them.
+  def add_workout_offerings(course_offerings, common)
+    workout_offerings = [] # Workout offerings added from this submission.
+    course_offerings.each do |id, offering|
+      course_offering = CourseOffering.find(id)
+      workout_offering = WorkoutOffering.find_by(workout: self, course_offering: course_offering)
+      if workout_offering.blank?
+        workout_offering = WorkoutOffering.new
+      end
+      workout_offering.workout = self
+      workout_offering.course_offering = course_offering
+      workout_offering.time_limit = common[:time_limit]
+      workout_offering.published = common[:published]
+      if common[:most_recent].to_b != workout_offering.most_recent
+        workout_offering.most_recent = common[:most_recent]
+        workout_offering.save!
+        workout_offering.rescore_all
+      end
+      workout_offering.opening_date = DateTime.strptime(offering['opening_date'].to_s, '%Q') if offering['opening_date'].present?
+      workout_offering.soft_deadline = DateTime.strptime(offering['soft_deadline'].to_s, '%Q') if offering['soft_deadline'].present?
+      workout_offering.hard_deadline = DateTime.strptime(offering['hard_deadline'].to_s, '%Q') if offering['hard_deadline'].present?
+      workout_offering.workout_policy = common[:workout_policy]
+      workout_offering.save!
+      workout_offerings << workout_offering.id
+      extensions = offering['extensions']
+      extensions.each do |ext|
+        student_id = ext['student_id']
+        student = User.find(student_id)
+        student_extension = StudentExtension.find_by user: student, workout_offering: workout_offering
+        if student_extension.blank?
+          student_extension = StudentExtension.new
+        end
+        student_extension.user = student
+        student_extension.workout_offering = workout_offering
+        student_extension.opening_date = DateTime.strptime(ext['opening_date'].to_s, '%Q') if ext['opening_date'].present?
+        student_extension.soft_deadline = DateTime.strptime(ext['soft_deadline'].to_s, '%Q') if ext['soft_deadline'].present?
+        student_extension.hard_deadline = DateTime.strptime(ext['hard_deadline'].to_s, '%Q') if ext['hard_deadline'].present?
+        student_extension.time_limit = ext['time_limit'].present?
+        student_extension.save!
+      end
+    end
+
+    return workout_offerings
+  end
 
   # -------------------------------------------------------------
   def score_for(user, workout_offering = nil)
@@ -228,11 +277,24 @@ class Workout < ActiveRecord::Base
   #~ Class methods ............................................................
 
   # -------------------------------------------------------------
-  def self.search(terms)
-    # FIXME: need to add visibility controls here
-    return Workout.tagged_with(terms, wild: true, on: :tags) +
-      Workout.tagged_with(terms, wild: true, on: :languages) +
-      Workout.tagged_with(terms, wild: true, on: :styles)
+  def self.search(terms, user)
+    if user
+      available_workouts = Workout.where(
+        id: (Workout.visible_to_user(user) + user.managed_workouts)
+        .map(&:id)
+      )
+
+      return available_workouts
+        .tagged_with(terms, any: true, wild: true, on: :tags) +
+        available_workouts
+        .tagged_with(terms, any: true, wild: true, on: :languages) +
+        available_workouts
+        .tagged_with(terms, any: true, wild: true, on: :styles)
+    else
+      return Workout.tagged_with(terms, any: true, wild: true, on: :tags) +
+        Workout.tagged_with(terms, any: true, wild: true, on: :languages) +
+        Workout.tagged_with(terms, any: true, wild: true, on: :styles)
+    end
   end
 
 end

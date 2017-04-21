@@ -4,7 +4,7 @@
 - if @workout && show_feedback
   - pts = @workout.exercise_workouts.find_by(exercise: @exercise).andand.points
   - score = @attempt.score
-  - score_pct = score * 100.0 / pts
+  - score_pct = pts > 0 ? score * 100.0 / pts : 0
   .summary
     .radial-progress{ 'data-progress' => score_pct.round() }
       .circle
@@ -66,13 +66,13 @@
                 %i.fa.fa-minus-square
   - else
     - examples = @exercise_version.prompts.first.specific.examples
-    - if examples.any?
-      %table.table.table-striped.feedback
-        %thead
-          %tr
-            %th Example
-            %th Result
-        %tbody
+    %table.table.table-striped.feedback
+      %thead
+        %tr
+          %th Example
+          %th.text-center Result
+      %tbody
+        - if examples.any?
           - answer.test_case_results(true).each do |tcr|
             - if tcr.test_case.is_example?
               %tr
@@ -89,6 +89,10 @@
                 - else
                   %td.fail
                     %i.fa.fa-minus-square
+        %tr
+          %td Other hidden tests
+          %td.unknown
+            %i.fa.fa-question-circle
 
-= render partial: 'workout_scores/time_remaining',
+-#= render partial: 'workout_scores/time_remaining',
   locals: { workout_score: @attempt.workout_score }

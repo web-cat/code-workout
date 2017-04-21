@@ -22,9 +22,9 @@
 #  last_name                :string(255)
 #  global_role_id           :integer          not null
 #  avatar                   :string(255)
-#  slug                     :string(255)      default(""), not null
-#  current_workout_score_id :integer
+#  slug                     :string(255)      not null
 #  time_zone_id             :integer
+#  current_workout_score_id :integer
 #
 # Indexes
 #
@@ -75,6 +75,7 @@ class User < ActiveRecord::Base
 
   belongs_to  :current_workout_score, class_name: 'WorkoutScore'
   has_many    :test_case_results, inverse_of: :user, dependent: :destroy
+  has_many    :lti_identities
 
 
   #~ Hooks ....................................................................
@@ -84,7 +85,7 @@ class User < ActiveRecord::Base
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, and :timeoutable
   devise :database_authenticatable, :omniauthable, :registerable,
-    :recoverable, :rememberable, :trackable, :validatable,  # :confirmable,
+    :recoverable, :rememberable, :trackable, #:validatable,  # :confirmable,
     :omniauth_providers => [:facebook, :google_oauth2, :cas]
 
   before_create :set_default_role
@@ -106,6 +107,7 @@ class User < ActiveRecord::Base
     where{ (id == u.id) |
     (course_enrollments.course_role_id != CourseRole::STUDENT_ID) } }
 
+  attr_accessor :skip_password_validation
 
   #~ Class methods ............................................................
 
@@ -133,14 +135,29 @@ class User < ActiveRecord::Base
 
   # -------------------------------------------------------------
   # Public: Gets a relation representing all of the CourseOfferings that
-  # this user can manage.
+  # this user can manage. If a course and term are passed,
+  # filters the list by course and term as well.
   #
   # Returns a relation representing all of the CourseOfferings that this
   # user can manage
   #
-  def managed_course_offerings
-    course_enrollments.where(course_roles: { can_manage_course: true }).
-      map(&:course_offering)
+  def managed_course_offerings(course=nil, term=nil)
+    if course.nil? && term.nil?
+      course_enrollments.where(course_roles: { can_manage_course: true }).
+        map(&:course_offering)
+    elsif course.nil?
+      course_enrollments.joins(:course_offering).
+        where(course_roles:
+          { can_manage_course: true }, course_offering:
+            { term: term }
+        ).map(&:course_offering)
+    else
+      course_enrollments.joins(:course_offering).
+        where(course_roles:
+          { can_manage_course: true }, course_offering:
+            { course: course, term: term }
+        ).map(&:course_offering)
+    end
   end
 
 
@@ -162,6 +179,21 @@ class User < ActiveRecord::Base
   def student_course_offerings
     course_enrollments.where(course_role: CourseRole.student).
       map(&:course_offering)
+  end
+
+  def managed_workout_offerings_in_term(workout, course, term)
+    course_enrollments.joins(course_offering: :workout_offerings).
+      where(course_roles:
+        { can_manage_course: true }, course_offering:
+          { course: course, term: term }
+      ).map { |e| e.course_offering.workout_offerings.where(workout: workout) }
+  end
+
+  def managed_workouts
+    course_enrollments.joins(course_offering: :workout_offerings).
+      where(course_roles:
+        { can_manage_course: true }
+      ).flat_map { |e| e.course_offering.workout_offerings }.map(&:workout)
   end
 
 
@@ -323,6 +355,9 @@ class User < ActiveRecord::Base
     # taken from: http://www.chicagoinformatics.com/index.php/2012/09/
     # user-administration-for-devise/
     def password_required?
+      # only set when creating a new user through LTI
+      return false if skip_password_validation
+
       (!password.blank? && !password_confirmation.blank?) || new_record?
     end
 

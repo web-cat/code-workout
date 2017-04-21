@@ -8,6 +8,7 @@
 #
 # Indexes
 #
+#  exercise_owners_owner_id_fk                        (owner_id)
 #  index_exercise_owners_on_exercise_id_and_owner_id  (exercise_id,owner_id) UNIQUE
 #
 

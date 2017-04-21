@@ -9,11 +9,12 @@
 #  year       :integer          not null
 #  created_at :datetime
 #  updated_at :datetime
-#  slug       :string(255)      default(""), not null
+#  slug       :string(255)      not null
 #
 # Indexes
 #
 #  index_terms_on_slug             (slug) UNIQUE
+#  index_terms_on_starts_on        (starts_on)
 #  index_terms_on_year_and_season  (year,season)
 #
 
@@ -73,7 +74,7 @@ class Term < ActiveRecord::Base
   # -------------------------------------------------------------
   def self.current_term
     result = Term.
-      where('starts_on <= :now and :now < ends_on', now: DateTime.now).
+      where('starts_on <= :now and :now <= ends_on', now: Date.today).
       first
     return result ? result : Term.first
   end

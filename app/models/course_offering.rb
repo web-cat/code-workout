@@ -5,17 +5,19 @@
 #  id                      :integer          not null, primary key
 #  course_id               :integer          not null
 #  term_id                 :integer          not null
-#  label                   :string(255)      default(""), not null
+#  label                   :string(255)      not null
 #  url                     :string(255)
 #  self_enrollment_allowed :boolean
 #  created_at              :datetime
 #  updated_at              :datetime
 #  cutoff_date             :date
+#  lms_instance_id         :integer
 #
 # Indexes
 #
-#  index_course_offerings_on_course_id  (course_id)
-#  index_course_offerings_on_term_id    (term_id)
+#  index_course_offerings_on_course_id        (course_id)
+#  index_course_offerings_on_lms_instance_id  (lms_instance_id)
+#  index_course_offerings_on_term_id          (term_id)
 #
 
 # =============================================================================
@@ -27,6 +29,7 @@ class CourseOffering < ActiveRecord::Base
 
   belongs_to :course, inverse_of: :course_offerings
   belongs_to :term, inverse_of: :course_offerings
+  belongs_to :lms_instance, inverse_of: :course_offerings
   has_many :workout_offerings, inverse_of: :course_offering,
     dependent: :destroy
   has_many :workouts, through: :workout_offerings
@@ -41,9 +44,12 @@ class CourseOffering < ActiveRecord::Base
 
   scope :by_date,
     -> { includes(:term).order('terms.starts_on DESC', 'label ASC') }
+
+  # FIXME: This scope seems to be broken. Use user.managed_course_offerings instead
   scope :managed_by_user, -> (u) { joins{course_enrollments}.
    where{ course_enrollments.user == u &&
     course_enrollments.course_role_id == CourseRole::INSTRUCTOR_ID } }
+  scope :for_course_in_term, -> (c, t) { where { (course == c && term == t) } }
 
 
   #~ Validation ...............................................................
@@ -60,7 +66,10 @@ class CourseOffering < ActiveRecord::Base
     "#{course.number} (#{label})"
   end
 
+
+  # -------------------------------------------------------------
   def name
+    # FIXME: remove this method and use one of the other display_* methods
     self.course.name + ' - ' + self.term.display_name
   end
 
@@ -68,6 +77,12 @@ class CourseOffering < ActiveRecord::Base
   # -------------------------------------------------------------
   def display_name_with_term
     "#{course.number} (#{term.display_name}, #{label})"
+  end
+
+
+  # -------------------------------------------------------------
+  def display_name_with_org_and_term
+    "#{course.organization.abbreviation} #{course.number} (#{term.display_name}, #{label})"
   end
 
 

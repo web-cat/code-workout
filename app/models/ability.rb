@@ -14,6 +14,8 @@ class Ability
   def initialize(user)
     # default abilities for anonymous, non-logged-in visitors
     can [:read, :index], [Term, Organization, Course, CourseOffering]
+    can [:search, :random_exercise, :practice, :evaluate], Exercise, is_public: true
+    can [:practice, :read], Workout, is_public: true
 
     if user
       # This ability allows admins impersonating other users to revert
@@ -36,11 +38,14 @@ class Ability
         end
         can [:edit, :update], User, id: user.id
 
+        can :new_or_existing, Organization
+
         process_global_role user
         process_instructor user
         process_courses user
         process_exercises user
         process_workouts user
+        process_workout_offerings user
         process_resource_files user
       end
     end
@@ -97,8 +102,10 @@ class Ability
       # global role.
       can [:create], [Course, CourseOffering, CourseEnrollment,
         Workout, Exercise, Attempt, ResourceFile]
+      can [:manage], [Course, CourseOffering, CourseEnrollment,
+        Exercise, Attempt, ResourceFile]
 
-      can [:index], [Workout, Exercise, Attempt, ResourceFile]
+      #can [:index], [Workout, Exercise, Attempt, ResourceFile]
     end
   end
 
@@ -121,10 +128,14 @@ class Ability
 
       # A user can manage a CourseOffering if they are enrolled in that
       # offering and have a CourseRole where can_manage_course? is true.
-      can [:edit, :update], CourseOffering,
-        CourseOffering.managed_by_user(user) do |co|
-        co.is_manager? user
-      end
+      # can [:manage], CourseOffering,
+      #   CourseOffering.managed_by_user(user) do |co|
+      #   co.is_manager? user
+      # end
+      can :create, [CourseOffering, Course, Organization]
+      can :manage, CourseOffering, course_enrollments:
+        { user_id: user.id, course_role:
+          { can_manage_assignments: true} }
 
       # A user can grade a CourseOffering if they are enrolled in that
       # offering and have a CourseRole where can_grade_submissions? is true.
@@ -137,6 +148,14 @@ class Ability
       can :manage, CourseEnrollment do |enrollment|
         enrollment.course_offering.is_manager? user
       end
+
+      # A user can request tab content on the course page through AJAX if they are enrolled in an offering of the course
+      can :tab_content, Course do |course|
+        course.course_offerings.any? { |co| co.is_enrolled? (user) }
+      end
+
+      # A user can search for courses if they are signed in
+      can :search, Course
     end
   end
 
@@ -150,18 +169,22 @@ class Ability
       !user.global_role.can_manage_all_courses? &&
       !user.global_role.is_instructor?
 
-      # Still needs revision
-      can [:index, :read, :practice, :evaluate], Exercise,
-        Exercise.visible_to_user(user) do |e|
+
+
+      can [:read, :practice, :evaluate], Exercise do |e|
         e.visible_to?(user)
       end
+
       can [:show], WorkoutOffering do |o|
         o.can_be_seen_by? user
 #        now = Time.now
 #        ((o.opening_date == nil) || (o.opening_date <= now)) &&
 #          o.course_offering.course_enrollments.where(user_id: user.id).any?
       end
-      can [:review], WorkoutOffering, course_offering: {course_enrollments: {user: user, course_role: {can_manage_assignments: true}}}
+      can [:manage], WorkoutOffering, course_offering:
+        { course_enrollments:
+          { user_id: user.id, course_role:
+            { can_manage_assignments: true } } }
       can [:practice], WorkoutOffering do |o|
         o.can_be_seen_by? user
 #        now = Time.now
@@ -211,9 +234,9 @@ class Ability
         { workout_offering:
           { course_offering:
             { course_enrollments:
-              { user: user, course_role:
+              { user_id: user.id, course_role:
                 { can_manage_assignments: true } } } } }
-      can [:create, :read], Attempt, user: user
+      can [:create, :read], Attempt, user_id: user.id
     end
   end
 
@@ -221,13 +244,32 @@ class Ability
   # -------------------------------------------------------------
   def process_workouts(user)
     can [:read, :update, :destroy], Workout, creator_id: user.id
+    can :create, Workout if user.instructor_course_offerings.any?
+    can :update, Workout, workout_offerings:
+      { course_offering:
+        { course_enrollments:
+          { user_id: user.id, course_role:
+            { can_manage_assignments: true } } } }
+    can :read, Workout, workout_offerings:
+      { course_offering:
+        { course_enrollments:
+          { user_id: user.id } } }
     can :practice, Workout, is_public: true
   end
 
+  def process_workout_offerings(user)
+    can :create, WorkoutOffering if user.instructor_course_offerings.any?
+    can :read, WorkoutOffering, course_offering:
+      { course_enrollments:
+        { user_id: user.id } }
+    can :manage, WorkoutOffering, course_offering:
+      { course_enrollments:
+        { user_id: user.id, course_role:
+          { can_manage_assignments: true } } }
+  end
 
   # -------------------------------------------------------------
   def process_resource_files(user)
     can [:read, :update, :destroy], ResourceFile, user_id: user.id
   end
-
 end

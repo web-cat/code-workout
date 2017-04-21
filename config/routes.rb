@@ -2,12 +2,17 @@ CodeWorkout::Application.routes.draw do
 
   root 'home#index'
 
+  post 'lti/launch', as: :lti_launch # => 'workout_offerings#practice', as: :lti_workout_offering_practice
+
+  post 'lti/assessment'
+
   get 'home' => 'home#index'
   get 'main' => 'home#index'
   get 'home/about'
   get 'home/license'
   get 'home/contact'
   get 'home/new_course_modal', as: :new_course_modal
+  get 'home/python_ruby_modal', as: :python_ruby_modal
 
   get 'static_pages/home'
   get 'static_pages/help'
@@ -36,7 +41,7 @@ CodeWorkout::Application.routes.draw do
 
 
   get 'sse/feedback_wait'
-  # get 'sse/feedback_update'
+  get 'sse/feedback_update'
   get 'sse/feedback_poll'
   post '/course_offerings/:id/upload_roster' => 'course_offerings#upload_roster'
 
@@ -63,11 +68,12 @@ CodeWorkout::Application.routes.draw do
       as: :exercise_practice
     patch 'exercises/:id/practice' => 'exercises#evaluate',
       as: :exercise_evaluate
-    post 'exercises/search' => 'exercises#search', as: :search
+    post 'exercises/search' => 'exercises#search', as: :exercises_search
     # At the bottom, so the routes above take precedence over existing ids
     resources :exercises
 
     # /gym/workouts ...
+    get  'workouts/embed' => 'workouts#embed'
     get  'workouts/download' => 'workouts#download'
     get  'workouts/:id/add_exercises' => 'workouts#add_exercises'
     post 'workouts/link_exercises'  => 'workouts#link_exercises'
@@ -81,9 +87,9 @@ CodeWorkout::Application.routes.draw do
     get  'workouts_dummy' => 'workouts#dummy'
     get  'workouts_import' => 'workouts#upload_yaml'
     post  'workouts_yaml_create' => 'workouts#yaml_create'
-
+    post 'workouts/search' => 'workouts#search', as: :workouts_search
     # At the bottom, so the routes above take precedence over existing ids
-    resources :workouts
+    resources :workouts, except: [ :new, :edit ]
   end
 
   # All of the routes anchored at /courses
@@ -91,30 +97,35 @@ CodeWorkout::Application.routes.draw do
     get 'search' => 'courses#search', as: :courses_search
     post 'find' => 'courses#find', as: :course_find
     get 'new' => 'courses#new'
+    post 'create' => 'courses#create', as: :courses_create
     get ':id/edit' => 'courses#edit', as: :course_edit
-    get ':course_id/:term_id/:id/practice(/:exercise_id)' =>
-      'workout_offerings#practice',
-      as: :workout_offering_practice
-    get ':course_id/:term_id/:workout_offering_id/:id' => 'exercises#practice',
-      as: :workout_offering_exercise
-    patch ':course_id/:term_id/:workout_offering_id/:id' => 'exercises#evaluate',
-      as: :workout_offering_exercise_evaluate
-    get ':course_id/:term_id/:workout_offering_id/review/:review_user_id/:id' => 'exercises#practice',
-      as: :workout_offering_exercise_review
-
-    get ':course_id/:term_id/:id' => 'workout_offerings#show',
-      as: :workout_offering
-    get ':course_id/:term_id/review/:review_user_id/:id' => 'workout_offerings#review',
-      as: :workout_offering_review
-    post ':id/:term_id/generate_gradebook/' => 'courses#generate_gradebook',
-      as: :course_gradebook
+    get ':course_id/new_offering' => 'course_offerings#new', as: :new_course_offering
+    post ':course_id/create_offering' => 'course_offerings#create', as: :course_offering_create
+    get ':course_id/:term_id/tab_content/:tab' => 'courses#tab_content'
+    get ':course_id/:term_id/workouts/new' => 'workouts#new', as: :new_workout
+    get ':course_id/:term_id/workouts/:workout_id/clone' => 'workouts#clone', as: :clone_workout
+    get ':course_id/:term_id/workouts/new_or_existing' => 'workouts#new_or_existing', as: :new_or_existing_workout
+    get ':course_id/:term_id/:workout_offering_id/edit_workout' => 'workouts#edit', as: :edit_workout
+    get ':course_id/:term_id/:id/practice(/:exercise_id)' => 'workout_offerings#practice', as: :workout_offering_practice
+    get ':course_id/:term_id/:workout_offering_id/:id' => 'exercises#practice', as: :workout_offering_exercise
+    patch ':course_id/:term_id/:workout_offering_id/:id' => 'exercises#evaluate', as: :workout_offering_exercise_evaluate
+    get ':course_id/:term_id/:workout_offering_id/review/:review_user_id/:id' => 'exercises#practice', as: :workout_offering_exercise_review
+    get ':course_id/:term_id/:id' => 'workout_offerings#show', as: :workout_offering
+    get ':course_id/:term_id/review/:review_user_id/:id' => 'workout_offerings#review', as: :workout_offering_review
+    post ':id/:term_id/generate_gradebook/' => 'courses#generate_gradebook', as: :course_gradebook
     get ':id(/:term_id)' => 'courses#show', as: :course
-
-
   end
 
+  # Organization routes, separate from courses
+  resources :organizations, only: :create do
+    collection do
+      get 'new_or_existing'
+      get 'search'
+      get 'abbr_suggestion'
+    end
+  end
 
-  resources :course_offerings, only: [ :edit, :update ] do
+  resources :course_offerings, only: [ :edit, :update, :index, :show ] do
     post 'enroll' => :enroll, as: :enroll
     delete 'unenroll' => :unenroll, as: :unenroll
     match 'upload_roster/:action', controller: 'upload_roster',
@@ -122,6 +133,7 @@ CodeWorkout::Application.routes.draw do
     post 'generate_gradebook' => :generate_gradebook, as: :gradebook
     get 'add_workout' => :add_workout, as: :add_workout
     post 'store_workout/:id' => :store_workout, as: :store_workout
+    get '/search_students' => :search_students, as: :search_students
   end
 
   # All of the routes anchored at /users
@@ -135,9 +147,13 @@ CodeWorkout::Application.routes.draw do
 
   #OmniAuth for Facebook
   devise_for :users,
-    controllers: { omniauth_callbacks: 'users/omniauth_callbacks' },
+    controllers: { omniauth_callbacks: 'users/omniauth_callbacks', registrations: 'registrations' },
     skip: [:registrations, :sessions]
   as :user do
+    get '/new_password' => 'devise/passwords#new', as: :new_password
+    get '/edit_password' => 'devise/passwords#edit', as: :edit_password
+    put '/update_password' => 'devise/passwords#update', as: :update_password
+    post '/create_password' => 'devise/passwords#create', as: :create_password
     get '/signup' => 'devise/registrations#new', as: :new_user_registration
     post '/signup' => 'devise/registrations#create', as: :user_registration
     get '/login' => 'devise/sessions#new', as: :new_user_session
@@ -146,6 +162,7 @@ CodeWorkout::Application.routes.draw do
   end
 
 end
+
 #== Route Map
 =begin
  Prefix Verb   URI Pattern                            Controller#Action

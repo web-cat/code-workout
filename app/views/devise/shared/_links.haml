@@ -5,7 +5,7 @@
   = button_link 'Sign up', new_user_path
 
 - if devise_mapping.recoverable? && controller_name != 'passwords' && controller_name != 'registrations'
-  = button_link 'Forgot your password?', new_password_path(resource_name)
+  = button_link 'Forgot your password?', new_password_path
 
 - if devise_mapping.confirmable? && controller_name != 'confirmations'
   = button_link 'Didn\'t receive confirmation instructions?',

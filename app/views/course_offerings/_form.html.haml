@@ -1,10 +1,13 @@
-= semantic_form_for @course_offering, html: { class: "form-horizontal" } do |f|
+- url = url_for(organization_course_offering_create_path(course_id: params[:course_id], organization_id: params[:organization_id]))
+= semantic_form_for @course_offering, url: url, html: { class: "form-horizontal col-xs-10" } do |f|
   = f.semantic_errors
-  = f.inputs
-  = link_to "<i class=\"icon-upload\"> Upload Roster</i>".html_safe,
-    upload_roster_path(@course_offering),
-    class: "btn btn-inverse",
-    remote: true
-  %a.btn{"data-toggle" => "modal", href: "#upload_roster_modal", role: "button"} Modal
+  = f.inputs do
+    = f.input :label, input_html: { placeholder: "e.g. MWF 10:00am" }
+    = f.input :term
+    = f.input :url
+    = f.input :self_enrollment_allowed, label: false
+    %br
+    = f.input :cutoff_date, as: :date_picker, hint: 'The last date for self-enrollment.'
   = f.actions do
     = f.action :submit, as: :button, button_html: { class: 'btn btn-primary' }
+    = f.action :cancel, as: :link, label: 'Cancel', url: organizations_path, button_html: { class: 'btn btn-default' }

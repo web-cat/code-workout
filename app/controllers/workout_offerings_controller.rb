@@ -1,17 +1,29 @@
 class WorkoutOfferingsController < ApplicationController
+  skip_before_filter :authenticate_user!, :only => :practice
+
   load_and_authorize_resource
 
+  skip_authorize_resource :only => :practice
+
   #~ Action methods ...........................................................
+  after_action :allow_iframe, only: :practice
+
+  # the consumer keys/secrets
+  $oauth_creds = {"test" => "secret"}
 
   # -------------------------------------------------------------
   def show
     if @workout_offering
       @workout = @workout_offering.workout
+      @course = Course.find params[:course_id]
+      @term = Term.find params[:term_id]
+      @organization = Organization.find params[:organization_id]
+      @course_offering = CourseOffering.find_by @course, @term
       @exs = @workout.exercises
     end
     render 'workouts/show'
   end
-  
+
   def review
     if @workout_offering
       @workout = @workout_offering.workout
@@ -44,7 +56,13 @@ class WorkoutOfferingsController < ApplicationController
 
   # -------------------------------------------------------------
   def practice
+    # must include the oauth proxy object
+    require 'oauth/request_proxy/rack_request'
+
+    @lti_launch = params[:lti_launch]
     if @workout_offering
+      lis_outcome_service_url = params[:lis_outcome_service_url]
+      lis_result_sourcedid = params[:lis_result_sourcedid]
       ex1 = nil
       if params[:exercise_id]
         ex1 = Exercise.find_by(id: params[:exercise_id])
@@ -64,6 +82,8 @@ class WorkoutOfferingsController < ApplicationController
             user: current_user,
             workout_offering: @workout_offering,
             workout: @workout_offering.workout)
+          @workout_score.lis_outcome_service_url = lis_outcome_service_url
+          @workout_score.lis_result_sourcedid = lis_result_sourcedid
           @workout_score.save!
         end
         current_user.current_workout_score = @workout_score
@@ -91,10 +111,73 @@ class WorkoutOfferingsController < ApplicationController
           @workout_offering.course_offering.course.organization.slug,
         course_id: @workout_offering.course_offering.course.slug,
         term_id: @workout_offering.course_offering.term.slug,
-        workout_offering_id: @workout_offering.id)
+        workout_offering_id: @workout_offering.id,
+        lis_result_sourcedid: lis_result_sourcedid,
+        lis_outcome_service_url: lis_outcome_service_url,
+        lti_launch: @lti_launch
+      )
     else
       redirect_to root_path, notice: 'Workout offering not found' and return
     end
   end
+
+  private
+
+    def lti_enroll
+      @workout_offering = WorkoutOffering.find_by(id: params[:id])
+      @course_offering = CourseOffering.find_by(id: @workout_offering.course_offering_id)
+
+      if @course_offering &&
+        @course_offering.can_enroll? &&
+        !@course_offering.is_enrolled?(current_user)
+
+        CourseEnrollment.create(
+        course_offering: @course_offering,
+        user: current_user,
+        course_role: CourseRole.student)
+      end
+    end
+
+    def was_nonce_used_in_last_x_minutes?(nonce, minutes=60)
+      # some kind of caching solution or something to keep a short-term memory of used nonces
+      false
+    end
+
+    def lti_authorize!
+      if key = params['oauth_consumer_key']
+        if secret = $oauth_creds[key]
+          @tp = IMS::LTI::ToolProvider.new(key, secret, params)
+        else
+          @tp = IMS::LTI::ToolProvider.new(nil, nil, params)
+          @tp.lti_msg = "Your consumer didn't use a recognized key."
+          @tp.lti_errorlog = "You did it wrong!"
+          @message = "Consumer key wasn't recognized"
+          return false
+        end
+      else
+        @message = "No consumer key"
+        return false
+      end
+
+      if !@tp.valid_request?(request)
+        @message = "The OAuth signature was invalid"
+        return false
+      end
+
+      if Time.now.utc.to_i - @tp.request_oauth_timestamp.to_i > 60*60
+        @message = "Your request is too old."
+        return false
+      end
+
+      # this isn't actually checking anything like it should, just want people
+      # implementing real tools to be aware they need to check the nonce
+      if was_nonce_used_in_last_x_minutes?(@tp.request_oauth_nonce, 60)
+        @message = "Why are you reusing the nonce?"
+        return false
+      end
+
+      # @username = @tp.username("Dude")
+      return true
+    end
 
 end

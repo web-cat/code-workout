@@ -5,16 +5,17 @@
   - headers<<'Total'
   = CSV.generate_line(headers).strip()
   - CourseEnrollment.where(course_offering_id: off.id).each do |ce|
-    - body = Array.new   
-    - body << off.id.to_s   
+    - body = Array.new
+    - body << off.id.to_s
     - body << off.name
-    - if ce.course_role_id == CourseRole.find_by(name: 'Student').id 
-      - body<<User.find(ce.user_id).first_name   
+    - if ce.course_role_id == CourseRole.find_by(name: 'Student').id
+      - body<<User.find(ce.user_id).first_name
       - body<<User.find(ce.user_id).last_name
       - grand_total = 0.0
       - CourseOffering.find(off.id).workouts.each do |wkt|
-        - if WorkoutScore.find_by(user_id: ce.user_id, workout: wkt)
-          - tot = WorkoutScore.find_by!(user_id: ce.user_id, workout: wkt).score
+        - workout_offering = off.workout_offerings.find_by(workout: wkt)
+        - if workout_score = WorkoutScore.find_by(user_id: ce.user_id, workout: wkt, workout_offering: workout_offering)
+          - tot = workout_score.score
           - body << tot
           - grand_total += tot
         - else

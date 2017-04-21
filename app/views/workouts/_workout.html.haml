@@ -12,10 +12,10 @@
 - workout ||= workout_score.andand.workout
 - workout ||= workout_offering.andand.workout
 - workout_offering ||= workout_score.andand.workout_offering
-- score_pct = workout_score ? (workout_score.score/workout.total_points * 100).round(0) : 0
+- score_pct = workout_score ? ((workout.total_points > 0) ? (workout_score.score/workout.total_points * 100).round(0) : 0) : 0
 - if score_pct == 100 && workout_score.score < workout.total_points
   - score_pct = 99
-- closed = (workout_offering && workout_offering.hard_deadline < Time.zone.now)
+- closed = (workout_offering.andand.hard_deadline && workout_offering.andand.hard_deadline < Time.zone.now)
 %article.workout.thumbnail{ class: (closed ? (size + " closed") : size) }
   .title
     - if workout_offering && workout_offering.current_deadline_distance == 4
@@ -23,7 +23,7 @@
       .due.soon= user_time(current_user, workout_offering.soft_deadline).to_s.split(" ").first
     - elsif workout_offering && workout_offering.current_deadline_distance == 1
       %i.fa.fa-lock
-      .due= workout_offering.soft_deadline.to_s.split(" ").first
+      .due= user_time(current_user, workout_offering.soft_deadline).to_s.split(" ").first
     - elsif workout_offering && workout_offering.current_deadline_distance.nil?
       %i.fa.fa-folder-open
       .due Open
@@ -39,7 +39,7 @@
       %i.fa.fa-folder-open
       .due.late
         = (workout_offering.current_deadline_distance.abs/24).to_s + ' days ago'
-    - else
+    - elsif workout_offering
       %i.fa.fa-folder-open
       .due.late
         = 'Due in a few minutes'
@@ -55,23 +55,33 @@
     %span.badge.badge-info= workout.exercises.count.to_s
 
   .summary
-    - if !workout_score || workout_score.show_feedback?
-      .radial-progress{ 'data-progress' => score_pct }
-        .circle
-          .mask.full
-            .fill
-          .mask.half
-            .fill
-            .fill.fix
-          .shadow
-        .inset
-          .pct
+    - if defined?(new_or_existing)
+      - if can_update && workout_offering
+        = link_to 'Edit', organization_edit_workout_path(course_id: workout_offering.course_offering.course.slug,
+          term_id: workout_offering.course_offering.term.slug,
+          organization_id: workout_offering.course_offering.course.organization.slug,
+          workout_offering_id: workout_offering.id), class: 'btn btn-sm btn-primary'
+      - else
+        %button.btn.btn-sm.btn-primary.btn-clone{ data: { workout_id: workout.id } }
+          Clone
     - else
-      .radial-progress.masked
-        .circle
-          .shadow
-        .inset
-          .score= image_tag 'pct-blur.png'
+      - if !workout_score || workout_score.show_feedback?
+        .radial-progress{ 'data-progress' => score_pct }
+          .circle
+            .mask.full
+              .fill
+            .mask.half
+              .fill
+              .fill.fix
+            .shadow
+          .inset
+            .pct
+      - else
+        .radial-progress.masked
+          .circle
+            .shadow
+          .inset
+            .score= image_tag 'pct-blur.png'
   .body
     .text
       = teaser(workout.description)
@@ -79,7 +89,7 @@
     = difficulty_image(workout.highest_difficulty.to_i)
     .taglist
       - workout.tags.each do |t|
-        = link_to t.name, search_path(search: t.name),
+        = link_to t.name, exercises_search_path(search: t.name),
           method: :post, class: 'tag'
 
 -#.well.well-sm.col-md-5

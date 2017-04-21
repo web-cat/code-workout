@@ -6,18 +6,27 @@ class CourseOfferingsController < ApplicationController
   # -------------------------------------------------------------
   # GET /course_offerings
   def index
+    @course_offerings = current_user.managed_course_offerings
+    @lti_launch = params[:lti_launch]
+    render layout: 'one_column'
   end
-
 
   # -------------------------------------------------------------
   # GET /course_offerings/1
   def show
+    @lti_launch = params[:lti_launch]
+    render layout: 'one_column'
   end
 
 
   # -------------------------------------------------------------
   # GET /course_offerings/new
   def new
+    @organization = Organization.find(params[:organization_id])
+    @course = Course.find(params[:course_id])
+    if params[:new_course]
+      flash.now[:success] = "#{@course.name} was successfully created in #{@organization.name}"
+    end
   end
 
 
@@ -27,20 +36,61 @@ class CourseOfferingsController < ApplicationController
     @uploaded_roster = UploadedRoster.new
   end
 
+  # -------------------------------------------------------------
+  # GET /course_offerings/1/students
+  def search_students
+    @course_offering = CourseOffering.find params[:id]
+    @terms = escape_javascript(params[:terms])
+    @terms = @terms.split(@terms.include?(',') ? /\s*,\s*/ : nil)
+    @course_offering_students = User.where(id: @course_offering.students)
+    @students = User.none
+    @terms.each do |term|
+      @students = @students + @course_offering_students
+        .where("first_name like ? or last_name like ? or email like ?", "%#{term}%", "%#{term}%", "%#{term}%")
+    end
+
+    if @students.blank?
+      @msg = 'Your search returned no results. Here are all the students enrolled in the course.'
+      @students = @course_offering_students
+    else
+      @msg = "#{@students.count} results returned:"
+    end
+
+    if @students.blank?
+      @msg = 'No students are enrolled in this course offering.'
+    end
+
+    respond_to do |format|
+      format.js
+    end
+  end
 
   # -------------------------------------------------------------
   # POST /course_offerings
   def create
     @course_offering = CourseOffering.new(course_offering_params)
 
+    # until we figure out how to use formtastic hidden fields
+    @course = Course.find(params[:course_id])
+    @course_offering.course = @course
+
     if @course_offering.save
+      CourseEnrollment.create(
+        course_offering: @course_offering,
+        user: current_user,
+        course_role: CourseRole.instructor
+      )
+
       redirect_to organization_course_path(
         @course_offering.course.organization,
         @course_offering.course,
         @course_offering.term),
         notice: "#{@course_offering.display_name} was successfully created."
     else
-      render action: 'new'
+      redirect_to organization_new_course_offering_path(
+        organization_id: params[:organization_id],
+        course_id: params[:course_id]
+      )
     end
   end
 
@@ -90,14 +140,14 @@ class CourseOfferingsController < ApplicationController
       redirect_to root_path
     end
   end
-  
+
   # -------------------------------------------------------------
   # GET /course_offerings/:id/upload_roster
   # Method to enroll students from an uploaded roster.
   # TODO: Needs to be redone so that it will read an actual CSV
   #       file of student enrollment info and not just a list of
   #       e-mail addresses.
-  
+
   def upload_roster
     form_contents = params[:form]
     puts form_contents.fetch(:rosterfile).path

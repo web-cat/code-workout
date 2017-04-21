@@ -25,8 +25,7 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
 
   # -------------------------------------------------------------
   def internal_auth(kind)
-    @user = User.from_omniauth(
-      request.env['omniauth.auth'], current_user)
+    @user = User.from_omniauth(request.env['omniauth.auth'], current_user)
     if @user.persisted?
       set_flash_message(:notice, :success, kind: kind) if
         is_navigational_format?

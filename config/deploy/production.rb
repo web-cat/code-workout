@@ -1,13 +1,15 @@
 set :stage, :production
+set :branch, :production
+set :rails_env, 'production'
 
 # Simple Role Syntax
 # ==================
 # Supports bulk-adding hosts to roles, the primary
 # server in each group is considered to be the first
 # unless any hosts have the primary property set.
-role :app, %w{codeworkout@codeworkout.org}
-role :web, %w{codeworkout@codeworkout.org}
-role :db,  %w{codeworkout@codeworkout.org}
+role :app, %w{codeworkout@codeworkout.cs.vt.edu}
+role :web, %w{codeworkout@codeworkout.cs.vt.edu}
+role :db,  %w{codeworkout@codeworkout.cs.vt.edu}
 
 # Extended Server Syntax
 # ======================
@@ -15,7 +17,7 @@ role :db,  %w{codeworkout@codeworkout.org}
 # definition into the server list. The second argument
 # something that quacks like a hash can be used to set
 # extended properties on the server.
-server 'codeworkout.org', user: 'codeworkout', roles: %w{web app db}, my_property: :my_value
+server 'codeworkout.cs.vt.edu', user: 'codeworkout', roles: %w{web app db}, my_property: :my_value
 
 # you can set custom ssh options
 # it's possible to pass any option but you need to keep in mind that net/ssh understand limited list of options

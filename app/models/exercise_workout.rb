@@ -10,6 +10,11 @@
 #  created_at  :datetime
 #  updated_at  :datetime
 #
+# Indexes
+#
+#  exercise_workouts_exercise_id_fk  (exercise_id)
+#  exercise_workouts_workout_id_fk   (workout_id)
+#
 
 # =============================================================================
 # Represents a many-to-many relationship between exercises and workouts,

@@ -9,7 +9,7 @@
   %p
     Tags:
     - @workout.tags.each do |t|
-      =link_to t.name, search_path(search: t.name), method: :post, class: 'tag'
+      =link_to t.name, exercises_search_path(search: t.name), method: :post, class: 'tag'
 
 - if course_offering && course_offering.is_staff?(review_user)
   %table.table.table-striped{ style: 'width: auto' }
@@ -35,7 +35,7 @@
               model: 'workout_offering' } }= woff.opening_date
             %td
               - if woff.opening_date
-                = l woff.opening_date
+                = l user_time(current_user, woff.opening_date)
             -#%td.xeditable{ id: 'soft_deadline',
               data: { type: 'text',
               url: '/workout_offerings/' + woff.id.to_s,
@@ -44,7 +44,7 @@
               xeditable: "true",
               pk: woff.id.to_s,
               model: 'workout_offering' } }= woff.soft_deadline
-            %td= l woff.soft_deadline
+            %td= l user_time(current_user, woff.soft_deadline)
             -#%td.xeditable{ id: 'hard_deadline',
               data: { type: 'text',
               url: '/workout_offerings/' + woff.id.to_s,
@@ -53,18 +53,18 @@
               xeditable: "true",
               pk: woff.id.to_s,
               model: 'workout_offering' } }= woff.hard_deadline
-            %td= l woff.hard_deadline
+            %td= l user_time(current_user, woff.hard_deadline)
 - elsif @workout_offering
   %p
     - if  review_user.id != current_user.id
-      Student: 
+      Student:
       = "#{review_user.display_name}."
-    - if workout_score
+    - if workout_score.last_attempted_at
       &nbsp;&nbsp;&nbsp;Last Attempted:
-      = l workout_score.last_attempted_at
+      = l user_time(current_user, workout_score.last_attempted_at)
     - elsif @workout_offering.hard_deadline
       Due:
-      = l @workout_offering.hard_deadline
+      = l user_time(current_user, @workout_offering.hard_deadline)
     &nbsp;&nbsp;&nbsp;Score:
     - if workout_score
       - if workout_score.show_feedback?
@@ -90,9 +90,11 @@
 
 %h2 Exercises
 
-- if workout_score.nil? && @workout_offering.andand.workout_policy.andand.hide_thumbnails_before_start
+- manages_course = current_user.global_role.is_admin? || course_offering.andand.is_manager?(current_user)
+
+- if !manages_course && workout_score.nil? && @workout_offering.andand.workout_policy.andand.hide_thumbnails_before_start
   .alert.alert-warning You must begin this workout before you can see its exercises.
-- elsif workout_score.andand.closed? && !@workout_offering.andand.shutdown? && (@workout_offering.andand.workout_policy.andand.no_review_before_close || @workout_offering.andand.workout_policy.andand.hide_thumbnails_in_review_before_close)
+- elsif !manages_course && workout_score.andand.closed? && !@workout_offering.andand.shutdown? && (@workout_offering.andand.workout_policy.andand.no_review_before_close || @workout_offering.andand.workout_policy.andand.hide_thumbnails_in_review_before_close)
   .alert.alert-warning Results will be visible after the assignment closes.
 - elsif @exs.empty?
   .alert.alert-warning No exercises in this workout

@@ -3,6 +3,7 @@ source 'https://rubygems.org'
 gem 'rails'
 gem 'bootstrap-sass', '~> 3.2.0'
 gem 'jquery-rails'
+gem 'jquery-ui-rails'
 gem 'bootstrap-editable-rails'
 gem 'codemirror-rails'
 gem 'font-awesome-rails'
@@ -44,8 +45,10 @@ group :assets do
 end
 
 group :development, :test do
+  gem 'thin'
+  gem 'byebug'
   gem 'sqlite3'
-  gem 'mysql2'
+  gem 'mysql2', '= 0.3.15'
   gem 'rspec-rails'
   gem 'annotate'
   gem 'rails-erd', github: 'voormedia/rails-erd'
@@ -66,7 +69,7 @@ group :test do
 end
 
 group :production, :staging do
-  gem 'mysql2'
+  gem 'mysql2', '= 0.3.15'
 end
 
 group :doc do
@@ -95,6 +98,10 @@ gem 'awesome_print'   # For debugging/logging output
 #gems for rich text editing
 gem 'bootstrap-wysihtml5-rails'
 
+#gems for datepicker
+gem 'momentjs-rails', '>= 2.9.0'
+gem 'bootstrap3-datetimepicker-rails', '~> 4.17.37'
+
 #gem for improved WHERE querying
 gem 'squeel'
 
@@ -108,7 +115,11 @@ gem 'wannabe_bool'
 gem 'capistrano'
 gem 'capistrano-bundler'
 gem 'capistrano-rails'
+gem 'capistrano3-puma', github: 'seuros/capistrano-puma'
 
 #for multi-color progress bar
 gem 'css3-progress-bar-rails'
 
+gem 'immigrant'
+gem 'ims-lti', '~> 1.1.8'
+gem 'json'

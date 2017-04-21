@@ -1,7 +1,14 @@
 // Standard extensions get all permissions by default //
 
 
+grant codeBase "file:${java.home}/-" {
+    permission java.security.AllPermission;
+};
+
 grant codeBase "file:${java.home}/lib/ext/*" {
+    permission java.security.AllPermission;
+};
+grant codeBase "file:${{java.ext.dirs}}/*" {
     permission java.security.AllPermission;
 };
 
@@ -12,8 +19,26 @@ grant codeBase "file:${ant.home}/-" {
 grant codeBase "file:/usr/share/java/-" {
     permission java.security.AllPermission;
 };
+// For OS X, in case java.home points to a JRE
+grant codeBase "file:/Library/Java/JavaVirtualMachines/-" {
+    permission java.security.AllPermission;
+};
+// For CentOS
+grant codeBase "file:/usr/lib/jvm/-" {
+    permission java.security.AllPermission;
+};
+grant codeBase "file:/usr/lib/java/-" {
+    permission java.security.AllPermission;
+};
+grant codeBase "file:/usr/java/-" {
+    permission java.security.AllPermission;
+};
+
 
 grant codeBase "file:${resource_dir}/-" {
+    permission java.security.AllPermission;
+};
+grant codeBase "file:/Users/edwards/git/code-workout/usr/resources/Java/-" {
     permission java.security.AllPermission;
 };
 
@@ -79,4 +104,6 @@ grant {
 
     // What requires this in the JUnit infrastructure?
     permission java.util.PropertyPermission "*", "read,write";
+
+    permission java.lang.RuntimePermission "modifyThreadGroup", "";
 };

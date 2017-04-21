@@ -5,11 +5,18 @@ require "#{Rails.root}/usr/resources/config"
 
 class CodeWorker
   include SuckerPunch::Job
-  workers 10
+
+  # Reducing to 2 workers, since it seems that each puma process will
+  # have its own job queue and its own set of sucker punch worker threads.
+  # We'll get parallelism through puma processes instead of sucker punch
+  # workers.
+  workers 2 # 10
 
   # -------------------------------------------------------------
   def perform(attempt_id)
     ActiveRecord::Base.connection_pool.with_connection do
+      start_time = Time.now
+
       attempt = Attempt.find(attempt_id)
       exv = attempt.exercise_version
       prompt = exv.prompts.first.specific
@@ -102,6 +109,8 @@ class CodeWorker
 #        "record_#{current_attempt}_attempt", extra: :nothing) do
 #        puts "SKYFALL"
 #      end
+
+      Rails.logger.info "[pid:#{Process.pid}/thread:#{Thread.current.object_id}] processed attempt #{attempt_id} in #{Time.now - start_time}s"
     end
   end
 
@@ -112,9 +121,7 @@ class CodeWorker
   # -------------------------------------------------------------
   def execute_javatest(class_name, attempt_dir, pre_lines, answer_lines)
     cmd = CodeWorkout::Config::JAVA[:ant_cmd] % {attempt_dir: attempt_dir}
-    system(cmd +
-      ">> #{attempt_dir}/err.log " +
-      "2>> #{attempt_dir}/err.log")
+    system(cmd + '>> err.log 2>> err.log')
 
     # Parse compiler output for error messages to determine success
     error = ''
