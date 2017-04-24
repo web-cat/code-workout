@@ -80,6 +80,8 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # GET /exercises/1/edit
   def edit
+    @exercise_version = @exercise.current_version
+    @text_representation = @exercise_version.text_representation || ExerciseRepresenter.new(@exercise).to_hash.to_yaml
   end
 
 
@@ -228,10 +230,15 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # POST /exercises/upload_create
   def upload_create
-    if params[:exercise_version]['text_representation'].present?
+    byebug
+    if params[:exercise_version] && params[:exercise_version]['text_representation'].present?
       hash = YAML.load(params[:exercise_version]['text_representation'])
     else
       hash = YAML.load(File.read(params[:form][:file].path))
+    end
+
+    if !hash.kind_of?(Array)
+      hash = [hash]
     end
 
     exercises = ExerciseRepresenter.for_collection.new([]).from_hash(hash)
