@@ -9,9 +9,7 @@ gem 'codemirror-rails'
 gem 'font-awesome-rails'
 gem 'formtastic', '~> 3.1'
 gem 'formtastic-bootstrap'
-#gem 'sidekiq'
 gem 'sucker_punch', '~> 1.0'
-# gem 'jbuilder', '~> 1.2'
 gem 'haml', '>= 3.1.4'
 gem 'haml-rails'
 gem 'coffee-rails', '~> 4.0.0'
@@ -30,7 +28,6 @@ gem 'representable'
 gem 'redcarpet'
 gem 'loofah'
 gem 'truncate_html'
-gem 'puma'
 gem 'tzinfo' # For timezone support
 
 # For JSON support
@@ -70,6 +67,7 @@ end
 
 group :production, :staging do
   gem 'mysql2', '= 0.3.15'
+  gem 'puma'
 end
 
 group :doc do
@@ -115,11 +113,12 @@ gem 'wannabe_bool'
 gem 'capistrano'
 gem 'capistrano-bundler'
 gem 'capistrano-rails'
-gem 'capistrano3-puma', github: 'seuros/capistrano-puma'
+group :production, :staging do
+  gem 'capistrano3-puma', github: 'seuros/capistrano-puma'
+end
 
 #for multi-color progress bar
 gem 'css3-progress-bar-rails'
 
 gem 'immigrant'
 gem 'ims-lti', '~> 1.1.8'
-gem 'json'
