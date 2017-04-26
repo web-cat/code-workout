@@ -207,6 +207,12 @@ ul.wysihtml5-toolbar li {
     .xp:after { content: 'xp'; }
   }
 
+  .right {
+    float: right;
+    padding-right: 8px;
+    padding-bottom: 3px;
+  }
+
   .body, .info { padding: 0 63px 0 9px; width: 100%; }
   .body {
     $font-size: 12px;

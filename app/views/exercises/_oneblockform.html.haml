@@ -1,4 +1,5 @@
-%p.lead Use the editor below or upload an existing YAML file from your computer.
+%p.text.text-info
+  Use the editor below or upload an existing YAML file from your computer.
 
 = semantic_form_for @exercise_version, url: exercises_upload_create_path, method: :post do |f|
   = f.semantic_errors
@@ -6,9 +7,9 @@
     .col-md-9
       = f.input :text_representation, maxlength: 16.megabytes - 1, as: :text,
         input_html: { class: 'code', autofocus: true, data: { lang: 'text/x-yaml' },
-        value: @text_representation.present? ? @text_representation : '' }, label: 'YAML Representation of the Exercise'
+        value: @text_representation.present? ? @text_representation : '' }, label: 'YAML Representation of the Exercise:'
   .row
-    = f.submit class: 'btn btn-primary'
+    = f.submit class: 'btn btn-primary', value: 'Submit'
 %br
 OR
 %br
