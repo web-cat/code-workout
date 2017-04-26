@@ -443,7 +443,6 @@ DEPENDENCIES
   jquery-rails
   jquery-ui-rails
   js-routes
-  json
   kaminari
   log_file
   loofah

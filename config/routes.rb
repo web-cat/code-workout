@@ -21,6 +21,9 @@ CodeWorkout::Application.routes.draw do
   get 'static_pages/mockup3'
   get 'static_pages/typography'
   get 'static_pages/thumbnails'
+
+  get 'help/exercise_format'
+
   # routes anchored at /admin
   # First, we have to override some of the ActiveAdmin auto-generated
   # routes, since our user ids and file ids use restricted characters
