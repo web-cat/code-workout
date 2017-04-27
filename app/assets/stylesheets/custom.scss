@@ -345,11 +345,29 @@ input {
     min-width: 10ch;
   }
 
+  &.url {
+    min-width: 10ch;
+  }
+
   &[type=number]::-webkit-inner-spin-button,
   &[type=number]::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
   }
+}
+
+tr.fields {
+  &.extension td.course-offering {
+    min-width: 10ch;
+  }
+
+  td.remove {
+    text-align: center;
+  }
+}
+
+#workout-offering-fields th, #student-extension-fields th {
+  font-size: small;
 }
 
 .btn-group a {
