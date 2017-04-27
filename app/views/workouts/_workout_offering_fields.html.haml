@@ -3,6 +3,8 @@
     %small.display{style: 'font-size: small;'}
       = course_offering.andand.display_name_with_term
   %td
+    %input{ type: 'text', class: 'form-control input-sm', placeholder: 'Optional' }
+  %td
     - date = workout_offering.andand.opening_date.andand.to_i
     %input.datepicker.opening-datepicker{ type: 'text', class: 'form-control input-sm', placeholder: 'Set date',
       data: { date: (date ? date * 1000 : nil) } }

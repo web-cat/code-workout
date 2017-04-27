@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170420144021) do
+ActiveRecord::Schema.define(version: 20170427154810) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -529,6 +529,7 @@ ActiveRecord::Schema.define(version: 20170420144021) do
     t.integer  "continue_from_workout_id"
     t.string   "lms_assignment_id"
     t.boolean  "most_recent",              default: true
+    t.string   "lms_assignment_url"
   end
 
   add_index "workout_offerings", ["continue_from_workout_id"], name: "workout_offerings_continue_from_workout_id_fk", using: :btree
