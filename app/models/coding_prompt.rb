@@ -60,9 +60,18 @@ class CodingPrompt < ActiveRecord::Base
     true
   end
 
+
+  # -------------------------------------------------------------
   def examples
     test_cases.select{ |tc| tc.is_example? }
   end
+
+
+  # -------------------------------------------------------------
+  def language
+    return exercise_version.exercise.language || "Java"
+  end
+
 
   # -------------------------------------------------------------
   def new_answer(args)
@@ -93,6 +102,7 @@ class CodingPrompt < ActiveRecord::Base
     end
     return result.gsub(/\b___\b/, '')
   end
+
 
   #~ Private instance methods .................................................
   private
@@ -157,13 +167,13 @@ class CodingPrompt < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def generate_tests(file_name)
-    language = exercise_version.exercise.language || "Java"
+    lang = self.language
     tests = ''
     self.test_cases.each do |test_case|
-      tests << test_case.to_code(language)
+      tests << test_case.to_code(lang)
     end
-    body = File.read('usr/resources/' + language + '/' + language +
-      'BaseTestFile.' + Exercise.extension_of(language))
+    body = File.read('usr/resources/' + lang + '/' + lang +
+      'BaseTestFile.' + Exercise.extension_of(lang))
     File.write(file_name, body % {
       tests: tests,
       method_name: self.method_name,
