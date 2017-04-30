@@ -32,7 +32,8 @@ module CodeWorkout
         "-Dattempt_dir=%{attempt_dir} " \
         "-Dbasedir=. " \
         "-l ant.log " \
-        "-f ../../../../usr/resources/Java/build.xml"
+        "-f ../../../../usr/resources/Java/build.xml",
+      daemon_url: "http://localhost:8080/javadaemon/cr?dir=%{attempt_dir}"
     }
 
   end

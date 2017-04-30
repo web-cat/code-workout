@@ -62,14 +62,14 @@ class CodingPrompt < ActiveRecord::Base
 
 
   # -------------------------------------------------------------
-  def examples
-    test_cases.select{ |tc| tc.is_example? }
+  def language
+    exercise_version.exercise.language || 'Java'
   end
 
 
   # -------------------------------------------------------------
-  def language
-    return exercise_version.exercise.language || "Java"
+  def examples
+    test_cases.only_examples
   end
 
 
@@ -86,7 +86,7 @@ class CodingPrompt < ActiveRecord::Base
       FileUtils.mkdir_p(dir)
     end
     file_name = dir + '/' + self.class_name + 'Test.' +
-      Exercise.extension_of(exercise_version.exercise.language || 'Java')
+      Exercise.extension_of(self.language)
     if !File.exist?(file_name)
       generate_tests(file_name)
     end
@@ -109,7 +109,7 @@ class CodingPrompt < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def prompt_dir
-    'usr/resources/Java/tests/' + self.id.to_s
+    'usr/resources/' + self.language + '/tests/' + self.id.to_s
   end
 
 
@@ -136,20 +136,54 @@ class CodingPrompt < ActiveRecord::Base
           weight: 1.0,
           coding_prompt: self,
           input: row[0],
-          expected_output: row[1])
+          expected_output: row[1],
+          example: false,
+          hidden: false,
+          static: false)
         if tc.input && tc.input.include?(';')
           tc.input = tc.input.gsub(/;\s*/, ', ')
         end
         if !row[2].blank?
-          tc.description = row[2]
+          desc = row[2]
+          if desc.blank?
+            #ignore
+          elsif desc == 'example'
+            tc.example = true
+          elsif desc == 'hidden'
+            tc.hidden = true
+          elsif desc == 'static'
+            tc.static = true
+          else
+            if desc.sub!(/^example:\s*/i, '')
+              tc.example = true
+            end
+            if desc.sub!(/^hidden:\s*/i, '')
+              tc.hidden = true
+            end
+            if desc.sub!(/^static:\s*/i, '')
+              tc.static = true
+            end
+            if !desc.blank?
+              tc.description = desc
+            end
+          end
         end
         if !row[3].blank?
           tc.negative_feedback = row[3]
         end
         if !row[4].blank?
-          tc.weight = row[4].to_f
-          if tc.weight < 0
+          if row[4] =~ /all(\s|_)or(\s|_)nothing/i
             tc.weight = 1.0
+            tc.all_or_nothing = true
+          else
+            wt = row[4]
+            if wt.sub!(/^all(\s|_)or(\s|_)nothing:\s*/i, '')
+              tc.all_or_nothing = true
+            end
+            tc.weight = wt.to_f
+            if tc.weight < 0
+              tc.weight = 1.0
+            end
           end
         end
         if tc.save
@@ -169,7 +203,7 @@ class CodingPrompt < ActiveRecord::Base
   def generate_tests(file_name)
     lang = self.language
     tests = ''
-    self.test_cases.each do |test_case|
+    self.test_cases.only_dynamic.each do |test_case|
       tests << test_case.to_code(lang)
     end
     body = File.read('usr/resources/' + lang + '/' + lang +

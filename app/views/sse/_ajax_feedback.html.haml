@@ -55,7 +55,7 @@
               - description = tcr.display_description
               = description
               - if !tcr.pass
-                - if !description.blank? && !description.include?('hidden')
+                - if !tcr.test_case.hidden?
                   %br
                   .out= tcr.execution_feedback
             - if tcr.pass
@@ -80,7 +80,7 @@
                   - description = tcr.display_description
                   = description
                   - if !tcr.pass
-                    - if !description.blank? && !description.include?('hidden')
+                    - if !tcr.test_case.hidden?
                       %br
                       .out= tcr.execution_feedback
                 - if tcr.pass
