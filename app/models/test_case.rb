@@ -11,6 +11,10 @@
 #  coding_prompt_id  :integer          not null
 #  input             :text             not null
 #  expected_output   :text             not null
+#  static            :boolean          default(FALSE), not null
+#  all_or_nothing    :boolean          default(FALSE), not null
+#  example           :boolean          default(FALSE), not null
+#  hidden            :boolean          default(FALSE), not null
 #
 # Indexes
 #
@@ -47,9 +51,10 @@ class TestCase < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def is_example?
-    return !self.description.blank? &&
-        (self.description == 'example' ||
-        self.description.start_with?('example:'))
+    # return !self.description.blank? &&
+    #    (self.description == 'example' ||
+    #    self.description.start_with?('example:'))
+    return self.example?
   end
 
 

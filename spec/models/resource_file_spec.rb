@@ -4,7 +4,7 @@
 #
 #  id         :integer          not null, primary key
 #  filename   :string(255)
-#  token      :string(255)      not null
+#  token      :string(255)      default(""), not null
 #  user_id    :integer          not null
 #  public     :boolean          default(TRUE)
 #  created_at :datetime
