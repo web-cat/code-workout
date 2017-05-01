@@ -230,7 +230,6 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # POST /exercises/upload_create
   def upload_create
-    byebug
     if params[:exercise_version] && params[:exercise_version]['text_representation'].present?
       hash = YAML.load(params[:exercise_version]['text_representation'])
     else
