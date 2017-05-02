@@ -16,6 +16,7 @@
 #  continue_from_workout_id :integer
 #  lms_assignment_id        :string(255)
 #  most_recent              :boolean          default(TRUE)
+#  lms_assignment_url       :string(255)
 #
 # Indexes
 #

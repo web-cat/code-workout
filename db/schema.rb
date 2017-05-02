@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170427154810) do
+ActiveRecord::Schema.define(version: 20170502204756) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -171,6 +171,18 @@ ActiveRecord::Schema.define(version: 20170427154810) do
   add_index "errors", ["class_name"], name: "index_errors_on_class_name", using: :btree
   add_index "errors", ["created_at"], name: "index_errors_on_created_at", using: :btree
 
+  create_table "exercise_collections", force: true do |t|
+    t.string   "name"
+    t.text     "description"
+    t.integer  "user_group_id"
+    t.integer  "license_id"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "exercise_collections", ["license_id"], name: "index_exercise_collections_on_license_id", using: :btree
+  add_index "exercise_collections", ["user_group_id"], name: "index_exercise_collections_on_user_group_id", using: :btree
+
   create_table "exercise_families", force: true do |t|
     t.string   "name",       null: false
     t.datetime "created_at"
@@ -222,20 +234,22 @@ ActiveRecord::Schema.define(version: 20170427154810) do
   add_index "exercise_workouts", ["workout_id"], name: "exercise_workouts_workout_id_fk", using: :btree
 
   create_table "exercises", force: true do |t|
-    t.integer  "question_type",                      null: false
+    t.integer  "question_type",                          null: false
     t.integer  "current_version_id"
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "versions"
     t.integer  "exercise_family_id"
     t.string   "name"
-    t.boolean  "is_public",          default: false, null: false
-    t.integer  "experience",                         null: false
+    t.boolean  "is_public",              default: false, null: false
+    t.integer  "experience",                             null: false
     t.integer  "irt_data_id"
     t.string   "external_id"
+    t.integer  "exercise_collection_id"
   end
 
   add_index "exercises", ["current_version_id"], name: "index_exercises_on_current_version_id", using: :btree
+  add_index "exercises", ["exercise_collection_id"], name: "index_exercises_on_exercise_collection_id", using: :btree
   add_index "exercises", ["exercise_family_id"], name: "index_exercises_on_exercise_family_id", using: :btree
   add_index "exercises", ["external_id"], name: "index_exercises_on_external_id", unique: true, using: :btree
   add_index "exercises", ["irt_data_id"], name: "exercises_irt_data_id_fk", using: :btree
@@ -291,6 +305,26 @@ ActiveRecord::Schema.define(version: 20170427154810) do
     t.float   "discrimination", limit: 24, null: false
   end
 
+  create_table "license_policies", force: true do |t|
+    t.string   "name"
+    t.text     "description"
+    t.boolean  "can_fork"
+    t.boolean  "is_public"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  create_table "licenses", force: true do |t|
+    t.string   "name"
+    t.text     "description"
+    t.string   "url"
+    t.integer  "license_policy_id"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "licenses", ["license_policy_id"], name: "index_licenses_on_license_policy_id", using: :btree
+
   create_table "lms_instances", force: true do |t|
     t.string   "consumer_key"
     t.string   "consumer_secret"
@@ -323,6 +357,13 @@ ActiveRecord::Schema.define(version: 20170427154810) do
 
   add_index "lti_identities", ["lms_instance_id"], name: "index_lti_identities_on_lms_instance_id", using: :btree
   add_index "lti_identities", ["user_id"], name: "index_lti_identities_on_user_id", using: :btree
+
+  create_table "memberships", force: true do |t|
+    t.integer  "user_id"
+    t.integer  "user_group_id"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
 
   create_table "multiple_choice_prompt_answers", force: true do |t|
   end
@@ -478,6 +519,12 @@ ActiveRecord::Schema.define(version: 20170427154810) do
     t.string   "name"
     t.string   "zone"
     t.string   "display_as"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  create_table "user_groups", force: true do |t|
+    t.string   "name"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
