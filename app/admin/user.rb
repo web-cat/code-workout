@@ -1,6 +1,7 @@
 ActiveAdmin.register User do
   active_admin_import
 
+  menu parent: 'Users', priority: 10
   permit_params :first_name, :last_name, :email,
     :confirmed_at, :global_role_id, :avatar
 
