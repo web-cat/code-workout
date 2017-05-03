@@ -122,7 +122,6 @@ class User < ActiveRecord::Base
       "#{prefix}%")).reorder('email asc').pluck(:email)
   end
 
-
   #~ Instance methods .........................................................
 
   # -------------------------------------------------------------
@@ -137,6 +136,13 @@ class User < ActiveRecord::Base
     @ability ||= Ability.new(self)
   end
 
+  def is_a_member_of(user_group)
+    if user_group.nil?
+      false
+    end
+
+    user_groups.include?(user_group)
+  end
 
   # -------------------------------------------------------------
   # Public: Gets a relation representing all of the CourseOfferings that
@@ -200,7 +206,6 @@ class User < ActiveRecord::Base
         { can_manage_course: true }
       ).flat_map { |e| e.course_offering.workout_offerings }.map(&:workout)
   end
-
 
   # -------------------------------------------------------------
   def course_offerings_for_term(term, course)

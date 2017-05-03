@@ -169,8 +169,6 @@ class Ability
       !user.global_role.can_manage_all_courses? &&
       !user.global_role.is_instructor?
 
-
-
       can [:read, :practice, :evaluate], Exercise do |e|
         e.visible_to?(user)
       end
@@ -228,7 +226,14 @@ class Ability
 #          where(user: user)
       end
       can :create, Exercise if user.global_role.is_instructor?
-      can [:update], Exercise, exercise_owners: { owner: user }
+      # can [:update], Exercise, exercise_owners: { owner: user }
+      can :update, Exercise do |e|
+        created = user == e.current_version.andand.creator
+        user_in_group = user.is_a_member_of(e.exercise_collection.andand.user_group)
+        owns_collection = user == e.exercise_collection.andand.user
+
+        created || user_in_group || owns_collection
+      end
 
       can :read, Attempt, workout_score:
         { workout_offering:

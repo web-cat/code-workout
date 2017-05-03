@@ -73,11 +73,16 @@ namespace :db do
     user_group = FactoryGirl.create :user_group
     user_group.users << [ instructor, instructor2 ]
 
-    collection = FactoryGirl.create :exercise_collection, id: 1
-    user_group.exercise_collection = collection
+    group_owned_collection = FactoryGirl.create :group_owned_collection, id: 1
+    user_group.exercise_collection = group_owned_collection
 
-    FactoryGirl.create :mc_exercise, name: 'Pick One 3', exercise_collection: collection
-    FactoryGirl.create :mc_exercise, name: 'Pick One 4', exercise_collection: collection
+    single_user_collection = FactoryGirl.create :user_owned_collection
+    instructor.exercise_collection = single_user_collection
+
+    FactoryGirl.create :mc_exercise, name: 'Pick One 3', exercise_collection: group_owned_collection
+    FactoryGirl.create :mc_exercise, name: 'Pick One 4', exercise_collection: group_owned_collection
+    FactoryGirl.create :coding_exercise, name: 'User Owned Coding', exercise_collection: single_user_collection
+    FactoryGirl.create :mc_exercise, name: 'User Owned MCQ', exercise_collection: single_user_collection
 
     # Create a workout_offering
     FactoryGirl.create :workout_offering

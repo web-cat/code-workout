@@ -12,4 +12,8 @@ class UserGroup < ActiveRecord::Base
   has_many :memberships
   has_many :users, through: :memberships
   has_one :exercise_collection
+
+  def not_in_group
+    User.where.not(id: self.users.flat_map(&:id))
+  end
 end

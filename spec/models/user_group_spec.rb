@@ -8,8 +8,22 @@
 #  updated_at :datetime
 #
 
-require 'rails_helper'
+require 'spec_helper'
 
-RSpec.describe UserGroup, :type => :model do
-  pending "add some examples to (or delete) #{__FILE__}"
+describe UserGroup, :type => :model do
+  before :all do
+    @user_group = UserGroup.find(1)
+    @user = User.find(2)
+  end
+
+  describe '#is_a_member_of' do
+    it 'should return true if a user is a member of this group' do
+      expect(@user.is_a_member_of(@user_group)).to eq(true)
+    end
+
+    it 'should return false if a user is a member of this group' do
+      outsider = @user_group.not_in_group.first
+      expect(outsider.is_a_member_of(@user_group)).to eq(false)
+    end
+  end
 end

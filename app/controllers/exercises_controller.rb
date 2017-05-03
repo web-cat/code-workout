@@ -204,7 +204,6 @@ class ExercisesController < ApplicationController
       @ex.save!
       @version = ExerciseVersion.new(exercise: @ex,creator_id:
                  User.find_by(email: version['creator']).andand.id,
-                 exercise: @ex,
                  position:1)
       @version.save!
       version['prompts'].each do |prompt|

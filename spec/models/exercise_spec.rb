@@ -30,15 +30,13 @@ require 'spec_helper'
 
 describe Exercise do
   before :all do
-    @ex5 = Exercise.find(5)
-    @ex6 = Exercise.find(6)
+    @exercise = Exercise.find(1)
   end
 
-  # sandbox test
-  describe '#new' do
-    it 'should be an instance of Exercise' do
-      expect(@ex5).to be_an_instance_of Exercise
-      expect(@ex6).to be_an_instance_of Exercise
+  describe 'creator edit permissions' do
+    it 'should be editable by the exercise creator' do
+      user = @exercise.current_version.andand.creator
+      expect(user.can?(:edit, @exercise)).to eq(true)
     end
   end
 end
