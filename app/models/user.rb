@@ -81,6 +81,7 @@ class User < ActiveRecord::Base
 
   has_many :memberships
   has_many :user_groups, through: :memberships
+  has_one :exercise_collection
 
   #~ Hooks ....................................................................
 

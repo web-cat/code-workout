@@ -18,6 +18,7 @@
 
 class ExerciseCollection < ActiveRecord::Base
   belongs_to :user_group
+  belongs_to :user
   belongs_to :license
   has_many :exercises
 end

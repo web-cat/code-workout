@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170502204756) do
+ActiveRecord::Schema.define(version: 20170503154537) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -178,10 +178,12 @@ ActiveRecord::Schema.define(version: 20170502204756) do
     t.integer  "license_id"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer  "user_id"
   end
 
   add_index "exercise_collections", ["license_id"], name: "index_exercise_collections_on_license_id", using: :btree
   add_index "exercise_collections", ["user_group_id"], name: "index_exercise_collections_on_user_group_id", using: :btree
+  add_index "exercise_collections", ["user_id"], name: "index_exercise_collections_on_user_id", using: :btree
 
   create_table "exercise_families", force: true do |t|
     t.string   "name",       null: false
