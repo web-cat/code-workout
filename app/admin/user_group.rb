@@ -7,9 +7,7 @@ ActiveAdmin.register UserGroup do
   index do
     id_column
     column :name
-    column :exercise_collection do |g|
-      link_to g.exercise_collection.name, admin_exercise_collection_path(g.exercise_collection)
-    end
+    column :exercise_collection
     actions
   end
 

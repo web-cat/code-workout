@@ -70,6 +70,15 @@ namespace :db do
     w = FactoryGirl.create :workout_with_exercises
     FactoryGirl.create :coding_exercise, name: 'Factorial 3'
 
+    user_group = FactoryGirl.create :user_group
+    user_group.users << [ instructor, instructor2 ]
+
+    collection = FactoryGirl.create :exercise_collection, id: 1
+    user_group.exercise_collection = collection
+
+    FactoryGirl.create :mc_exercise, name: 'Pick One 3', exercise_collection: collection
+    FactoryGirl.create :mc_exercise, name: 'Pick One 4', exercise_collection: collection
+
     # Create a workout_offering
     FactoryGirl.create :workout_offering
     FactoryGirl.create(:workout_offering,

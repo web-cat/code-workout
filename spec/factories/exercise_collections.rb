@@ -20,8 +20,8 @@
 
 FactoryGirl.define do
   factory :exercise_collection do
-    name "MyString"
-    description "MyText"
-    user_group nil
+    name "MCQExercises"
+    description "Collection of multiple choice exercises." \
+      "Created by FactoryGirl for testing."
   end
 end

@@ -10,6 +10,7 @@ ActiveAdmin.register ExerciseCollection do
     end
     column :description
     column :license
+    column :user_group
     column :created_at
     column :updated_at
     actions

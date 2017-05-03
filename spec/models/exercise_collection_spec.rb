@@ -16,8 +16,21 @@
 #  index_exercise_collections_on_user_group_id  (user_group_id)
 #
 
-require 'rails_helper'
+require 'spec_helper'
 
-RSpec.describe ExerciseCollection, :type => :model do
-  pending "add some examples to (or delete) #{__FILE__}"
+describe ExerciseCollection, :type => :model do
+  before :all do
+    @exercise_collection = ExerciseCollection.find(1)
+    @user_group = UserGroup.find(1)
+  end
+
+  describe '#contains' do
+    it 'should contain two exercises' do
+      expect(@exercise_collection.exercises.count).to eq(2)
+    end
+  end
+
+  describe '#edit-permissions' do
+
+  end
 end

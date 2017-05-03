@@ -29,5 +29,16 @@
 require 'spec_helper'
 
 describe Exercise do
-  pending "add some examples to (or delete) #{__FILE__}"
+  before :all do
+    @ex5 = Exercise.find(5)
+    @ex6 = Exercise.find(6)
+  end
+
+  # sandbox test
+  describe '#new' do
+    it 'should be an instance of Exercise' do
+      expect(@ex5).to be_an_instance_of Exercise
+      expect(@ex6).to be_an_instance_of Exercise
+    end
+  end
 end
