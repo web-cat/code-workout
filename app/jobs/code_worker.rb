@@ -69,7 +69,7 @@ class CodeWorker
 
         # kludgy static analysis barf
         result = nil
-        if prompt.id == 203
+        if prompt.id == 223
           # puts "\n\n\nanswer_text = #{answer_text}\n"
           nctext = answer_text
           nctext.gsub!(/(\/\*([^*]|(\*+[^*\/]))*\*+\/)|(\/\/[^\r\n]*)/, '')
@@ -93,6 +93,20 @@ class CodeWorker
             result = 'Integer.valueOf() or Long.valueOf() may not be used'
           elsif nctext =~ /(?<!\bthis)\.nextLong\s*\(/
             result = 'Scanner.nextLong() may not be used'
+          end
+        end
+        if prompt.id == 226 || prompt.id == 228
+          # puts "\n\n\nanswer_text = #{answer_text}\n"
+          nctext = answer_text
+          nctext.gsub!(/(\/\*([^*]|(\*+[^*\/]))*\*+\/)|(\/\/[^\r\n]*)/, '')
+          # puts "\n\n\nctext = #{nctext}\n\n\n"
+
+          # no for loop
+          # no while loop
+          if nctext =~ /\bfor\b/
+            result = 'for loops are not allowed'
+          elsif nctext =~ /\bwhile\b/
+            result = 'while loops are not allowed'
           end
         end
         if result
