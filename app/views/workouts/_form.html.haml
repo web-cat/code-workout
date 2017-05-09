@@ -80,6 +80,9 @@
         %thead
           %tr
             %th Course Offering
+            %th.lms-url
+              LMS URL
+              %i.fa.fa-info-circle.action{ data: { toggle: 'modal', target: '#lms-url-help-modal' } }
             %th Opens On
             %th Due Date
             %th Accepts Until
@@ -103,7 +106,7 @@
 
   .form-group#extensions{ style: 'display: none;', data: { student_extensions: "#{@student_extensions.to_json}" } }
     %p.lead Student Extensions
-    .col-lg-9.col-md-6.col-xs-9
+    .col-lg-10.col-md-6.col-xs-9
       %table#student-extension-fields.table
         %thead
           %tr
@@ -173,3 +176,13 @@
                   = policy.name
                 %td
                   = policy.description
+
+#lms-url-help-modal.modal.fade{role: 'dialog', tabindex: '-1' }
+  .modal-dialog.modal-md{ style: 'overflow-y: scroll; max-height:85% margin-top: 50px; margin-bottom:50px;' }
+    .modal-content
+      .modal-body
+        If you want this assignment to be accessed ONLY through a Learning Management System such
+        as Canvas, CourseDen, or Moodle, paste the url to the LMS assignment here.
+
+        .text.text-danger
+          Including this field will automatically redirect students to the provided URL.

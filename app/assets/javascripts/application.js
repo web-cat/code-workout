@@ -21,6 +21,7 @@
 //= require js-routes
 //= require codemirror
 //= require codemirror/modes/clike
+//= require codemirror/modes/yaml
 //= require bootstrap-wysihtml5
 //= require cocoon
 //= require cm

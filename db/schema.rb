@@ -185,10 +185,11 @@ ActiveRecord::Schema.define(version: 20170509003343) do
     t.integer  "stem_id"
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer  "exercise_id", null: false
-    t.integer  "version",     null: false
+    t.integer  "exercise_id",                          null: false
+    t.integer  "version",                              null: false
     t.integer  "creator_id"
     t.integer  "irt_data_id"
+    t.text     "text_representation", limit: 16777215
   end
 
   add_index "exercise_versions", ["creator_id"], name: "exercise_versions_creator_id_fk", using: :btree
@@ -524,6 +525,7 @@ ActiveRecord::Schema.define(version: 20170509003343) do
     t.integer  "continue_from_workout_id"
     t.string   "lms_assignment_id"
     t.boolean  "most_recent",              default: true
+    t.string   "lms_assignment_url"
   end
 
   add_index "workout_offerings", ["continue_from_workout_id"], name: "workout_offerings_continue_from_workout_id_fk", using: :btree

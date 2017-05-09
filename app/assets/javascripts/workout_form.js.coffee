@@ -307,12 +307,15 @@ get_offerings = ->
     do (offering_row) ->
       offering_fields = $('td', $(offering_row))
       offering_id = $(offering_fields[0]).data 'course-offering-id'
+      lms_assignment_url = $('input', offering_fields[1])[0].value
+      console.log lms_assignment_url
       if offering_id != ''
-        opening_date = $('.opening-datepicker', $(offering_fields[1])).data('date')
-        soft_deadline = $('.soft-datepicker', $(offering_fields[2])).data('date')
-        hard_deadline = $('.hard-datepicker', $(offering_fields[3])).data('date')
+        opening_date = $('.opening-datepicker', $(offering_fields[2])).data('date')
+        soft_deadline = $('.soft-datepicker', $(offering_fields[3])).data('date')
+        hard_deadline = $('.hard-datepicker', $(offering_fields[4])).data('date')
 
         offering =
+          lms_assignment_url: lms_assignment_url
           opening_date: opening_date
           soft_deadline: soft_deadline
           hard_deadline: hard_deadline
@@ -320,7 +323,6 @@ get_offerings = ->
           extensions: []
 
         offerings[offering_id.toString()] = offering
-  console.log offerings
   return offerings
 
 get_offerings_with_extensions = ->

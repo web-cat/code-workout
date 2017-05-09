@@ -240,6 +240,7 @@ class Workout < ActiveRecord::Base
         workout_offering.save!
         workout_offering.rescore_all
       end
+      workout_offering.lms_assignment_url = offering['lms_assignment_url']
       workout_offering.opening_date = DateTime.strptime(offering['opening_date'].to_s, '%Q') if offering['opening_date'].present?
       workout_offering.soft_deadline = DateTime.strptime(offering['soft_deadline'].to_s, '%Q') if offering['soft_deadline'].present?
       workout_offering.hard_deadline = DateTime.strptime(offering['hard_deadline'].to_s, '%Q') if offering['hard_deadline'].present?

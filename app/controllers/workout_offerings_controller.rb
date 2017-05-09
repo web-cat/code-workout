@@ -72,6 +72,14 @@ class WorkoutOfferingsController < ApplicationController
       session[:workout_feedback] = Hash.new
       session[:workout_feedback]['workout'] =
         "You have attempted Workout #{@workout_offering.workout.name}"
+
+      if !@lti_launch && @workout_offering.lms_assignment_id.present? &&
+          !current_user.manages?(@workout_offering.course_offering)
+        @message = "This assignment must be accessed through your course's Learning Management System (like Canvas)."
+        @redirect_url = @workout_offering.lms_assignment_url
+        render 'lti/error' and return
+      end
+
       if current_user
         @workout_score = @workout_offering.score_for(current_user)
         if @workout_score.nil?

@@ -3,6 +3,9 @@
     %small.display{style: 'font-size: small;'}
       = course_offering.andand.display_name_with_term
   %td
+    %input.url{ type: 'text', class: 'form-control input-sm', placeholder: 'Optional',
+      value: workout_offering ? workout_offering.lms_assignment_url : '' }
+  %td
     - date = workout_offering.andand.opening_date.andand.to_i
     %input.datepicker.opening-datepicker{ type: 'text', class: 'form-control input-sm', placeholder: 'Set date',
       data: { date: (date ? date * 1000 : nil) } }
@@ -18,5 +21,5 @@
     = button_tag type: 'button', class: 'add-extension btn btn-sm btn-primary',
       data: { toggle: 'modal', target: '#extension-modal' } do
       Add Extension
-  %td
+  %td.remove
     %i.fa.fa-times.action.delete-offering{ data: { removable: "#{removable}" } }
