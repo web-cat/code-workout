@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170411130659) do
+ActiveRecord::Schema.define(version: 20170509003343) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -84,10 +84,11 @@ ActiveRecord::Schema.define(version: 20170411130659) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.string   "class_name"
-    t.text     "wrapper_code", null: false
-    t.text     "test_script",  null: false
+    t.text     "wrapper_code",                  null: false
+    t.text     "test_script",                   null: false
     t.string   "method_name"
     t.text     "starter_code"
+    t.boolean  "hide_examples", default: false, null: false
   end
 
   create_table "course_enrollments", force: true do |t|
@@ -461,7 +462,7 @@ ActiveRecord::Schema.define(version: 20170411130659) do
     t.text     "input",                                        null: false
     t.text     "expected_output",                              null: false
     t.boolean  "static",                       default: false, null: false
-    t.boolean  "all_or_nothing",               default: false, null: false
+    t.boolean  "screening",                    default: false, null: false
     t.boolean  "example",                      default: false, null: false
     t.boolean  "hidden",                       default: false, null: false
   end

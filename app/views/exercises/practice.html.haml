@@ -74,7 +74,7 @@
       - elsif prompt.is_coding?
         - coding_questions = true
         - examples = prompt.examples
-        - if examples.any?
+        - if !prompt.hide_examples && examples.any?
           %p Examples:
           %pre.examples
             - examples.each do |example|

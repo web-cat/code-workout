@@ -127,7 +127,7 @@ class CodeWorker
           test_id = line[2][/\d+/].to_i
           test_case = prompt.test_cases.where(id: test_id).first
           tc_score = test_case.record_result(answer, line)
-          if test_case.all_or_nothing?
+          if false #test_case.all_or_nothing?
             tcr = TestCaseResult.find(attempt: attempt, test_case: test_case).first
             if !tcr.pass?
               all_or_nothing_failed = true
