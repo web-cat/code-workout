@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170411130659) do
+ActiveRecord::Schema.define(version: 20170430212102) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -461,7 +461,7 @@ ActiveRecord::Schema.define(version: 20170411130659) do
     t.text     "input",                                        null: false
     t.text     "expected_output",                              null: false
     t.boolean  "static",                       default: false, null: false
-    t.boolean  "all_or_nothing",               default: false, null: false
+    t.boolean  "screening",                    default: false, null: false
     t.boolean  "example",                      default: false, null: false
     t.boolean  "hidden",                       default: false, null: false
   end

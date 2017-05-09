@@ -12,7 +12,7 @@
 #  input             :text             not null
 #  expected_output   :text             not null
 #  static            :boolean          default(FALSE), not null
-#  all_or_nothing    :boolean          default(FALSE), not null
+#  screening         :boolean          default(FALSE), not null
 #  example           :boolean          default(FALSE), not null
 #  hidden            :boolean          default(FALSE), not null
 #
@@ -24,7 +24,7 @@
 # This require is to prevent autoload circular dependencies, since
 # TestCaseResult is used in one of the methods.
 
- require 'test_case_result'
+require 'test_case_result'
 
 
 # =============================================================================
@@ -58,6 +58,68 @@ class TestCase < ActiveRecord::Base
   # -------------------------------------------------------------
   def is_example?
     self.example
+  end
+
+
+  # -------------------------------------------------------------
+  def apply_static_check(answer, code)
+    if !self.static
+      return nil
+    end
+
+    if !code
+      code = answer.without_comments
+    end
+    required_count = nil
+    required = self.expected_output.blank? ||
+      self.expected_output =~ /true/i
+    if self.expected_output =~ /^[0-9]+$/
+      required_count = self.expected_output.to_i
+      required = (required_count > 0)
+    end
+    options = nil
+    regex = self.input
+    nresp = self.negative_feedback
+    nresp_operator = 'use'
+    if regex =~ /^keyword(s?):/
+      regex = '\b(' + to_choices(regex, /^keyword(s?):\s*/) + ')\b'
+    elsif regex =~ /^class(es)?:/
+      regex = '\b(' + to_choices(regex, /^class(es)?:\s*/) + ')\b'
+    elsif regex =~ /^method(s?):/
+      regex = '(?<!\bthis\s*)\.\s*(' +
+        to_choices(regex, /^method(s?):\s*/) + ')\s*\('
+    elsif regex.start_with? '/'
+      nresp_operator = 'contain'
+      last = regex.rindex('/')
+      if last < regex.length - 1
+        options = regex[(last + 1)..-1]
+      end
+      regex = regex[1..last]
+    end
+    if nresp.blank?
+      if required
+        nresp = 'Answer must ' + nresp_operator + ' ' + self.input
+      else
+        nresp = 'Answer cannot ' + nresp_operator + ' ' + self.input
+      end
+    end
+    mdata = Regexp.new(regex, options).match(code)
+    if self.screening
+      if required && !mdata || !required && mdata
+        return nresp
+      end
+    else
+      passed = required && mdata || !required && !mdata
+      tcr = TestCaseResult.new(
+        test_case: self,
+        user: answer.attempt.user,
+        coding_prompt_answer: answer,
+        pass: passed
+      )
+      if !passed
+        tcr.execution_feedback = nresp
+      end
+    end
   end
 
 
@@ -157,6 +219,11 @@ class TestCase < ActiveRecord::Base
 
   #~ Private instance methods .................................................
   private
+
+  def to_choices(str, regex)
+    str.sub(regex, '').tr(',', ' ').strip.split(/\s+/).join('|')
+  end
+
 
     TEST_METHOD_TEMPLATES = {
       'Ruby' => <<RUBY_TEST,
