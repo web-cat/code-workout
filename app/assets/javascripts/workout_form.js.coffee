@@ -176,9 +176,9 @@ search_students = (course_offering_id) ->
       # init_datepickers()
 
 validate_workout_name = ->
-  can_update = $('#workout-offering-fields').data 'can-update'
+  cloning = $('body').is('.workouts.clone')
   name_field = $('#wo-name')
-  if can_update == false
+  if cloning
     if name_field.val() == name_field.data 'old-name'
       $('#clone-msg').css 'display', 'block'
       return false
@@ -414,10 +414,12 @@ handle_submit = ->
   if $('body').is '.workouts.new'
     url = '/gym/workouts'
     type = 'post'
-  else if $('body').is('.workouts.edit') || $('body').is('.workouts.clone')
-    can_update = $('#workout-offering-fields').data 'can-update'
-    url = if can_update == true then '/gym/workouts/' + $('h1').data('id') else '/gym/workouts'
-    type = if can_update == true then 'patch' else 'post'
+  else if $('body').is '.workouts.edit'
+    url = '/gym/workouts/' + $('h1').data('id')
+    type = 'patch'
+  else if $('body').is '.workouts.clone'
+    url = '/gym/workouts'
+    type = 'post'
 
   $.ajax
     url: url
