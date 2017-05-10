@@ -140,11 +140,24 @@ class TestCase < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def to_code(language)
+    inp = self.input
+    if !inp.blank?
+      # TODO: need to fix this to handle nested parens appropriately
+      inp.gsub!(/map\([^()]*\)/) do |map_expr|
+        map_expr.split(/"/).map.with_index{ |x, i|
+          if i % 2 == 0
+            x.gsub(/\s*=(>?)\s*/, ', ')
+          else
+            x
+          end
+        }.join('"')
+      end
+    end
     TEST_METHOD_TEMPLATES[language] % {
       id: self.id.to_s,
       method_name: coding_prompt.method_name,
       class_name: coding_prompt.class_name,
-      input: self.input,
+      input: inp,
       expected_output: self.expected_output,
       negative_feedback: self.negative_feedback,
       array: ((self.expected_output.start_with?('new ') &&
