@@ -116,6 +116,9 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
   $('#btn-submit-wo').click ->
     handle_submit()
 
+  $('#extension-modal').on 'shown.bs.modal', ->
+    $('#terms').focus();
+
 init = ->
   description = $('textarea#description').data 'value'
   $('textarea#description').val description

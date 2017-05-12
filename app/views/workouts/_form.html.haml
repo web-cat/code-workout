@@ -164,17 +164,24 @@
       .modal-header
         %p.lead Workout Policy Information
       .modal-body
-        %table.table
-          %thead
-            %th Name
-            %th Description
-          %tbody
-            - WorkoutPolicy.all.each do |policy|
-              %tr
-                %td
-                  = policy.name
-                %td
-                  = policy.description
+        %small
+          Control policies like showing feedback before the assignment closes, showing results from test cases, review ability, etc.
+        - if WorkoutPolicy.any?
+          %table.table
+            %thead
+              %th Name
+              %th Description
+            %tbody
+              - WorkoutPolicy.all.each do |policy|
+                %tr
+                  %td
+                    = policy.name
+                  %td
+                    = policy.description
+        - else
+          %small
+            %br
+            There are no workout policies available for use at the moment.
 
 #lms-url-help-modal.modal.fade{role: 'dialog', tabindex: '-1' }
   .modal-dialog.modal-md{ style: 'overflow-y: scroll; max-height:85% margin-top: 50px; margin-bottom:50px;' }

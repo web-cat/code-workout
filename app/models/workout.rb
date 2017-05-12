@@ -260,7 +260,7 @@ class Workout < ActiveRecord::Base
         student_extension.opening_date = DateTime.strptime(ext['opening_date'].to_s, '%Q') if ext['opening_date'].present?
         student_extension.soft_deadline = DateTime.strptime(ext['soft_deadline'].to_s, '%Q') if ext['soft_deadline'].present?
         student_extension.hard_deadline = DateTime.strptime(ext['hard_deadline'].to_s, '%Q') if ext['hard_deadline'].present?
-        student_extension.time_limit = ext['time_limit'].present?
+        student_extension.time_limit = ext['time_limit'] if ext['time_limit'].present?
         student_extension.save!
       end
     end
