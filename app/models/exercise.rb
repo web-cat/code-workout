@@ -98,8 +98,8 @@ class Exercise < ActiveRecord::Base
   }
 
 
-  scope :visible_to_user, -> (u) { joins{exercise_owners.outer}.
-    where{ (is_public == true) | (exercise_owners.owner == u) } }
+  scope :visible_through_user, -> (u) { joins{exercise_owners.outer}.joins{exercise_collection.outer}.
+    where{ (exercise_owners.owner == u) | (exercise_collection.user == u) } }
 
 
   #~ Class methods ............................................................
@@ -137,6 +137,33 @@ class Exercise < ActiveRecord::Base
     end
   end
 
+  def self.visible_to_user(user)
+    visible_through_user = Exercise.visible_through_user(user)
+
+    publicly_visible = Exercise.publicly_visible
+
+    visible_through_user_group = Exercise.joins(exercise_collection: [ user_group: :memberships ])
+      .where(exercise_collection:
+        { user_group:
+          { memberships:
+            { user: user } } }
+      )
+
+    return visible_through_user.union(publicly_visible.union(visible_through_user_group))
+  end
+
+  def self.publicly_visible
+    public_license = Exercise.joins(exercise_collection: [ license: :license_policy ])
+      .where(is_public: nil, exercise_collection:
+        { license:
+          { license_policy:
+            { is_public: true } } }
+      )
+
+    public_exercise = Exercise.where(is_public: true)
+
+    return public_exercise.union(public_license)
+  end
 
   # -------------------------------------------------------------
   # return the extension of a given language
@@ -210,6 +237,15 @@ class Exercise < ActiveRecord::Base
   # -------------------------------------------------------------
   def visible_to?(u)
     self.is_public || self.owners.include?(u)
+  end
+
+  def is_publicly_available?
+    unless self.is_public.nil?
+      self.is_public
+    else
+      self.is_public ||
+        self.exercise_collection.andand.is_public?
+    end
   end
 
 

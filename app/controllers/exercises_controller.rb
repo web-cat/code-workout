@@ -10,7 +10,11 @@ class ExercisesController < ApplicationController
 
   # GET /exercises
   def index
-    @exercises = Exercise.where(is_public: true)
+    if current_user
+      @exercises = Exercise.visible_to_user(current_user)
+    else
+      @exercises = Exercise.publicly_visible
+    end
   end
 
 

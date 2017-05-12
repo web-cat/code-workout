@@ -21,4 +21,8 @@ class ExerciseCollection < ActiveRecord::Base
   belongs_to :user
   belongs_to :license
   has_many :exercises
+
+  def is_public?
+    return self.license.andand.license_policy.andand.is_public
+  end
 end
