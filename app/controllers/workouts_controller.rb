@@ -471,14 +471,14 @@ class WorkoutsController < ApplicationController
       end
 
       exercises = JSON.parse params[:exercises]
-      exercises.each do |key, value|
-        exercise = Exercise.find value['id']
+      exercises.each_with_index do |ex, index|
+        exercise = Exercise.find ex['id']
         exercise_workout = ExerciseWorkout.find_by workout: @workout, exercise: exercise
         if exercise_workout.blank?
           exercise_workout = ExerciseWorkout.new workout: @workout, exercise: exercise
         end
-        exercise_workout.set_list_position key
-        exercise_workout.points = value['points']
+        exercise_workout.set_list_position index
+        exercise_workout.points = ex['points']
         exercise_workout.save!
       end
 

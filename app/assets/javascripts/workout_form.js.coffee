@@ -13,19 +13,28 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
     validate_workout_name()
 
   $('.search-results').on 'click', '.add-ex', ->
-    $('.empty-msg').css 'display', 'none'
-    $('#ex-list').css 'display', 'block'
-    ex_name = $(this).data('ex-name')
     ex_id = $(this).data('ex-id')
+    ex_name = $(this).data('ex-name')
     name = "X#{ex_id}"
-    if ex_name
-      name = name + ": #{ex_name}"
-    data =
-      name: name
-      id: ex_id
-      points: 0
-    template = Mustache.render($(window.codeworkout.exercise_template).filter('#exercise-template').html(), data)
-    $('#ex-list').append(template)
+    can_add = !exercise_is_in_workout(ex_id)
+    if can_add
+      $('.empty-msg').css 'display', 'none'
+      $('#ex-list').css 'display', 'block'
+      if ex_name
+        name = name + ": #{ex_name}"
+      data =
+        name: name
+        id: ex_id
+        points: 0
+      template = Mustache.render($(window.codeworkout.exercise_template).filter('#exercise-template').html(), data)
+      $('#ex-list').append(template)
+    else
+      form_alert(["Exercise #{name} has already been added to this workout."])
+      exercise = $('#ex-list').find("[data-id=#{ex_id}]")
+      exercise.addClass 'shake'
+      setTimeout ->
+        exercise.removeClass 'shake'
+      , 1000
 
   $('#course-offerings').on 'click', 'a', ->
     course_offering_id = $(this).data 'course-offering-id'
@@ -118,6 +127,8 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
 
   $('#extension-modal').on 'shown.bs.modal', ->
     $('#terms').focus();
+
+# End event handlers, begin helper methods
 
 init = ->
   description = $('textarea#description').data 'value'
@@ -291,7 +302,7 @@ init_row_datepickers = (row) ->
 
 get_exercises = ->
   exs = $('#ex-list li')
-  exercises = {}
+  exercises = []
   i = 0
   while i < exs.length
     ex_id = $(exs[i]).data('id')
@@ -299,9 +310,21 @@ get_exercises = ->
     ex_points = '0' if ex_points == ''
     ex_obj = { id: ex_id, points: ex_points }
     position = i + 1
-    exercises[position.toString()] = ex_obj
+    exercises.push(ex_obj)
     i++
   return exercises
+
+# Checks if an exercise with the specified ID
+# has already been added to the workout.
+#
+# exercises -- An array of exercise objects, as returned by
+#       get_exercises
+# ex_id -- An integer
+exercise_is_in_workout = (ex_id) ->
+  for exercise in get_exercises() when exercise['id'] is ex_id
+    return true
+
+  return false
 
 get_offerings = ->
   offerings = {}
