@@ -1,3 +1,5 @@
+default_point_value = 1
+
 $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
   window.codeworkout ?= {}
   window.codeworkout.removed_exercises = []
@@ -25,7 +27,7 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
       data =
         name: name
         id: ex_id
-        points: 0
+        points: default_point_value
       template = Mustache.render($(window.codeworkout.exercise_template).filter('#exercise-template').html(), data)
       $('#ex-list').append(template)
     else
@@ -35,6 +37,9 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
       setTimeout ->
         exercise.removeClass 'shake'
       , 1000
+
+  $('#ex-list').on 'change', '.points', ->
+    default_point_value = $(this).val()
 
   $('#course-offerings').on 'click', 'a', ->
     course_offering_id = $(this).data 'course-offering-id'
