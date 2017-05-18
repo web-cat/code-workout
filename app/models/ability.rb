@@ -171,7 +171,7 @@ class Ability
       !user.global_role.can_manage_all_courses? &&
       !user.global_role.is_instructor?
 
-      can [:read, :practice, :evaluate], Exercise do |e|
+      can [:read, :evaluate], Exercise do |e|
         e.visible_to?(user)
       end
 
@@ -194,7 +194,7 @@ class Ability
       end
       can :practice, Exercise do |e|
         now = Time.now
-        e.is_public? || WorkoutOffering.
+        e.visible_to?(user) || WorkoutOffering.
 #          joins{workout.exercises}.joins{course_offering.course_enrollments}.
 #          where{
 #            course_offering.course_enrollments.user_id == user.id &
@@ -212,6 +212,11 @@ class Ability
 #          { time: Time.now }).course_offering.course_enrollments.
 #          where(user: user)
       end
+
+      can :gym_practice, Exercise do |e|
+        e.visible_to?(user)
+      end
+
       can :evaluate, Exercise do |e|
         now = Time.now
         WorkoutOffering.
@@ -231,7 +236,7 @@ class Ability
       # can [:update], Exercise, exercise_owners: { owner: user }
       can :update, Exercise do |e|
         created = user == e.current_version.andand.creator
-        user_in_group = user.is_a_member_of(e.exercise_collection.andand.user_group)
+        user_in_group = user.is_a_member_of?(e.exercise_collection.andand.user_group)
         owns_collection = user == e.exercise_collection.andand.user
 
         created || user_in_group || owns_collection

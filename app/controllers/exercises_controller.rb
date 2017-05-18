@@ -3,6 +3,7 @@ class ExercisesController < ApplicationController
   require 'oauth/request_proxy/rack_request'
 
   load_and_authorize_resource
+  skip_authorize_resource only: :practice
 
   #~ Action methods ...........................................................
   after_action :allow_iframe, only: :practice
@@ -289,7 +290,7 @@ class ExercisesController < ApplicationController
         notice: 'Choose an exercise to practice!' and return
     end
 
-    authorize! :practice, @exercise
+    # authorize! :practice, @exercise
 
     @student_user = params[:review_user_id] ? User.find(params[:review_user_id]) : current_user
 
@@ -312,6 +313,12 @@ class ExercisesController < ApplicationController
       if params[:workout_id]
         @workout = Workout.find(params[:workout_id])
       end
+    end
+
+    if @workout_offering
+      authorize! :practice, @exercise, message: 'You cannot access that assignment because your enrollment for that course offering has expired or never existed.'
+    else
+      authorize! :gym_practice, @exercise, message: 'You cannot access that exercise because it is not public in the Gym.'
     end
 
     @attempt = nil

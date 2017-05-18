@@ -236,7 +236,11 @@ class Exercise < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def visible_to?(u)
-    self.is_public || self.owners.include?(u)
+    self.is_public ||
+    self.owners.include?(u) ||
+    self.exercise_collection.andand.is_public? ||
+    u.is_a_member_of?(self.exercise_collection.andand.user_group) ||
+    self.exercise_collection.andand.owned_by?(u)
   end
 
   def is_publicly_available?

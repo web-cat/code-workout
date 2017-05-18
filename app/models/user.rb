@@ -136,7 +136,7 @@ class User < ActiveRecord::Base
     @ability ||= Ability.new(self)
   end
 
-  def is_a_member_of(user_group)
+  def is_a_member_of?(user_group)
     if user_group.nil?
       false
     end
