@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170503154537) do
+ActiveRecord::Schema.define(version: 20170518161825) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -149,10 +149,12 @@ ActiveRecord::Schema.define(version: 20170503154537) do
     t.datetime "updated_at"
     t.integer  "creator_id"
     t.string   "slug",            null: false
+    t.integer  "user_group_id"
   end
 
   add_index "courses", ["organization_id"], name: "index_courses_on_organization_id", using: :btree
   add_index "courses", ["slug"], name: "index_courses_on_slug", using: :btree
+  add_index "courses", ["user_group_id"], name: "index_courses_on_user_group_id", using: :btree
 
   create_table "errors", force: true do |t|
     t.string   "usable_type"
@@ -179,8 +181,10 @@ ActiveRecord::Schema.define(version: 20170503154537) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "user_id"
+    t.integer  "course_offering_id"
   end
 
+  add_index "exercise_collections", ["course_offering_id"], name: "index_exercise_collections_on_course_offering_id", using: :btree
   add_index "exercise_collections", ["license_id"], name: "index_exercise_collections_on_license_id", using: :btree
   add_index "exercise_collections", ["user_group_id"], name: "index_exercise_collections_on_user_group_id", using: :btree
   add_index "exercise_collections", ["user_id"], name: "index_exercise_collections_on_user_id", using: :btree
