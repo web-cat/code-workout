@@ -175,42 +175,14 @@ class Ability
         e.visible_to?(user)
       end
 
-      can [:show], WorkoutOffering do |o|
-        o.can_be_seen_by? user
-#        now = Time.now
-#        ((o.opening_date == nil) || (o.opening_date <= now)) &&
-#          o.course_offering.course_enrollments.where(user_id: user.id).any?
-      end
-      can [:manage], WorkoutOffering, course_offering:
-        { course_enrollments:
-          { user_id: user.id, course_role:
-            { can_manage_assignments: true } } }
-      can [:practice], WorkoutOffering do |o|
-        o.can_be_seen_by? user
-#        now = Time.now
-#        ((o.opening_date == nil) || (o.opening_date <= now)) &&
-#          ((o.hard_deadline >= now) || (o.soft_deadline >= now)) &&
-#          o.course_offering.course_enrollments.where(user_id: user.id).any?
-      end
       can :practice, Exercise do |e|
         now = Time.now
         e.visible_to?(user) || WorkoutOffering.
-#          joins{workout.exercises}.joins{course_offering.course_enrollments}.
-#          where{
-#            course_offering.course_enrollments.user_id == user.id &
-#            course_offering.course_enrollments.course_role_id.not_eq
-#              CourseRole.STUDENT_ID
-#             }.any? || WorkoutOffering.
           joins{workout.exercises}.joins{course_offering.course_enrollments}.
           where{
             ((starts_on == nil) | (starts_on <= now)) &
             course_offering.course_enrollments.user_id == user.id
              }.any?
-#        e.workouts.workout_offerings.where(
-#          '(starts_on is NULL or starts_on < :time) and ' \
-#          '(hard_deadline >= :time or soft_deadline >= :time)',
-#          { time: Time.now }).course_offering.course_enrollments.
-#          where(user: user)
       end
 
       can :gym_practice, Exercise do |e|
@@ -226,14 +198,8 @@ class Ability
             ((hard_deadline >= now) | (soft_deadline >= now)) &
             course_offering.course_enrollments.user_id == user.id
              }.any?
-#        e.workouts.workout_offerings.where(
-#          '(starts_on is NULL or starts_on < :time) and ' \
-#          '(hard_deadline >= :time or soft_deadline >= :time)',
-#          { time: Time.now }).course_offering.course_enrollments.
-#          where(user: user)
       end
       can :create, Exercise if user.global_role.is_instructor?
-      # can [:update], Exercise, exercise_owners: { owner: user }
       can :update, Exercise do |e|
         created = user == e.current_version.andand.creator
         user_in_group = user.is_a_member_of?(e.exercise_collection.andand.user_group)
@@ -271,6 +237,9 @@ class Ability
 
   def process_workout_offerings(user)
     can :create, WorkoutOffering if user.instructor_course_offerings.any?
+    can [:show, :practice], WorkoutOffering do |o|
+      o.can_be_seen_by? user
+    end
     can :read, WorkoutOffering, course_offering:
       { course_enrollments:
         { user_id: user.id } }

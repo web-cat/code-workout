@@ -109,30 +109,27 @@ class Exercise < ActiveRecord::Base
     # first, turn all ids of the form X4 to just the number
     ids = []
     terms.each do |t|
-      if t =~ /(X|x)\d+/
+      if t =~ /^[x]\d+$/i
         ids.append t[1..-1]
       end
     end
     r = terms.join("|")
+    if r.blank?
+      return nil
+    end
     if user
-      result = Exercise.visible_to_user(user).
-        tagged_with(terms, any: true, wild: true, on: :tags) +
-        Exercise.visible_to_user(user).
-        tagged_with(terms, any: true, wild: true, on: :languages) +
-        Exercise.visible_to_user(user).
-        tagged_with(terms, any: true, wild: true, on: :styles) +
-        Exercise.visible_to_user(user).
-        where('(name regexp (?)) or (exercises.id in (?))', r, ids)
+      visible = Exercise.visible_to_user(user)
+      result = visible.tagged_with(terms, any: true, wild: true, on: :tags) +
+        visible.tagged_with(terms, any: true, wild: true, on: :languages) +
+        visible.tagged_with(terms, any: true, wild: true, on: :styles) +
+        visible.where('(name regexp (?)) or (exercises.id in (?))', r, ids)
       return result.uniq
     else
-      result = Exercise.where(is_public: true).
-        tagged_with(terms, any: true, wild: true, on: :tags) +
-        Exercise.where(is_public: true).
-        tagged_with(terms, any: true, wild: true, on: :languages) +
-        Exercise.where(is_public: true).
-        tagged_with(terms, any: true, wild: true, on: :styles) +
-        Exercise.where(is_public: true).
-        where('(name regexp (?)) or (exercises.id in (?))', r, ids)
+      visible = Exercise.publicly_visible
+      result = visible.tagged_with(terms, any: true, wild: true, on: :tags) +
+        visible.tagged_with(terms, any: true, wild: true, on: :languages) +
+        visible.tagged_with(terms, any: true, wild: true, on: :styles) +
+        visible.where('(name regexp (?)) or (exercises.id in (?))', r, ids)
       return result.uniq
     end
   end
@@ -142,6 +139,13 @@ class Exercise < ActiveRecord::Base
 
     publicly_visible = Exercise.publicly_visible
 
+    visible_through_course_offering = Exercise.joins(exercise_collection: [ course_offering: :course_enrollments ])
+      .where(exercise_collection:
+        { course_offering:
+          { course_enrollments:
+            { user: user } } }
+      )
+
     visible_through_user_group = Exercise.joins(exercise_collection: [ user_group: :memberships ])
       .where(exercise_collection:
         { user_group:
@@ -149,7 +153,10 @@ class Exercise < ActiveRecord::Base
             { user: user } } }
       )
 
-    return visible_through_user.union(publicly_visible.union(visible_through_user_group))
+    return visible_through_user
+      .union(publicly_visible)
+      .union(visible_through_course_offering)
+      .union(visible_through_user_group)
   end
 
   def self.publicly_visible

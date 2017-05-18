@@ -42,18 +42,15 @@ class ExercisesController < ApplicationController
   def search
     @terms = escape_javascript(params[:search])
     @terms = @terms.split(@terms.include?(',') ? /\s*,\s*/ : nil)
-#    @wos = Workout.search @terms
     @wos = []
     @exs = Exercise.search(@terms, current_user)
     @msg = ''
-#    if @wos.length == 0 && @exs.length == 0
-    if @exs.length == 0
+    if @exs.blank?
       @msg = 'No exercises were found for your search request. ' \
         'Try these instead...'
-#      @wos = Workout.order('RANDOM()').limit(4)
-      @exs = Exercise.all.shuffle.first(16)
+      @exs = Exercise.publicly_visible.shuffle.first(16)
     end
-    if @exs.length == 0
+    if @exs.blank?
       @msg = 'No public exercises are available to search right now. ' \
         'Wait for contributors to add more.'
     end

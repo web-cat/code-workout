@@ -28,11 +28,6 @@
         != offering.graders.map{ |i| link_to i.display_name,
           user_path(i) }.to_sentence
 
-  -#- if can? :edit, @course
-    %p
-      = button_link 'Edit Course Properties', edit_course_path(@course)
-      = button_link 'Add an offering', new_course_path
-
   .container-fluid
     .navbar-collapse.collapse
       %ul.nav.nav-tabs
