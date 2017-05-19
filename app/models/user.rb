@@ -122,6 +122,14 @@ class User < ActiveRecord::Base
       "#{prefix}%")).reorder('email asc').pluck(:email)
   end
 
+  def self.not_in_group(user_group)
+    if user_group.nil?
+      User.all
+    else
+      User.where.not(id: user_group.users.flat_map(&:id))
+    end
+  end
+
   #~ Instance methods .........................................................
 
   # -------------------------------------------------------------
@@ -137,10 +145,6 @@ class User < ActiveRecord::Base
   end
 
   def is_a_member_of?(user_group)
-    if user_group.nil?
-      false
-    end
-
     user_groups.include?(user_group)
   end
 

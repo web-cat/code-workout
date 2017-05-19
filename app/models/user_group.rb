@@ -12,8 +12,11 @@ class UserGroup < ActiveRecord::Base
   has_many :memberships
   has_many :users, through: :memberships
   has_one :exercise_collection
+  has_one :course
 
-  def not_in_group
-    User.where.not(id: self.users.flat_map(&:id))
+  def add_user_to_group(user)
+    unless user.nil?
+      Membership.create user: user, user_group: self
+    end
   end
 end

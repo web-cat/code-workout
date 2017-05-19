@@ -43,7 +43,7 @@ describe ExerciseCollection, :type => :model do
       end
 
       it 'should not let an outsider edit an exercise from the collection' do
-        outside_user = @user_group.not_in_group.where.not(global_role: GlobalRole.administrator).first
+        outside_user = User.not_in_group(@user_group).where.not(global_role: GlobalRole.administrator).first
         expect(outside_user.can?(:edit, @exercise_collection.exercises.first)).to eq(false)
       end
     end

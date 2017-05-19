@@ -21,8 +21,8 @@ describe UserGroup, :type => :model do
       expect(@user.is_a_member_of?(@user_group)).to eq(true)
     end
 
-    it 'should return false if a user is a member of this group' do
-      outsider = @user_group.not_in_group.first
+    it 'should return false if a user is not a member of this group' do
+      outsider = User.not_in_group(@user_group).first
       expect(outsider.is_a_member_of?(@user_group)).to eq(false)
     end
   end

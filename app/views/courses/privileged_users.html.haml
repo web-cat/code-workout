@@ -1,0 +1,28 @@
+= render 'layouts/breadcrumb'
+
+= javascript_include_tag('course')
+%h1= "#{@course.number} Privileged Users"
+
+.container
+  .new-user-setup
+    .form-horizontal
+      .form-group
+        = label_tag :user, 'Add User', class: 'control-label col-xs-3'
+        .col-xs-8.col-md-5
+          .ui-widget
+            = text_field_tag :user, nil, id: 'user', class: 'form-control input-sm',
+              placeholder: 'Start typing a user\'s name or email',
+              data: { url: organization_course_privileged_users_path(@course.organization, @course, not: true) }
+        %small.add-user#hint.col-md-5.col-xs-12.text.text-warning{ style: 'display: none' }
+
+  - if @users.andand.any?
+    %ul.list-group
+      - @users.each do |u|
+        %li.list-group-item.col-xs-11.col-md-8{ data: { user_id: u.id } }
+          .row
+            .col-xs-11
+              = u.display_name
+            .col-xs-1
+              %i.fa.fa-times.action
+  - else
+    This course has no privileged users.

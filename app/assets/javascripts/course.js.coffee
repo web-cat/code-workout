@@ -17,3 +17,15 @@ $('.courses.show').ready ->
         cache: true
         success: (data) ->
           $('#' + tab_id).data 'needs-update', 'false'
+
+$('.courses.privileged_users').ready ->
+  console.log 'here'
+  setup_autocomplete()
+
+setup_autocomplete = ->
+  autocomplete = $('#user').autocomplete
+    minLength: 2
+    autoFocus: true
+    url: $('#user').data 'url'
+    select: (event, ui) ->
+      console.log ui.item

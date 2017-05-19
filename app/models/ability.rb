@@ -156,6 +156,11 @@ class Ability
         course.course_offerings.any? { |co| co.is_enrolled? (user) }
       end
 
+      # A user can view and edit a course's privileged users if they are also a privileged user
+      can :privileged_users, Course, user_group:
+        { memberships:
+          { user: user } }
+
       # A user can search for courses if they are signed in
       can :search, Course
     end

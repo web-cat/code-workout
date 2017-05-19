@@ -31,10 +31,19 @@ class CoursesController < ApplicationController
         !current_user.global_role.is_admin? &&
         (@course_offerings.any? {|co| co.is_student? current_user } ||
         !@course_offerings.any? {|co| co.is_staff? current_user })
-      # respond_to do |format|
-       # format.js
-       # format.html
-      # end
+    end
+  end
+
+  # -------------------------------------------------------------
+  # GET /
+  def privileged_users
+    @course = Course.find params[:course_id]
+    @user_group = @course.user_group
+    @users = params[:not] ? User.not_in_group(@user_group) : @user_group.andand.users
+
+    respond_to do |format|
+      format.json { render json: @users.to_json }
+      format.html
     end
   end
 
