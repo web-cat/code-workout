@@ -1,4 +1,5 @@
 default_point_value = 1
+searchable = null
 
 $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
   window.codeworkout ?= {}
@@ -78,32 +79,27 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
       alert 'Cannot delete this workout. Some students have already attempted it.'
 
   $('#workout-offering-fields').on 'click', '.add-extension', ->
-    course_offering = $(this).closest('tr').find('.course-offering small').text()
-    course_offering_id = $(this).closest('tr').find('.course-offering').data 'course-offering-id'
-    clear_student_search()
-    $('#extension-modal').data('course-offering', { id: course_offering_id, display: course_offering } )
-    $('#extension-modal #modal-header').append 'Searching for students from <u>' + course_offering + '</u>'
-    $('#btn-student-search').click ->
-      search_students(course_offering_id)
-    $('#terms').keydown (e) ->
-      if e.keyCode == 13
-        search_students(course_offering_id)
+    course_offering = $(this).closest('tr').find('.course-offering')
+    course_offering_display = $(course_offering).text()
+    course_offering_id = $(course_offering).data 'course-offering-id'
 
-  $('#students').on 'click', 'a', ->
-    course_offering = $('#extension-modal').data('course-offering')
-    student =
-      id: $(this).data('student-id')
-      display: $(this).text()
-    data =
-      course_offering_id: course_offering.id
-      course_offering_display: course_offering.display
-      student_display: student.display
-      student_id: student.id
-    template = $(Mustache.render($(window.codeworkout.student_extension_template).filter('#extension-template').html(), data))
-    $('#student-extension-fields tbody').append(template)
-    $('#extension-modal').modal('hide')
-    $('#extensions').css 'display', 'block'
-    init_row_datepickers template
+    searchable = $('.searchable').StudentSearch
+      course_offering_display: course_offering_display
+      course_offering_id: course_offering_id
+
+  $('.searchable').on 'studentSelect', (e) ->
+    if (searchable)
+      data =
+        course_offering_id: searchable.course_offering.id
+        course_offering_display: searchable.course_offering.display
+        student_display: e.display
+        student_id: e.id
+
+      template = $(Mustache.render($(window.codeworkout.student_extension_template).filter('#extension-template').html(), data))
+      $('#student-extension-fields tbody').append(template)
+      $('#student-search-modal').modal('hide')
+      $('#extensions').css 'display', 'block'
+      init_row_datepickers template
 
   $(document).on 'click', '.delete-extension', ->
     row = $(this).closest('tr')
@@ -130,7 +126,7 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
   $('#btn-submit-wo').click ->
     handle_submit()
 
-  $('#extension-modal').on 'shown.bs.modal', ->
+  $('#student-search-modal').on 'shown.bs.modal', ->
     $('#terms').focus();
 
 # End event handlers, begin helper methods
@@ -177,22 +173,6 @@ init_templates = ->
     window.codeworkout.student_extension_template = template
     if $('body').is '.workouts.edit'
       init_student_extensions()
-
-clear_student_search = ->
-  $('#extension-modal #modal-header').empty()
-  $('#extension-modal .msg').empty()
-  $('#students').empty()
-  $('#terms').val('')
-
-search_students = (course_offering_id) ->
-  $.ajax
-    url: '/course_offerings/' + course_offering_id + '/search_students'
-    type: 'get'
-    data: { terms: $('#terms').val() }
-    cache: true
-    dataType: 'script'
-    success: (data) ->
-      # init_datepickers()
 
 validate_workout_name = ->
   cloning = $('body').is('.workouts.clone')

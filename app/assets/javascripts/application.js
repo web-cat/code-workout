@@ -29,6 +29,7 @@
 //= require moment
 //= require bootstrap-datetimepicker
 //= require mustache.min
+//= require student_search
 //= require workout_form
 //= require workout_new_or_existing
 //= require flatpickr

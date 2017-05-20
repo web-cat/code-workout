@@ -1,7 +1,7 @@
-$('#extension-modal .msg').empty();
-$('#extension-modal #students').empty();
+$('#student-search-modal .msg').empty();
+$('#student-search-modal #students').empty();
 - if @students.any?
   - if defined? @msg
-    $('#extension-modal .msg').append("<p>#{@msg}</p>")
+    $('#student-search-modal .msg').append("<p>#{@msg}</p>")
   - @students.each do |student|
     $('#students').append("<a href='#' data-student-id='#{student.id}' class='list-group-item list-group-item-action'>#{student.display_name}</a>")

@@ -126,11 +126,11 @@
     %tbody
       = render partial: 'workout_offering_fields', locals: { removable: true, workout_offering: nil, course_offering: nil }
 
-#extension-modal.modal.fade{role: 'dialog', tabindex: '-1' }
+#student-search-modal.modal.fade{role: 'dialog', tabindex: '-1' }
   .modal-dialog.modal-lg{ style: 'overflow-y: scroll; max-height:85% margin-top: 50px; margin-bottom:50px;' }
-    .modal-content
-      .modal-header
-        %p.lead#modal-header
+    .modal-content.searchable
+      .modal-header.header
+        %p.lead
       .modal-body
         .form-group
           .col-xs-10
