@@ -132,17 +132,23 @@
       .modal-header.header
         %p.lead
       .modal-body
+        -# .form-group
+        -#   .col-xs-10
+        -#     = text_field_tag 'terms', nil, placeholder: 'e.g John Smith or jsmith9@vt.edu or john. Blank for all students.',
+        -#       class: 'form-control'
+        -#   .col-xs-2
+        -#     = button_tag 'Search', id: 'btn-student-search', class: 'btn'
+        -# #student-search-results
+        -#   .msg
+        -#     No results yet
+        -#   #results-area
+        -#     .list-group#students
         .form-group
-          .col-xs-10
-            = text_field_tag 'terms', nil, placeholder: 'e.g John Smith or jsmith9@vt.edu or john. Blank for all students.',
-              class: 'form-control'
-          .col-xs-2
-            = button_tag 'Search', id: 'btn-student-search', class: 'btn'
-        #student-search-results
-          .msg
-            No results yet
-          #results-area
-            .list-group#students
+          = label_tag :student, 'Search Terms', class: 'control-label col-xs-3'
+          .col-xs-12.col-md-9
+            .ui-widget
+              = text_field_tag :student, nil, id: 'student', class: 'form-control input-sm',
+                placeholder: "Start typing a name or email address"
 
 #offerings-modal.modal.fade{role: 'dialog', tabindex: '-1' }
   .modal-dialog.modal-lg{ style: 'overflow-y: scroll; max-height:85% margin-top: 50px; margin-bottom:50px;' }

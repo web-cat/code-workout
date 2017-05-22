@@ -82,13 +82,14 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
     course_offering = $(this).closest('tr').find('.course-offering')
     course_offering_display = $(course_offering).text()
     course_offering_id = $(course_offering).data 'course-offering-id'
-
+    $('#student-search-modal').modal('show');
     searchable = $('.searchable').StudentSearch
       course_offering_display: course_offering_display
       course_offering_id: course_offering_id
 
   $('.searchable').on 'studentSelect', (e) ->
     if (searchable)
+      $('#student-search-modal').modal('hide')
       data =
         course_offering_id: searchable.course_offering.id
         course_offering_display: searchable.course_offering.display

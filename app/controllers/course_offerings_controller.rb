@@ -40,29 +40,16 @@ class CourseOfferingsController < ApplicationController
   # GET /course_offerings/1/students
   def search_students
     @course_offering = CourseOffering.find params[:id]
-    @terms = escape_javascript(params[:terms])
+    @terms = escape_javascript(params[:term])
     @terms = @terms.split(@terms.include?(',') ? /\s*,\s*/ : nil)
     @course_offering_students = User.where(id: @course_offering.students)
     @students = User.none
     @terms.each do |term|
       @students = @students + @course_offering_students
-        .where("first_name like ? or last_name like ? or email like ?", "%#{term}%", "%#{term}%", "%#{term}%")
+        .where("lower(first_name) like ? or lower(last_name) like ? or lower(email) like ?", "%#{term.downcase}%", "%#{term.downcase}%", "%#{term.downcase}%")
     end
 
-    if @students.blank?
-      @msg = 'Your search returned no results. Here are all the students enrolled in the course.'
-      @students = @course_offering_students
-    else
-      @msg = "#{@students.count} #{'results'.pluralize(@students.count)} returned:"
-    end
-
-    if @students.blank?
-      @msg = 'No students are enrolled in this course offering.'
-    end
-
-    respond_to do |format|
-      format.js
-    end
+    render json: @students.uniq.to_json and return
   end
 
   # -------------------------------------------------------------

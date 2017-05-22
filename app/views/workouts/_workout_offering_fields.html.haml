@@ -18,8 +18,7 @@
     %input.datepicker.hard-datepicker{ type: 'text', class: 'form-control input-sm', placeholder: 'Set date',
       data: { date: (date ? date * 1000 : nil) } }
   %td
-    = button_tag type: 'button', class: 'add-extension btn btn-sm btn-primary',
-      data: { toggle: 'modal', target: '#student-search-modal' } do
+    = button_tag type: 'button', class: 'add-extension btn btn-sm btn-primary' do
       Add Extension
   %td.remove
     %i.fa.fa-times.action.delete-offering{ data: { removable: "#{removable}" } }

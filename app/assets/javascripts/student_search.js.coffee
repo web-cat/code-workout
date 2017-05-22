@@ -1,8 +1,5 @@
 jQuery.fn.StudentSearch = (config) ->
   element = $(this)
-  initialized = element.hasClass('initialized')
-  if !initialized
-    element.addClass('initialized')
   course_offering_display = config.course_offering_display
   course_offering_id = config.course_offering_id
   notin = config.notin || false
@@ -28,32 +25,37 @@ jQuery.fn.StudentSearch = (config) ->
 
     clear_student_search: ->
       element.find('.header').empty()
-      element.find('.msg').empty()
-      element.find('#students').empty()
-      element.find('#terms').val('')
+      element.find('#student').empty()
 
-    init_event_handlers: ->
+    init_autocomplete: ->
       that = this
-      element.find('#btn-student-search').click ->
-        that.search_students(null)
+      autocomplete = element.find('#student').autocomplete
+        minLength: 2
+        autoFocus: true
+        source: "/course_offerings/#{course_offering_id}/search_students?notin=#{notin}"
+        select: (event, ui) ->
+          that.handle_autocomplete_select(event, ui)
+          return false
 
-      element.find('#terms').keydown (e) ->
-        if e.keyCode == 13
-          that.search_students(null)
+      autocomplete.data('ui-autocomplete')._renderItem = (ul, item) ->
+        display = "#{item.first_name} #{item.last_name} (#{item.email})"
+        return $('<li class="list-group-item"></li')
+          .append(display)
+          .appendTo(ul)
 
-      element.find('#students').on 'click', 'a', ->
-        student_id = $(this).data 'student-id'
-        student_display = $(this).text()
-        element.trigger
-          type: 'studentSelect'
-          id: student_id
-          display: student_display
+    handle_autocomplete_select: (event, ui) ->
+      full_name = "#{ui.item.first_name} #{ui.item.last_name}"
+      display = if full_name.length > 1 then full_name else ui.item.email
+      id = ui.item.id
+      element.trigger
+        type: 'studentSelect'
+        display: display
+        id: id
 
     init: ->
       this.clear_student_search()
+      this.init_autocomplete();
       element.find('.header').append "Searching for students from <u>#{course_offering_display}</u>"
-      if !initialized
-        this.init_event_handlers()
 
   searchable.init()
 
