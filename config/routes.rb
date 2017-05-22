@@ -134,8 +134,10 @@ CodeWorkout::Application.routes.draw do
     post 'generate_gradebook' => :generate_gradebook, as: :gradebook
     get 'add_workout' => :add_workout, as: :add_workout
     post 'store_workout/:id' => :store_workout, as: :store_workout
-    get '/search_students' => :search_students, as: :search_students
+    get '/search_enrolled_users' => :search_enrolled_users, as: :search_enrolled_users
   end
+
+  resources :course_enrollments
 
   # All of the routes anchored at /users
   resources :users, constraints: { id: /[^\/]+/ } do

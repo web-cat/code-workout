@@ -11,18 +11,6 @@ jQuery.fn.StudentSearch = (config) ->
 
     element: element
 
-    search_students: (callback) ->
-      terms = element.find('#terms').val()
-      $.ajax
-        url: "/course_offerings/#{course_offering_id}/search_students?notin=#{notin}"
-        type: 'get'
-        data: { terms: terms }
-        cache: true
-        dataType: 'script'
-        success: (data) =>
-          if callback
-            callback()
-
     clear_student_search: ->
       element.find('.header').empty()
       element.find('#student').empty()
@@ -32,7 +20,7 @@ jQuery.fn.StudentSearch = (config) ->
       autocomplete = element.find('#student').autocomplete
         minLength: 2
         autoFocus: true
-        source: "/course_offerings/#{course_offering_id}/search_students?notin=#{notin}"
+        source: "/course_offerings/#{course_offering_id}/search_enrolled_users?notin=#{notin}"
         select: (event, ui) ->
           that.handle_autocomplete_select(event, ui)
           return false

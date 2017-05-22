@@ -38,18 +38,17 @@ class CourseOfferingsController < ApplicationController
 
   # -------------------------------------------------------------
   # GET /course_offerings/1/students
-  def search_students
+  def search_enrolled_users
     @course_offering = CourseOffering.find params[:id]
     @terms = escape_javascript(params[:term])
     @terms = @terms.split(@terms.include?(',') ? /\s*,\s*/ : nil)
-    @course_offering_students = User.where(id: @course_offering.students)
-    @students = User.none
+    @results = User.none
     @terms.each do |term|
-      @students = @students + @course_offering_students
+      @results = @results + @course_offering.users
         .where("lower(first_name) like ? or lower(last_name) like ? or lower(email) like ?", "%#{term.downcase}%", "%#{term.downcase}%", "%#{term.downcase}%")
     end
 
-    render json: @students.uniq.to_json and return
+    render json: @results.uniq.to_json and return
   end
 
   # -------------------------------------------------------------
