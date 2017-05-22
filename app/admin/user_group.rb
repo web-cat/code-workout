@@ -6,12 +6,25 @@ ActiveAdmin.register UserGroup do
 
   index do
     id_column
-    column :name
+    column :name do |g|
+      link_to g.name, admin_user_group_path(g)
+    end
     column :exercise_collection
     actions
   end
 
-  sidebar 'Users', only: :show do
+  show do
+    attributes_table do
+      row :id
+      row :name
+      row :exercise_collection
+      row :course
+      row :created_at
+      row :updated_at
+    end
+  end
+
+  sidebar 'Members', only: :show do
     table_for user_group.memberships do
       column :id
       column(:user) { |m| link_to m.user.display_name, admin_user_path(m.user) }

@@ -71,7 +71,7 @@ class Exercise < ActiveRecord::Base
 
 
   #~ Validation ...............................................................
-
+  validates :name, presence: :true
   validates :question_type, presence: true, numericality: { greater_than: 0 }
   validates :experience, presence: true,
     numericality: { greater_than_or_equal_to: 0 }

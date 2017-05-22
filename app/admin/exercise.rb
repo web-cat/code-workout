@@ -17,6 +17,19 @@ ActiveAdmin.register Exercise do
     actions
   end
 
+  form do |f|
+    f.semantic_errors
+    f.inputs do
+      f.input :name
+      f.input :is_public
+      f.input :experience
+      f.input :exercise_family
+      f.input :current_version, as: :select, collection: (f.object.exercise_versions.map { |v| [v.version, v.id] })
+      f.input :exercise_collection
+      f.input :question_type
+    end
+  end
+
   show do
     attributes_table do
       row :id

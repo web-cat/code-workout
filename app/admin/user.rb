@@ -20,22 +20,30 @@ ActiveAdmin.register User do
 
   sidebar 'Teaching Courses', only: :show,
     if: proc{ user.instructor_course_offerings.any? } do
-    table_for user.instructor_course_offerings do
-      column(:term) {|c| link_to c.term.display_name, admin_term_path(c.term)}
-      column :offering do |c|
-        link_to c.display_name, admin_course_offering_path(c)
+      table_for user.instructor_course_offerings do
+        column(:term) {|c| link_to c.term.display_name, admin_term_path(c.term)}
+        column :offering do |c|
+          link_to c.display_name, admin_course_offering_path(c)
+        end
       end
     end
-  end
 
   sidebar 'Grading Courses', only: :show,
     if: proc{ user.grader_course_offerings.any? } do
-    table_for user.grader_course_offerings do
-      column(:term) {|c| link_to c.term.display_name, admin_term_path(c.term)}
-      column :offering do |c|
-        link_to c.display_name, admin_course_offering_path(c)
+      table_for user.grader_course_offerings do
+        column(:term) {|c| link_to c.term.display_name, admin_term_path(c.term)}
+        column :offering do |c|
+          link_to c.display_name, admin_course_offering_path(c)
+        end
       end
     end
-  end
 
+  sidebar 'User Groups', only: :show,
+    if: proc{ user.memberships.any? } do
+      table_for user.user_groups do
+        column :name do |g|
+          link_to g.name, admin_user_group_path(g)
+        end
+      end
+    end
 end
