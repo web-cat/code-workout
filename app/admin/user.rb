@@ -4,7 +4,11 @@ ActiveAdmin.register User do
 
   menu parent: 'Users', priority: 10
   permit_params :first_name, :last_name, :email,
-    :confirmed_at, :global_role_id, :avatar
+    :slug, :global_role, :time_zone, :avatar,
+    :resest_password_token, :reset_password_sent_at,
+    :confirmation_token, memberships_attributes: [
+      :id, :user_group_id
+    ]
 
   index do
     selectable_column

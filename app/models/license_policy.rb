@@ -12,5 +12,6 @@
 #
 
 class LicensePolicy < ActiveRecord::Base
-  has_many :licenses
+  has_many :licenses, inverse_of: :license_policy
+  accepts_nested_attributes_for :licenses
 end

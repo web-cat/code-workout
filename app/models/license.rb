@@ -16,6 +16,6 @@
 #
 
 class License < ActiveRecord::Base
-  belongs_to :license_policy
+  belongs_to :license_policy, inverse_of: :licenses
   has_many :exercise_collections
 end

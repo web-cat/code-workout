@@ -3,6 +3,9 @@ ActiveAdmin.register UserGroup do
   active_admin_import
 
   menu parent: 'Users', priority: 20
+  permit_params :name, memberships_attributes: [
+    :id, :user_id
+  ]
 
   index do
     id_column
