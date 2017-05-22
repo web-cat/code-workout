@@ -17,7 +17,7 @@
 #
 
 class ExerciseCollection < ActiveRecord::Base
-  belongs_to :user_group
+  belongs_to :user_group, inverse_of: :exercise_collection
   belongs_to :user
   belongs_to :license
   belongs_to :course_offering, inverse_of: :exercise_collections

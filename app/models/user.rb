@@ -83,6 +83,7 @@ class User < ActiveRecord::Base
   has_many :user_groups, through: :memberships
   has_one :exercise_collection
 
+  accepts_nested_attributes_for :memberships
   #~ Hooks ....................................................................
 
   delegate :can?, :cannot?, to: :ability

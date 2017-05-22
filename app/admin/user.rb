@@ -1,4 +1,5 @@
 ActiveAdmin.register User do
+  includes :memberships
   active_admin_import
 
   menu parent: 'Users', priority: 10
@@ -16,6 +17,27 @@ ActiveAdmin.register User do
     column :last_login, :last_sign_in_at
     column 'Last IP', :last_sign_in_ip
     actions
+  end
+
+  form do |f|
+    f.semantic_errors
+    f.inputs do
+      f.input :first_name
+      f.input :last_name
+      f.input :email
+      f.input :slug
+      f.input :global_role
+      f.input :time_zone
+      f.input :reset_password_token
+      f.input :reset_password_sent_at
+      f.input :confirmation_token
+    end
+    f.inputs 'Group Memberships' do
+      f.has_many :memberships do |g|
+        g.input :user_group
+      end
+    end
+    f.actions
   end
 
   sidebar 'Teaching Courses', only: :show,

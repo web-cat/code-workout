@@ -13,6 +13,19 @@ ActiveAdmin.register UserGroup do
     actions
   end
 
+  form do |f|
+    f.semantic_errors
+    f.inputs do
+      f.input :name
+    end
+    f.inputs 'Members' do
+      f.has_many :memberships do |m|
+        m.input :user
+      end
+    end
+    f.actions
+  end
+
   show do
     attributes_table do
       row :id

@@ -11,8 +11,10 @@
 class UserGroup < ActiveRecord::Base
   has_many :memberships
   has_many :users, through: :memberships
-  has_one :exercise_collection
+  has_one :exercise_collection, inverse_of: :user_group
   has_one :course
+
+  accepts_nested_attributes_for :memberships
 
   def add_user_to_group(user)
     unless user.nil?
