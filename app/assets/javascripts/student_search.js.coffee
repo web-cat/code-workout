@@ -24,6 +24,12 @@ jQuery.fn.StudentSearch = (config) ->
         select: (event, ui) ->
           that.handle_autocomplete_select(event, ui)
           return false
+        response: (event, ui) ->
+          if ui.content.length == 0
+            console.log 'emptyResponse'
+            element.trigger
+              type: 'emptyResponse'
+          return false
 
       autocomplete.data('ui-autocomplete')._renderItem = (ul, item) ->
         display = "#{item.first_name} #{item.last_name} (#{item.email})"
@@ -37,13 +43,18 @@ jQuery.fn.StudentSearch = (config) ->
       id = ui.item.id
       element.trigger
         type: 'studentSelect'
-        display: display
-        id: id
+        course_offering_id: this.course_offering.id
+        course_offering_display: this.course_offering.display
+        student_name: full_name
+        student_display: "#{full_name} (#{ui.item.email})".trim()
+        student_id: id
 
     init: ->
       this.clear_student_search()
       this.init_autocomplete();
-      element.find('.header').append "Searching for students from <u>#{course_offering_display}</u>"
+      header = element.find('.header')
+      if (header)
+        header.append "Searching for students from <u>#{course_offering_display}</u>"
 
   searchable.init()
 

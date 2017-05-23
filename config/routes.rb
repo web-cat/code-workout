@@ -137,7 +137,7 @@ CodeWorkout::Application.routes.draw do
     get '/search_enrolled_users' => :search_enrolled_users, as: :search_enrolled_users
   end
 
-  resources :course_enrollments
+  resources :course_enrollments, only: :new
 
   # All of the routes anchored at /users
   resources :users, constraints: { id: /[^\/]+/ } do

@@ -90,11 +90,12 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
   $('.searchable').on 'studentSelect', (e) ->
     if (searchable)
       $('#student-search-modal').modal('hide')
+      name = if e.student_name.length > 1 then e.student_name else e.student_display
       data =
         course_offering_id: searchable.course_offering.id
         course_offering_display: searchable.course_offering.display
-        student_display: e.display
-        student_id: e.id
+        student_display: e.student_display
+        student_id: e.student_id
 
       template = $(Mustache.render($(window.codeworkout.student_extension_template).filter('#extension-template').html(), data))
       $('#student-extension-fields tbody').append(template)
