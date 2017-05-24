@@ -114,10 +114,21 @@ class WorkoutsController < ApplicationController
     @term = Term.find params[:term_id]
     @organization = Organization.find params[:organization_id]
 
-    @default_results = @course.course_offerings.joins(workout_offerings: :workout)
+    @workout_offerings = @course.course_offerings.joins(:workout_offerings, :term)
+      .order('terms.ends_on DESC')
       .flat_map(&:workout_offerings)
-      .map(&:workout).uniq
 
+    # workouts_with_term is of the form [[CourseOffering, Workout], [CourseOffering, Workout], [CourseOffering, Workout]]
+    # we will convert it into a Hash where each key is a term, and each value is an array of Workouts
+    workouts_with_term = @workout_offerings.map { |wo| [wo.course_offering.term, wo.workout] }
+    @default_results = workouts_with_term.group_by(&:first)
+      .map{ |k, a| [k, a.map(&:last)] }
+      .to_h
+
+    # make sure each term shows unique Workouts
+    @default_results.each do |term, workouts|
+      @default_results[term] = workouts.uniq
+    end
     render layout: 'one_column'
   end
 
