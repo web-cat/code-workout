@@ -197,6 +197,8 @@ class User < ActiveRecord::Base
       map(&:course_offering)
   end
 
+  # Get all workout offerings from course offerings that the
+  # user manages, for the specified course and term
   def managed_workout_offerings_in_term(workout, course, term)
     course_enrollments.joins(course_offering: :workout_offerings).
       where(course_roles:
@@ -205,10 +207,20 @@ class User < ActiveRecord::Base
       ).map { |e| e.course_offering.workout_offerings.where(workout: workout) }
   end
 
+  # Get all workouts that have been offered in a course
+  # for which the user has been an instructor AND for which
+  # the user is in the privileged group
+  # Simply being an instructor in the course is not enough,
+  # to prevent users from simply creating `fake` course_offerings
+  # to get access to course materials
   def managed_workouts
-    course_enrollments.joins(course_offering: :workout_offerings).
+    course_enrollments.joins(course_offering: { course: { user_group: :memberships } }).
       where(course_roles:
-        { can_manage_course: true }
+        { can_manage_course: true }, course_offering:
+          { course:
+            { user_group:
+              { memberships:
+                { user: self } } } }
       ).flat_map { |e| e.course_offering.workout_offerings }.map(&:workout)
   end
 

@@ -143,14 +143,14 @@ class WorkoutsController < ApplicationController
   # -------------------------------------------------------------
   # POST /gym/workouts/search
   def search
-    @terms = escape_javascript(params[:search])
-    @terms = @terms.split(@terms.include?(' ') ? /\s*,\s*/ : nil)
-    @workouts = Workout.search @terms, current_user
+    terms = escape_javascript(params[:search])
+    terms = terms.split(terms.include?(' ') ? /\s*,\s*/ : nil)
+    course = params[:course] ? Course.find(params[:course]) : nil
+    @workouts = Workout.search terms, current_user, course
 
     if @workouts.blank?
       @msg = 'Your search did not match any workouts. Try these instead...'
-      @workouts = (Workout.visible_to_user(current_user) + current_user.managed_workouts)
-        .uniq.shuffle.first(16)
+      @workouts = Workout.search nil, current_user, course
     end
 
     if @workouts.blank?
@@ -170,7 +170,7 @@ class WorkoutsController < ApplicationController
     @workout = @workout_offering.workout
 
     if cannot? :edit, @workout
-      redirect_to root_path, notice: 'You are not authorized to edit workouts.' and return
+      redirect_to root_path, notice: 'You are not authorized to edit this workout.' and return
     end
 
     @course = Course.find(params[:course_id])

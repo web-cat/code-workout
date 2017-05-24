@@ -4,6 +4,7 @@
   = form_tag workouts_search_path(params[:search]), remote: true, class: 'form-horizontal' do
     .col-xs-7
       = text_field_tag :search, nil, placeholder: 'e.g. Looping', class: 'form-control input-sm', id: 'search-terms'
+      = hidden_field_tag :course, @course.id
     .col-xs-1
       = submit_tag 'Search', class: 'btn btn-default btn-sm'
     .col-xs-3

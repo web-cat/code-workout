@@ -80,6 +80,13 @@ class Workout < ActiveRecord::Base
   #~ Class methods ............................................................
 
   #~ Instance methods .........................................................
+
+  # Workout is visible if the user is the creator or
+  # if the workout is public
+  def visible_to?(user)
+    self.is_public || self.creator == user
+  end
+
   # -------------------------------------------------------------
   # FIXME: probably shouldn't be here, since it omits setting the
   # point value.
@@ -280,7 +287,7 @@ class Workout < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def self.search(terms, user, course = nil)
-    r = terms.join('|')
+    split_terms = terms.nil? ? nil : terms.join('|')
     if user
       available_workouts = Workout.where(
         id: (Workout.visible_to_user(user) + user.managed_workouts)
@@ -289,15 +296,17 @@ class Workout < ActiveRecord::Base
 
       # If a course is specified, we want the results sorted by terms in which
       # workouts were offered for that course.
-      if course
+      if course && user.is_a_member_of?(course.andand.user_group)
         workout_offerings = course.course_offerings.joins(:workout_offerings, :term)
           .order('terms.ends_on DESC')
           .flat_map(&:workout_offerings)
-        workouts_to_search = (available_workouts.tagged_with(terms, any: true, wild: true, on: :tags) +
+        workouts_to_search = available_workouts.tagged_with(terms, any: true, wild: true, on: :tags) +
           available_workouts.tagged_with(terms, any: true, wild: true, on: :languages) +
-          available_workouts.tagged_with(terms, any: true, wild: true, on: :styles) +
-          available_workouts.where('name regexp (?)', r))
-        .flat_map(&:id)
+          available_workouts.tagged_with(terms, any: true, wild: true, on: :styles)
+        if split_terms
+          workouts_to_search = workouts_to_search + available_workouts.where('name regexp (?)', split_terms)
+        end
+        workouts_to_search = workouts_to_search.flat_map(&:id)
 
         workout_offerings = workout_offerings.select{ |wo| workouts_to_search.include?(wo.workout.id) }
 
@@ -306,9 +315,13 @@ class Workout < ActiveRecord::Base
         # we will convert it into a Hash where each key is a term, and each value is an array of Workouts
         # that were offered in that term
         workouts_with_term = workout_offerings.map { |wo| [wo.course_offering.term, wo.workout] }
-        return workouts_with_term.group_by(&:first)
+        results = workouts_with_term.group_by(&:first)
           .map{ |k, a| [k, a.map(&:last)] }
           .to_h
+        results.each do |term, workouts|
+          results[term] = workouts.uniq
+        end
+        return results
       end
     else
       available_workouts = Workout.where(is_public: true)
@@ -317,6 +330,6 @@ class Workout < ActiveRecord::Base
     return available_workouts.tagged_with(terms, any: true, wild: true, on: :tags) +
       available_workouts.tagged_with(terms, any: true, wild: true, on: :languages) +
       available_workouts.tagged_with(terms, any: true, wild: true, on: :styles) +
-      available_workouts.where('name regexp (?)', r).uniq
+      available_workouts.where('name regexp (?)', split_terms).uniq
   end
 end
