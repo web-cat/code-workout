@@ -28,6 +28,7 @@ class CourseOfferingsController < ApplicationController
       organization_id: params[:organization_id],
       course_id: params[:course_id]
     )
+    @term = params[:term_id].nil? ? nil : Term.find(params[:term_id])
     if params[:new_course]
       flash.now[:success] = "#{@course.name} was successfully created in #{@organization.name}"
     end
