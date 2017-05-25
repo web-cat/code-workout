@@ -32,8 +32,9 @@
           user_path(i) }.to_sentence
     %br
     %br
-    = link_to "+ Add a section",
-      organization_new_course_offering_path(organization_id: @course.organization.id, course_id: @course.id)
+    - if current_user.is_a_member_of?(@course.user_group)
+      = link_to "+ Add a section",
+        organization_new_course_offering_path(organization_id: @course.organization.id, course_id: @course.id)
 
   .container-fluid
     .navbar-collapse.collapse
