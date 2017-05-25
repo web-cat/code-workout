@@ -24,6 +24,10 @@ class CourseOfferingsController < ApplicationController
   def new
     @organization = Organization.find(params[:organization_id])
     @course = Course.find(params[:course_id])
+    @url = organization_course_offering_create_path(
+      organization_id: params[:organization_id],
+      course_id: params[:course_id]
+    )
     if params[:new_course]
       flash.now[:success] = "#{@course.name} was successfully created in #{@organization.name}"
     end
@@ -33,7 +37,9 @@ class CourseOfferingsController < ApplicationController
   # -------------------------------------------------------------
   # GET /course_offerings/1/edit
   def edit
-    @uploaded_roster = UploadedRoster.new
+    # @uploaded_roster = UploadedRoster.new
+    @course_offering = CourseOffering.find params[:id]
+    @url = course_offering_path(@course_offering)
   end
 
   # -------------------------------------------------------------
