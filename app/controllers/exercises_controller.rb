@@ -313,9 +313,11 @@ class ExercisesController < ApplicationController
     end
 
     if @workout_offering
-      authorize! :practice, @exercise, message: 'You cannot access that assignment because your enrollment for that course offering has expired or never existed.'
+      # Re-check workout-offering permission in case the URL was entered directly.
+      authorize! :practice, @workout_offering, message: 'You cannot access that exercise because it belongs to an unpublished workout offering.'
+      authorize! :practice, @exercise, message: 'You are not authorized to practice that exercise at this time.'
     else
-      authorize! :gym_practice, @exercise, message: 'You cannot access that exercise because it is not public in the Gym.'
+      authorize! :gym_practice, @exercise, message: 'You cannot practice that exercise because it is not present in the Gym.'
     end
 
     @attempt = nil

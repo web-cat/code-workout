@@ -3,7 +3,7 @@
 %h1
   = @course.number_and_name
   %small= @term.display_name
-- if current_user.is_a_member_of?(@course.user_group)
+- if current_user.andand.is_a_member_of?(@course.user_group)
   = link_to "Review Privileged Users", organization_course_privileged_users_path(@course.organization, @course)
   %br/
 - if @course_offerings && @course_offerings.any?
@@ -32,7 +32,7 @@
           user_path(i) }.to_sentence
     %br
     %br
-    - if current_user.is_a_member_of?(@course.user_group)
+    - if current_user.andand.is_a_member_of?(@course.user_group)
       = link_to "+ Add a section",
         organization_new_course_offering_path(organization_id: @course.organization.id, course_id: @course.id)
 

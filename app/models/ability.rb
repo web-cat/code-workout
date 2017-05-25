@@ -228,19 +228,16 @@ class Ability
   def process_workouts(user)
     can [:read, :update, :destroy], Workout, creator_id: user.id
     can :create, Workout if user.instructor_course_offerings.any?
-    # can :update, Workout, workout_offerings:
-    #   { course_offering:
-    #     { course_enrollments:
-    #       { user_id: user.id, course_role:
-    #         { can_manage_assignments: true } } } }
     can :update, Workout do |w|
       user.managed_workouts.include?(w)
     end
-    can :read, Workout, workout_offerings:
-      { course_offering:
-        { course_enrollments:
-          { user_id: user.id } } }
-    can :practice, Workout, is_public: true
+
+    # This doesn't affect WorkoutOffering permissions, which are based on enrollments
+    # due dates, and publishing dates.
+    # The workout offering practice and show actions check their own permissions
+    # and use the Workout VIEWS, not controller actions.
+    # So this permission affects ONLY gym access.
+    can [:read, :practice], Workout, is_public: true
   end
 
   def process_workout_offerings(user)
@@ -248,9 +245,7 @@ class Ability
     can [:show, :practice], WorkoutOffering do |o|
       o.can_be_seen_by? user
     end
-    can :read, WorkoutOffering, course_offering:
-      { course_enrollments:
-        { user_id: user.id } }
+
     can :manage, WorkoutOffering, course_offering:
       { course_enrollments:
         { user_id: user.id, course_role:

@@ -58,9 +58,9 @@ class WorkoutOfferingsController < ApplicationController
   def practice
     # must include the oauth proxy object
     require 'oauth/request_proxy/rack_request'
-
     @lti_launch = params[:lti_launch]
     if @workout_offering
+      authorize! :practice, @workout_offering, message: 'You are not authorized to access that workout offering.'
       lis_outcome_service_url = params[:lis_outcome_service_url]
       lis_result_sourcedid = params[:lis_result_sourcedid]
       ex1 = nil
