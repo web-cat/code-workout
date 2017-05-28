@@ -1,16 +1,19 @@
 = render 'layouts/breadcrumb'
 
-= javascript_include_tag('course')
-%h1= "#{@course.number} Privileged Users"
-%h2
-  This page is not fully implemented yet.
-
 .container
+  = javascript_include_tag('course')
+  %h1= "#{@course.number} Privileged Users"
+  .text.text-warning
+    :markdown
+      Privileged users for a course can view course materials like unpublished or private workouts and exercises that have been used in the past.
+      If you are a privileged user for a course, you may also grant privileges to other non-privileged users.
+      This allows you to *manually* grant users access to course materials, preventing un-privileged users from gaining access to course materials by creating "dummy" course offerings.
+
   .new-user-setup
     .form-horizontal
       .form-group
-        = label_tag :user, 'Add User', class: 'control-label col-xs-3'
-        .col-xs-8.col-md-5
+        = label_tag :user, 'Add Privileged User', class: 'control-label col-xs-3'
+        .col-xs-8.col-md-7
           .ui-widget
             = text_field_tag :user, nil, id: 'user', class: 'form-control input-sm',
               placeholder: 'Start typing a user\'s name or email',
@@ -18,13 +21,16 @@
         %small.add-user#hint.col-md-5.col-xs-12.text.text-warning{ style: 'display: none' }
 
   - if @users.andand.any?
-    %ul.list-group
-      - @users.each do |u|
-        %li.list-group-item.col-xs-11.col-md-8{ data: { user_id: u.id } }
-          .row
-            .col-xs-11
+    %table.table{ style: 'width: auto;' }
+      %thead
+        %th
+          %i
+            Privileged Users
+      %tbody
+        - @users.each do |u|
+          %tr{ data: { user_id: u.id } }
+            %td
               = u.display_name
-            .col-xs-1
-              %i.fa.fa-times.action
   - else
-    This course has no privileged users.
+    .text.text-warning
+      This course has no privileged users.

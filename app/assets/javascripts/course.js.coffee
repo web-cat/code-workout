@@ -30,12 +30,3 @@ $('.courses.show').ready ->
 
 $('.courses.privileged_users').ready ->
   console.log 'here'
-  setup_autocomplete()
-
-setup_autocomplete = ->
-  autocomplete = $('#user').autocomplete
-    minLength: 2
-    autoFocus: true
-    url: $('#user').data 'url'
-    select: (event, ui) ->
-      console.log ui.item

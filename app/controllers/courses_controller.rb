@@ -29,8 +29,8 @@ class CoursesController < ApplicationController
       @course_offering = @course_offerings.andand.first
       @is_student = !user_signed_in? ||
         !current_user.global_role.is_admin? &&
-        (@course_offerings.any? {|co| co.is_student? current_user } ||
-        !@course_offerings.any? {|co| co.is_staff? current_user })
+        (@course_offerings.any? { |co| co.is_student? current_user } ||
+        !@course_offerings.any? { |co| co.is_staff? current_user })
     end
   end
 
@@ -38,8 +38,16 @@ class CoursesController < ApplicationController
   # GET /
   def privileged_users
     @course = Course.find params[:course_id]
+    authorize! :privileged_users, @course, message: 'You cannot review privileged users for that course.'
     @user_group = @course.user_group
-    @users = params[:not] ? User.not_in_group(@user_group) : @user_group.andand.users
+    if params[:not]
+      # the request is for users who are NOT privileged users
+      # most likely to search for users to add to the list of privileged users
+      @users = User.not_in_group(@user_group)
+    else
+      memberships = @user_group.andand.memberships.andand.order(created_at: :desc)
+      @users = memberships.andand.map(&:user)
+    end
 
     respond_to do |format|
       format.json { render json: @users.to_json }

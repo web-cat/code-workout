@@ -134,7 +134,16 @@ class Exercise < ActiveRecord::Base
     end
   end
 
+  # Get a list of Exercises that are visible to the specified user.
+  #
+  # It is the union of exercises that are publicly visible, created or owned by the user,
+  # part of an exercise collection owned by the user or by a group the user is a
+  # member of, and exercises that are visible through a course_offering.
   def self.visible_to_user(user)
+    # If updating this method, remember to update the instance method
+    # exercise.visible_to?(user).
+
+    # Get exercises owned or created by the user
     visible_through_user = Exercise.visible_through_user(user)
 
     publicly_visible = Exercise.publicly_visible
@@ -159,6 +168,11 @@ class Exercise < ActiveRecord::Base
       .union(visible_through_user_group)
   end
 
+  # Get exercises that are publicly visible, either by the Exercise.is_public
+  # property, or by the license assigned to the Exercise's collection.
+  #
+  # Also the list of exercises that can be seen/searched/practiced without being
+  # signed in.
   def self.publicly_visible
     public_license = Exercise.joins(exercise_collection: [ license: :license_policy ])
       .where(is_public: nil, exercise_collection:
@@ -243,6 +257,9 @@ class Exercise < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def visible_to?(u)
+    # If updating this instance method, remember to update the class method
+    # Exercise.visible_to_user(u). This method exists so avoid creating a list
+    # of visible exercises unnecessarily.
     self.is_public ||
     self.owners.include?(u) ||
     self.exercise_collection.andand.is_public? ||
