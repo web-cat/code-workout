@@ -45,6 +45,7 @@ class Ability
         process_global_role user
         process_instructor user
         process_courses user
+        process_user_groups user
         process_exercises user
         process_workouts user
         process_workout_offerings user
@@ -166,6 +167,11 @@ class Ability
     end
   end
 
+  # -------------------------------------------------------------
+  def process_user_groups(user)
+    can [ :members, :add_user ], UserGroup, memberships:
+      { user: user }
+  end
 
   # -------------------------------------------------------------
   def process_exercises(user)

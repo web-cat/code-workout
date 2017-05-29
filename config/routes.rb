@@ -139,6 +139,11 @@ CodeWorkout::Application.routes.draw do
 
   resources :course_enrollments, only: :new
 
+  resources :user_groups, only: [ :new ] do
+    get 'members' => 'user_groups#members', as: :members
+    post 'add_user/:user_id' => 'user_groups#add_user', as: :add_user
+  end
+
   # All of the routes anchored at /users
   resources :users, constraints: { id: /[^\/]+/ } do
     resources :resource_files, path: 'media',
