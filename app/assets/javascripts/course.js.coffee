@@ -1,3 +1,6 @@
+##########################
+#    COURSE SHOW PAGE    #
+##########################
 ROSTER_TAB = 'tab_roster'
 
 requestUpdate = (tab_id) ->
@@ -28,5 +31,40 @@ $('.courses.show').ready ->
         $("\##{tab_id}").html("<div class='col-xs-offset-6'><i class='fa fa-spin fa-2x'/></div>")
         requestUpdate(tab_id)
 
+##########################
+#    PRIVILEGED USERS    #
+##########################
+
 $('.courses.privileged_users').ready ->
-  console.log 'here'
+  setup_autocomplete()
+
+setup_autocomplete = ->
+  user_group_id = $('h1').data('user-group-id')
+  url = "/user_groups/#{user_group_id}/members?notin=true"
+  autocomplete = $('#privileged-user').autocomplete
+    minLength: 2
+    autoFocus: true
+    source: url
+    select: (event, ui) ->
+      handle_autocomplete_select(event, ui)
+
+  autocomplete.data('ui-autocomplete')._renderItem = (ul, item) ->
+    display = "#{item.first_name} #{item.last_name} (#{item.email})"
+    return $('<li class="list-group-item"></li>')
+      .append(display)
+      .appendTo(ul)
+
+handle_autocomplete_select = (event, ui) ->
+  user_id = ui.item.id
+  user_group_id = $('h1').data('user-group-id')
+  $.ajax
+    url: "/user_groups/#{user_group_id}/add_user/#{user_id}"
+    type: 'post'
+    dataType: 'json'
+    success: (data) ->
+      if data.error?
+        alert(data['error'])
+      else
+        userlist = $('.privileged-user-list > tbody')
+        row = $("<tr data-user-id=#{data.id}><td><a href=#{data.url}>#{data.name}</a></td></tr>")
+        row.prependTo(userlist)

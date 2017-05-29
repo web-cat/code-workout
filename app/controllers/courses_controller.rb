@@ -40,14 +40,8 @@ class CoursesController < ApplicationController
     @course = Course.find params[:course_id]
     authorize! :privileged_users, @course, message: 'You cannot review privileged users for that course.'
     @user_group = @course.user_group
-    if params[:not]
-      # the request is for users who are NOT privileged users
-      # most likely to search for users to add to the list of privileged users
-      @users = User.not_in_group(@user_group)
-    else
-      memberships = @user_group.andand.memberships.andand.order(created_at: :desc)
-      @users = memberships.andand.map(&:user)
-    end
+    memberships = @user_group.andand.memberships.andand.order(created_at: :desc)
+    @users = memberships.andand.map(&:user)
 
     respond_to do |format|
       format.json { render json: @users.to_json }

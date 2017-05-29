@@ -2,7 +2,8 @@
 
 .container
   = javascript_include_tag('course')
-  %h1= "#{@course.number} Privileged Users"
+  %h1{ data: { user_group_id: @user_group.andand.id } }
+    = "#{@course.number} Privileged Users"
   .text.text-warning
     :markdown
       Privileged users for a course can view course materials like unpublished or private workouts and exercises that have been used in the past.
@@ -15,22 +16,23 @@
         = label_tag :user, 'Add Privileged User', class: 'control-label col-xs-3'
         .col-xs-8.col-md-7
           .ui-widget
-            = text_field_tag :user, nil, id: 'user', class: 'form-control input-sm',
+            = text_field_tag :user, nil, id: 'privileged-user', class: 'form-control input-sm',
               placeholder: 'Start typing a user\'s name or email',
               data: { url: organization_course_privileged_users_path(@course.organization, @course, not: true) }
         %small.add-user#hint.col-md-5.col-xs-12.text.text-warning{ style: 'display: none' }
-
+  %br
+  %br
   - if @users.andand.any?
-    %table.table{ style: 'width: auto;' }
+    %table.table.table-striped.privileged-user-list{ style: 'width: auto;' }
       %thead
         %th
-          %i
-            Privileged Users
+          %b
+            PRIVILEGED USERS
       %tbody
         - @users.each do |u|
           %tr{ data: { user_id: u.id } }
             %td
-              = u.display_name
+              = link_to u.display_name, user_path(u.id)
   - else
     .text.text-warning
       This course has no privileged users.

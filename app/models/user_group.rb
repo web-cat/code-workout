@@ -18,7 +18,7 @@ class UserGroup < ActiveRecord::Base
 
   def add_user_to_group(user)
     unless user.nil?
-      Membership.create user: user, user_group: self
+      return Membership.create user: user, user_group: self
     end
   end
 end
