@@ -169,6 +169,7 @@ class Ability
 
   # -------------------------------------------------------------
   def process_user_groups(user)
+    can :create, UserGroup
     can [ :members, :add_user ], UserGroup, memberships:
       { user: user }
   end

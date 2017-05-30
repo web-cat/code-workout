@@ -92,6 +92,14 @@ class CoursesController < ApplicationController
     )
 
     if @course.save
+      group = UserGroup.create(
+        name: @course.number,
+        description: "Privileged users for #{@course.display_name}."
+      )
+
+      group.course = @course
+      group.add_user_to_group(current_user)
+
       url = url_for(organization_new_course_offering_path(
           course_id: @course.id,
           organization_id: @organization.id,
