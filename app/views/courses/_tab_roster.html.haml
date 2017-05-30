@@ -5,7 +5,7 @@
       %li
         = link_to 'Manually...', new_course_enrollment_path(course_id: @course, term_id: @term), remote: true
       %li
-        = link_to 'Upload a roster...', '/#', remote: true
+        = link_to 'Upload a roster...', choose_roster_course_enrollments_path(course_id: @course, term_id: @term), remote: true
 
 - @course_offerings.each do |offering|
   -# - if @course_offerings.size > 1

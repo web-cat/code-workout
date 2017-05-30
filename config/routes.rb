@@ -137,7 +137,14 @@ CodeWorkout::Application.routes.draw do
     get '/search_enrolled_users' => :search_enrolled_users, as: :search_enrolled_users
   end
 
-  resources :course_enrollments, only: :new
+  # routes for course_enrollments
+  resources :course_enrollments, only: [ :new ] do
+    collection do
+      get 'choose_roster'
+      post 'roster_upload'
+    end
+  end
+
 
   resources :user_groups, only: [ :new ] do
     get 'members' => 'user_groups#members', as: :members

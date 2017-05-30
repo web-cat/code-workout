@@ -1,4 +1,3 @@
-
 # Append the course enrollments dialog to the page body.
 $('body').append(
   '<%= escape_javascript(render partial: "course_enrollments/new_enrollment_modal", locals: { course_offerings: @course_offerings }) %>')

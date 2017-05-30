@@ -1,0 +1,25 @@
+- show_form = course_offerings && course_offerings.any?
+#roster-upload-modal.modal.fade{ role: 'dialog', tabindex: '-1' }
+  .modal-dialog.modal-md{ style: 'overflow-y: scroll; max-height:85% margin-top: 50px; margin-bottom:50px;' }
+    .modal-content.searchable
+      .modal-header
+        %h3 Upload a roster
+      - if show_form
+        = form_tag roster_upload_course_enrollments_path, multipart: true do
+          .modal-body
+            .form-group
+              = label_tag :course_offering, 'Course Offering', class: 'control-label col-xs-3'
+              .col-xs-12.col-md-9
+                // course_offerings is a local variable passed to the partial
+                = select_tag :course_offering, options_for_select(course_offerings.collect{ |co| [co.display_name_with_term, co.id] }), class: 'form-control input-sm', id: 'course-offering'
+            .form-group
+              = label_tag :rosterfile, 'Choose a file', class: 'control-label col-xs-3'
+              .col-xs-12.col-md-9
+                .ui-widget
+                  = file_field_tag 'rosterfile', class: 'form-control input-sm'
+          .modal-footer
+            = submit_tag 'Submit', id: 'btn-upload-roster', class: 'btn btn-primary'
+      - else
+        .modal-body
+          .text.text-warning
+            There are no course offerings to create enrollments for.
