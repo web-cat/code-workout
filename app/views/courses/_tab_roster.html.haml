@@ -1,10 +1,18 @@
+- if @course_offerings.any?
+  .pull-right.dropdown
+    = dropdown_button_tag 'Enroll Users', class: 'btn btn-primary'
+    %ul.dropdown-menu
+      %li
+        = link_to 'Manually...', new_course_enrollment_path(course_id: @course, term_id: @term), remote: true
+      %li
+        = link_to 'Upload a roster...', '/#', remote: true
+
 - @course_offerings.each do |offering|
-  - if @course_offerings.size > 1
-    %h2= offering.display_name
-    = link_to
-  = form_tag '/course_offerings/'+ offering.id.to_s + '/upload_roster', multipart: true do
-    = file_field( "form", "rosterfile" )
-    = submit_tag "Submit File"
+  -# - if @course_offerings.size > 1
+  -#   %h2= offering.display_name
+  -# = form_tag '/course_offerings/'+ offering.id.to_s + '/upload_roster', multipart: true do
+  -#   = file_field( "form", "rosterfile" )
+  -#   = submit_tag "Submit File"
   %table.table.table-striped
     %thead
       %tr

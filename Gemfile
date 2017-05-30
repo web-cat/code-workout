@@ -29,6 +29,7 @@ gem 'redcarpet'
 gem 'loofah'
 gem 'truncate_html'
 gem 'tzinfo' # For timezone support
+gem 'active_record_union'
 
 # For JSON support
 gem 'rabl'

@@ -23,6 +23,35 @@ module ApplicationHelper
     javascript_include_tag c if Rails.application.assets.find_asset("#{c}.js")
   end
 
+  # -------------------------------------------------------------
+  def dropdown_button_tag(*args, &block)
+    if block_given?
+      options = args.first || {}
+      dropdown_button_tag(capture(&block), options)
+    else
+      content = args.first
+      options = args.second || {}
+
+      if options[:class]
+        options[:class] += ' dropdown-toggle'
+      else
+        options[:class] = 'dropdown_toggle'
+      end
+
+      if options[:data]
+        options[:data][:toggle] = 'dropdown'
+      else
+        options[:data] = { toggle: 'dropdown' }
+      end
+
+      options[:href] = '#'
+
+      content_tag :a, options do
+        raw(content + ' <span class="caret"></span>'.html_safe)
+      end
+    end
+  end
+
 
   # -------------------------------------------------------------
   TEASER_LENGTH = 140

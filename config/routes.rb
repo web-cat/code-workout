@@ -99,6 +99,7 @@ CodeWorkout::Application.routes.draw do
     get 'new' => 'courses#new'
     post 'create' => 'courses#create', as: :courses_create
     get ':id/edit' => 'courses#edit', as: :course_edit
+    get ':course_id/privileged_users' => 'courses#privileged_users', as: :course_privileged_users
     get ':course_id/new_offering' => 'course_offerings#new', as: :new_course_offering
     post ':course_id/create_offering' => 'course_offerings#create', as: :course_offering_create
     get ':course_id/:term_id/tab_content/:tab' => 'courses#tab_content'
@@ -133,7 +134,14 @@ CodeWorkout::Application.routes.draw do
     post 'generate_gradebook' => :generate_gradebook, as: :gradebook
     get 'add_workout' => :add_workout, as: :add_workout
     post 'store_workout/:id' => :store_workout, as: :store_workout
-    get '/search_students' => :search_students, as: :search_students
+    get '/search_enrolled_users' => :search_enrolled_users, as: :search_enrolled_users
+  end
+
+  resources :course_enrollments, only: :new
+
+  resources :user_groups, only: [ :new ] do
+    get 'members' => 'user_groups#members', as: :members
+    post 'add_user/:user_id' => 'user_groups#add_user', as: :add_user
   end
 
   # All of the routes anchored at /users

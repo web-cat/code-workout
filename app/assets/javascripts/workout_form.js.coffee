@@ -1,3 +1,6 @@
+default_point_value = 1
+searchable = null
+
 $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
   window.codeworkout ?= {}
   window.codeworkout.removed_exercises = []
@@ -13,19 +16,31 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
     validate_workout_name()
 
   $('.search-results').on 'click', '.add-ex', ->
-    $('.empty-msg').css 'display', 'none'
-    $('#ex-list').css 'display', 'block'
-    ex_name = $(this).data('ex-name')
     ex_id = $(this).data('ex-id')
+    ex_name = $(this).data('ex-name')
     name = "X#{ex_id}"
-    if ex_name
-      name = name + ": #{ex_name}"
-    data =
-      name: name
-      id: ex_id
-      points: 0
-    template = Mustache.render($(window.codeworkout.exercise_template).filter('#exercise-template').html(), data)
-    $('#ex-list').append(template)
+    can_add = !exercise_is_in_workout(ex_id)
+    if can_add
+      $('.empty-msg').css 'display', 'none'
+      $('#ex-list').css 'display', 'block'
+      if ex_name
+        name = name + ": #{ex_name}"
+      data =
+        name: name
+        id: ex_id
+        points: default_point_value
+      template = Mustache.render($(window.codeworkout.exercise_template).filter('#exercise-template').html(), data)
+      $('#ex-list').append(template)
+    else
+      form_alert(["Exercise #{name} has already been added to this workout."])
+      exercise = $('#ex-list').find("[data-id=#{ex_id}]")
+      exercise.addClass 'shake'
+      setTimeout ->
+        exercise.removeClass 'shake'
+      , 1000
+
+  $('#ex-list').on 'change', '.points', ->
+    default_point_value = $(this).val()
 
   $('#course-offerings').on 'click', 'a', ->
     course_offering_id = $(this).data 'course-offering-id'
@@ -64,32 +79,29 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
       alert 'Cannot delete this workout. Some students have already attempted it.'
 
   $('#workout-offering-fields').on 'click', '.add-extension', ->
-    course_offering = $(this).closest('tr').find('.course-offering small').text()
-    course_offering_id = $(this).closest('tr').find('.course-offering').data 'course-offering-id'
-    clear_student_search()
-    $('#extension-modal').data('course-offering', { id: course_offering_id, display: course_offering } )
-    $('#extension-modal #modal-header').append 'Searching for students from <u>' + course_offering + '</u>'
-    $('#btn-student-search').click ->
-      search_students(course_offering_id)
-    $('#terms').keydown (e) ->
-      if e.keyCode == 13
-        search_students(course_offering_id)
+    course_offering = $(this).closest('tr').find('.course-offering')
+    course_offering_display = $(course_offering).text()
+    course_offering_id = $(course_offering).data 'course-offering-id'
+    $('#student-search-modal').modal('show');
+    searchable = $('.searchable').StudentSearch
+      course_offering_display: course_offering_display
+      course_offering_id: course_offering_id
 
-  $('#students').on 'click', 'a', ->
-    course_offering = $('#extension-modal').data('course-offering')
-    student =
-      id: $(this).data('student-id')
-      display: $(this).text()
-    data =
-      course_offering_id: course_offering.id
-      course_offering_display: course_offering.display
-      student_display: student.display
-      student_id: student.id
-    template = $(Mustache.render($(window.codeworkout.student_extension_template).filter('#extension-template').html(), data))
-    $('#student-extension-fields tbody').append(template)
-    $('#extension-modal').modal('hide')
-    $('#extensions').css 'display', 'block'
-    init_row_datepickers template
+  $('.searchable').on 'studentSelect', (e) ->
+    if (searchable)
+      $('#student-search-modal').modal('hide')
+      name = if e.student_name.length > 1 then e.student_name else e.student_display
+      data =
+        course_offering_id: searchable.course_offering.id
+        course_offering_display: searchable.course_offering.display
+        student_display: e.student_display
+        student_id: e.student_id
+
+      template = $(Mustache.render($(window.codeworkout.student_extension_template).filter('#extension-template').html(), data))
+      $('#student-extension-fields tbody').append(template)
+      $('#student-search-modal').modal('hide')
+      $('#extensions').css 'display', 'block'
+      init_row_datepickers template
 
   $(document).on 'click', '.delete-extension', ->
     row = $(this).closest('tr')
@@ -115,6 +127,11 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
 
   $('#btn-submit-wo').click ->
     handle_submit()
+
+  $('#student-search-modal').on 'shown.bs.modal', ->
+    $('#terms').focus();
+
+# End event handlers, begin helper methods
 
 init = ->
   description = $('textarea#description').data 'value'
@@ -159,26 +176,10 @@ init_templates = ->
     if $('body').is '.workouts.edit'
       init_student_extensions()
 
-clear_student_search = ->
-  $('#extension-modal #modal-header').empty()
-  $('#extension-modal .msg').empty()
-  $('#students').empty()
-  $('#terms').val('')
-
-search_students = (course_offering_id) ->
-  $.ajax
-    url: '/course_offerings/' + course_offering_id + '/search_students'
-    type: 'get'
-    data: { terms: $('#terms').val() }
-    cache: true
-    dataType: 'script'
-    success: (data) ->
-      # init_datepickers()
-
 validate_workout_name = ->
-  can_update = $('#workout-offering-fields').data 'can-update'
+  cloning = $('body').is('.workouts.clone')
   name_field = $('#wo-name')
-  if can_update == false
+  if cloning
     if name_field.val() == name_field.data 'old-name'
       $('#clone-msg').css 'display', 'block'
       return false
@@ -288,7 +289,7 @@ init_row_datepickers = (row) ->
 
 get_exercises = ->
   exs = $('#ex-list li')
-  exercises = {}
+  exercises = []
   i = 0
   while i < exs.length
     ex_id = $(exs[i]).data('id')
@@ -296,9 +297,21 @@ get_exercises = ->
     ex_points = '0' if ex_points == ''
     ex_obj = { id: ex_id, points: ex_points }
     position = i + 1
-    exercises[position.toString()] = ex_obj
+    exercises.push(ex_obj)
     i++
   return exercises
+
+# Checks if an exercise with the specified ID
+# has already been added to the workout.
+#
+# exercises -- An array of exercise objects, as returned by
+#       get_exercises
+# ex_id -- An integer
+exercise_is_in_workout = (ex_id) ->
+  for exercise in get_exercises() when exercise['id'] is ex_id
+    return true
+
+  return false
 
 get_offerings = ->
   offerings = {}
@@ -414,10 +427,12 @@ handle_submit = ->
   if $('body').is '.workouts.new'
     url = '/gym/workouts'
     type = 'post'
-  else if $('body').is('.workouts.edit') || $('body').is('.workouts.clone')
-    can_update = $('#workout-offering-fields').data 'can-update'
-    url = if can_update == true then '/gym/workouts/' + $('h1').data('id') else '/gym/workouts'
-    type = if can_update == true then 'patch' else 'post'
+  else if $('body').is '.workouts.edit'
+    url = '/gym/workouts/' + $('h1').data('id')
+    type = 'patch'
+  else if $('body').is '.workouts.clone'
+    url = '/gym/workouts'
+    type = 'post'
 
   $.ajax
     url: url

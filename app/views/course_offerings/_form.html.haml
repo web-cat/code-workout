@@ -1,9 +1,10 @@
-- url = url_for(organization_course_offering_create_path(course_id: params[:course_id], organization_id: params[:organization_id]))
-= semantic_form_for @course_offering, url: url, html: { class: "form-horizontal col-xs-10" } do |f|
+- url = @url
+- method = action_name == 'edit' ? :put : :post
+= semantic_form_for @course_offering, url: url, html: { class: "form-horizontal col-xs-10", method: method } do |f|
   = f.semantic_errors
   = f.inputs do
     = f.input :label, input_html: { placeholder: "e.g. MWF 10:00am" }
-    = f.input :term
+    = f.input :term, collection: Term.where('starts_on > (?)', DateTime.now)
     = f.input :url
     = f.input :self_enrollment_allowed, label: false
     %br

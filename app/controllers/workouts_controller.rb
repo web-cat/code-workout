@@ -114,10 +114,21 @@ class WorkoutsController < ApplicationController
     @term = Term.find params[:term_id]
     @organization = Organization.find params[:organization_id]
 
-    @default_results = @course.course_offerings.joins(workout_offerings: :workout)
+    @workout_offerings = @course.course_offerings.joins(:workout_offerings, :term)
+      .order('terms.ends_on DESC')
       .flat_map(&:workout_offerings)
-      .map(&:workout).uniq
 
+    # workouts_with_term is of the form [[CourseOffering, Workout], [CourseOffering, Workout], [CourseOffering, Workout]]
+    # we will convert it into a Hash where each key is a term, and each value is an array of Workouts
+    workouts_with_term = @workout_offerings.map { |wo| [wo.course_offering.term, wo.workout] }
+    @default_results = workouts_with_term.group_by(&:first)
+      .map{ |k, a| [k, a.map(&:last)] }
+      .to_h
+
+    # make sure each term shows unique Workouts
+    @default_results.each do |term, workouts|
+      @default_results[term] = workouts.uniq
+    end
     render layout: 'one_column'
   end
 
@@ -132,14 +143,14 @@ class WorkoutsController < ApplicationController
   # -------------------------------------------------------------
   # POST /gym/workouts/search
   def search
-    @terms = escape_javascript(params[:search])
-    @terms = @terms.split(@terms.include?(' ') ? /\s*,\s*/ : nil)
-    @workouts = Workout.search @terms, current_user
+    terms = escape_javascript(params[:search])
+    terms = terms.split(terms.include?(' ') ? /\s*,\s*/ : nil)
+    course = params[:course] ? Course.find(params[:course]) : nil
+    @workouts = Workout.search terms, current_user, course
 
     if @workouts.blank?
       @msg = 'Your search did not match any workouts. Try these instead...'
-      @workouts = (Workout.visible_to_user(current_user) + current_user.managed_workouts)
-        .uniq.shuffle.first(16)
+      @workouts = Workout.search nil, current_user, course
     end
 
     if @workouts.blank?
@@ -159,7 +170,7 @@ class WorkoutsController < ApplicationController
     @workout = @workout_offering.workout
 
     if cannot? :edit, @workout
-      redirect_to root_path, notice: 'You are not authorized to edit workouts.' and return
+      redirect_to root_path, notice: 'You are not authorized to edit this workout.' and return
     end
 
     @course = Course.find(params[:course_id])
@@ -471,14 +482,14 @@ class WorkoutsController < ApplicationController
       end
 
       exercises = JSON.parse params[:exercises]
-      exercises.each do |key, value|
-        exercise = Exercise.find value['id']
+      exercises.each_with_index do |ex, index|
+        exercise = Exercise.find ex['id']
         exercise_workout = ExerciseWorkout.find_by workout: @workout, exercise: exercise
         if exercise_workout.blank?
           exercise_workout = ExerciseWorkout.new workout: @workout, exercise: exercise
         end
-        exercise_workout.set_list_position key
-        exercise_workout.points = value['points']
+        exercise_workout.set_list_position index
+        exercise_workout.points = ex['points']
         exercise_workout.save!
       end
 

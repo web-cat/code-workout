@@ -3,6 +3,7 @@ class ExercisesController < ApplicationController
   require 'oauth/request_proxy/rack_request'
 
   load_and_authorize_resource
+  skip_authorize_resource only: :practice
 
   #~ Action methods ...........................................................
   after_action :allow_iframe, only: :practice
@@ -10,7 +11,11 @@ class ExercisesController < ApplicationController
 
   # GET /exercises
   def index
-    @exercises = Exercise.where(is_public: true)
+    if current_user
+      @exercises = Exercise.visible_to_user(current_user)
+    else
+      @exercises = Exercise.publicly_visible
+    end
   end
 
 
@@ -37,18 +42,15 @@ class ExercisesController < ApplicationController
   def search
     @terms = escape_javascript(params[:search])
     @terms = @terms.split(@terms.include?(',') ? /\s*,\s*/ : nil)
-#    @wos = Workout.search @terms
     @wos = []
     @exs = Exercise.search(@terms, current_user)
     @msg = ''
-#    if @wos.length == 0 && @exs.length == 0
-    if @exs.length == 0
+    if @exs.blank?
       @msg = 'No exercises were found for your search request. ' \
         'Try these instead...'
-#      @wos = Workout.order('RANDOM()').limit(4)
-      @exs = Exercise.all.shuffle.first(16)
+      @exs = Exercise.publicly_visible.shuffle.first(16)
     end
-    if @exs.length == 0
+    if @exs.blank?
       @msg = 'No public exercises are available to search right now. ' \
         'Wait for contributors to add more.'
     end
@@ -204,7 +206,6 @@ class ExercisesController < ApplicationController
       @ex.save!
       @version = ExerciseVersion.new(exercise: @ex,creator_id:
                  User.find_by(email: version['creator']).andand.id,
-                 exercise: @ex,
                  position:1)
       @version.save!
       version['prompts'].each do |prompt|
@@ -286,7 +287,7 @@ class ExercisesController < ApplicationController
         notice: 'Choose an exercise to practice!' and return
     end
 
-    authorize! :practice, @exercise
+    # authorize! :practice, @exercise
 
     @student_user = params[:review_user_id] ? User.find(params[:review_user_id]) : current_user
 
@@ -309,6 +310,14 @@ class ExercisesController < ApplicationController
       if params[:workout_id]
         @workout = Workout.find(params[:workout_id])
       end
+    end
+
+    if @workout_offering
+      # Re-check workout-offering permission in case the URL was entered directly.
+      authorize! :practice, @workout_offering, message: 'You cannot access that exercise because it belongs to an unpublished workout offering.'
+      authorize! :practice, @exercise, message: 'You are not authorized to practice that exercise at this time.'
+    else
+      authorize! :gym_practice, @exercise, message: 'You cannot practice that exercise because it is not present in the Gym.'
     end
 
     @attempt = nil

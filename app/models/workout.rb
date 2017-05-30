@@ -79,6 +79,14 @@ class Workout < ActiveRecord::Base
 
   #~ Class methods ............................................................
 
+  #~ Instance methods .........................................................
+
+  # Workout is visible if the user is the creator or
+  # if the workout is public
+  def visible_to?(user)
+    self.is_public || self.creator == user
+  end
+
   # -------------------------------------------------------------
   # FIXME: probably shouldn't be here, since it omits setting the
   # point value.
@@ -260,7 +268,7 @@ class Workout < ActiveRecord::Base
         student_extension.opening_date = DateTime.strptime(ext['opening_date'].to_s, '%Q') if ext['opening_date'].present?
         student_extension.soft_deadline = DateTime.strptime(ext['soft_deadline'].to_s, '%Q') if ext['soft_deadline'].present?
         student_extension.hard_deadline = DateTime.strptime(ext['hard_deadline'].to_s, '%Q') if ext['hard_deadline'].present?
-        student_extension.time_limit = ext['time_limit'].present?
+        student_extension.time_limit = ext['time_limit'] if ext['time_limit'].present?
         student_extension.save!
       end
     end
@@ -278,24 +286,50 @@ class Workout < ActiveRecord::Base
   #~ Class methods ............................................................
 
   # -------------------------------------------------------------
-  def self.search(terms, user)
+  def self.search(terms, user, course = nil)
+    split_terms = terms.nil? ? nil : terms.join('|')
     if user
       available_workouts = Workout.where(
         id: (Workout.visible_to_user(user) + user.managed_workouts)
         .map(&:id)
       )
 
-      return available_workouts
-        .tagged_with(terms, any: true, wild: true, on: :tags) +
-        available_workouts
-        .tagged_with(terms, any: true, wild: true, on: :languages) +
-        available_workouts
-        .tagged_with(terms, any: true, wild: true, on: :styles)
-    else
-      return Workout.tagged_with(terms, any: true, wild: true, on: :tags) +
-        Workout.tagged_with(terms, any: true, wild: true, on: :languages) +
-        Workout.tagged_with(terms, any: true, wild: true, on: :styles)
-    end
-  end
+      # If a course is specified, we want the results sorted by terms in which
+      # workouts were offered for that course.
+      if course && user.is_a_member_of?(course.andand.user_group)
+        workout_offerings = course.course_offerings.joins(:workout_offerings, :term)
+          .order('terms.ends_on DESC')
+          .flat_map(&:workout_offerings)
+        workouts_to_search = available_workouts.tagged_with(terms, any: true, wild: true, on: :tags) +
+          available_workouts.tagged_with(terms, any: true, wild: true, on: :languages) +
+          available_workouts.tagged_with(terms, any: true, wild: true, on: :styles)
+        if split_terms
+          workouts_to_search = workouts_to_search + available_workouts.where('name regexp (?)', split_terms)
+        end
+        workouts_to_search = workouts_to_search.flat_map(&:id)
 
+        workout_offerings = workout_offerings.select{ |wo| workouts_to_search.include?(wo.workout.id) }
+
+        # workouts_with_term is of the form
+        # [[Term, Workout], [Term, Workout], [Term, Workout]]
+        # we will convert it into a Hash where each key is a term, and each value is an array of Workouts
+        # that were offered in that term
+        workouts_with_term = workout_offerings.map { |wo| [wo.course_offering.term, wo.workout] }
+        results = workouts_with_term.group_by(&:first)
+          .map{ |k, a| [k, a.map(&:last)] }
+          .to_h
+        results.each do |term, workouts|
+          results[term] = workouts.uniq
+        end
+        return results
+      end
+    else
+      available_workouts = Workout.where(is_public: true)
+    end
+
+    return available_workouts.tagged_with(terms, any: true, wild: true, on: :tags) +
+      available_workouts.tagged_with(terms, any: true, wild: true, on: :languages) +
+      available_workouts.tagged_with(terms, any: true, wild: true, on: :styles) +
+      available_workouts.where('name regexp (?)', split_terms).uniq
+  end
 end

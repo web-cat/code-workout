@@ -14,7 +14,9 @@ class Ability
   def initialize(user)
     # default abilities for anonymous, non-logged-in visitors
     can [:read, :index], [Term, Organization, Course, CourseOffering]
-    can [:search, :random_exercise, :practice, :evaluate], Exercise, is_public: true
+    can [:index, :search, :random_exercise, :practice, :evaluate], Exercise do |e|
+      e.is_publicly_available?
+    end
     can [:practice, :read], Workout, is_public: true
 
     if user
@@ -43,6 +45,7 @@ class Ability
         process_global_role user
         process_instructor user
         process_courses user
+        process_user_groups user
         process_exercises user
         process_workouts user
         process_workout_offerings user
@@ -154,11 +157,21 @@ class Ability
         course.course_offerings.any? { |co| co.is_enrolled? (user) }
       end
 
+      # A user can view and edit a course's privileged users if they are also a privileged user
+      can :privileged_users, Course do |course|
+        course.creator_id == user.id || user.is_a_member_of?(course.user_group)
+      end
+
       # A user can search for courses if they are signed in
       can :search, Course
     end
   end
 
+  # -------------------------------------------------------------
+  def process_user_groups(user)
+    can [ :members, :add_user ], UserGroup, memberships:
+      { user: user }
+  end
 
   # -------------------------------------------------------------
   def process_exercises(user)
@@ -169,49 +182,24 @@ class Ability
       !user.global_role.can_manage_all_courses? &&
       !user.global_role.is_instructor?
 
-
-
-      can [:read, :practice, :evaluate], Exercise do |e|
+      can [:read, :evaluate], Exercise do |e|
         e.visible_to?(user)
       end
 
-      can [:show], WorkoutOffering do |o|
-        o.can_be_seen_by? user
-#        now = Time.now
-#        ((o.opening_date == nil) || (o.opening_date <= now)) &&
-#          o.course_offering.course_enrollments.where(user_id: user.id).any?
-      end
-      can [:manage], WorkoutOffering, course_offering:
-        { course_enrollments:
-          { user_id: user.id, course_role:
-            { can_manage_assignments: true } } }
-      can [:practice], WorkoutOffering do |o|
-        o.can_be_seen_by? user
-#        now = Time.now
-#        ((o.opening_date == nil) || (o.opening_date <= now)) &&
-#          ((o.hard_deadline >= now) || (o.soft_deadline >= now)) &&
-#          o.course_offering.course_enrollments.where(user_id: user.id).any?
-      end
       can :practice, Exercise do |e|
         now = Time.now
-        e.is_public? || WorkoutOffering.
-#          joins{workout.exercises}.joins{course_offering.course_enrollments}.
-#          where{
-#            course_offering.course_enrollments.user_id == user.id &
-#            course_offering.course_enrollments.course_role_id.not_eq
-#              CourseRole.STUDENT_ID
-#             }.any? || WorkoutOffering.
+        e.visible_to?(user) || WorkoutOffering.
           joins{workout.exercises}.joins{course_offering.course_enrollments}.
           where{
             ((starts_on == nil) | (starts_on <= now)) &
             course_offering.course_enrollments.user_id == user.id
              }.any?
-#        e.workouts.workout_offerings.where(
-#          '(starts_on is NULL or starts_on < :time) and ' \
-#          '(hard_deadline >= :time or soft_deadline >= :time)',
-#          { time: Time.now }).course_offering.course_enrollments.
-#          where(user: user)
       end
+
+      can :gym_practice, Exercise do |e|
+        e.visible_to?(user)
+      end
+
       can :evaluate, Exercise do |e|
         now = Time.now
         WorkoutOffering.
@@ -221,14 +209,15 @@ class Ability
             ((hard_deadline >= now) | (soft_deadline >= now)) &
             course_offering.course_enrollments.user_id == user.id
              }.any?
-#        e.workouts.workout_offerings.where(
-#          '(starts_on is NULL or starts_on < :time) and ' \
-#          '(hard_deadline >= :time or soft_deadline >= :time)',
-#          { time: Time.now }).course_offering.course_enrollments.
-#          where(user: user)
       end
       can :create, Exercise if user.global_role.is_instructor?
-      can [:update], Exercise, exercise_owners: { owner: user }
+      can :update, Exercise do |e|
+        created = user == e.current_version.andand.creator
+        user_in_group = user.is_a_member_of?(e.exercise_collection.andand.user_group)
+        owns_collection = user == e.exercise_collection.andand.user
+
+        created || user_in_group || owns_collection
+      end
 
       can :read, Attempt, workout_score:
         { workout_offering:
@@ -245,23 +234,24 @@ class Ability
   def process_workouts(user)
     can [:read, :update, :destroy], Workout, creator_id: user.id
     can :create, Workout if user.instructor_course_offerings.any?
-    can :update, Workout, workout_offerings:
-      { course_offering:
-        { course_enrollments:
-          { user_id: user.id, course_role:
-            { can_manage_assignments: true } } } }
-    can :read, Workout, workout_offerings:
-      { course_offering:
-        { course_enrollments:
-          { user_id: user.id } } }
-    can :practice, Workout, is_public: true
+    can :update, Workout do |w|
+      user.managed_workouts.include?(w)
+    end
+
+    # This doesn't affect WorkoutOffering permissions, which are based on enrollments
+    # due dates, and publishing dates.
+    # The workout offering practice and show actions check their own permissions
+    # and use the Workout VIEWS, not controller actions.
+    # So this permission affects ONLY gym access.
+    can [:read, :practice], Workout, is_public: true
   end
 
   def process_workout_offerings(user)
     can :create, WorkoutOffering if user.instructor_course_offerings.any?
-    can :read, WorkoutOffering, course_offering:
-      { course_enrollments:
-        { user_id: user.id } }
+    can [:show, :practice], WorkoutOffering do |o|
+      o.can_be_seen_by? user
+    end
+
     can :manage, WorkoutOffering, course_offering:
       { course_enrollments:
         { user_id: user.id, course_role:

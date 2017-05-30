@@ -34,11 +34,12 @@ class CourseOffering < ActiveRecord::Base
     dependent: :destroy
   has_many :workouts, through: :workout_offerings
   has_many :course_enrollments,
-    -> { includes(:course_role, :user).order(
-      'course_roles.id ASC', 'users.last_name ASC', 'users.first_name ASC') },
+    # -> { includes(:course_role, :user).order(
+    #   'course_roles.id ASC', 'users.last_name ASC', 'users.first_name ASC') },
     inverse_of: :course_offering,
     dependent: :destroy
   has_many :users, through: :course_enrollments
+  has_many :exercise_collections
 
   accepts_nested_attributes_for :term
 

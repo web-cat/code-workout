@@ -388,6 +388,10 @@ tr.fields {
   @extend .action;
 }
 
+ul.ui-autocomplete {
+  z-index: 1100;
+}
+
 // shake animation for form validations and hints
 .shake {
   animation: shake 0.82s cubic-bezier(.36, .07, .19, .97) both;

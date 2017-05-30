@@ -1,0 +1,30 @@
+- show_form = course_offerings && course_offerings.any?
+#new-enrollment-modal.modal.fade{ role: 'dialog', tabindex: '-1' }
+  .modal-dialog.modal-md{ style: 'overflow-y: scroll; max-height:85% margin-top: 50px; margin-bottom:50px;' }
+    .modal-content.searchable
+      .modal-header
+        %h3 Enroll a user
+      .modal-body
+        - if show_form
+          .form-group
+            = label_tag :course_offering, 'Course Offering', class: 'control-label col-xs-3'
+            .col-xs-12.col-md-9
+              // course_offerings is a local variable passed to the partial
+              = select_tag :course_offering, options_for_select(course_offerings.collect{ |co| [co.display_name_with_term, co.id] }), class: 'form-control input-sm', id: 'course-offering'
+          .form-group
+            = label_tag :student, 'Find a student', class: 'control-label col-xs-3'
+            .col-xs-12.col-md-9
+              .ui-widget
+                = text_field_tag :student, nil, id: 'student', class: 'form-control input-sm',
+                  placeholder: "Start typing a name or email address", disabled: true
+          .form-group
+            = label_tag :course_role, 'Course role', class: 'control-label col-xs-3'
+            .col-xs-12.col-md.9
+              = select_tag :course_role, options_for_select(CourseRole.all.reverse.collect{ |role| [role.name, role.id] }),
+                class: 'form-control input-sm', id: 'course-role'
+        - else
+          .text.text-warning
+            There are no course offerings available to enroll in.
+      .modal-footer
+        - if show_form
+          = button_tag 'Submit', id: 'btn-enroll', class: 'btn btn-primary'
