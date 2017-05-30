@@ -17,8 +17,55 @@ class CourseEnrollmentsController < ApplicationController
   end
 
   def roster_upload
-    flash[:notice] = 'This functionality is pending.'
-    redirect_to root_path and return
+    @course_offering = CourseOffering.find params[:course_offering]
+    file = params[:rosterfile]
+    has_headers = !!params[:has_headers] # "true" or "false"
+
+    success = true
+    created_count = 0
+    enrolled_count = 0
+    duplicated_count = 0
+
+    CSV.parse(File.read(file.path), headers: has_headers) do |row|
+      email = row['email']
+      user = User.find_by(email: email)
+      if !user
+        user = User.new(email: email, global_role: GlobalRole.regular_user)
+        user.password = user.email_without_domain
+        user.first_name = row['first_name']
+        user.last_name = row['last_name']
+        if user.save
+          created_count = created_count + 1
+        end
+      end
+
+      if !@course_offering.is_enrolled?(user)
+        course_role_field = row['course_role']
+        if course_role_field.downcase.include?('instructor')
+          course_role = CourseRole.instructor
+        else
+          course_role = CourseRole.student
+        end
+
+        if CourseEnrollment.create(course_offering: @course_offering, user: user, course_role: course_role)
+          enrolled_count = enrolled_count + 1
+        end
+      else
+        duplicated_count = duplicated_count + 1
+      end
+    end
+
+    message = %(
+      <strong>Enrollments complete</strong><br/>
+      #{created_count} new user accounts created<br/>
+      #{enrolled_count} users enrolled<br/>
+      #{duplicated_count} already-enrolled users ignored).html_safe
+    flash[:success] = message
+    redirect_to organization_course_path(
+      id: @course_offering.course.slug,
+      organization_id: @course_offering.course.organization.slug,
+      term_id: @course_offering.term.slug
+    ) and return
   end
 
   private

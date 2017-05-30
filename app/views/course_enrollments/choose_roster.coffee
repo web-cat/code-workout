@@ -8,7 +8,8 @@ $('body').append(
 
 $('#rosterfile').on 'change', ->
   filename = $(this).val()
-  console.log filename
+  console.log(Boolean(filename))
+  $('#btn-upload-roster').prop('disabled', !Boolean(filename))
 
 # attach event handlers for modal display
 $('#roster-upload-modal').on 'hidden.bs.modal', ->

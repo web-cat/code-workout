@@ -5,7 +5,7 @@
       .modal-header
         %h3 Upload a roster
       - if show_form
-        = form_tag roster_upload_course_enrollments_path, multipart: true do
+        = form_tag roster_upload_course_enrollments_path, multipart: true, remote: true do
           .modal-body
             .form-group
               = label_tag :course_offering, 'Course Offering', class: 'control-label col-xs-3'
@@ -17,8 +17,12 @@
               .col-xs-12.col-md-9
                 .ui-widget
                   = file_field_tag 'rosterfile', class: 'form-control input-sm'
+            .form-group
+              = label_tag :has_headers, 'Headers', class: 'checkbox col-xs-3'
+              .col-xs-8
+                = check_box_tag :has_headers, true
           .modal-footer
-            = submit_tag 'Submit', id: 'btn-upload-roster', class: 'btn btn-primary'
+            = submit_tag 'Submit', id: 'btn-upload-roster', class: 'btn btn-primary', disabled: true
       - else
         .modal-body
           .text.text-warning
