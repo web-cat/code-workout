@@ -76,6 +76,7 @@ class Ability
         Organization,
         Term,
         User,
+        UserGroup,
         Course,
         CourseOffering,
         CourseEnrollment,
@@ -170,8 +171,9 @@ class Ability
   # -------------------------------------------------------------
   def process_user_groups(user)
     can :create, UserGroup
-    can [ :members, :add_user ], UserGroup, memberships:
-      { user: user }
+    can [ :members, :add_user ], UserGroup do |group|
+      user.is_a_member_of?(group) || user.global_role.is_admin?
+    end
   end
 
   # -------------------------------------------------------------

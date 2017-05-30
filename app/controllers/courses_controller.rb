@@ -35,7 +35,7 @@ class CoursesController < ApplicationController
   end
 
   # -------------------------------------------------------------
-  # GET /
+  # THIS IS NOT USED. LEAVING THIS ACTION HERE FOR FUTURE USE
   def privileged_users
     @course = Course.find params[:course_id]
     authorize! :privileged_users, @course, message: 'You cannot review privileged users for that course.'
@@ -47,6 +47,19 @@ class CoursesController < ApplicationController
       format.json { render json: @users.to_json }
       format.html
     end
+  end
+
+  # -------------------------------------------------------------
+  # GET /courses/:organization/:course/request_privileged_access/:user
+  def request_privileged_access
+    @requester = User.find params[:user_id]
+    @course = Course.find params[:id]
+    @user_group = @course.user_group
+    @user = User.find('ayaankazerouni@gmail.com')
+    
+    UserGroupMailer.review_access_request(@user, @requester, @user_group, @course).deliver
+
+    redirect_to root_path
   end
 
   # -------------------------------------------------------------

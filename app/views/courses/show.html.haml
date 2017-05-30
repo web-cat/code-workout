@@ -3,9 +3,11 @@
 %h1
   = @course.number_and_name
   %small= @term.display_name
-- if current_user.andand.is_a_member_of?(@course.user_group)
-  = link_to "Review Privileged Users", organization_course_privileged_users_path(@course.organization, @course)
-  %br/
+- if @course_offerings.any? { |co| co.is_staff?(current_user) } && !current_user.andand.is_a_member_of?(@course.user_group)
+  - url = url_for(organization_request_privileged_access_path(organization_id: @course.organization.slug, id: @course.slug, user_id: current_user.id))
+  = button_link 'Request access to course materials', url
+  %br
+  %br
 - if @course_offerings && @course_offerings.any?
   = javascript_include_tag('course')
   %p
@@ -30,7 +32,6 @@
           = 'grader'.pluralize(offering.graders.size)
         != offering.graders.map{ |i| link_to i.display_name,
           user_path(i) }.to_sentence
-    %br
     %br
     - if current_user.andand.is_a_member_of?(@course.user_group)
       = link_to "+ Add a section",

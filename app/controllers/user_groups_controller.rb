@@ -30,4 +30,9 @@ class UserGroupsController < ApplicationController
       render json: { error: message }.to_json and return
     end
   end
+
+  def review_access_request
+    @requester = User.find params[:user_id]
+    @user_group = UserGroup.find params[:user_group_id]
+  end
 end

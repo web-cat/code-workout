@@ -1,0 +1,9 @@
+%h1 Review access request
+
+Request from:
+= link_to @requester.display_name, user_path(@requester.id)
+%br
+For access to:
+= @user_group.name
+%small.text.text-warning
+= @user_group.description
