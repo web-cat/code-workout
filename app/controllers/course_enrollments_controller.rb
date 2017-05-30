@@ -27,20 +27,20 @@ class CourseEnrollmentsController < ApplicationController
     duplicated_count = 0
 
     CSV.parse(File.read(file.path), headers: has_headers) do |row|
-      email = row['email']
+      email = has_headers ? row['email'] : row[0]
       user = User.find_by(email: email)
       if !user
         user = User.new(email: email, global_role: GlobalRole.regular_user)
         user.password = user.email_without_domain
-        user.first_name = row['first_name']
-        user.last_name = row['last_name']
+        user.first_name = has_headers ? row['first_name'] : row[1]
+        user.last_name = has_headers ? row['last_name'] : row[2]
         if user.save
           created_count = created_count + 1
         end
       end
 
       if !@course_offering.is_enrolled?(user)
-        course_role_field = row['course_role']
+        course_role_field = has_headers ? row['course_role'] : row[3]
         if course_role_field.downcase.include?('instructor')
           course_role = CourseRole.instructor
         else
