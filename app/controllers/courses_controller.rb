@@ -63,10 +63,7 @@ class CoursesController < ApplicationController
     )
     @access_request.save
 
-    @users = @user_group.users
-    if @users.blank?
-      @users = User.where(global_role_id: GlobalRole.administrator)
-    end
+    @users = (@user_group.users + User.where(global_role_id: GlobalRole.administrator)).uniq
 
     @users.each do |user|
       UserGroupMailer.review_access_request(user, @access_request, @course).deliver
