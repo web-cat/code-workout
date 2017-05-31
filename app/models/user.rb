@@ -81,6 +81,7 @@ class User < ActiveRecord::Base
 
   has_many :memberships
   has_many :user_groups, through: :memberships
+  has_many :group_access_requests, inverse_of: :user
   has_one :exercise_collection
 
   accepts_nested_attributes_for :memberships

@@ -168,6 +168,12 @@ class Ability
         course.creator_id == user.id || user.is_a_member_of?(course.user_group)
       end
 
+      can :request_privileged_access, Course do |course|
+        user.global_role.is_admin? ||
+        !user.is_a_member_of?(course.user_group) ||
+        user.access_request_for(course.user_group).nil?
+      end
+
       # A user can search for courses if they are signed in
       can :search, Course
     end

@@ -56,21 +56,36 @@ class CoursesController < ApplicationController
   def request_privileged_access
     @requester = User.find params[:requester_id]
     @course = Course.find params[:id]
+
     @user_group = @course.user_group
-    @access_request = GroupAccessRequest.new(
-      user: @requester,
-      user_group: @user_group
-    )
-    @access_request.save
+    if @requester.access_request_for(@user_group).nil?
+      @access_request = GroupAccessRequest.new(
+        user: @requester,
+        user_group: @user_group
+      )
+      @access_request.save
 
-    @users = (@user_group.users + User.where(global_role_id: GlobalRole.administrator)).uniq
+      @users = (@user_group.users + User.where(global_role_id: GlobalRole.administrator)).uniq
 
-    @users.each do |user|
-      UserGroupMailer.review_access_request(user, @access_request, @course).deliver
+      @users.each do |user|
+        UserGroupMailer.review_access_request(user, @access_request, @course).deliver
+      end
+
+      allowed = true
+    else
+      allowed = false
     end
 
     respond_to do |format|
       format.js
+      format.html {
+        if (!allowed)
+          flash[:error] = 'You cannot make a second request for access to that course.'
+          redirect_to root_path
+        else
+          redirect_to root_path
+        end
+      }
     end
   end
 
