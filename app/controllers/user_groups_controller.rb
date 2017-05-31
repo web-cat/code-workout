@@ -31,8 +31,26 @@ class UserGroupsController < ApplicationController
     end
   end
 
+  # Takes the user_group member to a page to approve or deny the request
+  # for access. If the user_group member is not signed in, makes them
+  # sign in first. In the abilities file, this action is 'allowed to everyone'
+  # since we take care of permissions here.
+  # GET /user_groups/:user_group_id/review_access_request/:requester_id/:user_id
   def review_access_request
-    @requester = User.find params[:user_id]
+    @requester = User.find params[:requester_id]
     @user_group = UserGroup.find params[:user_group_id]
+    @user = User.find params[:user_id]
+    if !(current_user && current_user == @user)
+      sign_out if current_user
+      current_url = user_group_review_access_request_path(
+        user_group_id: params[:user_group_id],
+        user_id: params[:user_id],
+        requester_id: params[:requester_id]
+      )
+      login_url = new_user_session_path(redirect_to: current_url)
+
+      flash[:notice] = "Please sign in as #{@user.display_name} to review an access request."
+      redirect_to login_url
+    end
   end
 end

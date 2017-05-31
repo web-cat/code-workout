@@ -55,8 +55,8 @@ class CoursesController < ApplicationController
     @requester = User.find params[:user_id]
     @course = Course.find params[:id]
     @user_group = @course.user_group
-    @user = User.find('ayaankazerouni@gmail.com')
-    
+    @user = User.find('ayaankazerouni@gmail.com') # placeholder
+
     UserGroupMailer.review_access_request(@user, @requester, @user_group, @course).deliver
 
     redirect_to root_path

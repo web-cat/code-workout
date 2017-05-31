@@ -19,6 +19,11 @@ class Ability
     end
     can [:practice, :read], Workout, is_public: true
 
+    # Permissions for reviewing access requests are handled in the
+    # controller action itself, since this action will typically be triggered
+    # from links in emails.
+    can :review_access_request, UserGroup
+
     if user
       # This ability allows admins impersonating other users to revert
       # back to their original user.
