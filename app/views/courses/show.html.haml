@@ -3,11 +3,8 @@
 %h1
   = @course.number_and_name
   %small= @term.display_name
-- if @course_offerings.any? { |co| co.is_staff?(current_user) } && !current_user.andand.is_a_member_of?(@course.user_group)
-  - url = url_for(organization_request_privileged_access_path(organization_id: @course.organization.slug, id: @course.slug, user_id: current_user.id))
-  = button_link 'Request access to course materials', url
-  %br
-  %br
+.privileged-access
+  = render partial: 'privileged_access', locals: { course: @course, is_student: @is_student, is_privileged: @is_privileged, access_request: @access_request }
 - if @course_offerings && @course_offerings.any?
   = javascript_include_tag('course')
   %p

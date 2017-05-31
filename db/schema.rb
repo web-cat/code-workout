@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170530210400) do
+ActiveRecord::Schema.define(version: 20170531150805) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -292,6 +292,18 @@ ActiveRecord::Schema.define(version: 20170530210400) do
     t.boolean "can_edit_system_configuration", default: false, null: false
     t.boolean "builtin",                       default: false, null: false
   end
+
+  create_table "group_access_requests", force: true do |t|
+    t.integer  "user_id"
+    t.integer  "user_group_id"
+    t.boolean  "pending",       default: true
+    t.boolean  "decision"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "group_access_requests", ["user_group_id"], name: "index_group_access_requests_on_user_group_id", using: :btree
+  add_index "group_access_requests", ["user_id"], name: "index_group_access_requests_on_user_id", using: :btree
 
   create_table "identities", force: true do |t|
     t.integer  "user_id",    null: false
