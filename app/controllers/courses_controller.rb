@@ -31,6 +31,8 @@ class CoursesController < ApplicationController
         !current_user.global_role.is_admin? &&
         (@course_offerings.any? { |co| co.is_student? current_user } ||
         !@course_offerings.any? { |co| co.is_staff? current_user })
+      @is_privileged = current_user.is_a_member_of?(@course.user_group)
+      @access_request = current_user.access_request_for(@course.user_group)
     end
   end
 
@@ -52,14 +54,27 @@ class CoursesController < ApplicationController
   # -------------------------------------------------------------
   # GET /courses/:organization/:course/request_privileged_access/:user
   def request_privileged_access
-    @requester = User.find params[:user_id]
+    @requester = User.find params[:requester_id]
     @course = Course.find params[:id]
     @user_group = @course.user_group
-    @user = User.find('ayaankazerouni@gmail.com') # placeholder
+    @access_request = GroupAccessRequest.new(
+      user: @requester,
+      user_group: @user_group
+    )
+    @access_request.save
 
-    UserGroupMailer.review_access_request(@user, @requester, @user_group, @course).deliver
+    @users = @user_group.users
+    if @users.blank?
+      @users = User.where(global_role_id: GlobalRole.administrator)
+    end
 
-    redirect_to root_path
+    @users.each do |user|
+      UserGroupMailer.review_access_request(user, @access_request, @course).deliver
+    end
+
+    respond_to do |format|
+      format.js
+    end
   end
 
   # -------------------------------------------------------------

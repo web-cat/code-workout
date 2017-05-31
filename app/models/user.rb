@@ -149,6 +149,10 @@ class User < ActiveRecord::Base
     user_groups.include?(user_group)
   end
 
+  def access_request_for(user_group)
+    GroupAccessRequest.find_by user: self, user_group: user_group
+  end
+
   # -------------------------------------------------------------
   # Public: Gets a relation representing all of the CourseOfferings that
   # this user can manage. If a course and term are passed,
