@@ -69,6 +69,8 @@ CodeWorkout::Application.routes.draw do
     patch 'exercises/:id/practice' => 'exercises#evaluate',
       as: :exercise_evaluate
     post 'exercises/search' => 'exercises#search', as: :exercises_search
+    get 'exercises/query_data' => 'exercises#query_data', as: :exercises_query_data
+    get 'exercises/:id/download_data' => 'exercises#download_data', as: :exercise_download_data
     # At the bottom, so the routes above take precedence over existing ids
     resources :exercises
 

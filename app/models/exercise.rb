@@ -260,9 +260,8 @@ class Exercise < ActiveRecord::Base
     # If updating this instance method, remember to update the class method
     # Exercise.visible_to_user(u). This method exists so avoid creating a list
     # of visible exercises unnecessarily.
-    self.is_public ||
+    self.is_publicly_available? ||
     self.owners.include?(u) ||
-    self.exercise_collection.andand.is_public? ||
     u.is_a_member_of?(self.exercise_collection.andand.user_group) ||
     self.exercise_collection.andand.owned_by?(u)
   end

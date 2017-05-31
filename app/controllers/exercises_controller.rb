@@ -37,6 +37,17 @@ class ExercisesController < ApplicationController
     end
   end
 
+  def query_data
+    @available_exercises = Exercise.visible_to_user(current_user).select(&:is_coding?)
+  end
+
+  def download_data
+    @exercise = Exercise.find params[:id]
+    submissions = @exercise.exercise_versions.includes(attempts: :prompt_answers)
+    flash[:error] = "This functionality hasn't been finished."
+    redirect_to root_path
+  end
+
 
   # -------------------------------------------------------------
   def search
