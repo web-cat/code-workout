@@ -149,7 +149,7 @@ CodeWorkout::Application.routes.draw do
 
   resources :user_groups, only: [ :new ] do
     get 'members' => 'user_groups#members', as: :members
-    get 'review_access_request' => 'user_groups#review_access_request', as: :review_access_request
+    get 'review_access_request/:requester_id/:user_id' => 'user_groups#review_access_request', as: :review_access_request
     post 'add_user/:user_id' => 'user_groups#add_user', as: :add_user
   end
 
@@ -165,7 +165,7 @@ CodeWorkout::Application.routes.draw do
   #OmniAuth for Facebook
   devise_for :users,
     controllers: { omniauth_callbacks: 'users/omniauth_callbacks', registrations: 'registrations' },
-    skip: [:registrations, :sessions]
+    skip: [:registrations, :sessions] # skipping these because routes are being defined below
   as :user do
     get '/new_password' => 'devise/passwords#new', as: :new_password
     get '/edit_password' => 'devise/passwords#edit', as: :edit_password
@@ -173,7 +173,8 @@ CodeWorkout::Application.routes.draw do
     post '/create_password' => 'devise/passwords#create', as: :create_password
     get '/signup' => 'devise/registrations#new', as: :new_user_registration
     post '/signup' => 'devise/registrations#create', as: :user_registration
-    get '/login' => 'devise/sessions#new', as: :new_user_session
+    # use the overridden login action
+    get '/login' => 'users/sessions#new', as: :new_user_session
     post '/login' => 'devise/sessions#create', as: :user_session
     delete '/logout' => 'devise/sessions#destroy', as: :destroy_user_session
   end
