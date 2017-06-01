@@ -170,7 +170,7 @@ class LtiController < ApplicationController
         if (/\A[0-9][0-9].[0-9][0-9].[0-9][0-9] -/ =~ workout_name).nil?
           @workout = Workout.where('lower(name) = ?', workout_name).andand.first
         else
-          @workout = Workout.where('lower(name) = ?', workout_name[11..workout_name.length])
+          @workout = Workout.where('lower(name) = ?', workout_name[11..workout_name.length]).andand.first
         end
 
         if @workout.blank?
@@ -195,7 +195,7 @@ class LtiController < ApplicationController
 
         @workout_offering = WorkoutOffering.find_by(
           course_offering_id: @course_offering.id,
-          workout_id: @workout.first.id
+          workout_id: @workout.id
         )
         if @workout_offering.blank?
           @workout_offering = WorkoutOffering.new(
