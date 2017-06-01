@@ -31,11 +31,13 @@ class CoursesController < ApplicationController
         !current_user.global_role.is_admin? &&
         (@course_offerings.any? { |co| co.is_student? current_user } ||
         !@course_offerings.any? { |co| co.is_staff? current_user })
+      @is_privileged = current_user.is_a_member_of?(@course.user_group)
+      @access_request = current_user.access_request_for(@course.user_group)
     end
   end
 
   # -------------------------------------------------------------
-  # GET /
+  # THIS IS NOT USED. LEAVING THIS ACTION HERE FOR FUTURE USE
   def privileged_users
     @course = Course.find params[:course_id]
     authorize! :privileged_users, @course, message: 'You cannot review privileged users for that course.'
@@ -46,6 +48,44 @@ class CoursesController < ApplicationController
     respond_to do |format|
       format.json { render json: @users.to_json }
       format.html
+    end
+  end
+
+  # -------------------------------------------------------------
+  # GET /courses/:organization/:course/request_privileged_access/:user
+  def request_privileged_access
+    @requester = User.find params[:requester_id]
+    @course = Course.find params[:id]
+
+    @user_group = @course.user_group
+    if @requester.access_request_for(@user_group).nil?
+      @access_request = GroupAccessRequest.new(
+        user: @requester,
+        user_group: @user_group
+      )
+      @access_request.save
+
+      @users = (@user_group.users + User.where(global_role_id: GlobalRole.administrator)).uniq
+
+      @users.each do |user|
+        UserGroupMailer.review_access_request(user, @access_request, @course).deliver
+      end
+
+      allowed = true
+    else
+      allowed = false
+    end
+
+    respond_to do |format|
+      format.js
+      format.html {
+        if (!allowed)
+          flash[:error] = 'You cannot make a second request for access to that course.'
+          redirect_to root_path
+        else
+          redirect_to root_path
+        end
+      }
     end
   end
 
@@ -92,6 +132,14 @@ class CoursesController < ApplicationController
     )
 
     if @course.save
+      group = UserGroup.create(
+        name: @course.number,
+        description: "Privileged users for #{@course.display_name}."
+      )
+
+      group.course = @course
+      group.add_user_to_group(current_user)
+
       url = url_for(organization_new_course_offering_path(
           course_id: @course.id,
           organization_id: @organization.id,

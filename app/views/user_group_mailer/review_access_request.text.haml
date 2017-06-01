@@ -1,0 +1,16 @@
+= "Hi, #{@user.display_name}"
+\
+- if @course
+  = "#{@requester.display_name} requests access to materials for the course #{@course.display_name}"
+- elsif @user_group
+  = "#{@requester.display_name} requests access to the user group #{@user_group} and all its related materials."
+\
+Please sign in to CodeWorkout and follow the link below to approve or deny this request.
+\
+= url_for(action: 'review_access_request', controller: 'user_groups', requester_id: @requester.id, user_group_id: @user_group.id, user_id: @user.id, only_path: false)
+\
+= "NOTE: Approve the request ONLY if you know that #{@requester.display_name} is a staff member for the course. If you are not sure, you may disregard this email and let another privileged user make the decision."
+\
+Thanks!
+\
+\-- The CodeWorkout team

@@ -81,6 +81,7 @@ class User < ActiveRecord::Base
 
   has_many :memberships
   has_many :user_groups, through: :memberships
+  has_many :group_access_requests, inverse_of: :user
   has_one :exercise_collection
 
   accepts_nested_attributes_for :memberships
@@ -147,6 +148,10 @@ class User < ActiveRecord::Base
 
   def is_a_member_of?(user_group)
     user_groups.include?(user_group)
+  end
+
+  def access_request_for(user_group)
+    GroupAccessRequest.find_by user: self, user_group: user_group
   end
 
   # -------------------------------------------------------------

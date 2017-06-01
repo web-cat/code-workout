@@ -155,12 +155,7 @@ class Exercise < ActiveRecord::Base
             { user: user } } }
       )
 
-    visible_through_user_group = Exercise.joins(exercise_collection: [ user_group: :memberships ])
-      .where(exercise_collection:
-        { user_group:
-          { memberships:
-            { user: user } } }
-      )
+    visible_through_user_group = Exercise.visible_through_user_group(user)
 
     return visible_through_user
       .union(publicly_visible)
@@ -184,6 +179,15 @@ class Exercise < ActiveRecord::Base
     public_exercise = Exercise.where(is_public: true)
 
     return public_exercise.union(public_license)
+  end
+
+  def self.visible_through_user_group(user)
+    Exercise.joins(exercise_collection: [ user_group: :memberships ])
+      .where(exercise_collection:
+        { user_group:
+          { memberships:
+            { user: user } } }
+      )
   end
 
   # -------------------------------------------------------------
@@ -260,9 +264,8 @@ class Exercise < ActiveRecord::Base
     # If updating this instance method, remember to update the class method
     # Exercise.visible_to_user(u). This method exists so avoid creating a list
     # of visible exercises unnecessarily.
-    self.is_public ||
+    self.is_publicly_available? ||
     self.owners.include?(u) ||
-    self.exercise_collection.andand.is_public? ||
     u.is_a_member_of?(self.exercise_collection.andand.user_group) ||
     self.exercise_collection.andand.owned_by?(u)
   end

@@ -11,6 +11,7 @@
 class UserGroup < ActiveRecord::Base
   has_many :memberships
   has_many :users, through: :memberships
+  has_many :group_access_requests, inverse_of: :user_group
   has_one :exercise_collection, inverse_of: :user_group
   has_one :course
 

@@ -14,10 +14,15 @@ class Ability
   def initialize(user)
     # default abilities for anonymous, non-logged-in visitors
     can [:read, :index], [Term, Organization, Course, CourseOffering]
-    can [:index, :search, :random_exercise, :practice, :evaluate], Exercise do |e|
+    can [:index, :search, :random_exercise, :gym_practice, :evaluate], Exercise do |e|
       e.is_publicly_available?
     end
     can [:practice, :read], Workout, is_public: true
+
+    # Permissions for reviewing access requests are handled in the
+    # controller action itself, since this action will typically be triggered
+    # from links in emails.
+    can :review_access_request, UserGroup
 
     if user
       # This ability allows admins impersonating other users to revert
@@ -76,6 +81,7 @@ class Ability
         Organization,
         Term,
         User,
+        UserGroup,
         Course,
         CourseOffering,
         CourseEnrollment,
@@ -162,6 +168,12 @@ class Ability
         course.creator_id == user.id || user.is_a_member_of?(course.user_group)
       end
 
+      can :request_privileged_access, Course do |course|
+        user.global_role.is_admin? ||
+        !user.is_a_member_of?(course.user_group) ||
+        user.access_request_for(course.user_group).nil?
+      end
+
       # A user can search for courses if they are signed in
       can :search, Course
     end
@@ -169,8 +181,10 @@ class Ability
 
   # -------------------------------------------------------------
   def process_user_groups(user)
-    can [ :members, :add_user ], UserGroup, memberships:
-      { user: user }
+    can :create, UserGroup
+    can [ :members, :add_user ], UserGroup do |group|
+      user.is_a_member_of?(group) || user.global_role.is_admin?
+    end
   end
 
   # -------------------------------------------------------------
@@ -226,6 +240,12 @@ class Ability
               { user_id: user.id, course_role:
                 { can_manage_assignments: true } } } } }
       can [:create, :read], Attempt, user_id: user.id
+
+      can :query_data, Exercise
+      can :download_data, Exercise do |e|
+        Exercise.visible_through_user(user).map(&:id).include?(e.id) ||
+        Exercise.visible_through_user_group(user).map(&:id).include?(e.id)
+      end
     end
   end
 

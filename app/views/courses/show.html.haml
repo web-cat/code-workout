@@ -3,9 +3,8 @@
 %h1
   = @course.number_and_name
   %small= @term.display_name
-- if current_user.andand.is_a_member_of?(@course.user_group)
-  = link_to "Review Privileged Users", organization_course_privileged_users_path(@course.organization, @course)
-  %br/
+.privileged-access
+  = render partial: 'privileged_access', locals: { course: @course, is_student: @is_student, is_privileged: @is_privileged, access_request: @access_request }
 - if @course_offerings && @course_offerings.any?
   = javascript_include_tag('course')
   %p
@@ -30,7 +29,6 @@
           = 'grader'.pluralize(offering.graders.size)
         != offering.graders.map{ |i| link_to i.display_name,
           user_path(i) }.to_sentence
-    %br
     %br
     - if current_user.andand.is_a_member_of?(@course.user_group)
       = link_to "+ Add a section",

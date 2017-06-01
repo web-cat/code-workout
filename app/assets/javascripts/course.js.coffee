@@ -18,6 +18,9 @@ requestUpdate = (tab_id) ->
     success: (data) ->
       $('#' + tab_id).data 'needs-update', 'false'
 
+$('#request-privileged-access').on 'click', ->
+  $('.privileged-access').html('<i class="fa fa-spinner fa-spin"></i>')
+
 $('.courses.show').ready ->
   $('a[data-toggle="tab"]').on 'shown.bs.tab', (e) ->
     tab_id = $(e.target).attr('href')

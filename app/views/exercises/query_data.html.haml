@@ -1,0 +1,5 @@
+%h2 Click on an exercise to download submission data for it.
+
+- @available_exercises.each do |ex|
+  .form-group
+    = link_to ex.display_name, exercise_download_data_path(id: ex.id,format: :csv)
