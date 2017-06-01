@@ -31,8 +31,8 @@ class CoursesController < ApplicationController
         !current_user.global_role.is_admin? &&
         (@course_offerings.any? { |co| co.is_student? current_user } ||
         !@course_offerings.any? { |co| co.is_staff? current_user })
-      @is_privileged = current_user.is_a_member_of?(@course.user_group)
-      @access_request = current_user.access_request_for(@course.user_group)
+      @is_privileged = current_user.andand.is_a_member_of?(@course.user_group)
+      @access_request = current_user.andand.access_request_for(@course.user_group)
     end
   end
 
