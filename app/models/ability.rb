@@ -240,6 +240,12 @@ class Ability
               { user_id: user.id, course_role:
                 { can_manage_assignments: true } } } } }
       can [:create, :read], Attempt, user_id: user.id
+
+      can :query_data, Exercise
+      can :download_data, Exercise do |e|
+        Exercise.visible_through_user(user).map(&:id).include?(e.id) ||
+        Exercise.visible_through_user_group(user).map(&:id).include?(e.id)
+      end
     end
   end
 
