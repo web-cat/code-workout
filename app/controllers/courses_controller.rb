@@ -58,6 +58,15 @@ class CoursesController < ApplicationController
     @course = Course.find params[:id]
 
     @user_group = @course.user_group
+    if @user_group.nil?
+      @user_group = UserGroup.new(
+        user_group: @course.number,
+        description: "Privileged Users for #{@course.display_name}."
+      )
+      @user_group.course = @course
+      @user_group.save
+    end
+
     if @requester.access_request_for(@user_group).nil?
       @access_request = GroupAccessRequest.new(
         user: @requester,

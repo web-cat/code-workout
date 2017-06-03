@@ -44,10 +44,10 @@ class UserGroupsController < ApplicationController
     if @access_request && request.get?
       get_review_access_request
     elsif @access_request && request.post?
-      post_review_request_access
+      post_review_request_access and return
     else
       flash[:error] = 'Unidentified access request. No action required.'
-      redirect_to root_path
+      redirect_to root_path and return
     end
   end
 
@@ -73,9 +73,9 @@ class UserGroupsController < ApplicationController
   end
 
   def post_review_request_access
-    if !@user.is_a_member_of?(@user_group) || !@user.global_role.is_admin?
+    if !(@user.is_a_member_of?(@user_group) || @user.global_role.is_admin?)
       flash[:error] = "#{@user.display_name} is not authorized to add members to #{@user_group.name}."
-      redirect_to root_path
+      redirect_to root_path and return
     end
     if params[:decision]
       @user_group.add_user_to_group(@requester)
