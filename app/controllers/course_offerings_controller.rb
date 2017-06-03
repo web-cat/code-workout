@@ -100,7 +100,11 @@ class CourseOfferingsController < ApplicationController
 
   def enroll
     @user = User.find params[:user_id]
-    @course_role = CourseRole.find params[:course_role_id]
+    if params[:course_role_id]
+      @course_role = CourseRole.find params[:course_role_id]
+    else
+      @course_role = CourseRole.student
+    end
 
     success = true
 
