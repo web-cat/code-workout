@@ -255,7 +255,7 @@ class Ability
     can [:read, :update, :destroy], Workout, creator_id: user.id
     can :create, Workout if user.instructor_course_offerings.any?
     can :update, Workout do |w|
-      user.managed_workouts.include?(w)
+      user.managed_workouts.include?(w) || w.creator_id = user.id
     end
 
     # This doesn't affect WorkoutOffering permissions, which are based on enrollments
