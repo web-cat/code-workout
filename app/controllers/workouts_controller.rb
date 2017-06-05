@@ -2,6 +2,7 @@ require 'json'
 require 'date'
 
 class WorkoutsController < ApplicationController
+  include ArrayHelper
   before_action :set_workout, only: [:show, :update, :destroy]
   after_action :allow_iframe, only: [:new, :new_create, :edit, :embed]
   respond_to :html, :js
@@ -120,10 +121,11 @@ class WorkoutsController < ApplicationController
 
     # workouts_with_term is of the form [[CourseOffering, Workout], [CourseOffering, Workout], [CourseOffering, Workout]]
     # we will convert it into a Hash where each key is a term, and each value is an array of Workouts
-    workouts_with_term = @workout_offerings.map { |wo| [wo.course_offering.term, wo.workout] }
-    @default_results = workouts_with_term.group_by(&:first)
-      .map{ |k, a| [k, a.map(&:last)] }
-      .to_h
+    workouts_with_term = @workout_offerings.map { |wo|
+      [wo.course_offering.term, wo.workout]
+    }.group_by(&:first).map{ |k, a| [k, a.map(&:last)] }
+
+    @default_results = array_to_hash(workouts_with_term)
 
     # make sure each term shows unique Workouts
     @default_results.each do |term, workouts|
