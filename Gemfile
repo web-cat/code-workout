@@ -114,9 +114,7 @@ gem 'wannabe_bool'
 gem 'capistrano'
 gem 'capistrano-bundler'
 gem 'capistrano-rails'
-group :production, :staging do
-  gem 'capistrano3-puma', github: 'seuros/capistrano-puma'
-end
+gem 'capistrano3-puma', github: 'seuros/capistrano-puma'
 
 #for multi-color progress bar
 gem 'css3-progress-bar-rails'
