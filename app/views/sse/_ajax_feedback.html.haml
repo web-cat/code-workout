@@ -53,10 +53,11 @@
           %tr
             %td
               - description = tcr.display_description
-              = description
+              = description if tcr.display_description != 'static_analysis'
               - if !tcr.pass
                 - if !description.blank? && !description.include?('hidden')
-                  %br
+                  -if tcr.display_description != 'static_analysis'
+                    %br
                   .out= tcr.execution_feedback
             - if tcr.pass
               %td.pass
