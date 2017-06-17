@@ -159,7 +159,7 @@ class CodingPrompt < ActiveRecord::Base
   def generate_tests(file_name)
     language = exercise_version.exercise.language || "Java"
     tests = ''
-    self.test_cases.each do |test_case|
+    self.test_cases.where("description != ? OR description IS ?",'static_analysis',nil).each do |test_case|
       tests << test_case.to_code(language)
     end
     body = File.read('usr/resources/' + language + '/' + language +
