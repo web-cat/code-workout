@@ -54,6 +54,11 @@ html, body { height: 100%; }
 .CodeMirror-scroll { max-height: 400px; }
 /* .practice .CodeMirror { min-height: 18px * 15; } */
 
+/* Error in Codemirror */
+.error-widget {width: 100%;
+  padding-left: 6px;
+  background: rgba(255, 0, 0, 0.7);
+  font-size: 80%}
 
 /* Right sidebar text */
 
