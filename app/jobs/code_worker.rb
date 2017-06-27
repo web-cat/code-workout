@@ -93,7 +93,9 @@ class CodeWorker
         end  # CSV end
       end
       #static analysis
-      result_sa= execute_java_sa(answer, attempt_dir,answer_lines, answer_text, prompt.test_cases)
+      correct_sa, total_sa = execute_java_sa(answer, attempt_dir,answer_lines, answer_text, prompt.test_cases)
+      correct += correct_sa
+      total += total_sa
       multiplier = 1.0
       attempt.score = correct * multiplier / total
       attempt.experience_earned = attempt.score * exv.exercise.experience / attempt.submit_num
@@ -244,6 +246,7 @@ class CodeWorker
           end
       end
     end
+    return correct,total
   end
 
   # -------------------------------------------------------------
