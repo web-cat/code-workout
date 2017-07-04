@@ -488,7 +488,7 @@ class ExercisesController < ApplicationController
     end
 
     # Tighter restrictions for the moment, should go away
-    authorize! :practice, @exercise
+    # authorize! :gym_practice, @exercise
     if current_user
       @student_drift_user = current_user
     elsif session[:student_drift_user_id]
