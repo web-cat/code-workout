@@ -36,7 +36,6 @@
 # offerings have been given workout offerings.
 #
 class Workout < ActiveRecord::Base
-
   #~ Relationships ............................................................
 
   acts_as_taggable_on :tags, :languages, :styles
@@ -287,7 +286,8 @@ class Workout < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def self.search(terms, user, course = nil)
-    split_terms = terms.nil? ? nil : terms.join('|')
+    split_terms = terms.blank? ? nil : terms.join('|')
+
     if user
       available_workouts = Workout.where(
         id: (Workout.visible_to_user(user) + user.managed_workouts)
@@ -300,24 +300,28 @@ class Workout < ActiveRecord::Base
         workout_offerings = course.course_offerings.joins(:workout_offerings, :term)
           .order('terms.ends_on DESC')
           .flat_map(&:workout_offerings)
-        workouts_to_search = available_workouts.tagged_with(terms, any: true, wild: true, on: :tags) +
-          available_workouts.tagged_with(terms, any: true, wild: true, on: :languages) +
-          available_workouts.tagged_with(terms, any: true, wild: true, on: :styles)
-        if split_terms
-          workouts_to_search = workouts_to_search + available_workouts.where('name regexp (?)', split_terms)
+        if terms.blank?
+          workouts_to_search = available_workouts
+        else
+          workouts_to_search = available_workouts.tagged_with(terms, any: true, wild: true, on: :tags) +
+            available_workouts.tagged_with(terms, any: true, wild: true, on: :languages) +
+            available_workouts.tagged_with(terms, any: true, wild: true, on: :styles)
+          if split_terms
+            workouts_to_search = workouts_to_search + available_workouts.where('name regexp (?)', split_terms)
+          end
         end
         workouts_to_search = workouts_to_search.flat_map(&:id)
 
         workout_offerings = workout_offerings.select{ |wo| workouts_to_search.include?(wo.workout.id) }
 
         # workouts_with_term is of the form
-        # [[Term, Workout], [Term, Workout], [Term, Workout]]
+        # [[CourseOffering, Workout], [CourseOffering, Workout], [CourseOffering, Workout]]
         # we will convert it into a Hash where each key is a term, and each value is an array of Workouts
         # that were offered in that term
         workouts_with_term = workout_offerings.map { |wo| [wo.course_offering.term, wo.workout] }
         results = workouts_with_term.group_by(&:first)
           .map{ |k, a| [k, a.map(&:last)] }
-          .to_h
+        results = array_to_hash(results)
         results.each do |term, workouts|
           results[term] = workouts.uniq
         end
@@ -332,4 +336,24 @@ class Workout < ActiveRecord::Base
       available_workouts.tagged_with(terms, any: true, wild: true, on: :styles) +
       available_workouts.where('name regexp (?)', split_terms).uniq
   end
+end
+
+private
+
+#helper to convert array to hash
+# duplicated from ArrayHelper for the moment
+
+# Converts an array of the form
+# [[k1, val1],[k2, val2]] to a hash of the form
+# { k1: val, k2: val2}
+# val1 and val2 can be inner arrays
+#----------------------------------
+def array_to_hash(a)
+  h = {}
+  a.each do |i|
+    key = i.first
+    value = i.last
+    h[key] = value
+  end
+  h
 end
