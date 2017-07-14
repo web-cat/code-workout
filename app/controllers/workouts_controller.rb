@@ -119,17 +119,17 @@ class WorkoutsController < ApplicationController
       .order('terms.ends_on DESC')
       .flat_map(&:workout_offerings)
 
-    # workouts_with_term is of the form [[CourseOffering, Workout], [CourseOffering, Workout], [CourseOffering, Workout]]
+    # workouts_with_term is of the form [[CourseOffering, WorkoutOffering], [CourseOffering, WorkoutOffering], [CourseOffering, WorkoutOffering]]
     # we will convert it into a Hash where each key is a term, and each value is an array of Workouts
     workouts_with_term = @workout_offerings.map { |wo|
-      [wo.course_offering.term, wo.workout]
+      [wo.course_offering.term, wo]
     }.group_by(&:first).map{ |k, a| [k, a.map(&:last)] }
 
     @default_results = array_to_hash(workouts_with_term)
 
     # make sure each term shows unique Workouts
-    @default_results.each do |term, workouts|
-      @default_results[term] = workouts.uniq
+    @default_results.each do |term, workout_offerings|
+      @default_results[term] = workout_offerings.uniq{ |wo| wo.workout }
     end
     render layout: 'one_column'
   end
@@ -148,11 +148,12 @@ class WorkoutsController < ApplicationController
     terms = escape_javascript(params[:search])
     terms = terms.split(terms.include?(' ') ? /\s*,\s*/ : nil)
     course = params[:course] ? Course.find(params[:course]) : nil
-    @workouts = Workout.search terms, current_user, course
+    searching_offerings = params[:offerings]
+    @workouts = Workout.search terms, current_user, course, searching_offerings
 
     if @workouts.blank?
       @msg = 'Your search did not match any workouts. Try these instead...'
-      @workouts = Workout.search nil, current_user, course
+      @workouts = Workout.search nil, current_user, course, searching_offerings
     end
 
     if @workouts.blank?

@@ -285,7 +285,7 @@ class Workout < ActiveRecord::Base
   #~ Class methods ............................................................
 
   # -------------------------------------------------------------
-  def self.search(terms, user, course = nil)
+  def self.search(terms, user, course, searching_offerings)
     split_terms = terms.blank? ? nil : terms.join('|')
 
     if user
@@ -315,15 +315,25 @@ class Workout < ActiveRecord::Base
         workout_offerings = workout_offerings.select{ |wo| workouts_to_search.include?(wo.workout.id) }
 
         # workouts_with_term is of the form
-        # [[CourseOffering, Workout], [CourseOffering, Workout], [CourseOffering, Workout]]
+        # [[CourseOffering, WorkoutOffering], [CourseOffering, WorkoutOffering], [CourseOffering, WorkoutOffering]]
         # we will convert it into a Hash where each key is a term, and each value is an array of Workouts
         # that were offered in that term
-        workouts_with_term = workout_offerings.map { |wo| [wo.course_offering.term, wo.workout] }
-        results = workouts_with_term.group_by(&:first)
-          .map{ |k, a| [k, a.map(&:last)] }
-        results = array_to_hash(results)
-        results.each do |term, workouts|
-          results[term] = workouts.uniq
+        if searching_offerings
+          workouts_with_term = workout_offerings.map { |wo| [wo.course_offering.term, wo] }
+          results = workouts_with_term.group_by(&:first)
+            .map{ |k, a| [k, a.map(&:last)] }
+          results = array_to_hash(results)
+          results.each do |term, workout_offerings|
+            results[term] = workout_offerings.uniq{ |wo| wo.workout }
+          end
+        else
+          workouts_with_term = workout_offerings.map { |wo| [wo.course_offering.term, wo.workout] }
+          results = workouts_with_term.group_by(&:first)
+            .map{ |k, a| [k, a.map(&:last)] }
+          results = array_to_hash(results)
+          results.each do |term, workouts|
+            results[term] = workouts.uniq
+          end
         end
         return results
       end
