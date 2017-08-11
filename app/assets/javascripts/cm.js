@@ -56,6 +56,29 @@ function prepareEditor() {
   });
 }
 
+function clearLineWidgets(){
+    editor = codemirrors[0].editor
+    editor.widgets.forEach(function(widget){
+        editor.removeLineWidget(widget);
+    })
+    editor.widgets=[]
+    editor.widgets.length=0
+}
+
+function addLineWidget(msg, lineNumber , widgetType){
+    switch (widgetType){
+        case 'error':
+            widgetClass = 'error-widget'
+            break
+        case 'warning':
+        default:
+            widgetClass = 'warning-widget'
+    }
+    widget = $('<div class="'+widgetClass+'"></div>')
+    widget.text(msg)
+    editor.widgets.push(editor.addLineWidget(lineNumber, widget[0]))
+}
+
 $(document).ready(function() {
   prepareEditor();
 

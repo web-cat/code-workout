@@ -60,6 +60,12 @@ html, body { height: 100%; }
   background: rgba(255, 0, 0, 0.7);
   font-size: 80%}
 
+/* Error in Codemirror */
+.warning-widget {width: 100%;
+  padding-left: 6px;
+  background: rgba(249, 255, 157, 0.7);
+  font-size: 80%}
+
 /* Right sidebar text */
 
 .sidebar h2 {
