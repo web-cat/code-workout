@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170531150805) do
+ActiveRecord::Schema.define(version: 20170810205035) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -510,6 +510,7 @@ ActiveRecord::Schema.define(version: 20170531150805) do
     t.integer  "test_case_id",            null: false
     t.integer  "user_id",                 null: false
     t.text     "execution_feedback"
+    t.text     "feedback_line"
     t.datetime "created_at"
     t.datetime "updated_at"
     t.boolean  "pass",                    null: false

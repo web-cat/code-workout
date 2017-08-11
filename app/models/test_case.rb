@@ -85,7 +85,9 @@ class TestCase < ActiveRecord::Base
       test_case: self,
       user: answer.attempt.user,
       coding_prompt_answer: answer,
-      pass: (test_results_array.length == 8 && test_results_array[7].to_i == 1)
+      pass: (test_results_array.length == 8 && test_results_array[7].to_i == 1),
+      feedback_line: test_results_array.length == 8 && test_results_array[1] == 'static_analysis' &&
+          test_results_array[3] == 'no' ? test_results_array[4] : nil
       )
     if !self.negative_feedback.blank?
       tcr.execution_feedback = self.negative_feedback
