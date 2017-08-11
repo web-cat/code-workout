@@ -58,12 +58,18 @@ class CodeWorker
       FileUtils.cp(prompt.test_file_name, attempt_dir)
       File.write(attempt_dir + '/' + prompt.class_name + '.' + lang, code_body)
 
+      answer =
+          attempt.prompt_answers.where(prompt: prompt.acting_as).first.specific
       # This "switch" based on language type needs to be refactored
       # to be more OO
 
       if language == "Java"
-        result = execute_javatest(
+        #static analysis
+        pass_sa = execute_java_sa(answer, answer_text, prompt.test_cases)
+        if pass_sa
+          result = execute_javatest(
           prompt.class_name, attempt_dir, pre_lines, answer_lines)
+        end
       elsif language == "Ruby"
         result = execute_rubytest(
           prompt.class_name, attempt_dir, pre_lines, answer_lines)
@@ -76,13 +82,13 @@ class CodeWorker
       total = 0.0
       correct = 0.0
       total = 0.0
-      answer =
-        attempt.prompt_answers.where(prompt: prompt.acting_as).first.specific
       if !File.exist?(attempt_dir + '/results.csv')
-        answer.error = result
-        # puts "CODE-ERROR-FEEDBACK", answer.error, "CODE-ERROR-FEEDBACK"
+        if result
+          answer.error = result
+          # puts "CODE-ERROR-FEEDBACK", answer.error, "CODE-ERROR-FEEDBACK"
+          answer.save
+        end
         total = 1.0
-        answer.save
       else
         CSV.foreach(attempt_dir + '/results.csv') do |line|
           # find test id
@@ -92,10 +98,7 @@ class CodeWorker
           total += test_case.weight
         end  # CSV end
       end
-      #static analysis
-      correct_sa, total_sa = execute_java_sa(answer, attempt_dir,answer_lines, answer_text, prompt.test_cases)
-      correct += correct_sa
-      total += total_sa
+
       multiplier = 1.0
       attempt.score = correct * multiplier / total
       attempt.experience_earned = attempt.score * exv.exercise.experience / attempt.submit_num
@@ -188,7 +191,7 @@ class CodeWorker
   end
 
 
-  def execute_java_sa(answer, attempt_dir, answer_lines, answer_text, test_cases)
+  def execute_java_sa(answer, answer_text, test_cases)
     total = 0
     correct = 0
     #remove comments from code
@@ -223,11 +226,10 @@ class CodeWorker
           # not_allowed = Regexp.new not_allowed+"\\s*\\(" if tc.expected_output.include? '('
           if lnum.any?
             line = Array.new(8)
-            if !tc.negative_feedback.blank?
-              tc.negative_feedback << ' Lines: ' + lnum.join(", ")
-            else
-              line[6] = 'The use of "'+ not_allowed_text +'" is not allowed. Lines: ' + lnum.join(", ")
-            end
+            line[1] = 'static_analysis'
+            line[3] = 'no'
+            line[4] = lnum.join(" ")
+            line[6] = 'The use of "'+ not_allowed_text +'" is not allowed.'
             line[7] = 0
             correct += tc.record_result(answer, line)
             total += tc.weight
@@ -246,7 +248,7 @@ class CodeWorker
           end
       end
     end
-    return correct,total
+    return correct == total
   end
 
   # -------------------------------------------------------------
