@@ -17,11 +17,11 @@ echo updating system packages
 apt-add-repository -y ppa:brightbox/ruby-ng >/dev/null 2>&1
 apt-get -y update >/dev/null 2>&1
 
-install 'development tools' build-essential  dkms curl libxslt-dev libpq-dev python-dev python-pip python-feedvalidator python-software-properties python-sphinx libmariadbclient-dev libcurl4-gnutls-dev libevent-dev libffi-dev libssl-dev stunnel4 libsqlite3-dev
+install 'development tools' build-essential  dkms curl libxslt-dev libpq-dev python-dev python-pip python-feedvalidator python-software-properties python-sphinx libmariadbclient-dev libcurl4-gnutls-dev libevent-dev libffi-dev libssl-dev stunnel4 libsqlite3-dev libgmp3-dev
 
-install Ruby ruby2.3 ruby2.3-dev
-update-alternatives --set ruby /usr/bin/ruby2.3 >/dev/null 2>&1
-update-alternatives --set gem /usr/bin/gem2.3 >/dev/null 2>&1
+install Ruby ruby2.4 ruby2.4-dev
+update-alternatives --set ruby /usr/bin/ruby2.4 >/dev/null 2>&1
+update-alternatives --set gem /usr/bin/gem2.4 >/dev/null 2>&1
 
 echo installing Bundler
 gem install bundler -N >/dev/null 2>&1
