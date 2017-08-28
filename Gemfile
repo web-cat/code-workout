@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-gem 'rails'
+gem 'rails', '~> 4.2'
 gem 'bootstrap-sass', '~> 3.2.0'
 gem 'jquery-rails'
 gem 'jquery-ui-rails'
@@ -19,7 +19,7 @@ gem 'nokogiri'
 gem 'csv_shaper'
 gem 'andand', github: 'raganwald/andand'
 gem 'foreigner'
-gem 'responders', '~> 1.1' # Can't move above 1.1 until migrating to rails 4.2+
+gem 'responders' # Can't move above 1.1 until migrating to rails 4.2+
 gem 'friendly_id', '~> 5'
 gem 'active_record-acts_as'
 gem 'acts_as_list'
@@ -33,7 +33,7 @@ gem 'active_record_union'
 
 # For JSON support
 gem 'rabl'
-gem 'oj'
+gem 'oj', '~> 2.16'
 gem 'oj_mimic_json'
 
 group :assets do
@@ -50,7 +50,6 @@ group :development, :test do
   gem 'rspec-rails'
   gem 'annotate'
   gem 'rails-erd', github: 'voormedia/rails-erd'
-  gem 'immigrant'
   gem 'faker'
   # Needed for debugging support in Aptana Studio.  Disabled, since these
   # two gems do not support Ruby 2.0 yet :-(.
@@ -83,7 +82,7 @@ gem 'omniauth-facebook'
 gem 'omniauth-google-oauth2'
 gem 'omniauth-cas'
 gem 'cancancan'
-gem 'activeadmin', github: 'activeadmin'
+gem 'activeadmin'
 gem "active_admin_import" , github: 'activeadmin-plugins/active_admin_import'
 gem 'active_skin', github: 'rstgroup/active_skin'
 gem 'exception_handler'
@@ -102,7 +101,7 @@ gem 'momentjs-rails', '>= 2.9.0'
 gem 'bootstrap3-datetimepicker-rails', '~> 4.17.37'
 
 #gem for improved WHERE querying
-gem 'squeel'
+gem 'squeel', '~> 1.2'
 
 #for nested forms
 gem 'cocoon'
