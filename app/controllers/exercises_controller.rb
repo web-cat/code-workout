@@ -325,11 +325,6 @@ class ExercisesController < ApplicationController
       else
         @user_time_limit = nil
       end
-
-      if !@workout_offering.course_offering.is_enrolled?(current_user)
-        redirect_to root_path,
-          flash: { error: 'You are not enrolled in that course offering, so you cannot attempt its workouts.' } and return
-      end
     else
       @workout_offering = nil
       if params[:workout_id]
@@ -339,7 +334,7 @@ class ExercisesController < ApplicationController
 
     if @workout_offering
       # Re-check workout-offering permission in case the URL was entered directly.
-      authorize! :practice, @workout_offering, message: 'You cannot access that exercise because it belongs to an unpublished workout offering.'
+      authorize! :practice, @workout_offering, message: 'You cannot access that exercise because it belongs to an unpublished workout offering, or a workout offering you are not enrolled in.'
       authorize! :practice, @exercise, message: 'You are not authorized to practice that exercise at this time.'
     else
       authorize! :gym_practice, @exercise, message: 'You cannot practice that exercise because it is not present in the Gym.'
