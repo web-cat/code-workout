@@ -141,7 +141,7 @@ CodeWorkout::Application.routes.draw do
   end
 
   # routes for course_enrollments
-  resources :course_enrollments, only: [ :new ] do
+  resources :course_enrollments, only: [ :new, :destroy ] do
     collection do
       get 'choose_roster'
       post 'roster_upload'
