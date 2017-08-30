@@ -31,6 +31,14 @@
       %small#org-hint.text.text-warning
 
     .form-group.new-org{ style: 'display: none' }
+      = label_tag :is_hidden, 'Hide Course?', class: 'control-label col-xs-3'
+      .col-xs-1
+        = check_box_tag 'is_hidden', 'is_hidden', false, id: 'org-is-hidden'
+      %small.col-xs-6.text.text-warning
+        Check this box if you are creating a test organization. This will hide the organization
+        in lists of organizations visible to the public.
+
+    .form-group.new-org{ style: 'display: none' }
       %button.col-xs-offset-1#btn-submit-org.btn.btn-primary Submit
 
 .course-setup{ style: 'display: none' }

@@ -98,7 +98,8 @@ include AbbrHelper
     @organization = Organization.new(
       name: to_title_case(params[:name]),
       abbreviation: params[:abbreviation],
-      slug: params[:abbreviation].downcase
+      slug: params[:abbreviation].downcase,
+      is_hidden: params[:is_hidden]
     )
 
     if @organization.save
