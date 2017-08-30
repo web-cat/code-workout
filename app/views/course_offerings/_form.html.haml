@@ -4,7 +4,7 @@
   = f.semantic_errors
   = f.inputs do
     = f.input :label, input_html: { placeholder: "e.g. MWF 10:00am" }
-    = f.input :term, collection: Term.where('starts_on > (?)', DateTime.now)
+    = f.input :term, collection: Term.where('ends_on > (?)', DateTime.now)
     = f.input :url
     = f.input :self_enrollment_allowed, label: false
     %br
