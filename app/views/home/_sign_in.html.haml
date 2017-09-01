@@ -1,13 +1,13 @@
 .list-group
-  = link_to user_omniauth_authorize_path(:facebook),
+  = link_to user_facebook_omniauth_authorize_path,
   class: 'btn btn-social btn-facebook list-group-item' do
     %i.fa.fa-facebook
     Sign in with Facebook
-  = link_to user_omniauth_authorize_path(:google_oauth2),
+  = link_to user_google_oauth2_omniauth_authorize_path,
   class: 'btn btn-social btn-google-plus list-group-item' do
     %i.fa.fa-google
     Sign in with Google
-  = link_to user_omniauth_authorize_path(:cas),
+  = link_to user_cas_omniauth_authorize_path,
   class: 'btn btn-social btn-vt list-group-item' do
     %span VT
     Sign in with Virginia Tech CAS
