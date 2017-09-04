@@ -74,6 +74,8 @@ class LtiController < ApplicationController
       term_slug = params[:custom_term]
       course_name = params[:context_title]
       course_slug = course_number.gsub(/[^a-zA-Z0-9]/, '').downcase
+      assignment_id = params[:custom_canvas_assignment_id]
+      lms_assignment_id = "#{@lms_instance.id}-#{assignment_id}"
 
       # Finding appropriate course offerings and workout offerings from the workout
       resource_link_title = params[:resource_link_title]
@@ -118,7 +120,8 @@ class LtiController < ApplicationController
         workout_name: workout_name,
         user_id: @user.id,
         course_id: @course.slug,
-        context: @tp.context_instructor?,
+        is_instructor: @tp.context_instructor?,
+        lms_assignment_id: lms_assignment_id,
         label: params[:custom_label], # can be nil
         lis_outcome_service_url: params[:lis_outcome_service_url],
         lis_result_sourcedid: params[:lis_result_sourcedid]
