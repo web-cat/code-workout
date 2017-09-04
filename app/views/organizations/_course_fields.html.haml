@@ -26,5 +26,13 @@
       %i#course-valid.fa.fa-question-circle{ aria_hidden: 'true' }
     %small#course-hint.text.text-warning
 
+  .form-group.new-course
+    = label_tag :is_hidden, 'Hide Course?', class: 'control-label col-xs-3'
+    .col-xs-1
+      = check_box_tag 'is_hidden', 'is_hidden', false, id: 'course-is-hidden'
+    %small.col-xs-6.text.text-warning
+      Check this box if you are creating a test course. This will hide the course
+      in lists of courses visible to the public.
+
   .form-group.new-course{ style: 'display: none' }
     %button.col-xs-offset-1#btn-submit-course.btn.btn-primary Submit

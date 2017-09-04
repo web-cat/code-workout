@@ -89,6 +89,9 @@ html, body { height: 100%; }
   margin-bottom: 15px;
   margin-left: 16.666666666666664%;
   padding-left: 8px;
+  &.sign-in-form {
+    margin-left: 0;
+  }
 }
 
 /* for consistent font awesome icons */

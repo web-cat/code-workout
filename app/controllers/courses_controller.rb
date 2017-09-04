@@ -137,7 +137,8 @@ class CoursesController < ApplicationController
       name: create_params[:name],
       number: create_params[:number],
       slug: create_params[:slug],
-      organization: @organization
+      organization: @organization,
+      is_hidden: create_params[:is_hidden]
     )
 
     if @course.save
