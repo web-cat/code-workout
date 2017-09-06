@@ -136,19 +136,17 @@ CodeWorkout::Application.routes.draw do
     match 'upload_roster/:action', controller: 'upload_roster',
       as: :upload_roster, via: [:get, :post]
     post 'generate_gradebook' => :generate_gradebook, as: :gradebook
-    get 'add_workout' => :add_workout, as: :add_workout
+    post 'add_workout/:workout_id' => 'course_offerings#add_workout', as: :add_workout
     post 'store_workout/:id' => :store_workout, as: :store_workout
     get '/search_enrolled_users' => :search_enrolled_users, as: :search_enrolled_users
   end
 
-  # routes for course_enrollments
   resources :course_enrollments, only: [ :new, :destroy ] do
     collection do
       get 'choose_roster'
       post 'roster_upload'
     end
   end
-
 
   resources :user_groups, only: [ :new ] do
     get 'members' => 'user_groups#members', as: :members

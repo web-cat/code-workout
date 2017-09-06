@@ -106,17 +106,18 @@ class CourseOfferingsController < ApplicationController
       @course_role = CourseRole.student
     end
 
-    success = true
-
     if @course_offering &&
+      !current_user.is_enrolled?(@course_offering) &&
       (@course_offering.can_enroll? ||
         current_user.manages?(@course_offering))
 
-      success = CourseEnrollment.create(
+      co = CourseEnrollment.new(
         course_offering: @course_offering,
         user: @user,
         course_role: @course_role
       )
+
+      success = co.save
     else
       success = false
     end
@@ -231,13 +232,44 @@ class CourseOfferingsController < ApplicationController
   # -------------------------------------------------------------
   # GET /course_offerings/:id/add_workout
   def add_workout
-    @workouts = Workout.all
-    @wkts = []
-    @course_offering.workouts.each do |wks|
-      @wkts << wks
+    if request.get?
+      # not sure if this is actually used or not, route removed
+      @workouts = Workout.all
+      @wkts = []
+      @course_offering.workouts.each do |wks|
+        @wkts << wks
+      end
+      @workouts = @workouts - @wkts
+      @course_offering
+    elsif request.post?
+      @workout = Workout.find params[:workout_id]
+      @course_offering = CourseOffering.find params[:course_offering_id]
+      lti_params = params[:lti_params]
+      @workout_offering = WorkoutOffering.new(
+        workout: @workout,
+        course_offering: @course_offering,
+        opening_date: DateTime.now,
+        soft_deadline: nil,
+        hard_deadline: nil,
+        lms_assignment_id: lti_params[:lms_assignment_id]
+      )
+
+      success = @workout_offering.save
+
+      practice_url = url_for(
+        organization_workout_offering_practice_path(
+          id: @workout_offering.id,
+          lis_outcome_service_url: lti_params[:lis_outcome_service_url],
+          lis_result_sourcedid: lti_params[:lis_result_sourcedid],
+          organization_id: @course_offering.course.organization.slug,
+          term_id: @course_offering.term.slug,
+          course_id: @course_offering.course.slug,
+          lti_launch: true
+        )
+      )
+
+      render json: { success: success, practice_url: practice_url } and return
     end
-    @workouts = @workouts - @wkts
-    @course_offering
   end
 
 

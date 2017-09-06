@@ -135,6 +135,8 @@ class Ability
 
       can :unenroll, CourseOffering
 
+      can :add_workout, CourseOffering
+
       # A user can manage a CourseOffering if they are enrolled in that
       # offering and have a CourseRole where can_manage_course? is true.
       # can [:manage], CourseOffering,

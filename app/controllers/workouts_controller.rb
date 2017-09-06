@@ -377,17 +377,51 @@ class WorkoutsController < ApplicationController
 
       workout_offerings = workout_offerings.flatten.uniq
 
-      enrolled_workout_offerings =
-        workout_offerings.select { |wo| @user.is_enrolled?(wo.course_offering) }
-      @workout_offering = enrolled_workout_offerings.first
+      if workout_offerings.blank?
+        # couldn't find workout_offerings by workout_name or by lms_assignment_id
+        if @workout.blank?
+          # no workout. stop trying, return an error message
+          @message = 'This workout does not exist. Please contact your instructor.'
+          render 'lti/error' and return
+        end
+
+        # is the user enrolled in an offering of the course?
+        enrolled_course_offerings = @user.course_offerings_for_term(@term, @course)
+        if enrolled_course_offerings.blank?
+          # let the user choose to enroll in a course_offering
+          @available_workout_offerings = []
+          @lms_assignment_id = lms_assignment_id
+          @available_course_offerings = CourseOffering.where(course: @course, term: @term)
+            .select{ |co| co.self_enrollment_allowed? }
+          render 'course_offerings/available_offerings' and return
+        else
+          # have a course_offering, create the workout_offering
+          @course_offering = enrolled.course_offerings.first
+          @workout_offering = WorkoutOffering.create(
+            course_offering: @course_offering,
+            workout: @workout,
+            opening_date: DateTime.now,
+            soft_deadline: nil,
+            hard_deadline: nil,
+            lms_assignment_id: lms_assignment_id
+          )
+        end
+      else
+        # workout_offerings exist, find the one from the user's course_offering
+        enrolled_workout_offerings =
+          workout_offerings.andand.select { |wo| @user.is_enrolled?(wo.course_offering) }
+        @workout_offering = enrolled_workout_offerings.andand.first
+      end
 
       if @workout_offering.blank?
-        # show the student a list of courses in which they can enroll
+        # didn't find a single enrolled workout_offering
+        # let the user choose to enroll in a course_offering
         @available_workout_offerings = workout_offerings.uniq { |wo|
           wo.course_offering
         }.select { |wo|
           wo.course_offering.self_enrollment_allowed?
         }
+        @available_course_offerings = @available_workout_offerings.map(&:course_offering)
         render 'course_offerings/available_offerings' and return
       end
     end
