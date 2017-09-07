@@ -306,6 +306,7 @@ class WorkoutsController < ApplicationController
     @user = User.find params[:user_id]
     @term = Term.find params[:term_id]
     @course = Course.find params[:course_id]
+    @lti_launch = true
     lms_assignment_id = params[:lms_assignment_id]
 
     # Find all workouts with the specified name
@@ -393,10 +394,10 @@ class WorkoutsController < ApplicationController
           @lms_assignment_id = lms_assignment_id
           @available_course_offerings = CourseOffering.where(course: @course, term: @term)
             .select{ |co| co.self_enrollment_allowed? }
-          render 'course_offerings/available_offerings' and return
+          render layout: 'one_column' and return
         else
           # have a course_offering, create the workout_offering
-          @course_offering = enrolled.course_offerings.first
+          @course_offering = enrolled_course_offerings.first
           @workout_offering = WorkoutOffering.create(
             course_offering: @course_offering,
             workout: @workout,
@@ -422,7 +423,7 @@ class WorkoutsController < ApplicationController
           wo.course_offering.self_enrollment_allowed?
         }
         @available_course_offerings = @available_workout_offerings.map(&:course_offering)
-        render 'course_offerings/available_offerings' and return
+        render layout: 'one_column' and return
       end
     end
 
