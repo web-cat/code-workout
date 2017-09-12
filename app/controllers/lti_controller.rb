@@ -74,6 +74,7 @@ class LtiController < ApplicationController
       term_slug = params[:custom_term]
       course_name = params[:context_title]
       course_slug = course_number.gsub(/[^a-zA-Z0-9]/, '').downcase
+      # TODO: Use LTI assignment id if canvas is unavailable
       assignment_id = params[:custom_canvas_assignment_id]
       lms_assignment_id = "#{@lms_instance.id}-#{assignment_id}"
 
@@ -108,6 +109,7 @@ class LtiController < ApplicationController
         end
       end
 
+      # TODO: Consider creating new terms as appropriate
       @term = Term.find_by(slug: term_slug) || Term.current_term
       if @term.blank?
         @message = 'Term not found.'

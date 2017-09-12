@@ -316,8 +316,10 @@ class WorkoutsController < ApplicationController
     if params[:is_instructor].to_b
       workout_offerings = nil
       if @workout
+        # TODO: Search by term here
         workout_offerings = @user.managed_workout_offerings_in_term(@workout, @course, @term)
       else
+        # TODO: Do this first
         workout_offerings = WorkoutOffering.where(lms_assignment_id: lms_assignment_id)
       end
 
@@ -341,6 +343,9 @@ class WorkoutsController < ApplicationController
 
           @course_offerings << course_offering
         end
+        # TODO: Revise this as well.
+        # From the workouts used in this course with the specified name,
+        # CLONE the most recent one
         if @workout
           @course_offerings.each do |co|
             @workout_offering = WorkoutOffering.create(
@@ -366,6 +371,7 @@ class WorkoutsController < ApplicationController
       end
     else
       workout_offerings = nil
+      # TODO: Figure out the search process by workout name for a student
       if @workout.blank? # didn't find a workout by name, so check for workout_offerings by lms_assignment_id
         workout_offerings = WorkoutOffering.where(lms_assignment_id: lms_assignment_id)
       else

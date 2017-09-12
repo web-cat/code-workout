@@ -244,6 +244,7 @@ class CourseOfferingsController < ApplicationController
     elsif request.post?
       @workout = Workout.find params[:workout_id]
       @course_offering = CourseOffering.find params[:course_offering_id]
+      # TODO: Find the instructor, go through the search procedure for a workout
       lti_params = params[:lti_params]
       @workout_offering = WorkoutOffering.new(
         workout: @workout,
