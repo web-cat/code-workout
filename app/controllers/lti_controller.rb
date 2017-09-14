@@ -74,8 +74,7 @@ class LtiController < ApplicationController
       term_slug = params[:custom_term]
       course_name = params[:context_title]
       course_slug = course_number.gsub(/[^a-zA-Z0-9]/, '').downcase
-      # TODO: Use LTI assignment id if canvas is unavailable
-      assignment_id = params[:custom_canvas_assignment_id]
+      assignment_id = params[:ext_lti_assignment_id] || params[:custom_canvas_assignment_id]
       lms_assignment_id = "#{@lms_instance.id}-#{assignment_id}"
 
       # Finding appropriate course offerings and workout offerings from the workout

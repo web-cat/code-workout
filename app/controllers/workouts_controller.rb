@@ -309,21 +309,17 @@ class WorkoutsController < ApplicationController
     @lti_launch = true
     lms_assignment_id = params[:lms_assignment_id]
 
-    # Find all workouts with the specified name
-    workouts = Workout.where('lower(name) = ?', params[:workout_name].downcase)
-    @workout = workouts.andand.first
-
     if params[:is_instructor].to_b
-      workout_offerings = nil
-      if @workout
-        # TODO: Search by term here
-        workout_offerings = @user.managed_workout_offerings_in_term(@workout, @course, @term)
-      else
-        # TODO: Do this first
-        workout_offerings = WorkoutOffering.where(lms_assignment_id: lms_assignment_id)
+      workout_offerings = WorkoutOffering.where(lms_assignment_id: lms_assignment_id)
+      if workout_offerings.blank?
+        workout_offerings = @user.managed_workout_offerings_in_term(params[:workout_name].downcase, @course, @term)
       end
 
       workout_offerings = workout_offerings.andand.flatten.uniq
+      found_workout = workout_offerings.andand
+        .uniq{ |wo| wo.workout }.andand
+        .sort_by{ |wo| wo.course_offering.start_date }.andand
+        .last.andand.map &:workout
 
       if workout_offerings.blank?
         @course_offerings = @user.managed_course_offerings(course: @course, term: @term)
@@ -343,20 +339,13 @@ class WorkoutsController < ApplicationController
 
           @course_offerings << course_offering
         end
-        # TODO: Revise this as well.
-        # From the workouts used in this course with the specified name,
-        # CLONE the most recent one
-        if @workout
-          @course_offerings.each do |co|
-            @workout_offering = WorkoutOffering.create(
-              workout: @workout,
-              course_offering: co,
-              opening_date: DateTime.now,
-              soft_deadline: nil,
-              hard_deadline: nil,
-              lms_assignment_id: lms_assignment_id
-            )
-          end
+        if found_workout
+          redirect_to(organization_clone_workout_path(
+            course_id: @course.slug,
+            term_id: @term.slug,
+            organization_id: @course.organization.slug,
+            workout_id: found_workout.id
+          )) and return
         else
           redirect_to organization_new_workout_path(
             lti_launch: true,

@@ -218,7 +218,14 @@ class User < ActiveRecord::Base
       where(course_roles:
         { can_manage_course: true }, course_offering:
           { course: course, term: term }
-      ).map { |e| e.course_offering.workout_offerings.where(workout: workout) }
+      ).map { |e|
+        if workout.kind_of?(String)
+          workouts_with_name = Workout.where('lower(name) = ?', workout)
+          return e.course_offering.workout_offerings.where{ workout_id.in(workouts_with_name.select{id})}
+        else
+          return e.course_offering.workout_offerings.where(workout: workout)
+        end
+      }
   end
 
   # Get all workouts that have been offered in a course
