@@ -242,20 +242,42 @@ class CourseOfferingsController < ApplicationController
       @workouts = @workouts - @wkts
       @course_offering
     elsif request.post?
-      @workout = Workout.find params[:workout_id]
+      workout_name = params[:workout_name]
       @course_offering = CourseOffering.find params[:course_offering_id]
-      # TODO: Find the instructor, go through the search procedure for a workout
-      lti_params = params[:lti_params]
-      @workout_offering = WorkoutOffering.new(
-        workout: @workout,
-        course_offering: @course_offering,
-        opening_date: DateTime.now,
-        soft_deadline: nil,
-        hard_deadline: nil,
-        lms_assignment_id: lti_params[:lms_assignment_id]
-      )
+      instructor = @course_offering.instructors.andand.first
+      workout_offerings = instructor
+        .managed_workout_offerings_in_term(workout_name.downcase, @course_offering.course, @course_offering.term)
+      @workout_offering = workout_offerings.andand
+        .sort_by{ |wo| wo.created_at }.andand
+        .last
 
-      success = @workout_offering.save
+      if !@workout_offering
+        workout_offerings = instructor
+          .managed_workout_offerings_in_term(workout_name.downcase, @course_offering.course, nil)
+        found_workout = workout_offerings.andand
+          .uniq{ |wo| wo.workout }.andand
+          .sort_by{ |wo| wo.course_offering.start_date }.andand
+          .last.andand.map(&:workout)
+
+        if !found_workout
+          render json: { success: false } and return
+        end
+
+        @workout = found_workout.dup
+        @workout.save
+
+        lti_params = params[:lti_params]
+        @workout_offering = WorkoutOffering.new(
+          workout: @workout,
+          course_offering: @course_offering,
+          opening_date: DateTime.now,
+          soft_deadline: nil,
+          hard_deadline: nil,
+          lms_assignment_id: lti_params[:lms_assignment_id]
+        )
+
+        success = @workout_offering.save
+      end
 
       practice_url = url_for(
         organization_workout_offering_practice_path(

@@ -136,7 +136,7 @@ CodeWorkout::Application.routes.draw do
     match 'upload_roster/:action', controller: 'upload_roster',
       as: :upload_roster, via: [:get, :post]
     post 'generate_gradebook' => :generate_gradebook, as: :gradebook
-    post 'add_workout/:workout_id' => 'course_offerings#add_workout', as: :add_workout
+    post 'add_workout/:workout_name' => 'course_offerings#add_workout', as: :add_workout
     post 'store_workout/:id' => :store_workout, as: :store_workout
     get '/search_enrolled_users' => :search_enrolled_users, as: :search_enrolled_users
   end

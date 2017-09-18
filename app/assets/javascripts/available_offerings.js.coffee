@@ -19,7 +19,7 @@ $('.workouts.find_offering').ready ->
   # the workout_offering practice page
   $('.course-offering').on 'click', ->
     course_offering_id = $(this).data 'course-offering-id'
-    workout_id = $(this).data 'workout-id'
+    workout_name = $(this).data 'workout-name'
     user_id = $(this).data 'user-id'
     enroll_url = "/course_offerings/#{course_offering_id}/enroll"
     $.ajax
@@ -30,7 +30,7 @@ $('.workouts.find_offering').ready ->
       success: (data)->
         wo_data =
           course_offering_id: course_offering_id,
-          workout_id: workout_id
+          workout_name: workout_name
           lti_params:
             lms_assignment_id: window.codeworkout.lms_assignment_id
             lis_outcome_service_url: window.codeworkout.lis_outcome_service_url
@@ -40,7 +40,7 @@ $('.workouts.find_offering').ready ->
 
 create_workout_offering = (wo_data) ->
   $.ajax
-    url: "/course_offerings/#{wo_data.course_offering_id}/add_workout/#{wo_data.workout_id}"
+    url: "/course_offerings/#{wo_data.course_offering_id}/add_workout/#{wo_data.workout_name}"
     type: 'post'
     dataType: 'json'
     data: wo_data

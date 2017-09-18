@@ -316,10 +316,10 @@ class WorkoutsController < ApplicationController
       end
 
       workout_offerings = workout_offerings.andand.flatten.uniq
-      found_workout = workout_offerings.andand
+      @workout = workout_offerings.andand
         .uniq{ |wo| wo.workout }.andand
         .sort_by{ |wo| wo.course_offering.start_date }.andand
-        .last.andand.map &:workout
+        .last.andand.map(&:workout)
 
       if workout_offerings.blank?
         @course_offerings = @user.managed_course_offerings(course: @course, term: @term)
@@ -339,12 +339,12 @@ class WorkoutsController < ApplicationController
 
           @course_offerings << course_offering
         end
-        if found_workout
+        if @workout
           redirect_to(organization_clone_workout_path(
             course_id: @course.slug,
             term_id: @term.slug,
             organization_id: @course.organization.slug,
-            workout_id: found_workout.id
+            workout_id: @workout.id
           )) and return
         else
           redirect_to organization_new_workout_path(
@@ -359,30 +359,13 @@ class WorkoutsController < ApplicationController
         @workout_offering = workout_offerings.first
       end
     else
-      workout_offerings = nil
-      # TODO: Figure out the search process by workout name for a student
-      if @workout.blank? # didn't find a workout by name, so check for workout_offerings by lms_assignment_id
-        workout_offerings = WorkoutOffering.where(lms_assignment_id: lms_assignment_id)
-      else
-        # Find workout offerings in the specified course and term
-        workout_offerings ||= @workout.workout_offerings.joins(:course_offering).
-          where(course_offering:
-            { term: @term, course: @course }
-          )
-      end
-
-      workout_offerings = workout_offerings.flatten.uniq
+      # first search by lms_assignment_id
+      workout_offerings = WorkoutOffering.where(lms_assignment_id: lms_assignment_id)
 
       if workout_offerings.blank?
-        # couldn't find workout_offerings by workout_name or by lms_assignment_id
-        if @workout.blank?
-          # no workout. stop trying, return an error message
-          @message = 'This workout does not exist. Please contact your instructor.'
-          render 'lti/error' and return
-        end
-
         # is the user enrolled in an offering of the course?
         enrolled_course_offerings = @user.course_offerings_for_term(@term, @course)
+
         if enrolled_course_offerings.blank?
           # let the user choose to enroll in a course_offering
           @available_workout_offerings = []
@@ -391,26 +374,41 @@ class WorkoutsController < ApplicationController
             .select{ |co| co.self_enrollment_allowed? }
           render layout: 'one_column' and return
         else
-          # have a course_offering, create the workout_offering
+          # have a course_offering, use the instructor to find appropriate workout_offerings
+          # by workout name
           @course_offering = enrolled_course_offerings.first
-          @workout_offering = WorkoutOffering.create(
-            course_offering: @course_offering,
-            workout: @workout,
-            opening_date: DateTime.now,
-            soft_deadline: nil,
-            hard_deadline: nil,
-            lms_assignment_id: lms_assignment_id
-          )
+          instructor = @course_offering.instructors.first
+          workout_offerings = instructor
+            .managed_workout_offerings_in_term(params[:workout_name].downcase, @course, @term)
+          if workout_offerings.blank?
+            # no current workout_offerings, check all semesters
+            old_workout_offerings = instructor
+              .managed_workout_offerings_in_term(params[:workout_name].downcase, @course, nil)
+            found_workout = old_workout_offerings.andand
+              .uniq{ |wo| wo.workout }.andand
+              .sort_by{ |wo| wo.course_offering.start_date }.andand
+              .last.andand.map(&:workout)
+            if !found_workout
+              @message = "The workout named #{params[:workout_name]} does not exist or is not linked with this LMS assignment. Please contact your instructor."
+              render 'lti/error' and return
+            else
+              # the workout exists, so we let course_offerings#add_workout take care of things
+              # after the user selects the course_offering they would like to enroll in
+              @available_workout_offerings = []
+              @available_course_offerings = CourseOffering.where(course: @course, term: @term)
+                .select{ |co| co.self_enrollment_allowed? }
+              render layout: 'one_column' and return
+            end
+          end
         end
-      else
-        # workout_offerings exist, find the one from the user's course_offering
-        enrolled_workout_offerings =
-          workout_offerings.andand.select { |wo| @user.is_enrolled?(wo.course_offering) }
-        @workout_offering = enrolled_workout_offerings.andand.first
       end
 
-      if @workout_offering.blank?
-        # didn't find a single enrolled workout_offering
+      workout_offerings = workout_offerings.flatten.uniq
+      enrolled_workout_offerings = workout_offerings.andand.select { |wo| @user.is_enrolled?(wo.course_offering) }
+
+      if enrolled_workout_offerings.any?
+        @workout_offering = enrolled_workout_offerings.andand.first
+      else
         # let the user choose to enroll in a course_offering
         @available_workout_offerings = workout_offerings.uniq { |wo|
           wo.course_offering

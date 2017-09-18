@@ -190,7 +190,6 @@ class User < ActiveRecord::Base
     end
   end
 
-
   # -------------------------------------------------------------
   def instructor_course_offerings
     course_enrollments.where(course_role: CourseRole.instructor).
@@ -214,11 +213,21 @@ class User < ActiveRecord::Base
   # Get all workout offerings from course offerings that the
   # user manages, for the specified course and term
   def managed_workout_offerings_in_term(workout, course, term)
-    course_enrollments.joins(course_offering: :workout_offerings).
-      where(course_roles:
-        { can_manage_course: true }, course_offering:
-          { course: course, term: term }
-      ).map { |e|
+    if !term.nil?
+      enrollments = course_enrollments.joins(course_offering: :workout_offerings).
+        where(course_roles:
+          { can_manage_course: true }, course_offering:
+            { course: course, term: term }
+        )
+      else
+        enrollments = course_enrollments.joins(course_offering: :workout_offerings).
+          where(course_roles:
+            { can_manage_course: true }, course_offering:
+              { course: course }
+            )
+      end
+
+      enrollments.map { |e|
         if workout.kind_of?(String)
           workouts_with_name = Workout.where('lower(name) = ?', workout)
           return e.course_offering.workout_offerings.where{ workout_id.in(workouts_with_name.select{id})}
