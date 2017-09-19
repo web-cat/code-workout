@@ -247,52 +247,61 @@ class CourseOfferingsController < ApplicationController
       instructor = @course_offering.instructors.andand.first
       workout_offerings = instructor
         .managed_workout_offerings_in_term(workout_name.downcase, @course_offering.course, @course_offering.term)
-      @workout_offering = workout_offerings.andand
-        .sort_by{ |wo| wo.created_at }.andand
-        .last
 
-      if !@workout_offering
+      found_workout = workout_offerings.first.andand.workout # same course and term, same workout
+      @workout = found_workout
+
+      if !found_workout
+        # no other offering this semester is offering the workout, so look in past semesters
         workout_offerings = instructor
           .managed_workout_offerings_in_term(workout_name.downcase, @course_offering.course, nil)
         found_workout = workout_offerings.andand
           .uniq{ |wo| wo.workout }.andand
           .sort_by{ |wo| wo.course_offering.start_date }.andand
           .last.andand.map(&:workout)
-
-        if !found_workout
-          render json: { success: false } and return
-        end
-
-        @workout = found_workout.dup
-        @workout.save
-
-        lti_params = params[:lti_params]
-        @workout_offering = WorkoutOffering.new(
-          workout: @workout,
-          course_offering: @course_offering,
-          opening_date: DateTime.now,
-          soft_deadline: nil,
-          hard_deadline: nil,
-          lms_assignment_id: lti_params[:lms_assignment_id]
-        )
-
-        success = @workout_offering.save
       end
 
-      practice_url = url_for(
-        organization_workout_offering_practice_path(
-          id: @workout_offering.id,
-          lis_outcome_service_url: lti_params[:lis_outcome_service_url],
-          lis_result_sourcedid: lti_params[:lis_result_sourcedid],
-          organization_id: @course_offering.course.organization.slug,
-          term_id: @course_offering.term.slug,
-          course_id: @course_offering.course.slug,
-          lti_launch: true
-        )
+      if !found_workout
+        # nothing seems to have ever offered workouts matching this description
+        # be the first
+        workouts = Workout.where('lower(name) = ?', workout_name.downcase)
+        found_workout = workouts.first
+      end
+
+      if !found_workout
+        # workout doesn't seem to exist
+        @message = "The workout with name '#{workout_name}' does not exist. Please contact your instructor."
+        render 'lti/error' and return
+      end
+
+      @workout ||= found_workout.deep_clone!
+
+      lti_params = params[:lti_params]
+      @workout_offering = WorkoutOffering.new(
+        workout: @workout,
+        course_offering: @course_offering,
+        opening_date: DateTime.now,
+        soft_deadline: nil,
+        hard_deadline: nil,
+        lms_assignment_id: params[:lti_params][:lms_assignment_id]
       )
 
-      render json: { success: success, practice_url: practice_url } and return
+      @workout_offering.save
     end
+
+    practice_url = url_for(
+      organization_workout_offering_practice_path(
+        id: @workout_offering.id,
+        lis_outcome_service_url: params[:lti_params][:lis_outcome_service_url],
+        lis_result_sourcedid: params[:lti_params][:lis_result_sourcedid],
+        organization_id: @course_offering.course.organization.slug,
+        term_id: @course_offering.term.slug,
+        course_id: @course_offering.course.slug,
+        lti_launch: true
+      )
+    )
+
+    render json: { practice_url: practice_url } and return
   end
 
 

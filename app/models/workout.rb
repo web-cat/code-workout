@@ -276,6 +276,17 @@ class Workout < ActiveRecord::Base
     return workout_offerings
   end
 
+  def deep_clone!
+    clone = self.dup
+    clone.save
+    self.exercises.each do |e|
+      exercise_workout = ExerciseWorkout.new(workout: clone, exercise: e)
+      exercise_workout.save
+    end
+
+    return clone
+  end
+
   # -------------------------------------------------------------
   def score_for(user, workout_offering = nil)
     workout_scores.where(user: user, workout_offering: workout_offering).

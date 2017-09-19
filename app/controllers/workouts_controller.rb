@@ -361,6 +361,19 @@ class WorkoutsController < ApplicationController
     else
       # first search by lms_assignment_id
       workout_offerings = WorkoutOffering.where(lms_assignment_id: lms_assignment_id)
+      if workout_offerings.blank?
+        if params[:label] # label is specified, we can narrow down to a single course offering
+          @course_offering = CourseOffering.find_by(course: @course, term: @term, label: params[:label])
+          if @course_offering
+            workouts_with_name = Workout.where('lower(name) = ?', params[:workout_name].downcase)
+            workout_offerings = @course_offering.workout_offerings.where{ workout_id.in(workouts_with_name.select{id}) }
+            @workout_offering = workout_offerings.first
+          else
+            @message = 'Your course offering is not yet defined. Please contact your instructor.'
+            render 'lti/error' and return
+          end
+        end
+      end
 
       if workout_offerings.blank?
         # is the user enrolled in an offering of the course?
@@ -368,7 +381,7 @@ class WorkoutsController < ApplicationController
 
         if enrolled_course_offerings.blank?
           # let the user choose to enroll in a course_offering
-          @available_workout_offerings = []
+          @available_offerings = []
           @lms_assignment_id = lms_assignment_id
           @available_course_offerings = CourseOffering.where(course: @course, term: @term)
             .select{ |co| co.self_enrollment_allowed? }
@@ -376,7 +389,7 @@ class WorkoutsController < ApplicationController
         else
           # have a course_offering, use the instructor to find appropriate workout_offerings
           # by workout name
-          @course_offering = enrolled_course_offerings.first
+          @course_offering ||= enrolled_course_offerings.first
           instructor = @course_offering.instructors.first
           workout_offerings = instructor
             .managed_workout_offerings_in_term(params[:workout_name].downcase, @course, @term)
@@ -403,20 +416,24 @@ class WorkoutsController < ApplicationController
         end
       end
 
-      workout_offerings = workout_offerings.flatten.uniq
-      enrolled_workout_offerings = workout_offerings.andand.select { |wo| @user.is_enrolled?(wo.course_offering) }
+      if !@workout_offering
+        # don't have a workout_offering, but may have narrowed it down
+        workout_offerings = workout_offerings.flatten.uniq
+        enrolled_workout_offerings = workout_offerings.andand.select { |wo| @user.is_enrolled?(wo.course_offering) }
 
-      if enrolled_workout_offerings.any?
-        @workout_offering = enrolled_workout_offerings.andand.first
-      else
-        # let the user choose to enroll in a course_offering
-        @available_workout_offerings = workout_offerings.uniq { |wo|
-          wo.course_offering
-        }.select { |wo|
-          wo.course_offering.self_enrollment_allowed?
-        }
-        @available_course_offerings = @available_workout_offerings.map(&:course_offering)
-        render layout: 'one_column' and return
+        if enrolled_workout_offerings.any?
+          @workout_offering = enrolled_workout_offerings.andand.first
+        else
+          # let the user choose to enroll in a course_offering
+          @existing_workout_offerings = workout_offerings.uniq { |wo|
+            wo.course_offering
+          }.select { |wo|
+            wo.course_offering.self_enrollment_allowed?
+          }.map(&:id)
+          @available_offerings = CourseOffering.where(course: @course, term: @term)
+            .select{ |co| co.self_enrollment_allowed? }
+          render layout: 'one_column' and return
+        end
       end
     end
 
