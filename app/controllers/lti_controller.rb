@@ -223,8 +223,7 @@ class LtiController < ApplicationController
       # Users accessing the workout after it has been created will be enrolled here
       role = @tp.context_instructor? ? CourseRole.instructor : CourseRole.student
 
-      if @tp.context_student? &&
-        @course_offering &&
+      if @course_offering &&
         @course_offering.can_enroll? &&
         !@course_offering.is_enrolled?(current_user)
 
