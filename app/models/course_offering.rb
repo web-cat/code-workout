@@ -183,4 +183,47 @@ class CourseOffering < ActiveRecord::Base
     user && course_enrollments.where(user: user).first.andand.course_role
   end
 
+  def add_workout(workout, workout_offering_options={})
+    found_workout = nil
+    if workout.kind_of?(String)
+      instructor = self.instructors.first
+      instructor_workout_offerings = instructor
+        .managed_workout_offerings_in_term(workout.downcase, self.course, self.term)
+      found_workout = instructor_workout_offerings.first.andand.workout # same course and term, same workout
+
+      if !found_workout
+        # no other offering this semester is offering the workout, so look in past semesters
+        instructor_workout_offerings = instructor
+          .managed_workout_offerings_in_term(workout.downcase, self.course, nil)
+        found_workout = instructor_workout_offerings.andand
+          .uniq{ |wo| wo.workout }.andand
+          .sort_by{ |wo| wo.course_offering.start_date }.andand
+          .last.andand.map(&:workout)
+      end
+
+      if !found_workout
+        # nothing seems to have ever offered workouts matching this description,
+        # so be the first
+        workouts = Workout.where('lower(name) = ?', workout.downcase)
+        found_workout = workouts.first
+      end
+
+      if !found_workout
+        return nil
+      end
+    end
+
+    new_workout = found_workout.deep_clone!
+    workout_offering = WorkoutOffering.new(
+      workout: found_workout,
+      course_offering: self,
+      opening_date: workout_offering_options[:opening_date] || DateTime.now,
+      soft_deadline: workout_offering_options[:soft_deadline],
+      hard_deadline: workout_offering_options[:hard_deadline],
+      lms_assignment_id: workout_offering_options[:lms_assignment_id]
+    )
+    workout_offering.save
+
+    return workout_offering
+  end
 end

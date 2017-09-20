@@ -244,49 +244,10 @@ class CourseOfferingsController < ApplicationController
     elsif request.post?
       workout_name = params[:workout_name]
       @course_offering = CourseOffering.find params[:course_offering_id]
-      instructor = @course_offering.instructors.andand.first
-      workout_offerings = instructor
-        .managed_workout_offerings_in_term(workout_name.downcase, @course_offering.course, @course_offering.term)
-
-      found_workout = workout_offerings.first.andand.workout # same course and term, same workout
-      @workout = found_workout
-
-      if !found_workout
-        # no other offering this semester is offering the workout, so look in past semesters
-        workout_offerings = instructor
-          .managed_workout_offerings_in_term(workout_name.downcase, @course_offering.course, nil)
-        found_workout = workout_offerings.andand
-          .uniq{ |wo| wo.workout }.andand
-          .sort_by{ |wo| wo.course_offering.start_date }.andand
-          .last.andand.map(&:workout)
-      end
-
-      if !found_workout
-        # nothing seems to have ever offered workouts matching this description
-        # be the first
-        workouts = Workout.where('lower(name) = ?', workout_name.downcase)
-        found_workout = workouts.first
-      end
-
-      if !found_workout
-        # workout doesn't seem to exist
-        @message = "The workout with name '#{workout_name}' does not exist. Please contact your instructor."
-        render 'lti/error' and return
-      end
-
-      @workout ||= found_workout.deep_clone!
-
-      lti_params = params[:lti_params]
-      @workout_offering = WorkoutOffering.new(
-        workout: @workout,
-        course_offering: @course_offering,
-        opening_date: DateTime.now,
-        soft_deadline: nil,
-        hard_deadline: nil,
+      workout_offering_options = {
         lms_assignment_id: params[:lti_params][:lms_assignment_id]
-      )
-
-      @workout_offering.save
+      }
+      @workout_offering = @course_offering.add_workout(workout_name, workout_offering_options)
     end
 
     practice_url = url_for(

@@ -7,9 +7,8 @@
 
   .container
     = javascript_include_tag('available_offerings')
-
+    %h1 Section selection
     - if @available_offerings.any?
-      %h1 Section selection
       %p Click on your course section to proceed to the assignment.
       %ul.list-group
         - @available_offerings.each do |o|
