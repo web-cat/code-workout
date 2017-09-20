@@ -5,6 +5,15 @@
   Courses from
   = @organization.name
 
+- if @organization.is_hidden
+  %p.text.text-warning.row
+    %small.col-md-5
+      - subject = "CodeWorkout - request to display hidden organization #{@organization.name}"
+      This is a hidden organization; these are typically used for testing purposes.
+      You may distribute this page's URL, but it will not appear publicly in CodeWorkout.
+      If you think this organization should NOT be marked hidden, please
+      = mail_to('edwards@cs.vt.edu', 'email us.', subject: subject)
+
 %p
   Switch to a different term:
   = select_tag 'term_id',
@@ -15,26 +24,31 @@
 %ul
   - if @organization.courses.any?
     - @organization.courses.each do |course|
-      %li
-        = link_to course.number_and_name,
-          organization_course_path(@organization, course, @term)
-        %table.table.table-striped{ style: 'width: auto' }
-          %thead
-            %th Term
-            %th Section
-            %th Instructor(s)
-            %th Enroll
-          %tbody
-            - course.course_offerings.each do |o|
-              %tr
-                %td= o.term.display_name
-                %td= link_to o.display_name,
-                  organization_course_path(o.course.organization,
-                  o.course, o.term)
-                %td!= o.instructors.map{ |i| link_to i.display_name,
-                  user_path(i) }.to_sentence
-                %td= render partial: "course_offerings/self_enrollment",
-                  locals: { off: o }
+      - show_course = !course.is_hidden || current_user.andand.is_a_member_of?(course.user_group)
+      - if show_course
+        %li
+          = link_to course.number_and_name,
+            organization_course_path(@organization, course, @term)
+          - if course.is_hidden
+            %small.text.text-warning
+              Hidden course, displayed because you have course privileges.
+          %table.table.table-striped{ style: 'width: auto' }
+            %thead
+              %th Term
+              %th Section
+              %th Instructor(s)
+              %th Enroll
+            %tbody
+              - course.course_offerings.each do |o|
+                %tr
+                  %td= o.term.display_name
+                  %td= link_to o.display_name,
+                    organization_course_path(o.course.organization,
+                    o.course, o.term)
+                  %td!= o.instructors.map{ |i| link_to i.display_name,
+                    user_path(i) }.to_sentence
+                  %td= render partial: "course_offerings/self_enrollment",
+                    locals: { off: o }
   - else
     %li
       This organization does not have any courses in

@@ -1,0 +1,40 @@
+- show_form = course_offerings && course_offerings.any?
+#roster-upload-modal.modal.fade{ role: 'dialog', tabindex: '-1' }
+  .modal-dialog.modal-md{ style: 'overflow-y: scroll; max-height:85% margin-top: 50px; margin-bottom:50px;' }
+    .modal-content.searchable
+      .modal-header
+        %h3 Upload a roster
+      - if show_form
+        = form_tag roster_upload_course_enrollments_path, multipart: true, remote: true do
+          .modal-body
+            .form-group
+              = label_tag :course_offering, 'Course Offering', class: 'control-label col-xs-3'
+              .col-xs-12.col-md-9
+                // course_offerings is a local variable passed to the partial
+                = select_tag :course_offering, options_for_select(course_offerings.collect{ |co| [co.display_name_with_term, co.id] }), class: 'form-control input-sm', id: 'course-offering'
+            .form-group
+              %small.text.text-warning
+                :markdown
+                  Choose a CSV file with four columns. If you have a header row, you **must** have the following names:
+
+                  * email
+                  * first_name (can be empty)
+                  * last_name (can be empty)
+                  * course_role
+
+                  If you do not have a header row, columns will be interpreted in the above order.
+                  Users that are already enrolled in the course offering will be ignored.
+              = label_tag :rosterfile, 'Choose a file', class: 'control-label col-xs-3'
+              .col-xs-12.col-md-9
+                .ui-widget
+                  = file_field_tag 'rosterfile', class: 'form-control input-sm'
+            .form-group
+              = label_tag :has_headers, 'Has headers?', class: 'checkbox col-xs-3'
+              .col-xs-8
+                = check_box_tag :has_headers, true
+          .modal-footer
+            = submit_tag 'Submit', id: 'btn-upload-roster', class: 'btn btn-primary', disabled: true
+      - else
+        .modal-body
+          .text.text-warning
+            There are no course offerings to create enrollments for.

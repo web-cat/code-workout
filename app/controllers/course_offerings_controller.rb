@@ -24,6 +24,11 @@ class CourseOfferingsController < ApplicationController
   def new
     @organization = Organization.find(params[:organization_id])
     @course = Course.find(params[:course_id])
+    @url = organization_course_offering_create_path(
+      organization_id: params[:organization_id],
+      course_id: params[:course_id]
+    )
+    @term = params[:term_id].nil? ? nil : Term.find(params[:term_id])
     if params[:new_course]
       flash.now[:success] = "#{@course.name} was successfully created in #{@organization.name}"
     end
@@ -33,36 +38,29 @@ class CourseOfferingsController < ApplicationController
   # -------------------------------------------------------------
   # GET /course_offerings/1/edit
   def edit
-    @uploaded_roster = UploadedRoster.new
+    # @uploaded_roster = UploadedRoster.new
+    @course_offering = CourseOffering.find params[:id]
+    @url = course_offering_path(@course_offering)
   end
 
   # -------------------------------------------------------------
   # GET /course_offerings/1/students
-  def search_students
+  def search_enrolled_users
     @course_offering = CourseOffering.find params[:id]
-    @terms = escape_javascript(params[:terms])
+    @terms = escape_javascript(params[:term])
     @terms = @terms.split(@terms.include?(',') ? /\s*,\s*/ : nil)
-    @course_offering_students = User.where(id: @course_offering.students)
-    @students = User.none
-    @terms.each do |term|
-      @students = @students + @course_offering_students
-        .where("first_name like ? or last_name like ? or email like ?", "%#{term}%", "%#{term}%", "%#{term}%")
-    end
-
-    if @students.blank?
-      @msg = 'Your search returned no results. Here are all the students enrolled in the course.'
-      @students = @course_offering_students
+    @results = User.none
+    if params[:notin].andand.to_b
+      searchable = User.where('id not in (?)', @course_offering.users.blank? ? '' : @course_offering.users.map(&:id))
     else
-      @msg = "#{@students.count} results returned:"
+      searchable = @course_offering.users
+    end
+    @terms.each do |term|
+      @results = @results + searchable
+        .where("lower(first_name) like ? or lower(last_name) like ? or lower(email) like ?", "%#{term.downcase}%", "%#{term.downcase}%", "%#{term.downcase}%")
     end
 
-    if @students.blank?
-      @msg = 'No students are enrolled in this course offering.'
-    end
-
-    respond_to do |format|
-      format.js
-    end
+    render json: @results.uniq.to_json and return
   end
 
   # -------------------------------------------------------------
@@ -101,22 +99,46 @@ class CourseOfferingsController < ApplicationController
   # FIXME:  Not really sure this is the best place to do it.
 
   def enroll
-    if @course_offering &&
-      @course_offering.can_enroll? &&
-      CourseEnrollment.create(
-      course_offering: @course_offering,
-      user: current_user,
-      course_role: CourseRole.student)
-
-      redirect_to organization_course_path(
-        @course_offering.course.organization,
-        @course_offering.course,
-        @course_offering.term),
-        notice: 'You are now enrolled in ' +
-          "#{@course_offering.display_name}."
+    @user = User.find params[:user_id]
+    if params[:course_role_id]
+      @course_role = CourseRole.find params[:course_role_id]
     else
-      flash[:warning] = 'Unable to enroll in that course.'
-      redirect_to root_path
+      @course_role = CourseRole.student
+    end
+
+    success = true
+
+    if @course_offering &&
+      (@course_offering.can_enroll? ||
+        current_user.manages?(@course_offering))
+
+      success = CourseEnrollment.create(
+        course_offering: @course_offering,
+        user: @user,
+        course_role: @course_role
+      )
+    else
+      success = false
+    end
+
+    respond_to do |format|
+      format.html {
+        if success
+          redirect_to organization_course_path(
+            @course_offering.course.organization,
+            @course_offering.course,
+            @course_offering.term),
+            notice: 'You are now enrolled in ' +
+              "#{@course_offering.display_name}."
+        else
+          flash[:warning] = 'Unable to enroll in that course.'
+          redirect_to root_path
+        end
+      }
+
+      format.json {
+        render json: { success: (success.kind_of?(CourseEnrollment) ? true : success) }
+      }
     end
   end
 

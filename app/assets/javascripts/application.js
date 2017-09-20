@@ -21,6 +21,7 @@
 //= require js-routes
 //= require codemirror
 //= require codemirror/modes/clike
+//= require codemirror/modes/yaml
 //= require bootstrap-wysihtml5
 //= require cocoon
 //= require cm
@@ -28,6 +29,7 @@
 //= require moment
 //= require bootstrap-datetimepicker
 //= require mustache.min
+//= require student_search
 //= require workout_form
 //= require workout_new_or_existing
 //= require flatpickr

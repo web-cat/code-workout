@@ -18,7 +18,11 @@ ActiveAdmin.register CourseOffering do
       link_to c.label, admin_course_offering_path(c)
     end
     column 'Self-enroll?', :self_enrollment_allowed
-    column(:url) { |c| link_to c.url, c.url }
+    column(:url) { |c|
+      if c.url
+        link_to c.url, c.url
+      end
+    }
     column :created_at
     actions
   end

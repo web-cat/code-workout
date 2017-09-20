@@ -123,7 +123,7 @@ class WorkoutScore < ActiveRecord::Base
     if !workout_offering
       nil
     end
-    time_limit = workout_offering.time_limit_for(user)
+    time_limit = workout_offering.andand.time_limit_for(user)
 
     if time_limit
       now = Time.zone.now

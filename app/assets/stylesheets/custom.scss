@@ -89,6 +89,9 @@ html, body { height: 100%; }
   margin-bottom: 15px;
   margin-left: 16.666666666666664%;
   padding-left: 8px;
+  &.sign-in-form {
+    margin-left: 0;
+  }
 }
 
 /* for consistent font awesome icons */
@@ -205,6 +208,12 @@ ul.wysihtml5-toolbar li {
     text-align: center;
     .xp { display: block; font-size: 75%; color: black; }
     .xp:after { content: 'xp'; }
+  }
+
+  .right {
+    float: right;
+    padding-right: 8px;
+    padding-bottom: 3px;
   }
 
   .body, .info { padding: 0 63px 0 9px; width: 100%; }
@@ -339,11 +348,29 @@ input {
     min-width: 10ch;
   }
 
+  &.url {
+    min-width: 10ch;
+  }
+
   &[type=number]::-webkit-inner-spin-button,
   &[type=number]::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
   }
+}
+
+tr.fields {
+  &.extension td.course-offering {
+    min-width: 10ch;
+  }
+
+  td.remove {
+    text-align: center;
+  }
+}
+
+#workout-offering-fields th, #student-extension-fields th {
+  font-size: small;
 }
 
 .btn-group a {
@@ -362,6 +389,10 @@ input {
 
 .ui-menu-item {
   @extend .action;
+}
+
+ul.ui-autocomplete {
+  z-index: 1100;
 }
 
 // shake animation for form validations and hints

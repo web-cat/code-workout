@@ -3,6 +3,7 @@ class ExercisesController < ApplicationController
   require 'oauth/request_proxy/rack_request'
 
   load_and_authorize_resource
+  skip_authorize_resource only: :practice
 
   #~ Action methods ...........................................................
   after_action :allow_iframe, only: :practice
@@ -10,7 +11,11 @@ class ExercisesController < ApplicationController
 
   # GET /exercises
   def index
-    @exercises = Exercise.where(is_public: true)
+    if current_user
+      @exercises = Exercise.visible_to_user(current_user)
+    else
+      @exercises = Exercise.publicly_visible
+    end
   end
 
 
@@ -32,23 +37,45 @@ class ExercisesController < ApplicationController
     end
   end
 
+  def query_data
+    @available_exercises = Exercise.visible_through_user(current_user).union(Exercise.visible_through_user_group(current_user)).uniq.select(&:is_coding?)
+  end
+
+  def download_data
+    resultset = Exercise.joins(exercise_versions: { attempts: :prompt_answers })
+      .joins('left join coding_prompt_answers on prompt_answers.actable_id = coding_prompt_answers.id')
+      .select('attempts.user_id, exercises.name as exercise_name, exercises.id as exercise_id,
+        exercise_versions.id as exercise_version_id, exercise_versions.version as version_no,
+        coding_prompt_answers.id as answer_id, coding_prompt_answers.answer, coding_prompt_answers.error,
+        attempts.id as attempt_id, attempts.submit_time, attempts.submit_num, attempts.score')
+      .where(id: params[:id])
+    attributes = %w{ user_id exercise_name exercise_id exercise_version_id version_no answer_id answer error attempt_id submit_time submit_num score }
+
+    data = CSV.generate(headers: true) do |csv|
+      csv << attributes
+      resultset.each do |submission|
+        csv << attributes.map { |a| submission.attributes[a] }
+      end
+    end
+
+    respond_to do |format|
+      format.csv { send_data data, filename: "X#{params[:id]}-submissions.csv" }
+    end
+  end
 
   # -------------------------------------------------------------
   def search
     @terms = escape_javascript(params[:search])
     @terms = @terms.split(@terms.include?(',') ? /\s*,\s*/ : nil)
-#    @wos = Workout.search @terms
     @wos = []
     @exs = Exercise.search(@terms, current_user)
     @msg = ''
-#    if @wos.length == 0 && @exs.length == 0
-    if @exs.length == 0
+    if @exs.blank?
       @msg = 'No exercises were found for your search request. ' \
         'Try these instead...'
-#      @wos = Workout.order('RANDOM()').limit(4)
-      @exs = Exercise.all.shuffle.first(16)
+      @exs = Exercise.publicly_visible.shuffle.first(16)
     end
-    if @exs.length == 0
+    if @exs.blank?
       @msg = 'No public exercises are available to search right now. ' \
         'Wait for contributors to add more.'
     end
@@ -73,12 +100,15 @@ class ExercisesController < ApplicationController
     # @coding_exercise = CodingQuestion.new
     # @languages = Tag.where(tagtype: Tag.language).pluck(:tag_name)
     # @areas = Tag.where(tagtype: Tag.area).pluck(:tag_name)
+    @exercise_version = ExerciseVersion.new
   end
 
 
   # -------------------------------------------------------------
   # GET /exercises/1/edit
   def edit
+    @exercise_version = @exercise.current_version
+    @text_representation = @exercise_version.text_representation || ExerciseRepresenter.new(@exercise).to_hash.to_yaml
   end
 
 
@@ -201,7 +231,6 @@ class ExercisesController < ApplicationController
       @ex.save!
       @version = ExerciseVersion.new(exercise: @ex,creator_id:
                  User.find_by(email: version['creator']).andand.id,
-                 exercise: @ex,
                  position:1)
       @version.save!
       version['prompts'].each do |prompt|
@@ -227,7 +256,16 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # POST /exercises/upload_create
   def upload_create
-    hash = YAML.load(File.read(params[:form][:file].path))
+    if params[:exercise_version] && params[:exercise_version]['text_representation'].present?
+      hash = YAML.load(params[:exercise_version]['text_representation'])
+    else
+      hash = YAML.load(File.read(params[:form][:file].path))
+    end
+
+    if !hash.kind_of?(Array)
+      hash = [hash]
+    end
+
     exercises = ExerciseRepresenter.for_collection.new([]).from_hash(hash)
     exercises.each do |e|
       if !e.save
@@ -274,7 +312,7 @@ class ExercisesController < ApplicationController
         notice: 'Choose an exercise to practice!' and return
     end
 
-    authorize! :practice, @exercise
+    # authorize! :practice, @exercise
 
     @student_user = params[:review_user_id] ? User.find(params[:review_user_id]) : current_user
 
@@ -287,16 +325,19 @@ class ExercisesController < ApplicationController
       else
         @user_time_limit = nil
       end
-
-      if !@workout_offering.course_offering.is_enrolled?(current_user)
-        redirect_to root_path,
-          flash: { error: 'You are not enrolled in that course offering, so you cannot attempt its workouts.' } and return
-      end
     else
       @workout_offering = nil
       if params[:workout_id]
         @workout = Workout.find(params[:workout_id])
       end
+    end
+
+    if @workout_offering
+      # Re-check workout-offering permission in case the URL was entered directly.
+      authorize! :practice, @workout_offering, message: 'You cannot access that exercise because it belongs to an unpublished workout offering, or a workout offering you are not enrolled in.'
+      authorize! :practice, @exercise, message: 'You are not authorized to practice that exercise at this time.'
+    else
+      authorize! :gym_practice, @exercise, message: 'You cannot practice that exercise because it is not present in the Gym.'
     end
 
     @attempt = nil
@@ -442,7 +483,7 @@ class ExercisesController < ApplicationController
     end
 
     # Tighter restrictions for the moment, should go away
-    authorize! :practice, @exercise
+    # authorize! :gym_practice, @exercise
     if current_user
       @student_drift_user = current_user
     elsif session[:student_drift_user_id]

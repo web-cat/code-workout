@@ -26,4 +26,9 @@ FactoryGirl.define do
     # url_part "cs-1114"
   end
 
+  factory :cs_3114 do
+    name 'Data Structures and Algorithms'
+    number 'CS 3114'
+    organization_id 1
+  end
 end

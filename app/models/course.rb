@@ -35,7 +35,8 @@ class Course < ActiveRecord::Base
   # Associating with exercises through course_exercises
   has_many    :course_exercises, inverse_of: :course, dependent: :destroy
   has_many    :exercises, through: :course_exercises
-
+  # Associating with user groups
+  belongs_to :user_group, inverse_of: :course
   #Kaminari for the show method
   paginates_per 100
 

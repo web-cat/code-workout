@@ -24,7 +24,7 @@
 #  avatar                   :string(255)
 #  slug                     :string(255)      default(""), not null
 #  current_workout_score_id :integer
-#  time_zone_id             :integer
+#  user_group_id            :integer
 #
 # Indexes
 #
@@ -35,6 +35,7 @@
 #  index_users_on_reset_password_token      (reset_password_token) UNIQUE
 #  index_users_on_slug                      (slug) UNIQUE
 #  index_users_on_time_zone_id              (time_zone_id)
+#  index_users_on_user_group_id             (user_group_id)
 #
 
 # =============================================================================
@@ -77,7 +78,12 @@ class User < ActiveRecord::Base
   has_many    :test_case_results, inverse_of: :user, dependent: :destroy
   has_many    :lti_identities
 
+  has_many :memberships
+  has_many :user_groups, through: :memberships
+  has_many :group_access_requests, inverse_of: :user
+  has_one :exercise_collection
 
+  accepts_nested_attributes_for :memberships
   #~ Hooks ....................................................................
 
   delegate :can?, :cannot?, to: :ability
@@ -117,6 +123,13 @@ class User < ActiveRecord::Base
       "#{prefix}%")).reorder('email asc').pluck(:email)
   end
 
+  def self.not_in_group(user_group)
+    if user_group.nil?
+      User.all
+    else
+      User.where.not(id: user_group.users.flat_map(&:id))
+    end
+  end
 
   #~ Instance methods .........................................................
 
@@ -132,6 +145,13 @@ class User < ActiveRecord::Base
     @ability ||= Ability.new(self)
   end
 
+  def is_a_member_of?(user_group)
+    user_groups.include?(user_group)
+  end
+
+  def access_request_for(user_group)
+    GroupAccessRequest.find_by user: self, user_group: user_group
+  end
 
   # -------------------------------------------------------------
   # Public: Gets a relation representing all of the CourseOfferings that
@@ -181,6 +201,8 @@ class User < ActiveRecord::Base
       map(&:course_offering)
   end
 
+  # Get all workout offerings from course offerings that the
+  # user manages, for the specified course and term
   def managed_workout_offerings_in_term(workout, course, term)
     course_enrollments.joins(course_offering: :workout_offerings).
       where(course_roles:
@@ -189,13 +211,22 @@ class User < ActiveRecord::Base
       ).map { |e| e.course_offering.workout_offerings.where(workout: workout) }
   end
 
+  # Get all workouts that have been offered in a course
+  # for which the user has been an instructor AND for which
+  # the user is in the privileged group
+  # Simply being an instructor in the course is not enough,
+  # to prevent users from simply creating `fake` course_offerings
+  # to get access to course materials
   def managed_workouts
-    course_enrollments.joins(course_offering: :workout_offerings).
+    course_enrollments.joins(course_offering: { course: { user_group: :memberships } }).
       where(course_roles:
-        { can_manage_course: true }
+        { can_manage_course: true }, course_offering:
+          { course:
+            { user_group:
+              { memberships:
+                { user: self } } } }
       ).flat_map { |e| e.course_offering.workout_offerings }.map(&:workout)
   end
-
 
   # -------------------------------------------------------------
   def course_offerings_for_term(term, course)

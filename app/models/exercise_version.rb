@@ -2,14 +2,15 @@
 #
 # Table name: exercise_versions
 #
-#  id          :integer          not null, primary key
-#  stem_id     :integer
-#  created_at  :datetime
-#  updated_at  :datetime
-#  exercise_id :integer          not null
-#  version     :integer          not null
-#  creator_id  :integer
-#  irt_data_id :integer
+#  id                  :integer          not null, primary key
+#  stem_id             :integer
+#  created_at          :datetime
+#  updated_at          :datetime
+#  exercise_id         :integer          not null
+#  version             :integer          not null
+#  creator_id          :integer
+#  irt_data_id         :integer
+#  text_representation :text(16777215)
 #
 # Indexes
 #

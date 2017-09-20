@@ -2,26 +2,28 @@
 #
 # Table name: exercises
 #
-#  id                 :integer          not null, primary key
-#  question_type      :integer          not null
-#  current_version_id :integer
-#  created_at         :datetime
-#  updated_at         :datetime
-#  versions           :integer
-#  exercise_family_id :integer
-#  name               :string(255)
-#  is_public          :boolean          default(FALSE), not null
-#  experience         :integer          not null
-#  irt_data_id        :integer
-#  external_id        :string(255)
+#  id                     :integer          not null, primary key
+#  question_type          :integer          not null
+#  current_version_id     :integer
+#  created_at             :datetime
+#  updated_at             :datetime
+#  versions               :integer
+#  exercise_family_id     :integer
+#  name                   :string(255)
+#  is_public              :boolean          default(FALSE), not null
+#  experience             :integer          not null
+#  irt_data_id            :integer
+#  external_id            :string(255)
+#  exercise_collection_id :integer
 #
 # Indexes
 #
-#  exercises_irt_data_id_fk               (irt_data_id)
-#  index_exercises_on_current_version_id  (current_version_id)
-#  index_exercises_on_exercise_family_id  (exercise_family_id)
-#  index_exercises_on_external_id         (external_id) UNIQUE
-#  index_exercises_on_is_public           (is_public)
+#  exercises_irt_data_id_fk                   (irt_data_id)
+#  index_exercises_on_current_version_id      (current_version_id)
+#  index_exercises_on_exercise_collection_id  (exercise_collection_id)
+#  index_exercises_on_exercise_family_id      (exercise_family_id)
+#  index_exercises_on_external_id             (external_id) UNIQUE
+#  index_exercises_on_is_public               (is_public)
 #
 
 # =============================================================================
@@ -59,6 +61,7 @@ class Exercise < ActiveRecord::Base
   has_many :owners, through: :exercise_owners
   belongs_to :current_version, class_name: 'ExerciseVersion'
   belongs_to :irt_data, dependent: :destroy
+  belongs_to :exercise_collection
 
   accepts_nested_attributes_for :exercise_versions, allow_destroy: true
 
@@ -68,7 +71,7 @@ class Exercise < ActiveRecord::Base
 
 
   #~ Validation ...............................................................
-
+  validates :name, presence: :true
   validates :question_type, presence: true, numericality: { greater_than: 0 }
   validates :experience, presence: true,
     numericality: { greater_than_or_equal_to: 0 }
@@ -95,8 +98,8 @@ class Exercise < ActiveRecord::Base
   }
 
 
-  scope :visible_to_user, -> (u) { joins{exercise_owners.outer}.
-    where{ (is_public == true) | (exercise_owners.owner == u) } }
+  scope :visible_through_user, -> (u) { joins{exercise_owners.outer}.joins{exercise_collection.outer}.
+    where{ (exercise_owners.owner == u) | (exercise_collection.user == u) } }
 
 
   #~ Class methods ............................................................
@@ -106,34 +109,86 @@ class Exercise < ActiveRecord::Base
     # first, turn all ids of the form X4 to just the number
     ids = []
     terms.each do |t|
-      if t =~ /(X|x)\d+/
+      if t =~ /^[x]\d+$/i
         ids.append t[1..-1]
       end
     end
     r = terms.join("|")
+    if r.blank?
+      return nil
+    end
     if user
-      result = Exercise.visible_to_user(user).
-        tagged_with(terms, any: true, wild: true, on: :tags) +
-        Exercise.visible_to_user(user).
-        tagged_with(terms, any: true, wild: true, on: :languages) +
-        Exercise.visible_to_user(user).
-        tagged_with(terms, any: true, wild: true, on: :styles) +
-        Exercise.visible_to_user(user).
-        where('(name regexp (?)) or (exercises.id in (?))', r, ids)
+      visible = Exercise.visible_to_user(user)
+      result = visible.tagged_with(terms, any: true, wild: true, on: :tags) +
+        visible.tagged_with(terms, any: true, wild: true, on: :languages) +
+        visible.tagged_with(terms, any: true, wild: true, on: :styles) +
+        visible.where('(name regexp (?)) or (exercises.id in (?))', r, ids)
       return result.uniq
     else
-      result = Exercise.where(is_public: true).
-        tagged_with(terms, any: true, wild: true, on: :tags) +
-        Exercise.where(is_public: true).
-        tagged_with(terms, any: true, wild: true, on: :languages) +
-        Exercise.where(is_public: true).
-        tagged_with(terms, any: true, wild: true, on: :styles) +
-        Exercise.where(is_public: true).
-        where('(name regexp (?)) or (exercises.id in (?))', r, ids)
+      visible = Exercise.publicly_visible
+      result = visible.tagged_with(terms, any: true, wild: true, on: :tags) +
+        visible.tagged_with(terms, any: true, wild: true, on: :languages) +
+        visible.tagged_with(terms, any: true, wild: true, on: :styles) +
+        visible.where('(name regexp (?)) or (exercises.id in (?))', r, ids)
       return result.uniq
     end
   end
 
+  # Get a list of Exercises that are visible to the specified user.
+  #
+  # It is the union of exercises that are publicly visible, created or owned by the user,
+  # part of an exercise collection owned by the user or by a group the user is a
+  # member of, and exercises that are visible through a course_offering.
+  def self.visible_to_user(user)
+    # If updating this method, remember to update the instance method
+    # exercise.visible_to?(user).
+
+    # Get exercises owned or created by the user
+    visible_through_user = Exercise.visible_through_user(user)
+
+    publicly_visible = Exercise.publicly_visible
+
+    visible_through_course_offering = Exercise.joins(exercise_collection: [ course_offering: :course_enrollments ])
+      .where(exercise_collection:
+        { course_offering:
+          { course_enrollments:
+            { user: user } } }
+      )
+
+    visible_through_user_group = Exercise.visible_through_user_group(user)
+
+    return visible_through_user
+      .union(publicly_visible)
+      .union(visible_through_course_offering)
+      .union(visible_through_user_group)
+  end
+
+  # Get exercises that are publicly visible, either by the Exercise.is_public
+  # property, or by the license assigned to the Exercise's collection.
+  #
+  # Also the list of exercises that can be seen/searched/practiced without being
+  # signed in.
+  def self.publicly_visible
+    public_license = Exercise.joins(exercise_collection: [ license: :license_policy ])
+      .where(is_public: nil, exercise_collection:
+        { license:
+          { license_policy:
+            { is_public: true } } }
+      )
+
+    public_exercise = Exercise.where(is_public: true)
+
+    return public_exercise.union(public_license)
+  end
+
+  def self.visible_through_user_group(user)
+    Exercise.joins(exercise_collection: [ user_group: :memberships ])
+      .where(exercise_collection:
+        { user_group:
+          { memberships:
+            { user: user } } }
+      )
+  end
 
   # -------------------------------------------------------------
   # return the extension of a given language
@@ -206,7 +261,22 @@ class Exercise < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def visible_to?(u)
-    self.is_public || self.owners.include?(u)
+    # If updating this instance method, remember to update the class method
+    # Exercise.visible_to_user(u). This method exists so avoid creating a list
+    # of visible exercises unnecessarily.
+    self.is_publicly_available? ||
+    self.owners.include?(u) ||
+    u.is_a_member_of?(self.exercise_collection.andand.user_group) ||
+    self.exercise_collection.andand.owned_by?(u)
+  end
+
+  def is_publicly_available?
+    unless self.is_public.nil?
+      self.is_public
+    else
+      self.is_public ||
+        self.exercise_collection.andand.is_public?
+    end
   end
 
 

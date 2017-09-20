@@ -29,6 +29,7 @@ gem 'redcarpet'
 gem 'loofah'
 gem 'truncate_html'
 gem 'tzinfo' # For timezone support
+gem 'active_record_union'
 
 # For JSON support
 gem 'rabl'
@@ -113,9 +114,7 @@ gem 'wannabe_bool'
 gem 'capistrano'
 gem 'capistrano-bundler'
 gem 'capistrano-rails'
-group :production, :staging do
-  gem 'capistrano3-puma', github: 'seuros/capistrano-puma'
-end
+gem 'capistrano3-puma', github: 'seuros/capistrano-puma'
 
 #for multi-color progress bar
 gem 'css3-progress-bar-rails'

@@ -41,8 +41,6 @@
         - if user_signed_in?
           - if current_user.global_role.can_edit_system_configuration?
             %li= link_to icon_tag_for('wrench'), admin_dashboard_path
-          - elsif current_user.global_role.is_instructor?
-            %li= link_to icon_tag_for('wrench'), admin_course_offerings_path
           %li= link_to current_user.email, current_user
           %li
             = link_to destroy_user_session_path, method: :delete do

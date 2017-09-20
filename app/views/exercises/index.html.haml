@@ -4,7 +4,8 @@
   %li.active Exercises
 
 %h1 Exercises
-
+- if can? :create, Exercise
+  %p= button_link 'Create New', new_exercise_path, class: 'btn btn-primary'
 - if @exercises.size > 0
   - @exercises.in_groups_of(2, false) do |row|
     = render row, user: current_user

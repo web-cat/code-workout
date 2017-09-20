@@ -69,6 +69,8 @@ CodeWorkout::Application.routes.draw do
     patch 'exercises/:id/practice' => 'exercises#evaluate',
       as: :exercise_evaluate
     post 'exercises/search' => 'exercises#search', as: :exercises_search
+    get 'exercises/query_data' => 'exercises#query_data', as: :exercises_query_data
+    get 'exercises/:id/download_data' => 'exercises#download_data', as: :exercise_download_data
     # At the bottom, so the routes above take precedence over existing ids
     resources :exercises
 
@@ -97,8 +99,10 @@ CodeWorkout::Application.routes.draw do
     get 'search' => 'courses#search', as: :courses_search
     post 'find' => 'courses#find', as: :course_find
     get 'new' => 'courses#new'
+    get ':id/request_privileged_access/:requester_id' => 'courses#request_privileged_access', as: :request_privileged_access
     post 'create' => 'courses#create', as: :courses_create
     get ':id/edit' => 'courses#edit', as: :course_edit
+    get ':course_id/privileged_users' => 'courses#privileged_users', as: :course_privileged_users
     get ':course_id/new_offering' => 'course_offerings#new', as: :new_course_offering
     post ':course_id/create_offering' => 'course_offerings#create', as: :course_offering_create
     get ':course_id/:term_id/tab_content/:tab' => 'courses#tab_content'
@@ -133,7 +137,23 @@ CodeWorkout::Application.routes.draw do
     post 'generate_gradebook' => :generate_gradebook, as: :gradebook
     get 'add_workout' => :add_workout, as: :add_workout
     post 'store_workout/:id' => :store_workout, as: :store_workout
-    get '/search_students' => :search_students, as: :search_students
+    get '/search_enrolled_users' => :search_enrolled_users, as: :search_enrolled_users
+  end
+
+  # routes for course_enrollments
+  resources :course_enrollments, only: [ :new, :destroy ] do
+    collection do
+      get 'choose_roster'
+      post 'roster_upload'
+    end
+  end
+
+
+  resources :user_groups, only: [ :new ] do
+    get 'members' => 'user_groups#members', as: :members
+    get 'review_access_request/:requester_id/:user_id' => 'user_groups#review_access_request', as: :review_access_request
+    post 'review_access_request/:requester_id/:user_id' => 'user_groups#review_access_request', as: :decide_access_request
+    post 'add_user/:user_id' => 'user_groups#add_user', as: :add_user
   end
 
   # All of the routes anchored at /users
@@ -148,7 +168,7 @@ CodeWorkout::Application.routes.draw do
   #OmniAuth for Facebook
   devise_for :users,
     controllers: { omniauth_callbacks: 'users/omniauth_callbacks', registrations: 'registrations' },
-    skip: [:registrations, :sessions]
+    skip: [:registrations, :sessions] # skipping these because routes are being defined below
   as :user do
     get '/new_password' => 'devise/passwords#new', as: :new_password
     get '/edit_password' => 'devise/passwords#edit', as: :edit_password
@@ -156,7 +176,8 @@ CodeWorkout::Application.routes.draw do
     post '/create_password' => 'devise/passwords#create', as: :create_password
     get '/signup' => 'devise/registrations#new', as: :new_user_registration
     post '/signup' => 'devise/registrations#create', as: :user_registration
-    get '/login' => 'devise/sessions#new', as: :new_user_session
+    # use the overridden login action
+    get '/login' => 'users/sessions#new', as: :new_user_session
     post '/login' => 'devise/sessions#create', as: :user_session
     delete '/logout' => 'devise/sessions#destroy', as: :destroy_user_session
   end

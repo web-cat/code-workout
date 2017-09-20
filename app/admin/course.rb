@@ -7,7 +7,7 @@ ActiveAdmin.register Course, sort_order: :number_asc do
 
   index do
     id_column
-    column :number
+    column(:number) { |c| link_to c.number, admin_course_path(c) }
     column(:name) { |c| link_to c.name, admin_course_path(c) }
     column :organization, sortable: 'organizations.name'
     column :creator
@@ -34,4 +34,12 @@ ActiveAdmin.register Course, sort_order: :number_asc do
     end
   end
 
+  sidebar 'Privileged Users', only: :show,
+    if: proc{ course.user_group } do
+      table_for course.user_group.users do
+        column :name do |u|
+          link_to u.display_name, admin_user_path(u)
+        end
+      end
+    end
 end
