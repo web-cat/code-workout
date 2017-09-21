@@ -202,13 +202,6 @@ class CourseOffering < ActiveRecord::Base
       end
 
       if !found_workout
-        # nothing seems to have ever offered workouts matching this description,
-        # so be the first
-        workouts = Workout.where('lower(name) = ?', workout.downcase)
-        found_workout = workouts.first
-      end
-
-      if !found_workout
         return nil
       end
     end

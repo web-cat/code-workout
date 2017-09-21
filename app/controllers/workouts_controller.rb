@@ -328,11 +328,6 @@ class WorkoutsController < ApplicationController
         .sort_by{ |wo| wo.course_offering.start_date }.andand
         .last.andand.map(&:workout)
 
-      if !found_workout
-        workouts = Workout.where('lower(name) = ?', params[:workout_name])
-        found_workout = workouts.first
-      end
-
       if workout_offerings.blank?
         @course_offerings = @user.managed_course_offerings course: @course, term: @term
         if @course_offerings.blank?
