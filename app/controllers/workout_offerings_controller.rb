@@ -59,6 +59,9 @@ class WorkoutOfferingsController < ApplicationController
     # must include the oauth proxy object
     require 'oauth/request_proxy/rack_request'
     @lti_launch = params[:lti_launch]
+    if @lti_launch
+      lti_enroll
+    end
     if @workout_offering
       authorize! :practice, @workout_offering, message: 'You are not authorized to access that workout offering.'
       lis_outcome_service_url = params[:lis_outcome_service_url]
@@ -133,7 +136,7 @@ class WorkoutOfferingsController < ApplicationController
 
     def lti_enroll
       @workout_offering = WorkoutOffering.find_by(id: params[:id])
-      @course_offering = CourseOffering.find_by(id: @workout_offering.course_offering_id)
+      @course_offering = @workout_offering.course_offering
 
       if @course_offering &&
         @course_offering.can_enroll? &&

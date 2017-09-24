@@ -111,6 +111,7 @@ CodeWorkout::Application.routes.draw do
     get ':course_id/:term_id/workouts/new_or_existing' => 'workouts#new_or_existing', as: :new_or_existing_workout
     get ':course_id/:term_id/:workout_offering_id/edit_workout' => 'workouts#edit', as: :edit_workout
     get ':course_id/:term_id/:id/practice(/:exercise_id)' => 'workout_offerings#practice', as: :workout_offering_practice
+    get ':course_id/:term_id/find_offering/:workout_name' => 'workouts#find_offering', as: :find_workout_offering
     get ':course_id/:term_id/:workout_offering_id/:id' => 'exercises#practice', as: :workout_offering_exercise
     patch ':course_id/:term_id/:workout_offering_id/:id' => 'exercises#evaluate', as: :workout_offering_exercise_evaluate
     get ':course_id/:term_id/:workout_offering_id/review/:review_user_id/:id' => 'exercises#practice', as: :workout_offering_exercise_review
@@ -135,19 +136,17 @@ CodeWorkout::Application.routes.draw do
     match 'upload_roster/:action', controller: 'upload_roster',
       as: :upload_roster, via: [:get, :post]
     post 'generate_gradebook' => :generate_gradebook, as: :gradebook
-    get 'add_workout' => :add_workout, as: :add_workout
+    post 'add_workout/:workout_name' => 'course_offerings#add_workout', as: :add_workout
     post 'store_workout/:id' => :store_workout, as: :store_workout
     get '/search_enrolled_users' => :search_enrolled_users, as: :search_enrolled_users
   end
 
-  # routes for course_enrollments
   resources :course_enrollments, only: [ :new, :destroy ] do
     collection do
       get 'choose_roster'
       post 'roster_upload'
     end
   end
-
 
   resources :user_groups, only: [ :new ] do
     get 'members' => 'user_groups#members', as: :members

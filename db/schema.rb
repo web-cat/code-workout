@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170830164617) do
+ActiveRecord::Schema.define(version: 20170920191837) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -598,7 +598,7 @@ ActiveRecord::Schema.define(version: 20170830164617) do
 
   add_index "workout_offerings", ["continue_from_workout_id"], name: "workout_offerings_continue_from_workout_id_fk", using: :btree
   add_index "workout_offerings", ["course_offering_id"], name: "index_workout_offerings_on_course_offering_id", using: :btree
-  add_index "workout_offerings", ["lms_assignment_id"], name: "index_workout_offerings_on_lms_assignment_id", unique: true, using: :btree
+  add_index "workout_offerings", ["lms_assignment_id"], name: "index_workout_offerings_on_lms_assignment_id", using: :btree
   add_index "workout_offerings", ["workout_id"], name: "index_workout_offerings_on_workout_id", using: :btree
   add_index "workout_offerings", ["workout_policy_id"], name: "index_workout_offerings_on_workout_policy_id", using: :btree
 

@@ -252,6 +252,7 @@ class Workout < ActiveRecord::Base
       workout_offering.soft_deadline = DateTime.strptime(offering['soft_deadline'].to_s, '%Q') if offering['soft_deadline'].present?
       workout_offering.hard_deadline = DateTime.strptime(offering['hard_deadline'].to_s, '%Q') if offering['hard_deadline'].present?
       workout_offering.workout_policy = common[:workout_policy]
+      workout_offering.lms_assignment_id = common[:lms_assignment_id]
       workout_offering.save!
       workout_offerings << workout_offering.id
       extensions = offering['extensions']
@@ -273,6 +274,17 @@ class Workout < ActiveRecord::Base
     end
 
     return workout_offerings
+  end
+
+  def deep_clone!
+    clone = self.dup
+    clone.save
+    self.exercises.each do |e|
+      exercise_workout = ExerciseWorkout.new(workout: clone, exercise: e)
+      exercise_workout.save
+    end
+
+    return clone
   end
 
   # -------------------------------------------------------------
