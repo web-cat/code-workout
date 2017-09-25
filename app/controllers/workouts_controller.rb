@@ -197,10 +197,9 @@ class WorkoutsController < ApplicationController
       ex_data[:exercise_workout_id] = ex.id
       @exercises.push(ex_data)
     end
-
     @workout_offerings = current_user.managed_workout_offerings_in_term(@workout, @course, @term).flatten
 
-    course_offerings = current_user.managed_course_offerings @course, @term
+    course_offerings = current_user.managed_course_offerings(course: @course, term: @term)
     used_course_offerings = @workout_offerings.flat_map(&:course_offering)
     @unused_course_offerings = course_offerings - used_course_offerings
 
@@ -307,7 +306,12 @@ class WorkoutsController < ApplicationController
     @term = Term.find params[:term_id]
     @course = Course.find params[:course_id]
     @lti_launch = true
-    lms_assignment_id = params[:lms_assignment_id]
+    ext_lti_assignment_id = params[:ext_lti_assignment_id]
+    custom_canvas_assignment_id = params[:custom_canvas_assignment_id]
+    lms_instance_id = params[:lms_instance_id]
+
+    # will only use this if we need to create a new workout_offering
+    @lms_assignment_id = "#{lms_instance_id}-#{ext_lti_assignment_id}"
 
     if params[:from_collection].to_b
       workouts = Workout.where('lower(name) = ?', params[:workout_name].downcase)
@@ -315,7 +319,10 @@ class WorkoutsController < ApplicationController
     end
 
     if params[:is_instructor].to_b
-      workout_offerings = WorkoutOffering.where(lms_assignment_id: lms_assignment_id)
+      workout_offerings = WorkoutOffering.where(lms_assignment_id: "#{lms_instance_id}-#{ext_lti_assignment_id}")
+      if workout_offerings.blank?
+        workout_offerings = WorkoutOffering.where(lms_assignment_id: "#{lms_instance_id}-#{custom_canvas_assignment_id}")
+      end
       @workout_offering = workout_offerings.first
 
       if workout_offerings.blank?
@@ -325,8 +332,8 @@ class WorkoutsController < ApplicationController
       workout_offerings = workout_offerings.andand.flatten.uniq
       found_workout ||= workout_offerings.andand
         .uniq{ |wo| wo.workout }.andand
-        .sort_by{ |wo| wo.course_offering.start_date }.andand
-        .last.andand.map(&:workout)
+        .sort_by{ |wo| wo.course_offering.term.starts_on }.andand
+        .last.andand.workout
 
       if workout_offerings.blank?
         @course_offerings = @user.managed_course_offerings course: @course, term: @term
@@ -354,7 +361,7 @@ class WorkoutsController < ApplicationController
               opening_date: DateTime.now,
               soft_deadline: nil,
               hard_deadline: nil,
-              lms_assignment_id: lms_assignment_id
+              lms_assignment_id: @lms_assignment_id
             )
             @workout_offering.save
           end
@@ -372,7 +379,7 @@ class WorkoutsController < ApplicationController
             course_id: @course.slug,
             term_id: @term.slug,
             organization_id: @course.organization.slug,
-            lms_assignment_id: lms_assignment_id
+            lms_assignment_id: @lms_assignment_id
           ) and return
         end
       else
@@ -380,7 +387,10 @@ class WorkoutsController < ApplicationController
       end
     else
       # first search by lms_assignment_id
-      workout_offerings = WorkoutOffering.where(lms_assignment_id: lms_assignment_id)
+      workout_offerings = WorkoutOffering.where(lms_assignment_id: "#{lms_instance_id}-#{ext_lti_assignment_id}")
+      if workout_offerings.blank?
+        workout_offerings = WorkoutOffering.where(lms_assignment_id: "#{lms_instance_id}-#{custom_canvas_assignment_id}")
+      end
       if workout_offerings.blank?
         if params[:label] # label is specified, we can narrow down to a single course offering
           @course_offering = CourseOffering.find_by(course: @course, term: @term, label: params[:label])
@@ -405,7 +415,6 @@ class WorkoutsController < ApplicationController
         if !@course_offering
           # let the user choose to enroll in a course_offering
           @available_offerings = []
-          @lms_assignment_id = lms_assignment_id
           @available_course_offerings = CourseOffering.where(course: @course, term: @term)
             .select{ |co| co.self_enrollment_allowed? }
           render layout: 'one_column' and return
@@ -421,8 +430,8 @@ class WorkoutsController < ApplicationController
               .managed_workout_offerings_in_term(params[:workout_name].downcase, @course, nil)
             found_workout ||= old_workout_offerings.andand
               .uniq{ |wo| wo.workout }.andand
-              .sort_by{ |wo| wo.course_offering.start_date }.andand
-              .last.andand.map(&:workout)
+              .sort_by{ |wo| wo.course_offering.term.starts_on }.andand
+              .last.andand.workout
             if !found_workout
               @message = "The workout named #{params[:workout_name]} does not exist or is not linked with this LMS assignment. Please contact your instructor."
               render 'lti/error' and return
@@ -436,7 +445,7 @@ class WorkoutsController < ApplicationController
                   opening_date: DateTime.now,
                   soft_deadline: nil,
                   hard_deadline: nil,
-                  lms_assignment_id: lms_assignment_id
+                  lms_assignment_id: @lms_assignment_id
                 )
                 @workout_offering.save
               end
@@ -454,7 +463,7 @@ class WorkoutsController < ApplicationController
           @workout_offering = enrolled_workout_offerings.andand.first
         elsif @course_offering
           # found an enrolled course_offering, so we don't need to ask the student anything
-          @workout_offering = @course_offering.add_workout(params[:workout_name], { lms_assignment_id: lms_assignment_id })
+          @workout_offering = @course_offering.add_workout(params[:workout_name], { lms_assignment_id: @lms_assignment_id })
           if !@workout_offering
             @message = "The workout named '#{params[:workout_name]}' does not exist or is not linked with this LMS assignment. Please contact your instructor."
             render 'lti/error' and return

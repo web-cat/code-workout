@@ -18,7 +18,7 @@ class WorkoutOfferingsController < ApplicationController
       @course = Course.find params[:course_id]
       @term = Term.find params[:term_id]
       @organization = Organization.find params[:organization_id]
-      @course_offering = CourseOffering.find_by @course, @term
+      @course_offering = CourseOffering.find_by course: @course, term: @term
       @exs = @workout.exercises
     end
     render 'workouts/show'
