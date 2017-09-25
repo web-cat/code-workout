@@ -35,7 +35,7 @@
               model: 'workout_offering' } }= woff.opening_date
             %td
               - if woff.opening_date
-                = l woff.opening_date
+                = l user_time(current_user, woff.opening_date)
             -#%td.xeditable{ id: 'soft_deadline',
               data: { type: 'text',
               url: '/workout_offerings/' + woff.id.to_s,
@@ -44,7 +44,7 @@
               xeditable: "true",
               pk: woff.id.to_s,
               model: 'workout_offering' } }= woff.soft_deadline
-            %td= l woff.soft_deadline
+            %td= l user_time(current_user, woff.soft_deadline)
             -#%td.xeditable{ id: 'hard_deadline',
               data: { type: 'text',
               url: '/workout_offerings/' + woff.id.to_s,
@@ -53,7 +53,7 @@
               xeditable: "true",
               pk: woff.id.to_s,
               model: 'workout_offering' } }= woff.hard_deadline
-            %td= l woff.hard_deadline
+            %td= l user_time(current_user, woff.hard_deadline)
 - elsif @workout_offering
   %p
     - if  review_user.id != current_user.id
@@ -61,10 +61,10 @@
       = "#{review_user.display_name}."
     - if workout_score.last_attempted_at
       &nbsp;&nbsp;&nbsp;Last Attempted:
-      = l workout_score.last_attempted_at
+      = l user_time(current_user, workout_score.last_attempted_at)
     - elsif @workout_offering.hard_deadline
       Due:
-      = l @workout_offering.hard_deadline
+      = l user_time(current_user, @workout_offering.hard_deadline)
     &nbsp;&nbsp;&nbsp;Score:
     - if workout_score
       - if workout_score.show_feedback?

@@ -1,7 +1,11 @@
-%h1 New Course Offering
+.container
+  %h1 New Course Offering
 
-= render 'form'
+  - if @course && @organization
+    %p.lead
+      Creating an offering of
+      = link_to @course.display_name, organization_course_path(organization_id: @organization.id, id: @course.id)
+      at
+      = link_to @organization.name, organization_path(@organization)
 
-.form-horizontal
-  .controls
-    = button_link 'Back', course_offerings_path
+  = render partial: 'form', locals: { term: @term }

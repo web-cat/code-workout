@@ -2,23 +2,26 @@
 #
 # Table name: workout_scores
 #
-#  id                  :integer          not null, primary key
-#  workout_id          :integer          not null
-#  user_id             :integer          not null
-#  score               :float(24)
-#  completed           :boolean
-#  completed_at        :datetime
-#  last_attempted_at   :datetime
-#  exercises_completed :integer
-#  exercises_remaining :integer
-#  created_at          :datetime
-#  updated_at          :datetime
-#  workout_offering_id :integer
+#  id                      :integer          not null, primary key
+#  workout_id              :integer          not null
+#  user_id                 :integer          not null
+#  score                   :float(24)
+#  completed               :boolean
+#  completed_at            :datetime
+#  last_attempted_at       :datetime
+#  exercises_completed     :integer
+#  exercises_remaining     :integer
+#  created_at              :datetime
+#  updated_at              :datetime
+#  workout_offering_id     :integer
+#  lis_outcome_service_url :string(255)
+#  lis_result_sourcedid    :string(255)
 #
 # Indexes
 #
-#  index_workout_scores_on_user_id     (user_id)
-#  index_workout_scores_on_workout_id  (workout_id)
+#  index_workout_scores_on_user_id        (user_id)
+#  index_workout_scores_on_workout_id     (workout_id)
+#  workout_scores_workout_offering_id_fk  (workout_offering_id)
 #
 
 # =============================================================================
@@ -93,11 +96,17 @@ class WorkoutScore < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def closed?
-    # FIXME: doesn't take into account deadline
-    minutes_open = (Time.zone.now - self.created_at)/60.0
-    time_limit = workout_offering.time_limit_for(user)
+    if !workout_offering
+      return false
+    end
 
-    time_limit && self.created_at && minutes_open >= time_limit
+    now = Time.zone.now
+    minutes_open = (now - self.created_at)/60.0
+    time_limit = workout_offering.time_limit_for(user)
+    hard_deadline = workout_offering.hard_deadline_for(user)
+
+    (time_limit && self.created_at && minutes_open >= time_limit) ||
+        (hard_deadline && now > hard_deadline)
   end
 
   # -------------------------------------------------------------
@@ -111,10 +120,26 @@ class WorkoutScore < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def time_remaining
+    if !workout_offering
+      nil
+    end
     time_limit = workout_offering.andand.time_limit_for(user)
 
     if time_limit
-      time_limit - (Time.zone.now - self.created_at)/60.0
+      now = Time.zone.now
+      remaining = time_limit - (now - self.created_at)/60.0
+      hard_deadline = workout_offering.hard_deadline_for(user)
+
+      if hard_deadline
+        until_deadline = (hard_deadline - now)/60.0
+      end
+
+      # return the lesser of the two possible limits
+      if until_deadline
+        return [remaining, until_deadline].min
+      else
+        return remaining
+      end
     else
       nil
     end
@@ -123,14 +148,18 @@ class WorkoutScore < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def show_feedback?
-    # FIXME: broken, needs fixing!
-    if self.workout_offering &&
-      self.workout_offering.hard_deadline_for(self.user) &&
-      self.workout_offering.hard_deadline_for(self.user) < Time.zone.now
-      # !workout_offering.andand.workout_policy.andand.hide_feedback_in_review_after_close
-      true
-    elsif closed?
-      !workout_offering.andand.workout_policy.andand.hide_feedback_in_review_before_close
+    if !self.workout_offering
+      return true
+    end
+
+    if self.closed?
+      if workout_offering.shutdown?
+        # FIXME: ???
+        # true
+        !workout_offering.andand.workout_policy.andand.hide_feedback_in_review_before_close
+      else
+        !workout_offering.andand.workout_policy.andand.hide_feedback_in_review_before_close
+      end
     else
       !workout_offering.andand.workout_policy.andand.hide_feedback_before_finish
     end
@@ -171,7 +200,7 @@ class WorkoutScore < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def record_attempt(attempt)
-    self.transaction do
+    self.with_lock do
       # scored_for_this = self.scored_attempts.joins{exercise_version}.
       #  where{(exercise_version.exercise_id == e.id)}
       scored_for_this = self.scored_attempts.
@@ -210,22 +239,28 @@ class WorkoutScore < ActiveRecord::Base
 
         self.scored_attempts << attempt
 
-        # recalculate workout score
-        self.score = 0.0
-        self.scored_attempts.each do |a|
-          self.score += a.score
-        end
-        self.score = self.score.round(2)
+        recalculate_score!(attempt: attempt)
+      end
+    end
+  end
 
-        if !self.last_attempted_at ||
-          self.last_attempted_at < attempt.submit_time
-          self.last_attempted_at = attempt.submit_time
-        end
-        self.save!
+  def recalculate_score!(options = {})
+    self.with_lock do
+      attempt = options[:attempt]
+      self.score = 0.0
+      self.scored_attempts.each do |a|
+        self.score += a.score
+      end
+      self.score = self.score.round(2)
 
-        if self.lis_outcome_service_url && self.lis_result_sourcedid
-          update_lti
-        end
+      if attempt && (!self.last_attempted_at ||
+        self.last_attempted_at < attempt.submit_time)
+        self.last_attempted_at = attempt.submit_time
+      end
+      self.save!
+
+      if self.lis_outcome_service_url && self.lis_result_sourcedid
+        update_lti
       end
     end
   end
@@ -334,11 +369,14 @@ class WorkoutScore < ActiveRecord::Base
     end
   end
 
-
-  private
-
+  # Sends scores to the appropriate LTI consumer
+  # -------------------------------------------------------------
   def update_lti
-    if lms_instance = self.workout_offering.course_offering.lms_instance
+    if self.workout_offering.andand.course_offering &&
+      self.workout_offering.course_offering.lms_instance &&
+      self.lis_outcome_service_url && self.lis_result_sourcedid
+
+      lms_instance = self.workout_offering.course_offering.lms_instance
       total_points = ExerciseWorkout.where(workout_id: self.workout_id).sum(:points)
       key = lms_instance.consumer_key
       secret = lms_instance.consumer_secret

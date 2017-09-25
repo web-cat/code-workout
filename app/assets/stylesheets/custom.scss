@@ -35,18 +35,18 @@ html, body { height: 100%; }
 /* yamm */
 
 .dropdown-menu { border-radius: 6px; }
-.yamm .navbar-right .dropdown-menu.signin { right: 0; }
+.yamm .navbar-right .dropdown-menu.auth { right: 0; }
 
-.dropdown-menu.signin { width: 30%; }
-.signin .yamm-content { padding: 5px 30px; }
-.signin .yamm-content .form-horizontal .form-group label.control-label {
+.dropdown-menu.auth { width: 30%; }
+.auth .yamm-content { padding: 5px 30px; }
+.auth .yamm-content .form-horizontal .form-group label.control-label {
   width: 20%;
 }
-.signin .yamm-content .form-horizontal .form-group .form-wrapper {
+.auth .yamm-content .form-horizontal .form-group .form-wrapper {
   width: 80%;
 }
-.signin .yamm-content .form-horizontal .form-group { margin-bottom: 5px; }
-.dropdown-menu.signin .btn { margin: 5px 15px; font-size: larger; }
+.auth .yamm-content .form-horizontal .form-group { margin-bottom: 5px; }
+.dropdown-menu.auth .btn { margin: 5px 15px; font-size: larger; }
 
 /* Codemirror */
 
@@ -89,6 +89,9 @@ html, body { height: 100%; }
   margin-bottom: 15px;
   margin-left: 16.666666666666664%;
   padding-left: 8px;
+  &.sign-in-form {
+    margin-left: 0;
+  }
 }
 
 /* for consistent font awesome icons */
@@ -207,6 +210,12 @@ ul.wysihtml5-toolbar li {
     .xp:after { content: 'xp'; }
   }
 
+  .right {
+    float: right;
+    padding-right: 8px;
+    padding-bottom: 3px;
+  }
+
   .body, .info { padding: 0 63px 0 9px; width: 100%; }
   .body {
     $font-size: 12px;
@@ -319,8 +328,49 @@ ul.wysihtml5-toolbar li {
   overflow-y: auto;
 }
 
-input.datepicker, input.time-limit {
-  min-width: 18ch;
+// Rules for form inputs
+// Mostly rules for complex forms like the workout-edit form
+input {
+  &.datepicker {
+    min-width: 21ch;
+
+    &:read-only {
+      background-color: white;
+      @extend .action;
+    }
+  }
+
+  &.time-limit {
+    min-width: 10ch;
+  }
+
+  &.points {
+    min-width: 10ch;
+  }
+
+  &.url {
+    min-width: 10ch;
+  }
+
+  &[type=number]::-webkit-inner-spin-button,
+  &[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}
+
+tr.fields {
+  &.extension td.course-offering {
+    min-width: 10ch;
+  }
+
+  td.remove {
+    text-align: center;
+  }
+}
+
+#workout-offering-fields th, #student-extension-fields th {
+  font-size: small;
 }
 
 .btn-group a {
@@ -330,4 +380,53 @@ input.datepicker, input.time-limit {
 .textblur {
   color: transparent;
   text-shadow: 0 0 3px #000000;
+}
+
+.ui-state-focus {
+  background-color: #f89406 !important;
+  color: white !important;
+}
+
+.ui-menu-item {
+  @extend .action;
+}
+
+ul.ui-autocomplete {
+  z-index: 1100;
+}
+
+// shake animation for form validations and hints
+.shake {
+  animation: shake 0.82s cubic-bezier(.36, .07, .19, .97) both;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+@keyframes shake {
+  10%, 90% {
+    transform: translate3d(-1px, 0, 0);
+  }
+
+  20%, 80% {
+    transform: translate3d(2px, 0, 0);
+  }
+
+  30%, 50%, 70% {
+    transform: translate3d(-4px, 0, 0);
+  }
+
+  40%, 60% {
+    transform: translate3d(4px, 0, 0);
+  }
+}
+
+// overriding bootstrap for the sign-in form
+.btn-social.list-group-item {
+  color: white;
+
+  a:hover :focus {
+    background-color: inherit;
+    color: inherit;
+  }
 }

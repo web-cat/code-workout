@@ -6,11 +6,12 @@ ActiveAdmin.register_page 'Dashboard' do
 
     panel 'Recent Errrors' do
       table_for Error.order('created_at desc').first(6) do
+        column(:time) { |e| l user_time(current_user, e.updated_at) }
         column :class_name
         column(:message) do |e|
           link_to e.message, admin_error_path(e)
         end
-        column 'URL', :target_url
+        column(:params) { |e| e.params }
       end
       a 'View log file', href: '/log_file'
     end

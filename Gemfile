@@ -9,9 +9,7 @@ gem 'codemirror-rails'
 gem 'font-awesome-rails'
 gem 'formtastic', '~> 3.1'
 gem 'formtastic-bootstrap'
-#gem 'sidekiq'
 gem 'sucker_punch', '~> 1.0'
-# gem 'jbuilder', '~> 1.2'
 gem 'haml', '>= 3.1.4'
 gem 'haml-rails'
 gem 'coffee-rails', '~> 4.0.0'
@@ -30,8 +28,8 @@ gem 'representable'
 gem 'redcarpet'
 gem 'loofah'
 gem 'truncate_html'
-gem 'puma'
 gem 'tzinfo' # For timezone support
+gem 'active_record_union'
 
 # For JSON support
 gem 'rabl'
@@ -45,6 +43,8 @@ group :assets do
 end
 
 group :development, :test do
+  gem 'thin'
+  gem 'byebug'
   gem 'sqlite3'
   gem 'mysql2', '= 0.3.15'
   gem 'rspec-rails'
@@ -69,6 +69,7 @@ end
 
 group :production, :staging do
   gem 'mysql2', '= 0.3.15'
+  gem 'puma'
 end
 
 group :doc do
@@ -121,4 +122,3 @@ gem 'css3-progress-bar-rails'
 
 gem 'immigrant'
 gem 'ims-lti', '~> 1.1.8'
-gem 'json'

@@ -12,6 +12,7 @@ CodeWorkout::Application.routes.draw do
   get 'home/license'
   get 'home/contact'
   get 'home/new_course_modal', as: :new_course_modal
+  get 'home/python_ruby_modal', as: :python_ruby_modal
 
   get 'static_pages/home'
   get 'static_pages/help'
@@ -20,6 +21,9 @@ CodeWorkout::Application.routes.draw do
   get 'static_pages/mockup3'
   get 'static_pages/typography'
   get 'static_pages/thumbnails'
+
+  get 'help/exercise_format'
+
   # routes anchored at /admin
   # First, we have to override some of the ActiveAdmin auto-generated
   # routes, since our user ids and file ids use restricted characters
@@ -65,10 +69,13 @@ CodeWorkout::Application.routes.draw do
     patch 'exercises/:id/practice' => 'exercises#evaluate',
       as: :exercise_evaluate
     post 'exercises/search' => 'exercises#search', as: :exercises_search
+    get 'exercises/query_data' => 'exercises#query_data', as: :exercises_query_data
+    get 'exercises/:id/download_data' => 'exercises#download_data', as: :exercise_download_data
     # At the bottom, so the routes above take precedence over existing ids
     resources :exercises
 
     # /gym/workouts ...
+    get  'workouts/embed' => 'workouts#embed'
     get  'workouts/download' => 'workouts#download'
     get  'workouts/:id/add_exercises' => 'workouts#add_exercises'
     post 'workouts/link_exercises'  => 'workouts#link_exercises'
@@ -92,13 +99,19 @@ CodeWorkout::Application.routes.draw do
     get 'search' => 'courses#search', as: :courses_search
     post 'find' => 'courses#find', as: :course_find
     get 'new' => 'courses#new'
+    get ':id/request_privileged_access/:requester_id' => 'courses#request_privileged_access', as: :request_privileged_access
+    post 'create' => 'courses#create', as: :courses_create
     get ':id/edit' => 'courses#edit', as: :course_edit
+    get ':course_id/privileged_users' => 'courses#privileged_users', as: :course_privileged_users
+    get ':course_id/new_offering' => 'course_offerings#new', as: :new_course_offering
+    post ':course_id/create_offering' => 'course_offerings#create', as: :course_offering_create
     get ':course_id/:term_id/tab_content/:tab' => 'courses#tab_content'
     get ':course_id/:term_id/workouts/new' => 'workouts#new', as: :new_workout
     get ':course_id/:term_id/workouts/:workout_id/clone' => 'workouts#clone', as: :clone_workout
     get ':course_id/:term_id/workouts/new_or_existing' => 'workouts#new_or_existing', as: :new_or_existing_workout
     get ':course_id/:term_id/:workout_offering_id/edit_workout' => 'workouts#edit', as: :edit_workout
     get ':course_id/:term_id/:id/practice(/:exercise_id)' => 'workout_offerings#practice', as: :workout_offering_practice
+    get ':course_id/:term_id/find_offering/:workout_name' => 'workouts#find_offering', as: :find_workout_offering
     get ':course_id/:term_id/:workout_offering_id/:id' => 'exercises#practice', as: :workout_offering_exercise
     patch ':course_id/:term_id/:workout_offering_id/:id' => 'exercises#evaluate', as: :workout_offering_exercise_evaluate
     get ':course_id/:term_id/:workout_offering_id/review/:review_user_id/:id' => 'exercises#practice', as: :workout_offering_exercise_review
@@ -108,6 +121,14 @@ CodeWorkout::Application.routes.draw do
     get ':id(/:term_id)' => 'courses#show', as: :course
   end
 
+  # Organization routes, separate from courses
+  resources :organizations, only: :create do
+    collection do
+      get 'new_or_existing'
+      get 'search'
+      get 'abbr_suggestion'
+    end
+  end
 
   resources :course_offerings, only: [ :edit, :update, :index, :show ] do
     post 'enroll' => :enroll, as: :enroll
@@ -115,9 +136,23 @@ CodeWorkout::Application.routes.draw do
     match 'upload_roster/:action', controller: 'upload_roster',
       as: :upload_roster, via: [:get, :post]
     post 'generate_gradebook' => :generate_gradebook, as: :gradebook
-    get 'add_workout' => :add_workout, as: :add_workout
+    post 'add_workout/:workout_name' => 'course_offerings#add_workout', as: :add_workout
     post 'store_workout/:id' => :store_workout, as: :store_workout
-    get '/search_students' => :search_students, as: :search_students
+    get '/search_enrolled_users' => :search_enrolled_users, as: :search_enrolled_users
+  end
+
+  resources :course_enrollments, only: [ :new, :destroy ] do
+    collection do
+      get 'choose_roster'
+      post 'roster_upload'
+    end
+  end
+
+  resources :user_groups, only: [ :new ] do
+    get 'members' => 'user_groups#members', as: :members
+    get 'review_access_request/:requester_id/:user_id' => 'user_groups#review_access_request', as: :review_access_request
+    post 'review_access_request/:requester_id/:user_id' => 'user_groups#review_access_request', as: :decide_access_request
+    post 'add_user/:user_id' => 'user_groups#add_user', as: :add_user
   end
 
   # All of the routes anchored at /users
@@ -131,12 +166,17 @@ CodeWorkout::Application.routes.draw do
 
   #OmniAuth for Facebook
   devise_for :users,
-    controllers: { omniauth_callbacks: 'users/omniauth_callbacks' },
-    skip: [:registrations, :sessions]
+    controllers: { omniauth_callbacks: 'users/omniauth_callbacks', registrations: 'registrations' },
+    skip: [:registrations, :sessions] # skipping these because routes are being defined below
   as :user do
+    get '/new_password' => 'devise/passwords#new', as: :new_password
+    get '/edit_password' => 'devise/passwords#edit', as: :edit_password
+    put '/update_password' => 'devise/passwords#update', as: :update_password
+    post '/create_password' => 'devise/passwords#create', as: :create_password
     get '/signup' => 'devise/registrations#new', as: :new_user_registration
     post '/signup' => 'devise/registrations#create', as: :user_registration
-    get '/login' => 'devise/sessions#new', as: :new_user_session
+    # use the overridden login action
+    get '/login' => 'users/sessions#new', as: :new_user_session
     post '/login' => 'devise/sessions#create', as: :user_session
     delete '/logout' => 'devise/sessions#destroy', as: :destroy_user_session
   end

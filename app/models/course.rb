@@ -3,13 +3,13 @@
 # Table name: courses
 #
 #  id              :integer          not null, primary key
-#  name            :string(255)      default(""), not null
-#  number          :string(255)      default(""), not null
+#  name            :string(255)      not null
+#  number          :string(255)      not null
 #  organization_id :integer          not null
 #  created_at      :datetime
 #  updated_at      :datetime
 #  creator_id      :integer
-#  slug            :string(255)      default(""), not null
+#  slug            :string(255)      not null
 #
 # Indexes
 #
@@ -35,7 +35,8 @@ class Course < ActiveRecord::Base
   # Associating with exercises through course_exercises
   has_many    :course_exercises, inverse_of: :course, dependent: :destroy
   has_many    :exercises, through: :course_exercises
-
+  # Associating with user groups
+  belongs_to :user_group, inverse_of: :course
   #Kaminari for the show method
   paginates_per 100
 

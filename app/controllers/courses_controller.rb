@@ -26,14 +26,75 @@ class CoursesController < ApplicationController
       @term = Term.find(params[:term_id])
       @course_offerings =
         current_user.andand.course_offerings_for_term(@term, @course)
+      @course_offering = @course_offerings.andand.first
       @is_student = !user_signed_in? ||
         !current_user.global_role.is_admin? &&
-        (@course_offerings.any? {|co| co.is_student? current_user } ||
-        !@course_offerings.any? {|co| co.is_staff? current_user })
-      # respond_to do |format|
-       # format.js
-       # format.html
-      # end
+        (@course_offerings.any? { |co| co.is_student? current_user } ||
+        !@course_offerings.any? { |co| co.is_staff? current_user })
+      @is_privileged = current_user.andand.is_a_member_of?(@course.user_group)
+      @access_request = current_user.andand.access_request_for(@course.user_group)
+    end
+  end
+
+  # -------------------------------------------------------------
+  # THIS IS NOT USED. LEAVING THIS ACTION HERE FOR FUTURE USE
+  def privileged_users
+    @course = Course.find params[:course_id]
+    authorize! :privileged_users, @course, message: 'You cannot review privileged users for that course.'
+    @user_group = @course.user_group
+    memberships = @user_group.andand.memberships.andand.order(created_at: :desc)
+    @users = memberships.andand.map(&:user)
+
+    respond_to do |format|
+      format.json { render json: @users.to_json }
+      format.html
+    end
+  end
+
+  # -------------------------------------------------------------
+  # GET /courses/:organization/:course/request_privileged_access/:user
+  def request_privileged_access
+    @requester = User.find params[:requester_id]
+    @course = Course.find params[:id]
+
+    @user_group = @course.user_group
+    if @user_group.nil?
+      @user_group = UserGroup.new(
+        user_group: @course.number,
+        description: "Privileged Users for #{@course.display_name}."
+      )
+      @user_group.course = @course
+      @user_group.save
+    end
+
+    if @requester.access_request_for(@user_group).nil?
+      @access_request = GroupAccessRequest.new(
+        user: @requester,
+        user_group: @user_group
+      )
+      @access_request.save
+
+      @users = (@user_group.users + User.where(global_role_id: GlobalRole.administrator)).uniq
+
+      @users.each do |user|
+        UserGroupMailer.review_access_request(user, @access_request, @course).deliver
+      end
+
+      allowed = true
+    else
+      allowed = false
+    end
+
+    respond_to do |format|
+      format.js
+      format.html {
+        if (!allowed)
+          flash[:error] = 'You cannot make a second request for access to that course.'
+          redirect_to root_path
+        else
+          redirect_to root_path
+        end
+      }
     end
   end
 
@@ -70,49 +131,35 @@ class CoursesController < ApplicationController
   # -------------------------------------------------------------
   # POST /courses
   def create
-    form = params[:course]
-    offering = form[:course_offering]
-    @course = Course.find_by(number: form[:number])
-
-    if @course.nil?
-      org = Organization.find_by(id: form[:organization_id])
-      if !org
-        flash[:error] = "Organization #{form[:organization_id]} " +
-          'could not be found.'
-        redirect_to root_path and return
-      end
-      @course = Course.new(
-        name: form[:name].to_s,
-        number: form[:number].to_s,
-        creator_id: current_user.id,
-        organization: org)
-        org.courses << @course
-        org.save
-    else
-      @course.course_offerings do |c|
-        if c.term == offering[:term].to_s
-          redirect_to new_course_path,
-            alert: 'A course offering with this number for this ' +
-            'term already exists.' and return
-        end
-      end
-    end
-
-    tmp = CourseOffering.create(
-      label: offering[:label].andand.to_s,
-      url: offering[:url].andand.to_s,
-      self_enrollment_allowed:
-        offering[:self_enrollment_allowed].andand.to_i == '1',
-      term: Term.find_by(id: offering[:term].andand.to_i))
-    @course.course_offerings << tmp
+    create_params = params[:course]
+    @organization = Organization.find(params[:organization_id])
+    @course = Course.new(
+      name: create_params[:name],
+      number: create_params[:number],
+      slug: create_params[:slug],
+      organization: @organization,
+      is_hidden: create_params[:is_hidden]
+    )
 
     if @course.save
-      redirect_to organization_course_path(
-        @course.organization,
-        @course,
-        tmp.term), notice: "#{tmp.display_name} was successfully created."
+      group = UserGroup.create(
+        name: @course.number,
+        description: "Privileged users for #{@course.display_name}."
+      )
+
+      group.course = @course
+      group.add_user_to_group(current_user)
+
+      url = url_for(organization_new_course_offering_path(
+          course_id: @course.id,
+          organization_id: @organization.id,
+          new_course: true
+        )
+      )
+      render json: { success: true, url: url } and return
     else
-      render action: 'new'
+      render json: { success: false, error:
+        "There was a problem while creating your course. Please check your fields and try again." } and return
     end
   end
 
@@ -147,10 +194,22 @@ class CoursesController < ApplicationController
 
   # -------------------------------------------------------------
   def search
+    @organization = Organization.find params[:organization_id]
+    if params[:term] && params[:slug]
+      @courses = Course.find_by(organization: @organization, slug: params[:term])
+    elsif params[:term]
+      @courses = @organization.courses.where('lower(name) like ? or lower(number) like ? or slug like ?',
+        "%#{params[:term].downcase}%", "%#{params[:term].downcase}%", "%#{params[:term]}%")
+    else
+      @courses = @organization.courses
+    end
+
+    render json: @courses and return
   end
 
 
   # -------------------------------------------------------------
+  # TODO: Not certain what this method achieves (also not sure about 'Course.search')
   def find
     @courses = Course.search(params[:search])
     redirect_to courses_search_path(courses: @courses, listing: true),

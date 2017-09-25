@@ -22,9 +22,10 @@
 #  last_name                :string(255)
 #  global_role_id           :integer          not null
 #  avatar                   :string(255)
-#  slug                     :string(255)      default(""), not null
-#  current_workout_score_id :integer
+#  slug                     :string(255)      not null
 #  time_zone_id             :integer
+#  current_workout_score_id :integer
+#  user_group_id            :integer
 #
 # Indexes
 #
@@ -35,6 +36,7 @@
 #  index_users_on_reset_password_token      (reset_password_token) UNIQUE
 #  index_users_on_slug                      (slug) UNIQUE
 #  index_users_on_time_zone_id              (time_zone_id)
+#  index_users_on_user_group_id             (user_group_id)
 #
 
 # =============================================================================
@@ -75,8 +77,14 @@ class User < ActiveRecord::Base
 
   belongs_to  :current_workout_score, class_name: 'WorkoutScore'
   has_many    :test_case_results, inverse_of: :user, dependent: :destroy
+  has_many    :lti_identities
 
+  has_many :memberships
+  has_many :user_groups, through: :memberships
+  has_many :group_access_requests, inverse_of: :user
+  has_one :exercise_collection
 
+  accepts_nested_attributes_for :memberships
   #~ Hooks ....................................................................
 
   delegate :can?, :cannot?, to: :ability
@@ -84,7 +92,7 @@ class User < ActiveRecord::Base
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, and :timeoutable
   devise :database_authenticatable, :omniauthable, :registerable,
-    :recoverable, :rememberable, :trackable, :validatable,  # :confirmable,
+    :recoverable, :rememberable, :trackable, #:validatable,  # :confirmable,
     :omniauth_providers => [:facebook, :google_oauth2, :cas]
 
   before_create :set_default_role
@@ -106,6 +114,7 @@ class User < ActiveRecord::Base
     where{ (id == u.id) |
     (course_enrollments.course_role_id != CourseRole::STUDENT_ID) } }
 
+  attr_accessor :skip_password_validation
 
   #~ Class methods ............................................................
 
@@ -115,6 +124,13 @@ class User < ActiveRecord::Base
       "#{prefix}%")).reorder('email asc').pluck(:email)
   end
 
+  def self.not_in_group(user_group)
+    if user_group.nil?
+      User.all
+    else
+      User.where.not(id: user_group.users.flat_map(&:id))
+    end
+  end
 
   #~ Instance methods .........................................................
 
@@ -130,6 +146,13 @@ class User < ActiveRecord::Base
     @ability ||= Ability.new(self)
   end
 
+  def is_a_member_of?(user_group)
+    user_groups.include?(user_group)
+  end
+
+  def access_request_for(user_group)
+    GroupAccessRequest.find_by user: self, user_group: user_group
+  end
 
   # -------------------------------------------------------------
   # Public: Gets a relation representing all of the CourseOfferings that
@@ -138,8 +161,11 @@ class User < ActiveRecord::Base
   #
   # Returns a relation representing all of the CourseOfferings that this
   # user can manage
+  # params = {term, course} (optional)
   #
-  def managed_course_offerings(course=nil, term=nil)
+  def managed_course_offerings(options = {})
+    course = options[:course]
+    term = options[:term]
     if course.nil? && term.nil?
       course_enrollments.where(course_roles: { can_manage_course: true }).
         map(&:course_offering)
@@ -149,6 +175,12 @@ class User < ActiveRecord::Base
           { can_manage_course: true }, course_offering:
             { term: term }
         ).map(&:course_offering)
+    elsif term.nil?
+      course_enrollments.joins(:course_offering).
+        where(course_roles:
+          { can_manage_course: true }, course_offering:
+            { course: course }
+        ).map(&:course_offering)
     else
       course_enrollments.joins(:course_offering).
         where(course_roles:
@@ -157,7 +189,6 @@ class User < ActiveRecord::Base
         ).map(&:course_offering)
     end
   end
-
 
   # -------------------------------------------------------------
   def instructor_course_offerings
@@ -179,21 +210,49 @@ class User < ActiveRecord::Base
       map(&:course_offering)
   end
 
+  # Get all workout offerings from course offerings that the
+  # user manages, for the specified course and term
   def managed_workout_offerings_in_term(workout, course, term)
-    course_enrollments.joins(course_offering: :workout_offerings).
+    if !term.nil?
+      enrollments = course_enrollments.joins(course_offering: :workout_offerings).
+        where(course_roles:
+          { can_manage_course: true }, course_offering:
+            { course: course, term: term }
+        )
+      else
+        enrollments = course_enrollments.joins(course_offering: :workout_offerings).
+          where(course_roles:
+            { can_manage_course: true }, course_offering:
+              { course: course }
+            )
+      end
+
+      enrollments.map { |e|
+        if workout.kind_of?(String)
+          workouts_with_name = Workout.where('lower(name) = ?', workout)
+          return e.course_offering.workout_offerings.where{ workout_id.in(workouts_with_name.select{id})}
+        else
+          return e.course_offering.workout_offerings.where(workout: workout)
+        end
+      }
+  end
+
+  # Get all workouts that have been offered in a course
+  # for which the user has been an instructor AND for which
+  # the user is in the privileged group
+  # Simply being an instructor in the course is not enough,
+  # to prevent users from simply creating `fake` course_offerings
+  # to get access to course materials
+  def managed_workouts
+    course_enrollments.joins(course_offering: { course: { user_group: :memberships } }).
       where(course_roles:
         { can_manage_course: true }, course_offering:
-          { course: course, term: term }
-      ).map { |e| e.course_offering.workout_offerings.where(workout: workout) }
-  end
-
-  def managed_workouts
-    course_enrollments.joins(course_offering: :workout_offerings).
-      where(course_roles:
-        { can_manage_course: true }
+          { course:
+            { user_group:
+              { memberships:
+                { user: self } } } }
       ).flat_map { |e| e.course_offering.workout_offerings }.map(&:workout)
   end
-
 
   # -------------------------------------------------------------
   def course_offerings_for_term(term, course)
@@ -224,6 +283,14 @@ class User < ActiveRecord::Base
     last_name.blank? ?
       (first_name.blank? ? email : first_name) :
       (first_name.blank? ? last_name : (first_name + ' ' + last_name))
+  end
+
+  # -------------------------------------------------------------
+  # Gets the user's "label name", which is their last name, first name, or email_without_domain,
+  # in decreasing order of preference. For use in auto-generated course_offering labels
+  def label_name
+    last_name.blank? ?
+      (first_name.blank? ? email_without_domain : first_name) : last_name
   end
 
 
@@ -353,6 +420,9 @@ class User < ActiveRecord::Base
     # taken from: http://www.chicagoinformatics.com/index.php/2012/09/
     # user-administration-for-devise/
     def password_required?
+      # only set when creating a new user through LTI
+      return false if skip_password_validation
+
       (!password.blank? && !password_confirmation.blank?) || new_record?
     end
 

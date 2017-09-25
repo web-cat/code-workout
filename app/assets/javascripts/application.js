@@ -13,6 +13,7 @@
 //= require modernizr.min.js
 //= require jquery
 //= require jquery-ui/sortable
+//= require jquery-ui/autocomplete
 //= require jquery_ujs
 //= require bootstrap-sprockets
 //= require bootstrap-editable
@@ -20,6 +21,7 @@
 //= require js-routes
 //= require codemirror
 //= require codemirror/modes/clike
+//= require codemirror/modes/yaml
 //= require bootstrap-wysihtml5
 //= require cocoon
 //= require cm
@@ -27,9 +29,9 @@
 //= require moment
 //= require bootstrap-datetimepicker
 //= require mustache.min
+//= require student_search
 //= require workout_form
-//= require new_or_existing
-
+//= require flatpickr
 
 // Add the route helpers directly into the window object for easy access.
 $.extend(window, Routes);

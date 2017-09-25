@@ -1,6 +1,7 @@
 = javascript_tag do
   window.codeworkout = window.codeworkout || {}
   window.codeworkout.lti_launch = "#{@lti_launch}"
+  window.codeworkout.lms_assignment_id = "#{@lms_assignment_id}"
   window.codeworkout.extension_template_path = "#{asset_path 'student_extension.mustache.html'}"
   window.codeworkout.exercise_template_path = "#{asset_path 'exercise.mustache.html'}"
   window.codeworkout.organization_id = "#{@organization.slug}"
@@ -19,8 +20,7 @@
         data: { old_name: @workout.present? ? @workout.name : '' }
     .row
       .col-xs-offset-2.col-lg-7.col-md-6.col-xs-7.alert-msg#clone-msg{ style: 'display: none;' }
-        You do not have permission to edit this workout. If you put in a new name, we can create a clone with your
-        new settings.
+        You are cloning this workout. Please enter a new name, and we'll create a new workout with your new settings.
   .form-group
     = label_tag :description, 'Description', class: 'control-label col-xs-2'
     .col-lg-7.col-md-6.col-xs-7
@@ -46,8 +46,8 @@
       %i.fa.fa-info-circle.action{ data: { toggle: 'modal', target: '#policy-help-modal' } }
     = label_tag :time_limit, 'Time', class: 'control-label col-xs-1'
     .col-xs-2
-      %input#time-limit.form-control.input-sm.input{ type: 'number', min: '0',
-        placeholder: 'Leave blank for none.', value: @time_limit ? "#{@time_limit}" : '' }
+      %input#time-limit.time-limit.form-control.input-sm.input{ type: 'number', min: '0',
+        placeholder: 'Optional', value: @time_limit ? "#{@time_limit}" : '' }
 
   .form-group
     = label_tag :is_public, 'Available in Gym?', class: 'control-label col-xs-2'
@@ -76,10 +76,13 @@
   .form-group
     %p.lead Add to Course Offerings
     .col-lg-9.col-md-6.col-xs-9
-      %table#workout-offering-fields.table{ data: { can_update: "#{@can_update}" } }
+      %table#workout-offering-fields.table{ data: { can_update: "#{@can_update}", lms_assignment_id: @lms_assignment_id } }
         %thead
           %tr
             %th Course Offering
+            %th.lms-url
+              LMS URL
+              %i.fa.fa-info-circle.action{ data: { toggle: 'modal', target: '#lms-url-help-modal' } }
             %th Opens On
             %th Due Date
             %th Accepts Until
@@ -103,7 +106,7 @@
 
   .form-group#extensions{ style: 'display: none;', data: { student_extensions: "#{@student_extensions.to_json}" } }
     %p.lead Student Extensions
-    .col-lg-9.col-md-6.col-xs-9
+    .col-lg-10.col-md-6.col-xs-9
       %table#student-extension-fields.table
         %thead
           %tr
@@ -124,23 +127,18 @@
     %tbody
       = render partial: 'workout_offering_fields', locals: { removable: true, workout_offering: nil, course_offering: nil }
 
-#extension-modal.modal.fade{role: 'dialog', tabindex: '-1' }
+#student-search-modal.modal.fade{role: 'dialog', tabindex: '-1' }
   .modal-dialog.modal-lg{ style: 'overflow-y: scroll; max-height:85% margin-top: 50px; margin-bottom:50px;' }
-    .modal-content
-      .modal-header
-        %p.lead#modal-header
+    .modal-content.searchable
+      .modal-header.header
+        %p.lead
       .modal-body
         .form-group
-          .col-xs-10
-            = text_field_tag 'terms', nil, placeholder: 'e.g John Smith or jsmith9@vt.edu or john. Blank for all students.',
-              class: 'form-control'
-          .col-xs-2
-            = button_tag 'Search', id: 'btn-student-search', class: 'btn'
-        #student-search-results
-          .msg
-            No results yet
-          #results-area
-            .list-group#students
+          = label_tag :student, 'Find a student', class: 'control-label col-xs-3'
+          .col-xs-12.col-md-9
+            .ui-widget
+              = text_field_tag :student, nil, id: 'student', class: 'form-control input-sm',
+                placeholder: "Start typing a name or email address"
 
 #offerings-modal.modal.fade{role: 'dialog', tabindex: '-1' }
   .modal-dialog.modal-lg{ style: 'overflow-y: scroll; max-height:85% margin-top: 50px; margin-bottom:50px;' }
@@ -162,14 +160,31 @@
       .modal-header
         %p.lead Workout Policy Information
       .modal-body
-        %table.table
-          %thead
-            %th Name
-            %th Description
-          %tbody
-            - WorkoutPolicy.all.each do |policy|
-              %tr
-                %td
-                  = policy.name
-                %td
-                  = policy.description
+        %small
+          Control policies like showing feedback before the assignment closes, showing results from test cases, review ability, etc.
+        - if WorkoutPolicy.any?
+          %table.table
+            %thead
+              %th Name
+              %th Description
+            %tbody
+              - WorkoutPolicy.all.each do |policy|
+                %tr
+                  %td
+                    = policy.name
+                  %td
+                    = policy.description
+        - else
+          %small
+            %br
+            There are no workout policies available for use at the moment.
+
+#lms-url-help-modal.modal.fade{role: 'dialog', tabindex: '-1' }
+  .modal-dialog.modal-md{ style: 'overflow-y: scroll; max-height:85% margin-top: 50px; margin-bottom:50px;' }
+    .modal-content
+      .modal-body
+        If you want this assignment to be accessed ONLY through a Learning Management System such
+        as Canvas, CourseDen, or Moodle, paste the url to the LMS assignment here.
+
+        .text.text-danger
+          Including this field will automatically redirect students to the provided URL.

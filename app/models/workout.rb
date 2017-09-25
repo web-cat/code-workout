@@ -3,7 +3,7 @@
 # Table name: workouts
 #
 #  id                :integer          not null, primary key
-#  name              :string(255)      default(""), not null
+#  name              :string(255)      not null
 #  scrambled         :boolean          default(FALSE)
 #  created_at        :datetime
 #  updated_at        :datetime
@@ -17,6 +17,7 @@
 #
 #  index_workouts_on_external_id  (external_id) UNIQUE
 #  index_workouts_on_is_public    (is_public)
+#  workouts_creator_id_fk         (creator_id)
 #
 
 # =============================================================================
@@ -35,7 +36,6 @@
 # offerings have been given workout offerings.
 #
 class Workout < ActiveRecord::Base
-
   #~ Relationships ............................................................
 
   acts_as_taggable_on :tags, :languages, :styles
@@ -77,6 +77,14 @@ class Workout < ActiveRecord::Base
 
 
   #~ Class methods ............................................................
+
+  #~ Instance methods .........................................................
+
+  # Workout is visible if the user is the creator or
+  # if the workout is public
+  def visible_to?(user)
+    self.is_public || self.creator == user
+  end
 
   # -------------------------------------------------------------
   # FIXME: probably shouldn't be here, since it omits setting the
@@ -234,11 +242,17 @@ class Workout < ActiveRecord::Base
       workout_offering.course_offering = course_offering
       workout_offering.time_limit = common[:time_limit]
       workout_offering.published = common[:published]
-      workout_offering.most_recent = common[:most_recent]
-      workout_offering.opening_date = DateTime.parse(offering['opening_date']) if offering['opening_date']
-      workout_offering.soft_deadline = DateTime.parse(offering['soft_deadline']) if offering['soft_deadline']
-      workout_offering.hard_deadline = DateTime.parse(offering['hard_deadline']) if offering['hard_deadline']
+      if common[:most_recent].to_b != workout_offering.most_recent
+        workout_offering.most_recent = common[:most_recent]
+        workout_offering.save!
+        workout_offering.rescore_all
+      end
+      workout_offering.lms_assignment_url = offering['lms_assignment_url']
+      workout_offering.opening_date = DateTime.strptime(offering['opening_date'].to_s, '%Q') if offering['opening_date'].present?
+      workout_offering.soft_deadline = DateTime.strptime(offering['soft_deadline'].to_s, '%Q') if offering['soft_deadline'].present?
+      workout_offering.hard_deadline = DateTime.strptime(offering['hard_deadline'].to_s, '%Q') if offering['hard_deadline'].present?
       workout_offering.workout_policy = common[:workout_policy]
+      workout_offering.lms_assignment_id = common[:lms_assignment_id]
       workout_offering.save!
       workout_offerings << workout_offering.id
       extensions = offering['extensions']
@@ -251,15 +265,26 @@ class Workout < ActiveRecord::Base
         end
         student_extension.user = student
         student_extension.workout_offering = workout_offering
-        student_extension.opening_date = DateTime.parse(ext['opening_date']) if ext['opening_date']
-        student_extension.soft_deadline = DateTime.parse(ext['soft_deadline']) if ext['soft_deadline']
-        student_extension.hard_deadline = DateTime.parse(ext['hard_deadline']) if ext['hard_deadline']
-        student_extension.time_limit = ext['time_limit']
+        student_extension.opening_date = DateTime.strptime(ext['opening_date'].to_s, '%Q') if ext['opening_date'].present?
+        student_extension.soft_deadline = DateTime.strptime(ext['soft_deadline'].to_s, '%Q') if ext['soft_deadline'].present?
+        student_extension.hard_deadline = DateTime.strptime(ext['hard_deadline'].to_s, '%Q') if ext['hard_deadline'].present?
+        student_extension.time_limit = ext['time_limit'] if ext['time_limit'].present?
         student_extension.save!
       end
     end
 
     return workout_offerings
+  end
+
+  def deep_clone!
+    clone = self.dup
+    clone.save
+    self.exercises.each do |e|
+      exercise_workout = ExerciseWorkout.new(workout: clone, exercise: e)
+      exercise_workout.save
+    end
+
+    return clone
   end
 
   # -------------------------------------------------------------
@@ -272,24 +297,85 @@ class Workout < ActiveRecord::Base
   #~ Class methods ............................................................
 
   # -------------------------------------------------------------
-  def self.search(terms, user)
+  def self.search(terms, user, course, searching_offerings)
+    split_terms = terms.blank? ? nil : terms.join('|')
+
     if user
       available_workouts = Workout.where(
         id: (Workout.visible_to_user(user) + user.managed_workouts)
         .map(&:id)
       )
 
-      return available_workouts
-        .tagged_with(terms, any: true, wild: true, on: :tags) +
-        available_workouts
-        .tagged_with(terms, any: true, wild: true, on: :languages) +
-        available_workouts
-        .tagged_with(terms, any: true, wild: true, on: :styles)
-    else
-      return Workout.tagged_with(terms, any: true, wild: true, on: :tags) +
-        Workout.tagged_with(terms, any: true, wild: true, on: :languages) +
-        Workout.tagged_with(terms, any: true, wild: true, on: :styles)
-    end
-  end
+      # If a course is specified, we want the results sorted by terms in which
+      # workouts were offered for that course.
+      if course && user.is_a_member_of?(course.andand.user_group)
+        workout_offerings = course.course_offerings.joins(:workout_offerings, :term)
+          .order('terms.ends_on DESC')
+          .flat_map(&:workout_offerings)
+        if terms.blank?
+          workouts_to_search = available_workouts
+        else
+          workouts_to_search = available_workouts.tagged_with(terms, any: true, wild: true, on: :tags) +
+            available_workouts.tagged_with(terms, any: true, wild: true, on: :languages) +
+            available_workouts.tagged_with(terms, any: true, wild: true, on: :styles)
+          if split_terms
+            workouts_to_search = workouts_to_search + available_workouts.where('name regexp (?)', split_terms)
+          end
+        end
+        workouts_to_search = workouts_to_search.flat_map(&:id)
 
+        workout_offerings = workout_offerings.select{ |wo| workouts_to_search.include?(wo.workout.id) }
+
+        # workouts_with_term is of the form
+        # [[CourseOffering, WorkoutOffering], [CourseOffering, WorkoutOffering], [CourseOffering, WorkoutOffering]]
+        # we will convert it into a Hash where each key is a term, and each value is an array of Workouts
+        # that were offered in that term
+        if searching_offerings
+          workouts_with_term = workout_offerings.map { |wo| [wo.course_offering.term, wo] }
+          results = workouts_with_term.group_by(&:first)
+            .map{ |k, a| [k, a.map(&:last)] }
+          results = array_to_hash(results)
+          results.each do |term, workout_offerings|
+            results[term] = workout_offerings.uniq{ |wo| wo.workout }
+          end
+        else
+          workouts_with_term = workout_offerings.map { |wo| [wo.course_offering.term, wo.workout] }
+          results = workouts_with_term.group_by(&:first)
+            .map{ |k, a| [k, a.map(&:last)] }
+          results = array_to_hash(results)
+          results.each do |term, workouts|
+            results[term] = workouts.uniq
+          end
+        end
+        return results
+      end
+    else
+      available_workouts = Workout.where(is_public: true)
+    end
+
+    return available_workouts.tagged_with(terms, any: true, wild: true, on: :tags) +
+      available_workouts.tagged_with(terms, any: true, wild: true, on: :languages) +
+      available_workouts.tagged_with(terms, any: true, wild: true, on: :styles) +
+      available_workouts.where('name regexp (?)', split_terms).uniq
+  end
+end
+
+private
+
+#helper to convert array to hash
+# duplicated from ArrayHelper for the moment
+
+# Converts an array of the form
+# [[k1, val1],[k2, val2]] to a hash of the form
+# { k1: val, k2: val2}
+# val1 and val2 can be inner arrays
+#----------------------------------
+def array_to_hash(a)
+  h = {}
+  a.each do |i|
+    key = i.first
+    value = i.last
+    h[key] = value
+  end
+  h
 end

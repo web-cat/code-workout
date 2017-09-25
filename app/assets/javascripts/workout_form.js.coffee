@@ -1,3 +1,6 @@
+default_point_value = 1
+searchable = null
+
 $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
   window.codeworkout ?= {}
   window.codeworkout.removed_exercises = []
@@ -13,16 +16,31 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
     validate_workout_name()
 
   $('.search-results').on 'click', '.add-ex', ->
-    $('.empty-msg').css 'display', 'none'
-    $('#ex-list').css 'display', 'block'
-    ex_name = $(this).data('ex-name')
     ex_id = $(this).data('ex-id')
-    data =
-      name: ex_name
-      id: ex_id
-      points: 0
-    template = Mustache.render($(window.codeworkout.exercise_template).filter('#exercise-template').html(), data)
-    $('#ex-list').append(template)
+    ex_name = $(this).data('ex-name')
+    name = "X#{ex_id}"
+    can_add = !exercise_is_in_workout(ex_id)
+    if can_add
+      $('.empty-msg').css 'display', 'none'
+      $('#ex-list').css 'display', 'block'
+      if ex_name
+        name = name + ": #{ex_name}"
+      data =
+        name: name
+        id: ex_id
+        points: default_point_value
+      template = Mustache.render($(window.codeworkout.exercise_template).filter('#exercise-template').html(), data)
+      $('#ex-list').append(template)
+    else
+      form_alert(["Exercise #{name} has already been added to this workout."])
+      exercise = $('#ex-list').find("[data-id=#{ex_id}]")
+      exercise.addClass 'shake'
+      setTimeout ->
+        exercise.removeClass 'shake'
+      , 1000
+
+  $('#ex-list').on 'change', '.points', ->
+    default_point_value = $(this).val()
 
   $('#course-offerings').on 'click', 'a', ->
     course_offering_id = $(this).data 'course-offering-id'
@@ -61,32 +79,29 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
       alert 'Cannot delete this workout. Some students have already attempted it.'
 
   $('#workout-offering-fields').on 'click', '.add-extension', ->
-    course_offering = $(this).closest('tr').find('.course-offering small').text()
-    course_offering_id = $(this).closest('tr').find('.course-offering').data 'course-offering-id'
-    clear_student_search()
-    $('#extension-modal').data('course-offering', { id: course_offering_id, display: course_offering } )
-    $('#extension-modal #modal-header').append 'Searching for students from <u>' + course_offering + '</u>'
-    $('#btn-student-search').click ->
-      search_students(course_offering_id)
-    $('#terms').keydown (e) ->
-      if e.keyCode == 13
-        search_students(course_offering_id)
+    course_offering = $(this).closest('tr').find('.course-offering')
+    course_offering_display = $(course_offering).text()
+    course_offering_id = $(course_offering).data 'course-offering-id'
+    $('#student-search-modal').modal('show');
+    searchable = $('.searchable').StudentSearch
+      course_offering_display: course_offering_display
+      course_offering_id: course_offering_id
 
-  $('#students').on 'click', 'a', ->
-    course_offering = $('#extension-modal').data('course-offering')
-    student =
-      id: $(this).data('student-id')
-      display: $(this).text()
-    data =
-      course_offering_id: course_offering.id
-      course_offering_display: course_offering.display
-      student_display: student.display
-      student_id: student.id
-    template = $(Mustache.render($(window.codeworkout.student_extension_template).filter('#extension-template').html(), data))
-    $('#student-extension-fields tbody').append(template)
-    $('#extension-modal').modal('hide')
-    $('#extensions').css 'display', 'block'
-    init_row_datepickers template
+  $('.searchable').on 'studentSelect', (e) ->
+    if (searchable)
+      $('#student-search-modal').modal('hide')
+      name = if e.student_name.length > 1 then e.student_name else e.student_display
+      data =
+        course_offering_id: searchable.course_offering.id
+        course_offering_display: searchable.course_offering.display
+        student_display: e.student_display
+        student_id: e.student_id
+
+      template = $(Mustache.render($(window.codeworkout.student_extension_template).filter('#extension-template').html(), data))
+      $('#student-extension-fields tbody').append(template)
+      $('#student-search-modal').modal('hide')
+      $('#extensions').css 'display', 'block'
+      init_row_datepickers template
 
   $(document).on 'click', '.delete-extension', ->
     row = $(this).closest('tr')
@@ -112,6 +127,11 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
 
   $('#btn-submit-wo').click ->
     handle_submit()
+
+  $('#student-search-modal').on 'shown.bs.modal', ->
+    $('#terms').focus();
+
+# End event handlers, begin helper methods
 
 init = ->
   description = $('textarea#description').data 'value'
@@ -156,26 +176,10 @@ init_templates = ->
     if $('body').is '.workouts.edit'
       init_student_extensions()
 
-clear_student_search = ->
-  $('#extension-modal #modal-header').empty()
-  $('#extension-modal .msg').empty()
-  $('#students').empty()
-  $('#terms').val('')
-
-search_students = (course_offering_id) ->
-  $.ajax
-    url: '/course_offerings/' + course_offering_id + '/search_students'
-    type: 'get'
-    data: { terms: $('#terms').val() }
-    cache: true
-    dataType: 'script'
-    success: (data) ->
-      # init_datepickers()
-
 validate_workout_name = ->
-  can_update = $('#workout-offering-fields').data 'can-update'
+  cloning = $('body').is('.workouts.clone')
   name_field = $('#wo-name')
-  if can_update == false
+  if cloning
     if name_field.val() == name_field.data 'old-name'
       $('#clone-msg').css 'display', 'block'
       return false
@@ -198,9 +202,9 @@ init_student_extensions = ->
           student_id: extension.student_id
           student_display: extension.student_display
           time_limit: extension.time_limit
-          opening_date: extension.opening_date
-          soft_deadline: extension.soft_deadline
-          hard_deadline: extension.hard_deadline
+          opening_date: extension.opening_date * 1000
+          soft_deadline: extension.soft_deadline * 1000
+          hard_deadline: extension.hard_deadline * 1000
         template =
             $(Mustache.render($(window.codeworkout.student_extension_template).filter('#extension-template').html(), data))
         $('#student-extension-fields tbody').append template
@@ -211,10 +215,13 @@ init_exercises = ->
   if exercises
     for exercise in exercises
       do (exercise) ->
+        name = "X#{exercise.id}"
+        if exercise.name
+          name = name + ": #{exercise.name}"
         data =
           id: exercise.id
           exercise_workout_id: exercise.exercise_workout_id
-          name: exercise.name
+          name: name
           points: exercise.points
         $('#ex-list').append(Mustache.render($(window.codeworkout.exercise_template).filter('#exercise-template').html(), data))
     $('#ex-list').removeData 'exercises'
@@ -231,69 +238,58 @@ init_datepickers = ->
       init_row_datepickers extension
 
 init_row_datepickers = (row) ->
-  opening_datepicker = $('.input-group.opening-datepicker', $(row))
-  soft_datepicker = $('.input-group.soft-datepicker', $(row))
-  hard_datepicker = $('.input-group.hard-datepicker', $(row))
+  opening_input = $('.opening-datepicker', $(row))
+  soft_input = $('.soft-datepicker', $(row))
+  hard_input = $('.hard-datepicker', $(row))
 
-  if opening_datepicker.val() == '' || !opening_datepicker.data('DateTimePicker').date()?
-    opening_datepicker.datetimepicker
-      useCurrent: false
-  if soft_datepicker.val() == '' || !soft_datepicker.data('DateTimePicker').date()?
-    soft_datepicker.datetimepicker
-      useCurrent: false
-      minDate: opening_datepicker.data('DateTimePicker').minDate()
-  if hard_datepicker.val() == '' || !hard_datepicker.data('DateTimePicker').date()?
-    hard_datepicker.datetimepicker
-      useCurrent: false
-      minDate: soft_datepicker.data('DateTimePicker').minDate()
-
-  # Handle date change events
-  opening_datepicker.on 'dp.change', (e) ->
-    if e.date?
-      soft_datepicker.data('DateTimePicker').minDate e.date
-      disable_dates hard_datepicker, soft_datepicker, opening_datepicker, 'minDate'
-
-  soft_datepicker.on 'dp.change', (e) ->
-    if e.date?
-      opening_datepicker.data('DateTimePicker').maxDate e.date
-      hard_datepicker.data('DateTimePicker').minDate e.date
-
-  hard_datepicker.on 'dp.change', (e) ->
-    if e.date?
-      soft_datepicker.data('DateTimePicker').maxDate e.date
-      disable_dates opening_datepicker, soft_datepicker, hard_datepicker, 'maxDate'
+  opening_datepicker = null
+  soft_datepicker = null
+  hard_datepicker = null
+  if opening_input.val() == ''
+    opening_datepicker = opening_input.flatpickr
+      enableTime: true
+      altInput: true
+      altFormat: 'M j, Y - h:i K'
+      onChange: (selectedDates, dateStr, instance) ->
+        if selectedDates.length
+          date = selectedDates[0].getTime()
+          opening_input.data 'date', date
+  if soft_input.val() == ''
+    soft_datepicker = soft_input.flatpickr
+      enableTime: true
+      altInput: true
+      altFormat: 'M j, Y - h:i K'
+      onChange: (selectedDates, dateStr, instance) ->
+        if selectedDates.length
+          date = selectedDates[0].getTime()
+          soft_input.data 'date', date
+  if hard_input.val() == ''
+    hard_datepicker = hard_input.flatpickr
+      enableTime: true
+      altInput: true
+      altFormat: 'M j, Y - h:i K'
+      onChange: (selectedDates, dateStr, instance) ->
+        if selectedDates.length
+          date = selectedDates[0].getTime()
+          hard_input.data 'date', date
 
   # Set existing values, if applicable
   if $('body').is '.workouts.edit'
-    if opening_datepicker.data('date')? && opening_datepicker.data('date') != ''
-      opening_date = moment.unix(parseInt(opening_datepicker.data('date')))
-      opening_datepicker.data('DateTimePicker').defaultDate opening_date
+    if opening_input.data('date')? && opening_input.data('date') != ''
+      date = parseInt(opening_input.data('date'))
+      opening_datepicker.setDate(date, false)
 
-    if soft_datepicker.data('date')? && soft_datepicker.data('date') != ''
-      soft_date = moment.unix(parseInt(soft_datepicker.data('date')))
-      soft_datepicker.data('DateTimePicker').defaultDate soft_date
+    if soft_input.data('date')? && soft_input.data('date') != ''
+      date = parseInt(soft_input.data('date'))
+      soft_datepicker.setDate(date, false)
 
-    if hard_datepicker.data('date')? && hard_datepicker.data('date') != ''
-      hard_date = moment.unix(parseInt(hard_datepicker.data('date')))
-      hard_datepicker.data('DateTimePicker').defaultDate hard_date
-
-    disable_dates opening_datepicker, soft_datepicker, hard_datepicker, 'maxDate'
-    disable_dates soft_datepicker, opening_datepicker, undefined, 'minDate'
-    disable_dates soft_datepicker, hard_datepicker, undefined, 'maxDate'
-    disable_dates hard_datepicker, soft_datepicker, opening_datepicker, 'minDate'
-
-disable_dates = (this_datepicker, preferred_datepicker, backup_datepicker, min_max) ->
-  preferred_date = if preferred_datepicker? then preferred_datepicker.data('DateTimePicker').date() else undefined
-  backup_date = if backup_datepicker? then backup_datepicker.data('DateTimePicker').date() else undefined
-
-  if preferred_date?
-    this_datepicker.data('DateTimePicker')[min_max](preferred_date)
-  else if backup_date?
-    this_datepicker.data('DateTimePicker')[min_max](backup_date)
+    if hard_input.data('date')? && hard_input.data('date') != ''
+      date = parseInt(hard_input.data('date'))
+      hard_datepicker.setDate(date, false)
 
 get_exercises = ->
   exs = $('#ex-list li')
-  exercises = {}
+  exercises = []
   i = 0
   while i < exs.length
     ex_id = $(exs[i]).data('id')
@@ -301,9 +297,21 @@ get_exercises = ->
     ex_points = '0' if ex_points == ''
     ex_obj = { id: ex_id, points: ex_points }
     position = i + 1
-    exercises[position.toString()] = ex_obj
+    exercises.push(ex_obj)
     i++
   return exercises
+
+# Checks if an exercise with the specified ID
+# has already been added to the workout.
+#
+# exercises -- An array of exercise objects, as returned by
+#       get_exercises
+# ex_id -- An integer
+exercise_is_in_workout = (ex_id) ->
+  for exercise in get_exercises() when exercise['id'] is ex_id
+    return true
+
+  return false
 
 get_offerings = ->
   offerings = {}
@@ -312,16 +320,15 @@ get_offerings = ->
     do (offering_row) ->
       offering_fields = $('td', $(offering_row))
       offering_id = $(offering_fields[0]).data 'course-offering-id'
+      lms_assignment_url = $('input', offering_fields[1])[0].value
+      console.log lms_assignment_url
       if offering_id != ''
-        opening_datepicker = $('.opening-datepicker', $(offering_fields[1])).data('DateTimePicker').date()
-        soft_datepicker = $('.soft-datepicker', $(offering_fields[2])).data('DateTimePicker').date()
-        hard_datepicker = $('.hard-datepicker', $(offering_fields[3])).data('DateTimePicker').date()
-
-        opening_date = if opening_datepicker? then opening_datepicker.toDate().toString() else null
-        soft_deadline = if soft_datepicker? then soft_datepicker.toDate().toString() else null
-        hard_deadline = if hard_datepicker? then hard_datepicker.toDate().toString() else null
+        opening_date = $('.opening-datepicker', $(offering_fields[2])).data('date')
+        soft_deadline = $('.soft-datepicker', $(offering_fields[3])).data('date')
+        hard_deadline = $('.hard-datepicker', $(offering_fields[4])).data('date')
 
         offering =
+          lms_assignment_url: lms_assignment_url
           opening_date: opening_date
           soft_deadline: soft_deadline
           hard_deadline: hard_deadline
@@ -339,15 +346,10 @@ get_offerings_with_extensions = ->
       extension_fields = $('td', $(extension_row))
       student_id = $(extension_row).data 'student-id'
       course_offering_id = $(extension_row).data 'course-offering-id'
-      time_limit = $('.time_limit', $(extension_fields[5])).val()
-      opening_datepicker = $('.opening-datepicker', $(extension_fields[2])).data('DateTimePicker').date()
-      soft_datepicker = $('.soft-datepicker', $(extension_fields[3])).data('DateTimePicker').date()
-      hard_datepicker = $('.hard-datepicker', $(extension_fields[4])).data('DateTimePicker').date()
-
-      opening_date = if opening_datepicker? then opening_datepicker.toDate().toString() else null
-      soft_deadline = if soft_datepicker? then soft_datepicker.toDate().toString() else null
-      hard_deadline = if hard_datepicker? then hard_datepicker.toDate().toString() else null
-
+      time_limit = $('.time-limit', $(extension_fields[5])).val()
+      opening_date = $('.opening-datepicker', $(extension_fields[2])).data('date')
+      soft_deadline = $('.soft-datepicker', $(extension_fields[3])).data('date')
+      hard_deadline = $('.hard-datepicker', $(extension_fields[4])).data('date')
       extension =
         student_id: student_id
         time_limit: time_limit
@@ -418,6 +420,7 @@ handle_submit = ->
   fd.append 'term_id', window.codeworkout.term_id
   fd.append 'organization_id', window.codeworkout.organization_id
   fd.append 'course_id', window.codeworkout.course_id
+  fd.append 'lms_assignment_id', window.codeworkout.lms_assignment_id
   # Tells the server whether this form is being submitted through LTI or not.
   # The window.codeworkout namespace was declared in the workouts/_form partial.
   fd.append 'lti_launch', window.codeworkout.lti_launch if window.codeworkout.lti_launch != ''
@@ -425,10 +428,12 @@ handle_submit = ->
   if $('body').is '.workouts.new'
     url = '/gym/workouts'
     type = 'post'
-  else if $('body').is('.workouts.edit') || $('body').is('.workouts.clone')
-    can_update = $('#workout-offering-fields').data 'can-update'
-    url = if can_update == true then '/gym/workouts/' + $('h1').data('id') else '/gym/workouts'
-    type = if can_update == true then 'patch' else 'post'
+  else if $('body').is '.workouts.edit'
+    url = '/gym/workouts/' + $('h1').data('id')
+    type = 'patch'
+  else if $('body').is '.workouts.clone'
+    url = '/gym/workouts'
+    type = 'post'
 
   $.ajax
     url: url

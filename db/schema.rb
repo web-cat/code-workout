@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20161129200944) do
+ActiveRecord::Schema.define(version: 20170920191837) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -142,17 +142,20 @@ ActiveRecord::Schema.define(version: 20161129200944) do
   end
 
   create_table "courses", force: true do |t|
-    t.string   "name",            null: false
-    t.string   "number",          null: false
-    t.integer  "organization_id", null: false
+    t.string   "name",                            null: false
+    t.string   "number",                          null: false
+    t.integer  "organization_id",                 null: false
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "creator_id"
-    t.string   "slug",            null: false
+    t.string   "slug",                            null: false
+    t.integer  "user_group_id"
+    t.boolean  "is_hidden",       default: false
   end
 
   add_index "courses", ["organization_id"], name: "index_courses_on_organization_id", using: :btree
   add_index "courses", ["slug"], name: "index_courses_on_slug", using: :btree
+  add_index "courses", ["user_group_id"], name: "index_courses_on_user_group_id", using: :btree
 
   create_table "errors", force: true do |t|
     t.string   "usable_type"
@@ -170,6 +173,22 @@ ActiveRecord::Schema.define(version: 20161129200944) do
 
   add_index "errors", ["class_name"], name: "index_errors_on_class_name", using: :btree
   add_index "errors", ["created_at"], name: "index_errors_on_created_at", using: :btree
+
+  create_table "exercise_collections", force: true do |t|
+    t.string   "name"
+    t.text     "description"
+    t.integer  "user_group_id"
+    t.integer  "license_id"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+    t.integer  "user_id"
+    t.integer  "course_offering_id"
+  end
+
+  add_index "exercise_collections", ["course_offering_id"], name: "index_exercise_collections_on_course_offering_id", using: :btree
+  add_index "exercise_collections", ["license_id"], name: "index_exercise_collections_on_license_id", using: :btree
+  add_index "exercise_collections", ["user_group_id"], name: "index_exercise_collections_on_user_group_id", using: :btree
+  add_index "exercise_collections", ["user_id"], name: "index_exercise_collections_on_user_id", using: :btree
 
   create_table "exercise_families", force: true do |t|
     t.string   "name",       null: false
@@ -189,10 +208,11 @@ ActiveRecord::Schema.define(version: 20161129200944) do
     t.integer  "stem_id"
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer  "exercise_id", null: false
-    t.integer  "version",     null: false
+    t.integer  "exercise_id",                          null: false
+    t.integer  "version",                              null: false
     t.integer  "creator_id"
     t.integer  "irt_data_id"
+    t.text     "text_representation", limit: 16777215
   end
 
   add_index "exercise_versions", ["creator_id"], name: "exercise_versions_creator_id_fk", using: :btree
@@ -221,20 +241,22 @@ ActiveRecord::Schema.define(version: 20161129200944) do
   add_index "exercise_workouts", ["workout_id"], name: "exercise_workouts_workout_id_fk", using: :btree
 
   create_table "exercises", force: true do |t|
-    t.integer  "question_type",                      null: false
+    t.integer  "question_type",                          null: false
     t.integer  "current_version_id"
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "versions"
     t.integer  "exercise_family_id"
     t.string   "name"
-    t.boolean  "is_public",          default: false, null: false
-    t.integer  "experience",                         null: false
+    t.boolean  "is_public",              default: false, null: false
+    t.integer  "experience",                             null: false
     t.integer  "irt_data_id"
     t.string   "external_id"
+    t.integer  "exercise_collection_id"
   end
 
   add_index "exercises", ["current_version_id"], name: "index_exercises_on_current_version_id", using: :btree
+  add_index "exercises", ["exercise_collection_id"], name: "index_exercises_on_exercise_collection_id", using: :btree
   add_index "exercises", ["exercise_family_id"], name: "index_exercises_on_exercise_family_id", using: :btree
   add_index "exercises", ["external_id"], name: "index_exercises_on_external_id", unique: true, using: :btree
   add_index "exercises", ["irt_data_id"], name: "exercises_irt_data_id_fk", using: :btree
@@ -272,6 +294,18 @@ ActiveRecord::Schema.define(version: 20161129200944) do
     t.boolean "builtin",                       default: false, null: false
   end
 
+  create_table "group_access_requests", force: true do |t|
+    t.integer  "user_id"
+    t.integer  "user_group_id"
+    t.boolean  "pending",       default: true
+    t.boolean  "decision"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "group_access_requests", ["user_group_id"], name: "index_group_access_requests_on_user_group_id", using: :btree
+  add_index "group_access_requests", ["user_id"], name: "index_group_access_requests_on_user_id", using: :btree
+
   create_table "identities", force: true do |t|
     t.integer  "user_id",    null: false
     t.string   "provider",   null: false
@@ -289,6 +323,26 @@ ActiveRecord::Schema.define(version: 20161129200944) do
     t.float   "difficulty",     limit: 24, null: false
     t.float   "discrimination", limit: 24, null: false
   end
+
+  create_table "license_policies", force: true do |t|
+    t.string   "name"
+    t.text     "description"
+    t.boolean  "can_fork"
+    t.boolean  "is_public"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  create_table "licenses", force: true do |t|
+    t.string   "name"
+    t.text     "description"
+    t.string   "url"
+    t.integer  "license_policy_id"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "licenses", ["license_policy_id"], name: "index_licenses_on_license_policy_id", using: :btree
 
   create_table "lms_instances", force: true do |t|
     t.string   "consumer_key"
@@ -312,6 +366,24 @@ ActiveRecord::Schema.define(version: 20161129200944) do
 
   add_index "lms_types", ["name"], name: "index_lms_types_on_name", unique: true, using: :btree
 
+  create_table "lti_identities", force: true do |t|
+    t.string   "lti_user_id"
+    t.integer  "user_id"
+    t.integer  "lms_instance_id"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "lti_identities", ["lms_instance_id"], name: "index_lti_identities_on_lms_instance_id", using: :btree
+  add_index "lti_identities", ["user_id"], name: "index_lti_identities_on_user_id", using: :btree
+
+  create_table "memberships", force: true do |t|
+    t.integer  "user_id"
+    t.integer  "user_group_id"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
   create_table "multiple_choice_prompt_answers", force: true do |t|
   end
 
@@ -321,11 +393,12 @@ ActiveRecord::Schema.define(version: 20161129200944) do
   end
 
   create_table "organizations", force: true do |t|
-    t.string   "name",         null: false
+    t.string   "name",                         null: false
     t.datetime "created_at"
     t.datetime "updated_at"
     t.string   "abbreviation"
-    t.string   "slug",         null: false
+    t.string   "slug",                         null: false
+    t.boolean  "is_hidden",    default: false
   end
 
   add_index "organizations", ["name"], name: "index_organizations_on_name", unique: true, using: :btree
@@ -470,6 +543,13 @@ ActiveRecord::Schema.define(version: 20161129200944) do
     t.datetime "updated_at"
   end
 
+  create_table "user_groups", force: true do |t|
+    t.string   "name"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+    t.text     "description"
+  end
+
   create_table "users", force: true do |t|
     t.string   "email",                    default: "", null: false
     t.string   "encrypted_password",       default: "", null: false
@@ -517,11 +597,12 @@ ActiveRecord::Schema.define(version: 20161129200944) do
     t.integer  "continue_from_workout_id"
     t.string   "lms_assignment_id"
     t.boolean  "most_recent",              default: true
+    t.string   "lms_assignment_url"
   end
 
   add_index "workout_offerings", ["continue_from_workout_id"], name: "workout_offerings_continue_from_workout_id_fk", using: :btree
   add_index "workout_offerings", ["course_offering_id"], name: "index_workout_offerings_on_course_offering_id", using: :btree
-  add_index "workout_offerings", ["lms_assignment_id"], name: "index_workout_offerings_on_lms_assignment_id", unique: true, using: :btree
+  add_index "workout_offerings", ["lms_assignment_id"], name: "index_workout_offerings_on_lms_assignment_id", using: :btree
   add_index "workout_offerings", ["workout_id"], name: "index_workout_offerings_on_workout_id", using: :btree
   add_index "workout_offerings", ["workout_policy_id"], name: "index_workout_offerings_on_workout_policy_id", using: :btree
 

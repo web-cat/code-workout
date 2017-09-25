@@ -5,17 +5,19 @@
 #  id                      :integer          not null, primary key
 #  course_id               :integer          not null
 #  term_id                 :integer          not null
-#  label                   :string(255)      default(""), not null
+#  label                   :string(255)      not null
 #  url                     :string(255)
 #  self_enrollment_allowed :boolean
 #  created_at              :datetime
 #  updated_at              :datetime
 #  cutoff_date             :date
+#  lms_instance_id         :integer
 #
 # Indexes
 #
-#  index_course_offerings_on_course_id  (course_id)
-#  index_course_offerings_on_term_id    (term_id)
+#  index_course_offerings_on_course_id        (course_id)
+#  index_course_offerings_on_lms_instance_id  (lms_instance_id)
+#  index_course_offerings_on_term_id          (term_id)
 #
 
 # =============================================================================
@@ -32,11 +34,12 @@ class CourseOffering < ActiveRecord::Base
     dependent: :destroy
   has_many :workouts, through: :workout_offerings
   has_many :course_enrollments,
-    -> { includes(:course_role, :user).order(
-      'course_roles.id ASC', 'users.last_name ASC', 'users.first_name ASC') },
+    # -> { includes(:course_role, :user).order(
+    #   'course_roles.id ASC', 'users.last_name ASC', 'users.first_name ASC') },
     inverse_of: :course_offering,
     dependent: :destroy
   has_many :users, through: :course_enrollments
+  has_many :exercise_collections
 
   accepts_nested_attributes_for :term
 
@@ -61,10 +64,13 @@ class CourseOffering < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def display_name
-    "#{course.organization.abbreviation} #{term.slug} #{course.number} (#{label})"
+    "#{course.number} (#{label})"
   end
 
+
+  # -------------------------------------------------------------
   def name
+    # FIXME: remove this method and use one of the other display_* methods
     self.course.name + ' - ' + self.term.display_name
   end
 
@@ -72,6 +78,12 @@ class CourseOffering < ActiveRecord::Base
   # -------------------------------------------------------------
   def display_name_with_term
     "#{course.number} (#{term.display_name}, #{label})"
+  end
+
+
+  # -------------------------------------------------------------
+  def display_name_with_org_and_term
+    "#{course.organization.abbreviation} #{course.number} (#{term.display_name}, #{label})"
   end
 
 
@@ -171,4 +183,40 @@ class CourseOffering < ActiveRecord::Base
     user && course_enrollments.where(user: user).first.andand.course_role
   end
 
+  def add_workout(workout, workout_offering_options={})
+    found_workout = nil
+    if workout.kind_of?(String)
+      instructor = self.instructors.first
+      instructor_workout_offerings = instructor
+        .managed_workout_offerings_in_term(workout.downcase, self.course, self.term)
+      found_workout = instructor_workout_offerings.first.andand.workout # same course and term, same workout
+
+      if !found_workout
+        # no other offering this semester is offering the workout, so look in past semesters
+        instructor_workout_offerings = instructor
+          .managed_workout_offerings_in_term(workout.downcase, self.course, nil)
+        found_workout = instructor_workout_offerings.andand
+          .uniq{ |wo| wo.workout }.andand
+          .sort_by{ |wo| wo.course_offering.start_date }.andand
+          .last.andand.map(&:workout)
+      end
+
+      if !found_workout
+        return nil
+      end
+    end
+
+    new_workout = found_workout.deep_clone!
+    workout_offering = WorkoutOffering.new(
+      workout: found_workout,
+      course_offering: self,
+      opening_date: workout_offering_options[:opening_date] || DateTime.now,
+      soft_deadline: workout_offering_options[:soft_deadline],
+      hard_deadline: workout_offering_options[:hard_deadline],
+      lms_assignment_id: workout_offering_options[:lms_assignment_id]
+    )
+    workout_offering.save
+
+    return workout_offering
+  end
 end

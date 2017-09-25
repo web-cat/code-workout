@@ -3,13 +3,13 @@
 # Table name: courses
 #
 #  id              :integer          not null, primary key
-#  name            :string(255)      default(""), not null
-#  number          :string(255)      default(""), not null
+#  name            :string(255)      not null
+#  number          :string(255)      not null
 #  organization_id :integer          not null
 #  created_at      :datetime
 #  updated_at      :datetime
 #  creator_id      :integer
-#  slug            :string(255)      default(""), not null
+#  slug            :string(255)      not null
 #
 # Indexes
 #
@@ -26,4 +26,9 @@ FactoryGirl.define do
     # url_part "cs-1114"
   end
 
+  factory :cs_3114 do
+    name 'Data Structures and Algorithms'
+    number 'CS 3114'
+    organization_id 1
+  end
 end

@@ -10,7 +10,7 @@
     Closed
   - elsif off.self_enrollment_allowed?
     - if user_signed_in?
-      = link_to 'Enroll', course_offering_enroll_path(off), method: :post
+      = link_to 'Enroll', course_offering_enroll_path(off, user_id: current_user.id), method: :post
     - else
       Sign in to enroll
   - else

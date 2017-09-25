@@ -52,11 +52,11 @@
                 organization_id: @course_offering.course.organization.id, term_id: @course_offering.term.id,
                 course_id: @course_offering.course.id)
             %td.col-md-1
-              = workout_offering.opening_date.to_formatted_s :short
+              = user_time(current_user, workout_offering.opening_date).to_formatted_s :short
             %td.col-md-1
-              = workout_offering.soft_deadline.to_formatted_s :short
+              = user_time(current_user, workout_offering.soft_deadline).to_formatted_s :short
             %td.col-md-1
-              = workout_offering.hard_deadline.to_formatted_s :short
+              = user_time(current_user, workout_offering.hard_deadline).to_formatted_s :short
   %p
     %strong
     - if user_signed_in? && @course_offering.is_manager?(current_user)

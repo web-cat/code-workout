@@ -4,7 +4,7 @@
 - if @user_deadline
   = javascript_include_tag('timeout')
 = javascript_include_tag("practice")
-.col-md-7#user-deadline{ data: { deadline: @user_deadline } }
+.col-md-7#user-deadline{ data: { deadline: @user_deadline, server_now: @server_now } }
   = semantic_form_for @exercise_version,
     url: (@workout_offering ? organization_workout_offering_exercise_evaluate_path(id: @exercise_version.exercise.id,
       course_id: @workout_offering.course_offering.course.slug,
@@ -90,11 +90,12 @@
             - allow_write = false
         - if allow_write && params[:review_user_id].nil?
           = f.input :answer_code, as: :text, class: 'code',
-          input_html: { lang: 'text/x-' + (@exercise.language || 'java').downcase, readonly: true, autofocus: true,
+          input_html: { class: 'code', readonly: true, autofocus: true,
             value: prior_answer ? prior_answer.specific.answer : prompt.prepare_starter_code,
-            data: { starter_code: prompt.prepare_starter_code } }
+            data: { lang: 'text/x-' + (@exercise.language || 'java').downcase,
+            starter_code: prompt.prepare_starter_code } }
         - else
-          %pre{ lang: 'text/x-java' }
+          %pre{ data: { lang: 'text/x-java' } }
             = prior_answer ? prior_answer.specific.answer : prompt.prepare_starter_code
     .actions
       - if @workout_offering.nil? || @workout_offering.can_be_practiced_by?(current_user)
