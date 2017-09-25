@@ -33,6 +33,12 @@
 //= require workout_form
 //= require flatpickr
 
+
+$('a[data-popup]').live('click', function(e) {
+    window.open( $(this).attr('href'), "Popup", "height=600, width=600" );
+    e.preventDefault();
+});
+
 // Add the route helpers directly into the window object for easy access.
 $.extend(window, Routes);
 

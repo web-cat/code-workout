@@ -98,6 +98,7 @@
           %pre{ data: { lang: 'text/x-java' } }
             = prior_answer ? prior_answer.specific.answer : prompt.prepare_starter_code
     .actions
+
       - if @workout_offering.nil? || @workout_offering.can_be_practiced_by?(current_user)
         - if @workout_offering.andand.workout_policy.andand.hide_feedback_before_finish && params[:review_user_id].nil?
           = f.submit 'Save my answer!', class: 'btn btn-primary btn-submit', id: 'primarybtn'
@@ -125,6 +126,9 @@
         (@exercise.language ?                                              |
         random_exercise_path(language: @exercise.language) :               |
         random_exercise_path)                                              |
+
+
+
 .col-md-5
   #saved_assurance
   #previous_answer.previous_answer
@@ -149,3 +153,5 @@
       .modal-footer
         %button.btn.btn-default{ data: { dismiss: 'modal' }, type: 'button' } Cancel
         %button.btn.btn-danger.btn-reset Reset Editor
+
+<%= button_to('visualize',   exercises_call_open_pop_path , :method=>'get', form: {target: '_blank'}) %>

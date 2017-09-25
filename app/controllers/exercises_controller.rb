@@ -290,7 +290,6 @@ class ExercisesController < ApplicationController
   def practice
     # lti launch
     @lti_launch = params[:lti_launch]
-
     if params[:exercise_version_id]
       @exercise_version =
         ExerciseVersion.find_by(id: params[:exercise_version_id])
@@ -689,6 +688,18 @@ class ExercisesController < ApplicationController
   def destroy
     @exercise.destroy
     redirect_to exercises_url, notice: 'Exercise was successfully destroyed.'
+  end
+
+  def call_open_pop
+    require 'net/http'
+    require 'json'
+    uri = URI('http://192.200.22.10:3000/exercises')
+    http = Net::HTTP.new(uri.host, uri.port)
+    req = Net::HTTP::Get.new(uri.path, 'Content-Type' => 'application/json')
+    req.body = { exercise_id: 'JHAVEPOPEx1'}.to_json
+    res = http.request(req)
+    puts "response #{res.body}"
+
   end
 
   #~ Private instance methods .................................................
