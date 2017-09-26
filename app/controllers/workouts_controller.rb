@@ -5,7 +5,7 @@ require 'wannabe_bool'
 class WorkoutsController < ApplicationController
   include ArrayHelper
   before_action :set_workout, only: [:show, :update, :destroy]
-  after_action :allow_iframe, only: [:new, :new_create, :edit, :embed]
+  after_action :allow_iframe, only: [:new, :new_create, :edit, :embed, :find_offering]
   respond_to :html, :js
 
   #~ Action methods ...........................................................
@@ -341,7 +341,7 @@ class WorkoutsController < ApplicationController
           course_offering = CourseOffering.create(
             course: @course,
             term: @term,
-            label: "#{@user.label_name} - #{@term.display_name}",
+            label: params[:label] || "#{@user.label_name} - #{@term.display_name}",
             self_enrollment_allowed: true
           )
 
