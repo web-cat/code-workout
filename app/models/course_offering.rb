@@ -198,7 +198,7 @@ class CourseOffering < ActiveRecord::Base
         found_workout = instructor_workout_offerings.andand
           .uniq{ |wo| wo.workout }.andand
           .sort_by{ |wo| wo.course_offering.term.starts_on }.andand
-          .last.andand..workout
+          .last.andand.workout
       end
 
       if !found_workout

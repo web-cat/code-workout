@@ -67,34 +67,27 @@
     - if new_or_existing
       - message = 'A clone of this workout will be created, which you can then offer in your course offerings. Is this okay?'
       = link_to 'Clone', organization_clone_workout_path(course_id: course_id,
-        term_id: term_id,
+        term_id: Term.current_term.id,
         organization_id: organization_id,
         workout_id: workout_offering.workout.id), class: 'btn btn-sm btn-primary',
         data: { confirm: message }
+    - elsif !workout_score || workout_score.show_feedback?
+      .radial-progress{ 'data-progress' => score_pct }
+        .circle
+          .mask.full
+            .fill
+          .mask.half
+            .fill
+            .fill.fix
+          .shadow
+        .inset
+          .pct
     - else
-      - if workout_offering && (current_user.can? :edit, workout_offering)
-        = link_to 'Edit', organization_edit_workout_path(course_id: course_id,
-          term_id: term_id,
-          organization_id: organization_id,
-          workout_offering_id: workout_offering.id), class: 'btn btn-sm btn-primary',
-          data: { confirm: message }
-      - elsif !workout_score || workout_score.show_feedback?
-        .radial-progress{ 'data-progress' => score_pct }
-          .circle
-            .mask.full
-              .fill
-            .mask.half
-              .fill
-              .fill.fix
-            .shadow
-          .inset
-            .pct
-      - else
-        .radial-progress.masked
-          .circle
-            .shadow
-          .inset
-            .score= image_tag 'pct-blur.png'
+      .radial-progress.masked
+        .circle
+          .shadow
+        .inset
+          .score= image_tag 'pct-blur.png'
   .body
     .text
       = teaser(workout.description)
