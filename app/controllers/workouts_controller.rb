@@ -325,8 +325,8 @@ class WorkoutsController < ApplicationController
       workout_offerings = workout_offerings.andand.flatten.uniq
       found_workout ||= workout_offerings.andand
         .uniq{ |wo| wo.workout }.andand
-        .sort_by{ |wo| wo.course_offering.start_date }.andand
-        .last.andand.map(&:workout)
+        .sort_by{ |wo| wo.course_offering.term.starts_on }.andand
+        .last.andand.workout
 
       if workout_offerings.blank?
         @course_offerings = @user.managed_course_offerings course: @course, term: @term
@@ -421,8 +421,8 @@ class WorkoutsController < ApplicationController
               .managed_workout_offerings_in_term(params[:workout_name].downcase, @course, nil)
             found_workout ||= old_workout_offerings.andand
               .uniq{ |wo| wo.workout }.andand
-              .sort_by{ |wo| wo.course_offering.start_date }.andand
-              .last.andand.map(&:workout)
+              .sort_by{ |wo| wo.course_offering.term.starts_on }.andand
+              .last.andand.workout
             if !found_workout
               @message = "The workout named #{params[:workout_name]} does not exist or is not linked with this LMS assignment. Please contact your instructor."
               render 'lti/error' and return
