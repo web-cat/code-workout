@@ -197,8 +197,8 @@ class CourseOffering < ActiveRecord::Base
           .managed_workout_offerings_in_term(workout.downcase, self.course, nil)
         found_workout = instructor_workout_offerings.andand
           .uniq{ |wo| wo.workout }.andand
-          .sort_by{ |wo| wo.course_offering.start_date }.andand
-          .last.andand.map(&:workout)
+          .sort_by{ |wo| wo.course_offering.term.starts_on }.andand
+          .last.andand.workout
       end
 
       if !found_workout

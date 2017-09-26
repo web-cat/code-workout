@@ -74,8 +74,9 @@ class LtiController < ApplicationController
       term_slug = params[:custom_term]
       course_name = params[:context_title]
       course_slug = course_number.gsub(/[^a-zA-Z0-9]/, '').downcase
-      assignment_id = params[:ext_lti_assignment_id] || params[:custom_canvas_assignment_id]
-      lms_assignment_id = "#{@lms_instance.id}-#{assignment_id}"
+      ext_lti_assignment_id = params[:ext_lti_assignment_id]
+      custom_canvas_assignment_id = params[:custom_canvas_assignment_id]
+      byebug
       workout_from_collection = false # are we serving a workout from a pre-existing collection? (like OpenDSA)
 
       # Finding appropriate course offerings and workout offerings from the workout
@@ -124,7 +125,9 @@ class LtiController < ApplicationController
         user_id: @user.id,
         course_id: @course.slug,
         is_instructor: @tp.context_instructor?,
-        lms_assignment_id: lms_assignment_id,
+        ext_lti_assignment_id: ext_lti_assignment_id,
+        custom_canvas_assignment_id: custom_canvas_assignment_id,
+        lms_instance_id: @lms_instance.id,
         label: params[:custom_label], # can be nil
         lis_outcome_service_url: params[:lis_outcome_service_url],
         lis_result_sourcedid: params[:lis_result_sourcedid],
