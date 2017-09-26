@@ -76,7 +76,6 @@ class LtiController < ApplicationController
       course_slug = course_number.gsub(/[^a-zA-Z0-9]/, '').downcase
       ext_lti_assignment_id = params[:ext_lti_assignment_id]
       custom_canvas_assignment_id = params[:custom_canvas_assignment_id]
-      byebug
       workout_from_collection = false # are we serving a workout from a pre-existing collection? (like OpenDSA)
 
       # Finding appropriate course offerings and workout offerings from the workout
