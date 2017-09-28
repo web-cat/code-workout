@@ -26,7 +26,6 @@ jQuery.fn.StudentSearch = (config) ->
           return false
         response: (event, ui) ->
           if ui.content.length == 0
-            console.log 'emptyResponse'
             element.trigger
               type: 'emptyResponse'
           return false
