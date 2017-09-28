@@ -363,6 +363,17 @@ class ExercisesController < ApplicationController
       @workout_score.lis_outcome_service_url ||= params[:lis_outcome_service_url]
       @workout_score.save
 
+      should_force_lti = !@lti_launch &&
+        @workout_offering.lms_assignment_id.present? &&
+        (@workout_score.lis_result_sourcedid.nil? ||
+          @workout_score.lis_outcome_service_url.nil?)
+
+      if should_force_lti && !current_user.manages?(@workout_offering.course_offering)
+        @message = "This assignment must be accessed through your course's Learning Management System (like Canvas)."
+        @redirect_url = @workout_offering.lms_assignment_url
+        render 'lti/error' and return
+      end
+
       if !@workout_score.score.nil?
         @workout_score.update_lti
       end
