@@ -188,13 +188,13 @@ class CourseOffering < ActiveRecord::Base
     if workout.kind_of?(String)
       instructor = self.instructors.first
       instructor_workout_offerings = instructor
-        .managed_workout_offerings_in_term(workout.downcase, self.course, self.term)
+        .managed_workout_offerings_in_term(workout.downcase, self.course, self.term).flatten
       found_workout = instructor_workout_offerings.first.andand.workout # same course and term, same workout
 
       if !found_workout
         # no other offering this semester is offering the workout, so look in past semesters
         instructor_workout_offerings = instructor
-          .managed_workout_offerings_in_term(workout.downcase, self.course, nil)
+          .managed_workout_offerings_in_term(workout.downcase, self.course, nil).flatten
         found_workout = instructor_workout_offerings.andand
           .uniq{ |wo| wo.workout }.andand
           .sort_by{ |wo| wo.course_offering.term.starts_on }.andand

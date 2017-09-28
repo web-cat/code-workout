@@ -321,7 +321,6 @@ get_offerings = ->
       offering_fields = $('td', $(offering_row))
       offering_id = $(offering_fields[0]).data 'course-offering-id'
       lms_assignment_url = $('input', offering_fields[1])[0].value
-      console.log lms_assignment_url
       if offering_id != ''
         opening_date = $('.opening-datepicker', $(offering_fields[2])).data('date')
         soft_deadline = $('.soft-datepicker', $(offering_fields[3])).data('date')

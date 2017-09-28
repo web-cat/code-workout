@@ -106,10 +106,11 @@ class CourseOfferingsController < ApplicationController
       @course_role = CourseRole.student
     end
 
+    success = true
     if @course_offering &&
-      !current_user.is_enrolled?(@course_offering) &&
+      !@user.is_enrolled?(@course_offering) &&
       (@course_offering.can_enroll? ||
-        current_user.manages?(@course_offering))
+        @user.manages?(@course_offering))
 
       co = CourseEnrollment.new(
         course_offering: @course_offering,
@@ -117,7 +118,7 @@ class CourseOfferingsController < ApplicationController
         course_role: @course_role
       )
 
-      success = co.save
+      co.save
     else
       success = false
     end
@@ -128,12 +129,18 @@ class CourseOfferingsController < ApplicationController
       end
     else
       if success
-        redirect_to organization_course_path(
-          @course_offering.course.organization,
-          @course_offering.course,
-          @course_offering.term),
-          notice: 'You are now enrolled in ' +
-            "#{@course_offering.display_name}."
+        respond_to do |format|
+          format.html {
+            redirect_to organization_course_path(
+              @course_offering.course.organization,
+              @course_offering.course,
+              @course_offering.term),
+              notice: 'You are now enrolled in ' +
+                "#{@course_offering.display_name}."
+          }
+
+          format.json { render json: success }
+        end
       else
         flash[:warning] = 'Unable to enroll in that course.'
         redirect_to root_path

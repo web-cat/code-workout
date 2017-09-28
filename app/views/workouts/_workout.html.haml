@@ -60,9 +60,9 @@
     %span.badge.badge-info= workout.exercises.count.to_s
 
   .summary
-    - course_id = workout_offering.andand.course_offering.course.slug
-    - term_id = workout_offering.andand.course_offering.term.slug
-    - organization_id = workout_offering.andand.course_offering.course.organization.slug
+    - course_id = workout_offering.andand.course_offering.andand.course.andand.slug
+    - term_id = workout_offering.andand.course_offering.andand.term.andand.slug
+    - organization_id = workout_offering.andand.course_offering.andand.course.andand.organization.andand.slug
 
     - if new_or_existing
       - message = 'A clone of this workout will be created, which you can then offer in your course offerings. Is this okay?'
