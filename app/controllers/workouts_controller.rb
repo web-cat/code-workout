@@ -380,12 +380,11 @@ class WorkoutsController < ApplicationController
             lti_launch: true
           )) and return
         else
-          redirect_to organization_new_workout_path(
-            lti_launch: true,
-            course_id: @course.slug,
-            term_id: @term.slug,
-            organization_id: @course.organization.slug,
-            lms_assignment_id: @lms_assignment_id
+          redirect_to organization_new_or_existing_workout_path(
+              lti_launch: true,
+              organization_id: @course.organization.slug,
+              course_id: @course.slug,
+              term_id: @term.slug
           ) and return
         end
       else

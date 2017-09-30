@@ -61,7 +61,7 @@
     = label_tag :published, 'Visible to students?', class: 'control-label col-xs-2'
     .col-xs-8
       .col-xs-1
-        = check_box_tag 'published', 'published', defined?(@published) ? @published : true, id: 'published'
+        = check_box_tag 'published', 'published', defined?(@published) ? @published : false, id: 'published'
       %small.col-xs-11.text.text-warning
         Checking this box makes the Workout Offerings you create visible to students in your courses.
 
