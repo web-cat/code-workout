@@ -31,6 +31,7 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
         points: default_point_value
       template = Mustache.render($(window.codeworkout.exercise_template).filter('#exercise-template').html(), data)
       $('#ex-list').append(template)
+      close_slider()
     else
       form_alert(["Exercise #{name} has already been added to this workout."])
       exercise = $('#ex-list').find("[data-id=#{ex_id}]")
@@ -286,6 +287,12 @@ init_row_datepickers = (row) ->
     if hard_input.data('date')? && hard_input.data('date') != ''
       date = parseInt(hard_input.data('date'))
       hard_datepicker.setDate(date, false)
+
+close_slider = ->
+  if $('.toggle-slider').attr('data-is-open')
+    $('.toggle-slider').click()
+    $('#search-terms').val('')
+    $('.search-results').empty()
 
 get_exercises = ->
   exs = $('#ex-list li')

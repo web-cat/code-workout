@@ -395,6 +395,43 @@ ul.ui-autocomplete {
   z-index: 1100;
 }
 
+// slider animation for the sidebar
+.underlay {
+  position: absolute;
+  z-index: 1;
+  width: 100%;
+}
+
+.slider {
+  width: 33.33%;
+  position: absolute;
+  z-index: 2;
+}
+
+.toggle-slider {
+  position: absolute;
+  top: 4em;
+  opacity: 0.5;
+  border: 1px solid black;
+  border-radius: 0 5px 5px 0;
+  outline: none;
+
+  &[data-is-open='false'] {
+    opacity: 0.5;
+    left: 0px;
+  }
+
+  &[data-is-open='true'] {
+    opacity: 1;
+    left: 34%;
+  }
+
+  &:hover {
+    cursor: pointer;
+    opacity: 1;
+  }
+}
+
 // shake animation for form validations and hints
 .shake {
   animation: shake 0.82s cubic-bezier(.36, .07, .19, .97) both;

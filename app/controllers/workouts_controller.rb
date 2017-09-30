@@ -5,7 +5,15 @@ require 'wannabe_bool'
 class WorkoutsController < ApplicationController
   include ArrayHelper
   before_action :set_workout, only: [:show, :update, :destroy]
-  after_action :allow_iframe, only: [:new, :new_create, :edit, :embed, :find_offering]
+  after_action :allow_iframe, only: [
+    :new,
+    :clone,
+    :new_create,
+    :edit,
+    :embed,
+    :find_offering,
+    :new_or_existing
+  ]
   respond_to :html, :js
 
   #~ Action methods ...........................................................

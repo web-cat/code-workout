@@ -4,6 +4,8 @@
       .below-nav#sidebar
         = render partial: 'layouts/sidebar', locals: { user: @student_user ? @student_user : current_user }
   .col-md-9.scrollable.max-height.content
+    %button.btn-primary.toggle-slider{ style: 'display: none', 'data-is-open': false }
+      %i.fa.fa-bars
     .inner.max-height
       .below-nav
         = render partial: 'layouts/flash'
