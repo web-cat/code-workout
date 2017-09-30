@@ -18,11 +18,7 @@
     = label_tag :name, 'Name *', class: 'control-label col-xs-2'
     .col-lg-7.col-md-6.col-xs-7
       = text_field_tag :name, nil, id: 'wo-name', class: 'form-control', maxlength: 50,
-        placeholder: 'e.g. Recursion exercises', value: @workout.present? ? @workout.name : '',
-        data: { old_name: @workout.present? ? @workout.name : '' }
-    .row
-      .col-xs-offset-2.col-lg-7.col-md-6.col-xs-7.alert-msg#clone-msg{ style: 'display: none;' }
-        You are cloning this workout. Please enter a new name, and we'll create a new workout with your new settings.
+        placeholder: 'e.g. Recursion exercises', value: @workout.present? ? @workout.name : ''
   .form-group
     = label_tag :description, 'Description', class: 'control-label col-xs-2'
     .col-lg-7.col-md-6.col-xs-7

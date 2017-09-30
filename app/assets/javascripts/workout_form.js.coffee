@@ -12,9 +12,6 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
   sortable = $('#ex-list').sortable
     handle: '.handle'
 
-  $('#wo-name').change ->
-    validate_workout_name()
-
   $('.search-results').on 'click', '.add-ex', ->
     ex_id = $(this).data('ex-id')
     ex_name = $(this).data('ex-name')
@@ -139,7 +136,6 @@ init = ->
   $('textarea#description').val description
   init_templates()
   init_datepickers()
-  validate_workout_name()
 
 remove_extensions_if_any = (course_offering_id) ->
   extensions = $('#student-extension-fields tbody').find 'tr'
@@ -176,19 +172,6 @@ init_templates = ->
     window.codeworkout.student_extension_template = template
     if $('body').is '.workouts.edit'
       init_student_extensions()
-
-validate_workout_name = ->
-  cloning = $('body').is('.workouts.clone')
-  name_field = $('#wo-name')
-  if cloning
-    if name_field.val() == name_field.data 'old-name'
-      $('#clone-msg').css 'display', 'block'
-      return false
-    else
-      $('#clone-msg').css 'display', 'none'
-      return true
-
-  return true
 
 init_student_extensions = ->
   student_extensions = $('#extensions').data 'student-extensions'
@@ -389,7 +372,6 @@ reset_alert_area = ->
 check_completeness = ->
   messages = []
   messages.push 'Workout Name cannot be empty.' if $('#wo-name').val() == ''
-  messages.push 'Change the name of the workout so you can create a clone with your settings.' if !validate_workout_name()
   messages.push 'Workout must have at least 1 exercise.' if $('#ex-list li').length == 0
 
   return messages
