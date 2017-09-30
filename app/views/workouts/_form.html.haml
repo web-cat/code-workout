@@ -32,10 +32,7 @@
     = label_tag :ex_list, 'Exercises *', class: 'control-label col-xs-2'
     .col-lg-7.col-md-6.col-xs-7
       .empty-msg.alert-msg{ style: "display: #{@workout.andand.exercise_workouts.any? ? 'none;' : 'block;'}" }
-        - if @lti_launch
-          Use the search bar above the form to find exercises.
-        - else
-          Use the column on the left to find exercises.
+        Use the menu on the left to search for exercises.
 
       %ul.list-group#ex-list{ style: "display: #{@workout.andand.exercise_workouts.any? ? 'block;' : 'none;'}",
         data: { exercises: "#{@exercises.to_json}" } }

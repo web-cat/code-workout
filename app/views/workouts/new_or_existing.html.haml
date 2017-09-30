@@ -6,11 +6,12 @@
       = text_field_tag :search, nil, placeholder: 'e.g. Looping', class: 'form-control input-sm', id: 'search-terms'
       = hidden_field_tag :course, @course.id
       = hidden_field_tag :offerings, true # to pass to Workout.search
-    .col-xs-1
+    .col-xs-2
       = submit_tag 'Search', class: 'btn btn-default btn-sm'
-    .col-xs-3
-      = link_to 'None of these work, create a Workout instead.',
+    .col-xs-2
+      = link_to 'Create New',
         organization_new_workout_path(organization_id: @organization.slug,
+        lti_launch: true,
         course_id: @course.slug,
         term_id: @term.slug), class: 'btn btn-success btn-sm'
 .row.search-results

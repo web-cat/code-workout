@@ -106,11 +106,7 @@ class WorkoutsController < ApplicationController
       flash.now[:notice] = params[:notice]
     end
 
-    if @lti_launch
-      render layout: 'one_column'
-    else
-      render layout: 'two_columns'
-    end
+    render layout: 'two_columns'
   end
 
   # -------------------------------------------------------------
@@ -228,11 +224,7 @@ class WorkoutsController < ApplicationController
       end
     end
 
-    if @lti_launch
-      render layout: 'one_column'
-    else
-      render layout: 'two_columns'
-    end
+    render layout: 'two_columns'
   end
 
   def clone
@@ -257,11 +249,7 @@ class WorkoutsController < ApplicationController
     @course_offerings = current_user.managed_course_offerings course: @course, term: @term
     @unused_course_offerings = nil
 
-    if @lti_launch
-      render layout: 'one_column'
-    else
-      render layout: 'two_columns'
-    end
+    render layout: 'two_columns'
   end
 
   def create

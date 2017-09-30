@@ -20,6 +20,11 @@ html, body { height: 100%; }
 .content, .maincol {
   padding-bottom: 40px;
 }
+.content {
+  h1.left-padded {
+    margin-left: 20px;
+  }
+}
 .below-nav > .alert { margin: 10px 15px 20px; }
 
 #main { margin: 0 0 40px; }
@@ -403,7 +408,7 @@ ul.ui-autocomplete {
 }
 
 .slider {
-  width: 33.33%;
+  width: 310px;
   position: absolute;
   z-index: 2;
 }
@@ -423,7 +428,7 @@ ul.ui-autocomplete {
 
   &[data-is-open='true'] {
     opacity: 1;
-    left: 34%;
+    left: 310px;
   }
 
   &:hover {

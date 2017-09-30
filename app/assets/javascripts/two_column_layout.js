@@ -30,6 +30,7 @@
     if (shouldBeSlidable) {
       $('.sidebar').css('display', 'none');
       $('.toggle-slider').css('display', 'inherit');
+      $('.toggle-slider').attr('data-is-open', false);
     } else {
       $('.sidebar').css('display', 'inherit');
       $('.toggle-slider').css('display', 'none');
