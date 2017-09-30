@@ -342,7 +342,8 @@ class WorkoutsController < ApplicationController
             course: @course,
             term: @term,
             label: params[:label] || "#{@user.label_name} - #{@term.display_name}",
-            self_enrollment_allowed: true
+            self_enrollment_allowed: true,
+            lms_instance: LMSInstance.find(lms_instance_id)
           )
 
           @course_enrollment = CourseEnrollment.create(
@@ -355,6 +356,11 @@ class WorkoutsController < ApplicationController
         end
         if params[:from_collection].to_b && found_workout
           @course_offerings.each do |co|
+            if co.lms_instance.nil?
+              co.lms_instance = @lms_instance
+              co.save
+            end
+
             @workout_offering = WorkoutOffering.new(
               course_offering: co,
               workout: found_workout,
@@ -482,9 +488,14 @@ class WorkoutsController < ApplicationController
       end
     end
 
-    # check enrollment before proceeeding
+    # check enrollment and ties to LTI before proceeeding
     role = params[:is_instructor].to_b ? CourseRole.instructor : CourseRole.student
     @course_offering = @workout_offering.course_offering
+
+    if @course_offering.lms_instance.nil?
+      @course_offering.lms_instance_id = lms_instance_id
+      @course_offering.save
+    end
     if !@user.is_enrolled?(@course_offering) &&
         (@course_offering.can_enroll? || role.is_instructor?)
       CourseEnrollment.create(course_offering: @course_offering, user: @user, course_role: role)
