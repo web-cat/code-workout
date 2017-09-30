@@ -11,7 +11,7 @@
     .col-xs-2
       = link_to 'Create New',
         organization_new_workout_path(organization_id: @organization.slug,
-        lti_launch: true,
+        lti_launch: @lti_launch,
         course_id: @course.slug,
         term_id: @term.slug), class: 'btn btn-success btn-sm'
 .row.search-results
