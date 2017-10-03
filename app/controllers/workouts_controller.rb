@@ -5,7 +5,15 @@ require 'wannabe_bool'
 class WorkoutsController < ApplicationController
   include ArrayHelper
   before_action :set_workout, only: [:show, :update, :destroy]
-  after_action :allow_iframe, only: [:new, :new_create, :edit, :embed, :find_offering]
+  after_action :allow_iframe, only: [
+    :new,
+    :clone,
+    :new_create,
+    :edit,
+    :embed,
+    :find_offering,
+    :new_or_existing
+  ]
   respond_to :html, :js
 
   #~ Action methods ...........................................................
@@ -98,11 +106,7 @@ class WorkoutsController < ApplicationController
       flash.now[:notice] = params[:notice]
     end
 
-    if @lti_launch
-      render layout: 'one_column'
-    else
-      render layout: 'two_columns'
-    end
+    render layout: 'two_columns'
   end
 
   # -------------------------------------------------------------
@@ -220,11 +224,7 @@ class WorkoutsController < ApplicationController
       end
     end
 
-    if @lti_launch
-      render layout: 'one_column'
-    else
-      render layout: 'two_columns'
-    end
+    render layout: 'two_columns'
   end
 
   def clone
@@ -249,11 +249,7 @@ class WorkoutsController < ApplicationController
     @course_offerings = current_user.managed_course_offerings course: @course, term: @term
     @unused_course_offerings = nil
 
-    if @lti_launch
-      render layout: 'one_column'
-    else
-      render layout: 'two_columns'
-    end
+    render layout: 'two_columns'
   end
 
   def create
@@ -380,12 +376,11 @@ class WorkoutsController < ApplicationController
             lti_launch: true
           )) and return
         else
-          redirect_to organization_new_workout_path(
-            lti_launch: true,
-            course_id: @course.slug,
-            term_id: @term.slug,
-            organization_id: @course.organization.slug,
-            lms_assignment_id: @lms_assignment_id
+          redirect_to organization_new_or_existing_workout_path(
+              lti_launch: true,
+              organization_id: @course.organization.slug,
+              course_id: @course.slug,
+              term_id: @term.slug
           ) and return
         end
       else

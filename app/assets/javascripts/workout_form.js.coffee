@@ -12,9 +12,6 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
   sortable = $('#ex-list').sortable
     handle: '.handle'
 
-  $('#wo-name').change ->
-    validate_workout_name()
-
   $('.search-results').on 'click', '.add-ex', ->
     ex_id = $(this).data('ex-id')
     ex_name = $(this).data('ex-name')
@@ -31,6 +28,7 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
         points: default_point_value
       template = Mustache.render($(window.codeworkout.exercise_template).filter('#exercise-template').html(), data)
       $('#ex-list').append(template)
+      close_slider()
     else
       form_alert(["Exercise #{name} has already been added to this workout."])
       exercise = $('#ex-list').find("[data-id=#{ex_id}]")
@@ -138,7 +136,6 @@ init = ->
   $('textarea#description').val description
   init_templates()
   init_datepickers()
-  validate_workout_name()
 
 remove_extensions_if_any = (course_offering_id) ->
   extensions = $('#student-extension-fields tbody').find 'tr'
@@ -175,19 +172,6 @@ init_templates = ->
     window.codeworkout.student_extension_template = template
     if $('body').is '.workouts.edit'
       init_student_extensions()
-
-validate_workout_name = ->
-  cloning = $('body').is('.workouts.clone')
-  name_field = $('#wo-name')
-  if cloning
-    if name_field.val() == name_field.data 'old-name'
-      $('#clone-msg').css 'display', 'block'
-      return false
-    else
-      $('#clone-msg').css 'display', 'none'
-      return true
-
-  return true
 
 init_student_extensions = ->
   student_extensions = $('#extensions').data 'student-extensions'
@@ -287,6 +271,12 @@ init_row_datepickers = (row) ->
       date = parseInt(hard_input.data('date'))
       hard_datepicker.setDate(date, false)
 
+close_slider = ->
+  if $('.toggle-slider').attr('data-is-open')
+    $('.toggle-slider').click()
+    $('#search-terms').val('')
+    $('.search-results').empty()
+
 get_exercises = ->
   exs = $('#ex-list li')
   exercises = []
@@ -382,7 +372,6 @@ reset_alert_area = ->
 check_completeness = ->
   messages = []
   messages.push 'Workout Name cannot be empty.' if $('#wo-name').val() == ''
-  messages.push 'Change the name of the workout so you can create a clone with your settings.' if !validate_workout_name()
   messages.push 'Workout must have at least 1 exercise.' if $('#ex-list li').length == 0
 
   return messages
