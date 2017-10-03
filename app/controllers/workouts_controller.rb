@@ -305,8 +305,8 @@ class WorkoutsController < ApplicationController
     ext_lti_assignment_id = params[:ext_lti_assignment_id]
     custom_canvas_assignment_id = params[:custom_canvas_assignment_id]
     lms_instance_id = params[:lms_instance_id]
-
-    # will only use this if we need to create a new workout_offering
+    @custom_canvas_lms_assignment_id = "#{lms_instance_id}-#{custom_canvas_assignment_id}"
+    # will only use this if we need to set a new lms_assignment_id
     @lms_assignment_id = "#{lms_instance_id}-#{ext_lti_assignment_id}"
 
     if params[:from_collection].to_b
@@ -491,6 +491,16 @@ class WorkoutsController < ApplicationController
       @course_offering.lms_instance_id = lms_instance_id
       @course_offering.save
     end
+
+    if @workout_offering.lms_assignment_id.nil?
+      @workout_offering.lms_assignment_id = @lms_assignment_id
+      @workout_offering.save!
+    elsif !([@lms_assignment_id, @custom_canvas_lms_assignment_id].include?(@workout_offering.lms_assignment_id))
+      raise RuntimeError, %(Expected lms-assignment-id to be "#{@lms_assignment_id}" or
+        "#{@custom_canvas_lms_assignment_id}", but got "#{@workout_offering.lms_assignment_id}" instead.
+        Some manual changing in the database may have occured without proper cleanup.)
+    end
+
     if !@user.is_enrolled?(@course_offering) &&
         (@course_offering.can_enroll? || role.is_instructor?)
       CourseEnrollment.create(course_offering: @course_offering, user: @user, course_role: role)
