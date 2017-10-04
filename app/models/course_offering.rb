@@ -190,6 +190,7 @@ class CourseOffering < ActiveRecord::Base
       instructor_workout_offerings = instructor
         .managed_workout_offerings_in_term(workout.downcase, self.course, self.term).flatten
       found_workout = instructor_workout_offerings.first.andand.workout # same course and term, same workout
+      new_workout = found_workout # we use this instead of a clone, since it's a sister course_offering
 
       if !found_workout
         # no other offering this semester is offering the workout, so look in past semesters
@@ -206,9 +207,9 @@ class CourseOffering < ActiveRecord::Base
       end
     end
 
-    new_workout = found_workout.deep_clone!
+    new_workout ||= found_workout.deep_clone!
     workout_offering = WorkoutOffering.new(
-      workout: found_workout,
+      workout: new_workout,
       course_offering: self,
       opening_date: workout_offering_options[:opening_date] || DateTime.now,
       soft_deadline: workout_offering_options[:soft_deadline],
