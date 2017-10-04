@@ -120,6 +120,7 @@ class WorkoutsController < ApplicationController
     @course = Course.find params[:course_id]
     @term = Term.find params[:term_id]
     @organization = Organization.find params[:organization_id]
+    @lms_assignment_id = params[:lms_assignment_id]
 
     @workout_offerings = @course.course_offerings.joins(:workout_offerings, :term)
       .order('terms.ends_on DESC')
@@ -153,17 +154,18 @@ class WorkoutsController < ApplicationController
   def search
     terms = escape_javascript(params[:search])
     terms = terms.split(terms.include?(' ') ? /\s*,\s*/ : nil)
-    course = params[:course] ? Course.find(params[:course]) : nil
+    @course = params[:course] ? Course.find(params[:course]) : nil
     searching_offerings = params[:offerings]
-    @workouts = Workout.search terms, current_user, course, searching_offerings
+    @workouts = Workout.search terms, current_user, @course, searching_offerings
+    @lms_assignment_id = params[:lms_assignment_id]
 
     if @workouts.blank?
       @msg = 'Your search did not match any workouts. Try these instead...'
-      @workouts = Workout.search nil, current_user, course, searching_offerings
-    end
+      @workouts = Workout.search nil, current_user, @course, searching_offerings
 
-    if @workouts.blank?
-      @msg = 'No public workouts exist yet. Please wait for contributors to add more.'
+      if @workouts.blank?
+        @msg = 'No public workouts exist yet. Please wait for contributors to add more.'
+      end
     end
 
     respond_to do |format|
@@ -235,6 +237,7 @@ class WorkoutsController < ApplicationController
     @time_limit = @workout.workout_offerings.first.andand.time_limit
     @organization = Organization.find params[:organization_id]
     @lti_launch = params[:lti_launch]
+    @lms_assignment_id = params[:lms_assignment_id]
 
     @exercises = []
     @workout.exercise_workouts.each do |ex|
@@ -373,14 +376,16 @@ class WorkoutsController < ApplicationController
             term_id: @term.slug,
             organization_id: @course.organization.slug,
             workout_id: found_workout.id,
-            lti_launch: true
+            lti_launch: true,
+            lms_assignment_id: @lms_assignment_id
           )) and return
         else
           redirect_to organization_new_or_existing_workout_path(
               lti_launch: true,
               organization_id: @course.organization.slug,
               course_id: @course.slug,
-              term_id: @term.slug
+              term_id: @term.slug,
+              lms_assignment_id: @lms_assignment_id
           ) and return
         end
       else
