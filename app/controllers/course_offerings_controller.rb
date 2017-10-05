@@ -257,19 +257,24 @@ class CourseOfferingsController < ApplicationController
       @workout_offering = @course_offering.add_workout(workout_name, workout_offering_options)
     end
 
-    practice_url = url_for(
-      organization_workout_offering_practice_path(
-        id: @workout_offering.id,
-        lis_outcome_service_url: params[:lti_params][:lis_outcome_service_url],
-        lis_result_sourcedid: params[:lti_params][:lis_result_sourcedid],
-        organization_id: @course_offering.course.organization.slug,
-        term_id: @course_offering.term.slug,
-        course_id: @course_offering.course.slug,
-        lti_launch: true
+    if @workout_offering
+      practice_url = url_for(
+        organization_workout_offering_practice_path(
+          id: @workout_offering.id,
+          lis_outcome_service_url: params[:lti_params][:lis_outcome_service_url],
+          lis_result_sourcedid: params[:lti_params][:lis_result_sourcedid],
+          organization_id: @course_offering.course.organization.slug,
+          term_id: @course_offering.term.slug,
+          course_id: @course_offering.course.slug,
+          lti_launch: true
+        )
       )
-    )
 
-    render json: { practice_url: practice_url } and return
+      render json: { practice_url: practice_url } and return
+    else
+      @message = "The workout named #{params[:workout_name]} does not exist or is not linked with this LMS assignment. Please contact your instructor."
+      render 'lti/error' and return
+    end
   end
 
 
