@@ -71,7 +71,7 @@
         term_id: Term.current_term.id,
         organization_id: organization_id,
         workout_id: workout.id,
-        lms_assignment_id: @lms_assignment_id), class: 'btn btn-sm btn-primary',
+        lms_assignment_id: lms_assignment_id), class: 'btn btn-sm btn-primary',
         data: { confirm: message }
     - elsif !workout_score || workout_score.show_feedback?
       .radial-progress{ 'data-progress' => score_pct }

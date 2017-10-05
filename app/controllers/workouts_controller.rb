@@ -309,7 +309,6 @@ class WorkoutsController < ApplicationController
     custom_canvas_assignment_id = params[:custom_canvas_assignment_id]
     lms_instance_id = params[:lms_instance_id]
     @custom_canvas_lms_assignment_id = "#{lms_instance_id}-#{custom_canvas_assignment_id}"
-    # will only use this if we need to set a new lms_assignment_id
     @lms_assignment_id = "#{lms_instance_id}-#{ext_lti_assignment_id}"
 
     if params[:from_collection].to_b
@@ -318,9 +317,9 @@ class WorkoutsController < ApplicationController
     end
 
     if params[:is_instructor].to_b
-      workout_offerings = WorkoutOffering.where(lms_assignment_id: "#{lms_instance_id}-#{ext_lti_assignment_id}")
+      workout_offerings = WorkoutOffering.where(lms_assignment_id: @lms_assignment_id)
       if workout_offerings.blank?
-        workout_offerings = WorkoutOffering.where(lms_assignment_id: "#{lms_instance_id}-#{custom_canvas_assignment_id}")
+        workout_offerings = WorkoutOffering.where(lms_assignment_id: @custom_canvas_lms_assignment_id)
       end
       @workout_offering = workout_offerings.first
 
@@ -356,7 +355,7 @@ class WorkoutsController < ApplicationController
         if params[:from_collection].to_b && found_workout
           @course_offerings.each do |co|
             if co.lms_instance.nil?
-              co.lms_instance = @lms_instance
+              co.lms_instance_id = lms_instance_id
               co.save
             end
 
@@ -393,9 +392,9 @@ class WorkoutsController < ApplicationController
       end
     else
       # first search by lms_assignment_id
-      workout_offerings = WorkoutOffering.where(lms_assignment_id: "#{lms_instance_id}-#{ext_lti_assignment_id}")
+      workout_offerings = WorkoutOffering.where(lms_assignment_id: @lms_assignment_id)
       if workout_offerings.blank?
-        workout_offerings = WorkoutOffering.where(lms_assignment_id: "#{lms_instance_id}-#{custom_canvas_assignment_id}")
+        workout_offerings = WorkoutOffering.where(lms_assignment_id: @custom_canvas_lms_assignment_id)
       end
       if workout_offerings.blank?
         if params[:label] # label is specified, we can narrow down to a single course offering
@@ -499,7 +498,7 @@ class WorkoutsController < ApplicationController
 
     if @workout_offering.lms_assignment_id.nil?
       @workout_offering.lms_assignment_id = @lms_assignment_id
-      @workout_offering.save!
+      @workout_offering.save
     elsif !([@lms_assignment_id, @custom_canvas_lms_assignment_id].include?(@workout_offering.lms_assignment_id))
       raise RuntimeError, %(Expected lms-assignment-id to be "#{@lms_assignment_id}" or
         "#{@custom_canvas_lms_assignment_id}", but got "#{@workout_offering.lms_assignment_id}" instead.
@@ -695,7 +694,6 @@ class WorkoutsController < ApplicationController
       @workout.name = params[:name]
       @workout.description = params[:description]
       @workout.is_public = params[:is_public]
-
       common = {}   # params that are common among all offerings of this workout
       common[:workout_policy] = WorkoutPolicy.find_by id: params[:policy_id]
       common[:time_limit] = params[:time_limit]

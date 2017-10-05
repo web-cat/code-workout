@@ -6,6 +6,7 @@
       = text_field_tag :search, nil, placeholder: 'e.g. Looping', class: 'form-control input-sm', id: 'search-terms'
       = hidden_field_tag :course, @course.id
       = hidden_field_tag :offerings, true # to pass to Workout.search
+      = hidden_field_tag :lms_assignment_id, @lms_assignment_id
     .col-xs-2
       = submit_tag 'Search', class: 'btn btn-default btn-sm'
     .col-xs-2
