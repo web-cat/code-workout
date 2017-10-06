@@ -35,7 +35,7 @@
   .form-group
     = label_tag :policy_select, 'Policy', class: 'control-label col-xs-1'
     .col-xs-2
-      = collection_select nil, nil, WorkoutPolicy.all, :id, :name, { prompt: 'Select', selected: @policy ? @policy : nil },
+      = collection_select nil, nil, WorkoutPolicy.all, :id, :name, { prompt: 'Select', selected: @policy ? @policy.id : nil },
       { id: 'policy-select', class: 'form-control input-sm' }
     .col-xs-1
       %i.fa.fa-info-circle.action{ data: { toggle: 'modal', target: '#policy-help-modal' } }
