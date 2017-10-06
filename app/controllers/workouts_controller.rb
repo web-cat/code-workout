@@ -496,7 +496,7 @@ class WorkoutsController < ApplicationController
       @course_offering.save
     end
 
-    if @workout_offering.lms_assignment_id.nil?
+    if @workout_offering.lms_assignment_id.blank?
       @workout_offering.lms_assignment_id = @lms_assignment_id
       @workout_offering.save
     elsif !([@lms_assignment_id, @custom_canvas_lms_assignment_id].include?(@workout_offering.lms_assignment_id))

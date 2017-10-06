@@ -345,15 +345,7 @@ input {
     }
   }
 
-  &.time-limit {
-    min-width: 10ch;
-  }
-
-  &.points {
-    min-width: 10ch;
-  }
-
-  &.url {
+  &.time-limit, &.points, &.url {
     min-width: 10ch;
   }
 
