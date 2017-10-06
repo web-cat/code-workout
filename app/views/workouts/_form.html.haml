@@ -17,7 +17,7 @@
   .form-group
     = label_tag :name, 'Name *', class: 'control-label col-xs-2'
     .col-lg-7.col-md-6.col-xs-7
-      = text_field_tag :name, nil, id: 'wo-name', class: 'form-control', maxlength: 50,
+      = text_field_tag :name, nil, id: 'wo-name', class: 'form-control', maxlength: 255,
         placeholder: 'e.g. Recursion exercises', value: @workout.present? ? @workout.name : ''
   .form-group
     = label_tag :description, 'Description', class: 'control-label col-xs-2'
