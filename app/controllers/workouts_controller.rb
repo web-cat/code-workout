@@ -321,9 +321,15 @@ class WorkoutsController < ApplicationController
       if workout_offerings.blank?
         workout_offerings = WorkoutOffering.where(lms_assignment_id: @custom_canvas_lms_assignment_id)
       end
-      @workout_offering = workout_offerings.first
 
       if workout_offerings.blank?
+        # check current term
+        workout_offerings = @user.managed_workout_offerings_in_term(params[:workout_name].downcase, @course, @term)
+        @workout_offering = workout_offerings.first
+      end
+
+      if workout_offerings.blank?
+        # check past terms
         workout_offerings = @user.managed_workout_offerings_in_term(params[:workout_name].downcase, @course, nil)
       end
 
@@ -333,7 +339,7 @@ class WorkoutsController < ApplicationController
         .sort_by{ |wo| wo.course_offering.term.starts_on }.andand
         .last.andand.workout
 
-      if workout_offerings.blank?
+      if !@workout_offering
         @course_offerings = @user.managed_course_offerings course: @course, term: @term
         if @course_offerings.blank?
           course_offering = CourseOffering.create(
@@ -387,8 +393,6 @@ class WorkoutsController < ApplicationController
               lms_assignment_id: @lms_assignment_id
           ) and return
         end
-      else
-        @workout_offering = workout_offerings.first
       end
     else
       # first search by lms_assignment_id
@@ -487,7 +491,7 @@ class WorkoutsController < ApplicationController
       end
     end
 
-    # check enrollment and ties to LTI before proceeeding
+    # check enrollment and ties to LTI before proceeding
     role = params[:is_instructor].to_b ? CourseRole.instructor : CourseRole.student
     @course_offering = @workout_offering.course_offering
 
