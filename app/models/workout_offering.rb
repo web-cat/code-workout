@@ -135,6 +135,7 @@ class WorkoutOffering < ActiveRecord::Base
     course_offering.is_staff?(user) ||
       (((opens == nil) || (opens <= now)) &&
       course_offering.is_enrolled?(user) &&
+      published &&
       (uscore == nil ||
       !uscore.closed? ||
       !workout_policy.andand.no_review_before_close ||
