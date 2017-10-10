@@ -347,7 +347,7 @@ class WorkoutsController < ApplicationController
             term: @term,
             label: params[:label] || "#{@user.label_name} - #{@term.display_name}",
             self_enrollment_allowed: true,
-            lms_instance: LMSInstance.find(lms_instance_id)
+            lms_instance: LmsInstance.find(lms_instance_id)
           )
 
           @course_enrollment = CourseEnrollment.create(
