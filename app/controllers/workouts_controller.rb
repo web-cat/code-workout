@@ -325,7 +325,7 @@ class WorkoutsController < ApplicationController
       if workout_offerings.blank?
         # check current term
         workout_offerings = @user.managed_workout_offerings_in_term(params[:workout_name].downcase, @course, @term)
-        @workout_offering = workout_offerings.first
+        @workout_offering = workout_offerings.flatten.first
       end
 
       if workout_offerings.blank?
