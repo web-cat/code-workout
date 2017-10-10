@@ -92,7 +92,7 @@ class WorkoutOfferingsController < ApplicationController
 
       if current_user
         @workout_score = @workout_offering.score_for(current_user)
-        if @workout_score.nil?
+        if @workout_score.nil? && @workout_offering.can_be_practiced_by?(current_user)
           @workout_score = WorkoutScore.new(
             score: 0,
             exercises_completed: 0,
