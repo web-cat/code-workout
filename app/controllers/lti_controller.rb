@@ -30,7 +30,7 @@ class LtiController < ApplicationController
       end
 
       if @user.blank?
-        if params[:custom_canvas_user_login_id]
+        if params[:custom_canvas_user_login_id].andand.include?("@")
           email = params[:custom_canvas_user_login_id]
         else
           email = params[:lis_person_contact_email_primary]
