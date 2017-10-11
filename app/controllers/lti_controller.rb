@@ -87,6 +87,11 @@ class LtiController < ApplicationController
         workout_from_collection = true
       end
 
+      persistent_courses = ['1230385', '1230176', '1230392']
+
+      dynamic_lms_assignment = params[:dynamic].to_b || (params[:custom_canvas_course_id] &&
+        persistent_courses.include?(params[:custom_canvas_course_id]))
+
       if @organization.blank?
         @message = 'Organization not found'
         render 'lti/error' and return
@@ -126,6 +131,7 @@ class LtiController < ApplicationController
         is_instructor: @tp.context_instructor?,
         ext_lti_assignment_id: ext_lti_assignment_id,
         custom_canvas_assignment_id: custom_canvas_assignment_id,
+        dynamic_lms_assignment: dynamic_lms_assignment,
         lms_instance_id: @lms_instance.id,
         label: params[:custom_label], # can be nil
         lis_outcome_service_url: params[:lis_outcome_service_url],
