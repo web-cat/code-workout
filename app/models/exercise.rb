@@ -279,6 +279,14 @@ class Exercise < ActiveRecord::Base
     end
   end
 
+  def attempt_data
+    exercise_versions.joins({ attempts: :prompt_answers })
+      .joins('left join coding_prompt_answers on prompt_answers.actable_id = coding_prompt_answers.id')
+      .select('attempts.user_id, exercise_versions.id as exercise_version_id, exercise_versions.version as version_no,
+        coding_prompt_answers.id as answer_id, coding_prompt_answers.answer, coding_prompt_answers.error,
+        attempts.id as attempt_id, attempts.submit_time, attempts.submit_num, attempts.score')
+  end
+
 
   #~ Private instance methods .................................................
   private
