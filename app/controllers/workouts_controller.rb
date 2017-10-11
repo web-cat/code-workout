@@ -305,6 +305,7 @@ class WorkoutsController < ApplicationController
     @term = Term.find params[:term_id]
     @course = Course.find params[:course_id]
     @lti_launch = true
+    dynamic_lms_assignment = params[:dynamic_lms_assignment]
     ext_lti_assignment_id = params[:ext_lti_assignment_id]
     custom_canvas_assignment_id = params[:custom_canvas_assignment_id]
     lms_instance_id = params[:lms_instance_id]
@@ -325,8 +326,9 @@ class WorkoutsController < ApplicationController
       if workout_offerings.blank?
         # check current term
         workout_offerings = @user.managed_workout_offerings_in_term(params[:workout_name].downcase, @course, @term)
-        @workout_offering = workout_offerings.flatten.first
       end
+
+      @workout_offering = workout_offerings.flatten.first
 
       if workout_offerings.blank?
         # check past terms
@@ -500,10 +502,14 @@ class WorkoutsController < ApplicationController
       @course_offering.save
     end
 
-    if @workout_offering.lms_assignment_id.blank?
+    matching_lms_assignment_id = [@lms_assignment_id, @custom_canvas_lms_assignment_id].include?(@workout_offering.lms_assignment_id)
+
+    should_reset_lms_assignment_id = !matching_lms_assignment_id && dynamic_lms_assignment
+
+    if @workout_offering.lms_assignment_id.blank? || should_reset_lms_assignment_id
       @workout_offering.lms_assignment_id = @lms_assignment_id
       @workout_offering.save
-    elsif !([@lms_assignment_id, @custom_canvas_lms_assignment_id].include?(@workout_offering.lms_assignment_id))
+    elsif !matching_lms_assignment_id
       raise RuntimeError, %(Expected lms-assignment-id to be "#{@lms_assignment_id}" or
         "#{@custom_canvas_lms_assignment_id}", but got "#{@workout_offering.lms_assignment_id}" instead.
         Some manual changing in the database may have occured without proper cleanup.)

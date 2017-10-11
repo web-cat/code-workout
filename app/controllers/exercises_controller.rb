@@ -38,23 +38,22 @@ class ExercisesController < ApplicationController
   end
 
   def query_data
-    @available_exercises = Exercise.visible_through_user(current_user).union(Exercise.visible_through_user_group(current_user)).uniq.select(&:is_coding?)
+    @available_exercises = Exercise.visible_through_user(current_user)
+      .union(Exercise.visible_through_user_group(current_user))
+      .uniq.select(&:is_coding?)
   end
 
   def download_data
-    resultset = Exercise.joins(exercise_versions: { attempts: :prompt_answers })
-      .joins('left join coding_prompt_answers on prompt_answers.actable_id = coding_prompt_answers.id')
-      .select('attempts.user_id, exercises.name as exercise_name, exercises.id as exercise_id,
-        exercise_versions.id as exercise_version_id, exercise_versions.version as version_no,
-        coding_prompt_answers.id as answer_id, coding_prompt_answers.answer, coding_prompt_answers.error,
-        attempts.id as attempt_id, attempts.submit_time, attempts.submit_num, attempts.score')
-      .where(id: params[:id])
-    attributes = %w{ user_id exercise_name exercise_id exercise_version_id version_no answer_id answer error attempt_id submit_time submit_num score }
+    @exercise = Exercise.find params[:id]
+    resultset = @exercise.attempt_data
+    attempt_attributes = %w{ exercise_id exercise_name user_id exercise_version_id version_no answer_id answer error attempt_id submit_time submit_num score }
 
     data = CSV.generate(headers: true) do |csv|
-      csv << attributes
+      csv << attempt_attributes
       resultset.each do |submission|
-        csv << attributes.map { |a| submission.attributes[a] }
+        submission.attributes['exercise_name'] = @exercise.name
+        submission.attributes['exercise_id'] = @exercise.id
+        csv << attempt_attributes.map { |a| submission.attributes[a] }
       end
     end
 
