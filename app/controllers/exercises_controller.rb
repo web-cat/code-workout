@@ -43,17 +43,16 @@ class ExercisesController < ApplicationController
       .uniq.select(&:is_coding?)
   end
 
-  def download_data
+  def download_attempt_data
     @exercise = Exercise.find params[:id]
     resultset = @exercise.attempt_data
-    attempt_attributes = %w{ exercise_id exercise_name user_id exercise_version_id version_no answer_id answer error attempt_id submit_time submit_num score }
-
+    exercise_attributes = %w{ exercise_id exercise_name }
+    attempt_attributes = %w{ user_id exercise_version_id version_no answer_id answer error attempt_id submit_time
+      submit_num score workout_score workout_name course_number course_name term}
     data = CSV.generate(headers: true) do |csv|
-      csv << attempt_attributes
+      csv << (exercise_attributes + attempt_attributes)
       resultset.each do |submission|
-        submission.attributes['exercise_name'] = @exercise.name
-        submission.attributes['exercise_id'] = @exercise.id
-        csv << attempt_attributes.map { |a| submission.attributes[a] }
+        csv << ([ @exercise.id, @exercise.name ] + attempt_attributes.map { |a| submission.attributes[a] })
       end
     end
 

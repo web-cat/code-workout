@@ -6,7 +6,9 @@
   - else
     %p.text.text-success
       Click on an exercise to download submission data for it.
+      %br
+      Note that the download might take some time to start, depending on the number of attempts to query.
 
     - @available_exercises.each do |ex|
       .row
-        = link_to " #{ex.display_name}", exercise_download_data_path(id: ex.id,format: :csv), class: 'fa fa-download'
+        = link_to " #{ex.display_name}", download_exercise_attempt_data_path(id: ex.id,format: :csv), class: 'fa fa-download'
