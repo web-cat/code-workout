@@ -357,9 +357,15 @@ class ExercisesController < ApplicationController
     end
 
     if @workout_score
-      @workout_score.lis_result_sourcedid ||= params[:lis_result_sourcedid]
-      @workout_score.lis_outcome_service_url ||= params[:lis_outcome_service_url]
-      @workout_score.save
+      if @workout_score.lis_result_sourcedid.nil? || @workout_score.lis_outcome_service_url.nil?
+        @workout_score.lis_result_sourcedid = params[:lis_result_sourcedid]
+        @workout_score.lis_outcome_service_url = params[:lis_outcome_service_url]
+
+        @workout_score.save
+
+        # we set LMS gradebook ties for the first time, so force-send scores to LMS
+        @workout_score.update_lti if @workout_score.score
+      end
 
       should_force_lti = !@lti_launch &&
         @workout_offering.andand.lms_assignment_id.present? &&
@@ -370,10 +376,6 @@ class ExercisesController < ApplicationController
         @message = "This assignment must be accessed through your course's Learning Management System (like Canvas)."
         @redirect_url = @workout_offering.lms_assignment_url
         render 'lti/error' and return
-      end
-
-      if !@workout_score.score.nil?
-        @workout_score.update_lti
       end
     end
 
