@@ -356,6 +356,15 @@ input {
   }
 }
 
+.flatpickr-time {
+  .numInput {
+    cursor: text;
+    &:hover {
+      background: #fff;
+    }
+  }
+}
+
 tr.fields {
   &.extension td.course-offering {
     min-width: 10ch;
