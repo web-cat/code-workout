@@ -101,6 +101,7 @@ class WorkoutsController < ApplicationController
     @organization = Organization.find params[:organization_id]
     @course_offerings = current_user.managed_course_offerings(course: @course, term: @term)
     @lms_assignment_id = params[:lms_assignment_id]
+    @suggested_name = params[:suggested_name]
 
     if params[:notice]
       flash.now[:notice] = params[:notice]
@@ -121,6 +122,7 @@ class WorkoutsController < ApplicationController
     @term = Term.find params[:term_id]
     @organization = Organization.find params[:organization_id]
     @lms_assignment_id = params[:lms_assignment_id]
+    @suggested_name = params[:suggested_name]
 
     @workout_offerings = @course.course_offerings.joins(:workout_offerings, :term)
       .order('terms.ends_on DESC')
@@ -238,6 +240,7 @@ class WorkoutsController < ApplicationController
     @organization = Organization.find params[:organization_id]
     @lti_launch = params[:lti_launch]
     @lms_assignment_id = params[:lms_assignment_id]
+    @suggested_name = params[:suggested_name]
 
     @exercises = []
     @workout.exercise_workouts.each do |ex|
@@ -384,7 +387,8 @@ class WorkoutsController < ApplicationController
             organization_id: @course.organization.slug,
             workout_id: found_workout.id,
             lti_launch: true,
-            lms_assignment_id: @lms_assignment_id
+            lms_assignment_id: @lms_assignment_id,
+            suggested_name: params[:workout_name]
           )) and return
         else
           redirect_to organization_new_or_existing_workout_path(
@@ -392,7 +396,8 @@ class WorkoutsController < ApplicationController
               organization_id: @course.organization.slug,
               course_id: @course.slug,
               term_id: @term.slug,
-              lms_assignment_id: @lms_assignment_id
+              lms_assignment_id: @lms_assignment_id,
+              suggested_name: params[:workout_name]
           ) and return
         end
       end
