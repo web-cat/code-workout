@@ -454,6 +454,12 @@ class ExercisesController < ApplicationController
       @wexs = nil
     end
 
+		# decide whether or not to hide the sidebar 
+		# hide it if this workout (if present) has less than two exercises 
+		@workout ||= @workout_score.andand.workout || @workout_offering.andand.workout
+		ex_count = @workout.andand.exercises.andand.count
+		@hide_sidebar = ex_count && ex_count < 2
+
     render layout: 'two_columns'
 
   end
