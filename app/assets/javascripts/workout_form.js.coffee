@@ -202,11 +202,19 @@ init_exercises = ->
         name = "X#{exercise.id}"
         if exercise.name
           name = name + ": #{exercise.name}"
+
+        # Only keep track of the exercise_workout_id if we're editing a workout
+        # If we're creating or cloning a workout, this information is not required.
+        if $('body').is('.workouts.edit')
+          exercise_workout_id = exercise.exercise_workout_id
+        else
+          exercise_workout_id = ''
         data =
           id: exercise.id
-          exercise_workout_id: exercise.exercise_workout_id
+          exercise_workout_id: exercise_workout_id
           name: name
           points: exercise.points
+        console.log(data)
         $('#ex-list').append(Mustache.render($(window.codeworkout.exercise_template).filter('#exercise-template').html(), data))
     $('#ex-list').removeData 'exercises'
 
@@ -276,7 +284,7 @@ init_row_datepickers = (row) ->
       hard_datepicker.setDate(date, false)
 
 close_slider = ->
-  if $('.toggle-slider').attr('data-is-open')
+  if $('.sidebar').hasClass('slider') && $('.toggle-slider').attr('data-is-open')
     $('.toggle-slider').click()
     $('#search-terms').val('')
     $('.search-results').empty()
