@@ -212,7 +212,7 @@ class Ability
              }.any?
       end
 
-      can :gym_practice, Exercise do |e|
+      can [ :gym_practice, :embed ], Exercise do |e|
         e.visible_to?(user)
       end
 
