@@ -458,7 +458,7 @@ class ExercisesController < ApplicationController
 		# hide it if this workout (if present) has less than two exercises 
 		@workout ||= @workout_score.andand.workout || @workout_offering.andand.workout
 		ex_count = @workout.andand.exercises.andand.count
-		@hide_sidebar = ex_count && ex_count < 2
+		@hide_sidebar = (!@workout && @lti_launch) || (ex_count && ex_count < 2)
 
     render layout: 'two_columns'
 
@@ -488,8 +488,6 @@ class ExercisesController < ApplicationController
       end
     end
 
-    # Tighter restrictions for the moment, should go away
-    # authorize! :gym_practice, @exercise
     if current_user
       @student_drift_user = current_user
     elsif session[:student_drift_user_id]
@@ -642,10 +640,6 @@ class ExercisesController < ApplicationController
       end
     elsif @exercise_version.is_coding?
       @answer_code = params[:exercise_version][:answer_code]
-      # Why were these in here? what purpose do they serve ??????
-      # ---
-      # @answer_code.gsub!("\r","")
-      # @answer_code.gsub!("\n","")
       @exercise_version.prompts.each_with_index do |exercise_prompt, i|
         exercise_prompt_answer = @attempt.prompt_answers[i]
         exercise_prompt_answer.answer = params[:exercise_version][:answer_code]

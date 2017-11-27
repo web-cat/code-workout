@@ -76,7 +76,7 @@ CodeWorkout::Application.routes.draw do
     resources :exercises
 
     # /gym/workouts ...
-    get  'workouts/embed' => 'workouts#embed'
+    get  'workouts/embed' => 'workouts#embed', as: :workout_embed
     get  'workouts/download' => 'workouts#download'
     get  'workouts/:id/add_exercises' => 'workouts#add_exercises'
     post 'workouts/link_exercises'  => 'workouts#link_exercises'

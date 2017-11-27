@@ -119,7 +119,7 @@
           exercise_practice_path(@workout.next_exercise(@exercise, current_user, @workout_score), workout_id: @workout.id, lti_launch: @lti_launch),
           class: 'btn btn-info btn-next', id: 'nextbtn'
 
-    - if @workout.nil?
+    - if @workout.nil? && !@lti_launch
       %br
       = link_to "Practice a different #{@exercise.language} exercise",     |
         (@exercise.language ?                                              |
