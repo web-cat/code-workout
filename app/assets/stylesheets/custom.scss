@@ -314,6 +314,7 @@ ul.wysihtml5-toolbar li {
   cursor: move;
   padding-right: 5px;
 }
+// Mostly rules for complex forms like the workout-edit form
 
 .action {
   cursor: pointer;
@@ -333,8 +334,21 @@ ul.wysihtml5-toolbar li {
   overflow-y: auto;
 }
 
+// Pagination style for course rosters
+#roster_paginator {
+  text-align: center;
+
+  ul {
+		list-style-type: none;
+
+		li {
+			display: inline-block;
+		}
+  }
+}
+
+
 // Rules for form inputs
-// Mostly rules for complex forms like the workout-edit form
 input {
   &.datepicker {
     min-width: 21ch;
