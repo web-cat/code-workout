@@ -3,6 +3,7 @@
 
 - if @user_deadline
   = javascript_include_tag('timeout')
+= javascript_include_tag("two_column_layout")
 = javascript_include_tag("practice")
 .col-md-7#user-deadline{ data: { deadline: @user_deadline, server_now: @server_now } }
   = semantic_form_for @exercise_version,
