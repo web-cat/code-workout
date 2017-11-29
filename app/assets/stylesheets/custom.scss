@@ -430,20 +430,23 @@ ul.ui-autocomplete {
 
 .toggle-slider {
   position: absolute;
-  top: 4em;
-  opacity: 0.5;
+  top: 8em;
+	z-index: 2;
   border: 1px solid black;
-  border-radius: 0 5px 5px 0;
+  border-radius: 5px 5px 0 0;
   outline: none;
+	-webkit-transform: rotate(90deg);
+	-ms-transform: rotate(90deg);
+	transform: rotate(90deg);
 
   &[data-is-open='false'] {
-    opacity: 0.5;
-    left: 0px;
+    opacity: 0.4;
+    left: -37px;
   }
 
   &[data-is-open='true'] {
     opacity: 1;
-    left: 310px;
+    left: 274px;
   }
 
   &:hover {
