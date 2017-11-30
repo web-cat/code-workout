@@ -343,8 +343,16 @@ ul.wysihtml5-toolbar li {
 
 		li {
 			display: inline-block;
+
+			&.page {
+				padding: 0 2px;
+			}
+
+			&.active {
+				border-bottom: 1px solid black;
+			}
 		}
-  }
+	}
 }
 
 
