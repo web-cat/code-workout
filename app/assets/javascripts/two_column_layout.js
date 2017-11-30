@@ -24,7 +24,8 @@
 
   function setSlidable() {
     var width = $(window).width();
-    var shouldBeSlidable = width < 995;
+		var sidebar = $('.sidebar');
+    var shouldBeSlidable = width < 995 && sidebar.length > 0;
     $('.sidebar').toggleClass('slider', shouldBeSlidable);
     $('.content').toggleClass('underlay', shouldBeSlidable);
     if (shouldBeSlidable) {

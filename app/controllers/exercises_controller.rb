@@ -6,7 +6,7 @@ class ExercisesController < ApplicationController
   skip_authorize_resource only: :practice
 
   #~ Action methods ...........................................................
-  after_action :allow_iframe, only: :practice
+  after_action :allow_iframe, only: [:practice, :embed]
   # -------------------------------------------------------------
 
   # GET /exercises
@@ -283,31 +283,31 @@ class ExercisesController < ApplicationController
     redirect_to exercises_url, notice: 'Exercise upload complete.'
   end
 
+	def embed
+    if params[:exercise_version_id] || params[:id]
+      set_exercise_from_params
+    else
+      @message = 'Choose an exercise to embed!'
+      render 'lti/error' and return
+    end
+    
+    redirect_to exercise_practice_path(id: @exercise.id, lti_launch: true) and return
+	end
 
   # -------------------------------------------------------------
   def practice
     # lti launch
     @lti_launch = params[:lti_launch]
 
-    if params[:exercise_version_id]
-      @exercise_version =
-        ExerciseVersion.find_by(id: params[:exercise_version_id])
-      if !@exercise_version
-        redirect_to exercises_url, notice:
-          "Exercise version EV#{params[:exercise_version_id]} " +
-          "not found" and return
-      end
-      @exercise = @exercise_version.exercise
-    elsif params[:id]
-      @exercise = Exercise.find_by(id: params[:id])
-      if !@exercise
-        redirect_to exercises_url,
-          notice: "Exercise E#{params[:id]} not found" and return
-      end
-      @exercise_version = @exercise.current_version
+    if params[:exercise_version_id] || params[:id]
+      set_exercise_from_params
     else
-      redirect_to exercises_url,
-        notice: 'Choose an exercise to practice!' and return
+      @message = 'Choose an exercise to practice!'
+      if @lti_launch
+        render 'lti/error' and return
+      else
+        redirect_to exercises_url, notice: @message and return
+      end
     end
 
     # authorize! :practice, @exercise
@@ -458,7 +458,7 @@ class ExercisesController < ApplicationController
 		# hide it if this workout (if present) has less than two exercises 
 		@workout ||= @workout_score.andand.workout || @workout_offering.andand.workout
 		ex_count = @workout.andand.exercises.andand.count
-		@hide_sidebar = ex_count && ex_count < 2
+		@hide_sidebar = (!@workout && @lti_launch) || (ex_count && ex_count < 2)
 
     render layout: 'two_columns'
 
@@ -475,32 +475,19 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   #GET /evaluate/1
   def evaluate
-    # Copy/pasted from #practice method.  Should be refactored.
     @lti_launch = params[:lti_launch]
 
-    if params[:exercise_version_id]
-      @exercise_version =
-        ExerciseVersion.find_by(id: params[:exercise_version_id])
-      if !@exercise_version
-        redirect_to exercises_url, notice:
-          "Exercise version EV#{params[:exercise_version_id]} " +
-          "not found" and return
-      end
-      @exercise = @exercise_version.exercise
-    elsif params[:id]
-      @exercise = Exercise.find_by(id: params[:id])
-      if !@exercise
-        redirect_to exercises_url,
-          notice: "Exercise E#{params[:id]} not found" and return
-      end
-      @exercise_version = @exercise.current_version
+    if params[:exercise_version_id] || params[:id]
+      set_exercise_from_params
     else
-      redirect_to exercises_url,
-        notice: 'Choose an exercise to practice!' and return
+      @message = 'Choose an exercise to evaluate!'
+      if @lti_launch
+        render 'lti/error' and return
+      else
+        redirect_to exercises_url, notice: 'Choose an exercise to practice!' and return
+      end
     end
 
-    # Tighter restrictions for the moment, should go away
-    # authorize! :gym_practice, @exercise
     if current_user
       @student_drift_user = current_user
     elsif session[:student_drift_user_id]
@@ -653,10 +640,6 @@ class ExercisesController < ApplicationController
       end
     elsif @exercise_version.is_coding?
       @answer_code = params[:exercise_version][:answer_code]
-      # Why were these in here? what purpose do they serve ??????
-      # ---
-      # @answer_code.gsub!("\r","")
-      # @answer_code.gsub!("\n","")
       @exercise_version.prompts.each_with_index do |exercise_prompt, i|
         exercise_prompt_answer = @attempt.prompt_answers[i]
         exercise_prompt_answer.answer = params[:exercise_version][:answer_code]
@@ -710,6 +693,29 @@ class ExercisesController < ApplicationController
 
   #~ Private instance methods .................................................
   private
+
+    # set @exercise and @exercise_version based on params
+    # ----------------------------------------------------------
+    def set_exercise_from_params
+      if params[:exercise_version_id]
+        @exercise_version =
+          ExerciseVersion.find_by(id: params[:exercise_version_id])
+        if !@exercise_version
+          redirect_to exercises_url, notice:
+            "Exercise version EV#{params[:exercise_version_id]} " +
+            "not found" and return
+        end
+        @exercise = @exercise_version.exercise
+      elsif params[:id]
+        @exercise = Exercise.find_by(id: params[:id])
+        if !@exercise
+          redirect_to exercises_url,
+            notice: "Exercise E#{params[:id]} not found" and return
+        end
+        @exercise_version = @exercise.current_version
+      end
+    end
+
     # -------------------------------------------------------------
     def create_new_version
       newexercise = Exercise.new

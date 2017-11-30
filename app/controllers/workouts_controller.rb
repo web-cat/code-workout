@@ -65,12 +65,16 @@ class WorkoutsController < ApplicationController
   end
 
   def embed
-    workouts = Workout.where('lower(name) = ? and is_public = true', params[:resource_name].downcase)
-    @workout = workouts.first
+		if params[:workout_id].present?
+			@workout = Workout.find_by(id: params[:workout_id])
+		elsif params[:resource_name].present?
+			workouts = Workout.where('lower(name) = ? and is_public = true', params[:resource_name].downcase)
+			@workout = workouts.first
+		end
     if @workout
       redirect_to practice_workout_path(id: @workout.id, lti_launch: true) and return
     else
-      @message = 'Sorry, there are no public workouts with that name.'
+      @message = 'Sorry, there are no public workouts with that name or id.'
       render 'lti/error' and return
     end
   end
