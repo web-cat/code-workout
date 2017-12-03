@@ -50,8 +50,7 @@ class User < ActiveRecord::Base
   friendly_id :email_or_id
 
 
-  #~ Relationships ............................................................
-
+  #~ Relationships ............................................................  
   belongs_to  :global_role
   belongs_to  :time_zone
 #  has_many    :authentications
@@ -130,6 +129,11 @@ class User < ActiveRecord::Base
     else
       User.where.not(id: user_group.users.flat_map(&:id))
     end
+  end
+
+  def self.email_needs_fixing
+    User.where(User.arel_table[:email].does_not_match('%@%'))
+      .where("`id` in (?)", LtiIdentity.all.map(&:user_id))
   end
 
   #~ Instance methods .........................................................
