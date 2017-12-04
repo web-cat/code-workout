@@ -476,8 +476,8 @@ class ExercisesController < ApplicationController
   #GET /evaluate/1
   def evaluate
     @lti_launch = params[:lti_launch]
-
-    if params[:exercise_version_id] || params[:id]
+    
+		if params[:exercise_version_id] || params[:id]
       set_exercise_from_params
     else
       @message = 'Choose an exercise to evaluate!'
@@ -541,7 +541,7 @@ class ExercisesController < ApplicationController
     elsif @workout
       @workout_score = @workout.score_for(@student_drift_user)
     end
-    if @workout_score.andand.closed? && @workout_offering.andand.can_be_practiced_by?(@student_drift_user)
+    if @workout_score.andand.closed? && !@workout_offering.andand.can_be_practiced_by?(@student_drift_user)
       p 'WARNING: attempt to evaluate exercise after time expired.'
       return
     end
