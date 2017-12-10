@@ -1,5 +1,5 @@
 .container
-  %h1{data: { id: @workout.id } }
+  %h1.left-padded{data: { id: @workout.id } }
     Editing workout: #{@workout.name}
 
   = render 'form'

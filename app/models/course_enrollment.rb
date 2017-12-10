@@ -28,7 +28,7 @@ class CourseEnrollment < ActiveRecord::Base
   belongs_to :course_offering, inverse_of: :course_enrollments
   belongs_to :course_role
 
-  paginates_per 100
+  paginates_per 100 
 
   #~ Validation ...............................................................
 

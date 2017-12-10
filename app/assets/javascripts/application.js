@@ -14,6 +14,7 @@
 //= require jquery
 //= require jquery-ui/sortable
 //= require jquery-ui/autocomplete
+//= require jquery-ui/effect-slide
 //= require jquery_ujs
 //= require bootstrap-sprockets
 //= require bootstrap-editable

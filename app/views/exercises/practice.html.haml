@@ -3,6 +3,7 @@
 
 - if @user_deadline
   = javascript_include_tag('timeout')
+= javascript_include_tag("two_column_layout")
 = javascript_include_tag("practice")
 .col-md-7#user-deadline{ data: { deadline: @user_deadline, server_now: @server_now } }
   = semantic_form_for @exercise_version,
@@ -119,7 +120,7 @@
           exercise_practice_path(@workout.next_exercise(@exercise, current_user, @workout_score), workout_id: @workout.id, lti_launch: @lti_launch),
           class: 'btn btn-info btn-next', id: 'nextbtn'
 
-    - if @workout.nil?
+    - if @workout.nil? && !@lti_launch
       %br
       = link_to "Practice a different #{@exercise.language} exercise",     |
         (@exercise.language ?                                              |

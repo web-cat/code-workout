@@ -1,7 +1,7 @@
 = inside_layout 'header' do
   = javascript_tag do
     window.codeworkout = window.codeworkout || {}
-    window.codeworkout.lms_assignment_id = "#{params[:lms_assignment_id]}"
+    window.codeworkout.lms_assignment_id = "#{@lms_assignment_id}"
     window.codeworkout.lis_result_sourcedid = "#{params[:lis_result_sourcedid]}"
     window.codeworkout.lis_outcome_service_url = "#{params[:lis_outcome_service_url]}"
 

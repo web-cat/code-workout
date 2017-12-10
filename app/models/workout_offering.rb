@@ -63,7 +63,11 @@ class WorkoutOffering < ActiveRecord::Base
 
   # -----------------------------------------------------------------
   def score_for(user)
-    workout_scores.where(user: user).order('updated_at DESC').first
+    if user.nil?
+      return nil
+    else
+      workout_scores.where(user: user).order('updated_at DESC').first
+    end
   end
 
 
@@ -131,6 +135,7 @@ class WorkoutOffering < ActiveRecord::Base
     course_offering.is_staff?(user) ||
       (((opens == nil) || (opens <= now)) &&
       course_offering.is_enrolled?(user) &&
+      published &&
       (uscore == nil ||
       !uscore.closed? ||
       !workout_policy.andand.no_review_before_close ||

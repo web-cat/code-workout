@@ -106,10 +106,11 @@ class CourseOfferingsController < ApplicationController
       @course_role = CourseRole.student
     end
 
+    success = true
     if @course_offering &&
-      !current_user.is_enrolled?(@course_offering) &&
+      !@user.is_enrolled?(@course_offering) &&
       (@course_offering.can_enroll? ||
-        current_user.manages?(@course_offering))
+        @user.manages?(@course_offering))
 
       co = CourseEnrollment.new(
         course_offering: @course_offering,
@@ -117,7 +118,7 @@ class CourseOfferingsController < ApplicationController
         course_role: @course_role
       )
 
-      success = co.save
+      co.save
     else
       success = false
     end
@@ -128,12 +129,18 @@ class CourseOfferingsController < ApplicationController
       end
     else
       if success
-        redirect_to organization_course_path(
-          @course_offering.course.organization,
-          @course_offering.course,
-          @course_offering.term),
-          notice: 'You are now enrolled in ' +
-            "#{@course_offering.display_name}."
+        respond_to do |format|
+          format.html {
+            redirect_to organization_course_path(
+              @course_offering.course.organization,
+              @course_offering.course,
+              @course_offering.term),
+              notice: 'You are now enrolled in ' +
+                "#{@course_offering.display_name}."
+          }
+
+          format.json { render json: success }
+        end
       else
         flash[:warning] = 'Unable to enroll in that course.'
         redirect_to root_path
@@ -250,19 +257,24 @@ class CourseOfferingsController < ApplicationController
       @workout_offering = @course_offering.add_workout(workout_name, workout_offering_options)
     end
 
-    practice_url = url_for(
-      organization_workout_offering_practice_path(
-        id: @workout_offering.id,
-        lis_outcome_service_url: params[:lti_params][:lis_outcome_service_url],
-        lis_result_sourcedid: params[:lti_params][:lis_result_sourcedid],
-        organization_id: @course_offering.course.organization.slug,
-        term_id: @course_offering.term.slug,
-        course_id: @course_offering.course.slug,
-        lti_launch: true
+    if @workout_offering
+      practice_url = url_for(
+        organization_workout_offering_practice_path(
+          id: @workout_offering.id,
+          lis_outcome_service_url: params[:lti_params][:lis_outcome_service_url],
+          lis_result_sourcedid: params[:lti_params][:lis_result_sourcedid],
+          organization_id: @course_offering.course.organization.slug,
+          term_id: @course_offering.term.slug,
+          course_id: @course_offering.course.slug,
+          lti_launch: true
+        )
       )
-    )
 
-    render json: { practice_url: practice_url } and return
+      render json: { practice_url: practice_url } and return
+    else
+      @message = "The workout named #{params[:workout_name]} does not exist or is not linked with this LMS assignment. Please contact your instructor."
+      render 'lti/error' and return
+    end
   end
 
 
