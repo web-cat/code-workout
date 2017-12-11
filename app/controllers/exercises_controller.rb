@@ -691,14 +691,19 @@ class ExercisesController < ApplicationController
   end
 
   def call_open_pop
+    puts params.inspect
     require 'net/http'
     require 'json'
-    uri = URI('http://192.200.22.10:3000/exercises')
+    uri = URI('https://192.168.33.10:9210/exercises')
     http = Net::HTTP.new(uri.host, uri.port)
-    req = Net::HTTP::Get.new(uri.path, 'Content-Type' => 'application/json')
+    puts http
+
+    req = Net::HTTP::Get.new(uri.path)
     req.body = { exercise_id: 'JHAVEPOPEx1'}.to_json
+    puts req.body
     res = http.request(req)
     puts "response #{res.body}"
+    render res.body
 
   end
 
