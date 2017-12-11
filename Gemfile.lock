@@ -208,6 +208,8 @@ GEM
     hashie (3.3.1)
     hike (1.2.3)
     hitimes (1.2.2)
+    httparty (0.15.6)
+      multi_xml (>= 0.5.2)
     i18n (0.7.0)
     immigrant (0.3.1)
       activerecord (>= 3.0)
@@ -441,6 +443,7 @@ DEPENDENCIES
   gravtastic
   haml (>= 3.1.4)
   haml-rails
+  httparty
   immigrant
   ims-lti (~> 1.1.8)
   jquery-rails
@@ -482,4 +485,4 @@ DEPENDENCIES
   wannabe_bool
 
 BUNDLED WITH
-   1.13.2
+   1.16.0

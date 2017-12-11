@@ -691,20 +691,14 @@ class ExercisesController < ApplicationController
   end
 
   def call_open_pop
-    puts params.inspect
-    require 'net/http'
-    require 'json'
-    uri = URI('https://192.168.33.10:9210/exercises')
-    http = Net::HTTP.new(uri.host, uri.port)
-    puts http
+    require 'open-uri'
+    request_uri=URI.parse('https://192.168.33.10:9210/exercises')
 
-    req = Net::HTTP::Get.new(uri.path)
-    req.body = { exercise_id: 'JHAVEPOPEx1'}.to_json
-    puts req.body
-    res = http.request(req)
-    puts "response #{res.body}"
-    render res.body
-
+# The params incidentally are available as a String, via request_uri.query
+    output = open(request_uri, {ssl_verify_mode: OpenSSL::SSL::VERIFY_NONE})
+    obj = JSON.parse output.readlines.join("")
+    puts obj
+    render obj
   end
 
   #~ Private instance methods .................................................
