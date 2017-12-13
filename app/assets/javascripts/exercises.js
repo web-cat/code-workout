@@ -25,11 +25,11 @@
             url: url,
             type: 'GET',
             data: {
-                exercise_Id: exercise_id,
+                exercise_id: exercise_id,
                 code: studentCode
             },
             success: function (data) {
-                console.log("pleeeeeeeeeeeeeeeeeeeeas")
+                console.log(data)
             }
 
         });
@@ -71,7 +71,7 @@
         studentCode = $('#exercise_version_answer_code').val();
         fd = new FormData;
 
-        fd.append('exerciseId', exercise_id);
+        fd.append('exercise_id', exercise_id);
         fd.append('studentCode', studentCode);
 
         // url = '/course_offerings'

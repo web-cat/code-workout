@@ -691,14 +691,19 @@ class ExercisesController < ApplicationController
   end
 
   def call_open_pop
-    require 'open-uri'
-    request_uri=URI.parse('https://192.168.33.10:9210/exercises')
+    require 'rest-client'
+    require 'json'
+    payload = {'exercise_id' => params[:exercise_id],
+            'code' => params[:code]
+    }
 
-# The params incidentally are available as a String, via request_uri.query
-    output = open(request_uri, {ssl_verify_mode: OpenSSL::SSL::VERIFY_NONE})
-    obj = JSON.parse output.readlines.join("")
-    puts obj
-    render obj
+    request = RestClient.post('http://192.168.33.10:3000',
+                              payload.to_json,
+                              content_type: :json)
+
+    trace = JSON.parse(request.body)
+    render call_open_pop
+
   end
 
   #~ Private instance methods .................................................

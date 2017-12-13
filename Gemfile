@@ -122,4 +122,5 @@ gem 'css3-progress-bar-rails'
 
 gem 'immigrant'
 gem 'ims-lti', '~> 1.1.8'
-gem 'httparty'
+gem 'rest-client'
+gem 'json'
