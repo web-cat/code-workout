@@ -155,3 +155,16 @@
       .modal-footer
         %button.btn.btn-default{ data: { dismiss: 'modal' }, type: 'button' } Cancel
         %button.btn.btn-danger.btn-reset Reset Editor
+
+.modal.fade#visualize{ tabindex: '-1', role: 'dialog', aria_labelledby: 'visualizeModalLabel', aria_hidden: true }
+  .modal-dialog
+    .modal-content
+      .modal-header
+        %button.close{ type: 'button', data: { dismiss: 'modal' }, aria_hidden: true } &times
+        %p.lead.modal-title#visualizeModalLabel Close
+
+      .modal-body
+
+
+      .modal-footer
+        %button.btn.btn-default{ data: { dismiss: 'modal' }, type: 'button' } Cancel

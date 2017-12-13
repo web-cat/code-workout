@@ -690,6 +690,20 @@ class ExercisesController < ApplicationController
     redirect_to exercises_url, notice: 'Exercise was successfully destroyed.'
   end
 
+  def OLDcall_open_pop
+    require 'httparty'
+    require 'json'
+    request = HTTParty.post('https://192.168.33.10:9210/answers/solve',
+                 :body => {'exercise_id' => params[:exercise_id], 'code' => params[:code]}.to_json,
+                 :headers => { 'Content-Type' => 'application/json' },
+                  :verify => false )
+    puts request
+    respond_to do |format|
+      format.json { render :json => request["exercise_trace"]}  # note, no :location or :status options
+    end
+    #respond_with request.parsed_response
+
+  end
   def call_open_pop
     require 'rest-client'
     require 'json'
@@ -697,12 +711,17 @@ class ExercisesController < ApplicationController
             'code' => params[:code]
     }
 
-    request = RestClient.post('http://192.168.33.10:3000',
-                              payload.to_json,
-                              content_type: :json)
+    #request =  RestClient.post('https://192.168.33.10:9210/answers/solve',payload.to_json,content_type: :json)
 
+    request = RestClient::Request.execute(:method => :post,
+                                            :url => 'https://192.168.33.10:9210/answers/solve',
+                                            :payload => payload.to_json,
+                                            :headers => {'Content-Type' => 'application/json'},
+                                            :verify_ssl => OpenSSL::SSL::VERIFY_NONE)
     trace = JSON.parse(request.body)
-    render call_open_pop
+    respond_to do |format|
+      format.json { render :json => trace}  # note, no :location or :status options
+    end
 
   end
 
