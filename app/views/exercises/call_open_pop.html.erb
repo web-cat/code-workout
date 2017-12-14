@@ -1,1 +1,41 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
 <%= yield %>
+<%=raw @openpop_results %>
+<body onload="visualize(testvisualizerTrace);"/>
+<head>
+  <title>Java Visualizer</title>
+  <style>
+    #container {
+      width: 780px;
+      height: 540px;
+    }
+  </style>
+  <%= stylesheet_link_tag('JSAV') %>
+  <%= stylesheet_link_tag('odsaAV-min') %>
+  <%= stylesheet_link_tag('odsaStyle-min') %>
+  <%= javascript_include_tag('https://code.jquery.com/jquery-2.1.4.min.js') %>
+  <%= javascript_include_tag('https://code.jquery.com/ui/1.11.4/jquery-ui.min.js') %>
+  <%= javascript_include_tag('JsavWrapper') %>
+  <%= javascript_include_tag('jquery.transit') %>
+  <%= javascript_include_tag('raphael') %>
+  <%= javascript_include_tag('JSAV-min') %>
+  <%= javascript_include_tag('odsaUtils-min') %>
+  <%= javascript_include_tag('odsaAV-min') %>
+
+
+</head>
+
+<body>
+
+<div id="container">
+  <div class="avcontainer">
+    <span class="jsavcounter"></span>
+    <div class="jsavcontrols"></div>
+    <p class="jsavoutput jsavline"></p>
+  </div> <!--avcontainer-->
+</div> <!--container-->
+
+</body>
+</html>

@@ -29,7 +29,48 @@
                 code: studentCode
             },
             success: function (data) {
-                doModal("Visualize", JSON.stringify(data));
+                var visWindow = window.open("", 'VISUALIZE','height=800, width=500');
+                visWindow.document.body.innerHTML = "<script>var testvisualizerTrace =\n" +
+                    "    {\"code\":\"    p = p.next;\\n\\n \",\"trace\":[{\"stdout\":\"\",\"event\":\"step_line\",\"line\":1,\"stack_to_render\":[{\"func_name\":\"changeNext:1\",\"encoded_locals\":{\"p\":[\"REF\",181],\"r\":[\"REF\",179]},\"ordered_varnames\":[\"p\",\"r\"],\"parent_frame_id_list\":[],\"is_highlighted\":true,\"is_zombie\":false,\"is_parent\":false,\"unique_hash\":\"273\",\"frame_id\":273}],\"globals\":{},\"ordered_globals\":[],\"func_name\":\"changeNext\",\"heap\":{\"179\":[\"INSTANCE\",\"Link\",[\"next\",null],[\"data\",3]],\"178\":3,\"181\":[\"INSTANCE\",\"Link\",[\"next\",[\"REF\",180]],[\"data\",1]],\"174\":1,\"180\":[\"INSTANCE\",\"Link\",[\"next\",[\"REF\",179]],[\"data\",2]],\"177\":2}},{\"stdout\":\"\",\"event\":\"step_line\",\"line\":1,\"stack_to_render\":[{\"func_name\":\"changeNext:1\",\"encoded_locals\":{\"p\":[\"REF\",180],\"r\":[\"REF\",179]},\"ordered_varnames\":[\"p\",\"r\"],\"parent_frame_id_list\":[],\"is_highlighted\":true,\"is_zombie\":false,\"is_parent\":false,\"unique_hash\":\"281\",\"frame_id\":281}],\"globals\":{},\"ordered_globals\":[],\"func_name\":\"changeNext\",\"heap\":{\"179\":[\"INSTANCE\",\"Link\",[\"next\",null],[\"data\",3]],\"178\":3,\"180\":[\"INSTANCE\",\"Link\",[\"next\",[\"REF\",179]],[\"data\",2]],\"177\":2,\"181\":[\"INSTANCE\",\"Link\",[\"next\",[\"REF\",180]],[\"data\",1]],\"174\":1}}],\"userlog\":\"Debugger VM maxMemory: 807M \\n \"}\n" +
+                    "\n" +
+                    "</script>\n" +
+                    "\n" +
+                    "\n" +
+                    "\n" +
+                    "\n" +
+                    "<body onload=\"visualize(testvisualizerTrace);\"/>\n" +
+                    "<head>\n" +
+                    "    <title>JSAV example</title>\n" +
+                    "    <meta charset=\"utf-8\"/>\n" +
+                    "    <link rel=\"stylesheet\" href=\"JSAV.css\" type=\"text/css\"/>\n" +
+                    "    <link rel=\"stylesheet\" href=\"odsaAV-min.css\" type=\"text/css\"/>\n" +
+                    "    <link rel=\"stylesheet\" href=\"odsaStyle-min.css\" type=\"text/css\"/>\n" +
+                    "    <style>\n" +
+                    "        #container {\n" +
+                    "            width: 780px;\n" +
+                    "            height: 540px;\n" +
+                    "        }\n" +
+                    "    </style>\n" +
+                    "</head>\n" +
+                    "\n" +
+                    "<body>\n" +
+                    "<div id=\"container\">\n" +
+                    "    <div class=\"avcontainer\">\n" +
+                    "        <span class=\"jsavcounter\"></span>\n" +
+                    "        <div class=\"jsavcontrols\"></div>\n" +
+                    "        <p class=\"jsavoutput jsavline\"></p>\n" +
+                    "    </div> <!--avcontainer-->\n" +
+                    "</div> <!--container-->\n" +
+                    "<script src=\"https://code.jquery.com/jquery-2.1.4.min.js\"></script>\n" +
+                    "<script src=\"https://code.jquery.com/ui/1.11.4/jquery-ui.min.js\"></script>\n" +
+                    "<script src=\"jquery.transit.js\"></script>\n" +
+                    "<script src=\"https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.js\"></script>\n" +
+                    "<script src=\"JSAV-min.js\"></script>\n" +
+                    "<script src=\"odsaUtils-min.js\"></script>\n" +
+                    "<script src=\"odsaAV-min.js\"></script>\n" +
+                    "\n" +
+                    "<script src=\"JsavWrapper.js\"></script>\n" +
+                    "</body>";
             }
 
         });
@@ -51,7 +92,9 @@
         html += '</div>';  // dialog
         html += '</div>';  // footer
         html += '</div>';  // modalWindow
+
         $('body').append(html);
+
         $("#dynamicModal").modal();
         $("#dynamicModal").modal('show');
 

@@ -719,12 +719,13 @@ class ExercisesController < ApplicationController
                                             :headers => {'Content-Type' => 'application/json'},
                                             :verify_ssl => OpenSSL::SSL::VERIFY_NONE)
     trace = JSON.parse(request.body)
+    @openpop_results = trace
+
     respond_to do |format|
       format.json { render :json => trace}  # note, no :location or :status options
     end
 
   end
-
   #~ Private instance methods .................................................
   private
     # -------------------------------------------------------------
