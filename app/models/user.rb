@@ -131,9 +131,36 @@ class User < ActiveRecord::Base
     end
   end
 
-  def self.email_needs_fixing
-    User.where(User.arel_table[:email].does_not_match('%@%'))
+  def self.account_pairs
+    incomplete_emails = User.where(User.arel_table[:email].does_not_match('%@%'))
       .where("`id` in (?)", LtiIdentity.all.map(&:user_id))
+
+    duplicate_pairs = {}
+    incomplete_emails.flat_map(&:email).each do |e|
+      duplicate_account = User.where("email like '#{e}@%'").limit(1).first
+      if duplicate_account
+        duplicate_pairs[e] = duplicate_account.email
+      end
+    end
+
+    return duplicate_pairs 
+  end
+
+  # Given a hash representing pairs of email, for each pair,
+  # decide which one takes precedence. Then merge the second
+  # user into it
+  #
+  # The pairs are in order: { 'user': 'user@domain.com' }
+  def self.merge_account_pairs
+    pairs = self.account_pairs
+    pairs.each do |incomplete_email, complete_email| 
+      user1 = User.find(email: incomplete_email)
+      user2 = User.find(email: complete_email)
+
+      sorted = [user1, user2].sort_by(&:updated_at)
+      merge_master = sorted.last
+      merge_master.merge_with(sorted.first, user2.email)
+    end
   end
 
   #~ Instance methods .........................................................
@@ -400,6 +427,46 @@ class User < ActiveRecord::Base
   # -------------------------------------------------------------
   def normalize_friendly_id(value)
     value.split('@').map{ |x| CGI.escape x }.join('@')
+  end
+
+  # -------------------------------------------------------------
+  # Merge this user with the specifier user. The specified user's information
+  # gets merged INTO this user
+  def merge_with(user, email)
+    self.update(email: email)
+
+    # Enrollments 
+    enrollments = user.course_enrollments
+    enrollments.each do |e|
+      # only enroll this user if they are not already enrolled
+      if CourseEnrollment.find_by(course_offering: e.course_offering, course_role: e.course_role, user: self).blank?
+        e.update(user_id: self.id)
+      end
+    end
+
+    # Extensions
+    extensions = user.extensions
+    extensions.update_all(user_id: self.id)
+
+    # Attempts
+    user_attempts = user.attempts
+    user_attempts.update_all(user_id: self.id)
+
+    # Test case results
+    results = user.test_case_results
+    results.update_all(user_id: self.id)
+
+    # Workout Scores
+    scores = user.workout_scores
+    scores.update_all(user_id: self.id)
+
+    # LTI identities
+    lti_ids = user.lti_identities
+    lti_ids.each do |lti_id|
+      if LtiIdentity.find_by(lms_instance_id: lti_id.lms_instance, user: self).blank?
+        lti_id.update(user_id: self.id)
+      end
+    end
   end
 
 
