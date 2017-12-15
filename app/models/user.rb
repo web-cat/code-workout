@@ -512,12 +512,12 @@ class User < ActiveRecord::Base
   # in the `to` section
   def change_sections(from, to)
     if !self.is_enrolled?(from)
-      puts "Warning! User is not enrolled in #{from.display_name_with_term}. No changes."
+      puts "Warning! #{self.email} is not enrolled in #{from.display_name_with_term}. No changes."
       return
     end
 
     if (from.course_id != to.course_id) || (from.term_id != to.term_id)
-      puts "Warning! #{from.display_name_with_term} and #{to.display_name_with_term} are not sister course_offerings. No changes."
+      puts "Error! #{from.display_name_with_term} and #{to.display_name_with_term} are not sister course_offerings. No changes."
       return
     end
 
@@ -525,8 +525,10 @@ class User < ActiveRecord::Base
     if !self.is_enrolled(to)
       from_enrollment = CourseEnrollment.find_by(user: self, course_offering: from)
       CourseEnrollment.create(user: self, course_offering: to, course_role: from_enrollment.course_role)
+    else
+      puts "Warning! #{self.email} is already enrolled in #{to.display_name_with_term}."
     end
-    
+ 
     # Move workout scores
     wos = self.workout_offerings.where(course_offering: from).flatten
     ws = self.workout_scores.where("id in (?)", wos)
