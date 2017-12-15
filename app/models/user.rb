@@ -446,7 +446,15 @@ class User < ActiveRecord::Base
 
     # Extensions
     extensions = user.extensions
-    extensions.update_all(user_id: self.id)
+    possible_ext_duplicates = {}
+    extensions.each do |ext|
+      self_extension = self.student_extensions.where(workout_offering: ext.workout_offering).limit(1).first
+      if self_extension
+        possible_ext_duplicates[ext.id] = self_extension.id
+      end
+
+      ext.update(user_id: self.id)
+    end
 
     # Attempts
     user_attempts = user.attempts
@@ -457,8 +465,22 @@ class User < ActiveRecord::Base
     results.update_all(user_id: self.id)
 
     # Workout Scores
+    possible_ws_duplicates = {}
     scores = user.workout_scores
-    scores.update_all(user_id: self.id)
+    scores.each do |s|
+      self_score = nil
+      if score.workout_offering
+        self_score = self.workout_scores.where(workout_offering: s.workout_offering).limit(1).first
+      else
+        self_score = self.workout_scores.where(workout: s.workout, workout_offering: nil).limit(1).first
+      end
+
+      if self_score
+        possible_ws_duplicates[s.id] = self_score.id
+      end
+
+      s.update(user_id: self.id)
+    end
 
     # LTI identities
     lti_ids = user.lti_identities
@@ -467,8 +489,55 @@ class User < ActiveRecord::Base
         lti_id.update(user_id: self.id)
       end
     end
+
+    puts "-------------------------"
+    
+    puts "POSSIBLE DUPLICATE EXTENSIONS FOR #{email}"
+    possible_ext_duplicates.each do |k, v|
+      puts "#{k},#{v}"
+    end
+
+    puts "POSSIBLE DUPLICATE WORKOUT_SCORES FOR #{email}"
+    possible_ws_duplicates.each do |k, v|
+      puts "#{k},#{v}"
+    end
   end
 
+  # --------------------------------------------------------------
+  # Move this user from one section to another
+  # Will exit with no effect if
+  # * user is not currently enrolled in `from` 
+  # * `from` and `to` are not 'sister course offerings'
+  # Workout offerings will not be moved if a matching workout offering can't be found
+  # in the `to` section
+  def change_sections(from, to)
+    if !self.is_enrolled?(from)
+      puts "Warning! User is not enrolled in #{from.display_name_with_term}. No changes."
+      return
+    end
+
+    if (from.course_id != to.course_id) || (from.term_id != to.term_id)
+      puts "Warning! #{from.display_name_with_term} and #{to.display_name_with_term} are not sister course_offerings. No changes."
+      return
+    end
+
+    # Move enrollment if needed
+    if !self.is_enrolled(to)
+      from_enrollment = CourseEnrollment.find_by(user: self, course_offering: from)
+      CourseEnrollment.create(user: self, course_offering: to, course_role: from_enrollment.course_role)
+    end
+    
+    # Move workout scores
+    wos = self.workout_offerings.where(course_offering: from).flatten
+    ws = self.workout_scores.where("id in (?)", wos)
+    ws.each do |workout_score|
+      wo = ws.workout_offering
+      sister_wo = to.workout_offerings.where(workout: wo.workout).first
+      if sister_wo
+        ws.update(workout_offering_id: sister_wo)
+      end
+    end
+  end
 
   #~ Private instance methods .................................................
   private
