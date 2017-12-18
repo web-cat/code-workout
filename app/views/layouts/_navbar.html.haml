@@ -22,6 +22,7 @@
           %a.dropdown-toggle{ href: organizations_path,
             data: { toggle: 'dropdown' }, value: 'Course' }
             Course
+          - @active_courses = current_user.andand.course_offerings.joins(:term).where('terms.ends_on > (?)', DateTime.now)
           %ul.dropdown-menu
             %li
               .yamm-content
@@ -30,11 +31,12 @@
                     %strong Courses
                   %li
                     %strong= link_to 'Browse all', organizations_path
-                  - if user_signed_in? && current_user.course_enrollments.any?
-                    - term = Term.current_term
-                    - current_user.courses_for_term(term).each do |c|
-                      %li= link_to c.display_name,
+                  - if user_signed_in?
+                    - @active_courses.each do |c|
+                      %li= link_to c.display_name_with_term,
                         organization_course_path(c.organization, c, term)
+                    %li
+                      %strong= link_to 'Older Courses', organizations_path(enrolled: true)
 
       %ul.nav.navbar-nav.navbar-right.nav-top
         %li= render :partial => 'exercises/search'
