@@ -225,4 +225,28 @@ class WorkoutOffering < ActiveRecord::Base
       workout_score.recalculate_score!
     end
   end
+
+  def organize_private_exercises
+    @course = self.course_offering.course
+    @user_group = @course.user_group
+    if !@user_group
+      @user_group = UserGroup.create(
+        course: @course,
+        name: @course.number,
+        description: "Privileged user for #{@course.display_name}"
+      )
+    end
+
+    @exercise_collection = @user_group.exercise_collection
+    if !@exercise_collection
+      @exercise_collection = ExerciseCollection.create(
+        name: "#{@course.display_name} exercises",
+        description: "Exercises commonly used in #{@course.number}",
+        user_group: @user_group
+      )
+    end
+
+    @exercises = self.workout.exercises.where(is_public: false)
+    @exercise_collection.add(@exercises.flatten)
+  end
 end
