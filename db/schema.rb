@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170810205035) do
+ActiveRecord::Schema.define(version: 20170920191837) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -142,14 +142,15 @@ ActiveRecord::Schema.define(version: 20170810205035) do
   end
 
   create_table "courses", force: true do |t|
-    t.string   "name",            null: false
-    t.string   "number",          null: false
-    t.integer  "organization_id", null: false
+    t.string   "name",                            null: false
+    t.string   "number",                          null: false
+    t.integer  "organization_id",                 null: false
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "creator_id"
-    t.string   "slug",            null: false
+    t.string   "slug",                            null: false
     t.integer  "user_group_id"
+    t.boolean  "is_hidden",       default: false
   end
 
   add_index "courses", ["organization_id"], name: "index_courses_on_organization_id", using: :btree
@@ -392,11 +393,12 @@ ActiveRecord::Schema.define(version: 20170810205035) do
   end
 
   create_table "organizations", force: true do |t|
-    t.string   "name",         null: false
+    t.string   "name",                         null: false
     t.datetime "created_at"
     t.datetime "updated_at"
     t.string   "abbreviation"
-    t.string   "slug",         null: false
+    t.string   "slug",                         null: false
+    t.boolean  "is_hidden",    default: false
   end
 
   add_index "organizations", ["name"], name: "index_organizations_on_name", unique: true, using: :btree
@@ -600,7 +602,7 @@ ActiveRecord::Schema.define(version: 20170810205035) do
 
   add_index "workout_offerings", ["continue_from_workout_id"], name: "workout_offerings_continue_from_workout_id_fk", using: :btree
   add_index "workout_offerings", ["course_offering_id"], name: "index_workout_offerings_on_course_offering_id", using: :btree
-  add_index "workout_offerings", ["lms_assignment_id"], name: "index_workout_offerings_on_lms_assignment_id", unique: true, using: :btree
+  add_index "workout_offerings", ["lms_assignment_id"], name: "index_workout_offerings_on_lms_assignment_id", using: :btree
   add_index "workout_offerings", ["workout_id"], name: "index_workout_offerings_on_workout_id", using: :btree
   add_index "workout_offerings", ["workout_policy_id"], name: "index_workout_offerings_on_workout_policy_id", using: :btree
 

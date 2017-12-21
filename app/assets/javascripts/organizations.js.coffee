@@ -41,7 +41,7 @@ $('.organizations.new_or_existing').ready ->
       if term == ''
         $('#org-hint').text ''
       validate_org_slug term
-    , 1000
+    , 750
 
   course_keyup = null
   $('#number').keyup ->
@@ -51,7 +51,7 @@ $('.organizations.new_or_existing').ready ->
       if term == ''
         $('#course-hint').text ''
       validate_course_number term
-    , 1000
+    , 750
 
 
   $('#btn-submit-org').on 'click', ->
@@ -218,16 +218,25 @@ handle_submit_course = ->
     org_id = $('#organization').data 'org-id'
     course_name = $('#course').val()
     course_number = $('#number').val()
+    is_hidden = $('#course-is-hidden').is ':checked'
     # enforce the format 'CS 1114' (including the space)
     dept = course_number.match(/^([A-Z]+)/g)
     number = course_number.match(/([0-9]+)$/g)
     course_number = "#{dept} #{number}"
     slug = course_number.replace('/\s+/', '')
+    form_data = {
+      course: {
+        number: course_number
+        slug: slug
+        name: course_name,
+        is_hidden: is_hidden
+      }
+    }
     $.ajax
       url: "/courses/#{org_id}/create"
       type: 'post'
       dataType: 'json'
-      data: { course: { number: course_number, slug: slug, name: course_name } }
+      data: form_data
       success: (data)->
         if data['success']?
           window.location.href = data['url']
@@ -239,10 +248,11 @@ handle_submit_organization = ->
   if valid
     name = $('#organization').val()
     abbr = $('#abbr').val()
+    is_hidden = $('#org-is-hidden').is ':checked'
     $.ajax
       url: '/organizations/'
       type: 'post'
-      data: { name: name, abbreviation: abbr }
+      data: { name: name, abbreviation: abbr, is_hidden: is_hidden }
       dataType: 'json'
       success: (data)->
         if data['success']

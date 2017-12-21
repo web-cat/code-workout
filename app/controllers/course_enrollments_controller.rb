@@ -8,6 +8,15 @@ class CourseEnrollmentsController < ApplicationController
     end
   end
 
+  def destroy
+    course_enrollment = CourseEnrollment.find params[:id]
+    course_enrollment.destroy
+
+    respond_to do |format|
+      format.json { render json: params[:id] }
+    end
+  end
+
   def choose_roster
     parse_params
 

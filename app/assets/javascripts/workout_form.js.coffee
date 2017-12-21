@@ -12,9 +12,6 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
   sortable = $('#ex-list').sortable
     handle: '.handle'
 
-  $('#wo-name').change ->
-    validate_workout_name()
-
   $('.search-results').on 'click', '.add-ex', ->
     ex_id = $(this).data('ex-id')
     ex_name = $(this).data('ex-name')
@@ -31,6 +28,7 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
         points: default_point_value
       template = Mustache.render($(window.codeworkout.exercise_template).filter('#exercise-template').html(), data)
       $('#ex-list').append(template)
+      close_slider()
     else
       form_alert(["Exercise #{name} has already been added to this workout."])
       exercise = $('#ex-list').find("[data-id=#{ex_id}]")
@@ -138,7 +136,6 @@ init = ->
   $('textarea#description').val description
   init_templates()
   init_datepickers()
-  validate_workout_name()
 
 remove_extensions_if_any = (course_offering_id) ->
   extensions = $('#student-extension-fields tbody').find 'tr'
@@ -176,19 +173,6 @@ init_templates = ->
     if $('body').is '.workouts.edit'
       init_student_extensions()
 
-validate_workout_name = ->
-  cloning = $('body').is('.workouts.clone')
-  name_field = $('#wo-name')
-  if cloning
-    if name_field.val() == name_field.data 'old-name'
-      $('#clone-msg').css 'display', 'block'
-      return false
-    else
-      $('#clone-msg').css 'display', 'none'
-      return true
-
-  return true
-
 init_student_extensions = ->
   student_extensions = $('#extensions').data 'student-extensions'
   if student_extensions
@@ -218,11 +202,19 @@ init_exercises = ->
         name = "X#{exercise.id}"
         if exercise.name
           name = name + ": #{exercise.name}"
+
+        # Only keep track of the exercise_workout_id if we're editing a workout
+        # If we're creating or cloning a workout, this information is not required.
+        if $('body').is('.workouts.edit')
+          exercise_workout_id = exercise.exercise_workout_id
+        else
+          exercise_workout_id = ''
         data =
           id: exercise.id
-          exercise_workout_id: exercise.exercise_workout_id
+          exercise_workout_id: exercise_workout_id
           name: name
           points: exercise.points
+        console.log(data)
         $('#ex-list').append(Mustache.render($(window.codeworkout.exercise_template).filter('#exercise-template').html(), data))
     $('#ex-list').removeData 'exercises'
 
@@ -245,11 +237,13 @@ init_row_datepickers = (row) ->
   opening_datepicker = null
   soft_datepicker = null
   hard_datepicker = null
+  alt_format = 'M j, h:i K'
   if opening_input.val() == ''
     opening_datepicker = opening_input.flatpickr
       enableTime: true
       altInput: true
-      altFormat: 'M j, Y - h:i K'
+      altFormat: alt_format
+      minuteIncrement: 1
       onChange: (selectedDates, dateStr, instance) ->
         if selectedDates.length
           date = selectedDates[0].getTime()
@@ -258,7 +252,8 @@ init_row_datepickers = (row) ->
     soft_datepicker = soft_input.flatpickr
       enableTime: true
       altInput: true
-      altFormat: 'M j, Y - h:i K'
+      altFormat: alt_format
+      minuteIncrement: 1
       onChange: (selectedDates, dateStr, instance) ->
         if selectedDates.length
           date = selectedDates[0].getTime()
@@ -267,7 +262,8 @@ init_row_datepickers = (row) ->
     hard_datepicker = hard_input.flatpickr
       enableTime: true
       altInput: true
-      altFormat: 'M j, Y - h:i K'
+      altFormat: alt_format
+      minuteIncrement: 1
       onChange: (selectedDates, dateStr, instance) ->
         if selectedDates.length
           date = selectedDates[0].getTime()
@@ -286,6 +282,12 @@ init_row_datepickers = (row) ->
     if hard_input.data('date')? && hard_input.data('date') != ''
       date = parseInt(hard_input.data('date'))
       hard_datepicker.setDate(date, false)
+
+close_slider = ->
+  if $('.sidebar').hasClass('slider') && $('.toggle-slider').attr('data-is-open')
+    $('.toggle-slider').click()
+    $('#search-terms').val('')
+    $('.search-results').empty()
 
 get_exercises = ->
   exs = $('#ex-list li')
@@ -321,7 +323,6 @@ get_offerings = ->
       offering_fields = $('td', $(offering_row))
       offering_id = $(offering_fields[0]).data 'course-offering-id'
       lms_assignment_url = $('input', offering_fields[1])[0].value
-      console.log lms_assignment_url
       if offering_id != ''
         opening_date = $('.opening-datepicker', $(offering_fields[2])).data('date')
         soft_deadline = $('.soft-datepicker', $(offering_fields[3])).data('date')
@@ -383,7 +384,6 @@ reset_alert_area = ->
 check_completeness = ->
   messages = []
   messages.push 'Workout Name cannot be empty.' if $('#wo-name').val() == ''
-  messages.push 'Change the name of the workout so you can create a clone with your settings.' if !validate_workout_name()
   messages.push 'Workout must have at least 1 exercise.' if $('#ex-list li').length == 0
 
   return messages
@@ -420,6 +420,7 @@ handle_submit = ->
   fd.append 'term_id', window.codeworkout.term_id
   fd.append 'organization_id', window.codeworkout.organization_id
   fd.append 'course_id', window.codeworkout.course_id
+  fd.append 'lms_assignment_id', window.codeworkout.lms_assignment_id
   # Tells the server whether this form is being submitted through LTI or not.
   # The window.codeworkout namespace was declared in the workouts/_form partial.
   fd.append 'lti_launch', window.codeworkout.lti_launch if window.codeworkout.lti_launch != ''

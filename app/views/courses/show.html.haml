@@ -3,6 +3,16 @@
 %h1
   = @course.number_and_name
   %small= @term.display_name
+
+- if @course.is_hidden
+  %p.text.text-warning.row
+    %small.col-md-5
+      - subject = "CodeWorkout - request to display hidden course (#{@course.number_and_name})"
+      This is a hidden course; these are typically used for testing purposes.
+      You may distribute this page's URL, but it will not appear publicly in CodeWorkout.
+      If you think this course should NOT be marked hidden, please
+      = mail_to('edwards@cs.vt.edu', 'email us.', subject: subject)
+
 .privileged-access
   = render partial: 'privileged_access', locals: { course: @course, is_student: @is_student, is_privileged: @is_privileged, access_request: @access_request }
 - if @course_offerings && @course_offerings.any?

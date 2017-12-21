@@ -161,8 +161,11 @@ class User < ActiveRecord::Base
   #
   # Returns a relation representing all of the CourseOfferings that this
   # user can manage
+  # params = {term, course} (optional)
   #
-  def managed_course_offerings(course=nil, term=nil)
+  def managed_course_offerings(options = {})
+    course = options[:course]
+    term = options[:term]
     if course.nil? && term.nil?
       course_enrollments.where(course_roles: { can_manage_course: true }).
         map(&:course_offering)
@@ -172,6 +175,12 @@ class User < ActiveRecord::Base
           { can_manage_course: true }, course_offering:
             { term: term }
         ).map(&:course_offering)
+    elsif term.nil?
+      course_enrollments.joins(:course_offering).
+        where(course_roles:
+          { can_manage_course: true }, course_offering:
+            { course: course }
+        ).map(&:course_offering)
     else
       course_enrollments.joins(:course_offering).
         where(course_roles:
@@ -180,7 +189,6 @@ class User < ActiveRecord::Base
         ).map(&:course_offering)
     end
   end
-
 
   # -------------------------------------------------------------
   def instructor_course_offerings
@@ -205,11 +213,28 @@ class User < ActiveRecord::Base
   # Get all workout offerings from course offerings that the
   # user manages, for the specified course and term
   def managed_workout_offerings_in_term(workout, course, term)
-    course_enrollments.joins(course_offering: :workout_offerings).
-      where(course_roles:
-        { can_manage_course: true }, course_offering:
-          { course: course, term: term }
-      ).map { |e| e.course_offering.workout_offerings.where(workout: workout) }
+    if !term.nil?
+      enrollments = course_enrollments.joins(course_offering: :workout_offerings).
+        where(course_roles:
+          { can_manage_course: true }, course_offering:
+            { course: course, term: term }
+        )
+      else
+        enrollments = course_enrollments.joins(course_offering: :workout_offerings).
+          where(course_roles:
+            { can_manage_course: true }, course_offering:
+              { course: course }
+            )
+      end
+
+      enrollments.map { |e|
+        if workout.kind_of?(String)
+          workouts_with_name = Workout.where('lower(name) = ?', workout)
+          e.course_offering.workout_offerings.where{ workout_id.in(workouts_with_name.select{id})}
+        else
+          e.course_offering.workout_offerings.where(workout: workout)
+        end
+      }
   end
 
   # Get all workouts that have been offered in a course
@@ -258,6 +283,14 @@ class User < ActiveRecord::Base
     last_name.blank? ?
       (first_name.blank? ? email : first_name) :
       (first_name.blank? ? last_name : (first_name + ' ' + last_name))
+  end
+
+  # -------------------------------------------------------------
+  # Gets the user's "label name", which is their last name, first name, or email_without_domain,
+  # in decreasing order of preference. For use in auto-generated course_offering labels
+  def label_name
+    last_name.blank? ?
+      (first_name.blank? ? email_without_domain : first_name) : last_name
   end
 
 

@@ -7,14 +7,13 @@
       %li
         = link_to 'Upload a roster...', choose_roster_course_enrollments_path(course_id: @course, term_id: @term), remote: true
 
+= stylesheet_link_tag('pagination')
+
 - @course_offerings.each do |offering|
-  -# - if @course_offerings.size > 1
-  -#   %h2= offering.display_name
-  -# = form_tag '/course_offerings/'+ offering.id.to_s + '/upload_roster', multipart: true do
-  -#   = file_field( "form", "rosterfile" )
-  -#   = submit_tag "Submit File"
   %table.table.table-striped
     %thead
+      %tr.course-offering-label
+        %th= offering.label
       %tr
         %th Image
         %th Last name
@@ -27,5 +26,4 @@
       - @sec = offering.course_enrollments.               |
         page(params[:page]).per(params[:per])             |
       = render @sec
-  - if @sec.is_a?(Array)
-    #roster_paginator= paginate @sec, remote: true
+  #roster_paginator= paginate @sec, remote: true

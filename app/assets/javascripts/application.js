@@ -14,6 +14,7 @@
 //= require jquery
 //= require jquery-ui/sortable
 //= require jquery-ui/autocomplete
+//= require jquery-ui/effect-slide
 //= require jquery_ujs
 //= require bootstrap-sprockets
 //= require bootstrap-editable
@@ -31,7 +32,6 @@
 //= require mustache.min
 //= require student_search
 //= require workout_form
-//= require workout_new_or_existing
 //= require flatpickr
 
 // Add the route helpers directly into the window object for easy access.

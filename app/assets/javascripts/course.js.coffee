@@ -30,9 +30,26 @@ $('.courses.show').ready ->
       requestUpdate(tab_id)
 
     if tab_id == ROSTER_TAB
-      $("\##{tab_id}").on 'requestUpdate', ->
-        $("\##{tab_id}").html("<div class='col-xs-offset-6'><i class='fa fa-spin fa-2x'/></div>")
-        requestUpdate(tab_id)
+      $("\##{ROSTER_TAB}").on 'requestUpdate', ->
+        $("\##{ROSTER_TAB}").html("<div class='col-xs-offset-6'><i class='fa fa-spin fa-2x'/></div>")
+        requestUpdate(ROSTER_TAB)
+      $("\##{ROSTER_TAB}").on 'click', '.unenroll', ->
+        row = $(this).closest 'tr'
+        id = row.data('course-enrollment')
+        user_name = row.data('user-name')
+        user_id = row.data('user-id')
+        course_offering = row.closest('table').find('.course-offering-label').text().trim()
+        confirmed = confirm("Are you sure you want to unenroll #{user_name} from the #{course_offering} section?")
+        if confirmed
+          request_remove_enrollment(id, row)
+
+request_remove_enrollment = (id, row) ->
+  $.ajax
+    url: "/course_enrollments/#{id}"
+    type: 'delete'
+    dataType: 'json'
+    success: (data) ->
+      row.fadeOut()
 
 ##########################
 #    PRIVILEGED USERS    #

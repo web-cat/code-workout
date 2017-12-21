@@ -1,10 +1,12 @@
 - workout_score ||= nil
+- workout_offering ||= workout_score.andand.workout_offering
 - exs ||= nil
 - review ||= false
-- if workout_score
-  - exs = workout_score.workout.exercises
-  - cache [workout_score, workout_score.workout, workout_score.workout_offering] do
-    = render workout_score.workout, size: 'sm', workout_score: workout_score
+- workout = workout_score.andand.workout || workout_offering.andand.workout
+- if workout
+  - exs = workout.exercises
+  - cache [workout_score, workout, workout_offering] do
+    = render workout, size: 'sm', workout_score: workout_score, workout_offering: workout_offering
 
 - if exs
   -if exs.empty?
@@ -14,6 +16,6 @@
       = render exs,
         user: current_user,
         workout_score: workout_score,
-        workout_offering: workout_score.andand.workout_offering,
+        workout_offering: workout_offering,
         workout: workout_score.andand.workout,
         size: 'sm', review: review

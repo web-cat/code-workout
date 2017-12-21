@@ -1,11 +1,14 @@
 = javascript_tag do
   window.codeworkout = window.codeworkout || {}
   window.codeworkout.lti_launch = "#{@lti_launch}"
+  window.codeworkout.lms_assignment_id = "#{@lms_assignment_id}"
   window.codeworkout.extension_template_path = "#{asset_path 'student_extension.mustache.html'}"
   window.codeworkout.exercise_template_path = "#{asset_path 'exercise.mustache.html'}"
   window.codeworkout.organization_id = "#{@organization.slug}"
   window.codeworkout.course_id = "#{@course.slug}"
   window.codeworkout.term_id = "#{@term.slug}"
+
+= javascript_include_tag('two_column_layout')
 
 .row
   .col-xs-9.alert-msg#alerts{style: 'display: none;'}
@@ -14,12 +17,9 @@
   .form-group
     = label_tag :name, 'Name *', class: 'control-label col-xs-2'
     .col-lg-7.col-md-6.col-xs-7
-      = text_field_tag :name, nil, id: 'wo-name', class: 'form-control', maxlength: 50,
-        placeholder: 'e.g. Recursion exercises', value: @workout.present? ? @workout.name : '',
-        data: { old_name: @workout.present? ? @workout.name : '' }
-    .row
-      .col-xs-offset-2.col-lg-7.col-md-6.col-xs-7.alert-msg#clone-msg{ style: 'display: none;' }
-        You are cloning this workout. Please enter a new name, and we'll create a new workout with your new settings.
+      - suggested_name = @suggested_name || (@workout.present? ? @workout.name : '')
+      = text_field_tag :name, nil, id: 'wo-name', class: 'form-control', maxlength: 255,
+        placeholder: 'e.g. Recursion exercises', value: suggested_name
   .form-group
     = label_tag :description, 'Description', class: 'control-label col-xs-2'
     .col-lg-7.col-md-6.col-xs-7
@@ -29,17 +29,14 @@
     = label_tag :ex_list, 'Exercises *', class: 'control-label col-xs-2'
     .col-lg-7.col-md-6.col-xs-7
       .empty-msg.alert-msg{ style: "display: #{@workout.andand.exercise_workouts.any? ? 'none;' : 'block;'}" }
-        - if @lti_launch
-          Use the search bar above the form to find exercises.
-        - else
-          Use the column on the left to find exercises.
+        Use the menu on the left to search for exercises.
 
       %ul.list-group#ex-list{ style: "display: #{@workout.andand.exercise_workouts.any? ? 'block;' : 'none;'}",
         data: { exercises: "#{@exercises.to_json}" } }
   .form-group
     = label_tag :policy_select, 'Policy', class: 'control-label col-xs-1'
     .col-xs-2
-      = collection_select nil, nil, WorkoutPolicy.all, :id, :name, { prompt: 'Select', selected: @policy ? @policy : nil },
+      = collection_select nil, nil, WorkoutPolicy.all, :id, :name, { prompt: 'Select', selected: @policy ? @policy.id : nil },
       { id: 'policy-select', class: 'form-control input-sm' }
     .col-xs-1
       %i.fa.fa-info-circle.action{ data: { toggle: 'modal', target: '#policy-help-modal' } }
@@ -60,7 +57,7 @@
     = label_tag :published, 'Visible to students?', class: 'control-label col-xs-2'
     .col-xs-8
       .col-xs-1
-        = check_box_tag 'published', 'published', defined?(@published) ? @published : true, id: 'published'
+        = check_box_tag 'published', 'published', defined?(@published) ? @published : false, id: 'published'
       %small.col-xs-11.text.text-warning
         Checking this box makes the Workout Offerings you create visible to students in your courses.
 
@@ -75,7 +72,7 @@
   .form-group
     %p.lead Add to Course Offerings
     .col-lg-9.col-md-6.col-xs-9
-      %table#workout-offering-fields.table{ data: { can_update: "#{@can_update}" } }
+      %table#workout-offering-fields.table{ data: { can_update: "#{@can_update}", lms_assignment_id: @lms_assignment_id } }
         %thead
           %tr
             %th Course Offering

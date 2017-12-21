@@ -20,6 +20,11 @@ html, body { height: 100%; }
 .content, .maincol {
   padding-bottom: 40px;
 }
+.content {
+  h1.left-padded {
+    margin-left: 20px;
+  }
+}
 .below-nav > .alert { margin: 10px 15px 20px; }
 
 #main { margin: 0 0 40px; }
@@ -100,6 +105,9 @@ html, body { height: 100%; }
   margin-bottom: 15px;
   margin-left: 16.666666666666664%;
   padding-left: 8px;
+  &.sign-in-form {
+    margin-left: 0;
+  }
 }
 
 /* for consistent font awesome icons */
@@ -317,6 +325,7 @@ ul.wysihtml5-toolbar li {
   cursor: move;
   padding-right: 5px;
 }
+// Mostly rules for complex forms like the workout-edit form
 
 .action {
   cursor: pointer;
@@ -336,8 +345,29 @@ ul.wysihtml5-toolbar li {
   overflow-y: auto;
 }
 
+// Pagination style for course rosters
+#roster_paginator {
+  text-align: center;
+
+  ul {
+		list-style-type: none;
+
+		li {
+			display: inline-block;
+
+			&.page {
+				padding: 0 2px;
+			}
+
+			&.active {
+				border-bottom: 1px solid black;
+			}
+		}
+	}
+}
+
+
 // Rules for form inputs
-// Mostly rules for complex forms like the workout-edit form
 input {
   &.datepicker {
     min-width: 21ch;
@@ -348,15 +378,7 @@ input {
     }
   }
 
-  &.time-limit {
-    min-width: 10ch;
-  }
-
-  &.points {
-    min-width: 10ch;
-  }
-
-  &.url {
+  &.time-limit, &.points, &.url {
     min-width: 10ch;
   }
 
@@ -364,6 +386,15 @@ input {
   &[type=number]::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
+  }
+}
+
+.flatpickr-time {
+  .numInput {
+    cursor: text;
+    &:hover {
+      background: #fff;
+    }
   }
 }
 
@@ -401,6 +432,46 @@ tr.fields {
 
 ul.ui-autocomplete {
   z-index: 1100;
+}
+
+// slider animation for the sidebar
+.underlay {
+  position: absolute;
+  z-index: 1;
+  width: 100%;
+}
+
+.slider {
+  width: 310px;
+  position: absolute;
+  z-index: 2;
+}
+
+.toggle-slider {
+  position: absolute;
+  top: 8em;
+	z-index: 2;
+  border: 1px solid black;
+  border-radius: 5px 5px 0 0;
+  outline: none;
+	-webkit-transform: rotate(90deg);
+	-ms-transform: rotate(90deg);
+	transform: rotate(90deg);
+
+  &[data-is-open='false'] {
+    opacity: 0.4;
+    left: -37px;
+  }
+
+  &[data-is-open='true'] {
+    opacity: 1;
+    left: 274px;
+  }
+
+  &:hover {
+    cursor: pointer;
+    opacity: 1;
+  }
 }
 
 // shake animation for form validations and hints

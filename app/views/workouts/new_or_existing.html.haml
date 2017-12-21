@@ -5,13 +5,19 @@
     .col-xs-7
       = text_field_tag :search, nil, placeholder: 'e.g. Looping', class: 'form-control input-sm', id: 'search-terms'
       = hidden_field_tag :course, @course.id
-    .col-xs-1
+      = hidden_field_tag :offerings, true # to pass to Workout.search
+      = hidden_field_tag :lms_assignment_id, @lms_assignment_id
+      = hidden_field_tag :suggested_name, @suggested_name
+    .col-xs-2
       = submit_tag 'Search', class: 'btn btn-default btn-sm'
-    .col-xs-3
-      = link_to 'None of these work, create a Workout instead.',
+    .col-xs-2
+      = link_to 'Create New',
         organization_new_workout_path(organization_id: @organization.slug,
+        lti_launch: @lti_launch,
         course_id: @course.slug,
-        term_id: @term.slug), class: 'btn btn-success btn-sm'
+        term_id: @term.slug,
+        lms_assignment_id: @lms_assignment_id,
+        suggested_name: @suggested_name), class: 'btn btn-success btn-sm'
 .row.search-results
   - if @default_results.blank?
     Use the search bar above to find workouts!
@@ -22,4 +28,4 @@
         = term.display_name
       - workouts.in_groups_of(2, false) do |row|
         .row
-          = render row, user: current_user, new_or_existing: true, can_update: (can? :edit, row)
+          = render row, user: current_user, lms_assignment_id: @lms_assignment_id, new_or_existing: true, can_update: (can? :edit, row), suggested_name: @suggested_name

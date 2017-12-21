@@ -18,7 +18,7 @@ class WorkoutOfferingsController < ApplicationController
       @course = Course.find params[:course_id]
       @term = Term.find params[:term_id]
       @organization = Organization.find params[:organization_id]
-      @course_offering = CourseOffering.find_by @course, @term
+      @course_offering = CourseOffering.find_by course: @course, term: @term
       @exs = @workout.exercises
     end
     render 'workouts/show'
@@ -59,6 +59,9 @@ class WorkoutOfferingsController < ApplicationController
     # must include the oauth proxy object
     require 'oauth/request_proxy/rack_request'
     @lti_launch = params[:lti_launch]
+    if @lti_launch
+      lti_enroll
+    end
     if @workout_offering
       authorize! :practice, @workout_offering, message: 'You are not authorized to access that workout offering.'
       lis_outcome_service_url = params[:lis_outcome_service_url]
@@ -73,8 +76,15 @@ class WorkoutOfferingsController < ApplicationController
       session[:workout_feedback]['workout'] =
         "You have attempted Workout #{@workout_offering.workout.name}"
 
-      if !@lti_launch && @workout_offering.lms_assignment_id.present? &&
-          !current_user.manages?(@workout_offering.course_offering)
+      @workout_score = @workout_offering.score_for(current_user)
+
+      should_force_lti = !@lti_launch &&
+        @workout_offering.lms_assignment_id.present? &&
+        (@workout_score.nil? ||
+        @workout_score.lis_result_sourcedid.nil? ||
+        @workout_score.lis_outcome_service_url.nil?)
+
+      if should_force_lti && !current_user.manages?(@workout_offering.course_offering)
         @message = "This assignment must be accessed through your course's Learning Management System (like Canvas)."
         @redirect_url = @workout_offering.lms_assignment_url
         render 'lti/error' and return
@@ -82,7 +92,7 @@ class WorkoutOfferingsController < ApplicationController
 
       if current_user
         @workout_score = @workout_offering.score_for(current_user)
-        if @workout_score.nil?
+        if @workout_score.nil? && @workout_offering.can_be_practiced_by?(current_user)
           @workout_score = WorkoutScore.new(
             score: 0,
             exercises_completed: 0,
@@ -133,7 +143,7 @@ class WorkoutOfferingsController < ApplicationController
 
     def lti_enroll
       @workout_offering = WorkoutOffering.find_by(id: params[:id])
-      @course_offering = CourseOffering.find_by(id: @workout_offering.course_offering_id)
+      @course_offering = @workout_offering.course_offering
 
       if @course_offering &&
         @course_offering.can_enroll? &&
