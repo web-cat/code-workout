@@ -18,7 +18,8 @@
 
 - if @organizations.any?
   - @organizations.each do |organization|
-    - unless organization.is_hidden
+    - no_courses_to_show = organization.courses.where(is_hidden: false).blank?
+    - unless organization.is_hidden || no_courses_to_show 
       %h2= link_to organization.name, organization_path(organization)
 
       %ul
