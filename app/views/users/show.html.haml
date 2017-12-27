@@ -9,7 +9,7 @@
 %p
   %strong Last name:
   = @user.last_name
-  
+
 %p
   %strong Timezone:
   = @user.time_zone
@@ -25,10 +25,14 @@
         %th Workout name
         %th Score
     %tbody
-      - @user.workout_scores.each do |user_score|
+      - @workout_scores.each do |user_score|
         %tr
           %td= user_score.workout.name
-          %td= user_score.score
+          - score = user_score.andand.score
+          - if score && user_score.show_feedback?
+            %td= score
+          - else
+            %td.textblur -/-
 
 %br
 

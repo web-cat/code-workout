@@ -6,7 +6,7 @@ class ExercisesController < ApplicationController
   skip_authorize_resource only: :practice
 
   #~ Action methods ...........................................................
-  after_action :allow_iframe, only: :practice
+  after_action :allow_iframe, only: [:practice, :embed]
   # -------------------------------------------------------------
 
   # GET /exercises
@@ -38,23 +38,21 @@ class ExercisesController < ApplicationController
   end
 
   def query_data
-    @available_exercises = Exercise.visible_through_user(current_user).union(Exercise.visible_through_user_group(current_user)).uniq.select(&:is_coding?)
+    @available_exercises = Exercise.visible_through_user(current_user)
+      .union(Exercise.visible_through_user_group(current_user))
+      .uniq.select(&:is_coding?)
   end
 
-  def download_data
-    resultset = Exercise.joins(exercise_versions: { attempts: :prompt_answers })
-      .joins('left join coding_prompt_answers on prompt_answers.actable_id = coding_prompt_answers.id')
-      .select('attempts.user_id, exercises.name as exercise_name, exercises.id as exercise_id,
-        exercise_versions.id as exercise_version_id, exercise_versions.version as version_no,
-        coding_prompt_answers.id as answer_id, coding_prompt_answers.answer, coding_prompt_answers.error,
-        attempts.id as attempt_id, attempts.submit_time, attempts.submit_num, attempts.score')
-      .where(id: params[:id])
-    attributes = %w{ user_id exercise_name exercise_id exercise_version_id version_no answer_id answer error attempt_id submit_time submit_num score }
-
+  def download_attempt_data
+    @exercise = Exercise.find params[:id]
+    resultset = @exercise.attempt_data
+    exercise_attributes = %w{ exercise_id exercise_name }
+    attempt_attributes = %w{ user_id exercise_version_id version_no answer_id answer error attempt_id submit_time
+      submit_num score workout_score workout_name course_number course_name term}
     data = CSV.generate(headers: true) do |csv|
-      csv << attributes
+      csv << (exercise_attributes + attempt_attributes)
       resultset.each do |submission|
-        csv << attributes.map { |a| submission.attributes[a] }
+        csv << ([ @exercise.id, @exercise.name ] + attempt_attributes.map { |a| submission.attributes[a] })
       end
     end
 
@@ -285,31 +283,31 @@ class ExercisesController < ApplicationController
     redirect_to exercises_url, notice: 'Exercise upload complete.'
   end
 
+	def embed
+    if params[:exercise_version_id] || params[:id]
+      set_exercise_from_params
+    else
+      @message = 'Choose an exercise to embed!'
+      render 'lti/error' and return
+    end
+    
+    redirect_to exercise_practice_path(id: @exercise.id, lti_launch: true) and return
+	end
 
   # -------------------------------------------------------------
   def practice
     # lti launch
     @lti_launch = params[:lti_launch]
 
-    if params[:exercise_version_id]
-      @exercise_version =
-        ExerciseVersion.find_by(id: params[:exercise_version_id])
-      if !@exercise_version
-        redirect_to exercises_url, notice:
-          "Exercise version EV#{params[:exercise_version_id]} " +
-          "not found" and return
-      end
-      @exercise = @exercise_version.exercise
-    elsif params[:id]
-      @exercise = Exercise.find_by(id: params[:id])
-      if !@exercise
-        redirect_to exercises_url,
-          notice: "Exercise E#{params[:id]} not found" and return
-      end
-      @exercise_version = @exercise.current_version
+    if params[:exercise_version_id] || params[:id]
+      set_exercise_from_params
     else
-      redirect_to exercises_url,
-        notice: 'Choose an exercise to practice!' and return
+      @message = 'Choose an exercise to practice!'
+      if @lti_launch
+        render 'lti/error' and return
+      else
+        redirect_to exercises_url, notice: @message and return
+      end
     end
 
     # authorize! :practice, @exercise
@@ -359,12 +357,25 @@ class ExercisesController < ApplicationController
     end
 
     if @workout_score
-      @workout_score.lis_result_sourcedid ||= params[:lis_result_sourcedid]
-      @workout_score.lis_outcome_service_url ||= params[:lis_outcome_service_url]
-      @workout_score.save
+      if @workout_score.lis_result_sourcedid.nil? || @workout_score.lis_outcome_service_url.nil?
+        @workout_score.lis_result_sourcedid = params[:lis_result_sourcedid]
+        @workout_score.lis_outcome_service_url = params[:lis_outcome_service_url]
 
-      if !@workout_score.score.nil?
-        @workout_score.update_lti
+        @workout_score.save
+
+        # we set LMS gradebook ties for the first time, so force-send scores to LMS
+        @workout_score.update_lti if @workout_score.score
+      end
+
+      should_force_lti = !@lti_launch &&
+        @workout_offering.andand.lms_assignment_id.present? &&
+        (@workout_score.andand.lis_result_sourcedid.nil? ||
+          @workout_score.andand.lis_outcome_service_url.nil?)
+
+      if should_force_lti && !current_user.manages?(@workout_offering.course_offering)
+        @message = "This assignment must be accessed through your course's Learning Management System (like Canvas)."
+        @redirect_url = @workout_offering.lms_assignment_url
+        render 'lti/error' and return
       end
     end
 
@@ -443,6 +454,12 @@ class ExercisesController < ApplicationController
       @wexs = nil
     end
 
+		# decide whether or not to hide the sidebar 
+		# hide it if this workout (if present) has less than two exercises 
+		@workout ||= @workout_score.andand.workout || @workout_offering.andand.workout
+		ex_count = @workout.andand.exercises.andand.count
+		@hide_sidebar = (!@workout && @lti_launch) || (ex_count && ex_count < 2)
+
     render layout: 'two_columns'
 
   end
@@ -458,32 +475,19 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   #GET /evaluate/1
   def evaluate
-    # Copy/pasted from #practice method.  Should be refactored.
     @lti_launch = params[:lti_launch]
-
-    if params[:exercise_version_id]
-      @exercise_version =
-        ExerciseVersion.find_by(id: params[:exercise_version_id])
-      if !@exercise_version
-        redirect_to exercises_url, notice:
-          "Exercise version EV#{params[:exercise_version_id]} " +
-          "not found" and return
-      end
-      @exercise = @exercise_version.exercise
-    elsif params[:id]
-      @exercise = Exercise.find_by(id: params[:id])
-      if !@exercise
-        redirect_to exercises_url,
-          notice: "Exercise E#{params[:id]} not found" and return
-      end
-      @exercise_version = @exercise.current_version
+    
+		if params[:exercise_version_id] || params[:id]
+      set_exercise_from_params
     else
-      redirect_to exercises_url,
-        notice: 'Choose an exercise to practice!' and return
+      @message = 'Choose an exercise to evaluate!'
+      if @lti_launch
+        render 'lti/error' and return
+      else
+        redirect_to exercises_url, notice: 'Choose an exercise to practice!' and return
+      end
     end
 
-    # Tighter restrictions for the moment, should go away
-    # authorize! :gym_practice, @exercise
     if current_user
       @student_drift_user = current_user
     elsif session[:student_drift_user_id]
@@ -537,7 +541,7 @@ class ExercisesController < ApplicationController
     elsif @workout
       @workout_score = @workout.score_for(@student_drift_user)
     end
-    if @workout_score.andand.closed? && @workout_offering.andand.can_be_practiced_by?(@student_drift_user)
+    if @workout_score.andand.closed? && !@workout_offering.andand.can_be_practiced_by?(@student_drift_user)
       p 'WARNING: attempt to evaluate exercise after time expired.'
       return
     end
@@ -636,10 +640,6 @@ class ExercisesController < ApplicationController
       end
     elsif @exercise_version.is_coding?
       @answer_code = params[:exercise_version][:answer_code]
-      # Why were these in here? what purpose do they serve ??????
-      # ---
-      # @answer_code.gsub!("\r","")
-      # @answer_code.gsub!("\n","")
       @exercise_version.prompts.each_with_index do |exercise_prompt, i|
         exercise_prompt_answer = @attempt.prompt_answers[i]
         exercise_prompt_answer.answer = params[:exercise_version][:answer_code]
@@ -693,6 +693,29 @@ class ExercisesController < ApplicationController
 
   #~ Private instance methods .................................................
   private
+
+    # set @exercise and @exercise_version based on params
+    # ----------------------------------------------------------
+    def set_exercise_from_params
+      if params[:exercise_version_id]
+        @exercise_version =
+          ExerciseVersion.find_by(id: params[:exercise_version_id])
+        if !@exercise_version
+          redirect_to exercises_url, notice:
+            "Exercise version EV#{params[:exercise_version_id]} " +
+            "not found" and return
+        end
+        @exercise = @exercise_version.exercise
+      elsif params[:id]
+        @exercise = Exercise.find_by(id: params[:id])
+        if !@exercise
+          redirect_to exercises_url,
+            notice: "Exercise E#{params[:id]} not found" and return
+        end
+        @exercise_version = @exercise.current_version
+      end
+    end
+
     # -------------------------------------------------------------
     def create_new_version
       newexercise = Exercise.new

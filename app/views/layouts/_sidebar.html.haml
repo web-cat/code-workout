@@ -1,17 +1,11 @@
--#%form.form-search
--#  = form_for :exercise, :url =>{:controller => "exercises", :action =>"search", :id => @exercises}  do |f|
--#    %input.input-medium.search-query{ type: 'text', placeholder: 'find topics ...' }
--#    %button.btn.btn-default{ type: 'submit' }
--#      %i.fa.fa-search
--#      Search
--#= render :partial => 'exercises/search'
 - user ||= current_user
 - workout_score = (@workout_score || user.andand.current_workout_score) || nil
+- workout_offering = (@workout_offering || workout_score.andand.workout_offering) || nil
 - if controller_name.eql?('workouts') && ['new', 'edit', 'clone'].include?(action_name)
   = render partial: 'exercises/find_exercises_to_add'
-- elsif user_signed_in? && user.current_workout_score
+- elsif user_signed_in? && (workout_score || workout_offering)
   = render partial: 'workouts/status',
-    locals: { workout_score: workout_score, review: params[:review_user_id].present? }
+    locals: { workout_score: workout_score, workout_offering: workout_offering, review: params[:review_user_id].present? }
 - elsif user_signed_in? && session[:leaf_exercises]
   = render Exercise.find(session[:leaf_exercises]),
     user: user, size: 'sm'

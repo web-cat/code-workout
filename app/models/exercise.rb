@@ -279,6 +279,22 @@ class Exercise < ActiveRecord::Base
     end
   end
 
+  def attempt_data
+    exercise_versions.joins{ attempts.prompt_answers }
+      .joins('LEFT JOIN workout_scores ON workout_scores.id = attempts.workout_score_id')
+      .joins('LEFT JOIN workout_offerings ON workout_offerings.id = workout_scores.workout_offering_id')
+      .joins('LEFT JOIN workouts ON workouts.id = workout_scores.workout_id')
+      .joins('LEFT JOIN course_offerings ON course_offerings.id = workout_offerings.course_offering_id')
+      .joins('LEFT JOIN terms ON terms.id = course_offerings.term_id')
+      .joins('LEFT JOIN courses ON courses.id = course_offerings.course_id')
+      .joins('LEFT JOIN coding_prompt_answers ON prompt_answers.actable_id = coding_prompt_answers.id')
+      .select('attempts.user_id, exercise_versions.id as
+        exercise_version_id, exercise_versions.version as version_no, coding_prompt_answers.id as answer_id,
+        coding_prompt_answers.answer, coding_prompt_answers.error, attempts.id as attempt_id, attempts.submit_time,
+        attempts.submit_num, attempts.score, workout_scores.score as workout_score, workouts.name as workout_name,
+        courses.number as course_number, courses.name as course_name, terms.slug as term')
+  end
+
 
   #~ Private instance methods .................................................
   private

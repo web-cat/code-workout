@@ -100,7 +100,6 @@
   .alert.alert-warning No exercises in this workout
 - else
   - user = review_user
-  - p "passing workout offering #{@workout_offering.inspect}"
   - @exs.in_groups_of(2, false) do |row|
     = render row,
       user: user,

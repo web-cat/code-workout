@@ -1,9 +1,13 @@
 - size ||= 'lg'
 - user ||= current_user
-- workout ||= nil
-- workout = workout || @workout
 - workout_offering ||= (offering ||= nil)
+- workout ||= @workout
+- workout ||= workout_offering ? workout_offering.workout : nil
+- course ||= @course
+- course ||= workout_offering ? workout_offering.course_offering.course : nil
 - workout_score ||= workout_offering ? user.current_workout_score : workout.score_for(current_user, workout_offering)
+- new_or_existing ||= false
+
 - if workout_score && ((workout && workout_score.workout != workout) ||      |
   (workout_offering && workout_score.workout_offering != workout_offering))  |
   - workout_score = nil
@@ -44,44 +48,49 @@
       .due.late
         = 'Due in a few minutes'
 
-    - if workout_offering
-      = link_to workout.name,
-          organization_workout_offering_path(id: workout_offering.id,
-          course_id: workout_offering.course_offering.course.slug,
-          term_id: workout_offering.course_offering.term.slug,
-          organization_id: workout_offering.course_offering.course.organization.slug)
+    - if new_or_existing
+      = workout.name
     - else
-      = link_to workout.name, workout_path(id: workout[:id])
+      - if workout_offering
+        = link_to workout.name,
+            organization_workout_offering_path(id: workout_offering.id,
+            course_id: workout_offering.course_offering.course.slug,
+            term_id: workout_offering.course_offering.term.slug,
+            organization_id: workout_offering.course_offering.course.organization.slug)
+      - else
+        = link_to workout.name, workout_path(id: workout[:id])
     %span.badge.badge-info= workout.exercises.count.to_s
 
   .summary
-    - if defined?(new_or_existing)
-      - if can_update && workout_offering
-        = link_to 'Edit', organization_edit_workout_path(course_id: workout_offering.course_offering.course.slug,
-          term_id: workout_offering.course_offering.term.slug,
-          organization_id: workout_offering.course_offering.course.organization.slug,
-          workout_offering_id: workout_offering.id), class: 'btn btn-sm btn-primary'
-      - else
-        %button.btn.btn-sm.btn-primary.btn-clone{ data: { workout_id: workout.id } }
-          Clone
+    - course_id = course.andand.slug
+    - organization_id = course.andand.organization.andand.slug
+
+    - if new_or_existing
+      - message = 'A clone of this workout will be created, which you can then offer in your course offerings. Is this okay?'
+      = link_to 'Clone', organization_clone_workout_path(course_id: course_id,
+        term_id: Term.current_term.id,
+        organization_id: organization_id,
+        workout_id: workout.id,
+        lms_assignment_id: lms_assignment_id,
+        suggested_name: suggested_name), class: 'btn btn-sm btn-primary',
+        data: { confirm: message }
+    - elsif !workout_score || workout_score.show_feedback?
+      .radial-progress{ 'data-progress' => score_pct }
+        .circle
+          .mask.full
+            .fill
+          .mask.half
+            .fill
+            .fill.fix
+          .shadow
+        .inset
+          .pct
     - else
-      - if !workout_score || workout_score.show_feedback?
-        .radial-progress{ 'data-progress' => score_pct }
-          .circle
-            .mask.full
-              .fill
-            .mask.half
-              .fill
-              .fill.fix
-            .shadow
-          .inset
-            .pct
-      - else
-        .radial-progress.masked
-          .circle
-            .shadow
-          .inset
-            .score= image_tag 'pct-blur.png'
+      .radial-progress.masked
+        .circle
+          .shadow
+        .inset
+          .score= image_tag 'pct-blur.png'
   .body
     .text
       = teaser(workout.description)

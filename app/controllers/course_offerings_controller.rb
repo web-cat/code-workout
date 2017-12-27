@@ -107,38 +107,44 @@ class CourseOfferingsController < ApplicationController
     end
 
     success = true
-
     if @course_offering &&
+      !@user.is_enrolled?(@course_offering) &&
       (@course_offering.can_enroll? ||
-        current_user.manages?(@course_offering))
+        @user.manages?(@course_offering))
 
-      success = CourseEnrollment.create(
+      co = CourseEnrollment.new(
         course_offering: @course_offering,
         user: @user,
         course_role: @course_role
       )
+
+      co.save
     else
       success = false
     end
 
-    respond_to do |format|
-      format.html {
-        if success
-          redirect_to organization_course_path(
-            @course_offering.course.organization,
-            @course_offering.course,
-            @course_offering.term),
-            notice: 'You are now enrolled in ' +
-              "#{@course_offering.display_name}."
-        else
-          flash[:warning] = 'Unable to enroll in that course.'
-          redirect_to root_path
-        end
-      }
+    if params[:iframe]
+      respond_to do |format|
+        format.json { render json: success }
+      end
+    else
+      if success
+        respond_to do |format|
+          format.html {
+            redirect_to organization_course_path(
+              @course_offering.course.organization,
+              @course_offering.course,
+              @course_offering.term),
+              notice: 'You are now enrolled in ' +
+                "#{@course_offering.display_name}."
+          }
 
-      format.json {
-        render json: { success: (success.kind_of?(CourseEnrollment) ? true : success) }
-      }
+          format.json { render json: success }
+        end
+      else
+        flash[:warning] = 'Unable to enroll in that course.'
+        redirect_to root_path
+      end
     end
   end
 
@@ -233,13 +239,42 @@ class CourseOfferingsController < ApplicationController
   # -------------------------------------------------------------
   # GET /course_offerings/:id/add_workout
   def add_workout
-    @workouts = Workout.all
-    @wkts = []
-    @course_offering.workouts.each do |wks|
-      @wkts << wks
+    if request.get?
+      # not sure if this is actually used or not, route removed
+      @workouts = Workout.all
+      @wkts = []
+      @course_offering.workouts.each do |wks|
+        @wkts << wks
+      end
+      @workouts = @workouts - @wkts
+      @course_offering
+    elsif request.post?
+      workout_name = params[:workout_name]
+      @course_offering = CourseOffering.find params[:course_offering_id]
+      workout_offering_options = {
+        lms_assignment_id: params[:lti_params][:lms_assignment_id]
+      }
+      @workout_offering = @course_offering.add_workout(workout_name, workout_offering_options)
     end
-    @workouts = @workouts - @wkts
-    @course_offering
+
+    if @workout_offering
+      practice_url = url_for(
+        organization_workout_offering_practice_path(
+          id: @workout_offering.id,
+          lis_outcome_service_url: params[:lti_params][:lis_outcome_service_url],
+          lis_result_sourcedid: params[:lti_params][:lis_result_sourcedid],
+          organization_id: @course_offering.course.organization.slug,
+          term_id: @course_offering.term.slug,
+          course_id: @course_offering.course.slug,
+          lti_launch: true
+        )
+      )
+
+      render json: { practice_url: practice_url } and return
+    else
+      @message = "The workout named #{params[:workout_name]} does not exist or is not linked with this LMS assignment. Please contact your instructor."
+      render 'lti/error' and return
+    end
   end
 
 

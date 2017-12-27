@@ -135,6 +135,8 @@ class Ability
 
       can :unenroll, CourseOffering
 
+      can :add_workout, CourseOffering
+
       # A user can manage a CourseOffering if they are enrolled in that
       # offering and have a CourseRole where can_manage_course? is true.
       # can [:manage], CourseOffering,
@@ -210,7 +212,7 @@ class Ability
              }.any?
       end
 
-      can :gym_practice, Exercise do |e|
+      can [ :gym_practice, :embed ], Exercise do |e|
         e.visible_to?(user)
       end
 
@@ -242,7 +244,7 @@ class Ability
       can [:create, :read], Attempt, user_id: user.id
 
       can :query_data, Exercise
-      can :download_data, Exercise do |e|
+      can :download_attempt_data, Exercise do |e|
         Exercise.visible_through_user(user).map(&:id).include?(e.id) ||
         Exercise.visible_through_user_group(user).map(&:id).include?(e.id)
       end
