@@ -50,8 +50,7 @@ class User < ActiveRecord::Base
   friendly_id :email_or_id
 
 
-  #~ Relationships ............................................................
-
+  #~ Relationships ............................................................  
   belongs_to  :global_role
   belongs_to  :time_zone
 #  has_many    :authentications
@@ -129,6 +128,38 @@ class User < ActiveRecord::Base
       User.all
     else
       User.where.not(id: user_group.users.flat_map(&:id))
+    end
+  end
+
+  def self.account_pairs
+    incomplete_emails = User.where(User.arel_table[:email].does_not_match('%@%'))
+      .where("`id` in (?)", LtiIdentity.all.map(&:user_id))
+
+    duplicate_pairs = {}
+    incomplete_emails.flat_map(&:email).each do |e|
+      duplicate_account = User.where("email like '#{e}@%'").limit(1).first
+      if duplicate_account
+        duplicate_pairs[e] = duplicate_account.email
+      end
+    end
+
+    return duplicate_pairs 
+  end
+
+  # Given a hash representing pairs of email, for each pair,
+  # decide which one takes precedence. Then merge the second
+  # user into it
+  #
+  # The pairs are in order: { 'user': 'user@domain.com' }
+  def self.merge_account_pairs
+    pairs = self.account_pairs
+    pairs.each do |incomplete_email, complete_email| 
+      user1 = User.find(email: incomplete_email)
+      user2 = User.find(email: complete_email)
+
+      sorted = [user1, user2].sort_by(&:updated_at)
+      merge_master = sorted.last
+      merge_master.merge_with(sorted.first, user2.email)
     end
   end
 
@@ -398,6 +429,117 @@ class User < ActiveRecord::Base
     value.split('@').map{ |x| CGI.escape x }.join('@')
   end
 
+  # -------------------------------------------------------------
+  # Merge this user with the specifier user. The specified user's information
+  # gets merged INTO this user
+  def merge_with(user, email)
+    self.update(email: email)
+
+    # Enrollments 
+    enrollments = user.course_enrollments
+    enrollments.each do |e|
+      # only enroll this user if they are not already enrolled
+      if CourseEnrollment.find_by(course_offering: e.course_offering, course_role: e.course_role, user: self).blank?
+        e.update(user_id: self.id)
+      end
+    end
+
+    # Extensions
+    extensions = user.extensions
+    possible_ext_duplicates = {}
+    extensions.each do |ext|
+      self_extension = self.student_extensions.where(workout_offering: ext.workout_offering).limit(1).first
+      if self_extension
+        possible_ext_duplicates[ext.id] = self_extension.id
+      end
+
+      ext.update(user_id: self.id)
+    end
+
+    # Attempts
+    user_attempts = user.attempts
+    user_attempts.update_all(user_id: self.id)
+
+    # Test case results
+    results = user.test_case_results
+    results.update_all(user_id: self.id)
+
+    # Workout Scores
+    possible_ws_duplicates = {}
+    scores = user.workout_scores
+    scores.each do |s|
+      self_score = nil
+      if score.workout_offering
+        self_score = self.workout_scores.where(workout_offering: s.workout_offering).limit(1).first
+      else
+        self_score = self.workout_scores.where(workout: s.workout, workout_offering: nil).limit(1).first
+      end
+
+      if self_score
+        possible_ws_duplicates[s.id] = self_score.id
+      end
+
+      s.update(user_id: self.id)
+    end
+
+    # LTI identities
+    lti_ids = user.lti_identities
+    lti_ids.each do |lti_id|
+      if LtiIdentity.find_by(lms_instance_id: lti_id.lms_instance, user: self).blank?
+        lti_id.update(user_id: self.id)
+      end
+    end
+
+    puts "-------------------------"
+    
+    puts "POSSIBLE DUPLICATE EXTENSIONS FOR #{email}"
+    possible_ext_duplicates.each do |k, v|
+      puts "#{k},#{v}"
+    end
+
+    puts "POSSIBLE DUPLICATE WORKOUT_SCORES FOR #{email}"
+    possible_ws_duplicates.each do |k, v|
+      puts "#{k},#{v}"
+    end
+  end
+
+  # --------------------------------------------------------------
+  # Move this user from one section to another
+  # Will exit with no effect if
+  # * user is not currently enrolled in `from` 
+  # * `from` and `to` are not 'sister course offerings'
+  # Workout offerings will not be moved if a matching workout offering can't be found
+  # in the `to` section
+  def change_sections(from, to)
+    if !self.is_enrolled?(from)
+      puts "Warning! #{self.email} is not enrolled in #{from.display_name_with_term}. No changes."
+      return
+    end
+
+    if (from.course_id != to.course_id) || (from.term_id != to.term_id)
+      puts "Error! #{from.display_name_with_term} and #{to.display_name_with_term} are not sister course_offerings. No changes."
+      return
+    end
+
+    # Move enrollment if needed
+    if !self.is_enrolled(to)
+      from_enrollment = CourseEnrollment.find_by(user: self, course_offering: from)
+      CourseEnrollment.create(user: self, course_offering: to, course_role: from_enrollment.course_role)
+    else
+      puts "Warning! #{self.email} is already enrolled in #{to.display_name_with_term}."
+    end
+ 
+    # Move workout scores
+    wos = self.workout_offerings.where(course_offering: from).flatten
+    ws = self.workout_scores.where("id in (?)", wos)
+    ws.each do |workout_score|
+      wo = ws.workout_offering
+      sister_wo = to.workout_offerings.where(workout: wo.workout).first
+      if sister_wo
+        ws.update(workout_offering_id: sister_wo)
+      end
+    end
+  end
 
   #~ Private instance methods .................................................
   private

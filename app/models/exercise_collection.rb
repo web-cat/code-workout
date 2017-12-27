@@ -34,4 +34,13 @@ class ExerciseCollection < ActiveRecord::Base
       self.user == user
     end
   end
+
+  def add(*exercises)
+    exercises.flatten.each do |e|
+      if e.exercise_collection.nil?
+        e.exercise_collection = self
+        e.save!
+      end
+    end
+  end
 end

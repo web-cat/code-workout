@@ -292,6 +292,18 @@ class WorkoutScore < ActiveRecord::Base
 
 
   # ------------------------------------------------------------
+  # Class method to find workout scores that were computed after
+  # they were closed. Outputs a list of workout scores.
+  def self.late(options={})
+    WorkoutScore.joins{ workout_offering }
+      .joins('inner join student_extensions on student_extensions.workout_offering_id = workout_offerings.id
+             and student_extensions.user_id = workout_scores.user_id')
+      .where('workout_scores.last_attempted_at > 
+        coalesce(student_extensions.hard_deadline, workout_offerings.hard_deadline, "2030-12-31")')
+  end
+
+
+  # ------------------------------------------------------------
   # Class method to fix all workout scores by ensuring there is only
   # a single active score attempt for each unique exercise attempted.
   def self.score_fix1
