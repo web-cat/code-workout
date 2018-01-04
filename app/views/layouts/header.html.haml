@@ -17,5 +17,7 @@
       %script{ src: 'http://html5shim.googlecode.com/svn/trunk/html5.js' }
 
   - classes = ["#{controller_name}", "#{action_name}"]
+  - if @lti_launch
+    - classes << 'embedded'
   %body{ class: classes }
     = yield
