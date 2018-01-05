@@ -42,18 +42,24 @@ class TestCase < ActiveRecord::Base
   scope :only_hidden, -> { where(hidden: true) }
   scope :only_static, -> { where(static: true) }
   scope :only_dynamic, -> { where(static: false) }
-  scope :only_all_or_nothing, -> { where(all_or_nothing: false) }
+  scope :only_screening, -> { where(screening: false) }
 
 
   #~ Validation ...............................................................
 
-  validates :input, presence: true
-  validates :expected_output, presence: true
+  validates :input, presence: true, if: :no_description?
+  validates :expected_output, presence: true, if: :no_description?
   validates :coding_prompt, presence: true
   validates :weight, presence: true, numericality: { greater_than_or_equal_to: 0.0 }
 
 
   #~ Instance methods .........................................................
+
+  # -------------------------------------------------------------
+  def no_description?
+    self.description.blank?
+  end
+
 
   # -------------------------------------------------------------
   def is_example?
@@ -249,7 +255,7 @@ RUBY_TEST
 PYTHON_TEST
       'Java' => <<JAVA_TEST
     @Test
-    public void test%{id}()
+    public void test_%{id}()
     {
         assertEquals(
           "%{negative_feedback}",
