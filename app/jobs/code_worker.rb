@@ -64,7 +64,7 @@ class CodeWorker
       # This "switch" based on language type needs to be refactored
       # to be more OO
 
-      static_all_or_nothing_failed = false
+      static_screening_failed = false
       if language == 'Java'
 
         # kludgy static analysis barf
@@ -96,7 +96,7 @@ class CodeWorker
           end
         end
         if result
-          static_all_or_nothing_failed = true
+          static_screening_failed = true
         else
           result = execute_javatest(
             prompt.class_name, attempt_dir, pre_lines, answer_lines)
@@ -115,26 +115,26 @@ class CodeWorker
       total = 0.0
       answer =
         attempt.prompt_answers.where(prompt: prompt.acting_as).first.specific
-      if static_all_or_nothing_failed || !File.exist?(attempt_dir + '/results.csv')
+      if static_screening_failed || !File.exist?(attempt_dir + '/results.csv')
         answer.error = result
         # puts "CODE-ERROR-FEEDBACK", answer.error, "CODE-ERROR-FEEDBACK"
         total = 1.0
         answer.save
       else
-        all_or_nothing_failed = false
+        screening_failed = false
         CSV.foreach(attempt_dir + '/results.csv') do |line|
           # find test id
-          test_id = line[2][/\d+/].to_i
+          test_id = line[2][/\d+$/].to_i
           test_case = prompt.test_cases.where(id: test_id).first
           tc_score = test_case.record_result(answer, line)
-          if test_case.all_or_nothing?
+          if test_case.screening?
             tcr = TestCaseResult.find(attempt: attempt, test_case: test_case).first
             if !tcr.pass?
-              all_or_nothing_failed = true
+              screening_failed = true
               correct = 0.0
             end
           else
-            if !all_or_nothing_failed
+            if !screening_failed
               correct += tc_score
             end
             total += test_case.weight
