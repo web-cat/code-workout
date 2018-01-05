@@ -150,26 +150,16 @@ class Workout < ActiveRecord::Base
 
   # ------------------------------------------------------------
   def next_exercise(ex)
-    puts '== BLARG ====================================='
     ew = nil
-    puts 'exercise workouts:'
-    exercise_workouts.each do |eeww|
-      puts "    #{eeww.id} = ex #{eeww.exercise.id}, pos #{eeww.position}"
-    end
     if ex
       ew = exercise_workouts.where(exercise: ex).first
-      puts "looking up #{ex.id} -> #{ew.andand.id}, #{ew.andand.position}"
     end
     if ew
       ew = ew.lower_item
-      puts "lower_item -> #{ew.andand.id}, #{ew.andand.position}"
     end
     if !ew
       ew = exercise_workouts.first
-      puts "no item -> #{ew.andand.id}, #{ew.andand.position}"
     end
-    puts "exercise -> #{ew.andand.exercise.andand.id}"
-    puts '======================================='
     return ew.andand.exercise
   end
 
