@@ -258,12 +258,6 @@ class CodingPrompt < ActiveRecord::Base
           hidden: false,
           static: false,
           screening: false)
-        puts "test found:"
-        puts "    comment = #{comment}"
-        puts "    attributes = #{attrs}"
-        puts "    publicvoid = #{publicvoid}"
-        puts "    name = #{name}"
-        puts "    args = #{args}"
 
         tc.description = '<No Test Description Provided!>'
         desc = nil
@@ -371,12 +365,6 @@ class CodingPrompt < ActiveRecord::Base
         if attrs =~ /@(?:Scoring)?Weight\s*\(\s*([0-9]+(?:\.[0-9]*)?)\s*\)/
           tc.weight = $1.to_f
         end
-        puts "    description = #{desc}"
-        puts "    negative feedback = #{nfb}"
-        puts "    example = #{tc.example}"
-        puts "    hidden = #{tc.hidden}"
-        puts "    screening = #{tc.screening}"
-        puts "    weight = #{tc.weight}"
 
         if tc.save
           self.test_cases << tc
@@ -388,8 +376,7 @@ class CodingPrompt < ActiveRecord::Base
       end
 
       rewrite = "#{comment}#{attrs}#{publicvoid}#{name}#{args}"
-      puts "rewritten test decl:\n#{rewrite}\n\n"
-
+      # puts "rewritten test decl:\n#{rewrite}\n\n"
       rewrite
     end
     # puts "junit after rewrite:\n#{junit}"
