@@ -65,23 +65,19 @@ class CodeWorker
 
       # Run static checks
       result = nil
-      puts "========== BLARG ==========\n\n\n\n"
       static_screening_failed = false
       prompt.test_cases.only_static.each do |test_case|
-        puts "applying static check: #{test_case.input}"
-        result = test_case.apply_static_check(answer)
-        puts "    result: #{result}"
-        if result
-          answer.error = result
-          static_screening_failed = true
-          puts "    failed: setting error"
-          break
+        this_result = test_case.apply_static_check(answer)
+        if this_result
+          if !static_screening_failed
+            result = this_result
+            static_screening_failed = true
+            answer.error = result
+          end
         end
       end
-      puts "\n\n\n\n===================="
 
       if !static_screening_failed
-        puts "running dynamic tests"
         case language
         when 'Java'
           result = execute_javatest(
@@ -93,8 +89,6 @@ class CodeWorker
           result = execute_pythontest(
             prompt.class_name, attempt_dir, pre_lines, answer_lines)
         end
-      else
-        puts "skipping dynamic tests"
       end
 
       correct = 0.0
@@ -102,7 +96,6 @@ class CodeWorker
       if static_screening_failed || !File.exist?(attempt_dir + '/results.csv')
         answer.error = result
         puts "setting error text to: #{answer.error}"
-        # puts "CODE-ERROR-FEEDBACK", answer.error, "CODE-ERROR-FEEDBACK"
         total = 1.0
         puts "saving answer"
         answer.save

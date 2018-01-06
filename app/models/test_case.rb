@@ -140,24 +140,17 @@ class TestCase < ActiveRecord::Base
       passed = true
     end
 
-    if self.screening
-      if !passed
-        return nresp
-      else
-        return nil
-      end
-    else
-      tcr = TestCaseResult.new(
-        test_case: self,
-        user: answer.attempt.user,
-        coding_prompt_answer: answer,
-        pass: passed
-      )
-      if !passed
-        tcr.execution_feedback = nresp
-      end
-      return nil
+    tcr = TestCaseResult.new(
+      test_case: self,
+      user: answer.attempt.user,
+      coding_prompt_answer: answer,
+      pass: passed
+    )
+    if !passed
+      tcr.execution_feedback = nresp
     end
+    tcr.save!
+    return (!passed && self.screening) ? nresp : nil
   end
 
 
@@ -174,10 +167,14 @@ class TestCase < ActiveRecord::Base
     # end
     if result.blank?
       inp = self.input
-      if !inp.blank?
-        inp.gsub!(/new\s+[a-zA-Z0-9]+(\s*\[\s*\])+\s*/, '')
+      if self.static
+        result = inp
+      else
+        if !inp.blank?
+          inp.gsub!(/new\s+[a-zA-Z0-9]+(\s*\[\s*\])+\s*/, '')
+        end
+        result = coding_prompt.method_name + '(' + inp + ')'
       end
-      result = coding_prompt.method_name + '(' + inp + ')'
       if pass
         outp = self.expected_output
         if !outp.blank?
