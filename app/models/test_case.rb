@@ -11,6 +11,10 @@
 #  coding_prompt_id  :integer          not null
 #  input             :text             not null
 #  expected_output   :text             not null
+#  static            :boolean          default(FALSE), not null
+#  screening         :boolean          default(FALSE), not null
+#  example           :boolean          default(FALSE), not null
+#  hidden            :boolean          default(FALSE), not null
 #
 # Indexes
 #
@@ -20,7 +24,7 @@
 # This require is to prevent autoload circular dependencies, since
 # TestCaseResult is used in one of the methods.
 
- require 'test_case_result'
+require 'test_case_result'
 
 
 # =============================================================================
@@ -38,13 +42,13 @@ class TestCase < ActiveRecord::Base
   scope :only_hidden, -> { where(hidden: true) }
   scope :only_static, -> { where(static: true) }
   scope :only_dynamic, -> { where(static: false) }
-  scope :only_all_or_nothing, -> { where(all_or_nothing: false) }
+  scope :only_screening, -> { where(screening: false) }
 
 
   #~ Validation ...............................................................
 
-  validates :input, presence: true
-  validates :expected_output, presence: true
+  validates :input, presence: true, if: :no_description?
+  validates :expected_output, presence: true, if: :no_description?
   validates :coding_prompt, presence: true
   validates :weight, presence: true, numericality: { greater_than_or_equal_to: 0.0 }
 
@@ -52,11 +56,101 @@ class TestCase < ActiveRecord::Base
   #~ Instance methods .........................................................
 
   # -------------------------------------------------------------
+  def no_description?
+    self.description.blank?
+  end
+
+
+  # -------------------------------------------------------------
   def is_example?
-    # return !self.description.blank? &&
-        # (self.description == 'example' ||
-        # self.description.start_with?('example:'))
     self.example
+  end
+
+
+  # -------------------------------------------------------------
+  def apply_static_check(answer, code = nil)
+    if !self.static
+      return nil
+    end
+
+    if !code
+      code = answer.without_comments
+    end
+    required_min_count = 1
+    required_max_count = nil
+    if self.expected_output.blank? ||
+      self.expected_output =~ /^\s*(true|yes|present|found)\s*$/i
+      required_min_count = 1
+    elsif self.expected_output =~ /^\s*(false|no|absent|not\s*found)\s*$/i
+      required_min_count = 0
+      required_max_count = 0
+    elsif self.expected_output =~ /^\s*([0-9]+)\s*$/
+      required_min_count = $1.to_i
+      required_max_count = required_min_count
+    elsif self.expected_output =~ /^\s*{\s*([0-9]+)\s*,\s*([0-9]+)\s*}\s*$/
+      required_min_count = $1.to_i
+      required_max_count = $2.to_i
+    elsif self.expected_output =~ /^\s*{\s*,\s*([0-9]+)\s*}\s*$/
+      required_min_count = 0
+      required_max_count = $1.to_i
+    elsif self.expected_output =~ /^\s*{\s*([0-9]+)\s*,\s*}\s*$/
+      required_min_count = $1.to_i
+    end
+    options = nil
+    regex = self.input
+    nresp = self.negative_feedback
+    nresp_operator = 'use'
+    if regex =~ /^\s*keyword(s?)\s*:\s*/
+      regex = '\b(' + to_choices(regex, /^\s*keyword(s?)\s*:\s*/) + ')\b'
+    elsif regex =~ /^\s*class(es)?\s*:\s*/
+      regex = '\b(' + to_choices(regex, /^\s*class(es)?\s*:\s*/) + ')\b'
+    elsif regex =~ /^\s*method(s?)\s*:\s*/
+      regex = '(?<!\bthis)\s*\.\s*(' +
+        to_choices(regex, /^\s*method(s?)\s*:\s*/) + ')\s*\('
+    elsif regex.start_with? '/'
+      nresp_operator = 'contain'
+      last = regex.rindex('/')
+      if last < regex.length - 1
+        options = regex[(last + 1)..-1]
+      end
+      regex = regex[1..last]
+    end
+    actual_count = 0
+    if !code.blank?
+      actual_count = code.scan(Regexp.new(regex, options)).size
+    end
+    if actual_count < required_min_count
+      passed = false
+      if nresp.blank?
+        nresp = 'Answer must ' + nresp_operator + ' ' + self.input
+        if required_min_count > 1
+          nresp = nresp + ' at least ' + required_min_count + ' times'
+        end
+      end
+    elsif !required_max_count.nil? && actual_count > required_max_count
+      passed = false
+      if nresp.blank?
+        nresp = 'Answer cannot ' + nresp_operator + ' ' + self.input
+        if required_max_count > 0
+          nresp = nresp + ' more than ' + required_max_count +
+            ' ' + 'time'.pluralize(required_max_count)
+        end
+      end
+    else
+      passed = true
+    end
+
+    tcr = TestCaseResult.new(
+      test_case: self,
+      user: answer.attempt.user,
+      coding_prompt_answer: answer,
+      pass: passed
+    )
+    if !passed
+      tcr.execution_feedback = nresp
+    end
+    tcr.save!
+    return (!passed && self.screening) ? nresp : nil
   end
 
 
@@ -73,10 +167,14 @@ class TestCase < ActiveRecord::Base
     # end
     if result.blank?
       inp = self.input
-      if !inp.blank?
-        inp.gsub!(/new\s+[a-zA-Z0-9]+(\s*\[\s*\])+\s*/, '')
+      if self.static
+        result = inp
+      else
+        if !inp.blank?
+          inp.gsub!(/new\s+[a-zA-Z0-9]+(\s*\[\s*\])+\s*/, '')
+        end
+        result = coding_prompt.method_name + '(' + inp + ')'
       end
-      result = coding_prompt.method_name + '(' + inp + ')'
       if pass
         outp = self.expected_output
         if !outp.blank?
@@ -167,8 +265,63 @@ class TestCase < ActiveRecord::Base
   end
 
 
+  # -------------------------------------------------------------
+  def parse_description_specifier(desc)
+    desc.strip! if !desc.blank?
+    if !desc.blank?
+      if desc.sub!(/^((?:(?:example|hidden|static|screening)\s*:\s*)+)(.*)$/i, "\\2")
+        modifiers = $1
+        if modifiers =~ /example/i
+          self.example = true
+        end
+        if modifiers =~ /hidden/i
+          self.hidden = true
+        end
+        if modifiers =~ /static/i
+          self.static = true
+        end
+        if modifiers =~ /screening/i
+          self.screening = true
+        end
+      end
+      if desc == 'example'
+        self.example = true
+      elsif desc == 'hidden'
+        self.hidden = true
+      elsif desc == 'static'
+        self.static = true
+      elsif desc == 'screening'
+        self.screening = true
+      elsif !desc.blank?
+        self.description = desc
+      end
+    end
+  end
+
+
+  # -------------------------------------------------------------
+  def parse_negative_feedback_specifier(nfb)
+    nfb.strip! if !nfb.blank?
+    if !nfb.blank?
+      if nfb.sub!(/^((?:(?:screening)\s*:\s*)+)(.*)$/i, "\2")
+        self.screening = true
+      end
+      if nfb == 'screening'
+        self.screening = true
+      elsif !nfb.blank?
+        self.negative_feedback = nfb
+      end
+    end
+  end
+
+
   #~ Private instance methods .................................................
   private
+
+  def to_choices(str, regex)
+    str.sub(regex, '').tr(',', ' ').strip.split(/\s+/).join('|')
+  end
+
 
     TEST_METHOD_TEMPLATES = {
       'Ruby' => <<RUBY_TEST,
@@ -194,7 +347,7 @@ RUBY_TEST
 PYTHON_TEST
       'Java' => <<JAVA_TEST
     @Test
-    public void test%{id}()
+    public void test_%{id}()
     {
         assertEquals(
           "%{negative_feedback}",

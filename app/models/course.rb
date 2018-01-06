@@ -3,13 +3,13 @@
 # Table name: courses
 #
 #  id              :integer          not null, primary key
-#  name            :string(255)      not null
-#  number          :string(255)      not null
+#  name            :string(255)      default(""), not null
+#  number          :string(255)      default(""), not null
 #  organization_id :integer          not null
 #  created_at      :datetime
 #  updated_at      :datetime
 #  creator_id      :integer
-#  slug            :string(255)      not null
+#  slug            :string(255)      default(""), not null
 #
 # Indexes
 #

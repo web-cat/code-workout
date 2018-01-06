@@ -138,13 +138,13 @@ ActiveRecord::Schema.define(version: 20170920191837) do
   end
 
   create_table "courses", force: true do |t|
-    t.string   "name",                            null: false
-    t.string   "number",                          null: false
-    t.integer  "organization_id",                 null: false
+    t.string   "name",            default: "", null: false
+    t.string   "number",          default: "", null: false
+    t.integer  "organization_id",              null: false
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "creator_id"
-    t.string   "slug",                            null: false
+    t.string   "slug",            default: "", null: false
     t.integer  "user_group_id"
     t.boolean  "is_hidden",       default: false
   end
@@ -377,11 +377,11 @@ ActiveRecord::Schema.define(version: 20170920191837) do
   end
 
   create_table "organizations", force: true do |t|
-    t.string   "name",                         null: false
+    t.string   "name",         default: "", null: false
     t.datetime "created_at"
     t.datetime "updated_at"
     t.string   "abbreviation"
-    t.string   "slug",                         null: false
+    t.string   "slug",         default: "", null: false
     t.boolean  "is_hidden",    default: false
   end
 

@@ -120,8 +120,7 @@ class WorkoutOfferingsController < ApplicationController
         end
       end
       if ex1.nil?
-        ex1 = @workout_offering.workout.next_exercise(
-          nil, current_user, @workout_score)
+        ex1 = @workout_offering.workout.first_exercise
       end
       redirect_to organization_workout_offering_exercise_path(
         id: ex1.id,

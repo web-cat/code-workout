@@ -290,7 +290,7 @@ class ExercisesController < ApplicationController
       @message = 'Choose an exercise to embed!'
       render 'lti/error' and return
     end
-    
+
     redirect_to exercise_practice_path(id: @exercise.id, lti_launch: true) and return
 	end
 
@@ -454,8 +454,8 @@ class ExercisesController < ApplicationController
       @wexs = nil
     end
 
-		# decide whether or not to hide the sidebar 
-		# hide it if this workout (if present) has less than two exercises 
+		# decide whether or not to hide the sidebar
+		# hide it if this workout (if present) has less than two exercises
 		@workout ||= @workout_score.andand.workout || @workout_offering.andand.workout
 		ex_count = @workout.andand.exercises.andand.count
 		@hide_sidebar = (!@workout && @lti_launch) || (ex_count && ex_count < 2)
@@ -476,7 +476,7 @@ class ExercisesController < ApplicationController
   #GET /evaluate/1
   def evaluate
     @lti_launch = params[:lti_launch]
-    
+
 		if params[:exercise_version_id] || params[:id]
       set_exercise_from_params
     else
@@ -631,7 +631,7 @@ class ExercisesController < ApplicationController
         flash.notice = "Your previous question's answer choice has been saved and scored"
         render :js => "window.location = '" +
           organization_workout_offering_practice_path(
-          exercise_id: @workout_score.workout.next_exercise(@exercise, @student_drift_user, nil),
+          exercise_id: @workout_score.workout.next_exercise(@exercise),
           organization_id: @workout_offering.course_offering.course.organization.slug,
           course_id: @workout_offering.course_offering.course.slug,
           term_id: @workout_offering.course_offering.term.slug,

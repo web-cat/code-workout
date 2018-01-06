@@ -24,7 +24,9 @@ class CodeWorker
       exv = attempt.exercise_version
       prompt = exv.prompts.first.specific
       pre_lines = 0
-      answer_text = attempt.prompt_answers.first.specific.answer
+      answer =
+        attempt.prompt_answers.where(prompt: prompt.acting_as).first.specific
+      answer_text = answer.answer
       answer_lines = answer_text ? answer_text.count("\n") : 0
       if !prompt.wrapper_code.blank?
         code_body = prompt.wrapper_code.sub(/\b___\b/, answer_text)
@@ -61,94 +63,57 @@ class CodeWorker
       FileUtils.cp(prompt.test_file_name, attempt_dir)
       File.write(attempt_dir + '/' + prompt.class_name + '.' + lang, code_body)
 
-      # This "switch" based on language type needs to be refactored
-      # to be more OO
-
-      static_all_or_nothing_failed = false
-      if language == 'Java'
-
-        # kludgy static analysis barf
-        result = nil
-        if prompt.id == 223
-          # puts "\n\n\nanswer_text = #{answer_text}\n"
-          nctext = answer_text
-          nctext.gsub!(/(\/\*([^*]|(\*+[^*\/]))*\*+\/)|(\/\/[^\r\n]*)/, '')
-          # puts "\n\n\nctext = #{nctext}\n\n\n"
-
-          # no for loop
-          # no while loop
-          # no parseLong()
-          # no parseInt()
-          # no valueOf()
-          # no nextLong()
-          if nctext =~ /\bfor\b/
-            result = 'for loops are not allowed'
-          elsif nctext =~ /\bwhile\b/
-            result = 'while loops are not allowed'
-          elsif nctext =~ /(?<!\bthis)\.parseLong\s*\(/
-            result = 'Long.parseLong() may not be used'
-          elsif nctext =~ /(?<!\bthis)\.parseInt\s*\(/
-            result = 'Integer.parseInt() may not be used'
-          elsif nctext =~ /(?<!\bthis)\.valueOf\s*\(/
-            result = 'Integer.valueOf() or Long.valueOf() may not be used'
-          elsif nctext =~ /(?<!\bthis)\.nextLong\s*\(/
-            result = 'Scanner.nextLong() may not be used'
+      # Run static checks
+      result = nil
+      static_screening_failed = false
+      prompt.test_cases.only_static.each do |test_case|
+        this_result = test_case.apply_static_check(answer)
+        if this_result
+          if !static_screening_failed
+            result = this_result
+            static_screening_failed = true
+            answer.error = result
           end
         end
-        if prompt.id == 226 || prompt.id == 228
-          # puts "\n\n\nanswer_text = #{answer_text}\n"
-          nctext = answer_text
-          nctext.gsub!(/(\/\*([^*]|(\*+[^*\/]))*\*+\/)|(\/\/[^\r\n]*)/, '')
-          # puts "\n\n\nctext = #{nctext}\n\n\n"
+      end
 
-          # no for loop
-          # no while loop
-          if nctext =~ /\bfor\b/
-            result = 'for loops are not allowed'
-          elsif nctext =~ /\bwhile\b/
-            result = 'while loops are not allowed'
-          end
-        end
-        if result
-          static_all_or_nothing_failed = true
-        else
+      if !static_screening_failed
+        case language
+        when 'Java'
           result = execute_javatest(
             prompt.class_name, attempt_dir, pre_lines, answer_lines)
+        when 'Ruby'
+          result = execute_rubytest(
+            prompt.class_name, attempt_dir, pre_lines, answer_lines)
+        when 'Python'
+          result = execute_pythontest(
+            prompt.class_name, attempt_dir, pre_lines, answer_lines)
         end
-      elsif language == 'Ruby'
-        result = execute_rubytest(
-          prompt.class_name, attempt_dir, pre_lines, answer_lines)
-      elsif language == 'Python'
-        result = execute_pythontest(
-          prompt.class_name, attempt_dir, pre_lines, answer_lines)
-      end # IF INNERMOST
+      end
 
       correct = 0.0
       total = 0.0
-      correct = 0.0
-      total = 0.0
-      answer =
-        attempt.prompt_answers.where(prompt: prompt.acting_as).first.specific
-      if static_all_or_nothing_failed || !File.exist?(attempt_dir + '/results.csv')
+      if static_screening_failed || !File.exist?(attempt_dir + '/results.csv')
         answer.error = result
-        # puts "CODE-ERROR-FEEDBACK", answer.error, "CODE-ERROR-FEEDBACK"
+        puts "setting error text to: #{answer.error}"
         total = 1.0
+        puts "saving answer"
         answer.save
       else
-        all_or_nothing_failed = false
+        screening_failed = false
         CSV.foreach(attempt_dir + '/results.csv') do |line|
           # find test id
-          test_id = line[2][/\d+/].to_i
+          test_id = line[2][/\d+$/].to_i
           test_case = prompt.test_cases.where(id: test_id).first
           tc_score = test_case.record_result(answer, line)
-          if false #test_case.all_or_nothing?
+          if test_case.screening?
             tcr = TestCaseResult.find(attempt: attempt, test_case: test_case).first
             if !tcr.pass?
-              all_or_nothing_failed = true
+              screening_failed = true
               correct = 0.0
             end
           else
-            if !all_or_nothing_failed
+            if !screening_failed
               correct += tc_score
             end
             total += test_case.weight
