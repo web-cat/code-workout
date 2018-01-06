@@ -68,7 +68,7 @@ class TestCase < ActiveRecord::Base
 
 
   # -------------------------------------------------------------
-  def apply_static_check(answer, code)
+  def apply_static_check(answer, code = nil)
     if !self.static
       return nil
     end
@@ -76,24 +76,37 @@ class TestCase < ActiveRecord::Base
     if !code
       code = answer.without_comments
     end
-    required_count = nil
-    required = self.expected_output.blank? ||
-      self.expected_output =~ /true/i
-    if self.expected_output =~ /^[0-9]+$/
-      required_count = self.expected_output.to_i
-      required = (required_count > 0)
+    required_min_count = 1
+    required_max_count = nil
+    if self.expected_output.blank? ||
+      self.expected_output =~ /^\s*(true|yes|present|found)\s*$/i
+      required_min_count = 1
+    elsif self.expected_output =~ /^\s*(false|no|absent|not\s*found)\s*$/i
+      required_min_count = 0
+      required_max_count = 0
+    elsif self.expected_output =~ /^\s*([0-9]+)\s*$/
+      required_min_count = $1.to_i
+      required_max_count = required_min_count
+    elsif self.expected_output =~ /^\s*{\s*([0-9]+)\s*,\s*([0-9]+)\s*}\s*$/
+      required_min_count = $1.to_i
+      required_max_count = $2.to_i
+    elsif self.expected_output =~ /^\s*{\s*,\s*([0-9]+)\s*}\s*$/
+      required_min_count = 0
+      required_max_count = $1.to_i
+    elsif self.expected_output =~ /^\s*{\s*([0-9]+)\s*,\s*}\s*$/
+      required_min_count = $1.to_i
     end
     options = nil
     regex = self.input
     nresp = self.negative_feedback
     nresp_operator = 'use'
-    if regex =~ /^keyword(s?):/
-      regex = '\b(' + to_choices(regex, /^keyword(s?):\s*/) + ')\b'
-    elsif regex =~ /^class(es)?:/
-      regex = '\b(' + to_choices(regex, /^class(es)?:\s*/) + ')\b'
-    elsif regex =~ /^method(s?):/
-      regex = '(?<!\bthis\s*)\.\s*(' +
-        to_choices(regex, /^method(s?):\s*/) + ')\s*\('
+    if regex =~ /^\s*keyword(s?)\s*:\s*/
+      regex = '\b(' + to_choices(regex, /^\s*keyword(s?)\s*:\s*/) + ')\b'
+    elsif regex =~ /^\s*class(es)?\s*:\s*/
+      regex = '\b(' + to_choices(regex, /^\s*class(es)?\s*:\s*/) + ')\b'
+    elsif regex =~ /^\s*method(s?)\s*:\s*/
+      regex = '(?<!\bthis)\s*\.\s*(' +
+        to_choices(regex, /^\s*method(s?)\s*:\s*/) + ')\s*\('
     elsif regex.start_with? '/'
       nresp_operator = 'contain'
       last = regex.rindex('/')
@@ -102,20 +115,38 @@ class TestCase < ActiveRecord::Base
       end
       regex = regex[1..last]
     end
-    if nresp.blank?
-      if required
-        nresp = 'Answer must ' + nresp_operator + ' ' + self.input
-      else
-        nresp = 'Answer cannot ' + nresp_operator + ' ' + self.input
-      end
+    actual_count = 0
+    if !code.blank?
+      actual_count = code.scan(Regexp.new(regex, options)).size
     end
-    mdata = Regexp.new(regex, options).match(code)
-    if self.screening
-      if required && !mdata || !required && mdata
-        return nresp
+    if actual_count < required_min_count
+      passed = false
+      if nresp.blank?
+        nresp = 'Answer must ' + nresp_operator + ' ' + self.input
+        if required_min_count > 1
+          nresp = nresp + ' at least ' + required_min_count + ' times'
+        end
+      end
+    elsif !required_max_count.nil? && actual_count > required_max_count
+      passed = false
+      if nresp.blank?
+        nresp = 'Answer cannot ' + nresp_operator + ' ' + self.input
+        if required_max_count > 0
+          nresp = nresp + ' more than ' + required_max_count +
+            ' ' + 'time'.pluralize(required_max_count)
+        end
       end
     else
-      passed = required && mdata || !required && !mdata
+      passed = true
+    end
+
+    if self.screening
+      if !passed
+        return nresp
+      else
+        return nil
+      end
+    else
       tcr = TestCaseResult.new(
         test_case: self,
         user: answer.attempt.user,
@@ -125,6 +156,7 @@ class TestCase < ActiveRecord::Base
       if !passed
         tcr.execution_feedback = nresp
       end
+      return nil
     end
   end
 
@@ -220,6 +252,56 @@ class TestCase < ActiveRecord::Base
         self.expected_output.include?('[]')) ||
         self.expected_output.start_with?('array(')) ? 'Array' : ''
     }
+  end
+
+
+  # -------------------------------------------------------------
+  def parse_description_specifier(desc)
+    desc.strip! if !desc.blank?
+    if !desc.blank?
+      if desc.sub!(/^((?:(?:example|hidden|static|screening)\s*:\s*)+)(.*)$/i, "\\2")
+        modifiers = $1
+        if modifiers =~ /example/i
+          self.example = true
+        end
+        if modifiers =~ /hidden/i
+          self.hidden = true
+        end
+        if modifiers =~ /static/i
+          self.static = true
+        end
+        if modifiers =~ /screening/i
+          self.screening = true
+        end
+      end
+      if desc == 'example'
+        self.example = true
+      elsif desc == 'hidden'
+        self.hidden = true
+      elsif desc == 'static'
+        self.static = true
+      elsif desc == 'screening'
+        self.screening = true
+      elsif !desc.blank?
+        self.description = desc
+      end
+    end
+  end
+
+
+  # -------------------------------------------------------------
+  def parse_negative_feedback_specifier(nfb)
+    nfb.strip! if !nfb.blank?
+    if !nfb.blank?
+      if nfb.sub!(/^((?:(?:screening)\s*:\s*)+)(.*)$/i, "\2")
+        self.screening = true
+      end
+      if nfb == 'screening'
+        self.screening = true
+      elsif !nfb.blank?
+        self.negative_feedback = nfb
+      end
+    end
   end
 
 

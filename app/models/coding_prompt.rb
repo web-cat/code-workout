@@ -146,15 +146,16 @@ class CodingPrompt < ActiveRecord::Base
         end
       end
       # Default, if none of above cases return
-      parse_CSV_tests
+      parse_CSV_tests(self.test_script)
+      generate_CSV_tests(test_file_name)
     end
   end
 
 
   # -------------------------------------------------------------
-  def parse_CSV_tests
+  def parse_CSV_tests(csv_text)
     # Now parse the test description into test case objects
-    CSV.parse(self.test_script) do |row|
+    CSV.parse(csv_text) do |row|
       tc = TestCase.new(
         weight: 1.0,
         coding_prompt: self,
@@ -168,29 +169,7 @@ class CodingPrompt < ActiveRecord::Base
         tc.input = tc.input.gsub(/;\s*/, ', ')
       end
       if !row[2].blank?
-        desc = row[2]
-        if desc.blank?
-          #ignore
-        elsif desc == 'example'
-          tc.example = true
-        elsif desc == 'hidden'
-          tc.hidden = true
-        elsif desc == 'static'
-          tc.static = true
-        else
-          if desc.sub!(/^example:\s*/i, '')
-            tc.example = true
-          end
-          if desc.sub!(/^hidden:\s*/i, '')
-            tc.hidden = true
-          end
-          if desc.sub!(/^static:\s*/i, '')
-            tc.static = true
-          end
-          if !desc.blank?
-            tc.description = desc
-          end
-        end
+        tc.parse_description_specifier(row[2])
       end
       if !row[3].blank?
         tc.negative_feedback = row[3]
@@ -216,7 +195,6 @@ class CodingPrompt < ActiveRecord::Base
         puts "error saving test case: #{tc.errors.full_messages.to_s}"
       end
     end
-    generate_CSV_tests(test_file_name)
   end
 
 
@@ -239,8 +217,24 @@ class CodingPrompt < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def parse_JUnit_tests
-    junit = self.test_script.gsub(
-      /((?:\s*\/\/.*[\r\n]+)|(?:\s*\/\*(?:[^*]|(?:\*+[^*\/]))*\*+\/))*((?:\s*@(?:Test|Example|Hidden|Screening|(?:Weight|ScoringWeight)\s*\(\s*[0-9]+(?:\.[0-9]*)?\s*\)|(?:Description|Hint|NegativeFeedback)\s*\(\s*"\s*(?:[^"]|\\")*\s*"\s*\)))*)(\s*public\s+void\s+)([a-zA-Z0-9_]+)(\s*\(\s*\))/
+    junit = self.test_script.gsub(/\r\n/, "\n")
+
+    # First, collect any embedded static tests
+    junit.scan(
+      /(?:\/\/\p{Blank}*static\p{Blank}*tests\p{Blank}*:\p{Blank}*(.*\n(?:\p{Blank}*\/\/.*\n)*))|(?:\/\*\s*static\s*tests\s*:\s*((?:[^*]|(?:\*+[^*\/]))*)\*+\/)/i
+      ) do |tests1, tests2|
+      if tests2.blank?
+        tests = tests1.gsub(/^\p{Blank}*\/\/\p{Blank}*/, '').gsub(/\p{Blank}*$/, '')
+      else
+        tests = tests2.gsub(/^\p{Blank}*(\*\p{Blank}*)?/, '').gsub(/\p{Blank}*$/, '')
+      end
+      tests.sub!(/\n*$/m, "\n")
+      parse_CSV_tests(tests)
+    end
+
+    # Now, extract metadata about and rename each test method
+    junit.gsub!(
+      /((?:\p{Blank}*\/\/.*\n)|(?:\p{Blank}*\/\*(?:[^*]|(?:\*+[^*\/]))*\*+\/\p{Blank}*\n?))*((?:\s*@(?:Test|Example|Hidden|Screening|(?:Weight|ScoringWeight)\s*\(\s*[0-9]+(?:\.[0-9]*)?\s*\)|(?:Description|Hint|NegativeFeedback)\s*\(\s*"\s*(?:[^"]|\\")*\s*"\s*\)))*)(\s*public\s+void\s+)([a-zA-Z0-9_]+)(\s*\(\s*\))/
       ) do |match|
       comment = Regexp.last_match(1)
       attrs = Regexp.last_match(2)
@@ -270,7 +264,7 @@ class CodingPrompt < ActiveRecord::Base
           desc = $1.gsub(/\\"/, '"')
         end
         # If no description, try to pull it from the method name
-        if desc.blank? && name =~ /^test(.*)(?:_*[0-9]+)?$/
+        if desc.blank? && name =~ /^(?:test)?(.*)(?:_*[0-9]+)?$/
           namedesc = $1
           if !namedesc.blank?
             namedesc = namedesc.sub(/^_+/, '').sub(/_+$/, '')
@@ -292,6 +286,8 @@ class CodingPrompt < ActiveRecord::Base
             end
           end
         end
+        tc.parse_description_specifier(desc)
+
         # look for "example" tag in comments or attribute
         if comment =~ /example\s*:\s*true\s*(?:\*\/\s*)?$/i || attrs =~ /@Example\b/
           tc.example = true
@@ -304,37 +300,9 @@ class CodingPrompt < ActiveRecord::Base
         if comment =~ /screening\s*:\s*true\s*(?:\*\/\s*)?$/i || attrs =~ /@Screening\b/
           tc.screening = true
         end
-        if !desc.blank?
-          desc.strip!
-          # look for "example" tag embedded as the description
-          if desc == 'example'
-            tc.example = true
-          # look for "hidden" tag embedded as the description
-          elsif desc == 'hidden'
-            tc.hidden = true
-          # look for "screening" tag embedded as the description
-          elsif desc == 'screening'
-            tc.screening = true
-          else
-            # look for "example" tag embedded at start of description
-            if desc.sub!(/^example:\s*/i, '')
-              tc.example = true
-            end
-            # look for "hidden" tag embedded at start of description
-            if desc.sub!(/^hidden:\s*/i, '')
-              tc.hidden = true
-            end
-            # look for "screening" tag embedded at start of description
-            if desc.sub!(/^screening:\s*/i, '')
-              tc.screening = true
-            end
-          end
-          if !desc.blank?
-            tc.description = desc
-          end
-        end
-        nfb = nil
+
         # Attempt to pull negative feedback string from comments
+        nfb = nil
         if comment =~ /negative\s*feedback\s*:\s*((?:[^*\r\n]|(?:\*+[^*\/\r\n]))*)(?:\*\/\s*)?$/i
           nfb = $1
         end
@@ -342,21 +310,8 @@ class CodingPrompt < ActiveRecord::Base
         if attrs =~ /@NegativeFeedback\s*\(\s*"\s*((?:[^"]|\\")*)\s*"\s*\)/
           nfb = $1.gsub(/\\"/, '"')
         end
-        if !nfb.blank?
-          nfb.strip!
-          # look for "screening" tag embedded as the negative feedback
-          if nfb == 'screening'
-            tc.screening = true
-          else
-            # look for "screening" tag embedded at the start of neg feedback
-            if nfb.sub!(/^screening:\s*/i, '')
-              tc.screening = true
-            end
-          end
-          if !nfb.blank?
-            tc.negative_feedback = nfb
-          end
-        end
+        tc.parse_negative_feedback_specifier(nfb)
+
         # Attempt to pull test case weight from comments
         if comment =~ /(?:scoring\s*)?weight\s*:\s*([0-9]+(?:\.[0-9]*)?)\s*(?:\*\/\s*)?$/i
           tc.weight = $1.to_f

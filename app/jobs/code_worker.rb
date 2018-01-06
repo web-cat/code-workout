@@ -24,7 +24,9 @@ class CodeWorker
       exv = attempt.exercise_version
       prompt = exv.prompts.first.specific
       pre_lines = 0
-      answer_text = attempt.prompt_answers.first.specific.answer
+      answer =
+        attempt.prompt_answers.where(prompt: prompt.acting_as).first.specific
+      answer_text = answer.answer
       answer_lines = answer_text ? answer_text.count("\n") : 0
       if !prompt.wrapper_code.blank?
         code_body = prompt.wrapper_code.sub(/\b___\b/, answer_text)
@@ -61,64 +63,48 @@ class CodeWorker
       FileUtils.cp(prompt.test_file_name, attempt_dir)
       File.write(attempt_dir + '/' + prompt.class_name + '.' + lang, code_body)
 
-      # This "switch" based on language type needs to be refactored
-      # to be more OO
-
+      # Run static checks
+      result = nil
+      puts "========== BLARG ==========\n\n\n\n"
       static_screening_failed = false
-      if language == 'Java'
-
-        # kludgy static analysis barf
-        result = nil
-        if prompt.id == 203
-          # puts "\n\n\nanswer_text = #{answer_text}\n"
-          nctext = answer_text
-          nctext.gsub!(/(\/\*([^*]|(\*+[^*\/]))*\*+\/)|(\/\/[^\r\n]*)/, '')
-          # puts "\n\n\nctext = #{nctext}\n\n\n"
-
-          # no for loop
-          # no while loop
-          # no parseLong()
-          # no parseInt()
-          # no valueOf()
-          # no nextLong()
-          if nctext =~ /\bfor\b/
-            result = 'for loops are not allowed'
-          elsif nctext =~ /\bwhile\b/
-            result = 'while loops are not allowed'
-          elsif nctext =~ /(?<!\bthis)\.parseLong\s*\(/
-            result = 'Long.parseLong() may not be used'
-          elsif nctext =~ /(?<!\bthis)\.parseInt\s*\(/
-            result = 'Integer.parseInt() may not be used'
-          elsif nctext =~ /(?<!\bthis)\.valueOf\s*\(/
-            result = 'Integer.valueOf() or Long.valueOf() may not be used'
-          elsif nctext =~ /(?<!\bthis)\.nextLong\s*\(/
-            result = 'Scanner.nextLong() may not be used'
-          end
-        end
+      prompt.test_cases.only_static.each do |test_case|
+        puts "applying static check: #{test_case.input}"
+        result = test_case.apply_static_check(answer)
+        puts "    result: #{result}"
         if result
+          answer.error = result
           static_screening_failed = true
-        else
+          puts "    failed: setting error"
+          break
+        end
+      end
+      puts "\n\n\n\n===================="
+
+      if !static_screening_failed
+        puts "running dynamic tests"
+        case language
+        when 'Java'
           result = execute_javatest(
             prompt.class_name, attempt_dir, pre_lines, answer_lines)
+        when 'Ruby'
+          result = execute_rubytest(
+            prompt.class_name, attempt_dir, pre_lines, answer_lines)
+        when 'Python'
+          result = execute_pythontest(
+            prompt.class_name, attempt_dir, pre_lines, answer_lines)
         end
-      elsif language == 'Ruby'
-        result = execute_rubytest(
-          prompt.class_name, attempt_dir, pre_lines, answer_lines)
-      elsif language == 'Python'
-        result = execute_pythontest(
-          prompt.class_name, attempt_dir, pre_lines, answer_lines)
-      end # IF INNERMOST
+      else
+        puts "skipping dynamic tests"
+      end
 
       correct = 0.0
       total = 0.0
-      correct = 0.0
-      total = 0.0
-      answer =
-        attempt.prompt_answers.where(prompt: prompt.acting_as).first.specific
       if static_screening_failed || !File.exist?(attempt_dir + '/results.csv')
         answer.error = result
+        puts "setting error text to: #{answer.error}"
         # puts "CODE-ERROR-FEEDBACK", answer.error, "CODE-ERROR-FEEDBACK"
         total = 1.0
+        puts "saving answer"
         answer.save
       else
         screening_failed = false

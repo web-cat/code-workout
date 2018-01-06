@@ -51,7 +51,7 @@ class CodingPromptAnswer < ActiveRecord::Base
   # -------------------------------------------------------------
   def without_comments
     result = answer
-    lang = coding_prompt.language
+    lang = prompt.specific.language
     if lang
       regex = REMOVE_COMMENTS_REGEX[lang]
       if regex
