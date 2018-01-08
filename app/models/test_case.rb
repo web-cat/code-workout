@@ -111,8 +111,6 @@ class TestCase < ActiveRecord::Base
       regex = '/\[[^\]]*\]/'
     elsif regex =~ /^\s*recursion\s*$/i
       regex = 'self method:' + self.coding_prompt.method_name
-      puts "\n\n\n\n===================="
-      puts "recursion: translated = #{regex}"
     end
     nresp = self.negative_feedback
     nresp_operator = 'use'
@@ -129,8 +127,6 @@ class TestCase < ActiveRecord::Base
       else
         regex = '(?<!\bthis|\bsuper)\s*\.\s*(' + regex
       end
-      puts "  regex = #{regex}"
-      puts "====================\n\n\n\n"
     elsif regex.start_with? '/'
       nresp_operator = 'contain'
       last = regex.rindex('/')
