@@ -22,7 +22,7 @@
           %a.dropdown-toggle{ href: organizations_path,
             data: { toggle: 'dropdown' }, value: 'Course' }
             Course
-          - @active_courses = current_user.andand.course_offerings.joins(:term).where('terms.ends_on > (?)', DateTime.now)
+          - @active_courses = user_signed_in? ? current_user.course_offerings.joins(:term).where('terms.ends_on > (?)', DateTime.now) : nil
           %ul.dropdown-menu
             %li
               .yamm-content
