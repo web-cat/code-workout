@@ -75,7 +75,7 @@
       - elsif prompt.is_coding?
         - coding_questions = true
         - examples = prompt.examples
-        - if examples.any?
+        - if !prompt.hide_examples && examples.any?
           %p Examples:
           %pre.examples
             - examples.each do |example|
@@ -106,18 +106,18 @@
           = f.submit 'Check my answer!', class: 'btn btn-primary btn-submit', id: 'primarybtn'
       - if coding_questions
         %div.btn.btn-default{ data: { toggle: 'modal', target: '#confirm-reset' } } Reset
-      - if @workout_offering && params[:review_user_id].nil?
+      - if @workout_offering && params[:review_user_id].nil? && @workout_offering.workout.exercise_workouts.size > 1
         = button_link 'Next exercise',
-          organization_workout_offering_practice_path(exercise_id: @workout.next_exercise(@exercise, current_user, nil),
+          organization_workout_offering_practice_path(exercise_id: @workout.next_exercise(@exercise),
           organization_id: @workout_offering.course_offering.course.organization.slug,
           course_id: @workout_offering.course_offering.course.slug,
           term_id: @workout_offering.course_offering.term.slug,
           id: @workout_offering.id,
           lti_launch: @lti_launch),
-          class: 'btn btn-info btn-next', id: 'nextbtn'
-      - elsif @workout && params[:review_user_id].nil?
+          class: 'btn btn-default btn-next', id: 'nextbtn'
+      - elsif @workout && params[:review_user_id].nil? && @workout.exercise_workouts.size > 1
         = button_link 'Next exercise',
-          exercise_practice_path(@workout.next_exercise(@exercise, current_user, @workout_score), workout_id: @workout.id, lti_launch: @lti_launch),
+          exercise_practice_path(@workout.next_exercise(@exercise), workout_id: @workout.id, lti_launch: @lti_launch),
           class: 'btn btn-info btn-next', id: 'nextbtn'
 
     - if @workout.nil? && !@lti_launch

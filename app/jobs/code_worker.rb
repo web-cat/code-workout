@@ -1,4 +1,7 @@
 # app/workers/code_worker.rb
+
+require 'net/http'
+require 'uri'
 require 'csv'
 require 'fileutils'
 require "#{Rails.root}/usr/resources/config"
@@ -21,7 +24,9 @@ class CodeWorker
       exv = attempt.exercise_version
       prompt = exv.prompts.first.specific
       pre_lines = 0
-      answer_text = attempt.prompt_answers.first.specific.answer
+      answer =
+        attempt.prompt_answers.where(prompt: prompt.acting_as).first.specific
+      answer_text = answer.answer
       answer_lines = answer_text ? answer_text.count("\n") : 0
       if !prompt.wrapper_code.blank?
         code_body = prompt.wrapper_code.sub(/\b___\b/, answer_text)
@@ -58,38 +63,59 @@ class CodeWorker
       FileUtils.cp(prompt.test_file_name, attempt_dir)
       File.write(attempt_dir + '/' + prompt.class_name + '.' + lang, code_body)
 
-      # This "switch" based on language type needs to be refactored
-      # to be more OO
+      # Run static checks
+      result = nil
+      static_screening_failed = false
+      prompt.test_cases.only_static.each do |test_case|
+        this_result = test_case.apply_static_check(answer)
+        if this_result
+          if !static_screening_failed
+            result = this_result
+            static_screening_failed = true
+            answer.error = result
+          end
+        end
+      end
 
-      if language == "Java"
-        result = execute_javatest(
-          prompt.class_name, attempt_dir, pre_lines, answer_lines)
-      elsif language == "Ruby"
-        result = execute_rubytest(
-          prompt.class_name, attempt_dir, pre_lines, answer_lines)
-      elsif language == "Python"
-        result = execute_pythontest(
-          prompt.class_name, attempt_dir, pre_lines, answer_lines)
-      end # IF INNERMOST
+      if !static_screening_failed
+        case language
+        when 'Java'
+          result = execute_javatest(
+            prompt.class_name, attempt_dir, pre_lines, answer_lines)
+        when 'Ruby'
+          result = execute_rubytest(
+            prompt.class_name, attempt_dir, pre_lines, answer_lines)
+        when 'Python'
+          result = execute_pythontest(
+            prompt.class_name, attempt_dir, pre_lines, answer_lines)
+        end
+      end
 
       correct = 0.0
       total = 0.0
-      correct = 0.0
-      total = 0.0
-      answer =
-        attempt.prompt_answers.where(prompt: prompt.acting_as).first.specific
-      if !File.exist?(attempt_dir + '/results.csv')
+      if static_screening_failed || !File.exist?(attempt_dir + '/results.csv')
         answer.error = result
-        # puts "CODE-ERROR-FEEDBACK", answer.error, "CODE-ERROR-FEEDBACK"
         total = 1.0
         answer.save
       else
+        screening_failed = false
         CSV.foreach(attempt_dir + '/results.csv') do |line|
           # find test id
-          test_id = line[2][/\d+/].to_i
+          test_id = line[2][/\d+$/].to_i
           test_case = prompt.test_cases.where(id: test_id).first
-          correct += test_case.record_result(answer, line)
-          total += test_case.weight
+          tc_score = test_case.record_result(answer, line)
+          if test_case.screening?
+            tcr = TestCaseResult.find(attempt: attempt, test_case: test_case).first
+            if !tcr.pass?
+              screening_failed = true
+              correct = 0.0
+            end
+          else
+            if !screening_failed
+              correct += tc_score
+            end
+            total += test_case.weight
+          end
         end  # CSV end
       end
       multiplier = 1.0
@@ -120,8 +146,14 @@ class CodeWorker
 
   # -------------------------------------------------------------
   def execute_javatest(class_name, attempt_dir, pre_lines, answer_lines)
-    cmd = CodeWorkout::Config::JAVA[:ant_cmd] % {attempt_dir: attempt_dir}
-    system(cmd + '>> err.log 2>> err.log')
+    if CodeWorkout::Config::JAVA.key? :daemon_url
+      url = CodeWorkout::Config::JAVA[:daemon_url] % {attempt_dir: attempt_dir}
+      response = Net::HTTP.get_response(URI.parse(url))
+      puts "%{url} => response %{response.code}"
+    else
+      cmd = CodeWorkout::Config::JAVA[:ant_cmd] % {attempt_dir: attempt_dir}
+      system(cmd + '>> err.log 2>> err.log')
+    end
 
     # Parse compiler output for error messages to determine success
     error = ''
@@ -132,20 +164,14 @@ class CodeWorker
       compile_out = File.foreach(logfile) do |line|
         line.chomp!
         # puts "checking line: #{line}"
-        m = /^\s*\[javac\]\s/.match(line)
-        if m
-          line = m.post_match
-        else
-          break
-        end
-        # puts "javac output: #{line}"
-        if line =~ /^Compiling/
-          next
-        elsif line =~ /^\S+\.java:\s*([0-9]+)\s*:\s*(?:warning:\s*)?(.*)/
+        if line =~ /^\S+\.java:\s*([0-9]+)\s*:\s*(?:warning:\s*)?(.*)/
           line_no = $1.to_i - pre_lines
           if line_no > answer_lines
             line_no = answer_lines
             xtra = ', maybe a missing delimiter or closing brace?'
+          end
+          if !error.blank?
+            error += '. '
           end
           error += "line #{line_no}: #{$2}#{xtra}"
           # puts "error now: #{error}"
@@ -170,6 +196,7 @@ class CodeWorker
         end
       end
     end
+
     if error.blank?
       error = nil
     else

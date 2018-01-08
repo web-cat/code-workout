@@ -170,6 +170,8 @@ class WorkoutOffering < ActiveRecord::Base
     now = Time.zone.now
     deadline = ultimate_deadline
     x = deadline && now > ultimate_deadline
+    # FIXME: broken kludge
+    x && !workout_policy.andand.no_review_before_close
 #    puts "\n\n\n\nshutdown? = #{x}\n#{caller}\n\n\n\n"
     x
   end

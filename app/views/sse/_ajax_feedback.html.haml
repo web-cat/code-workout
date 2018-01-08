@@ -51,19 +51,19 @@
       %tbody
         - answer.test_case_results(true).each do |tcr|
           %tr
-            %td
-              - description = tcr.display_description
-              = description
-              - if !tcr.pass
-                - if !description.blank? && !description.include?('hidden')
-                  %br
-                  .out= tcr.execution_feedback
             - if tcr.pass
               %td.pass
                 %i.fa.fa-check-square
             - else
               %td.fail
                 %i.fa.fa-minus-square
+            %td
+              - description = tcr.display_description
+              = description
+              - if !tcr.pass
+                - if !tcr.test_case.hidden?
+                  %br
+                  .out= tcr.execution_feedback
   - else
     - examples = @exercise_version.prompts.first.specific.examples
     %table.table.table-striped.feedback
@@ -80,7 +80,7 @@
                   - description = tcr.display_description
                   = description
                   - if !tcr.pass
-                    - if !description.blank? && !description.include?('hidden')
+                    - if !tcr.test_case.hidden?
                       %br
                       .out= tcr.execution_feedback
                 - if tcr.pass

@@ -4,7 +4,7 @@ environment rails_env
 
 # For MRI, use workers instead of threads for greater parallelism
 if rails_env == 'production'
-  workers 20
+  workers 10
   threads 2, 2
   daemonize
   preload_app!

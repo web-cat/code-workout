@@ -28,7 +28,11 @@
       - @workout_scores.each do |user_score|
         %tr
           %td= user_score.workout.name
-          %td= user_score.score
+          - score = user_score.andand.score
+          - if score && user_score.show_feedback?
+            %td= score
+          - else
+            %td.textblur -/-
 
 %br
 
