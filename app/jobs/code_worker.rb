@@ -95,9 +95,7 @@ class CodeWorker
       total = 0.0
       if static_screening_failed || !File.exist?(attempt_dir + '/results.csv')
         answer.error = result
-        puts "setting error text to: #{answer.error}"
         total = 1.0
-        puts "saving answer"
         answer.save
       else
         screening_failed = false

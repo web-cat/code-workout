@@ -14,16 +14,6 @@ CodeWorkout::Application.routes.draw do
   get 'home/new_course_modal', as: :new_course_modal
   get 'home/python_ruby_modal', as: :python_ruby_modal
 
-  get 'static_pages/home'
-  get 'static_pages/help'
-  get 'static_pages/mockup1'
-  get 'static_pages/mockup2'
-  get 'static_pages/mockup3'
-  get 'static_pages/typography'
-  get 'static_pages/thumbnails'
-
-  get 'help/exercise_format'
-
   # routes anchored at /admin
   # First, we have to override some of the ActiveAdmin auto-generated
   # routes, since our user ids and file ids use restricted characters
@@ -181,6 +171,10 @@ CodeWorkout::Application.routes.draw do
     post '/login' => 'devise/sessions#create', as: :user_session
     delete '/logout' => 'devise/sessions#destroy', as: :destroy_user_session
   end
+
+  get 'help' => 'help#index'
+  match 'help/:action', to: 'help', via: [:get]
+  match 'static_pages/:action', to: 'static_pages', via: [:get]
 
 end
 

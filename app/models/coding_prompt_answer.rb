@@ -55,7 +55,11 @@ class CodingPromptAnswer < ActiveRecord::Base
     if lang
       regex = REMOVE_COMMENTS_REGEX[lang]
       if regex
-        result = result.gsub(regex, '')
+        # Replace all comments with just the line endings in the
+        # comments, in order to preserve line numbering
+        result.gsub!(regex) do |cmt|
+          cmt.scan(/\n/).join('')
+        end
       end
     end
     return result
