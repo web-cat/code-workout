@@ -79,9 +79,10 @@ class TestCase < ActiveRecord::Base
     required_min_count = 1
     required_max_count = nil
     if self.expected_output.blank? ||
-      self.expected_output =~ /^\s*(true|yes|present|found)\s*$/i
+      self.expected_output =~ /^\s*(required|true|yes|present|found)\s*$/i
       required_min_count = 1
-    elsif self.expected_output =~ /^\s*(false|no|absent|not\s*found)\s*$/i
+    elsif self.expected_output =~
+      /^\s*(prohibited|false|no|absent|not\s*found)\s*$/i
       required_min_count = 0
       required_max_count = 0
     elsif self.expected_output =~ /^\s*([0-9]+)\s*$/
@@ -98,15 +99,38 @@ class TestCase < ActiveRecord::Base
     end
     options = nil
     regex = self.input
+    if regex =~ /^\s*loop(s?)\s*$/i
+      regex = 'keywords:for,while,do'
+    elsif regex =~ /^\s*list(s?)\s*$/i
+      regex = 'classes:List,ArrayList,LinkedList'
+    elsif regex =~ /^\s*map(s?)\s*$/i
+      regex = 'classes:Map,HashMap,TreeMap'
+    elsif regex =~ /^\s*set(s?)\s*$/i
+      regex = 'classes:Set,HashSet,TreeSet'
+    elsif regex =~ /^\s*array(s?)\s*$/i
+      regex = '/\[[^\]]*\]/'
+    elsif regex =~ /^\s*recursion\s*$/i
+      regex = 'self method:' + self.coding_prompt.method_name
+      puts "\n\n\n\n===================="
+      puts "recursion: translated = #{regex}"
+    end
     nresp = self.negative_feedback
     nresp_operator = 'use'
     if regex =~ /^\s*keyword(s?)\s*:\s*/
       regex = '\b(' + to_choices(regex, /^\s*keyword(s?)\s*:\s*/) + ')\b'
     elsif regex =~ /^\s*class(es)?\s*:\s*/
       regex = '\b(' + to_choices(regex, /^\s*class(es)?\s*:\s*/) + ')\b'
-    elsif regex =~ /^\s*method(s?)\s*:\s*/
-      regex = '(?<!\bthis)\s*\.\s*(' +
-        to_choices(regex, /^\s*method(s?)\s*:\s*/) + ')\s*\('
+    elsif regex =~ /^\s*(?:(library|self)\s+)?method(s?)\s*:\s*/
+      internal = ($1 == 'self')
+      regex = regex.gsub(/\s*\([^\)]*\)/, '')
+      regex = to_choices(regex, /^\s*(?:(library|self)\s+)?method(s?)\s*:\s*/) + ')\s*\('
+      if internal
+        regex = '\b((this|super)\s*\.\s*|)(' + regex
+      else
+        regex = '(?<!\bthis|\bsuper)\s*\.\s*(' + regex
+      end
+      puts "  regex = #{regex}"
+      puts "====================\n\n\n\n"
     elsif regex.start_with? '/'
       nresp_operator = 'contain'
       last = regex.rindex('/')
@@ -116,8 +140,16 @@ class TestCase < ActiveRecord::Base
       regex = regex[1..last]
     end
     actual_count = 0
+    first_occurrence_line = nil
+    last_occurrence_line = nil
     if !code.blank?
-      actual_count = code.scan(Regexp.new(regex, options)).size
+      code.scan(Regexp.new(regex, options)) do |hit|
+        actual_count += 1
+        last_occurrence_line = $`.lines.count
+        if first_occurrence_line.nil?
+          first_occurrence_line = last_occurrence_line
+        end
+      end
     end
     if actual_count < required_min_count
       passed = false
@@ -132,8 +164,10 @@ class TestCase < ActiveRecord::Base
       if nresp.blank?
         nresp = 'Answer cannot ' + nresp_operator + ' ' + self.input
         if required_max_count > 0
-          nresp = nresp + ' more than ' + required_max_count +
-            ' ' + 'time'.pluralize(required_max_count)
+          nresp = "line #{last_occurrence_line}: " + nresp + ' more than ' +
+            required_max_count + ' ' + 'time'.pluralize(required_max_count)
+        else
+          nresp = "line #{first_occurrence_line}: " + nresp
         end
       end
     else
@@ -238,11 +272,24 @@ class TestCase < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def to_code(language)
+    inp = self.input
+    if !inp.blank?
+      # TODO: need to fix this to handle nested parens appropriately
+      inp.gsub!(/map\([^()]*\)/) do |map_expr|
+        map_expr.split(/"/).map.with_index{ |x, i|
+          if i % 2 == 0
+            x.gsub(/\s*=(>?)\s*/, ', ')
+          else
+            x
+          end
+        }.join('"')
+      end
+    end
     TEST_METHOD_TEMPLATES[language] % {
       id: self.id.to_s,
       method_name: coding_prompt.method_name,
       class_name: coding_prompt.class_name,
-      input: self.input,
+      input: inp,
       expected_output: self.expected_output,
       negative_feedback: self.negative_feedback,
       array: ((self.expected_output.start_with?('new ') &&
@@ -306,7 +353,7 @@ class TestCase < ActiveRecord::Base
   private
 
   def to_choices(str, regex)
-    str.sub(regex, '').tr(',', ' ').strip.split(/\s+/).join('|')
+    str.sub(regex, '').tr(',', ' ').strip.split(/\s+/).uniq.join('|')
   end
 
 
