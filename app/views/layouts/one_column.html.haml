@@ -1,6 +1,14 @@
-- if @lti_launch
-  = inside_layout 'header' do
-    = render partial: 'layouts/one_column_body'
-- else
-  = inside_layout do
-    = render partial: 'layouts/one_column_body'
+= inside_layout do
+  .max-height#main
+    .scrollable.max-height.content
+      .inner.max-height
+        .below-nav
+          = render partial: 'layouts/flash'
+          .container
+            - if controller_name.eql?('workouts') && ['new', 'edit', 'clone'].include?(action_name)
+              .row
+                = render partial: 'layouts/sidebar'
+              .row
+                = yield
+            - else
+              = yield
