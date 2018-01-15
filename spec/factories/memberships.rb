@@ -1,3 +1,4 @@
+<<<<<<< 9044d3db329f8e33128a87b26521bc44a948f1b8
 # == Schema Information
 #
 # Table name: memberships
