@@ -11,9 +11,9 @@
 #  updated_at  :datetime
 #
 
-# Read about factories at https://github.com/thoughtbot/factory_girl
+# Read about factories at https://github.com/thoughtbot/factory_bot
 
-FactoryGirl.define do
+FactoryBot.define do
   factory :license_policy do
     name "MyString"
     description "MyText"

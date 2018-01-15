@@ -21,9 +21,9 @@
 #  index_test_cases_on_coding_prompt_id  (coding_prompt_id)
 #
 
-# Read about factories at https://github.com/thoughtbot/factory_girl
+# Read about factories at https://github.com/thoughtbot/factory_bot
 
-FactoryGirl.define do
+FactoryBot.define do
   factory :test_case do
     test_script "MyString"
     negative_feedback "MyText"

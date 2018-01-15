@@ -16,7 +16,7 @@
 #  index_choices_on_multiple_choice_prompt_id  (multiple_choice_prompt_id)
 #
 
-FactoryGirl.define do
+FactoryBot.define do
   factory :choice do
     answer 'A choice'
     value 0.0

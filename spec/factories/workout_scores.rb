@@ -24,9 +24,9 @@
 #  workout_scores_workout_offering_id_fk  (workout_offering_id)
 #
 
-# Read about factories at https://github.com/thoughtbot/factory_girl
+# Read about factories at https://github.com/thoughtbot/factory_bot
 
-FactoryGirl.define do
+FactoryBot.define do
   factory :workout_score do
     score ""
     completed false

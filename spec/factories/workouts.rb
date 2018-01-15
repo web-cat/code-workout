@@ -20,9 +20,9 @@
 #  workouts_creator_id_fk         (creator_id)
 #
 
-# Read about factories at https://github.com/thoughtbot/factory_girl
+# Read about factories at https://github.com/thoughtbot/factory_bot
 
-FactoryGirl.define do
+FactoryBot.define do
   factory :workout do
     name 'Workout from Factory'
     scrambled true
@@ -33,15 +33,15 @@ FactoryGirl.define do
 
     factory :workout_with_exercises do
       after :create do |w|
-        FactoryGirl.create :exercise_workout,
+        FactoryBot.create :exercise_workout,
           workout_id: w.id,
-          exercise: FactoryGirl.create(:coding_exercise)
-        FactoryGirl.create :exercise_workout,
+          exercise: FactoryBot.create(:coding_exercise)
+        FactoryBot.create :exercise_workout,
           workout_id: w.id,
-          exercise: FactoryGirl.create(:mc_exercise)
-        FactoryGirl.create :exercise_workout,
+          exercise: FactoryBot.create(:mc_exercise)
+        FactoryBot.create :exercise_workout,
           workout_id: w.id,
-          exercise: FactoryGirl.create(:coding_exercise)
+          exercise: FactoryBot.create(:coding_exercise)
       end
     end
   end
