@@ -37,7 +37,7 @@
 #  index_users_on_time_zone_id              (time_zone_id)
 #
 
-FactoryGirl.define do
+FactoryBot.define do
 
  factory :user do
    first_name 'Joe'

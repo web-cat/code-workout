@@ -20,14 +20,14 @@
 #  index_exercise_collections_on_user_id             (user_id)
 #
 
-# Read about factories at https://github.com/thoughtbot/factory_girl
+# Read about factories at https://github.com/thoughtbot/factory_bot
 
-FactoryGirl.define do
+FactoryBot.define do
   factory :exercise_collection do
     factory :group_owned_collection do
       name "MCQExercises"
       description "Collection of multiple choice exercises." \
-        "Created by FactoryGirl for testing."
+        "Created by FactoryBot for testing."
     end
     factory :user_owned_collection do
       name "Owned by user"

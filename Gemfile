@@ -58,7 +58,7 @@ group :development, :test do
   gem 'pry'
   gem 'request-log-analyzer'
 end
-gem 'factory_girl_rails'
+gem 'factory_bot_rails'
 gem 'log_file'
 
 group :test do

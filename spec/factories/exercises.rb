@@ -26,7 +26,7 @@
 #  index_exercises_on_is_public               (is_public)
 #
 
-FactoryGirl.define do
+FactoryBot.define do
   sequence :exercise_no, 1
   factory :exercise do
     ignore do
@@ -73,11 +73,11 @@ FactoryGirl.define do
       style_list 'code writing'
 
       after :create do |e, v|
-        e.current_version = FactoryGirl.create :exercise_version,
+        e.current_version = FactoryBot.create :exercise_version,
           exercise: e,
           creator_id: v.creator_id
         e.exercise_versions << e.current_version
-        FactoryGirl.create :coding_prompt,
+        FactoryBot.create :coding_prompt,
           exercise_version: e.current_version,
           question: v.question,
           feedback: v.feedback,
@@ -105,11 +105,11 @@ FactoryGirl.define do
       style_list 'forced choice'
 
       after :create do |e, v|
-        e.current_version = FactoryGirl.create :exercise_version,
+        e.current_version = FactoryBot.create :exercise_version,
           exercise: e,
           creator_id: v.creator_id
         e.exercise_versions << e.current_version
-        FactoryGirl.create :mc_with_choices,
+        FactoryBot.create :mc_with_choices,
           exercise_version: e.current_version,
           question: v.question,
           feedback: v.feedback

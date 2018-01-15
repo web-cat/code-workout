@@ -23,9 +23,9 @@
 #  index_attempts_on_workout_score_id     (workout_score_id)
 #
 
-# Read about factories at https://github.com/thoughtbot/factory_girl
+# Read about factories at https://github.com/thoughtbot/factory_bot
 
-FactoryGirl.define do
+FactoryBot.define do
   factory :attempt do
     user 1
     exercise 1

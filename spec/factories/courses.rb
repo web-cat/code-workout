@@ -20,7 +20,7 @@
 #  index_courses_on_user_group_id    (user_group_id)
 #
 
-FactoryGirl.define do
+FactoryBot.define do
 
   factory :course do
     name "Introduction to Software Design"
