@@ -1,3 +1,4 @@
+<<<<<<< 9044d3db329f8e33128a87b26521bc44a948f1b8
 # == Schema Information
 #
 # Table name: memberships
@@ -8,10 +9,9 @@
 #  created_at    :datetime
 #  updated_at    :datetime
 #
+# Read about factories at https://github.com/thoughtbot/factory_bot
 
-# Read about factories at https://github.com/thoughtbot/factory_girl
-
-FactoryGirl.define do
+FactoryBot.define do
   factory :membership do
   end
 end

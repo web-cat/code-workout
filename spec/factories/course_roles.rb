@@ -11,9 +11,9 @@
 #  builtin                    :boolean          default(FALSE), not null
 #
 
-# Read about factories at https://github.com/thoughtbot/factory_girl
+# Read about factories at https://github.com/thoughtbot/factory_bot
 
-FactoryGirl.define do
+FactoryBot.define do
   factory :course_role do
     name "Test Role"
     can_manage_course false

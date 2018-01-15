@@ -20,7 +20,7 @@
 #  index_exercise_versions_on_stem_id      (stem_id)
 #
 
-FactoryGirl.define do
+FactoryBot.define do
   factory :exercise_version do
   end
 end

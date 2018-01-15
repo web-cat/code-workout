@@ -18,9 +18,9 @@
 #  index_test_case_results_on_user_id                  (user_id)
 #
 
-# Read about factories at https://github.com/thoughtbot/factory_girl
+# Read about factories at https://github.com/thoughtbot/factory_bot
 
-FactoryGirl.define do
+FactoryBot.define do
   factory :test_case_result do
     test_case_id 1
     user_id 1

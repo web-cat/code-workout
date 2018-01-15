@@ -20,7 +20,7 @@
 #  index_course_offerings_on_term_id          (term_id)
 #
 
-FactoryGirl.define do
+FactoryBot.define do
 
   factory :course_offering do
     course_id 1
