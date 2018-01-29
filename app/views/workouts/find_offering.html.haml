@@ -1,4 +1,4 @@
-= inside_layout 'header' do
+= inside_layout do
   = javascript_tag do
     window.codeworkout = window.codeworkout || {}
     window.codeworkout.lms_assignment_id = "#{@lms_assignment_id}"
@@ -24,7 +24,7 @@
             %a{ data: { practice_url: practice_url, course_offering_id: o.id, user_id: current_user.id }, class: 'workout-offering list-group-item action' }
               = o.display_name_with_term
           - else
-            %a{ data: { workout_name: params[:workout_name], course_offering_id: o.id, user_id: current_user.id }, class: 'course-offering list-group-item action' }
+            %a{ data: { workout_name: params[:workout_name], course_offering_id: o.id, user_id: current_user.id, from_collection: params[:from_collection] }, class: 'course-offering list-group-item action' }
               = o.display_name_with_term
 
       %p.text.text-danger
