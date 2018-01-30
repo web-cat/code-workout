@@ -272,10 +272,9 @@ class ExercisesController < ApplicationController
     if !hash.kind_of?(Array)
       hash = [hash]
     end
-
+    
     exercises = ExerciseRepresenter.for_collection.new([]).from_hash(hash)
     exercises.each do |e|
-      puts e
       if !e.save
         errors = []
         errors <<  "Cannot save exercise:<ul>" 
