@@ -34,6 +34,16 @@ class UsersController < InheritedResources::Base
     end
   end
 
+  def show
+    @user = User.find params[:id]
+    @workout_scores = @user.workout_scores.select{ |ws|
+      if ws.workout_offering
+        ws.workout_offering.can_be_seen_by?(@user)
+      else
+        true
+      end
+    }
+  end
 
   #~ Private instance methods .................................................
   private

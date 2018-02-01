@@ -3,7 +3,8 @@ COURSE = '#course'
 
 $(document).ready ->
   $('#term_id').change ->
-    window.location.href = '?term_id=' + $('#term_id').val()
+    enrolled = $('#enrolled').val()
+    window.location.href = "?enrolled=#{enrolled}&term_id=" + $('#term_id').val()
 
 $('.organizations.new_or_existing').ready ->
   setup_autocomplete '/organizations/search', ORGANIZATION
@@ -69,7 +70,9 @@ get_abbr_suggestion = (org_name)->
     data: { name: org_name }
     success: (data)->
       if data['abbr']
-        $('#abbr').attr 'placeholder', data['abbr']
+        # $('#abbr').attr 'placeholder', data['abbr']
+        $('#abbr').val(data['abbr'])
+        validate_org_slug(data['abbr'])
       else
         $('#org-hint').text data['msg']
 
@@ -78,6 +81,7 @@ validate_org_slug = (term)->
   uniqueness = $('#uniqueness')
   uniqueness.removeClass()
   if term == ''
+    $('#org-hint').text("This is a required field")
     uniqueness.addClass 'fa fa-times-circle text-danger'
     return false
   else
@@ -97,7 +101,7 @@ validate_org_slug = (term)->
           uniqueness.addClass 'fa fa-times-circle text-danger'
           org_name = data['name']
           msg = "Sorry, that abbreviation is being used by #{org_name}."
-          $('#org-hint').text msg
+          $('#org-hint').text(msg)
           return false
 
 validate_name = (name, field)->
@@ -120,7 +124,11 @@ validate_course_number = (number)->
     ([0-9]{3,})     # followed by 3 or more digits
   $ ///             # end of line
 
-  if number != '' and number.match(r)
+  if number == ''
+    $('#course-valid').removeClass()
+    $('#course-valid').addClass 'fa fa-times-circle text-danger'
+    $('#course-hint').html('This is a required field.') 
+  else if number.match(r)
     $('#course-valid').removeClass().addClass('fa fa-spinner')
     $('#course-hint').empty()
     slug = number.toLowerCase()

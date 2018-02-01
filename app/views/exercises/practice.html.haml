@@ -3,6 +3,7 @@
 
 - if @user_deadline
   = javascript_include_tag('timeout')
+= javascript_include_tag("two_column_layout")
 = javascript_include_tag("practice")
 .col-md-7#user-deadline{ data: { deadline: @user_deadline, server_now: @server_now } }
   = semantic_form_for @exercise_version,
@@ -74,7 +75,7 @@
       - elsif prompt.is_coding?
         - coding_questions = true
         - examples = prompt.examples
-        - if examples.any?
+        - if !prompt.hide_examples && examples.any?
           %p Examples:
           %pre.examples
             - examples.each do |example|
@@ -110,19 +111,19 @@
 
       - if @workout_offering && params[:review_user_id].nil?
         = button_link 'Next exercise',
-          organization_workout_offering_practice_path(exercise_id: @workout.next_exercise(@exercise, current_user, nil),
+          organization_workout_offering_practice_path(exercise_id: @workout.next_exercise(@exercise),
           organization_id: @workout_offering.course_offering.course.organization.slug,
           course_id: @workout_offering.course_offering.course.slug,
           term_id: @workout_offering.course_offering.term.slug,
           id: @workout_offering.id,
           lti_launch: @lti_launch),
-          class: 'btn btn-info btn-next', id: 'nextbtn'
-      - elsif @workout && params[:review_user_id].nil?
+          class: 'btn btn-default btn-next', id: 'nextbtn'
+      - elsif @workout && params[:review_user_id].nil? && @workout.exercise_workouts.size > 1
         = button_link 'Next exercise',
-          exercise_practice_path(@workout.next_exercise(@exercise, current_user, @workout_score), workout_id: @workout.id, lti_launch: @lti_launch),
+          exercise_practice_path(@workout.next_exercise(@exercise), workout_id: @workout.id, lti_launch: @lti_launch),
           class: 'btn btn-info btn-next', id: 'nextbtn'
 
-    - if @workout.nil?
+    - if @workout.nil? && !@lti_launch
       %br
       = link_to "Practice a different #{@exercise.language} exercise",     |
         (@exercise.language ?                                              |

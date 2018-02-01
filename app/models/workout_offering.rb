@@ -63,7 +63,11 @@ class WorkoutOffering < ActiveRecord::Base
 
   # -----------------------------------------------------------------
   def score_for(user)
-    workout_scores.where(user: user).order('updated_at DESC').first
+    if user.nil?
+      return nil
+    else
+      workout_scores.where(user: user).order('updated_at DESC').first
+    end
   end
 
 
@@ -131,6 +135,7 @@ class WorkoutOffering < ActiveRecord::Base
     course_offering.is_staff?(user) ||
       (((opens == nil) || (opens <= now)) &&
       course_offering.is_enrolled?(user) &&
+      published &&
       (uscore == nil ||
       !uscore.closed? ||
       !workout_policy.andand.no_review_before_close ||
@@ -165,6 +170,8 @@ class WorkoutOffering < ActiveRecord::Base
     now = Time.zone.now
     deadline = ultimate_deadline
     x = deadline && now > ultimate_deadline
+    # FIXME: broken kludge
+    x && !workout_policy.andand.no_review_before_close
 #    puts "\n\n\n\nshutdown? = #{x}\n#{caller}\n\n\n\n"
     x
   end
@@ -219,5 +226,29 @@ class WorkoutOffering < ActiveRecord::Base
 
       workout_score.recalculate_score!
     end
+  end
+
+  def organize_private_exercises
+    @course = self.course_offering.course
+    @user_group = @course.user_group
+    if !@user_group
+      @user_group = UserGroup.create(
+        course: @course,
+        name: @course.number,
+        description: "Privileged user for #{@course.display_name}"
+      )
+    end
+
+    @exercise_collection = @user_group.exercise_collection
+    if !@exercise_collection
+      @exercise_collection = ExerciseCollection.create(
+        name: "#{@course.display_name} exercises",
+        description: "Exercises commonly used in #{@course.number}",
+        user_group: @user_group
+      )
+    end
+
+    @exercises = self.workout.exercises.where(is_public: false)
+    @exercise_collection.add(@exercises.flatten)
   end
 end

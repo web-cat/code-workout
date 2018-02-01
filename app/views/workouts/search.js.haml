@@ -6,7 +6,7 @@ $('.search-results').empty();
   - @workouts.each do |term, workouts|
     $('.search-results').append("<p class='lead text-warning'>#{term.display_name}</p>")
     - workouts.in_groups_of(2, false) do |row|
-      $('.search-results').append("<div class='row'>#{escape_javascript(render row, user: current_user, new_or_existing: true, can_update: (can? :edit, row))}</div>")
+      $('.search-results').append("<div class='row'>#{escape_javascript(render row, user: current_user, lms_assignment_id: @lms_assignment_id, new_or_existing: true, can_update: (can? :edit, row),workout_name: params[:workout_name])}</div>")
 - else
   - @workouts.in_groups_of(2, false) do |row|
-    $('.search-results').append("#{escape_javascript(render row, user: current_user, new_or_existing: true, can_update: (can? :edit, row))}")
+    $('.search-results').append("#{escape_javascript(render row, user: current_user, new_or_existing: true, lms_assignment_id: @lms_assignment_id, can_update: (can? :edit, row), suggested_name: params[:suggested_name])}")

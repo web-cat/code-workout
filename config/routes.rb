@@ -14,16 +14,6 @@ CodeWorkout::Application.routes.draw do
   get 'home/new_course_modal', as: :new_course_modal
   get 'home/python_ruby_modal', as: :python_ruby_modal
 
-  get 'static_pages/home'
-  get 'static_pages/help'
-  get 'static_pages/mockup1'
-  get 'static_pages/mockup2'
-  get 'static_pages/mockup3'
-  get 'static_pages/typography'
-  get 'static_pages/thumbnails'
-
-  get 'help/exercise_format'
-
   # routes anchored at /admin
   # First, we have to override some of the ActiveAdmin auto-generated
   # routes, since our user ids and file ids use restricted characters
@@ -70,14 +60,15 @@ CodeWorkout::Application.routes.draw do
       as: :exercise_practice
     patch 'exercises/:id/practice' => 'exercises#evaluate',
       as: :exercise_evaluate
+		get 'exercises/:id/embed' => 'exercises#embed', as: :exercise_embed
     post 'exercises/search' => 'exercises#search', as: :exercises_search
     get 'exercises/query_data' => 'exercises#query_data', as: :exercises_query_data
-    get 'exercises/:id/download_data' => 'exercises#download_data', as: :exercise_download_data
+    get 'exercises/:id/download_attempt_data' => 'exercises#download_attempt_data', as: :download_exercise_attempt_data
     # At the bottom, so the routes above take precedence over existing ids
     resources :exercises
 
     # /gym/workouts ...
-    get  'workouts/embed' => 'workouts#embed'
+    get  'workouts/embed' => 'workouts#embed', as: :workout_embed
     get  'workouts/download' => 'workouts#download'
     get  'workouts/:id/add_exercises' => 'workouts#add_exercises'
     post 'workouts/link_exercises'  => 'workouts#link_exercises'
@@ -182,6 +173,10 @@ CodeWorkout::Application.routes.draw do
     post '/login' => 'devise/sessions#create', as: :user_session
     delete '/logout' => 'devise/sessions#destroy', as: :destroy_user_session
   end
+
+  get 'help' => 'help#index'
+  match 'help/:action', to: 'help', via: [:get]
+  match 'static_pages/:action', to: 'static_pages', via: [:get]
 
 end
 

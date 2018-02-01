@@ -30,7 +30,7 @@ class LtiController < ApplicationController
       end
 
       if @user.blank?
-        if params[:custom_canvas_user_login_id]
+        if params[:custom_canvas_user_login_id].andand.include?("@")
           email = params[:custom_canvas_user_login_id]
         else
           email = params[:lis_person_contact_email_primary]
@@ -71,13 +71,14 @@ class LtiController < ApplicationController
 
       @organization = @lms_instance.organization
       course_number = params[:custom_course_number] || params[:context_label].gsub(/[^a-zA-Z0-9 ]/, '')
-      term_slug = params[:custom_term]
-      course_name = params[:context_title]
-      course_slug = course_number.gsub(/[^a-zA-Z0-9]/, '').downcase
-      assignment_id = params[:ext_lti_assignment_id] || params[:custom_canvas_assignment_id]
-      lms_assignment_id = "#{@lms_instance.id}-#{assignment_id}"
-      workout_from_collection = false # are we serving a workout from a pre-existing collection? (like OpenDSA)
 
+			if params[:gym_exercise_id].present?
+				redirect_to exercise_embed_path(id: params[:gym_exercise_id]) and return
+			elsif params[:gym_workout_id].present?
+				redirect_to workout_embed_path(workout_id: params[:gym_workout_id]) and return
+			end
+
+      workout_from_collection = false # are we serving a workout from a pre-existing collection? (like OpenDSA)
       # Finding appropriate course offerings and workout offerings from the workout
       resource_link_title = params[:resource_link_title]
       if (/\A[0-9][0-9].[0-9][0-9].[0-9][0-9] -/ =~ resource_link_title).nil?
@@ -86,6 +87,16 @@ class LtiController < ApplicationController
         workout_name = resource_link_title[11..resource_link_title.length]
         workout_from_collection = true
       end
+
+      term_slug = params[:custom_term]
+      course_name = params[:context_title]
+      course_slug = course_number.gsub(/[^a-zA-Z0-9]/, '').downcase
+      ext_lti_assignment_id = params[:ext_lti_assignment_id]
+      custom_canvas_assignment_id = params[:custom_canvas_assignment_id]
+
+      persistent_courses = ['1230385', '1230176', '1230392']
+      dynamic_lms_assignment = params[:dynamic].to_b || (params[:custom_canvas_course_id] &&
+        persistent_courses.include?(params[:custom_canvas_course_id]))
 
       if @organization.blank?
         @message = 'Organization not found'
@@ -124,7 +135,10 @@ class LtiController < ApplicationController
         user_id: @user.id,
         course_id: @course.slug,
         is_instructor: @tp.context_instructor?,
-        lms_assignment_id: lms_assignment_id,
+        ext_lti_assignment_id: ext_lti_assignment_id,
+        custom_canvas_assignment_id: custom_canvas_assignment_id,
+        dynamic_lms_assignment: dynamic_lms_assignment,
+        lms_instance_id: @lms_instance.id,
         label: params[:custom_label], # can be nil
         lis_outcome_service_url: params[:lis_outcome_service_url],
         lis_result_sourcedid: params[:lis_result_sourcedid],

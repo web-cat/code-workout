@@ -31,4 +31,46 @@ class CodingPromptAnswer < ActiveRecord::Base
   # answer all prompts, and that would constitute an empty answer. We
   # want to allow that, so do not add validations preventing it.
 
+
+  #~ Instance methods .........................................................
+
+  # -------------------------------------------------------------
+  def execute_static_tests
+    result = nil
+    code = self.without_comments
+    self.test_cases.only_static.each do |test_case|
+      this_result = test_case.apply_static_check(self, code)
+      if !result && this_result
+        result = this_result
+      end
+    end
+    result
+  end
+
+
+  # -------------------------------------------------------------
+  def without_comments
+    result = answer
+    lang = prompt.specific.language
+    if lang
+      regex = REMOVE_COMMENTS_REGEX[lang]
+      if regex
+        # Replace all comments with just the line endings in the
+        # comments, in order to preserve line numbering
+        result.gsub!(regex) do |cmt|
+          cmt.scan(/\n/).join('')
+        end
+      end
+    end
+    return result
+  end
+
+
+  #~ Private instance methods .................................................
+  private
+
+    REMOVE_COMMENTS_REGEX = {
+      'Java' => /(\/\*([^*]|(\*+[^*\/]))*\*+\/)|(\/\/[^\r\n]*)/
+    }
+
 end

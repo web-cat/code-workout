@@ -45,4 +45,8 @@ tasks.todo
 
 .settings
 .byebug_history
+
+# ignore swap files
+*.swp
+*.swo
 /.idea/

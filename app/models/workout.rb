@@ -3,7 +3,7 @@
 # Table name: workouts
 #
 #  id                :integer          not null, primary key
-#  name              :string(255)      not null
+#  name              :string(255)      default(""), not null
 #  scrambled         :boolean          default(FALSE)
 #  created_at        :datetime
 #  updated_at        :datetime
@@ -40,9 +40,9 @@ class Workout < ActiveRecord::Base
 
   acts_as_taggable_on :tags, :languages, :styles
 	has_many :exercise_workouts,
-	  -> { includes(:exercise).order("'position' ASC") },
+	  -> { includes(:exercise).order('position ASC') },
 	  inverse_of: :workout, dependent: :destroy
-  has_many :exercises, through:  :exercise_workouts
+  has_many :exercises, through: :exercise_workouts
 	has_many :workout_scores, inverse_of: :workout, dependent: :destroy
   has_many :users, through: :workout_scores
   has_many :attempts
@@ -142,38 +142,25 @@ class Workout < ActiveRecord::Base
   end
 
 
+   # ------------------------------------------------------------
+  def first_exercise
+    exercise_workouts.first.exercise
+  end
+
+
   # ------------------------------------------------------------
-  def next_exercise(ex, user, workout_score)
-    if user.nil?
-      puts "Invalid USER"
-    end
-
-    if workout_score.nil?
-      workout_score = score_for(user)
-    end
-
-    position = 0
+  def next_exercise(ex)
+    ew = nil
     if ex
-      exw = exercise_workouts.where(exercise: ex).first
-      if exw
-        position = exw.position
-      end
+      ew = exercise_workouts.where(exercise: ex).first
     end
-    candidate = nil
-    exercise_workouts.each do |x|
-      if candidate.nil? ||
-        (candidate.position <= position && x.position > position)
-        attempt = Attempt.user_attempt(
-          user, x.exercise.current_version, workout_score)
-        if attempt.nil? || attempt.score < x.points
-          candidate = x
-        end
-      end
+    if ew
+      ew = ew.lower_item
     end
-    if candidate.nil? && exercise_workouts.size > 0
-      candidate = exercise_workouts.first
+    if !ew
+      ew = exercise_workouts.first
     end
-    return candidate.exercise
+    return ew.andand.exercise
   end
 
 
@@ -227,6 +214,7 @@ class Workout < ActiveRecord::Base
     return [earned, remaining, gap, earned_per, remaining_per, gap_per]
   end
 
+
   # ----------------------------------------------------------------------------
   # Updates or creates offerings for this workout in the specified courses.
   # The common hash contains options for each offering that are common among them.
@@ -252,7 +240,9 @@ class Workout < ActiveRecord::Base
       workout_offering.soft_deadline = DateTime.strptime(offering['soft_deadline'].to_s, '%Q') if offering['soft_deadline'].present?
       workout_offering.hard_deadline = DateTime.strptime(offering['hard_deadline'].to_s, '%Q') if offering['hard_deadline'].present?
       workout_offering.workout_policy = common[:workout_policy]
-      workout_offering.lms_assignment_id = common[:lms_assignment_id]
+      if common[:lms_assignment_id].present?
+        workout_offering.lms_assignment_id = common[:lms_assignment_id]
+      end
       workout_offering.save!
       workout_offerings << workout_offering.id
       extensions = offering['extensions']
@@ -276,6 +266,8 @@ class Workout < ActiveRecord::Base
     return workout_offerings
   end
 
+
+  # -------------------------------------------------------------
   def deep_clone!
     clone = self.dup
     clone.save
@@ -286,6 +278,7 @@ class Workout < ActiveRecord::Base
 
     return clone
   end
+
 
   # -------------------------------------------------------------
   def score_for(user, workout_offering = nil)
@@ -358,24 +351,28 @@ class Workout < ActiveRecord::Base
       available_workouts.tagged_with(terms, any: true, wild: true, on: :styles) +
       available_workouts.where('name regexp (?)', split_terms).uniq
   end
-end
 
-private
 
-#helper to convert array to hash
-# duplicated from ArrayHelper for the moment
+  #~ Private instance methods .................................................
+  private
 
-# Converts an array of the form
-# [[k1, val1],[k2, val2]] to a hash of the form
-# { k1: val, k2: val2}
-# val1 and val2 can be inner arrays
-#----------------------------------
-def array_to_hash(a)
-  h = {}
-  a.each do |i|
-    key = i.first
-    value = i.last
-    h[key] = value
+  # -------------------------------------------------------------
+  # helper to convert array to hash
+  # duplicated from ArrayHelper for the moment
+
+  # Converts an array of the form
+  # [[k1, val1],[k2, val2]] to a hash of the form
+  # { k1: val, k2: val2}
+  # val1 and val2 can be inner arrays
+  #----------------------------------
+  def array_to_hash(a)
+    h = {}
+    a.each do |i|
+      key = i.first
+      value = i.last
+      h[key] = value
+    end
+    h
   end
-  h
+
 end

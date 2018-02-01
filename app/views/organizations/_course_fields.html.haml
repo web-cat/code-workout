@@ -21,12 +21,12 @@
     = label_tag :abbr, 'Course Number', class: 'control-label col-xs-3'
     .col-xs-2
       = text_field_tag :abbr, nil, id: 'number', class: 'form-control input-sm',
-        placeholder: "suggested: CS 3114"
+        placeholder: "example: CS 3114"
     .col-xs-1
       %i#course-valid.fa.fa-question-circle{ aria_hidden: 'true' }
     %small#course-hint.text.text-warning
 
-  .form-group.new-course
+  .form-group.new-course{ style: 'display: none' }
     = label_tag :is_hidden, 'Hide Course?', class: 'control-label col-xs-3'
     .col-xs-1
       = check_box_tag 'is_hidden', 'is_hidden', false, id: 'course-is-hidden'

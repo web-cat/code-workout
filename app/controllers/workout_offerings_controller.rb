@@ -18,7 +18,7 @@ class WorkoutOfferingsController < ApplicationController
       @course = Course.find params[:course_id]
       @term = Term.find params[:term_id]
       @organization = Organization.find params[:organization_id]
-      @course_offering = CourseOffering.find_by @course, @term
+      @course_offering = CourseOffering.find_by course: @course, term: @term
       @exs = @workout.exercises
     end
     render 'workouts/show'
@@ -76,8 +76,15 @@ class WorkoutOfferingsController < ApplicationController
       session[:workout_feedback]['workout'] =
         "You have attempted Workout #{@workout_offering.workout.name}"
 
-      if !@lti_launch && @workout_offering.lms_assignment_id.present? &&
-          !current_user.manages?(@workout_offering.course_offering)
+      @workout_score = @workout_offering.score_for(current_user)
+
+      should_force_lti = !@lti_launch &&
+        @workout_offering.lms_assignment_id.present? &&
+        (@workout_score.nil? ||
+        @workout_score.lis_result_sourcedid.nil? ||
+        @workout_score.lis_outcome_service_url.nil?)
+
+      if should_force_lti && !current_user.manages?(@workout_offering.course_offering)
         @message = "This assignment must be accessed through your course's Learning Management System (like Canvas)."
         @redirect_url = @workout_offering.lms_assignment_url
         render 'lti/error' and return
@@ -85,7 +92,7 @@ class WorkoutOfferingsController < ApplicationController
 
       if current_user
         @workout_score = @workout_offering.score_for(current_user)
-        if @workout_score.nil?
+        if @workout_score.nil? && @workout_offering.can_be_practiced_by?(current_user)
           @workout_score = WorkoutScore.new(
             score: 0,
             exercises_completed: 0,
@@ -113,8 +120,7 @@ class WorkoutOfferingsController < ApplicationController
         end
       end
       if ex1.nil?
-        ex1 = @workout_offering.workout.next_exercise(
-          nil, current_user, @workout_score)
+        ex1 = @workout_offering.workout.first_exercise
       end
       redirect_to organization_workout_offering_exercise_path(
         id: ex1.id,
