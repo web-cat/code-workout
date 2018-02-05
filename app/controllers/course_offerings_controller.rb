@@ -252,7 +252,8 @@ class CourseOfferingsController < ApplicationController
       workout_name = params[:workout_name]
       @course_offering = CourseOffering.find params[:course_offering_id]
       workout_offering_options = {
-        lms_assignment_id: params[:lti_params][:lms_assignment_id]
+        lms_assignment_id: params[:lti_params][:lms_assignment_id],
+        from_collection: params[:from_collection]
       }
       @workout_offering = @course_offering.add_workout(workout_name, workout_offering_options)
     end

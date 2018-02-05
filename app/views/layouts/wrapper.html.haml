@@ -1,6 +1,6 @@
 = inside_layout 'header' do
-  - if !params[:lti_launch].to_b
+  - if !@lti_launch
     = render partial: 'layouts/navbar'
   = yield
-  - if !params[:lti_launch].to_b
+  - if !@lti_launch
     = render partial: 'layouts/footer'

@@ -171,7 +171,16 @@ class ExercisesController < ApplicationController
         exercise_dump << exercise
       end
     end
-    redirect_to exercise_practice_path(exercise_dump.sample) and return
+
+    if exercise_dump.any?
+      redirect_to exercise_practice_path(exercise_dump.sample) and return
+    else
+      filters = []
+      filters << "language #{params[:language]}" if params[:language]
+      filters << "question type #{Exercise::TYPE_NAMES[params[:question_type].to_i]}" if params[:question_type]
+      message = "Sorry, there are currently no public exercises #{filters.any? ? "with #{filters.to_sentence}." : "."}"
+      redirect_to root_path, notice: message and return
+    end
   end
 
 
@@ -263,24 +272,32 @@ class ExercisesController < ApplicationController
     if !hash.kind_of?(Array)
       hash = [hash]
     end
-
+    
     exercises = ExerciseRepresenter.for_collection.new([]).from_hash(hash)
     exercises.each do |e|
       if !e.save
-        # FIXME: Add these to alert message that can be sent back to user
-        puts 'cannot save exercise, name = ' + e.name.to_s +
-          ', external_id = ' + e.external_id.to_s + ': ' +
-          e.errors.full_messages.to_s
+        errors = []
+        errors <<  "Cannot save exercise:<ul>" 
+        e.errors.full_messages.each do |msg|
+          errors << "<li>#{msg}</li>"
+        end
+        
         if e.current_version
-          puts "    #{e.current_version.errors.full_messages.to_s}"
+          e.current_version.errors.full_messages.each do |msg|
+            errors << "<li>#{msg}</li>"
+          end
           if e.current_version.prompts.any?
-            puts "    #{e.current_version.prompts.first.errors.full_messages.to_s}"
+            e.current_version.prompts.first.errors.full_messages.each do |msg|
+              errors << "<li>#{msg}</li>"
+            end
           end
         end
+        errors << "</ul>"
+        redirect_to exercises_url, flash: { error: errors.join("").html_safe } and return
       end
     end
 
-    redirect_to exercises_url, notice: 'Exercise upload complete.'
+    redirect_to exercises_url, flash: { success: 'Exercise saved!' }
   end
 
 	def embed
