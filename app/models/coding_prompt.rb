@@ -165,9 +165,6 @@ class CodingPrompt < ActiveRecord::Base
         hidden: false,
         static: false,
         screening: false)
-      if tc.input && tc.input.include?(';')
-        tc.input = tc.input.gsub(/;\s*/, ', ')
-      end
       if !row[2].blank?
         tc.parse_description_specifier(row[2])
       end
