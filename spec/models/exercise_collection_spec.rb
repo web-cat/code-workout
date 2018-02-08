@@ -2,18 +2,22 @@
 #
 # Table name: exercise_collections
 #
-#  id            :integer          not null, primary key
-#  name          :string(255)
-#  description   :text
-#  user_group_id :integer
-#  license_id    :integer
-#  created_at    :datetime
-#  updated_at    :datetime
+#  id                 :integer          not null, primary key
+#  name               :string(255)
+#  description        :text
+#  user_group_id      :integer
+#  license_id         :integer
+#  created_at         :datetime
+#  updated_at         :datetime
+#  user_id            :integer
+#  course_offering_id :integer
 #
 # Indexes
 #
-#  index_exercise_collections_on_license_id     (license_id)
-#  index_exercise_collections_on_user_group_id  (user_group_id)
+#  index_exercise_collections_on_course_offering_id  (course_offering_id)
+#  index_exercise_collections_on_license_id          (license_id)
+#  index_exercise_collections_on_user_group_id       (user_group_id)
+#  index_exercise_collections_on_user_id             (user_id)
 #
 
 require 'spec_helper'

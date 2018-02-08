@@ -21,7 +21,7 @@
 # Indexes
 #
 #  index_workout_offerings_on_course_offering_id  (course_offering_id)
-#  index_workout_offerings_on_lms_assignment_id   (lms_assignment_id) UNIQUE
+#  index_workout_offerings_on_lms_assignment_id   (lms_assignment_id)
 #  index_workout_offerings_on_workout_id          (workout_id)
 #  index_workout_offerings_on_workout_policy_id   (workout_policy_id)
 #  workout_offerings_continue_from_workout_id_fk  (continue_from_workout_id)
