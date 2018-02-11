@@ -13,10 +13,13 @@
     options_for_select(Term.all.collect{ |t| [t.display_name, t.id] },
     @term.id),
     class: 'form-control inline'
+  
+  = hidden_field_tag 'enrolled', params[:enrolled].to_b
 
 - if @organizations.any?
   - @organizations.each do |organization|
-    - unless organization.is_hidden
+    - no_courses_to_show = organization.courses.where(is_hidden: false).blank?
+    - unless organization.is_hidden || no_courses_to_show 
       %h2= link_to organization.name, organization_path(organization)
 
       %ul
@@ -37,15 +40,16 @@
                   %th Enroll
                 %tbody
                   - course.course_offerings.each do |o|
-                    %tr
-                      %td= o.term.display_name
-                      %td= link_to o.display_name,
-                        organization_course_path(o.course.organization,
-                        o.course, o.term)
-                      %td!= o.instructors.map{ |i| link_to i.display_name,
-                        user_path(i) }.to_sentence
-                      %td= render partial: "course_offerings/self_enrollment",
-                        locals: { off: o }
+                    - if !params[:enrolled] || (params[:enrolled].to_b && current_user.andand.is_enrolled?(o))
+                      %tr
+                        %td= o.term.display_name
+                        %td= link_to o.display_name,
+                          organization_course_path(o.course.organization,
+                          o.course, o.term)
+                        %td!= o.instructors.map{ |i| link_to i.display_name,
+                          user_path(i) }.to_sentence
+                        %td= render partial: "course_offerings/self_enrollment",
+                          locals: { off: o }
 - else
   %p
     No organizations have courses offered in

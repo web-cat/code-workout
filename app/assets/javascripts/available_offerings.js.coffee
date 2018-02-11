@@ -21,6 +21,7 @@ $('.workouts.find_offering').ready ->
     course_offering_id = $(this).data 'course-offering-id'
     workout_name = $(this).data 'workout-name'
     user_id = $(this).data 'user-id'
+    from_collection = $(this).data 'from-collection'
     enroll_url = "/course_offerings/#{course_offering_id}/enroll"
     $.ajax
       url: enroll_url
@@ -31,6 +32,7 @@ $('.workouts.find_offering').ready ->
         wo_data =
           course_offering_id: course_offering_id,
           workout_name: workout_name
+          from_collection: from_collection
           lti_params:
             lms_assignment_id: window.codeworkout.lms_assignment_id
             lis_outcome_service_url: window.codeworkout.lis_outcome_service_url

@@ -689,8 +689,7 @@ class WorkoutsController < ApplicationController
             notice: "The time limit has passed for this workout." and return
         end
       end
-      ex1 = @workout.next_exercise(nil, current_user, @workout_score)
-      redirect_to exercise_practice_path(id: ex1.id, workout_id: @workout.id, lti_launch: params[:lti_launch])
+      redirect_to exercise_practice_path(@workout.first_exercise, workout_id: @workout.id, lti_launch: params[:lti_launch])
     else
       redirect_to workouts, notice: 'Workout not found' and return
     end

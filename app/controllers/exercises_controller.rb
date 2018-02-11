@@ -171,7 +171,16 @@ class ExercisesController < ApplicationController
         exercise_dump << exercise
       end
     end
-    redirect_to exercise_practice_path(exercise_dump.sample) and return
+
+    if exercise_dump.any?
+      redirect_to exercise_practice_path(exercise_dump.sample) and return
+    else
+      filters = []
+      filters << "language #{params[:language]}" if params[:language]
+      filters << "question type #{Exercise::TYPE_NAMES[params[:question_type].to_i]}" if params[:question_type]
+      message = "Sorry, there are currently no public exercises #{filters.any? ? "with #{filters.to_sentence}." : "."}"
+      redirect_to root_path, notice: message and return
+    end
   end
 
 
@@ -263,24 +272,32 @@ class ExercisesController < ApplicationController
     if !hash.kind_of?(Array)
       hash = [hash]
     end
-
+    
     exercises = ExerciseRepresenter.for_collection.new([]).from_hash(hash)
     exercises.each do |e|
       if !e.save
-        # FIXME: Add these to alert message that can be sent back to user
-        puts 'cannot save exercise, name = ' + e.name.to_s +
-          ', external_id = ' + e.external_id.to_s + ': ' +
-          e.errors.full_messages.to_s
+        errors = []
+        errors <<  "Cannot save exercise:<ul>" 
+        e.errors.full_messages.each do |msg|
+          errors << "<li>#{msg}</li>"
+        end
+        
         if e.current_version
-          puts "    #{e.current_version.errors.full_messages.to_s}"
+          e.current_version.errors.full_messages.each do |msg|
+            errors << "<li>#{msg}</li>"
+          end
           if e.current_version.prompts.any?
-            puts "    #{e.current_version.prompts.first.errors.full_messages.to_s}"
+            e.current_version.prompts.first.errors.full_messages.each do |msg|
+              errors << "<li>#{msg}</li>"
+            end
           end
         end
+        errors << "</ul>"
+        redirect_to exercises_url, flash: { error: errors.join("").html_safe } and return
       end
     end
 
-    redirect_to exercises_url, notice: 'Exercise upload complete.'
+    redirect_to exercises_url, flash: { success: 'Exercise saved!' }
   end
 
 	def embed
@@ -290,7 +307,7 @@ class ExercisesController < ApplicationController
       @message = 'Choose an exercise to embed!'
       render 'lti/error' and return
     end
-    
+
     redirect_to exercise_practice_path(id: @exercise.id, lti_launch: true) and return
 	end
 
@@ -454,8 +471,8 @@ class ExercisesController < ApplicationController
       @wexs = nil
     end
 
-		# decide whether or not to hide the sidebar 
-		# hide it if this workout (if present) has less than two exercises 
+		# decide whether or not to hide the sidebar
+		# hide it if this workout (if present) has less than two exercises
 		@workout ||= @workout_score.andand.workout || @workout_offering.andand.workout
 		ex_count = @workout.andand.exercises.andand.count
 		@hide_sidebar = (!@workout && @lti_launch) || (ex_count && ex_count < 2)
@@ -477,7 +494,7 @@ class ExercisesController < ApplicationController
   def evaluate
     @lti_launch = params[:lti_launch]
 
-    if params[:exercise_version_id] || params[:id]
+		if params[:exercise_version_id] || params[:id]
       set_exercise_from_params
     else
       @message = 'Choose an exercise to evaluate!'
@@ -541,7 +558,7 @@ class ExercisesController < ApplicationController
     elsif @workout
       @workout_score = @workout.score_for(@student_drift_user)
     end
-    if @workout_score.andand.closed? && @workout_offering.andand.can_be_practiced_by?(@student_drift_user)
+    if @workout_score.andand.closed? && !@workout_offering.andand.can_be_practiced_by?(@student_drift_user)
       p 'WARNING: attempt to evaluate exercise after time expired.'
       return
     end
@@ -631,7 +648,7 @@ class ExercisesController < ApplicationController
         flash.notice = "Your previous question's answer choice has been saved and scored"
         render :js => "window.location = '" +
           organization_workout_offering_practice_path(
-          exercise_id: @workout_score.workout.next_exercise(@exercise, @student_drift_user, nil),
+          exercise_id: @workout_score.workout.next_exercise(@exercise),
           organization_id: @workout_offering.course_offering.course.organization.slug,
           course_id: @workout_offering.course_offering.course.slug,
           term_id: @workout_offering.course_offering.term.slug,

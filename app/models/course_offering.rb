@@ -5,7 +5,7 @@
 #  id                      :integer          not null, primary key
 #  course_id               :integer          not null
 #  term_id                 :integer          not null
-#  label                   :string(255)      not null
+#  label                   :string(255)      default(""), not null
 #  url                     :string(255)
 #  self_enrollment_allowed :boolean
 #  created_at              :datetime
@@ -186,20 +186,27 @@ class CourseOffering < ActiveRecord::Base
   def add_workout(workout, workout_offering_options={})
     found_workout = nil
     if workout.kind_of?(String)
-      instructor = self.instructors.first
-      instructor_workout_offerings = instructor
-        .managed_workout_offerings_in_term(workout.downcase, self.course, self.term).flatten
-      found_workout = instructor_workout_offerings.first.andand.workout # same course and term, same workout
-      new_workout = found_workout # we use this instead of a clone, since it's a sister course_offering
-
+      if params[:from_collection].to_b
+        workouts = Workout.where('lower(name) = ?', params[:workout_name].downcase)
+        found_workout = workouts.andand.first
+        new_workout = found_workout # using a workout from a collection (like OpenDSA), so use the one you find
+      end
       if !found_workout
-        # no other offering this semester is offering the workout, so look in past semesters
+        instructor = self.instructors.first
         instructor_workout_offerings = instructor
-          .managed_workout_offerings_in_term(workout.downcase, self.course, nil).flatten
-        found_workout = instructor_workout_offerings.andand
-          .uniq{ |wo| wo.workout }.andand
-          .sort_by{ |wo| wo.course_offering.term.starts_on }.andand
-          .last.andand.workout
+          .managed_workout_offerings_in_term(workout.downcase, self.course, self.term).flatten
+        found_workout = instructor_workout_offerings.first.andand.workout # same course and term, same workout
+        new_workout = found_workout # we use this instead of a clone, since it's a sister course_offering
+
+        if !found_workout
+          # no other offering this semester is offering the workout, so look in past semesters
+          instructor_workout_offerings = instructor
+            .managed_workout_offerings_in_term(workout.downcase, self.course, nil).flatten
+          found_workout = instructor_workout_offerings.andand
+            .uniq{ |wo| wo.workout }.andand
+            .sort_by{ |wo| wo.course_offering.term.starts_on }.andand
+            .last.andand.workout
+        end
       end
 
       if !found_workout

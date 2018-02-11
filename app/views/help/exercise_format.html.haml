@@ -448,6 +448,11 @@
       first line represents a test that <code>factorial(1) == 1</code>. The
       second represents <code>factorial(3) == 6</code>.  The third represents
       <code>factorial(5) == 120</code>.
+    %p
+      By default, CodeWorkout will build a test description from the
+      input and output values that looks like this:
+    %pre.examples
+      factorial(3) -> 6
   .col-md-6
     %pre.examples
       :preserve
@@ -461,10 +466,53 @@
       An optional third column an be used to indicate
       example/hidden/static/screening status.
     %p
-      By default, CodeWorkout will build a test description from the
-      input and output values that looks like this:
+      "Static" tests allow checking of simple structural/textual properties
+      of solutions. The first (input) column specifies the pattern to check
+      for, and the second (expected output) column specifies whether the
+      pattern is required or prohibited. Static tests often are
+      also "screening" tests, which means answers will only receive credit
+      if the test passes (otherwise, the diagnostic is presented similar to
+      a compiler error).
+
+      In the example to the right,
+
+      Examples of static checks include:
     %pre.examples
-      factorial(3) -> 6
+      keyword: return
+      keywords: if, switch, else
+      class: Math
+      classes: List, ArrayList, LinkedList
+      method: toString()
+      methods: parseInt(), nextInt(), valueOf()
+      loops        // same as keywords:for,while,do
+      lists        // same as classes:List,ArrayList,LinkedList
+      maps         // same as classes:Map,HashMap,TreeMap
+      sets         // same as classes:Set,HashSet,TreeSet
+      arrays       // same as /\[[\]]*\]/
+      /any ruby regex/i
+    %p
+      The result/output of a static check can be specified in these ways:
+    %pre.examples
+      required
+      prohibited
+      present  // same as required
+      absent   // same as prohibited
+      true     // same as required
+      false    // same as prohibited
+      2        // required exactly 2 times
+      {1,3}    // must occur 1-3 times
+      {2,}     // must occur 2 or more times
+      {,3}     // must occur no more than 3 times
+  .col-md-6
+    %pre.examples
+      :preserve
+        Tests:
+        loops,prohibited,static:screening
+        1,1
+        3,6
+        5,120
+.row
+  .col-md-6
     %p
       The third column can also be used to provide a custom description
       that will be shown in place of the default description when showing
@@ -480,6 +528,7 @@
   .col-md-6
     %pre.examples
       :preserve
+        loops,prohibited,static:screening
         1,1,example
         3,6,example
         5,120,example: with a custom description

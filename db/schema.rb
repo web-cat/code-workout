@@ -16,8 +16,8 @@ ActiveRecord::Schema.define(version: 20170920191837) do
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
     t.text     "body"
-    t.string   "resource_id",   null: false
-    t.string   "resource_type", null: false
+    t.string   "resource_id",   default: "", null: false
+    t.string   "resource_type", default: "", null: false
     t.integer  "author_id"
     t.string   "author_type"
     t.datetime "created_at"
@@ -84,10 +84,11 @@ ActiveRecord::Schema.define(version: 20170920191837) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.string   "class_name"
-    t.text     "wrapper_code", null: false
-    t.text     "test_script",  null: false
+    t.text     "wrapper_code",                  null: false
+    t.text     "test_script",                   null: false
     t.string   "method_name"
     t.text     "starter_code"
+    t.boolean  "hide_examples", default: false, null: false
   end
 
   create_table "course_enrollments", force: true do |t|
@@ -112,9 +113,9 @@ ActiveRecord::Schema.define(version: 20170920191837) do
   add_index "course_exercises", ["exercise_id"], name: "course_exercises_exercise_id_fk", using: :btree
 
   create_table "course_offerings", force: true do |t|
-    t.integer  "course_id",               null: false
-    t.integer  "term_id",                 null: false
-    t.string   "label",                   null: false
+    t.integer  "course_id",                            null: false
+    t.integer  "term_id",                              null: false
+    t.string   "label",                   default: "", null: false
     t.string   "url"
     t.boolean  "self_enrollment_allowed"
     t.datetime "created_at"
@@ -127,13 +128,8 @@ ActiveRecord::Schema.define(version: 20170920191837) do
   add_index "course_offerings", ["lms_instance_id"], name: "index_course_offerings_on_lms_instance_id", using: :btree
   add_index "course_offerings", ["term_id"], name: "index_course_offerings_on_term_id", using: :btree
 
-  create_table "course_offerings_workouts", id: false, force: true do |t|
-    t.integer "course_offering_id", null: false
-    t.integer "workout_id",         null: false
-  end
-
   create_table "course_roles", force: true do |t|
-    t.string  "name",                                       null: false
+    t.string  "name",                       default: "",    null: false
     t.boolean "can_manage_course",          default: false, null: false
     t.boolean "can_manage_assignments",     default: false, null: false
     t.boolean "can_grade_submissions",      default: false, null: false
@@ -142,13 +138,13 @@ ActiveRecord::Schema.define(version: 20170920191837) do
   end
 
   create_table "courses", force: true do |t|
-    t.string   "name",                            null: false
-    t.string   "number",                          null: false
+    t.string   "name",            default: "",    null: false
+    t.string   "number",          default: "",    null: false
     t.integer  "organization_id",                 null: false
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "creator_id"
-    t.string   "slug",                            null: false
+    t.string   "slug",            default: "",    null: false
     t.integer  "user_group_id"
     t.boolean  "is_hidden",       default: false
   end
@@ -191,7 +187,7 @@ ActiveRecord::Schema.define(version: 20170920191837) do
   add_index "exercise_collections", ["user_id"], name: "index_exercise_collections_on_user_id", using: :btree
 
   create_table "exercise_families", force: true do |t|
-    t.string   "name",       null: false
+    t.string   "name",       default: "", null: false
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -262,21 +258,9 @@ ActiveRecord::Schema.define(version: 20170920191837) do
   add_index "exercises", ["irt_data_id"], name: "exercises_irt_data_id_fk", using: :btree
   add_index "exercises", ["is_public"], name: "index_exercises_on_is_public", using: :btree
 
-  create_table "exercises_workouts", force: true do |t|
-    t.integer  "workout_id",  null: false
-    t.integer  "exercise_id", null: false
-    t.integer  "points"
-    t.integer  "order"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-  end
-
-  add_index "exercises_workouts", ["exercise_id"], name: "index_exercises_workouts_on_exercise_id", using: :btree
-  add_index "exercises_workouts", ["workout_id"], name: "index_exercises_workouts_on_workout_id", using: :btree
-
   create_table "friendly_id_slugs", force: true do |t|
-    t.string   "slug",                      null: false
-    t.integer  "sluggable_id",              null: false
+    t.string   "slug",                      default: "", null: false
+    t.integer  "sluggable_id",                           null: false
     t.string   "sluggable_type", limit: 50
     t.string   "scope"
     t.datetime "created_at"
@@ -288,7 +272,7 @@ ActiveRecord::Schema.define(version: 20170920191837) do
   add_index "friendly_id_slugs", ["sluggable_type"], name: "index_friendly_id_slugs_on_sluggable_type", using: :btree
 
   create_table "global_roles", force: true do |t|
-    t.string  "name",                                          null: false
+    t.string  "name",                          default: "",    null: false
     t.boolean "can_manage_all_courses",        default: false, null: false
     t.boolean "can_edit_system_configuration", default: false, null: false
     t.boolean "builtin",                       default: false, null: false
@@ -307,9 +291,9 @@ ActiveRecord::Schema.define(version: 20170920191837) do
   add_index "group_access_requests", ["user_id"], name: "index_group_access_requests_on_user_id", using: :btree
 
   create_table "identities", force: true do |t|
-    t.integer  "user_id",    null: false
-    t.string   "provider",   null: false
-    t.string   "uid",        null: false
+    t.integer  "user_id",                 null: false
+    t.string   "provider",   default: "", null: false
+    t.string   "uid",        default: "", null: false
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -359,7 +343,7 @@ ActiveRecord::Schema.define(version: 20170920191837) do
   add_index "lms_instances", ["url"], name: "index_lms_instances_on_url", unique: true, using: :btree
 
   create_table "lms_types", force: true do |t|
-    t.string   "name",       null: false
+    t.string   "name",       default: "", null: false
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -393,15 +377,14 @@ ActiveRecord::Schema.define(version: 20170920191837) do
   end
 
   create_table "organizations", force: true do |t|
-    t.string   "name",                         null: false
+    t.string   "name",         default: "",    null: false
     t.datetime "created_at"
     t.datetime "updated_at"
     t.string   "abbreviation"
-    t.string   "slug",                         null: false
+    t.string   "slug",         default: "",    null: false
     t.boolean  "is_hidden",    default: false
   end
 
-  add_index "organizations", ["name"], name: "index_organizations_on_name", unique: true, using: :btree
   add_index "organizations", ["slug"], name: "index_organizations_on_slug", unique: true, using: :btree
 
   create_table "prompt_answers", force: true do |t|
@@ -434,7 +417,7 @@ ActiveRecord::Schema.define(version: 20170920191837) do
 
   create_table "resource_files", force: true do |t|
     t.string   "filename"
-    t.string   "token",                     null: false
+    t.string   "token",      default: "",   null: false
     t.integer  "user_id",                   null: false
     t.boolean  "public",     default: true
     t.datetime "created_at"
@@ -443,6 +426,16 @@ ActiveRecord::Schema.define(version: 20170920191837) do
 
   add_index "resource_files", ["token"], name: "index_resource_files_on_token", using: :btree
   add_index "resource_files", ["user_id"], name: "index_resource_files_on_user_id", using: :btree
+
+  create_table "signups", force: true do |t|
+    t.string   "first_name"
+    t.string   "last_name_name"
+    t.string   "email"
+    t.string   "institution"
+    t.text     "comments"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
 
   create_table "stems", force: true do |t|
     t.text     "preamble"
@@ -495,17 +488,16 @@ ActiveRecord::Schema.define(version: 20170920191837) do
   add_index "tags", ["name"], name: "index_tags_on_name", unique: true, using: :btree
 
   create_table "terms", force: true do |t|
-    t.integer  "season",     null: false
-    t.date     "starts_on",  null: false
-    t.date     "ends_on",    null: false
-    t.integer  "year",       null: false
+    t.integer  "season",                  null: false
+    t.date     "starts_on",               null: false
+    t.date     "ends_on",                 null: false
+    t.integer  "year",                    null: false
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.string   "slug",       null: false
+    t.string   "slug",       default: "", null: false
   end
 
   add_index "terms", ["slug"], name: "index_terms_on_slug", unique: true, using: :btree
-  add_index "terms", ["starts_on"], name: "index_terms_on_starts_on", using: :btree
   add_index "terms", ["year", "season"], name: "index_terms_on_year_and_season", using: :btree
 
   create_table "test_case_results", force: true do |t|
@@ -525,13 +517,17 @@ ActiveRecord::Schema.define(version: 20170920191837) do
 
   create_table "test_cases", force: true do |t|
     t.text     "negative_feedback"
-    t.float    "weight",            limit: 24, null: false
+    t.float    "weight",            limit: 24,                 null: false
     t.text     "description"
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer  "coding_prompt_id",             null: false
-    t.text     "input",                        null: false
-    t.text     "expected_output",              null: false
+    t.integer  "coding_prompt_id",                             null: false
+    t.text     "input",                                        null: false
+    t.text     "expected_output",                              null: false
+    t.boolean  "static",                       default: false, null: false
+    t.boolean  "screening",                    default: false, null: false
+    t.boolean  "example",                      default: false, null: false
+    t.boolean  "hidden",                       default: false, null: false
   end
 
   add_index "test_cases", ["coding_prompt_id"], name: "index_test_cases_on_coding_prompt_id", using: :btree
@@ -571,9 +567,9 @@ ActiveRecord::Schema.define(version: 20170920191837) do
     t.string   "last_name"
     t.integer  "global_role_id",                        null: false
     t.string   "avatar"
-    t.string   "slug",                                  null: false
-    t.integer  "time_zone_id"
+    t.string   "slug",                     default: "", null: false
     t.integer  "current_workout_score_id"
+    t.integer  "time_zone_id"
   end
 
   add_index "users", ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true, using: :btree
@@ -652,7 +648,7 @@ ActiveRecord::Schema.define(version: 20170920191837) do
   add_index "workout_scores", ["workout_offering_id"], name: "workout_scores_workout_offering_id_fk", using: :btree
 
   create_table "workouts", force: true do |t|
-    t.string   "name",                              null: false
+    t.string   "name",              default: "",    null: false
     t.boolean  "scrambled",         default: false
     t.datetime "created_at"
     t.datetime "updated_at"

@@ -1,7 +1,19 @@
-- if @lti_launch
-  = inside_layout 'header' do
-    = render partial: 'layouts/two_columns_body'
-- else
-  = inside_layout do
-    = render partial: 'layouts/two_columns_body'
-
+= inside_layout do
+  .row.max-height#main
+    - main_content = [ 'scrollable', 'max-height', 'content' ]
+    - main_content_width = ['col-md-12']
+    - if !@hide_sidebar # if this flag is not set, show the sidebar by default
+      - main_content_width = ['col-md-9']
+      .col-md-3.scrollable.max-height.sidebar
+        .inner.max-height
+          .below-nav#sidebar
+            = render partial: 'layouts/sidebar', locals: { user: @student_user ? @student_user : current_user }
+    - main_content = main_content + main_content_width
+    %div{ class: main_content }
+      %button.btn-primary.toggle-slider{ style: 'display: none', data: { is_open: false } }
+        %i.fa.fa-bars
+        Exercises
+      .inner.max-height
+        .below-nav
+          = render partial: 'layouts/flash'
+          = yield

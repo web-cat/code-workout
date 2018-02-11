@@ -21,7 +21,7 @@
 # Indexes
 #
 #  index_workout_offerings_on_course_offering_id  (course_offering_id)
-#  index_workout_offerings_on_lms_assignment_id   (lms_assignment_id) UNIQUE
+#  index_workout_offerings_on_lms_assignment_id   (lms_assignment_id)
 #  index_workout_offerings_on_workout_id          (workout_id)
 #  index_workout_offerings_on_workout_policy_id   (workout_policy_id)
 #  workout_offerings_continue_from_workout_id_fk  (continue_from_workout_id)
@@ -170,6 +170,8 @@ class WorkoutOffering < ActiveRecord::Base
     now = Time.zone.now
     deadline = ultimate_deadline
     x = deadline && now > ultimate_deadline
+    # FIXME: broken kludge
+    x && !workout_policy.andand.no_review_before_close
 #    puts "\n\n\n\nshutdown? = #{x}\n#{caller}\n\n\n\n"
     x
   end
@@ -224,5 +226,29 @@ class WorkoutOffering < ActiveRecord::Base
 
       workout_score.recalculate_score!
     end
+  end
+
+  def organize_private_exercises
+    @course = self.course_offering.course
+    @user_group = @course.user_group
+    if !@user_group
+      @user_group = UserGroup.create(
+        course: @course,
+        name: @course.number,
+        description: "Privileged user for #{@course.display_name}"
+      )
+    end
+
+    @exercise_collection = @user_group.exercise_collection
+    if !@exercise_collection
+      @exercise_collection = ExerciseCollection.create(
+        name: "#{@course.display_name} exercises",
+        description: "Exercises commonly used in #{@course.number}",
+        user_group: @user_group
+      )
+    end
+
+    @exercises = self.workout.exercises.where(is_public: false)
+    @exercise_collection.add(@exercises.flatten)
   end
 end

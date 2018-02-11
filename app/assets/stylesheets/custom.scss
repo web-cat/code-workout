@@ -11,6 +11,7 @@ html, body { height: 100%; }
 .full-height { min-height: 100%; }
 .no-overflow { overflow-y: hidden; }
 .below-nav { padding: 60px 10px 0; }
+.embedded .below-nav { padding-top: 0; }
 .breadcrumb { margin-bottom: 15px; }
 
 .sidebar, .content, .maincol {

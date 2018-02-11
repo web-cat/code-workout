@@ -22,10 +22,9 @@
 #  last_name                :string(255)
 #  global_role_id           :integer          not null
 #  avatar                   :string(255)
-#  slug                     :string(255)      not null
-#  time_zone_id             :integer
+#  slug                     :string(255)      default(""), not null
 #  current_workout_score_id :integer
-#  user_group_id            :integer
+#  time_zone_id             :integer
 #
 # Indexes
 #
@@ -36,7 +35,6 @@
 #  index_users_on_reset_password_token      (reset_password_token) UNIQUE
 #  index_users_on_slug                      (slug) UNIQUE
 #  index_users_on_time_zone_id              (time_zone_id)
-#  index_users_on_user_group_id             (user_group_id)
 #
 
 FactoryGirl.define do

@@ -1,0 +1,54 @@
+Title: MC-example
+
+Tags:     if, condition, plus, integer
+
+
+Stem:
+Answer this multiple choice question
+
+*  Choice 1
+*  [Correct] Choice 2
+*  Choice 3
+*  Choice 4
+
+
+[Note (this is not part of the question definition).
+This uses Markdown list format, which means the following are
+all equivalent for our purposes:
+
+*  Choice 1
+*  Choice 2
+*  Choice 3
+
++  Choice 1
++  Choice 2
++  Choice 3
+
+-  Choice 1
+-  Choice 2
+-  Choice 3
+
+1. Choice 1
+2. Choice 2
+3. Choice 3
+
+For answer scores/weights, use:
+
+-  [Correct] Choice 1 (score of 1.0)
+
+-  [1.0] Choice 1 (also score of 1.0)
+
+-  [0.5] Choice 1 (partial credit score of 0.5)
+
+
+Explanation for whole prompt:
+
+Explanation: Some text, possibly over multiple lines ....
+
+
+Explanation for one choice:
+
+1.  Choice 2
+    Explanation: ....
+
+end of comments.]
