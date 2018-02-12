@@ -94,7 +94,8 @@ class Exercise < ActiveRecord::Base
     'Ruby' => 'rb',
     'Java' => 'java',
     'Python' => 'py',
-    'Shell' => 'sh'
+    'Shell' => 'sh',
+    'Cpp' => 'cpp'
   }
 
 

@@ -35,6 +35,17 @@ module CodeWorkout
         "-f ../../../../usr/resources/Java/build.xml",
       daemon_url: "http://localhost:8080/javadaemon/cr?dir=%{attempt_dir}"
     }
+    CPP_DOCKER_IMAGE = "codeworkout/cpp"
+    CPP = {
+      make_cmd: "cd \"%{attempt_dir}\"; docker run --rm " \
+        "-v $(pwd):$(pwd) " \
+        "-v $(pwd)/../../../../usr/resources/Cpp/:/usr/resources/Cpp/:ro " \
+        "-w $(pwd) " \
+        "#{CPP_DOCKER_IMAGE} " \
+        "make " \
+        "-C/usr/resources/Cpp " \
+        "SRC_DIR=$PWD" \
+    }
 
   end
 end

@@ -377,7 +377,7 @@ RUBY_TEST
         self.assertEqual(%{class_name}.%{method_name}(%{input}),%{expected_output})
 
 PYTHON_TEST
-      'Java' => <<JAVA_TEST
+      'Java' => <<JAVA_TEST,
     @Test
     public void test_%{id}()
     {
@@ -387,6 +387,15 @@ PYTHON_TEST
           subject.%{method_name}(%{input}));
     }
 JAVA_TEST
+      'Cpp' => <<CPP_TEST
+    void test%{id}()
+    {
+        TSM_ASSERT_EQUALS(
+          "%{negative_feedback}",
+          %{expected_output},
+          subject.%{method_name}(%{input}));
+    }
+CPP_TEST
     }
 
 end
