@@ -71,6 +71,28 @@ echo debconf shared/accepted-oracle-license-v1-1 seen true | sudo debconf-set-se
 sudo apt-get install -y oracle-java8-installer
 sudo apt-get install -y ant
 
+#Install Docker CE
+echo installing docker
+sudo apt-get update
+sudo apt-get -y install \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    software-properties-common
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) \
+   stable"
+sudo apt-get update
+sudo apt-get -y install docker-ce
+sudo groupadd docker
+sudo usermod -aG docker vagrant
+
+#Add docker images
+echo getting docker images
+sudo docker pull codeworkout/cpp
+
 cd /vagrant
 bundle install
 rake db:reset
