@@ -9,17 +9,7 @@
 #    all: compile and test the code.
 #    clean: remove the generated files
 #
-#Current makefile location: /vagrant/usr/resources/Cpp
-#
-#Examples:
-#   make -C/vagrant/usr/resources/Cpp SRC_DIR=$PWD
-#   make -C/vagrant/usr/resources/Cpp all SRC_DIR=$PWD
-#   make -C/vagrant/usr/resources/Cpp clean SRC_DIR=$PWD
-#   docker run -ti -v $(pwd):$(pwd) -v /vagrant/usr/resources/Cpp:/vagrant/usr/resources/Cpp:ro  -w $(pwd) codeworkout/cpp  bash
-#
-#   docker run -ti -v $(pwd):$(pwd) -v $(pwd)/../../../resources/Cpp/:/usr/resources/Cpp/:ro -w $(pwd) codeworkout/cpp  bash
-#
-#   docker run --rm -v $(pwd):$(pwd) -v $(pwd)/../../../resources/Cpp/:/usr/resources/Cpp/:ro  -w $(pwd) codeworkout/cpp make -C/usr/resources/Cpp SRC_DIR=$PWD
+#Current makefile location: usr/resources/Cpp
 #---------------------------------------------------------------------------------------
 
 #Variables
