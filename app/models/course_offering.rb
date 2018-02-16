@@ -186,8 +186,8 @@ class CourseOffering < ActiveRecord::Base
   def add_workout(workout, workout_offering_options={})
     found_workout = nil
     if workout.kind_of?(String)
-      if params[:from_collection].to_b
-        workouts = Workout.where('lower(name) = ?', params[:workout_name].downcase)
+      if workout_offering_options[:from_collection].to_b
+        workouts = Workout.where('lower(name) = ?', workout)
         found_workout = workouts.andand.first
         new_workout = found_workout # using a workout from a collection (like OpenDSA), so use the one you find
       end
