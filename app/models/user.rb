@@ -511,8 +511,7 @@ class User < ActiveRecord::Base
       end
     end
     if self.created_at > user.created_at
-        self.created_at = user.created_at
-      end
+      self.created_at = user.created_at
     end
     self.save!
 
@@ -666,10 +665,9 @@ class User < ActiveRecord::Base
       end
     end
     if self.created_at > user.created_at
-        # self.created_at = user.created_at
-        puts "update user #{self.id}: " +
-          "created_at <= #{user.created_at}"
-      end
+      # self.created_at = user.created_at
+      puts "update user #{self.id}: " +
+        "created_at <= #{user.created_at}"
     end
 
     # Enrollments
