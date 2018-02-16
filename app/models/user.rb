@@ -465,53 +465,66 @@ class User < ActiveRecord::Base
   # Merge this user with the specifier user. The specified user's information
   # gets merged INTO this user
   def merge_with(user, email)
-    self.update(email: email)
-    self.update(slug: user.slug)
-
     # Update these attributes from merged user if they are currently blank
     [:encrypted_password, :first_name, :last_name, :avatar].each do |attr|
       new_value = user.read_attribute(attr)
       if self.read_attribute(attr).blank? && !new_value.blank?
-        self.write_attribute(attr, new_value)
+        puts "update user #{self.id}: #{attr} <= #{new_value}"
+        self[attr] = new_value
       end
     end
     [:current_workout_score_id, :time_zone_id].each do |attr|
       new_value = user.read_attribute(attr)
       if self.read_attribute(attr).nil? && !new_value.nil?
-        self.write_attribute(attr, new_value)
-      end
-    end
-    if user.remember_created_at
-      if !self.remember_created_at ||
-        self.remember_created_at > user.remember_created_at
-        self.remember_created_at = user.remember_created_at
+        puts "update user #{self.id}: #{attr} <= #{new_value}"
+        self[attr] = new_value
       end
     end
     self.sign_in_count += user.sign_in_count
+    puts "update user #{self.id}: sign_in_count <= #{self.sign_in_count}"
     if user.current_sign_in_at
       if !self.current_sign_in_at ||
         self.current_sign_in_at > user.current_sign_in_at
+        puts "update user #{self.id}: " +
+          "current_sign_in_at <= #{user.current_sign_in_at}"
         self.current_sign_in_at = user.current_sign_in_at
+        puts "update user #{self.id}: " +
+          "current_sign_in_ip <= #{user.current_sign_in_ip}"
         self.current_sign_in_ip = user.current_sign_in_ip
       end
     end
     if user.last_sign_in_at
       if !self.last_sign_in_at ||
         self.last_sign_in_at > user.last_sign_in_at
+        puts "update user #{self.id}: " +
+          "last_sign_in_at <= #{user.last_sign_in_at}"
         self.last_sign_in_at = user.last_sign_in_at
+        puts "update user #{self.id}: " +
+          "last_sign_in_ip <= #{user.last_sign_in_ip}"
         self.last_sign_in_ip = user.last_sign_in_ip
       end
     end
     if user.confirmed_at
       if !self.confirmed_at ||
         self.confirmed_at > user.confirmed_at
+        puts "update user #{self.id}: " +
+          "confirmed_at <= #{user.confirmed_at}"
         self.confirmed_at = user.confirmed_at
+        puts "update user #{self.id}: " +
+          "confirmation_token <= #{user.confirmation_token}"
         self.confirmation_token = user.confirmation_token
+        puts "update user #{self.id}: " +
+          "confirmation_sent_at <= #{user.confirmation_sent_at}"
         self.confirmation_sent_at = user.confirmation_sent_at
       end
     end
     if self.created_at > user.created_at
+      puts "update user #{self.id}: " +
+        "created_at <= #{user.created_at}"
       self.created_at = user.created_at
+      puts "update user #{self.id}: " +
+        "remember_created_at <= #{user.created_at}"
+      self.remember_created_at = user.created_at
     end
     self.save!
 
@@ -520,8 +533,10 @@ class User < ActiveRecord::Base
       # only enroll this user if they are not already enrolled
       if !CourseEnrollment.find_by(
         course_offering: e.course_offering, user: self)
+        puts "update course_enrollment #{e.id}: user_id <= #{self.id}"
         e.update(user_id: self.id)
       else
+        puts "destroy course_enrollment #{e.id}"
         e.destroy
       end
     end
@@ -535,13 +550,16 @@ class User < ActiveRecord::Base
         possible_ext_duplicates[ext.id] = self_extension.id
       end
 
+      puts "update student_extenstion #{ext.id}: user_id <= #{self.id}"
       ext.update(user_id: self.id)
     end
 
     # Attempts
+    puts "update user ids for #{user.attempts.count} attempts"
     user.attempts.update_all(user_id: self.id)
 
     # Test case results
+    puts "update user ids for #{user.test_case_results.count} test_cast_results"
     user.test_case_results.update_all(user_id: self.id)
 
     # Workout Scores
@@ -555,6 +573,7 @@ class User < ActiveRecord::Base
         possible_ws_duplicates[s.id] = self_score.id
       end
 
+      puts "update workout_score #{s.id}: user_id <= #{self.id}"
       s.update(user_id: self.id)
     end
 
@@ -566,10 +585,12 @@ class User < ActiveRecord::Base
       if existing_lti
         possible_lti_duplicates[existing_lti.id] = lti_id.id
       end
+      puts "update lti_identities #{lti_id.id}: user_id <= #{self.id}"
       lti_id.update(user_id: self.id)
     end
 
     # devise identities
+    puts "update user ids for #{user.identities.count} identities"
     user.identities.update_all(user_id: self.id)
 
 
@@ -589,7 +610,10 @@ class User < ActiveRecord::Base
       end
     end
 
+    puts "destroy user #{user.id}"
     user.destroy
+    puts "update user #{self.id}: email <= #{email}, slug <= #{user.slug}"
+    self.update(email: email, slug: user.slug)
   end
 
 
@@ -597,11 +621,6 @@ class User < ActiveRecord::Base
   # Merge this user with the specifier user. The specified user's information
   # gets merged INTO this user
   def check_merge_with(user, email)
-    # self.update(email: email)
-    puts "update user #{self.id}: email <= #{email}"
-    # self.update(slug: user.slug)
-    puts "update user #{self.id}: slug <= #{user.slug}"
-
     # Update these attributes from merged user if they are currently blank
     [:encrypted_password, :first_name, :last_name, :avatar].each do |attr|
       new_value = user.read_attribute(attr)
@@ -617,17 +636,9 @@ class User < ActiveRecord::Base
         puts "update user #{self.id}: #{attr} <= #{new_value}"
       end
     end
-    if user.remember_created_at
-      if !self.remember_created_at ||
-        self.remember_created_at > user.remember_created_at
-        # self.remember_created_at = user.remember_created_at
-        puts "update user #{self.id}: " +
-          "remember_created_at <= #{user.remember_created_at}"
-      end
-    end
     # self.sign_in_count += user.sign_in_count
     puts "update user #{self.id}: " +
-          "sign_in_count <= #{user.sign_in_count}"
+          "sign_in_count <= #{self.sign_in_count + user.sign_in_count}"
     if user.current_sign_in_at
       if !self.current_sign_in_at ||
         self.current_sign_in_at > user.current_sign_in_at
@@ -668,6 +679,9 @@ class User < ActiveRecord::Base
       # self.created_at = user.created_at
       puts "update user #{self.id}: " +
         "created_at <= #{user.created_at}"
+      # self.remember_created_at = user.created_at
+      puts "update user #{self.id}: " +
+        "remember_created_at <= #{user.created_at}"
     end
 
     # Enrollments
@@ -760,6 +774,8 @@ class User < ActiveRecord::Base
 
     # user.destroy
     puts "destroy user #{user.id}"
+    # self.update(email: email, user.slug)
+    puts "update user #{self.id}: email <= #{email}, slug <= #{user.slug}"
   end
 
 
