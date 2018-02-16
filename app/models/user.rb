@@ -160,12 +160,20 @@ class User < ActiveRecord::Base
   def self.merge_account_pairs(pairs)
     #pairs = self.account_pairs
     pairs.each do |incomplete_email, complete_email|
-      user1 = User.find(email: incomplete_email)
-      user2 = User.find(email: complete_email)
+      user1 = User.find_by(email: incomplete_email)
+      user2 = User.find_by(email: complete_email)
 
-      sorted = [user1, user2].sort_by(&:updated_at)
+      sorted = [user1, user2].sort do |a, b|
+        if a.attempts.count > b.attempts.count
+          1
+        elsif b.attempts.count > 0
+          -1
+        else
+          a.sign_in_count <=> b.sign_in_count
+        end
+      end
       merge_master = sorted.last
-      merge_master.merge_with(sorted.first, user2.email)
+      merge_master.check_merge_with(sorted.first, user2.email)
     end
   end
 
@@ -458,12 +466,61 @@ class User < ActiveRecord::Base
   # gets merged INTO this user
   def merge_with(user, email)
     self.update(email: email)
+    self.update(slug: user.slug)
+
+    # Update these attributes from merged user if they are currently blank
+    [:encrypted_password, :first_name, :last_name, :avatar].each do |attr|
+      new_value = user.read_attribute(attr)
+      if self.read_attribute(attr).blank? && !new_value.blank?
+        self.write_attribute(attr, new_value)
+      end
+    end
+    [:current_workout_score_id, :time_zone_id].each do |attr|
+      new_value = user.read_attribute(attr)
+      if self.read_attribute(attr).nil? && !new_value.nil?
+        self.write_attribute(attr, new_value)
+      end
+    end
+    if user.remember_created_at
+      if !self.remember_created_at ||
+        self.remember_created_at > user.remember_created_at
+        self.remember_created_at = user.remember_created_at
+      end
+    end
+    self.sign_in_count += user.sign_in_count
+    if user.current_sign_in_at
+      if !self.current_sign_in_at ||
+        self.current_sign_in_at > user.current_sign_in_at
+        self.current_sign_in_at = user.current_sign_in_at
+        self.current_sign_in_ip = user.current_sign_in_ip
+      end
+    end
+    if user.last_sign_in_at
+      if !self.last_sign_in_at ||
+        self.last_sign_in_at > user.last_sign_in_at
+        self.last_sign_in_at = user.last_sign_in_at
+        self.last_sign_in_ip = user.last_sign_in_ip
+      end
+    end
+    if user.confirmed_at
+      if !self.confirmed_at ||
+        self.confirmed_at > user.confirmed_at
+        self.confirmed_at = user.confirmed_at
+        self.confirmation_token = user.confirmation_token
+        self.confirmation_sent_at = user.confirmation_sent_at
+      end
+    end
+    if self.created_at > user.created_at
+        self.created_at = user.created_at
+      end
+    end
+    self.save!
 
     # Enrollments
     user.course_enrollments.each do |e|
       # only enroll this user if they are not already enrolled
-      if CourseEnrollment.find_by(
-        course_offering: e.course_offering, user: self).blank?
+      if !CourseEnrollment.find_by(
+        course_offering: e.course_offering, user: self)
         e.update(user_id: self.id)
       else
         e.destroy
@@ -472,7 +529,7 @@ class User < ActiveRecord::Base
 
     # Extensions
     possible_ext_duplicates = {}
-    user.extensions.each do |ext|
+    user.student_extensions.each do |ext|
       self_extension = self.student_extensions.where(
         workout_offering: ext.workout_offering).limit(1).first
       if self_extension
@@ -491,14 +548,9 @@ class User < ActiveRecord::Base
     # Workout Scores
     possible_ws_duplicates = {}
     user.workout_scores.each do |s|
-      self_score = nil
-      if score.workout_offering
-        self_score = self.workout_scores.where(
-          workout_offering: s.workout_offering).limit(1).first
-      else
-        self_score = self.workout_scores.where(
-          workout: s.workout, workout_offering: nil).limit(1).first
-      end
+      self_score = self.workout_scores.where(
+        workout: s.workout,
+        workout_offering: s.workout_offering).limit(1).first
 
       if self_score
         possible_ws_duplicates[s.id] = self_score.id
@@ -511,7 +563,7 @@ class User < ActiveRecord::Base
     possible_lti_duplicates = {}
     user.lti_identities.each do |lti_id|
       existing_lti = LtiIdentity.find_by(
-        lms_instance_id: lti_id.lms_instance, user: self).limit(1).first
+        lms_instance_id: lti_id.lms_instance, user: self)
       if existing_lti
         possible_lti_duplicates[existing_lti.id] = lti_id.id
       end
@@ -522,7 +574,7 @@ class User < ActiveRecord::Base
     user.identities.update_all(user_id: self.id)
 
 
-    if !possible_ext_duplicates.size.empty? ||
+    if !possible_ext_duplicates.empty? ||
       !possible_ws_duplicates.empty? ||
       !possible_lti_duplicates.empty?
       puts "-------------------------"
@@ -539,6 +591,177 @@ class User < ActiveRecord::Base
     end
 
     user.destroy
+  end
+
+
+  # -------------------------------------------------------------
+  # Merge this user with the specifier user. The specified user's information
+  # gets merged INTO this user
+  def check_merge_with(user, email)
+    # self.update(email: email)
+    puts "update user #{self.id}: email <= #{email}"
+    # self.update(slug: user.slug)
+    puts "update user #{self.id}: slug <= #{user.slug}"
+
+    # Update these attributes from merged user if they are currently blank
+    [:encrypted_password, :first_name, :last_name, :avatar].each do |attr|
+      new_value = user.read_attribute(attr)
+      if self.read_attribute(attr).blank? && !new_value.blank?
+        # self.write_attribute(attr, new_value)
+        puts "update user #{self.id}: #{attr} <= #{new_value}"
+      end
+    end
+    [:current_workout_score_id, :time_zone_id].each do |attr|
+      new_value = user.read_attribute(attr)
+      if self.read_attribute(attr).nil? && !new_value.nil?
+        # self.write_attribute(attr, new_value)
+        puts "update user #{self.id}: #{attr} <= #{new_value}"
+      end
+    end
+    if user.remember_created_at
+      if !self.remember_created_at ||
+        self.remember_created_at > user.remember_created_at
+        # self.remember_created_at = user.remember_created_at
+        puts "update user #{self.id}: " +
+          "remember_created_at <= #{user.remember_created_at}"
+      end
+    end
+    # self.sign_in_count += user.sign_in_count
+    puts "update user #{self.id}: " +
+          "sign_in_count <= #{user.sign_in_count}"
+    if user.current_sign_in_at
+      if !self.current_sign_in_at ||
+        self.current_sign_in_at > user.current_sign_in_at
+        # self.current_sign_in_at = user.current_sign_in_at
+        puts "update user #{self.id}: " +
+          "current_sign_in_at <= #{user.current_sign_in_at}"
+        # self.current_sign_in_ip = user.current_sign_in_ip
+        puts "update user #{self.id}: " +
+          "current_sign_in_ip <= #{user.current_sign_in_ip}"
+      end
+    end
+    if user.last_sign_in_at
+      if !self.last_sign_in_at ||
+        self.last_sign_in_at > user.last_sign_in_at
+        # self.last_sign_in_at = user.last_sign_in_at
+        puts "update user #{self.id}: " +
+          "last_sign_in_at <= #{user.last_sign_in_at}"
+        # self.last_sign_in_ip = user.last_sign_in_ip
+        puts "update user #{self.id}: " +
+          "last_sign_in_ip <= #{user.last_sign_in_ip}"
+      end
+    end
+    if user.confirmed_at
+      if !self.confirmed_at ||
+        self.confirmed_at > user.confirmed_at
+        # self.confirmed_at = user.confirmed_at
+        puts "update user #{self.id}: " +
+          "confirmed_at <= #{user.confirmed_at}"
+        # self.confirmation_token = user.confirmation_token
+        puts "update user #{self.id}: " +
+          "confirmation_token <= #{user.confirmation_token}"
+        # self.confirmation_sent_at = user.confirmation_sent_at
+        puts "update user #{self.id}: " +
+          "confirmation_sent_at <= #{user.confirmation_sent_at}"
+      end
+    end
+    if self.created_at > user.created_at
+        # self.created_at = user.created_at
+        puts "update user #{self.id}: " +
+          "created_at <= #{user.created_at}"
+      end
+    end
+
+    # Enrollments
+    user.course_enrollments.each do |e|
+      # only enroll this user if they are not already enrolled
+      if !CourseEnrollment.find_by(
+        course_offering: e.course_offering, user: self)
+        # e.update(user_id: self.id)
+        puts "update course_enrollment #{e.id}: user_id <= #{self.id}"
+      else
+        #e.destroy
+        puts "destroy course_enrollment #{e.id}"
+      end
+    end
+
+    # Extensions
+    possible_ext_duplicates = {}
+    user.student_extensions.each do |ext|
+      self_extension = self.student_extensions.where(
+        workout_offering: ext.workout_offering).limit(1).first
+      if self_extension
+        possible_ext_duplicates[ext.id] = self_extension.id
+      end
+
+      # ext.update(user_id: self.id)
+      puts "update student_extenstion #{ext.id}: user_id <= #{self.id}"
+    end
+
+    # Attempts
+    # user.attempts.update_all(user_id: self.id)
+    user.attempts.each do |attempt|
+      puts "update attempt #{attempt.id}: user_id <= #{self.id}"
+    end
+
+    # Test case results
+    # user.test_case_results.update_all(user_id: self.id)
+    user.test_case_results.each do |tcr|
+      puts "update test_case_result #{tcr.id}: user_id <= #{self.id}"
+    end
+
+    # Workout Scores
+    possible_ws_duplicates = {}
+    user.workout_scores.each do |s|
+      self_score = self.workout_scores.where(
+        workout: s.workout,
+        workout_offering: s.workout_offering).limit(1).first
+
+      if self_score
+        possible_ws_duplicates[s.id] = self_score.id
+      end
+
+      # s.update(user_id: self.id)
+      puts "update workout_score #{s.id}: user_id <= #{self.id}"
+    end
+
+    # LTI identities
+    possible_lti_duplicates = {}
+    user.lti_identities.each do |lti_id|
+      existing_lti = LtiIdentity.find_by(
+        lms_instance_id: lti_id.lms_instance, user: self)
+      if existing_lti
+        possible_lti_duplicates[existing_lti.id] = lti_id.id
+      end
+      # lti_id.update(user_id: self.id)
+      puts "update lti_identity #{lti_id.id}: user_id <= #{self.id}"
+    end
+
+    # devise identities
+    # user.identities.update_all(user_id: self.id)
+    user.identities.each do |i|
+      puts "update identity #{i.id}: user_id <= #{self.id}"
+    end
+
+
+    if !possible_ext_duplicates.empty? ||
+      !possible_ws_duplicates.empty? ||
+      !possible_lti_duplicates.empty?
+      puts "-------------------------"
+      puts "possible duplicates for: #{email}"
+      possible_ext_duplicates.each do |k, v|
+        puts "student_extensions,#{self.id},#{email},#{k}, #{v}"
+      end
+      possible_ws_duplicates.each do |k, v|
+        puts "workout_scores,#{self.id},#{email},#{k}, #{v}"
+      end
+      possible_lti_duplicates.each do |k, v|
+        puts "lti_identities,#{self.id},#{email},#{k}, #{v}"
+      end
+    end
+
+    # user.destroy
+    puts "destroy user #{user.id}"
   end
 
 
