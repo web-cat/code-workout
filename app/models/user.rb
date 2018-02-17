@@ -173,7 +173,7 @@ class User < ActiveRecord::Base
         end
       end
       merge_master = sorted.last
-      merge_master.check_merge_with(sorted.first, user2.email)
+      merge_master.merge_with(sorted.first, user2.email)
     end
   end
 
@@ -526,6 +526,9 @@ class User < ActiveRecord::Base
         "remember_created_at <= #{user.created_at}"
       self.remember_created_at = user.created_at
     end
+    puts "update user #{user.id}: current_workout_score_id <= nil"
+    user.current_workout_score = nil
+    user.save!
     self.save!
 
     # Enrollments
@@ -683,6 +686,8 @@ class User < ActiveRecord::Base
       puts "update user #{self.id}: " +
         "remember_created_at <= #{user.created_at}"
     end
+    puts "update user #{user.id}: current_workout_score_id <= nil"
+    user.update(current_workout_score_id: nil)
 
     # Enrollments
     user.course_enrollments.each do |e|
