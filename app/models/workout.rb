@@ -327,7 +327,7 @@ class Workout < ActiveRecord::Base
           workouts_with_term = workout_offerings.map { |wo| [wo.course_offering.term, wo] }
           results = workouts_with_term.group_by(&:first)
             .map{ |k, a| [k, a.map(&:last)] }
-          results = array_to_hash(results)
+          results = self.array_to_hash(results)
           results.each do |term, workout_offerings|
             results[term] = workout_offerings.uniq{ |wo| wo.workout }
           end
@@ -335,7 +335,7 @@ class Workout < ActiveRecord::Base
           workouts_with_term = workout_offerings.map { |wo| [wo.course_offering.term, wo.workout] }
           results = workouts_with_term.group_by(&:first)
             .map{ |k, a| [k, a.map(&:last)] }
-          results = array_to_hash(results)
+          results = self.array_to_hash(results)
           results.each do |term, workouts|
             results[term] = workouts.uniq
           end
@@ -365,7 +365,7 @@ class Workout < ActiveRecord::Base
   # { k1: val, k2: val2}
   # val1 and val2 can be inner arrays
   #----------------------------------
-  def array_to_hash(a)
+  def self.array_to_hash(a)
     h = {}
     a.each do |i|
       key = i.first
