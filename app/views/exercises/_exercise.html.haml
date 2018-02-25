@@ -82,7 +82,7 @@
       - else
         = link_to exercise.display_name, exercise_practice_path(exercise)
 
-      - if [ 'show', 'index', 'search' ].include?(action_name) && (can? :update, exercise)
+      - if [ 'show', 'index', 'search' ].include?(action_name) && (can? :edit, exercise)
         .right= button_link 'Edit', edit_exercise_path(exercise), class: 'btn btn-primary btn-sm'
 
     - if !new_workout
