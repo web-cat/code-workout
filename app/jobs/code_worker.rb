@@ -88,7 +88,7 @@ class CodeWorker
         when 'Python'
           result = execute_pythontest(
             prompt.class_name, attempt_dir, pre_lines, answer_lines)
-        when 'Cpp'
+        when 'C++'
           result = execute_cpptest(
             prompt.class_name, attempt_dir, pre_lines, answer_lines)
         end
@@ -231,7 +231,38 @@ class CodeWorker
 
   # -------------------------------------------------------------
   def execute_pythontest(class_name, attempt_dir, pre_lines, answer_lines)
-    return 'Python execution is temporarily suspended.'
+    cmd = CodeWorkout::Config::PYTHON[:make_cmd] % {attempt_dir: attempt_dir}
+    system(cmd + '>> err.log 2>> err.log')
+
+    # Parse compiler output for error messages to determine success
+    error = ''
+    logfile = attempt_dir + '/reports/compile.log'
+    if File.exist?(logfile) and !File.zero?(logfile)
+      compile_out = File.foreach(logfile) do |line|
+        line.chomp!
+        # puts "checking line: #{line}"
+        if line =~ /(error):\s*(.*)/i
+          if $1.casecmp('error')
+            error = "#{$2}"
+          else
+            error = "\n#{$1}: #{$2}"
+          end
+          break
+        end
+      end
+    end
+
+    if error.blank?
+      error = nil
+    else
+      # If there's an error, remove the test results, if any.
+      # This causes warnings to be treated the same as errors.
+      result_file = attempt_dir + '/results.csv'
+      if File.exist?(result_file)
+        File.delete(result_file)
+      end
+    end
+    return error
 #    if system("python #{class_name}Test.py",
 #      [:out, :err] => 'err.log',
 #      chdir: attempt_dir)
@@ -255,7 +286,7 @@ class CodeWorker
         line.chomp!
         # puts "checking line: #{line}"
         if line =~ /\s+(error):\s*(.*)/
-          if $1 == 'error'
+          if $1.casecmp('error')
             error = "#{$2}"
           else
             error = "\n#{$1}: #{$2}"

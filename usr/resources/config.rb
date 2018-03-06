@@ -39,12 +39,23 @@ module CodeWorkout
     CPP = {
       make_cmd: "cd \"%{attempt_dir}\"; docker run --rm " \
         "-v $(pwd):$(pwd) " \
-        "-v $(pwd)/../../../../usr/resources/Cpp/:/usr/resources/Cpp/:ro " \
+        "-v $(pwd)/../../../../usr/resources/C++/:/usr/resources/C++/:ro " \
         "-w $(pwd) " \
         "#{CPP_DOCKER_IMAGE} " \
         "make " \
-        "-C/usr/resources/Cpp " \
+        "-C/usr/resources/C++ " \
         "SRC_DIR=$PWD" \
+    }
+    PYTHON_DOCKER_IMAGE = "codeworkout/python"
+    PYTHON = {
+        make_cmd: "cd \"%{attempt_dir}\"; docker run --rm " \
+          "-v $(pwd):$(pwd) " \
+          "-v $(pwd)/../../../../usr/resources/Python/:/usr/resources/Python/:ro " \
+          "-w $(pwd) " \
+          "#{PYTHON_DOCKER_IMAGE} " \
+          "make " \
+          "-C/usr/resources/Python " \
+          "SRC_DIR=$PWD" \
     }
 
   end

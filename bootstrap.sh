@@ -92,6 +92,7 @@ sudo usermod -aG docker vagrant
 #Add docker images
 echo getting docker images
 sudo docker pull codeworkout/cpp
+sudo docker pull codeworkout/python
 
 cd /vagrant
 bundle install

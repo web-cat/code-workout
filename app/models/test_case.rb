@@ -370,11 +370,7 @@ class TestCase < ActiveRecord::Base
 RUBY_TEST
       'Python' => <<PYTHON_TEST,
     def test%{id}(self):
-        if %{class_name}.%{method_name}(%{input}) == %{expected_output}:
-            %{class_name}Test.f.write("1,,%{id}\n")
-        else:
-            %{class_name}Test.f.write("0,\"%{negative_feedback}\",%{id}\n")
-        self.assertEqual(%{class_name}.%{method_name}(%{input}),%{expected_output})
+        assert %{expected_output} == subject.%{method_name}(%{input}),"%{negative_feedback}"        
 
 PYTHON_TEST
       'Java' => <<JAVA_TEST,
@@ -387,7 +383,7 @@ PYTHON_TEST
           subject.%{method_name}(%{input}));
     }
 JAVA_TEST
-      'Cpp' => <<CPP_TEST
+      'C++' => <<CPP_TEST
     void test%{id}()
     {
         TSM_ASSERT_EQUALS(
