@@ -29,7 +29,7 @@
 
       %p.text.text-danger
         If you cannot find your course section, or are not sure which one you belong in, ask your instructor.
-    - elsif @available_course_offerings.any?
+    - elsif @available_course_offerings && @available_course_offerings.any?
       - @available_course_offerings.each do |co|
         %a{ data: { workout_name: params[:workout_name], course_offering_id: co.id, user_id: current_user.id }, class: 'course-offering list-group-item action' }
           = co.display_name_with_term

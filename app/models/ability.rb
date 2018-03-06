@@ -227,7 +227,7 @@ class Ability
              }.any?
       end
       can :create, Exercise if user.global_role.is_instructor?
-      can :update, Exercise do |e|
+      can :edit, Exercise do |e|
         created = user == e.current_version.andand.creator
         user_in_group = user.is_a_member_of?(e.exercise_collection.andand.user_group)
         owns_collection = user == e.exercise_collection.andand.user

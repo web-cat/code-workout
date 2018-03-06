@@ -483,7 +483,11 @@ class WorkoutsController < ApplicationController
           @workout_offering = enrolled_workout_offerings.andand.first
         elsif @course_offering
           # found an enrolled course_offering, so we don't need to ask the student anything
-          @workout_offering = @course_offering.add_workout(params[:workout_name], { lms_assignment_id: @lms_assignment_id })
+          workout_offering_options = {
+            lms_assignment_id: @lms_assignment_id,
+            from_collection: params[:from_collection]
+          }
+          @workout_offering = @course_offering.add_workout(params[:workout_name], workout_offering_options)
           if !@workout_offering
             @message = "The workout named '#{params[:workout_name]}' does not exist or is not linked with this LMS assignment. Please contact your instructor."
             render 'lti/error' and return
