@@ -1,6 +1,8 @@
 var codemirrors = [];
 var indentUnits = {
   'text/x-java': 4,
+  'text/x-c++src': 4,
+  'text/x-python': 4,
   'text/x-yaml': 2
 }
 
