@@ -4,7 +4,12 @@ require 'wannabe_bool'
 
 class WorkoutsController < ApplicationController
   include ArrayHelper
-  before_action :set_workout, only: [:show, :update, :destroy]
+  before_action :set_workout, only: [
+    :show,
+    :update,
+    :destroy,
+    :download_attempt_data
+  ]
   after_action :allow_iframe, only: [
     :new,
     :clone,
@@ -52,23 +57,58 @@ class WorkoutsController < ApplicationController
 
 
   # -------------------------------------------------------------
-  # GET /workouts/1
-  def show
-    if can? :read, @workout
-      @exs = @workout.exercises
-    else
+  def download_attempt_data
+    if cannot? :edit, @workout
       redirect_to gym_path, flash: {
-        error: 'You do not have permission to access that non-public workout.
-          Have a look at these popular workouts instead.'
-      }
+        error: 'You do not have permission to download data for this workout.'
+      } and return
+    end
+
+    # FIXME: blatantly copied from exercises_controller, but should be
+    # refactored to eliminate duplication
+    @exs = @workout.exercises
+    exercise_attributes = %w{ exercise_id exercise_name }
+    attempt_attributes = %w{ user_id exercise_version_id version_no answer_id
+      answer error attempt_id submit_time submit_num score workout_score
+      workout_name course_number course_name term}
+    data = CSV.generate(headers: true) do |csv|
+      csv << (exercise_attributes + attempt_attributes)
+      @exs.each do |ex|
+        ex.attempt_data(@workout.id).each do |submission|
+          csv << ([ @exercise.id, @exercise.name ] +
+            attempt_attributes.map { |a| submission.attributes[a] })
+        end
+      end
+    end
+
+    respond_to do |format|
+      format.csv do
+        send_data data, filename: "workout-#{params[:id]}-submissions.csv"
+      end
     end
   end
 
+
+  # -------------------------------------------------------------
+  # GET /workouts/1
+  def show
+    if cannot? :read, @workout
+      redirect_to gym_path, flash: {
+        error: 'You do not have permission to access that non-public workout.
+          Have a look at these popular workouts instead.'
+      } and return
+    end
+    @exs = @workout.exercises
+  end
+
+
+  # -------------------------------------------------------------
   def embed
 		if params[:workout_id].present?
 			@workout = Workout.find_by(id: params[:workout_id])
 		elsif params[:resource_name].present?
-			workouts = Workout.where('lower(name) = ? and is_public = true', params[:resource_name].downcase)
+			workouts = Workout.where('lower(name) = ? and is_public = true',
+			  params[:resource_name].downcase)
 			@workout = workouts.first
 		end
     if @workout
@@ -79,9 +119,13 @@ class WorkoutsController < ApplicationController
     end
   end
 
+
+  # -------------------------------------------------------------
   def review
     @exs = @workout.exercises
   end
+
+
   # -------------------------------------------------------------
   # GET /gym
   def gym
@@ -103,7 +147,8 @@ class WorkoutsController < ApplicationController
     @course = Course.find params[:course_id]
     @term = Term.find params[:term_id]
     @organization = Organization.find params[:organization_id]
-    @course_offerings = current_user.managed_course_offerings(course: @course, term: @term)
+    @course_offerings = current_user.managed_course_offerings(
+      course: @course, term: @term)
     @lms_assignment_id = params[:lms_assignment_id]
     @suggested_name = params[:suggested_name]
 
@@ -132,8 +177,10 @@ class WorkoutsController < ApplicationController
       .order('terms.ends_on DESC')
       .flat_map(&:workout_offerings)
 
-    # workouts_with_term is of the form [[CourseOffering, WorkoutOffering], [CourseOffering, WorkoutOffering], [CourseOffering, WorkoutOffering]]
-    # we will convert it into a Hash where each key is a term, and each value is an array of Workouts
+    # workouts_with_term is of the form [[CourseOffering, WorkoutOffering],
+    # [CourseOffering, WorkoutOffering], [CourseOffering, WorkoutOffering]]
+    # we will convert it into a Hash where each key is a term, and each value
+    # is an array of Workouts
     workouts_with_term = @workout_offerings.map { |wo|
       [wo.course_offering.term, wo]
     }.group_by(&:first).map{ |k, a| [k, a.map(&:last)] }
@@ -147,6 +194,7 @@ class WorkoutsController < ApplicationController
     render layout: 'one_column'
   end
 
+
   # -------------------------------------------------------------
   # GET /workouts/new_with_search/:searchkey
   def new_with_search
@@ -154,6 +202,7 @@ class WorkoutsController < ApplicationController
     @exers = Exercise.find_by_sql(
       "SELECT * FROM exercises WHERE name LIKE '%#{params[:searchkey]}%'")
   end
+
 
   # -------------------------------------------------------------
   # POST /gym/workouts/search
@@ -180,6 +229,7 @@ class WorkoutsController < ApplicationController
     end
   end
 
+
   # -------------------------------------------------------------
   # GET /workouts/1/edit
   def edit
@@ -187,7 +237,8 @@ class WorkoutsController < ApplicationController
     @workout = @workout_offering.workout
 
     if cannot? :edit, @workout
-      redirect_to root_path, notice: 'You are not authorized to edit this workout.' and return
+      redirect_to root_path,
+        notice: 'You are not authorized to edit this workout.' and return
     end
 
     @course = Course.find(params[:course_id])
@@ -209,9 +260,11 @@ class WorkoutsController < ApplicationController
       ex_data[:exercise_workout_id] = ex.id
       @exercises.push(ex_data)
     end
-    @workout_offerings = current_user.managed_workout_offerings_in_term(@workout, @course, @term).flatten
+    @workout_offerings = current_user.managed_workout_offerings_in_term(
+      @workout, @course, @term).flatten
 
-    course_offerings = current_user.managed_course_offerings(course: @course, term: @term)
+    course_offerings = current_user.managed_course_offerings(
+      course: @course, term: @term)
     used_course_offerings = @workout_offerings.flat_map(&:course_offering)
     @unused_course_offerings = course_offerings - used_course_offerings
 
@@ -223,7 +276,8 @@ class WorkoutsController < ApplicationController
         ext[:student_id] = e.user.id
         ext[:student_display] = e.user.display_name
         ext[:course_offering_id] = e.workout_offering.course_offering_id
-        ext[:course_offering_display] = e.workout_offering.course_offering.display_name_with_term
+        ext[:course_offering_display] =
+          e.workout_offering.course_offering.display_name_with_term
         ext[:opening_date] = e.opening_date.andand.to_i
         ext[:soft_deadline] = e.soft_deadline.andand.to_i
         ext[:hard_deadline] = e.hard_deadline.andand.to_i
@@ -235,6 +289,8 @@ class WorkoutsController < ApplicationController
     render layout: 'two_columns'
   end
 
+
+  # -------------------------------------------------------------
   def clone
     @workout = Workout.find params[:workout_id]
     @course = Course.find params[:course_id]
@@ -256,12 +312,15 @@ class WorkoutsController < ApplicationController
       @exercises.push(ex_data)
     end
 
-    @course_offerings = current_user.managed_course_offerings course: @course, term: @term
+    @course_offerings =
+      current_user.managed_course_offerings course: @course, term: @term
     @unused_course_offerings = nil
 
     render layout: 'two_columns'
   end
 
+
+  # -------------------------------------------------------------
   def create
     @workout = Workout.new
     @workout.creator_id = current_user.id
@@ -307,6 +366,8 @@ class WorkoutsController < ApplicationController
     end
   end
 
+
+  # -------------------------------------------------------------
   def find_offering
     @user = User.find params[:user_id]
     @term = Term.find params[:term_id]
@@ -316,30 +377,36 @@ class WorkoutsController < ApplicationController
     ext_lti_assignment_id = params[:ext_lti_assignment_id]
     custom_canvas_assignment_id = params[:custom_canvas_assignment_id]
     lms_instance_id = params[:lms_instance_id]
-    @custom_canvas_lms_assignment_id = "#{lms_instance_id}-#{custom_canvas_assignment_id}"
+    @custom_canvas_lms_assignment_id =
+      "#{lms_instance_id}-#{custom_canvas_assignment_id}"
     @lms_assignment_id = "#{lms_instance_id}-#{ext_lti_assignment_id}"
 
     if params[:from_collection].to_b
-      workouts = Workout.where('lower(name) = ?', params[:workout_name].downcase)
+      workouts = Workout.where('lower(name) = ?',
+        params[:workout_name].downcase)
       found_workout = workouts.andand.first
     end
 
     if params[:is_instructor].to_b
-      workout_offerings = WorkoutOffering.where(lms_assignment_id: @lms_assignment_id)
+      workout_offerings = WorkoutOffering.where(
+        lms_assignment_id: @lms_assignment_id)
       if workout_offerings.blank?
-        workout_offerings = WorkoutOffering.where(lms_assignment_id: @custom_canvas_lms_assignment_id)
+        workout_offerings = WorkoutOffering.where(
+          lms_assignment_id: @custom_canvas_lms_assignment_id)
       end
 
       if workout_offerings.blank?
         # check current term
-        workout_offerings = @user.managed_workout_offerings_in_term(params[:workout_name].downcase, @course, @term)
+        workout_offerings = @user.managed_workout_offerings_in_term(
+          params[:workout_name].downcase, @course, @term)
       end
 
       @workout_offering = workout_offerings.flatten.first
 
       if workout_offerings.blank?
         # check past terms
-        workout_offerings = @user.managed_workout_offerings_in_term(params[:workout_name].downcase, @course, nil)
+        workout_offerings = @user.managed_workout_offerings_in_term(
+          params[:workout_name].downcase, @course, nil)
       end
 
       workout_offerings = workout_offerings.andand.flatten.uniq
@@ -349,12 +416,14 @@ class WorkoutsController < ApplicationController
         .last.andand.workout
 
       if !@workout_offering
-        @course_offerings = @user.managed_course_offerings course: @course, term: @term
+        @course_offerings =
+          @user.managed_course_offerings course: @course, term: @term
         if @course_offerings.blank?
           course_offering = CourseOffering.create(
             course: @course,
             term: @term,
-            label: params[:label] || "#{@user.label_name} - #{@term.display_name}",
+            label: params[:label] ||
+              "#{@user.label_name} - #{@term.display_name}",
             self_enrollment_allowed: true,
             lms_instance: LmsInstance.find(lms_instance_id)
           )
@@ -545,10 +614,14 @@ class WorkoutsController < ApplicationController
     )
   end
 
+
+  # -------------------------------------------------------------
   def upload_yaml
 
   end
 
+
+  # -------------------------------------------------------------
   def yaml_create
     @yaml_wkts = YAML.load_file(params[:form].fetch(:yamlfile).path)
     @yaml_wkts.each do |workout|
@@ -591,10 +664,12 @@ class WorkoutsController < ApplicationController
     redirect_to workouts_path
   end
 
+
   # ------Placeholder for any views I want experiment with-------------------------------------------------------
   def dummy
     @workouts = Workout.find(1)
   end
+
 
   # -------------------------------------------------------------
   def evaluate
@@ -627,7 +702,6 @@ class WorkoutsController < ApplicationController
   #     render action: 'edit'
   #   end
   # end
-
   def update
     if cannot? :update, @workout
       redirect_to root_path,
@@ -693,7 +767,8 @@ class WorkoutsController < ApplicationController
             notice: "The time limit has passed for this workout." and return
         end
       end
-      redirect_to exercise_practice_path(@workout.first_exercise, workout_id: @workout.id, lti_launch: params[:lti_launch])
+      redirect_to exercise_practice_path(@workout.first_exercise,
+        workout_id: @workout.id, lti_launch: params[:lti_launch])
     else
       redirect_to workouts, notice: 'Workout not found' and return
     end
@@ -716,7 +791,7 @@ class WorkoutsController < ApplicationController
       @workout.name = params[:name]
       @workout.description = params[:description]
       @workout.is_public = params[:is_public]
-      common = {}   # params that are common among all offerings of this workout
+      common = {}  # params that are common among all offerings of this workout
       common[:workout_policy] = WorkoutPolicy.find_by id: params[:policy_id]
       common[:time_limit] = params[:time_limit]
       common[:published] = params[:published]
@@ -731,9 +806,11 @@ class WorkoutsController < ApplicationController
       exercises = JSON.parse params[:exercises]
       exercises.each_with_index do |ex, index|
         exercise = Exercise.find ex['id']
-        exercise_workout = ExerciseWorkout.find_by workout: @workout, exercise: exercise
+        exercise_workout =
+          ExerciseWorkout.find_by workout: @workout, exercise: exercise
         if exercise_workout.blank?
-          exercise_workout = ExerciseWorkout.new workout: @workout, exercise: exercise
+          exercise_workout =
+            ExerciseWorkout.new workout: @workout, exercise: exercise
         end
         exercise_workout.set_list_position index
         exercise_workout.points = ex['points']
@@ -751,17 +828,28 @@ class WorkoutsController < ApplicationController
       end
 
       course_offerings = JSON.parse params[:course_offerings]
-      workout_offerings = @workout.add_workout_offerings(course_offerings, common)
+      workout_offerings =
+        @workout.add_workout_offerings(course_offerings, common)
       return workout_offerings.first
     end
 
     # -------------------------------------------------------------
     # Only allow a trusted parameter "white list" through.
     def workout_params
-      params.require(:workout).permit(:name, :scrambled, :exercise_ids,
-        :description, :target_group, :points_multiplier, :opening_date, :exercise_workout,
-        :exercise_workouts_attributes, :workout_offerings_attributes,
-        :soft_deadline, :hard_deadline)
+      params.require(:workout).permit(
+        :description,
+        :exercise_ids,
+        :exercise_workout,
+        :exercise_workouts_attributes,
+        :hard_deadline,
+        :name,
+        :opening_date,
+        :points_multiplier,
+        :scrambled,
+        :soft_deadline,
+        :target_group,
+        :workout_offerings_attributes
+      )
     end
 
 end
