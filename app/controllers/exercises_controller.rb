@@ -37,29 +37,56 @@ class ExercisesController < ApplicationController
     end
   end
 
+
+  # -------------------------------------------------------------
   def query_data
     @available_exercises = Exercise.visible_through_user(current_user)
       .union(Exercise.visible_through_user_group(current_user))
       .uniq.select(&:is_coding?)
   end
 
+
+  # -------------------------------------------------------------
   def download_attempt_data
     @exercise = Exercise.find params[:id]
     resultset = @exercise.attempt_data
     exercise_attributes = %w{ exercise_id exercise_name }
-    attempt_attributes = %w{ user_id exercise_version_id version_no answer_id answer error attempt_id submit_time
-      submit_num score workout_score workout_name course_number course_name term}
+    attempt_attributes = %w{
+      user_id
+      exercise_version_id
+      version_no
+      answer_id
+      answer
+      error
+      attempt_id
+      submit_time
+      submit_num
+      score
+      active_score_id
+      workout_score_id
+      workout_score
+      workout_offering_id
+      workout_id
+      workout_name
+      course_offering_id
+      course_number
+      course_name
+      term }
     data = CSV.generate(headers: true) do |csv|
       csv << (exercise_attributes + attempt_attributes)
       resultset.each do |submission|
-        csv << ([ @exercise.id, @exercise.name ] + attempt_attributes.map { |a| submission.attributes[a] })
+        csv << ([ @exercise.id, @exercise.name ] +
+          attempt_attributes.map { |a| submission.attributes[a] })
       end
     end
 
     respond_to do |format|
-      format.csv { send_data data, filename: "X#{params[:id]}-submissions.csv" }
+      format.csv do
+        send_data data, filename: "X#{params[:id]}-submissions.csv"
+      end
     end
   end
+
 
   # -------------------------------------------------------------
   def search
@@ -272,16 +299,16 @@ class ExercisesController < ApplicationController
     if !hash.kind_of?(Array)
       hash = [hash]
     end
-    
+
     exercises = ExerciseRepresenter.for_collection.new([]).from_hash(hash)
     exercises.each do |e|
       if !e.save
         errors = []
-        errors <<  "Cannot save exercise:<ul>" 
+        errors <<  "Cannot save exercise:<ul>"
         e.errors.full_messages.each do |msg|
           errors << "<li>#{msg}</li>"
         end
-        
+
         if e.current_version
           e.current_version.errors.full_messages.each do |msg|
             errors << "<li>#{msg}</li>"
