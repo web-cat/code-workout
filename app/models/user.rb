@@ -806,25 +806,58 @@ class User < ActiveRecord::Base
     end
 
     # Move enrollment if needed
-    if !self.is_enrolled(to)
+    if !self.is_enrolled?(to)
       from_enrollment = CourseEnrollment.
         find_by(user: self, course_offering: from)
       CourseEnrollment.create(user: self,
         course_offering: to, course_role: from_enrollment.course_role)
     else
-      logger.warn "#{self.email} is already enrolled in "
-        + "#{to.display_name_with_term}."
+      logger.warn "#{self.email} is already enrolled in " +
+        "#{to.display_name_with_term}."
     end
 
     # Move workout scores
-    wos = self.workout_offerings.where(course_offering: from).flatten
-    ws = self.workout_scores.where("id in (?)", wos)
-    ws.each do |workout_score|
-      wo = ws.workout_offering
+    wos = from.workout_offerings
+    self.workout_scores.joins(:workout_offering).where(workout_offering:
+      { course_offering: from }).each do |workout_score|
+      wo = workout_score.workout_offering
       sister_wo = to.workout_offerings.where(workout: wo.workout).first
       if sister_wo
-        ws.update(workout_offering_id: sister_wo)
+        sister_ws = sister_wo.score_for(self)
+        if sister_ws
+          logger.error "Cannot migrate workout score #{workout_score} to " +
+            "workout offering #{wo.id} for user #{self.id}, because of " +
+            "duplicate workout score #{sister_ws}"
+        else
+          workout_score.update(workout_offering: sister_wo)
+        end
       end
+    end
+    # Move extensions
+    wos.each do |wo|
+      sister_wo = to.workout_offerings.where(workout: wo.workout).first
+      from_user_extensions = wo.student_extensions.where(user: self)
+      to_user_extensions = sister_wo.student_extensions.where(user: self)
+      if from_user_extensions.count > 0
+        if from_user_extensions.count > 1
+          logger.error "User #{self.id} has multiple extensions for workout " +
+            "offering #{wo}"
+        end
+        if to_user_extensions.count > 0
+          logger.error "User #{self.id} already has an extension for workout " +
+            "offering #{sister_wo}. Not migrating existing extensions from " +
+            "workout offering #{wo}."
+        else
+          from_user_extensions.each do |ue|
+            ue.update(workout_offering_id: sister_wo)
+          end
+        end
+      end
+    end
+
+    # Unenroll
+    self.course_enrollments.where(course_offering: from).each do |enrollment|
+      enrollment.destroy
     end
   end
 
