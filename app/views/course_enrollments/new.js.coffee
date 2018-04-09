@@ -89,7 +89,7 @@ $('#btn-enroll').on 'click', ->
       type: 'post'
       dataType: 'json'
       success: (data) =>
-        if data == true
+        if data['success'] == true
           $('#tab_roster').trigger
             type: 'requestUpdate'
             user_display: form_result.user_display
@@ -97,7 +97,8 @@ $('#btn-enroll').on 'click', ->
             success: data['success']
           $('#new-enrollment-modal').modal('hide')
         else
-          alert "Operation not completed. Could not enroll #{form_result.user_display} in #{form_result.course_offering_display}"
+          message = data['message']
+          alert "#{message}" 
 
 # Display the dialog.
 $('#new-enrollment-modal').modal('show')
