@@ -378,7 +378,6 @@ class User < ActiveRecord::Base
     course_offering && course_offerings.include?(course_offering)
   end
 
-
   # -------------------------------------------------------------
   def manages?(course_offering)
     role_for_course_offering(course_offering).andand.can_manage_course?
@@ -408,7 +407,6 @@ class User < ActiveRecord::Base
     course_offering && course_enrollments.
       where(course_offering: course_offering).first.andand.course_role
   end
-
 
   # -------------------------------------------------------------
   # Omni auth for Facebook and Google Users

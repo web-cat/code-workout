@@ -14,12 +14,13 @@
     @term.id),
     class: 'form-control inline'
   
-  = hidden_field_tag 'enrolled', params[:enrolled].to_b
+  = hidden_field_tag 'enrolled_only', params[:enrolled_only].to_b # see organizations.js.coffee
 
 - if @organizations.any?
   - @organizations.each do |organization|
-    - no_courses_to_show = organization.courses.where(is_hidden: false).blank?
-    - unless organization.is_hidden || no_courses_to_show 
+    - courses_to_show = organization.courses.where(is_hidden: false).any?
+    - show_org = courses_to_show && !organization.is_hidden 
+    - if show_org
       %h2= link_to organization.name, organization_path(organization)
 
       %ul
@@ -40,7 +41,7 @@
                   %th Enroll
                 %tbody
                   - course.course_offerings.each do |o|
-                    - if !params[:enrolled] || (params[:enrolled].to_b && current_user.andand.is_enrolled?(o))
+                    - if !params[:enrolled_only].to_b || (params[:enrolled_only].to_b && current_user.andand.is_enrolled?(o))
                       %tr
                         %td= o.term.display_name
                         %td= link_to o.display_name,

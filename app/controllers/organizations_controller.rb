@@ -11,11 +11,20 @@ include AbbrHelper
     # equivalent to load_and_authorize_resource.
     # The authorize is handled with accessible_by, then the load is
     # performed with a custom query
-    @organizations = Organization.accessible_by(current_ability).
-      includes(courses: :course_offerings).
-      joins(courses: :course_offerings).
-      where('course_offerings.term_id' => @term).
-      distinct
+    
+    if params[:enrolled_only].to_b
+      @organizations = Organization.accessible_by(current_ability).
+        includes(courses: { course_offerings: :course_enrollments } ).
+        joins(courses: { course_offerings: :course_enrollments } ).
+        where('course_offerings.term_id' => @term, 'course_enrollments.user_id' => current_user.id).
+        distinct
+    else
+      @organizations = Organization.accessible_by(current_ability).
+        includes(courses: :course_offerings).
+        joins(courses: :course_offerings).
+        where('course_offerings.term_id' => @term).
+        distinct
+    end
   end
 
   def search
