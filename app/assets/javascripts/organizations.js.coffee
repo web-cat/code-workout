@@ -3,8 +3,8 @@ COURSE = '#course'
 
 $(document).ready ->
   $('#term_id').change ->
-    enrolled = $('#enrolled').val()
-    window.location.href = "?enrolled=#{enrolled}&term_id=" + $('#term_id').val()
+    enrolled_only = $('#enrolled_only').val()
+    window.location.href = "?enrolled_only=#{enrolled_only}&term_id=" + $('#term_id').val()
 
 $('.organizations.new_or_existing').ready ->
   setup_autocomplete '/organizations/search', ORGANIZATION
