@@ -107,7 +107,7 @@
           = f.submit 'Check my answer!', class: 'btn btn-primary btn-submit', id: 'primarybtn'
       - if coding_questions
         %div.btn.btn-default{ data: { toggle: 'modal', target: '#confirm-reset' } } Reset
-      %div.btn.btn-default{id: "visualize"} Visualize
+      %div.btn.btn-default{id: "visualize", disabled: true} Visualize
 
       - if @workout_offering && params[:review_user_id].nil?
         = button_link 'Next exercise',
