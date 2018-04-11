@@ -24,6 +24,7 @@
 //= require codemirror/modes/clike
 //= require codemirror/modes/yaml
 //= require codemirror/modes/python
+//= require codemirror/modes/ruby
 //= require bootstrap-wysihtml5
 //= require cocoon
 //= require cm

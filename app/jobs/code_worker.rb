@@ -216,7 +216,37 @@ class CodeWorker
 
   # -------------------------------------------------------------
   def execute_rubytest(class_name, attempt_dir, pre_lines, answer_lines)
-    return 'Ruby execution is temporarily suspended.'
+    cmd = CodeWorkout::Config::RUBY[:make_cmd] % {attempt_dir: attempt_dir}
+    system(cmd + '>> err.log 2>> err.log')
+
+    # Parse compiler output for error messages to determine success
+    error = ''
+    logfile = attempt_dir + '/reports/compile.log'
+    if File.exist?(logfile) and !File.zero?(logfile)
+      compile_out = File.foreach(logfile) do |line|
+        line.chomp!
+        # puts "checking line: #{line}"
+        if line =~ /(error),\s*(.*)/i
+          if $1.casecmp('error')
+            error = "#{$2}"
+            error.gsub!(/for #<.*>/i,'')
+          end
+          break
+        end
+      end
+    end
+
+    if error.blank?
+      error = nil
+    else
+      # If there's an error, remove the test results, if any.
+      # This causes warnings to be treated the same as errors.
+      result_file = attempt_dir + '/results.csv'
+      if File.exist?(result_file)
+        File.delete(result_file)
+      end
+    end
+    return error
 #    if system("ruby #{class_name}Test.rb",
 #      [:out, :err] => 'err.log',
 #      chdir: attempt_dir)
