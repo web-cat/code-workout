@@ -90,7 +90,7 @@
         %th Graders
         %th Enroll
     %tbody
-      - @course.course_offerings.each do |off|
+      - @course.course_offerings.where(term: @term).each do |off|
         %tr
           %td= off.term.display_name
           %td= off.display_name
