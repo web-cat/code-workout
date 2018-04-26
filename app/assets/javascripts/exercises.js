@@ -52,9 +52,9 @@
                     "<head>\n" +
                     "    <title>JSAV example</title>\n" +
                     "    <meta charset=\"utf-8\"/>\n" +
-                    "    <link rel=\"stylesheet\" href=\"http://192.168.33.10:3000/assets/JSAV.css\" type=\"text/css\"/>\n" +
-                    "    <link rel=\"stylesheet\" href=\"http://192.168.33.10:3000/assets/odsaAV-min.css\" type=\"text/css\"/>\n" +
-                    "    <link rel=\"stylesheet\" href=\"http://192.168.33.10:3000/assets/odsaStyle-min.css\" type=\"text/css\"/>\n" +
+                    "    <link rel=\"stylesheet\" href=\"https://opendsax.cs.vt.edu:9292/assets/JSAV.css\" type=\"text/css\"/>\n" +
+                    "    <link rel=\"stylesheet\" href=\"https://opendsax.cs.vt.edu:9292/assets/odsaAV-min.css\" type=\"text/css\"/>\n" +
+                    "    <link rel=\"stylesheet\" href=\"https://opendsax.cs.vt.edu:9292/assets/odsaStyle-min.css\" type=\"text/css\"/>\n" +
                     "    <style>\n" +
                     "        #container {\n" +
                     "            width: 780px;\n" +
@@ -71,14 +71,14 @@
                     "        <p class=\"jsavoutput jsavline\"></p>\n" +
                     "    </div> <!--avcontainer-->\n" +
                     "</div> <!--container-->"+
-                    "<script src=\"http://192.168.33.10:3000/assets/jquery-2.1.4.min.js\"></script>\n" +
-                    "<script src=\"http://192.168.33.10:3000/assets/jquery-ui.min.js\"></script>\n" +
-                    "<script src=\"http://192.168.33.10:3000/assets/jquery.transit.js\"></script>\n" +
-                    "<script src=\"http://192.168.33.10:3000/assets/raphael.js\"></script>\n" +
-                    "<script src=\"http://192.168.33.10:3000/assets/JSAV-min.js\"></script>\n" +
-                    "<script src=\"http://192.168.33.10:3000/assets/odsaUtils-min.js\"></script>\n" +
-                    "<script src=\"http://192.168.33.10:3000/assets/odsaAV-min.js\"></script>\n" +
-                    "<script src=\"http://192.168.33.10:3000/assets/JsavWrapper.js\"></script>\n" +
+                    "<script src=\"https://opendsax.cs.vt.edu:9292/assets/jquery-2.1.4.min.js\"></script>\n" +
+                    "<script src=\"https://opendsax.cs.vt.edu:9292/assets/jquery-ui.min.js\"></script>\n" +
+                    "<script src=\"https://opendsax.cs.vt.edu:9292/assets/jquery.transit.js\"></script>\n" +
+                    "<script src=\"https://opendsax.cs.vt.edu:9292/assets/raphael.js\"></script>\n" +
+                    "<script src=\"https://opendsax.cs.vt.edu:9292/assets/JSAV-min.js\"></script>\n" +
+                    "<script src=\"https://opendsax.cs.vt.edu:9292/assets/odsaUtils-min.js\"></script>\n" +
+                    "<script src=\"https://opendsax.cs.vt.edu:9292/assets/odsaAV-min.js\"></script>\n" +
+                    "<script src=\"https://opendsax.cs.vt.edu:9292/assets/JsavWrapper.js\"></script>\n" +
                     "\n" +
                     "</body>"+
                     "</html>";
