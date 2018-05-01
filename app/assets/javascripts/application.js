@@ -1,3 +1,4 @@
+
 // This is a manifest file that'll be compiled into application.js, which will include all the files
 // listed below.
 //
@@ -33,13 +34,6 @@
 //= require student_search
 //= require workout_form
 //= require flatpickr
-
-
-$('a[data-popup]').live('click', function(e) {
-    window.open( $(this).attr('href'), "Popup", "height=600, width=600" );
-    e.preventDefault();
-});
-
 // Add the route helpers directly into the window object for easy access.
 $.extend(window, Routes);
 
