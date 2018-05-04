@@ -1,6 +1,0 @@
-- flash.each do |type, message|
-  - if !type.ends_with?('_id')
-    %div{ class: "alert #{flash_class_for(type)} fade in", role: 'alert' }
-      %button.close{ data: { dismiss: 'alert'} } &times;
-      = icon_tag_for(type)
-      = message
