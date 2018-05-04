@@ -1,0 +1,68 @@
+/*
+ * Adapted from: PixelKit's Dark Velvet Bootstrap UI Kit
+ *
+ * http://pixelkit.com/kits/dark-ui-kit
+ * Dark Velvet Version: 1.0
+ * Dark Velvet license: MIT License
+ * http://opensource.org/licenses/mit-license.html
+ */
+
+///* Variables */
+//@import "variables";
+//
+//  /* Mixins */
+//@import "mixins";
+//
+///* Reset */
+//@import "reset";
+//
+///* General Styles */
+//@import "general";
+//
+///* General Typography */
+//@import "typography";
+//
+///* Components */
+//@import "buttons";
+//// @import "checkboxes";
+//@import "ribbons";
+//// @import "badges";
+//// @import "rating";
+//// @import "pricing";
+//// @import "widgets-sidebar";
+//@import "posts";
+//@import "comments";
+//@import "forms";
+//@import "dividers";
+//@import "tabs";
+//// @import "sliders";
+//// @import "menu";
+//// @import "progress-bars";
+//// @import "scroll-bars";
+//// @import "profile";
+//// @import "knobs";
+//// @import "graph";
+//// @import "notifications";
+//// @import "datepicker";
+//// @import "chosen";
+//// @import "cusel";
+//// @import "jplayer";
+//// @import "jslider";
+//// @import "video-js";
+
+.table-striped > tbody > tr:nth-child(odd) > td,
+.table-striped > tbody > tr:nth-child(odd) > th {
+background-color: #353e47;
+}
+
+.table-bordered thead th  {
+  background-color: black;
+  color: white;
+}
+
+.navbar .nav > li.nav-text { padding: 13px 9px 0 0; }
+code { border-radius: 2px; }
+
+.content { border-left: 1px solid #000; }
+.sidebar { border-right: 1px solid #61686f; }
+/* .sidebar { background-color: #f0e6d3; } */

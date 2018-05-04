@@ -1,0 +1,23 @@
+= javascript_include_tag "add_exercise" 
+.nested-fields
+  = f.inputs do
+    .row.darker-bkg
+      .row             
+        .col-md-3
+          - puts "EXERS",@exers,"EXERS"
+          = f.input :exercise,
+            collection: Exercise.all,
+            placeholder: "Enter exercise id",
+            input_html: { class: 'col-md-10', rows: 1 }
+        -# TODO: Add back the ordering specification capabilities.    
+        .col-md-3
+          = f.input :position, as: :select,
+            collection: (1..10).to_a,
+            placeholder: "Exercise index",
+            input_html: { class: 'col-md-10', rows: 1 }
+        .col-md-3
+          = f.input :points,            
+            placeholder: "Points",
+            input_html: { class: 'col-md-10', rows: 1 }
+        .col-md-2
+          = link_to_remove_association "Remove exercise", f

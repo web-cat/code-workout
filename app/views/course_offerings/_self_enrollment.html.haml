@@ -1,0 +1,17 @@
+- if off.is_enrolled?(current_user)
+  - if off.is_instructor?(current_user)
+    Enrolled as instructor
+  - elsif off.is_grader?(current_user)
+    Enrolled as grader
+  - elsif off.is_student?(current_user)
+    = link_to 'Unenroll', course_offering_unenroll_path(off), method: :delete
+- else
+  - if off.effective_cutoff_date < Time.zone.now
+    Closed
+  - elsif off.self_enrollment_allowed?
+    - if user_signed_in?
+      = link_to 'Enroll', course_offering_enroll_path(off, user_id: current_user.id), method: :post
+    - else
+      Sign in to enroll
+  - else
+    Contact instructor

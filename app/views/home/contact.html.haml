@@ -1,0 +1,32 @@
+%ol.breadcrumb
+  %li= link_to 'Home', root_path
+  %li.active Contact
+
+%h1 Contact the CodeWorkout Team
+
+.form-horizontal.formtastic{ style: 'margin-left: 20px;' }
+  .form-group
+    %label.control-label Project Lead:
+    .form-wrapper
+      Stephen Edwards,
+      =link_to 'edwards@cs.vt.edu', 'mailto:edwards@cs.vt.edu'
+
+  .form-group
+    %label.control-label Developer:
+    .form-wrapper
+      Krishnan Panamalai Murali,
+      =link_to 'pmk1433@vt.edu', 'mailto:pmk1433@vt.edu'
+
+  .form-group
+    %label.control-label Source Code:
+    .form-wrapper
+      =link_to 'https://github.com/web-cat/code-workout',
+        'https://github.com/web-cat/code-workout'
+
+  .form-group
+    %label.control-label Issue Tracker:
+    .form-wrapper
+      =link_to 'https://github.com/web-cat/code-workout/issues',
+        'https://github.com/web-cat/code-workout/issues'
+
+=render partial: 'home/send_us_exercises'

@@ -1,0 +1,7 @@
+- workout_score ||= nil
+- time_remaining = workout_score.andand.time_remaining
+- if time_remaining && time_remaining > 0
+  .alert.alert-warning.fade.in{ role: 'alert' }
+    You have
+    = n_to_s(time_remaining)
+    minutes left to complete this workout.

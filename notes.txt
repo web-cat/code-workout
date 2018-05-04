@@ -1,0 +1,105 @@
+Development team notes:
+
+Database Test Data
+------------------
+After each pull, please do the following to place the database in
+a simple starter state we can all use:
+    
+    rake db:reset
+    rake db:populate
+
+The initial database population is defined by lib/tasks/sample_data.rake.
+It uses the factories defined in spec/factories/* to generate entities.
+If you add new modael classes and want to generate test data in the
+database, please add to the sample_data.rake file so that this population
+will happen automatically for everyone.  The sample_data.rake contains
+only "sample/try out" data for use during development, and it won't
+appear on the production server.  Initial database contents provided
+for all new installs, including the production server, is described
+in db/seeds.rb instead.
+    
+  - The initial database includes the following accounts:
+    - admin@codeworkout.org (pass: adminadmin), has admin-level access
+    - example-1@railstutorial.org (pass: hokiehokie), has instructor access
+    - example-*@railstutorial.org (pass: hokiehokie) 50 students
+    
+    It also includes the following other objects:
+    - two terms (spring 2013 and fall 2013),
+    - one organization (VT)
+    - one course (CS 1114)
+    - two offerings of 1114 (one each semester)
+      - one course offering is set up with the admin and instructor
+        as instructors, and all other sample accounts as students
+
+
+Git Practices
+-------------
+Do all work in your own branch, then merge into master when features
+are tested/working.  Pull master changes and merge them into your branch
+when necessary.
+
+After pulling updates from git, be sure to run this to update any Gem
+changes to the project:
+
+    bundle install
+
+After pulling updates from git, be sure to run this to bring the database
+up to speed:
+
+    rake db:populate
+
+The db:populate task with reset the database to an empty state with
+the current schema, and then preload it with some sample data.  Use
+"rake db:reset" if you want to go to an empty database without any
+sample data instead.
+
+
+Updating Documentation
+----------------------
+Some documentation is auto-generated.  In model classes, schema comments
+in the model source files show the table structure.  To update those
+comments, use:
+
+    bundle exec annotate
+
+In the root of the project, the erd.pdf file presents an entity relationship
+diagram (ERD) showing the relationships between the model entities.  Diagram
+generation requires graphviz to be installed.  If you have it installed,
+you can update the erd.pdf diagram using:
+
+    rake erd notation=bachman polymporphism=true
+
+
+Basic Code Formatting
+---------------------
++   Read the Ruby style guide:
+
+        https://github.com/bbatsov/ruby-style-guide
+
++   Please use spaces around operators (e.g., "a = 10" instead of "a=10",
+    or "a + b" instead of "a+b").
+
++   Please use spaces after commas (e.g., "function(a, b)" instead of
+    "function(a,b)".
+
++   In comments, please use a space after the comment character, separating
+    it from the first word of the comment.
+
++   In Ruby control constructs, use a space after Ruby keywords like "if"
+    (i.e., "if x == 0", not "if( x == 0 )").  Parentheses are OK, but are
+    not required in conditions.
+
++   Set your editor to automatically trim white space at the ends of lines,
+    and to use only spaces for indentation (indentation step size = 2), and
+    to ensure files end in a newline (i.e., no EOF on a meaningful line of
+    text).
+    --  In Eclipse, go to the Preferences dialog.  Under Aptana Studio->
+        Editors->Ruby, then set tab policy to "use spaces" with a tab size of
+        2.  Then go to Aptana Studio->Editors and check to "remove trailing
+        whitespace characters".
+
++   Keep lines under 80 columns where possible.  Break long lines when possible
+    to do this.
+    --  In Eclipse, go to the Preferences dialog.  Then go to General->
+        Editors->Text Editors, check to show the print margin and set the
+        print margin to 80 columns.

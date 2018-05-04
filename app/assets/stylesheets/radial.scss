@@ -1,0 +1,104 @@
+.radial-progress {
+  $circle-background: #d6dadc;
+  $circle-color: #91bf7d; // #97a71d;
+  $circle-size: 52px;
+  $transition-length: 1s;
+  $shadow: 2px 2px 4px rgba(0,0,0,0.2);
+
+  border-radius: 50%;
+  background-color: $circle-background;
+  width: $circle-size;
+  height: $circle-size;
+
+  &.masked {
+    background-image: repeating-linear-gradient(
+      -45deg,
+      $circle-color,
+      $circle-color 5px,
+      transparent 5px,
+      transparent 10px);
+  }
+
+  .circle {
+   .mask, .fill {
+      border-radius: 50%;
+      width: $circle-size;
+      height: $circle-size;
+      position: absolute;
+      transition: -webkit-transform $transition-length;
+      transition: -ms-transform $transition-length;
+      transition: transform $transition-length;
+      -webkit-backface-visibility: hidden;
+    }
+    .mask {
+      clip: rect(0px, $circle-size, $circle-size, $circle-size / 2);
+      .fill {
+        clip: rect(0px, $circle-size / 2, $circle-size, 0px);
+        background-color: $circle-color;
+      }
+    }
+    .shadow {
+      width: $circle-size;
+      height: $circle-size;
+      position: absolute;
+      border-radius: 50%;
+      box-shadow: $shadow inset;
+    }
+  }
+  $increment: 180deg / 100;
+  @for $i from 0 to 101 {
+    &[data-progress="#{$i}"] {
+      .circle {
+        .mask.full, .fill {
+          -webkit-transform: rotate($increment * $i);
+          -ms-transform: rotate($increment * $i);
+          transform: rotate($increment * $i);
+        }
+        .fill.fix {
+          -webkit-transform: rotate($increment * $i * 2);
+          -ms-transform: rotate($increment * $i * 2);
+          transform: rotate($increment * $i * 2);
+        }
+      }
+      .inset .pct:before {
+        content: "#{$i}%"
+      }
+    }
+  }
+
+  $inset-size: 40px;
+  $inset-color: #fbfbfb;
+  .inset {
+    width: $inset-size;
+    height: $inset-size;
+    position: absolute;
+    margin-left: ($circle-size - $inset-size) / 2;
+    margin-top: ($circle-size - $inset-size) / 2;
+    background-color: $inset-color;
+    border-radius: 50%;
+    box-shadow: $shadow;
+
+    $percentage-color: #739863; // #3c763d; // #97a71d;
+    $percentage-font-size: 13px;
+    $percentage-text-width: 38px;
+    .pct, .score {
+      width: $percentage-text-width;
+      position: absolute;
+      top: ($inset-size - $percentage-font-size) / 2;
+      left: ($inset-size - $percentage-text-width) / 2;
+      line-height: 1;
+      text-align: center;
+      color: $percentage-color;
+      font-weight: 800;
+      font-size: $percentage-font-size;
+    }
+    .score.neg { color: #a94442; }
+    .score.none { color: #999; }
+    .score.sym {
+      font-size: 2 * $percentage-font-size;
+      top: ($inset-size - 2 * $percentage-font-size) / 2;
+    }
+    .score .outof { color: #333; }
+    .score img { vertical-align: bottom; }
+  }
+}

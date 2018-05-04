@@ -1,0 +1,6 @@
+var tab = "#{@tab}"
+
+// render the partials with three parameters that are required by the partials.
+//All may or may not be used, depending on which partial was asked for.
+
+$('#' + tab).html("#{escape_javascript(render "#{@tab}", course: @course, is_student: @is_student, course_offerings: @course_offerings)}")

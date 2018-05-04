@@ -1,0 +1,35 @@
+= semantic_form_for @user,
+  html: { class: "form-horizontal" } do |f|
+  = f.semantic_errors
+
+  = f.input :first_name
+  = f.input :last_name
+  .form-group
+    %span.form-label
+      %label.control-label Email
+    .form-wrapper{ style: 'padding-top: 7px;' }
+      = @user.email
+  .form-group
+    %span.form-label
+      %label.control-label Avatar
+    .form-wrapper
+      = image_tag @user.avatar_url
+  = f.input :time_zone, as: :select, 
+  collection: TimeZone.all
+  = f.input :avatar, label: 'Avatar URL'
+  .form-group
+    %span.form-label
+      %label.control-label
+    .form-wrapper
+      %p
+        If you do not specify an image, your image will be automatically
+        loaded from Facebook, if you have logged in through that service,
+        or from
+        = succeed ',' do
+          = link_to 'http://gravatar.com', 'http://gravatar.com'
+        if you have set up an image there.  Otherwise, a unique
+        = link_to 'MonsterID', 'http://www.splitbrain.org/projects/monsterid'
+        image will be used for you.
+
+  = f.actions do
+    = f.action :submit, as: :button, button_html: { class: 'btn btn-primary' }

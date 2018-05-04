@@ -1,0 +1,12 @@
+.container
+  %h1 Edit Exercise
+  %p.lead
+    Editing 
+    = link_to @exercise.display_name, exercise_practice_path(@exercise)
+
+  = render 'oneblockform', qtype: @exercise.question_type
+
+  %p
+    = link_to 'Show', exercise_practice_path(@exercise)
+    \|
+    = link_to 'Back', exercises_path

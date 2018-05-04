@@ -1,0 +1,54 @@
+= semantic_form_for @workout, html: { class: "form-horizontal" } do |f|
+  = f.semantic_errors
+  .row
+    .col-md-10
+      = f.input :name, maxlength: 50,
+        placeholder: "Enter Workout name"
+  .row
+    .col-md-4
+      = f.input :exercises, :as => :select,
+        :collection => @workout.exercises,
+        :label => "Workout Exercises"
+    .row
+    .col-md-4
+      = f.input :exercises, :as => :select,
+        :collection => Exercise.find(@allexs-@exs),
+        :label => "Other Exercises"
+  .row
+    .col-md-4
+
+    .col-md-4
+      = f.input :target_group, :as => :select,
+        :collection => ['Public','Class','Group','Instructor'],
+        :label => "Audience"
+  .row
+    .col-md-4
+      = f.input :points_multiplier, :as => :select,
+        :collection => (1..10).step(1).to_a,
+        :label => "Experience Points",
+        :hint => "Workout question points multiplier"
+  .row
+    .col-md-10
+      = f.input :description, label: "Workout description",
+        placeholder: "(optional) Exercise explanation, given after submission",
+        input_html: { :class => 'richtexteditor span10', :rows => 2 }
+  %h2 Answers
+  .row.darker-bkg
+    .col-md-4
+      = f.input :scrambled,
+        :label => "Randomize?",
+        :input_html => { checked: 'checked', value: true}
+    .col-md-4
+      = f.input :opening_date,
+        :label => "Workout opening date",
+        :input_html => { value: Date.today}
+    .col-md-4
+      = f.input :soft_deadline,
+        :label => "Workout soft deadline",
+        :input_html => { value: Date.today}
+    .col-md-4
+      = f.input :hard_deadline,
+        :label => "Workout hard deadline",
+        :input_html => { value: Date.today}
+  .actions
+    = f.submit 'Save'

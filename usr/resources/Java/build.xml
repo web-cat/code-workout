@@ -1,0 +1,94 @@
+<project name="codeworkout-java" default="run" basedir="../../..">
+
+  <echo message="java.home = ${java.home}"/>
+  <echo message="attempt_dir = ${attempt_dir}"/>
+  <echo message="user.dir = ${user.dir}"/>
+  <property name="app.dir" value="${user.dir}/../../../.."/>
+  <echo message="app.dir = ${app.dir}"/>
+  <!--property name="resource_dir" value="${app.dir}/usr/resources/Java"/-->
+  <echo message="resource_dir = ${resource_dir}"/>
+  <!--property name="work_dir"   value="."/-->
+  <echo message="work_dir = ${work_dir}"/>
+  <property name="report_dir"   value="${work_dir}/reports"/>
+  <echo message="report_dir = ${report_dir}"/>
+  <echo message="ant.home = ${ant.home}"/>
+  <!-- timeout is in milliseconds -->
+  <property name="exec.timeout" value="120000"/>
+  <property name="build.compiler" value="modern"/>
+
+  <path id="codeworkout.classpath">
+    <pathelement location="${resource_dir}/JavaTddPluginSupport.jar"/>
+    <fileset dir="${resource_dir}">
+      <include name="*.jar"/>
+      <exclude name="JavaTddPluginSupport.jar"/>
+    </fileset>
+  	<pathelement location="${work_dir}"/>
+  </path>
+
+  <target name="compile">
+    <mkdir dir="${report_dir}"/>
+    <delete>
+      <fileset dir="${report_dir}"/>
+      <fileset dir="${work_dir}" includes="*.class"/>
+    </delete>
+  	<record name="${report_dir}/compile.log" action="start"/>
+    <javac
+      srcdir="${work_dir}"
+      destdir="${work_dir}"
+      debug="true"
+      debuglevel="lines,vars,source"
+      includeAntRuntime="false">
+      <classpath refid="codeworkout.classpath"/>
+      <compilerarg value="-Xlint:unchecked"/>
+      <compilerarg value="-Xlint:empty"/>
+      <compilerarg value="-Xlint:fallthrough"/>
+    </javac>
+  	<record name="${report_dir}/compile.log" action="stop"/>
+  </target>
+
+  <target name="run" depends="compile">
+    <junit printsummary="off"
+           haltonerror="no"
+           haltonfailure="no"
+           filtertrace="no"
+           timeout="${exec.timeout}"
+           tempdir="${work_dir}">
+      <classpath refid="codeworkout.classpath"/>
+      <jvmarg value="-ea"/>
+      <sysproperty key="java.security.manager" value=""/>
+      <sysproperty key="student.TestCase.trimStackTraces" value="true"/>
+      <sysproperty key="java.security.policy" value="=file:${resource_dir}/java.policy"/>
+      <sysproperty key="report_dir" value="${report_dir}"/>
+      <sysproperty key="work_dir" value="${work_dir}"/>
+      <sysproperty key="resource_dir" value="${resource_dir}"/>
+      <sysproperty key="ant.home" value="${ant.home}"/>
+      <sysproperty key="student.TestCase.trimStackTraces" value="false"/>
+      <sysproperty key="student.testingsupport.junit4.AdaptiveTimeout.ceiling" value="3000"/>
+      <sysproperty key="student.testingsupport.junit4.AdaptiveTimeout.maximum" value="4000"/>
+      <sysproperty key="student.testingsupport.junit4.AdaptiveTimeout.logfile" value="${report_dir}/timeout.csv"/>
+      <sysproperty key="student.testingsupport.junit4.AdaptiveTimeout.user" value="${attempt_dir}"/>
+      <sysproperty key="net.sf.webcat.plugins.javatddplugin.CsvJUnitResultFormatter.prefix" value="${attempt_dir}"/>
+      <formatter
+        classname="net.sf.webcat.plugins.javatddplugin.CsvJUnitResultFormatter"
+        extension=".csv"/>
+      <formatter
+        classname="net.sf.webcat.plugins.javatddplugin.BasicJUnitResultFormatter"
+        extension="-results.txt"/>
+      <formatter
+        classname="net.sf.webcat.plugins.javatddplugin.OutputCaptureJUnitResultFormatter"
+        extension="-out.txt"/>
+      <batchtest todir="${report_dir}">
+        <fileset dir="${work_dir}">
+          <include name="**/*Test.java"/>
+          <include name="**/*Tests.java"/>
+          <exclude name="**/Abstract*"/>
+          <exclude name="reports/"/>
+        </fileset>
+      </batchtest>
+    </junit>
+    <concat destfile="${work_dir}/results.csv">
+      <fileset dir="${report_dir}" includes="*.csv" excludes="timeout.csv"/>
+    </concat>
+  </target>
+
+</project>

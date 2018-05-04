@@ -1,0 +1,15 @@
+.nested-fields
+  = f.inputs do
+    .row.darker-bkg
+      .row             
+        .col-md-3
+          = f.input :version, as: :number,
+            input_html: {value: 1}    
+        .col-md-3
+          = f.input :creator,  as: :email,
+            input_html: {value: current_user.email}
+
+    
+  = f.semantic_fields_for :prompt do |ev|         
+    = render 'prompt_fields', f: ev, qtype: qtype
+

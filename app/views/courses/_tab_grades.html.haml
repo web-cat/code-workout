@@ -1,0 +1,62 @@
+-# FIXME: Funky logic for the time being
+-#- if course_offerings.size > 1 && !is_student
+  -#= button_to 'Download grades (all sections)',
+    -# course_gradebook_path(@course, format: :csv)
+- course_offerings.each do |offering|
+  -if course_offerings.size > 1
+    %h2= offering.display_name
+  - workout_offerings = offering.workout_offerings
+  - if is_student
+    - workout_offerings = workout_offerings.select{ |i| i.can_be_seen_by? current_user }
+  - if can? :generate_gradebook, offering
+    = button_to 'Download section grades',
+      course_offering_gradebook_path(offering, format: :csv)
+    %table.table.table-striped
+      %thead
+        %tr
+          %th
+          %th Name
+          - workout_offerings.each do |wkto|
+            %th= wkto.workout.name
+          %th Total
+      %tbody
+        - offering.students.each do |student|
+          %tr
+            %td
+              = image_tag student.avatar_url(size: 28),
+                width: 28, height: 28
+            %td
+              = student.display_name
+              - if !student.last_name.blank? || !student.first_name.blank?
+                %br
+                = surround '(', ')' do
+                  = student.email
+            - grand_total = 0.0
+            - workout_offerings.each do |wkto|
+              - score = wkto.score_for(student).andand.score
+              - if score
+                %td= link_to score.to_s,
+    organization_workout_offering_review_path(id: wkto.id,
+    course_id: wkto.course_offering.course.slug,
+    term_id: wkto.course_offering.term.slug,
+    organization_id: wkto.course_offering.course.organization.slug, review_user_id: student.id)
+                - grand_total += score
+              - else
+                %td -/-
+            %td= grand_total.round(2)
+  - else
+    %table.table.table-striped
+      %thead
+        %tr
+          %th Workout
+          %th Score
+      %tbody
+        - workout_offerings.each do |wkto|
+          %tr
+            %td= wkto.workout.name
+            - workout_score = wkto.score_for(current_user)
+            - score = workout_score.andand.score
+            - if score && workout_score.show_feedback?
+              %td= score
+            - else
+              %td.textblur -/-

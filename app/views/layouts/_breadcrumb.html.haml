@@ -1,0 +1,47 @@
+%ol.breadcrumb
+  %li= link_to 'Home', root_path
+  - @course_offering ||= @workout_offering.andand.course_offering
+  - @workout ||= @workout_offering.andand.workout
+  - @course ||= @course_offering.andand.course
+  - @organization ||= @course.andand.organization
+  - gym = [ @course_offering, @course, @organization, @workout_offering ].all?(&:nil?)
+  - standalone_ex = @exercise && @workout.blank?
+  - standalone_workout = @workout && @workout_offering.blank?
+
+  - if @organization
+    %li= link_to 'Courses', organizations_path
+    - if @course.blank?
+      %li.active= @organization.abbreviation
+
+  - if @course
+    %li= link_to @organization.abbreviation, organization_path(@organization)
+    - if @course_offering.blank?
+      %li.active= @course.number
+
+  - if @course_offering
+    %li= link_to @course.number, organization_course_path(@organization, @course)
+    - if @workout_offering.blank?
+      %li.active= @course_offering.term.display_name
+
+  - if @workout_offering
+    %li= link_to @course_offering.term.display_name,
+    organization_course_path(@organization, @course, term_id: @course_offering.term)
+    - if @exercise.blank?
+      %li.active= @workout.name
+    - else
+      %li= link_to @workout.name, organization_workout_offering_path(@organization,
+      @course, @course_offering.term, @workout_offering)
+      %li.active= @exercise.display_name
+
+  - if standalone_ex
+    %li= link_to 'Gym', gym_path
+    %li.active= @exercise.display_name
+  - elsif standalone_workout
+    %li= link_to 'Gym', gym_path
+    - if @exercise.blank?
+      %li.active= @workout.name
+    - else
+      %li= link_to @workout.name, workout_path(@workout)
+      %li.active= @exercise.display_name
+  - elsif gym
+    %li.active= 'Gym'

@@ -1,0 +1,15 @@
+= semantic_form_for User.new, url: session_path(User.new) do |f|
+
+  = f.inputs do
+    .form-group
+      = f.input :email, input_html: { autofocus: true }
+    .form-group
+      = f.input :password
+    .checkbox
+      %label
+        = f.check_box :remember_me, checked: true, style: 'margin-top: 6px;'
+        Remember me
+
+  = f.actions class: 'form-actions sign-in-form' do
+    = f.submit 'Sign in', class: 'btn btn-primary btn-sm'
+    = link_to 'Forgot your password?', new_password_path, class: 'btn btn-default btn-sm'

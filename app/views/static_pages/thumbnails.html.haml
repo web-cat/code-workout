@@ -1,0 +1,755 @@
+%h1 Thumbnail Designs
+
+%h2 "Closed" (past) workouts and exercises
+
+%article.workout.closed.thumbnail.lg
+  .title
+    .due 2/20/15
+    %i.fa.fa-lock
+    = link_to 'Best Workout', '#'
+    %span.badge.badge-info 10
+  .summary
+    .radial-progress{ 'data-progress' => '72' }
+      .circle
+        .mask.full
+          .fill
+        .mask.half
+          .fill
+          .fill.fix
+        .shadow
+      .inset
+        .pct
+  .body
+    .text
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+      eiusmod tempor incididunt ut labore et dolore magna aliqua.
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+      eiusmod tempor incididunt ut labore et dolore magna aliqua.
+  .info
+    = difficulty_image(45)
+    .taglist
+      = link_to 'Java', '#', class: 'tag'
+      = link_to 'loops', '#', class: 'tag'
+      = link_to 'conditionals', '#', class: 'tag'
+      = link_to 'booleans', '#', class: 'tag'
+      = link_to 'variables', '#', class: 'tag'
+
+%article.exercise.closed.thumbnail.lg
+  .title
+    %span.fa-stack
+      %i.fa.fa-square.fa-stack-2x
+      %i.fa.fa-terminal.fa-stack-1x.fa-inverse
+    = link_to 'smallestInArray', '#'
+  .summary
+    .radial-progress{ 'data-progress' => '80' }
+      .circle
+        .mask.full
+          .fill
+        .mask.half
+          .fill
+          .fill.fix
+        .shadow
+      .inset
+        .score
+          4
+          %span.outof> /5
+  .body
+    .text
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+      eiusmod tempor incididunt ut labore et dolore magna aliqua.
+  .info
+    = difficulty_image(45)
+    .taglist
+      = link_to 'Java', '#', class: 'tag'
+      = link_to 'loops', '#', class: 'tag'
+      = link_to 'conditionals', '#', class: 'tag'
+      = link_to 'booleans', '#', class: 'tag'
+      = link_to 'variables', '#', class: 'tag'
+
+
+.clearfix
+%h2 Scored (course) workouts and exercises, unattempted
+
+%article.workout.thumbnail.lg
+  .title
+    .due.soon in 1 day
+    %i.fa.fa-folder-open
+    = link_to 'Best Workout', '#'
+    %span.badge.badge-info 10
+  .summary
+    .radial-progress
+      .circle
+        .mask.full
+          .fill
+        .mask.half
+          .fill
+          .fill.fix
+        .shadow
+      .inset
+        .score
+          %i.fa.fa-pencil-square-o
+  .body
+    .text
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+      eiusmod tempor incididunt ut labore et dolore magna aliqua.
+  .info
+    = difficulty_image(45)
+    .taglist
+      = link_to 'Java', '#', class: 'tag'
+      = link_to 'loops', '#', class: 'tag'
+      = link_to 'conditionals', '#', class: 'tag'
+      = link_to 'booleans', '#', class: 'tag'
+      = link_to 'variables', '#', class: 'tag'
+
+%article.exercise.thumbnail.lg
+  .title
+    %span.fa-stack
+      %i.fa.fa-square.fa-stack-2x
+      %i.fa.fa-terminal.fa-stack-1x.fa-inverse
+    = link_to 'smallestInArray', '#'
+  .summary
+    .radial-progress
+      .circle
+        .mask.full
+          .fill
+        .mask.half
+          .fill
+          .fill.fix
+        .shadow
+      .inset
+        .score
+          %i.fa.fa-pencil-square-o
+          %span.outof> /5
+  .body
+    .text
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+      eiusmod tempor incididunt ut labore et dolore magna aliqua.
+  .info
+    = difficulty_image(45)
+    .taglist
+      = link_to 'Java', '#', class: 'tag'
+      = link_to 'loops', '#', class: 'tag'
+      = link_to 'conditionals', '#', class: 'tag'
+      = link_to 'booleans', '#', class: 'tag'
+      = link_to 'variables', '#', class: 'tag'
+
+
+.clearfix
+%h2 Scored (course) workouts and exercises, attempted
+
+%article.workout.thumbnail.lg
+  .title
+    .due.soon in 5 hrs
+    %i.fa.fa-folder-open
+    = link_to 'Best Workout', '#'
+    %span.badge.badge-info 10
+  .summary
+    .radial-progress{ 'data-progress' => '0' }
+      .circle
+        .mask.full
+          .fill
+        .mask.half
+          .fill
+          .fill.fix
+        .shadow
+      .inset
+        .pct
+  .body
+    .text
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+      eiusmod tempor incididunt ut labore et dolore magna aliqua.
+  .info
+    = difficulty_image(45)
+    .taglist
+      = link_to 'Java', '#', class: 'tag'
+      = link_to 'loops', '#', class: 'tag'
+      = link_to 'conditionals', '#', class: 'tag'
+      = link_to 'booleans', '#', class: 'tag'
+      = link_to 'variables', '#', class: 'tag'
+
+%article.exercise.thumbnail.lg
+  .title
+    %span.fa-stack
+      %i.fa.fa-square.fa-stack-2x
+      %i.fa.fa-terminal.fa-stack-1x.fa-inverse
+    = link_to 'smallestInArray', '#'
+  .summary
+    .radial-progress{ 'data-progress' => '0' }
+      .circle
+        .mask.full
+          .fill
+        .mask.half
+          .fill
+          .fill.fix
+        .shadow
+      .inset
+        .score
+          0
+          %span.outof> /5
+  .body
+    .text
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+      eiusmod tempor incididunt ut labore et dolore magna aliqua.
+  .info
+    = difficulty_image(45)
+    .taglist
+      = link_to 'Java', '#', class: 'tag'
+      = link_to 'loops', '#', class: 'tag'
+      = link_to 'conditionals', '#', class: 'tag'
+      = link_to 'booleans', '#', class: 'tag'
+      = link_to 'variables', '#', class: 'tag'
+
+%article.workout.thumbnail.lg
+  .title
+    .due.soon in 5 hrs
+    %i.fa.fa-folder-open
+    = link_to 'Best Workout', '#'
+    %span.badge.badge-info 10
+  .summary
+    .radial-progress{ 'data-progress' => '72' }
+      .circle
+        .mask.full
+          .fill
+        .mask.half
+          .fill
+          .fill.fix
+        .shadow
+      .inset
+        .pct
+  .body
+    .text
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+      eiusmod tempor incididunt ut labore et dolore magna aliqua.
+  .info
+    = difficulty_image(45)
+    .taglist
+      = link_to 'Java', '#', class: 'tag'
+      = link_to 'loops', '#', class: 'tag'
+      = link_to 'conditionals', '#', class: 'tag'
+      = link_to 'booleans', '#', class: 'tag'
+      = link_to 'variables', '#', class: 'tag'
+
+%article.exercise.thumbnail.lg
+  .title
+    %span.fa-stack
+      %i.fa.fa-square.fa-stack-2x
+      %i.fa.fa-terminal.fa-stack-1x.fa-inverse
+    = link_to 'smallestInArray', '#'
+  .summary
+    .radial-progress{ 'data-progress' => '80' }
+      .circle
+        .mask.full
+          .fill
+        .mask.half
+          .fill
+          .fill.fix
+        .shadow
+      .inset
+        .score
+          4
+          %span.outof> /5
+  .body
+    .text
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+      eiusmod tempor incididunt ut labore et dolore magna aliqua.
+  .info
+    = difficulty_image(45)
+    .taglist
+      = link_to 'Java', '#', class: 'tag'
+      = link_to 'loops', '#', class: 'tag'
+      = link_to 'conditionals', '#', class: 'tag'
+      = link_to 'booleans', '#', class: 'tag'
+      = link_to 'variables', '#', class: 'tag'
+
+
+.clearfix
+%h2 Scored (course), attempted, feedback not shown until later
+
+%article.workout.thumbnail.lg
+  .title
+    .due.soon in 5 hrs
+    %i.fa.fa-folder-open
+    = link_to 'Best Workout', '#'
+    %span.badge.badge-info 10
+  .summary
+    .radial-progress.masked
+      .circle
+        .shadow
+      .inset
+        .score= image_tag 'pct-blur.png'
+  .body
+    .text
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+      eiusmod tempor incididunt ut labore et dolore magna aliqua.
+  .info
+    = difficulty_image(45)
+    .taglist
+      = link_to 'Java', '#', class: 'tag'
+      = link_to 'loops', '#', class: 'tag'
+      = link_to 'conditionals', '#', class: 'tag'
+      = link_to 'booleans', '#', class: 'tag'
+      = link_to 'variables', '#', class: 'tag'
+
+%article.exercise.thumbnail.lg
+  .title
+    %span.fa-stack
+      %i.fa.fa-square.fa-stack-2x
+      %i.fa.fa-terminal.fa-stack-1x.fa-inverse
+    = link_to 'smallestInArray', '#'
+  .summary
+    .radial-progress.masked
+      .circle
+        .shadow
+      .inset
+        .score
+          = image_tag 'score-blur.png'
+          %span.outof> /5
+  .body
+    .text
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+      eiusmod tempor incididunt ut labore et dolore magna aliqua.
+  .info
+    = difficulty_image(45)
+    .taglist
+      = link_to 'Java', '#', class: 'tag'
+      = link_to 'loops', '#', class: 'tag'
+      = link_to 'conditionals', '#', class: 'tag'
+      = link_to 'booleans', '#', class: 'tag'
+      = link_to 'variables', '#', class: 'tag'
+
+
+.clearfix
+%h2 Workouts, due soon + overdue
+
+%article.workout.thumbnail.lg
+  .title
+    .due.soon in 5 hrs
+    %i.fa.fa-folder-open
+    = link_to 'Best Workout', '#'
+    %span.badge.badge-info 10
+  .summary
+    .radial-progress{ 'data-progress' => '72' }
+      .circle
+        .mask.full
+          .fill
+        .mask.half
+          .fill
+          .fill.fix
+        .shadow
+      .inset
+        .pct
+  .body
+    .text
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+      eiusmod tempor incididunt ut labore et dolore magna aliqua.
+  .info
+    = difficulty_image(45)
+    .taglist
+      = link_to 'Java', '#', class: 'tag'
+      = link_to 'loops', '#', class: 'tag'
+      = link_to 'conditionals', '#', class: 'tag'
+      = link_to 'booleans', '#', class: 'tag'
+      = link_to 'variables', '#', class: 'tag'
+
+%article.workout.thumbnail.lg
+  .title
+    .due.late 5 hrs ago
+    %i.fa.fa-folder-open
+    = link_to 'Best Workout', '#'
+    %span.badge.badge-info 10
+  .summary
+    .radial-progress{ 'data-progress' => '72' }
+      .circle
+        .mask.full
+          .fill
+        .mask.half
+          .fill
+          .fill.fix
+        .shadow
+      .inset
+        .pct
+  .body
+    .text
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+      eiusmod tempor incididunt ut labore et dolore magna aliqua.
+  .info
+    = difficulty_image(45)
+    .taglist
+      = link_to 'Java', '#', class: 'tag'
+      = link_to 'loops', '#', class: 'tag'
+      = link_to 'conditionals', '#', class: 'tag'
+      = link_to 'booleans', '#', class: 'tag'
+      = link_to 'variables', '#', class: 'tag'
+
+
+.clearfix
+%h2 Unscored (xp) workouts and exercises, unattempted
+
+%article.workout.thumbnail.lg
+  .title
+    .due open
+    %i.fa.fa-folder-open
+    = link_to 'Best Workout', '#'
+    %span.badge.badge-info 10
+  .summary
+    .radial-progress
+      .circle
+        .mask.full
+          .fill
+        .mask.half
+          .fill
+          .fill.fix
+        .shadow
+      .inset
+        .score
+          %i.fa.fa-pencil-square-o
+  .body
+    .text
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+      eiusmod tempor incididunt ut labore et dolore magna aliqua.
+  .info
+    = difficulty_image(45)
+    .taglist
+      = link_to 'Java', '#', class: 'tag'
+      = link_to 'loops', '#', class: 'tag'
+      = link_to 'conditionals', '#', class: 'tag'
+      = link_to 'booleans', '#', class: 'tag'
+      = link_to 'variables', '#', class: 'tag'
+
+%article.exercise.thumbnail.lg
+  .title
+    %span.fa-stack
+      %i.fa.fa-square.fa-stack-2x
+      %i.fa.fa-terminal.fa-stack-1x.fa-inverse
+    = link_to 'smallestInArray', '#'
+  .summary
+    .radial-progress
+      .circle
+        .mask.full
+          .fill
+        .mask.half
+          .fill
+          .fill.fix
+        .shadow
+      .inset
+        .score
+          %i.fa.fa-pencil-square-o>
+          %span.outof> /10
+          .xp
+  .body
+    .text
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+      eiusmod tempor incididunt ut labore et dolore magna aliqua.
+  .info
+    = difficulty_image(45)
+    .taglist
+      = link_to 'Java', '#', class: 'tag'
+      = link_to 'loops', '#', class: 'tag'
+      = link_to 'conditionals', '#', class: 'tag'
+      = link_to 'booleans', '#', class: 'tag'
+      = link_to 'variables', '#', class: 'tag'
+
+
+.clearfix
+%h2 Unscored (xp) workouts and exercises, attempted/completed
+%article.workout.thumbnail.lg
+  .title
+    .due open
+    %i.fa.fa-folder-open
+    = link_to 'Best Workout', '#'
+    %span.badge.badge-info 10
+  .summary
+    .radial-progress{ 'data-progress' => '84' }
+      .circle
+        .mask.full
+          .fill
+        .mask.half
+          .fill
+          .fill.fix
+        .shadow
+      .inset
+        .pct
+  .body
+    .text
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+      eiusmod tempor incididunt ut labore et dolore magna aliqua.
+  .info
+    = difficulty_image(45)
+    .taglist
+      = link_to 'Java', '#', class: 'tag'
+      = link_to 'loops', '#', class: 'tag'
+      = link_to 'conditionals', '#', class: 'tag'
+      = link_to 'booleans', '#', class: 'tag'
+      = link_to 'variables', '#', class: 'tag'
+
+%article.exercise.thumbnail.lg
+  .title
+    %span.fa-stack
+      %i.fa.fa-square.fa-stack-2x
+      %i.fa.fa-terminal.fa-stack-1x.fa-inverse
+    = link_to 'smallestInArray', '#'
+  .summary
+    .radial-progress{ 'data-progress' => '80' }
+      .circle
+        .mask.full
+          .fill
+        .mask.half
+          .fill
+          .fill.fix
+        .shadow
+      .inset
+        .score
+          8
+          %span.outof> /10
+          .xp
+  .body
+    .text
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+      eiusmod tempor incididunt ut labore et dolore magna aliqua.
+  .info
+    = difficulty_image(45)
+    .taglist
+      = link_to 'Java', '#', class: 'tag'
+      = link_to 'loops', '#', class: 'tag'
+      = link_to 'conditionals', '#', class: 'tag'
+      = link_to 'booleans', '#', class: 'tag'
+      = link_to 'variables', '#', class: 'tag'
+
+
+.clearfix
+-#%h2 Workout Mockups
+
+-#%article.workout.thumbnail.lg
+  .title
+    .due 2/20/15
+    %i.fa.fa-folder-open
+    = link_to 'Best Workout', '#'
+    %span.badge.badge-info 10
+  .summary
+    .radial-progress
+      .circle
+        .mask.full
+          .fill
+        .mask.half
+          .fill
+          .fill.fix
+        .shadow
+      .inset
+        .pct
+    = difficulty_image(45)
+  .text
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+    eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    .info
+      .taglist
+        = link_to 'Java', '#', class: 'tag'
+        = link_to 'loops', '#', class: 'tag'
+        = link_to 'conditionals', '#', class: 'tag'
+        = link_to 'booleans', '#', class: 'tag'
+        = link_to 'variables', '#', class: 'tag'
+
+-#%article.workout.thumbnail.lg
+  .title
+    .due.late 4 hrs ago
+    %i.fa.fa-folder-open
+    = link_to 'Best Workout', '#'
+    %span.badge.badge-info 10
+  .summary
+    .radial-progress{ 'data-progress' => '75' }
+      .circle
+        .mask.full
+          .fill
+        .mask.half
+          .fill
+          .fill.fix
+        .shadow
+      .inset
+        .pct
+    = difficulty_image(45)
+  .text
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+    eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    .info
+      .taglist
+        = link_to 'Java', '#', class: 'tag'
+        = link_to 'loops', '#', class: 'tag'
+        = link_to 'conditionals', '#', class: 'tag'
+        = link_to 'booleans', '#', class: 'tag'
+        = link_to 'variables', '#', class: 'tag'
+
+
+
+-#.clearfix
+-#%h2 Exercise Mockups
+
+-#%article.exercise.thumbnail.lg
+  .title
+    %i.fa.fa-list-ul
+    = link_to 'smallestInArray', '#'
+  .summary
+    .radial-progress
+      .circle
+        .mask.full
+          .fill
+        .mask.half
+          .fill
+          .fill.fix
+        .shadow
+      .inset
+        .score.none
+          _ /10
+          .xp
+    = difficulty_image(10)
+  .text
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+    eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    .info
+      .taglist
+        = link_to 'Java', '#', class: 'tag'
+        = link_to 'loops', '#', class: 'tag'
+        = link_to 'conditionals', '#', class: 'tag'
+        = link_to 'booleans', '#', class: 'tag'
+        = link_to 'variables', '#', class: 'tag'
+
+-#%article.exercise.thumbnail.lg
+  .title
+    %i.fa.fa-keyboard-o
+    = link_to 'smallestInArray', '#'
+  .summary
+    .radial-progress{ 'data-progress' => '0' }
+      .circle
+        .mask.full
+          .fill
+        .mask.half
+          .fill
+          .fill.fix
+        .shadow
+      .inset
+        .score
+          0/20
+          .xp
+    = difficulty_image(45)
+  .text
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+    eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    .info
+      .taglist
+        = link_to 'Java', '#', class: 'tag'
+        = link_to 'loops', '#', class: 'tag'
+        = link_to 'conditionals', '#', class: 'tag'
+        = link_to 'booleans', '#', class: 'tag'
+        = link_to 'variables', '#', class: 'tag'
+
+-#%article.exercise.thumbnail.lg
+  .title
+    %i.fa.fa-list-ul
+    = link_to 'smallestInArray', '#'
+  .summary
+    .radial-progress{ 'data-progress' => '75' }
+      .circle
+        .mask.full
+          .fill
+        .mask.half
+          .fill
+          .fill.fix
+        .shadow
+      .inset
+        .score
+          6/8
+          .xp
+    = difficulty_image(45)
+  .text
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+    eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    .info
+      .taglist
+        = link_to 'Java', '#', class: 'tag'
+        = link_to 'loops', '#', class: 'tag'
+        = link_to 'conditionals', '#', class: 'tag'
+        = link_to 'booleans', '#', class: 'tag'
+        = link_to 'variables', '#', class: 'tag'
+
+-#%article.exercise.thumbnail.lg
+  .title
+    %i.fa.fa-keyboard-o
+    = link_to 'smallestInArray', '#'
+  .summary
+    .radial-progress{ 'data-progress' => '100' }
+      .circle
+        .mask.full
+          .fill
+        .mask.half
+          .fill
+          .fill.fix
+        .shadow
+      .inset
+        .score
+          5/5
+          .xp
+    = difficulty_image(45)
+  .text
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+    eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    .info
+      .taglist
+        = link_to 'Java', '#', class: 'tag'
+        = link_to 'loops', '#', class: 'tag'
+        = link_to 'conditionals', '#', class: 'tag'
+        = link_to 'booleans', '#', class: 'tag'
+        = link_to 'variables', '#', class: 'tag'
+
+-#%article.exercise.thumbnail.lg
+  .title
+    %i.fa.fa-list-ul
+    = link_to 'smallestInArray', '#'
+  .summary
+    .radial-progress{ 'data-progress' => '100' }
+      .circle
+        .mask.full
+          .fill
+        .mask.half
+          .fill
+          .fill.fix
+        .shadow
+      .inset
+        .score.sym
+          %i.fa.fa-check
+    = difficulty_image(45)
+  .text
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+    eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    .info
+      .taglist
+        = link_to 'Java', '#', class: 'tag'
+        = link_to 'loops', '#', class: 'tag'
+        = link_to 'conditionals', '#', class: 'tag'
+        = link_to 'booleans', '#', class: 'tag'
+        = link_to 'variables', '#', class: 'tag'
+
+-#%article.exercise.thumbnail.lg
+  .title
+    %i.fa.fa-file-code-o
+    = link_to 'smallestInArray', '#'
+  .summary
+    .radial-progress{ 'data-progress' => '0' }
+      .circle
+        .mask.full
+          .fill
+        .mask.half
+          .fill
+          .fill.fix
+        .shadow
+      .inset
+        .score.sym.neg
+          %i.fa.fa-times
+    = difficulty_image(45)
+  .text
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+    eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    .info
+      .taglist
+        = link_to 'Java', '#', class: 'tag'
+        = link_to 'loops', '#', class: 'tag'
+        = link_to 'conditionals', '#', class: 'tag'
+        = link_to 'booleans', '#', class: 'tag'
+        = link_to 'variables', '#', class: 'tag'

@@ -1,0 +1,20 @@
+<script id='extension-template' type='text/html'>
+  <tr class='extension fields' data-id='{{ id }}' data-course-offering-id='{{ course_offering_id }}' data-student-id='{{ student_id }}'>
+    <td class='course-offering' style='font-size: small;'>{{ course_offering_display }}</td>
+    <td style='font-size: small;'>{{ student_display }}</td>
+    <td>
+      <input class='datepicker opening-datepicker form-control input-sm' type='text' placeholder='Set date'
+        data-date='{{ opening_date }}'/>
+    </td>
+    <td>
+      <input class='datepicker soft-datepicker form-control input-sm' type='text' placeholder='Set date'
+        data-date='{{ soft_deadline}}'/>
+    </td>
+    <td>
+      <input class='datepicker hard-datepicker form-control input-sm' type='text' placeholder='Set date'
+        data-date = '{{ hard_deadline }}'/>
+    </td>
+    <td><input class='form-control time-limit input-sm input' value='{{ time_limit }}' type='number' min='0' placeholder='Optional'></td>
+    <td class='remove'><i class='action delete-extension fa fa-times'></i></td>
+  </tr>
+</script>

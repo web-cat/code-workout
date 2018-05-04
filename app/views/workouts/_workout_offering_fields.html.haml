@@ -1,0 +1,24 @@
+%tr.offering.fields{ data: { id: workout_offering.andand.id } }
+  %td.course-offering{ data: { course_offering_id: course_offering.andand.id } }
+    %small.display{style: 'font-size: small;'}
+      = course_offering.andand.display_name_with_term
+  %td
+    %input.url{ type: 'text', class: 'form-control input-sm', placeholder: 'Optional',
+      value: workout_offering ? workout_offering.lms_assignment_url : '' }
+  %td
+    - date = workout_offering.andand.opening_date.andand.to_i
+    %input.datepicker.opening-datepicker{ type: 'text', class: 'form-control input-sm', placeholder: 'Set date',
+      data: { date: (date ? date * 1000 : nil) } }
+  %td
+    - date = workout_offering.andand.soft_deadline.andand.to_i
+    %input.datepicker.soft-datepicker{ type: 'text', class: 'form-control input-sm', placeholder: 'Set date',
+      data: { date: (date ? date * 1000 : nil) } }
+  %td
+    - date = workout_offering.andand.hard_deadline.andand.to_i
+    %input.datepicker.hard-datepicker{ type: 'text', class: 'form-control input-sm', placeholder: 'Set date',
+      data: { date: (date ? date * 1000 : nil) } }
+  %td
+    = button_tag type: 'button', class: 'add-extension btn btn-sm btn-primary' do
+      Add Extension
+  %td.remove
+    %i.fa.fa-times.action.delete-offering{ data: { removable: "#{removable}" } }

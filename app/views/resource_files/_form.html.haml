@@ -1,0 +1,4 @@
+= form_for ResourceFile.create, url: {action: "uploadFile"}  do |f|
+  = f.file_field :upload
+  .actions
+    = f.submit 'Upload'

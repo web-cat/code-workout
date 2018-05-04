@@ -1,0 +1,22 @@
+#python_ruby_modal.modal.fade{ role: 'dialog',
+  'aria-labelledby' => 'Create your course',
+  'data-keyboard' => 'true',
+  'aria-hidden' => 'true' }
+  .modal-dialog
+    .modal-content
+      .modal-header
+        %button.close{ 'data-dismiss' => 'modal', 'aria-label' => 'Close'}
+          %span{ 'aria-hidden' => 'true' }
+            &times
+        %h4.modal-title Ruby and Python exercises
+
+      .modal-body
+        %p
+          Ruby and Python exercises are unavailable while security
+          sandboxing concerns are addressed. They will be available
+          in a future release of CodeWorkout.
+
+      .modal-footer
+        %button.btn.btn-default{ type: 'button', 'data-dismiss' => 'modal' }
+          Close
+        -# %button.btn.btn-primary{ type: 'button' }

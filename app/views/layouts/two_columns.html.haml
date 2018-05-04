@@ -1,0 +1,7 @@
+- if @lti_launch
+  = inside_layout 'header' do
+    = render partial: 'layouts/two_columns_body'
+- else
+  = inside_layout do
+    = render partial: 'layouts/two_columns_body'
+

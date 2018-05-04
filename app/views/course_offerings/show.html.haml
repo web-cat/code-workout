@@ -1,0 +1,79 @@
+.container
+  - if !@lti_launch
+    = render partial: 'layouts/breadcrumb',
+      locals: {wid: nil, exid: nil, off: @course_offering}
+  %p#notice= notice
+  %p
+    %strong Course:
+    = link_to @course_offering.course.number_and_name,
+      organization_course_path(id: @course_offering.course.id, organization_id: @course_offering.course.organization.id)
+
+  %p
+    %strong Term:
+    = @course_offering.term.display_name
+
+  %p
+    %strong Label:
+    = @course_offering.label
+
+  %p
+    %strong URL:
+    = link_to @course_offering.url, @course_offering.url
+
+  %p
+    %strong Instructor(s):
+    - @course_offering.instructors.each do |instructor|
+      = link_to instructor.display_name, user_path(instructor)
+
+  %p
+    %strong Grader(s):
+    - @course_offering.graders.each do |grader|
+      = link_to grader.display_name, user_path(grader)
+
+  %p
+    %strong Self enrollment allowed:
+    = @course_offering.self_enrollment_allowed
+
+  %p
+    %strong Workout Offerings
+    %table.col-md-6.table
+      %thead
+        %tr
+          %th.col-md-1 Name
+          %th.col-md-1 Opens On
+          %th.col-md-1 Soft Deadline
+          %th.col-md-1 Hard Deadline
+      %tbody
+        - @course_offering.workout_offerings.each do |workout_offering|
+          %tr
+            %td.col-md-1
+              = link_to workout_offering.workout.name,
+                organization_workout_offering_practice_path(id: workout_offering.id,
+                organization_id: @course_offering.course.organization.id, term_id: @course_offering.term.id,
+                course_id: @course_offering.course.id)
+            %td.col-md-1
+              = user_time(current_user, workout_offering.opening_date).to_formatted_s :short
+            %td.col-md-1
+              = user_time(current_user, workout_offering.soft_deadline).to_formatted_s :short
+            %td.col-md-1
+              = user_time(current_user, workout_offering.hard_deadline).to_formatted_s :short
+  %p
+    %strong
+    - if user_signed_in? && @course_offering.is_manager?(current_user)
+      = link_to 'Add workouts', new_workout_path
+    - if @course_offering.self_enrollment_allowed?
+      - if user_signed_in?
+        - if !current_user.is_enrolled?(@course_offering)
+          %br
+          = link_to 'Enroll',                                                  |
+            '/course_enrollments?' + { course_enrollment:                      |
+            ActionController::Parameters.new({user_id: current_user.id,        |
+            course_offering_id: @course_offering.id,                           |
+            course_role_id: CourseRole::STUDENT_ID})}.to_param, method: :post  |
+      - else
+        %br
+        = link_to 'Need to Sign in to enroll', new_user_session_path
+
+
+  = button_link 'Edit', edit_course_offering_path(@course_offering)
+  = button_link 'Back', course_offerings_path

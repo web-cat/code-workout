@@ -1,0 +1,29 @@
+%h1 Question: minVal()
+%p
+  Write a method called
+  %code minVal()
+  that takes an array of
+  %code int
+  values as a parameter and returns the smallest value in the array.
+
+%pre{ lang: 'text/x-java' }
+  :preserve
+    public static int minVal(int[] y)
+    {
+        int bestSoFar = y[0];
+        for (int i = 1; i &lt;= y.length; i++)
+        {
+            if (y[i] &lt; bestSoFar)
+            {
+                bestSoFar = i;
+            }
+        }
+
+        return bestSoFar;
+    }
+    </pre>
+
+%form
+  %button.btn.btn-primary{ type: 'button' }
+    %i.glyphicon.glyphicon-expand
+    Check my answer!

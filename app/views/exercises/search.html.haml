@@ -1,0 +1,21 @@
+%h1 Search Results
+%p
+  Searching for:
+  - @terms.each do |t|
+    = link_to t, exercises_search_path(search: t), method: :post, class: 'tag'
+
+- uid = user_signed_in? ? current_user.id : 0
+- if not(@msg.empty?)
+  .alert= @msg
+- if not(@wos.empty?)
+  %h2 Workouts
+  -# = render partial: "workouts/thumblg", collection: @wos, as: :w,
+  - @wos.in_groups_of(2, false) do |row|
+    = render row, uid: uid
+    .clearfix
+
+- if not(@exs.empty?)
+  %h2 Individual Exercises
+  - @exs.in_groups_of(2, false) do |row|
+    = render row, user: current_user
+    .clearfix

@@ -1,0 +1,13 @@
+- if is_student
+  - course_offerings.each do |offering|
+    - offering.workout_offerings.select{ |i| i.can_be_seen_by? current_user }.in_groups_of(2, false) do |row|
+      = render row, locals: { uid: current_user.id }
+      .clearfix
+- else
+  - course_offerings.flat_map(&:workout_offerings).uniq{ |wo| wo.workout }.in_groups_of(2, false) do |row|
+    = render row, locals: { uid: current_user.id }
+    .clearfix
+- if !is_student
+  = link_to 'Add Workout', organization_new_or_existing_workout_path(organization_id: organization.slug,
+    course_id: course.slug,
+    term_id: term.slug), class: 'btn btn-default'

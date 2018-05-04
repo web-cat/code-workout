@@ -1,0 +1,12 @@
+.nested-fields
+  = f.inputs name: 'Multiple Choice Settings' do
+    = f.input :is_scrambled,
+      label: 'Randomize answers'
+
+    = f.input :allow_multiple,                |
+      label: 'Allow multiple selections'
+  
+  = f.semantic_fields_for :choices do |ch|
+    = render 'choice_fields', f: ch
+  .links
+    = link_to_add_association 'Add another choice', f, :choices

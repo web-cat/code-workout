@@ -1,0 +1,32 @@
+%h2
+  Edit
+  = resource_name.to_s.humanize
+
+= semantic_form_for resource, as: resource_name,
+  url: user_registration_path(resource_name),
+  html: { method: :put, class: "form-horizontal" } do |f|
+  = devise_error_messages!
+
+  = f.inputs do
+    = f.input :email, input_html:{ autofocus: true }
+    - if devise_mapping.confirmable? && resource.pending_reconfirmation?
+      Currently waiting confirmation for:
+      = resource.unconfirmed_email
+    = f.input :password, autocomplete: 'off'
+    %i (leave blank if you don't want to change it)
+    = f.input :password_confirmation
+    = f.input :current_password
+    %i (we need your current password to confirm your changes)
+
+  = f.actions do
+    = f.submit 'Update', class: 'btn btn-primary'
+    = button_link 'Back', :back
+
+%h3 Cancel your account
+
+%p
+  Unhappy?
+  = button_to 'Cancel your account', resource,
+    data: { confirm: 'Are you sure?' },
+    method: :delete,
+    class: 'btn btn-default'

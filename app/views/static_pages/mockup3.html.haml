@@ -1,0 +1,43 @@
+%h1 Question: maxRow()
+%p
+  The following method, called
+  %code> maxRow()
+  , is intended to take one parameter: a
+  %code List
+  where the elements are
+  %code> List
+  s of
+  %code Integer
+  objects. You can think of this parameter as a matrix--a list of rows, where
+  each row is a list of "cells" (plain integers). The method sums up the
+  integers in each row (each inner list), and returns the index (row number)
+  of the row with the largest row sum. Fill in the blanks so that this method
+  works as intended:
+
+%pre{ lang: 'text/x-java' }
+  :preserve
+    public static int maxRow(List&lt;List&lt;Integer&gt;&gt; matrix)
+    {
+        int maxVec = -1;                                // Line 1
+        int maxSum = Integer.MIN_VALUE;                 // Line 2
+
+        for (int row = 0; row &lt; __________; row++)      // Line 3
+        {
+            int sum = 0;                                // Line 4
+            for (int col = 0; col &lt; __________; col++)  // Line 5
+            {
+                sum = sum + __________;                 // Line 6
+            }
+            if (___________)                            // Line 7
+            {
+                maxSum = __________;                    // Line 8
+                maxVec = __________;                    // Line 9
+            }
+        }
+        return maxVec;                                  // Line 10
+    }
+
+%form
+  %button.btn.btn-primary{ type: 'button' }
+    %i.glyphicon.glyphicon-expand
+    Check my answer!
