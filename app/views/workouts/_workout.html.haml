@@ -72,6 +72,7 @@
         organization_id: organization_id,
         workout_id: workout.id,
         lms_assignment_id: lms_assignment_id,
+        lti_launch: @lti_launch,
         suggested_name: suggested_name), class: 'btn btn-sm btn-primary',
         data: { confirm: message }
     - elsif !workout_score || workout_score.show_feedback?
