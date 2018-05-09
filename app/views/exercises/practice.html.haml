@@ -160,7 +160,7 @@
         %button.close{ type: 'button', data: { dismiss: 'modal' }, aria_hidden: true } &times
         %p.lead.modal-title#resetModalLabel Code Visualization
 
-      .modal-body
-        %iframe{:align => "center", :id => "VisualizeIFrame", :width => 800, :height => 400}
+      .modal-body{ id: 'ModalBody'}
+        
       .modal-footer
         %button.btn.btn-default{ data: { dismiss: 'modal' }, type: 'button' } Cancel
