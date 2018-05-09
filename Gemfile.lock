@@ -170,6 +170,8 @@ GEM
       thread_safe (~> 0.1)
       warden (~> 1.2.3)
     diff-lcs (1.2.5)
+    domain_name (0.5.20170404)
+      unf (>= 0.0.5, < 1.0.0)
     erubis (2.7.0)
     eventmachine (1.2.3)
     exception_handler (0.3.45)
@@ -208,6 +210,8 @@ GEM
     hashie (3.3.1)
     hike (1.2.3)
     hitimes (1.2.2)
+    http-cookie (1.0.3)
+      domain_name (~> 0.5)
     i18n (0.7.0)
     immigrant (0.3.1)
       activerecord (>= 3.0)
@@ -250,6 +254,7 @@ GEM
     net-scp (1.2.1)
       net-ssh (>= 2.6.5)
     net-ssh (3.2.0)
+    netrc (0.11.0)
     nokogiri (1.6.3.1)
       mini_portile (= 0.6.0)
     oauth (0.4.7)
@@ -326,6 +331,10 @@ GEM
     request-log-analyzer (1.13.4)
     responders (1.1.1)
       railties (>= 3.2, < 4.2)
+    rest-client (2.0.2)
+      http-cookie (>= 1.0.2, < 2.0)
+      mime-types (>= 1.16, < 4.0)
+      netrc (~> 0.8)
     rspec-core (3.1.5)
       rspec-support (~> 3.1.0)
     rspec-expectations (3.1.2)
@@ -391,6 +400,9 @@ GEM
     uglifier (2.5.3)
       execjs (>= 0.3.0)
       json (>= 1.8.0)
+    unf (0.1.4)
+      unf_ext
+    unf_ext (0.0.7.4)
     wannabe_bool (0.1.1)
     warden (1.2.3)
       rack (>= 1.0)
@@ -446,6 +458,7 @@ DEPENDENCIES
   jquery-rails
   jquery-ui-rails
   js-routes
+  json
   kaminari
   log_file
   loofah
@@ -468,6 +481,7 @@ DEPENDENCIES
   representable
   request-log-analyzer
   responders (~> 1.1)
+  rest-client
   rspec-rails
   sass-rails
   sdoc
