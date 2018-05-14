@@ -493,6 +493,14 @@ class WorkoutsController < ApplicationController
             render 'lti/error' and return
           end
         end
+      else
+        anchor_offering = workout_offerings.first
+        sister_offerings = WorkoutOffering.joins(:course_offering)
+          .where("(lms_assignment_id = '' OR lms_assignment_id is NULL)
+                 AND course_id=#{anchor_offering.course_offering.course.id}
+                 AND term_id=#{anchor_offering.course_offering.term.id}
+                 AND workout_id=#{anchor_offering.workout.id}")
+        workout_offerings = workout_offerings + sister_offerings
       end
 
       enrolled_course_offerings = @user.course_offerings_for_term(@term, @course)
@@ -552,6 +560,7 @@ class WorkoutsController < ApplicationController
           @workout_offering = enrolled_workout_offerings.andand.first
         elsif @course_offering
           # found an enrolled course_offering, so we don't need to ask the student anything
+          # but the course offering does not include the workout offering, so add it
           workout_offering_options = {
             lms_assignment_id: @lms_assignment_id,
             from_collection: params[:from_collection]
