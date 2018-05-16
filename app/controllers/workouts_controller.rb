@@ -381,6 +381,7 @@ class WorkoutsController < ApplicationController
       "#{lms_instance_id}-#{custom_canvas_assignment_id}"
     @lms_assignment_id = "#{lms_instance_id}-#{ext_lti_assignment_id}"
 
+
     if params[:from_collection].to_b
       workouts = Workout.where('lower(name) = ?',
         params[:workout_name].downcase)
@@ -388,6 +389,8 @@ class WorkoutsController < ApplicationController
     end
 
     if params[:is_instructor].to_b
+      @course_offerings = CourseOffering.where(lti_context_id: params[:lti_context_id])
+
       workout_offerings = WorkoutOffering.where(
         lms_assignment_id: @lms_assignment_id)
       if workout_offerings.blank?

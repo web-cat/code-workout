@@ -136,12 +136,15 @@ class LtiController < ApplicationController
         render 'lti/error' and return
       end
 
+      lti_context_id = params[:context_id]
+
       redirect_to organization_find_workout_offering_path(
         organization_id: @organization.slug,
         term_id: @term.slug,
         workout_name: workout_name,
         user_id: @user.id,
         course_id: @course.slug,
+        lti_context_id: lti_context_id,
         is_instructor: @tp.context_instructor?,
         ext_lti_assignment_id: ext_lti_assignment_id,
         custom_canvas_assignment_id: custom_canvas_assignment_id,
