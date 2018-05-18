@@ -64,7 +64,7 @@ group :test do
   gem 'capybara'
 end
 
-group :production, :staging do
+group :production, :staging, :deploy  do
   gem 'mysql2', '= 0.3.15'
   gem 'puma'
 end
