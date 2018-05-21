@@ -33,7 +33,7 @@
             success: function (data) {
                 
                 studentCode = studentCode.split('\n').join('\\n');
-                studentCode = studentCode.split('{')[1].split('return')[0];
+                studentCode = studentCode.substring(studentCode.indexOf('{') + 1, studentCode.indexOf('return'));
                 //var visWindow = window.open("", "Visualize", "_blank",'height=400, width=800');
                 var html = "<!DOCTYPE html>\n" +
                 "<html>\n" +"\<script>\
