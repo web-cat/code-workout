@@ -71,13 +71,13 @@
                 \<script src=\"https://opendsa-server.cs.vt.edu/OpenDSA/JSAV/build/JSAV-min.js\">\<\/script>\n\
                 \<script src=\"https://opendsa-server.cs.vt.edu/OpenDSA/lib/odsaUtils-min.js\">\<\/script>\n\
                 \<script src=\"https://opendsa-server.cs.vt.edu/OpenDSA/lib/odsaAV-min.js\">\<\/script>\n\
-                \<script src=\"https://opendsax.cs.vt.edu:9292/assets/JsavWrapper.js\">\<\/script>\n\
+                \<script src=\"https://opendsa-server.cs.vt.edu:9292/assets/JsavWrapper.js\">\<\/script>\n\
                 \n\
                 \<\/body>' + "</html>";                 
                     //"</html>";
                 visWindow.document.write(html);
                 visWindow.document.close();
-                //doModal2("", studentCode, data.exercise_trace);
+               // doModal2("", studentCode, data.exercise_trace);
             }
         });
     };
@@ -126,7 +126,7 @@
                 \<script src=\"https://opendsa-server.cs.vt.edu/OpenDSA/JSAV/build/JSAV-min.js\">\<\/script>\n\
                 \<script src=\"https://opendsa-server.cs.vt.edu/OpenDSA/lib/odsaUtils-min.js\">\<\/script>\n\
                 \<script src=\"https://opendsa-server.cs.vt.edu/OpenDSA/lib/odsaAV-min.js\">\<\/script>\n\
-                \<script src=\"https://opendsax.cs.vt.edu:9292/assets/JsavWrapper.js\">\<\/script>\n\
+                \<script src=\"https://opendsa-server.cs.vt.edu:9292/assets/JsavWrapper.js\">\<\/script>\n\
                 \n\
                 \<\/body>'+ "</html>");                 
             iframeDoc.close();
@@ -172,7 +172,7 @@
         \<script src=\"https://opendsa-server.cs.vt.edu/OpenDSA/JSAV/build/JSAV-min.js\">\<\/script>\n\
         \<script src=\"https://opendsa-server.cs.vt.edu/OpenDSA/lib/odsaUtils-min.js\">\<\/script>\n\
         \<script src=\"https://opendsa-server.cs.vt.edu/OpenDSA/lib/odsaAV-min.js\">\<\/script>\n\
-        \<script src=\"https://opendsax.cs.vt.edu:9292/assets/JsavWrapper.js\">\<\/script>\n\
+        \<script src=\"https://opendsa-server.cs.vt.edu:9292/assets/JsavWrapper.js\">\<\/script>\n\
         \n\
         \<\/body>' + "</html>";
         if(document.getElementsByTagName('iframe').length !== 0)
