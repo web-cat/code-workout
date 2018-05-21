@@ -34,7 +34,7 @@
                 
                 studentCode = studentCode.split('\n').join('\\n');
                 studentCode = studentCode.split('{')[1].split('return')[0];
-                var visWindow = window.open("", "Visualize", "_blank",'height=400, width=800');
+                //var visWindow = window.open("", "Visualize", "_blank",'height=400, width=800');
                 var html = "<!DOCTYPE html>\n" +
                 "<html>\n" +"\<script>\
                 var testvisualizerTrace ={\"code\":\"" + studentCode + "\",\"trace\":[" + data.exercise_trace +"\
@@ -75,9 +75,9 @@
                 \n\
                 \<\/body>' + "</html>";                 
                     //"</html>";
-                visWindow.document.write(html);
-                visWindow.document.close();
-               // doModal2("", studentCode, data.exercise_trace);
+                //visWindow.document.write(html);
+                //visWindow.document.close();
+                doModal2("", studentCode, data.exercise_trace);
             }
         });
     };
@@ -179,18 +179,24 @@
         {
             document.getElementById('ModalBody').removeChild(document.getElementsByTagName('iframe')[0]);
         }
+        window.setTimeout(function(){ showIframe(html);}, 500);
+        $('#Visualize').modal('toggle');
+
+    };
+    function showIframe(html){
         var iframe = document.createElement('iframe');
         document.getElementById('ModalBody').appendChild(iframe);
         var iframeDoc = iframe.contentDocument;
         $(iframeDoc).ready(function (event) {
-          iframeDoc.open();
-        iframeDoc.write(html);                 
-        iframeDoc.close();
-        iframe.height = "400px";
-        iframe.width = "800px";
-        });                     
-        //$('#ModalBody').append(iframe);
-        $('#VisualizeModal').modal('toggle');
-
+            iframeDoc.open();
+           
+            html = html.replace("'",'"');
+            html = html.replace(/[^/\"_+-?![]{}()=*.|a-zA-Z 0-9]+/g,'');               
+            iframeDoc.write(html)               
+            iframeDoc.close();
+            iframe.height = "400px";
+            iframe.width = "800px";
+        });             
+        
     };
 }).call(this);
