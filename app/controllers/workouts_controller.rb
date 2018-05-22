@@ -366,22 +366,20 @@ class WorkoutsController < ApplicationController
     end
   end
 
-
-  # -------------------------------------------------------------
+  # ----------------------------------------------------------------------------
+  # GET /courses/:organization_id/:course_id/:term_id/find_offering/:workout_name  
   def find_offering
     @user = User.find params[:user_id]
     @term = Term.find params[:term_id]
     @course = Course.find params[:course_id]
     @lti_launch = true
     dynamic_lms_assignment = params[:dynamic_lms_assignment]
-    ext_lti_assignment_id = params[:ext_lti_assignment_id]
-    custom_canvas_assignment_id = params[:custom_canvas_assignment_id]
     lms_instance_id = params[:lms_instance_id]
     @custom_canvas_lms_assignment_id =
-      "#{lms_instance_id}-#{custom_canvas_assignment_id}"
-    @lms_assignment_id = "#{lms_instance_id}-#{ext_lti_assignment_id}"
+      "#{lms_instance_id}-#{params[:custom_canvas_assignment_id]}"
+    @lms_assignment_id = "#{lms_instance_id}-#{params[:ext_lti_assignment_id]}"
 
-
+    # Does the workout come from some kind of collection, like OpenDSA?
     if params[:from_collection].to_b
       workouts = Workout.where('lower(name) = ?',
         params[:workout_name].downcase)
@@ -394,13 +392,33 @@ class WorkoutsController < ApplicationController
         WorkoutOffering.find_by(lms_assignment_id: @custom_canvas_lms_assignment_id)
 
       if !@workout_offering
-        # look for candidate course sections 
+        # check current term for existing workout offerings
+        # for example, if they were created in CodeWorkout but not tied to LTI
+        workout_offerings = @user.managed_workout_offerings_in_term(
+            params[:workout_name].downcase, @course, @term)
+        @workout_offering = workout_offerings.flatten.first
+      end
+
+      if !@workout_offering
+        # didn't find a workout offering, so we're going to create one
+        # start figuring out which workout to use by look at past offerings
+        # that were taught by our user
+        workout_offerings = @user.managed_workout_offerings_in_term(
+          params[:workout_name].downcase, @course, nil)
+        found_workout ||= workout_offerings.andand
+          .uniq{ |wo| wo.workout }.andand
+          .sort_by{ |wo| wo.course_offering.term.starts_on }.andand
+          .last.andand.workout # most recent matching workout
+
+        # look for candidate course offerings to ask the user about 
         course_offerings = CourseOffering.where(lti_context_id: params[:lti_context_id]).any? ||
           @user.managed_course_offerings(course: @course, term: @term)
 
         if course_offerings.any?
           redirect_to organization_select_course_offering_path(
-            course_offerings: course_offerings.map(&:id).join(',')
+            course_offerings: course_offerings.map(&:id).join(','),
+            lti_context_id: params[:lti_context_id],
+            found_workout: found_workout.andand.id
           ) and return
         else
         end
@@ -642,7 +660,6 @@ class WorkoutsController < ApplicationController
       lti_launch: true
     )
   end
-
 
   # -------------------------------------------------------------
   def upload_yaml

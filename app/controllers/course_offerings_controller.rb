@@ -299,10 +299,17 @@ class CourseOfferingsController < ApplicationController
   end
 
   # -------------------------------------------------------------
-  # GET /course_offerings/select_offering
+  # GET /courses/:organization_id/:course_id/:term_id/select_offering  
+  # POST /courses/:organization_id/:course_id/:term_id/select_offering
   def select_offering
     @lti_launch = true
     @course_offerings = CourseOffering.find(params[:course_offerings].split(','))
+    if request.post?
+      @course_offerings.each do |co|
+        co.lti_context_id = params[:lti_context_id]
+        co.save
+      end
+    end
   end
 
   # -------------------------------------------------------------
