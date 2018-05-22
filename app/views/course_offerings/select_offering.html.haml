@@ -1,0 +1,12 @@
+.container
+  %h2 Please select a course offering
+  = form_tag '/path_TBD' do
+    - @course_offerings.each do |co|
+      .form-group.col-xs-12
+        .col-xs-1
+          = check_box_tag co.id, co.id, false, id: co.id
+        = label_tag 'co.id', co.display_name_with_term, class: 'control-label col-xs-4'
+    .form-group.col-xs-12
+      .col-xs-1
+        = check_box_tag 'new_course_offering', 'new_course_offering', false, id: 'new_course_offering'
+      = label_tag :new_course_offering, 'Create a new course offering', class: 'control-label col-xs-4'

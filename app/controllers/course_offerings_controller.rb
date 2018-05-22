@@ -1,7 +1,7 @@
 class CourseOfferingsController < ApplicationController
   before_filter :rename_course_offering_id_param
   load_and_authorize_resource
-
+  before_action :allow_iframe, only: [ :select_offering ]
 
   # -------------------------------------------------------------
   # GET /course_offerings
@@ -298,6 +298,12 @@ class CourseOfferingsController < ApplicationController
     end
   end
 
+  # -------------------------------------------------------------
+  # GET /course_offerings/select_offering
+  def select_offering
+    @lti_launch = true
+    @course_offerings = CourseOffering.find(params[:course_offerings].split(','))
+  end
 
   # -------------------------------------------------------------
   # POST /course_offerings/store_workout/:id

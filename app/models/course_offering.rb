@@ -227,4 +227,13 @@ class CourseOffering < ActiveRecord::Base
 
     return workout_offering
   end
+
+  def find_workout_offerings(workout)
+    if workout.kind_of?(String)
+      workout_offerings.joins(:workout).
+        where('lower(workouts.name) = ?', workout)
+    else
+      workout_offerings.where(workout: workout)
+    end
+  end
 end

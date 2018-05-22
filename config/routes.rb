@@ -100,6 +100,7 @@ CodeWorkout::Application.routes.draw do
     get ':course_id/privileged_users' => 'courses#privileged_users', as: :course_privileged_users
     get ':course_id/new_offering' => 'course_offerings#new', as: :new_course_offering
     post ':course_id/create_offering' => 'course_offerings#create', as: :course_offering_create
+    get ':course_id/:term_id/select_offering' => 'course_offerings#select_offering', as: :select_course_offering
     get ':course_id/:term_id/tab_content/:tab' => 'courses#tab_content'
     get ':course_id/:term_id/workouts/new' => 'workouts#new', as: :new_workout
     get ':course_id/:term_id/workouts/:workout_id/clone' => 'workouts#clone', as: :clone_workout
