@@ -305,9 +305,42 @@ class CourseOfferingsController < ApplicationController
     @lti_launch = true
     @course_offerings = CourseOffering.find(params[:course_offerings].split(','))
     if request.post?
+      # user chose one or more course offerings to tie to LTI
+      # once we have the course_offerings, we let the user create a workout or not
       @course_offerings.each do |co|
         co.lti_context_id = params[:lti_context_id]
         co.save
+
+        if !co.is_instructor?(current_user)
+          CourseEnrollment.create(user: current_user,
+                                  course_offering: co,
+                                  course_role: CourseRole.instructor)
+        end
+      end
+      
+      unless params[:workout_id].nil? || params[:workout_id].empty? # empty string is truthy in Ruby
+        @workout = Workout.find(params[:workout_id])
+      end
+ 
+      if @workout # found a workout, need to let the instructor clone and offer it
+        redirect_to(organization_clone_workout_path(
+          lti_launch: true,
+          organization_id: params[:organization_id],
+          course_id: params[:course_id],
+          term_id: params[:term_id],
+          lms_assignment_id: params[:lms_assignment_id],
+          workout_id: @workout.id,
+          suggested_name: params[:workout_name]
+        )) and return
+      else # no workout found, so we take the user to new_or_existing 
+        redirect_to organization_new_or_existing_workout_path(
+          lti_launch: true,
+          organization_id: params[:organization_id],
+          course_id: params[:course_id],
+          term_id: params[:term_id],
+          lms_assignment_id: params[:lms_assignment_id],
+          suggested_name: params[:workout_name]
+        ) and return
       end
     end
   end

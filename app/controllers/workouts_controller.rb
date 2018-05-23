@@ -405,7 +405,7 @@ class WorkoutsController < ApplicationController
         # that were taught by our user
         workout_offerings = @user.managed_workout_offerings_in_term(
           params[:workout_name].downcase, @course, nil)
-        found_workout ||= workout_offerings.andand
+        found_workout ||= workout_offerings.andand.flatten
           .uniq{ |wo| wo.workout }.andand
           .sort_by{ |wo| wo.course_offering.term.starts_on }.andand
           .last.andand.workout # most recent matching workout
@@ -418,7 +418,9 @@ class WorkoutsController < ApplicationController
           redirect_to organization_select_course_offering_path(
             course_offerings: course_offerings.map(&:id).join(','),
             lti_context_id: params[:lti_context_id],
-            found_workout: found_workout.andand.id
+            lms_assignment_id: @lms_assignment_id,
+            workout_id: found_workout.andand.id,
+            workout_name: params[:workout_name]
           ) and return
         else
         end
