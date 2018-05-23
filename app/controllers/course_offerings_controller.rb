@@ -333,14 +333,14 @@ class CourseOfferingsController < ApplicationController
           suggested_name: params[:workout_name]
         )) and return
       else # no workout found, so we take the user to new_or_existing 
-        redirect_to organization_new_or_existing_workout_path(
+        redirect_to(organization_new_or_existing_workout_path(
           lti_launch: true,
           organization_id: params[:organization_id],
           course_id: params[:course_id],
           term_id: params[:term_id],
           lms_assignment_id: params[:lms_assignment_id],
           suggested_name: params[:workout_name]
-        ) and return
+        )) and return
       end
     end
   end

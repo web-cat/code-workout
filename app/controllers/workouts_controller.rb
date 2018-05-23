@@ -411,10 +411,30 @@ class WorkoutsController < ApplicationController
           .last.andand.workout # most recent matching workout
 
         # look for candidate course offerings to ask the user about 
-        course_offerings = CourseOffering.where(lti_context_id: params[:lti_context_id]).any? ||
-          @user.managed_course_offerings(course: @course, term: @term)
-
+        course_offerings = CourseOffering.where(lti_context_id: params[:lti_context_id])
         if course_offerings.any?
+          # We have course_offerings tied to LTI. Help the user find a workout to clone and offer
+          if found_workout
+            redirect_to(organization_clone_workout_path(
+              lti_launch: true,
+              organization_id: params[:organization_id],
+              course_id: params[:course_id],
+              term_id: params[:term_id],
+              lms_assignment_id: params[:lms_assignment_id],
+              workout_id: found_workout.id,
+              suggested_name: params[:workout_name]
+            )) and return
+          else
+            redirect_to(organization_new_or_existing_workout_path(
+              lti_launch: true,
+              organization_id: params[:organization_id],
+              course_id: params[:course_id],
+              term_id: params[:term_id],
+              lms_assignment_id: params[:lms_assignment_id],
+              suggested_name: params[:workout_name]
+            )) and return
+          end
+        elsif (course_offerings = @user.managed_course_offerings(course: @course, term: @term))
           redirect_to organization_select_course_offering_path(
             course_offerings: course_offerings.map(&:id).join(','),
             lti_context_id: params[:lti_context_id],
@@ -422,7 +442,6 @@ class WorkoutsController < ApplicationController
             workout_id: found_workout.andand.id,
             workout_name: params[:workout_name]
           ) and return
-        else
         end
       end
     
