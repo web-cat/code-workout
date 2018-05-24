@@ -435,13 +435,20 @@ class WorkoutsController < ApplicationController
             )) and return
           end
         elsif (course_offerings = @user.managed_course_offerings(course: @course, term: @term))
-          redirect_to organization_select_course_offering_path(
-            course_offerings: course_offerings.map(&:id).join(','),
-            lti_context_id: params[:lti_context_id],
-            lms_assignment_id: @lms_assignment_id,
-            workout_id: found_workout.andand.id,
-            workout_name: params[:workout_name]
-          ) and return
+          if course_offerings.any?
+            redirect_to organization_select_course_offering_path(
+              course_offerings: course_offerings.map(&:id).join(','), 
+              lti_context_id: params[:lti_context_id],
+              lms_assignment_id: @lms_assignment_id,
+              workout_id: found_workout.andand.id,
+              workout_name: params[:workout_name]
+            ) and return
+          else # there are no existing candidate course offerings, go straight to form
+            redirect_to(organization_new_course_offering_path(
+              lti_launch: true,
+              lti_context_id: params[:lti_context_id]
+            )) and return
+          end
         end
       end
     

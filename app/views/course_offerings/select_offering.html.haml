@@ -1,5 +1,7 @@
 .container
   %h2 Please select a course offering
+  .text.text-info
+    Select the course offering(s) that should be tied to this course section in your LMS.
   = form_tag organization_select_course_offering_path do
     = hidden_field_tag 'lti_context_id', params[:lti_context_id]
     = hidden_field_tag 'workout_id', params[:workout_id]
@@ -11,8 +13,13 @@
           = check_box_tag 'course_offerings[]', co.id 
         = label_tag 'co.id', co.display_name_with_term, class: 'control-label col-xs-4'
     .form-group.col-xs-12
-      .col-xs-1
-        = check_box_tag 'new_course_offering', 'new_course_offering', false, id: 'new_course_offering'
-      = label_tag :new_course_offering, 'Create a new course offering', class: 'control-label col-xs-4'
-    .form-group.col-xs-12
       = submit_tag "Submit", class: 'btn btn-primary'
+
+  .text.text-info
+    Alternatively,
+    %a{ href: organization_new_course_offering_path(lti_launch: true) }
+      create new sections 
+    of
+    %i 
+      = @course.display_name
+    and tie them to your LMS.

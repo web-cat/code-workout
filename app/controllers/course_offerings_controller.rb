@@ -1,7 +1,7 @@
 class CourseOfferingsController < ApplicationController
   before_filter :rename_course_offering_id_param
   load_and_authorize_resource
-  before_action :allow_iframe, only: [ :select_offering ]
+  before_action :allow_iframe, only: [ :select_offering, :new ]
 
   # -------------------------------------------------------------
   # GET /course_offerings
@@ -22,6 +22,7 @@ class CourseOfferingsController < ApplicationController
   # -------------------------------------------------------------
   # GET /course_offerings/new
   def new
+    @lti_launch = params[:lti_launch].to_b
     @organization = Organization.find(params[:organization_id])
     @course = Course.find(params[:course_id])
     @url = organization_course_offering_create_path(
@@ -302,9 +303,13 @@ class CourseOfferingsController < ApplicationController
   # GET /courses/:organization_id/:course_id/:term_id/select_offering  
   # POST /courses/:organization_id/:course_id/:term_id/select_offering
   def select_offering
-    @lti_launch = true
     @course_offerings = CourseOffering.find(params[:course_offerings].split(','))
-    if request.post?
+    # TODO: If @course_offerings is empty, no point coming here. 
+    # Just take them to the form for new course offerings.
+    if request.get?
+      @lti_launch = true
+      @course = Course.find(params[:course_id])
+    elsif request.post?
       # user chose one or more course offerings to tie to LTI
       # once we have the course_offerings, we let the user create a workout or not
       @course_offerings.each do |co|
@@ -379,6 +384,6 @@ class CourseOfferingsController < ApplicationController
     # Only allow a trusted parameter "white list" through.
     def course_offering_params
       params.require(:course_offering).permit(:course_id, :term_id,
-        :label, :url, :self_enrollment_allowed)
+        :label, :url, :self_enrollment_allowed, :lti_context_id)
     end
 end

@@ -1,14 +1,24 @@
 - url = @url
 - method = action_name == 'edit' ? :put : :post
-= semantic_form_for @course_offering, url: url, html: { class: "form-horizontal col-xs-10", method: method } do |f|
-  = f.semantic_errors
-  = f.inputs do
-    = f.input :label, input_html: { placeholder: "e.g. MWF 10:00am" }
-    = f.input :term, collection: Term.where('ends_on > (?)', DateTime.now)
-    = f.input :url
-    = f.input :self_enrollment_allowed, label: false
-    %br
-    = f.input :cutoff_date, as: :date_picker, hint: 'The last date for self-enrollment.'
-  = f.actions do
-    = f.action :submit, as: :button, button_html: { class: 'btn btn-primary' }
-    = f.action :cancel, as: :link, label: 'Cancel', url: organizations_path, button_html: { class: 'btn btn-default' }
+- if action_name == 'edit'
+  - method = :put
+- else
+  - method = :post
+
+= javascript_include_tag 'course_offering_form'
+
+= form_tag @url do
+  .form-group.col-xs-12
+    = label_tag :term, 'Term', class: 'control-label col-xs-2'
+    .col-xs-6
+      = select_tag :term, options_from_collection_for_select(Term.where('ends_on > ?', DateTime.now), :slug, :display_name), class: 'form-control input-sm', prompt: 'Select a term'
+
+  .form-group.col-xs-12
+    = label_tag :self_enrollment_allowed, 'Allow Self Enrollment?', class: 'control-label col-xs-2'
+    .col-xs-6
+      = check_box_tag :self_enrollment_allowed, :self_enrollment_allowed, false, id: 'self-enrollment-allowed'
+
+  .form-group.col-xs-12
+    = label_tag :cutoff_date, 'Cutoff Date', class: 'control-label col-xs-2'
+    .col-xs-6
+      %input#cutoff_date.datepicker{ name: :cutoff_date, type: 'text', class: 'form-control input-sm', placeholder: 'MM/DD/YY' }
