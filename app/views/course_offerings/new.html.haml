@@ -4,8 +4,8 @@
   - if @course && @organization
     %p.lead
       Creating an offering of
-      = link_to @course.display_name, organization_course_path(organization_id: @organization.id, id: @course.id)
+      = @course.display_name
       at
-      = link_to @organization.name, organization_path(@organization)
+      = @organization.name
 
   = render partial: 'form', locals: { term: @term }

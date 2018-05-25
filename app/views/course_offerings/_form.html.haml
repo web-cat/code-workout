@@ -8,17 +8,42 @@
 = javascript_include_tag 'course_offering_form'
 
 = form_tag @url do
-  .form-group.col-xs-12
-    = label_tag :term, 'Term', class: 'control-label col-xs-2'
-    .col-xs-6
-      = select_tag :term, options_from_collection_for_select(Term.where('ends_on > ?', DateTime.now), :slug, :display_name), class: 'form-control input-sm', prompt: 'Select a term'
+  - if action_name == 'new'
+    %p Fields for all offerings
+  #common-fields
+    .form-group.col-xs-12
+      = label_tag :term, 'Term', class: 'control-label col-xs-2'
+      .col-xs-6
+        = select_tag :term, 
+                     options_from_collection_for_select(Term.where('ends_on > ?', DateTime.now), :slug, :display_name),
+                     class: 'form-control input-sm', 
+                     prompt: 'Select a term'
 
-  .form-group.col-xs-12
-    = label_tag :self_enrollment_allowed, 'Allow Self Enrollment?', class: 'control-label col-xs-2'
-    .col-xs-6
-      = check_box_tag :self_enrollment_allowed, :self_enrollment_allowed, false, id: 'self-enrollment-allowed'
+    .form-group.col-xs-12
+      = label_tag :self_enrollment_allowed, 'Allow Self Enrollment?', class: 'control-label col-xs-2'
+      .col-xs-6
+        = check_box_tag :self_enrollment_allowed, :self_enrollment_allowed, false, id: 'self-enrollment-allowed'
 
+    .form-group.col-xs-12
+      = label_tag :cutoff_date, 'Cutoff Date', class: 'control-label col-xs-2'
+      .col-xs-6
+        %input#cutoff_date.datepicker{ name: :cutoff_date, type: 'text', class: 'form-control input-sm', placeholder: 'MM/DD/YY' }
+
+    - if action_name == 'new'
+      %p Fields for individual offerings
+
+    .form-group.col-xs-12
+      = label_tag 'labels', 'Offering Label', class: 'control-label col-xs-2'
+      .col-xs-6
+        = text_field_tag 'labels[]'
+  = submit_tag 'Submit', class: 'btn btn-primary'
+
+= button_tag type: 'button', id: 'add-offering', class: 'btn btn-success btn-sm' do
+  %i.fa.fa-plus{ style: 'padding-right: 5px;' }
+  Add Course Offering
+
+#label-field{ style: 'display: none;' }
   .form-group.col-xs-12
-    = label_tag :cutoff_date, 'Cutoff Date', class: 'control-label col-xs-2'
+    = label_tag 'labels', 'Offering Label', class: 'control-label col-xs-2'
     .col-xs-6
-      %input#cutoff_date.datepicker{ name: :cutoff_date, type: 'text', class: 'form-control input-sm', placeholder: 'MM/DD/YY' }
+      = text_field_tag 'labels[]'
