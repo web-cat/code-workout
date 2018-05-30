@@ -11,10 +11,14 @@
   - if action_name == 'new'
     %p Fields for all offerings
   #common-fields
+    = hidden_field_tag 'course_offering[lti_context_id]', params[:lti_context_id] 
+    = hidden_field_tag 'course_offering[course_id]', params[:course_id]
+    = hidden_field_tag 'lti_launch', params[:lti_launch]
+
     .form-group.col-xs-12
       = label_tag :term, 'Term', class: 'control-label col-xs-2'
       .col-xs-6
-        = select_tag :term, 
+        = select_tag 'course_offering[term_id]',
                      options_from_collection_for_select(Term.where('ends_on > ?', DateTime.now), :slug, :display_name),
                      class: 'form-control input-sm', 
                      prompt: 'Select a term'
@@ -22,16 +26,21 @@
     .form-group.col-xs-12
       = label_tag :self_enrollment_allowed, 'Allow Self Enrollment?', class: 'control-label col-xs-2'
       .col-xs-6
-        = check_box_tag :self_enrollment_allowed, :self_enrollment_allowed, false, id: 'self-enrollment-allowed'
+        = check_box_tag 'course_offering[self_enrollment_allowed]', :self_enrollment_allowed, false, id: 'self-enrollment-allowed'
+
+    .form-group.col-xs-12
+      = label_tag :url, 'Course URL', class: 'control-label col-xs-2'
+      .col-xs-6
+        = text_field_tag 'course_offering[url]'
 
     .form-group.col-xs-12
       = label_tag :cutoff_date, 'Cutoff Date', class: 'control-label col-xs-2'
       .col-xs-6
-        %input#cutoff_date.datepicker{ name: :cutoff_date, type: 'text', class: 'form-control input-sm', placeholder: 'MM/DD/YY' }
+        %input#cutoff_date.datepicker{ name: 'course_offering[cutoff_date]', type: 'text', class: 'form-control input-sm', placeholder: 'MM/DD/YY' }
 
     - if action_name == 'new'
       %p Fields for individual offerings
-
+  #individual-fields
     .form-group.col-xs-12
       = label_tag 'labels', 'Offering Label', class: 'control-label col-xs-2'
       .col-xs-6

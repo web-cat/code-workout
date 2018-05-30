@@ -67,28 +67,49 @@ class CourseOfferingsController < ApplicationController
   # -------------------------------------------------------------
   # POST /course_offerings
   def create
-    @course_offering = CourseOffering.new(course_offering_params)
+    labels = params[:labels]
+    @lti_launch = params[:lti_launch].to_b
+    
+    # CourseOffering creation breaks if course and term have slugs instead of ids
+    @term = Term.find(course_offering_params[:term_id])
+    @course = Course.find(course_offering_params[:course_id])
 
-    # until we figure out how to use formtastic hidden fields
-    @course = Course.find(params[:course_id])
-    @course_offering.course = @course
-
-    if @course_offering.save
-      CourseEnrollment.create(
-        course_offering: @course_offering,
-        user: current_user,
-        course_role: CourseRole.instructor
+    course_offerings = labels.map{ |l|
+      CourseOffering.new(
+        course: @course,
+        term: @term,
+        label: l,
+        cutoff_date: course_offering_params[:cutoff_date],
+        url: course_offering_params[:url],
+        self_enrollment_allowed: course_offering_params[:self_enrollment_allowed],
+        lti_context_id: course_offering_params[:lti_context_id]
       )
+    }
+
+    # check that all intended course offerings are valid before
+    # creating any
+    if course_offerings.all?{ |co| co.valid? }
+      course_offerings.each do |co|
+        co.save
+        CourseEnrollment.create(
+          course_offering: co,
+          user: current_user,
+          course_role: CourseRole.instructor
+        )
+      end 
 
       redirect_to organization_course_path(
-        @course_offering.course.organization,
-        @course_offering.course,
-        @course_offering.term),
-        notice: "#{@course_offering.display_name} was successfully created."
+        course_offerings.first.course.organization,
+        course_offerings.first.course,
+        course_offerings.first.term),
+        notice: "#{course_offerings.first.display_name} was successfully created."
     else
+      flash[:error] = 'There were errors creating your course offerings.'
       redirect_to organization_new_course_offering_path(
         organization_id: params[:organization_id],
-        course_id: params[:course_id]
+        course_id: params[:course_id],
+        lti_context_id: course_offering_params[:lti_context_id],
+        lti_launch: @lti_launch
       )
     end
   end
@@ -384,6 +405,6 @@ class CourseOfferingsController < ApplicationController
     # Only allow a trusted parameter "white list" through.
     def course_offering_params
       params.require(:course_offering).permit(:course_id, :term_id,
-        :label, :url, :self_enrollment_allowed, :lti_context_id)
+        :label, :url, :self_enrollment_allowed, :lti_context_id, :cutoff_date)
     end
 end

@@ -14,6 +14,8 @@ class CoursesController < ApplicationController
   # -------------------------------------------------------------
   # GET /courses/1
   def show
+    @lti_launch = params[:lti_launch].to_b
+
     if params[:organization_id]
         @organization = Organization.find(params[:organization_id])
     end
