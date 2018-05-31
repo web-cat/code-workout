@@ -373,7 +373,6 @@ class WorkoutsController < ApplicationController
     @term = Term.find params[:term_id]
     @course = Course.find params[:course_id]
     @lti_launch = true
-    dynamic_lms_assignment = params[:dynamic_lms_assignment]
     lms_instance_id = params[:lms_instance_id]
     @custom_canvas_lms_assignment_id =
       "#{lms_instance_id}-#{params[:custom_canvas_assignment_id]}"
@@ -414,7 +413,33 @@ class WorkoutsController < ApplicationController
         course_offerings = CourseOffering.where(lti_context_id: params[:lti_context_id])
         if course_offerings.any?
           # We have course_offerings tied to LTI. Help the user find a workout to clone and offer
-          if found_workout
+          if params[:from_collection].to_b? && found_workout
+            # are we trying to serve a workout from a book like OpenDSA?
+            course_offerings.each do |co|
+              if co.lms_instance.nil?
+                co.lms_instance_id = lms_instance_id
+                co.save
+              end
+
+              if !co.is_instructor?(current_user)
+                CourseEnrollment.create(
+                  user: current_user, 
+                  course_offering: co,
+                  course_role: CourseRole.instructor
+                )
+              end
+
+              @workout_offering = WorkoutOffering.new(
+                course_offering: co,
+                workout: found_workout,
+                opening_date: DateTime.now,
+                soft_deadline: nil,
+                hard_deadline: nil,
+                lms_assignment_id: @lms_assignment_id
+              )
+              @workout_offering.save
+            end
+          elsif found_workout
             redirect_to(organization_clone_workout_path(
               lti_launch: true,
               organization_id: params[:organization_id],
@@ -435,19 +460,26 @@ class WorkoutsController < ApplicationController
             )) and return
           end
         elsif (course_offerings = @user.managed_course_offerings(course: @course, term: @term))
+          workout_offering_params = {
+            lms_assignment_id: @lms_assignment_id,
+            workout_id: found_workout.andand.id,
+            workout_name: params[:workout_name]
+            lis_outcome_service_url: params[:lis_outcome_service_url],
+            lis_result_sourcedid: params[:lis_result_sourcedid],
+            from_collection: params[:from_collection].to_b
+          }
           if course_offerings.any?
-            redirect_to organization_select_course_offering_path(
+            select_params = workout_offering_params.merge({
               course_offerings: course_offerings.map(&:id).join(','), 
               lti_context_id: params[:lti_context_id],
-              lms_assignment_id: @lms_assignment_id,
-              workout_id: found_workout.andand.id,
-              workout_name: params[:workout_name]
-            ) and return
+            })
+            redirect_to(organization_select_course_offering_path(select_params)) and return
           else # there are no existing candidate course offerings, go straight to form
-            redirect_to(organization_new_course_offering_path(
+            new_params = workout_offering_params.merge({
               lti_launch: true,
-              lti_context_id: params[:lti_context_id]
-            )) and return
+              lti_context_id: params[:lti_context_id 
+            })
+            redirect_to(organization_new_course_offering_path(new_params)) and return
           end
         end
       end
@@ -572,7 +604,7 @@ class WorkoutsController < ApplicationController
 
     matching_lms_assignment_id = [@lms_assignment_id, @custom_canvas_lms_assignment_id].include?(@workout_offering.lms_assignment_id)
 
-    should_reset_lms_assignment_id = !matching_lms_assignment_id && dynamic_lms_assignment
+    should_reset_lms_assignment_id = !matching_lms_assignment_id && params[:dynamic_lms_assignment].to_b
 
     if @workout_offering.lms_assignment_id.blank? || should_reset_lms_assignment_id
       @workout_offering.lms_assignment_id = @lms_assignment_id

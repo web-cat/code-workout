@@ -14,6 +14,12 @@
     = hidden_field_tag 'course_offering[lti_context_id]', params[:lti_context_id] 
     = hidden_field_tag 'course_offering[course_id]', params[:course_id]
     = hidden_field_tag 'lti_launch', params[:lti_launch]
+    = hidden_field_tag 'lis_result_sourcedid', params[:lis_result_sourcedid]
+    = hidden_field_tag 'lis_outcome_service_url', params[:lis_outcome_service_url]
+    = hidden_field_tag 'lms_assignment_id', params[:lms_assignment_id]
+    = hidden_field_tag 'from_collection', params[:from_collection]
+    = hidden_field_tag 'workout_id', params[:workout_id]
+    = hidden_field_tag 'workout_name', params[:workout_name]
 
     .form-group.col-xs-12
       = label_tag :term, 'Term', class: 'control-label col-xs-2'

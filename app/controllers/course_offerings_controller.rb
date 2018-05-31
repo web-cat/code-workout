@@ -98,19 +98,72 @@ class CourseOfferingsController < ApplicationController
         )
       end 
 
-      redirect_to organization_course_path(
-        course_offerings.first.course.organization,
-        course_offerings.first.course,
-        course_offerings.first.term),
-        notice: "#{course_offerings.first.display_name} was successfully created."
+      workout_id = params[:workout_id]
+
+      if @lti_launch && params[:from_collection].to_b && !workout_id.nil?
+        # this is an LTI launch and we know we want to use a specific workout
+        workout = Workout.find(params[:workout_id])
+        course_offerings.each do |co|
+          @workout_offering = WorkoutOffering.new(
+            course_offering: co,
+            workout: workout,
+            opening_date: DateTime.now,
+            soft_deadline: nil,
+            hard_deadline: nil,
+            lms_assignment_id: params[:lms_assignment_id]
+          )
+          @workout_offering.save
+        end
+        
+        redirect_to(organization_workout_offering_practice_path(
+          lis_outcome_service_url: params[:lis_outcome_service_url],
+          lis_result_sourcedid: params[:lis_result_sourcedid],
+          id: @workout_offering.id,
+          organization_id: @course.organization.slug,
+          term_id: @term.slug,
+          course_id: @course.slug, 
+          lti_launch: true
+        )) and return
+      elsif @lti_launch && !workout_id.nil?
+          redirect_to(organization_clone_workout_path(
+          lti_launch: true,
+          organization_id: @course.organization.slug,
+          course_id: @course.slug,
+          term_id: @term.slug, 
+          lms_assignment_id: params[:lms_assignment_id],
+          workout_id: workout_id,
+          suggested_name: params[:workout_name]
+        )) and return
+      elsif @lti_launch
+        redirect_to(organization_new_or_existing_workout_path(
+          lti_launch: true,
+          organization_id: @course.organization.slug, 
+          course_id: @course.slug, 
+          term_id: @term.slug,
+          lms_assignment_id: params[:lms_assignment_id],
+          suggested_name: params[:workout_name]
+        )) and return
+      else
+        redirect_to organization_course_path(
+          course_offerings.first.course.organization,
+          course_offerings.first.course,
+          course_offerings.first.term,
+          lti_launch: params[:lti_launch].to_b),
+          notice: "#{course_offerings.first.display_name} was successfully created."
+      end
     else
-      flash[:error] = 'There were errors creating your course offerings.'
-      redirect_to organization_new_course_offering_path(
-        organization_id: params[:organization_id],
-        course_id: params[:course_id],
-        lti_context_id: course_offering_params[:lti_context_id],
-        lti_launch: @lti_launch
-      )
+      @message = 'There were errors creating your course offerings.' 
+      if @lti_launch
+        render 'lti/error' and return 
+      else
+        flash[:error] = @message 
+        redirect_to organization_new_course_offering_path(
+          organization_id: params[:organization_id],
+          course_id: params[:course_id],
+          lti_context_id: course_offering_params[:lti_context_id],
+          lti_launch: @lti_launch
+        )
+      end
     end
   end
 
@@ -325,8 +378,7 @@ class CourseOfferingsController < ApplicationController
   # POST /courses/:organization_id/:course_id/:term_id/select_offering
   def select_offering
     @course_offerings = CourseOffering.find(params[:course_offerings].split(','))
-    # TODO: If @course_offerings is empty, no point coming here. 
-    # Just take them to the form for new course offerings.
+
     if request.get?
       @lti_launch = true
       @course = Course.find(params[:course_id])
@@ -338,17 +390,41 @@ class CourseOfferingsController < ApplicationController
         co.save
 
         if !co.is_instructor?(current_user)
-          CourseEnrollment.create(user: current_user,
-                                  course_offering: co,
-                                  course_role: CourseRole.instructor)
+          CourseEnrollment.create(
+            user: current_user,
+            course_offering: co,
+            course_role: CourseRole.instructor
+          )
         end
       end
       
-      unless params[:workout_id].nil? || params[:workout_id].empty? # empty string is truthy in Ruby
+      unless params[:workout_id].nil? || params[:workout_id].empty? # was a workout specified? 
         @workout = Workout.find(params[:workout_id])
       end
- 
-      if @workout # found a workout, need to let the instructor clone and offer it
+
+      if @workout && params[:from_collection].to_b
+        @course_offerings.each do |co|
+          @workout_offering = WorkoutOffering.new(
+            course_offering: co,
+            workout: @workout,
+            opening_date: DateTime.now,
+            soft_deadline: nil,
+            hard_deadline: nil,
+            lms_assignment_id: params[:lms_assignment_id]
+          )
+          @workout_offering.save 
+        end
+        co = @course_offerings.first
+        redirect_to organization_workout_offering_practice_path(
+          lis_outcome_service_url: params[:lis_outcome_service_url],
+          lis_result_sourcedid: params[:lis_result_sourcedid],
+          id: @workout_offering.id,
+          organization_id: co.course.organization.slug,
+          term_id: co.term.slug,
+          course_id: co.course.slug, 
+          lti_launch: true
+        )
+      elsif @workout # found a workout, need to let the instructor clone and offer it
         redirect_to(organization_clone_workout_path(
           lti_launch: true,
           organization_id: params[:organization_id],

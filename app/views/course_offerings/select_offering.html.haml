@@ -7,6 +7,9 @@
     = hidden_field_tag 'workout_id', params[:workout_id]
     = hidden_field_tag 'lms_assignment_id', params[:lms_assignment_id]
     = hidden_field_tag 'workout_name', params[:workout_name]
+    = hidden_field_tag 'from_collection', params[:from_collection]
+    = hidden_field_tag 'lis_result_sourcedid', params[:lis_result_sourcedid]
+    = hidden_field_tag 'lis_outcome_service_url', params[:lis_outcome_service_url]
     - @course_offerings.each do |co|
       .form-group.col-xs-12
         .col-xs-1
