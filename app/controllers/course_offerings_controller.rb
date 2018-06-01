@@ -81,7 +81,7 @@ class CourseOfferingsController < ApplicationController
         label: l,
         cutoff_date: course_offering_params[:cutoff_date],
         url: course_offering_params[:url],
-        self_enrollment_allowed: course_offering_params[:self_enrollment_allowed],
+        self_enrollment_allowed: course_offering_params[:self_enrollment_allowed].present?,
         lti_context_id: course_offering_params[:lti_context_id]
       )
     }
@@ -98,9 +98,9 @@ class CourseOfferingsController < ApplicationController
         )
       end 
 
-      workout_id = params[:workout_id]
+      workout = Workout.find_by(id: params[:workout_id]) 
 
-      if @lti_launch && params[:from_collection].to_b && !workout_id.nil?
+      if @lti_launch && params[:from_collection].to_b && workout 
         # this is an LTI launch and we know we want to use a specific workout
         workout = Workout.find(params[:workout_id])
         course_offerings.each do |co|
@@ -124,7 +124,7 @@ class CourseOfferingsController < ApplicationController
           course_id: @course.slug, 
           lti_launch: true
         )) and return
-      elsif @lti_launch && !workout_id.nil?
+      elsif @lti_launch && workout
           redirect_to(organization_clone_workout_path(
           lti_launch: true,
           organization_id: @course.organization.slug,

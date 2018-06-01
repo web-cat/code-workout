@@ -463,7 +463,7 @@ class WorkoutsController < ApplicationController
           workout_offering_params = {
             lms_assignment_id: @lms_assignment_id,
             workout_id: found_workout.andand.id,
-            workout_name: params[:workout_name]
+            workout_name: params[:workout_name],
             lis_outcome_service_url: params[:lis_outcome_service_url],
             lis_result_sourcedid: params[:lis_result_sourcedid],
             from_collection: params[:from_collection].to_b
@@ -477,7 +477,7 @@ class WorkoutsController < ApplicationController
           else # there are no existing candidate course offerings, go straight to form
             new_params = workout_offering_params.merge({
               lti_launch: true,
-              lti_context_id: params[:lti_context_id 
+              lti_context_id: params[:lti_context_id]
             })
             redirect_to(organization_new_course_offering_path(new_params)) and return
           end
