@@ -302,7 +302,7 @@ class Exercise < ActiveRecord::Base
         attempts.submit_time,
         attempts.submit_num,
         attempts.score,
-        attemps.active_score_id,
+        attempts.active_score_id,
         workout_scores.id as workout_score_id,
         workout_scores.score as workout_score,
         workout_offerings.id as workout_offering_id,
