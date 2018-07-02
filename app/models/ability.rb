@@ -226,14 +226,14 @@ class Ability
             course_offering.course_enrollments.user_id == user.id
              }.any?
       end
-      can :create, Exercise if user.global_role.is_instructor?
-      can :edit, Exercise do |e|
-        created = user == e.current_version.andand.creator
-        user_in_group = user.is_a_member_of?(e.exercise_collection.andand.user_group)
-        owns_collection = user == e.exercise_collection.andand.user
+      # can :create, Exercise if user.global_role.is_instructor?
+      # can :edit, Exercise do |e|
+      #   created = user == e.current_version.andand.creator
+      #   user_in_group = user.is_a_member_of?(e.exercise_collection.andand.user_group)
+      #   owns_collection = user == e.exercise_collection.andand.user
 
-        created || user_in_group || owns_collection
-      end
+      #   created || user_in_group || owns_collection
+      # end
 
       can :read, Attempt, workout_score:
         { workout_offering:
