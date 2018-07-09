@@ -14,7 +14,7 @@
       = mail_to('edwards@cs.vt.edu', 'email us.', subject: subject)
 
 .privileged-access
-  = render partial: 'privileged_access', locals: { course: @course, is_student: @is_student, is_privileged: @is_privileged, access_request: @access_request }
+  = render partial: 'privileged_access', locals: { course: @course, is_instructor: @is_instructor, is_privileged: @is_privileged, access_request: @access_request }
 - if @course_offerings && @course_offerings.any?
   = javascript_include_tag('course')
   %p
