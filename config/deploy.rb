@@ -6,7 +6,7 @@ set :repo_url, 'git://github.com/web-cat/code-workout.git'
 set :deploy_to, '/home/codeworkout/rails'
 set :scm, :git
 
-set :format, :pretty
+set :format_options, truncate: false
 set :log_level, :debug
 set :pty, true
 
