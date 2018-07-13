@@ -10,12 +10,3 @@
         value: @text_representation.present? ? @text_representation : '' }, label: 'YAML Representation of the Exercise:'
   .row
     = f.submit class: 'btn btn-primary', value: 'Submit'
-%br
-OR
-%br
-%br
-= form_tag exercises_url + '/upload_create', multipart: true, class: 'form-horizontal' do
-  .row
-    = file_field('form', 'file')
-  .row
-    = submit_tag 'Submit File', class: 'btn btn-primary'

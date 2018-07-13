@@ -122,9 +122,6 @@ class ExercisesController < ApplicationController
   # GET /exercises/new
   def new
     @exercise = Exercise.new
-    # @coding_exercise = CodingQuestion.new
-    # @languages = Tag.where(tagtype: Tag.language).pluck(:tag_name)
-    # @areas = Tag.where(tagtype: Tag.area).pluck(:tag_name)
     @exercise_version = ExerciseVersion.new
   end
 
@@ -290,11 +287,7 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # POST /exercises/upload_create
   def upload_create
-    if params[:exercise_version] && params[:exercise_version]['text_representation'].present?
-      hash = YAML.load(params[:exercise_version]['text_representation'])
-    else
-      hash = YAML.load(File.read(params[:form][:file].path))
-    end
+    hash = YAML.load(params[:exercise_version]['text_representation'])
 
     if !hash.kind_of?(Array)
       hash = [hash]
