@@ -27,10 +27,8 @@ class CoursesController < ApplicationController
       @course_offerings =
         current_user.andand.course_offerings_for_term(@term, @course)
       @course_offering = @course_offerings.andand.first
-      @is_student = !user_signed_in? ||
-        !current_user.global_role.is_admin? &&
-        (@course_offerings.any? { |co| co.is_student? current_user } ||
-        !@course_offerings.any? { |co| co.is_staff? current_user })
+      @is_instructor = current_user.global_role.is_admin? ||
+        @course_offerings.any? { |co| co.is_instructor? current_user }
       @is_privileged = current_user.andand.is_a_member_of?(@course.user_group)
       @access_request = current_user.andand.access_request_for(@course.user_group)
     end

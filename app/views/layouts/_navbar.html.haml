@@ -28,6 +28,12 @@
                 %ul.list-unstyled
                   %li
                     %strong Courses
+                  - if user_signed_in?
+                    - @active_courses.each do |c|
+                      %li= link_to c.display_name_with_term,
+                        organization_course_path(c.course.organization, c.course, c.term)
+                    %li
+                      %strong= link_to 'Your older courses', organizations_path(enrolled_only: true)
                   %li
                     %strong= link_to 'Browse all', organizations_path
                   - if user_signed_in? && current_user.course_enrollments.any?

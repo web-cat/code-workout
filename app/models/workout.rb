@@ -336,7 +336,7 @@ class Workout < ActiveRecord::Base
           workouts_with_term = workout_offerings.map { |wo| [wo.course_offering.term, wo] }
           results = workouts_with_term.group_by(&:first)
             .map{ |k, a| [k, a.map(&:last)] }
-          results = array_to_hash(results)
+          results = self.array_to_hash(results)
           results.each do |term, workout_offerings|
             results[term] = workout_offerings.uniq{ |wo| wo.workout }
           end
@@ -344,7 +344,7 @@ class Workout < ActiveRecord::Base
           workouts_with_term = workout_offerings.map { |wo| [wo.course_offering.term, wo.workout] }
           results = workouts_with_term.group_by(&:first)
             .map{ |k, a| [k, a.map(&:last)] }
-          results = array_to_hash(results)
+          results = self.array_to_hash(results)
           results.each do |term, workouts|
             results[term] = workouts.uniq
           end
@@ -362,22 +362,27 @@ class Workout < ActiveRecord::Base
   end
 end
 
-private
 
-#helper to convert array to hash
-# duplicated from ArrayHelper for the moment
+  #~ Private instance methods .................................................
+  private
 
-# Converts an array of the form
-# [[k1, val1],[k2, val2]] to a hash of the form
-# { k1: val, k2: val2}
-# val1 and val2 can be inner arrays
-#----------------------------------
-def array_to_hash(a)
-  h = {}
-  a.each do |i|
-    key = i.first
-    value = i.last
-    h[key] = value
+  # -------------------------------------------------------------
+  # helper to convert array to hash
+  # duplicated from ArrayHelper for the moment
+
+  # Converts an array of the form
+  # [[k1, val1],[k2, val2]] to a hash of the form
+  # { k1: val, k2: val2}
+  # val1 and val2 can be inner arrays
+  #----------------------------------
+  def self.array_to_hash(a)
+    h = {}
+    a.each do |i|
+      key = i.first
+      value = i.last
+      h[key] = value
+    end
+    h
   end
-  h
+
 end

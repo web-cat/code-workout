@@ -172,8 +172,11 @@ class Ability
 
       can :request_privileged_access, Course do |course|
         user.global_role.is_admin? ||
-        !user.is_a_member_of?(course.user_group) ||
-        user.access_request_for(course.user_group).nil?
+        (
+          !user.is_a_member_of?(course.user_group) &&
+          user.access_request_for(course.user_group).nil? &&
+          course.course_offerings.any?{ |co| co.is_instructor? user }
+        )
       end
 
       # A user can search for courses if they are signed in
@@ -226,14 +229,14 @@ class Ability
             course_offering.course_enrollments.user_id == user.id
              }.any?
       end
-      can :create, Exercise if user.global_role.is_instructor?
-      can :update, Exercise do |e|
-        created = user == e.current_version.andand.creator
-        user_in_group = user.is_a_member_of?(e.exercise_collection.andand.user_group)
-        owns_collection = user == e.exercise_collection.andand.user
+      # can :create, Exercise if user.global_role.is_instructor?
+      # can :edit, Exercise do |e|
+      #   created = user == e.current_version.andand.creator
+      #   user_in_group = user.is_a_member_of?(e.exercise_collection.andand.user_group)
+      #   owns_collection = user == e.exercise_collection.andand.user
 
-        created || user_in_group || owns_collection
-      end
+      #   created || user_in_group || owns_collection
+      # end
 
       can :read, Attempt, workout_score:
         { workout_offering:

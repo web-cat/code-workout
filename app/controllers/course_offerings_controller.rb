@@ -107,10 +107,21 @@ class CourseOfferingsController < ApplicationController
     end
 
     success = true
+    already_enrolled = @user.is_enrolled?(@course_offering)
+    can_enroll = @course_offering.can_enroll?
+    enrollee_manages_course = @user.manages?(@course_offering)
+    current_user_manages_course = current_user.andand.manages?(@course_offering)
+
+    errors = []
+    errors.push("the student is already enrolled in this course offering") if already_enrolled
+    errors.push("the enrollment cutoff date for this course offering has already passed") if !can_enroll
+    errors.push("you do not have permission to override the enrollment cutoff date") if (!can_enroll && !current_user_manages_course && current_user != @user)
+
+
     if @course_offering &&
-      !@user.is_enrolled?(@course_offering) &&
-      (@course_offering.can_enroll? ||
-        @user.manages?(@course_offering))
+      !already_enrolled &&
+      (can_enroll || enrollee_manages_course || current_user_manages_course)
+        
 
       co = CourseEnrollment.new(
         course_offering: @course_offering,
@@ -125,7 +136,7 @@ class CourseOfferingsController < ApplicationController
 
     if params[:iframe]
       respond_to do |format|
-        format.json { render json: success }
+        format.json { render json: { success: success } }
       end
     else
       if success
@@ -139,11 +150,20 @@ class CourseOfferingsController < ApplicationController
                 "#{@course_offering.display_name}."
           }
 
-          format.json { render json: success }
+          format.json { render json: { success: success } }
         end
       else
-        flash[:warning] = 'Unable to enroll in that course.'
-        redirect_to root_path
+        message = "Could not enroll #{@user.display_name} in #{@course_offering.display_name_with_term} because"
+        reasons = "#{errors.to_sentence}." 
+        message = "#{message} #{reasons}" 
+        respond_to do |format|
+          format.html {
+            flash[:warning] = 'Unable to enroll in that course.'
+            redirect_to root_path
+          }
+
+          format.json { render json: { success: success, message: message } }
+        end
       end
     end
   end
@@ -252,7 +272,8 @@ class CourseOfferingsController < ApplicationController
       workout_name = params[:workout_name]
       @course_offering = CourseOffering.find params[:course_offering_id]
       workout_offering_options = {
-        lms_assignment_id: params[:lti_params][:lms_assignment_id]
+        lms_assignment_id: params[:lti_params][:lms_assignment_id],
+        from_collection: params[:from_collection]
       }
       @workout_offering = @course_offering.add_workout(workout_name, workout_offering_options)
     end

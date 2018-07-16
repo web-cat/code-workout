@@ -37,29 +37,56 @@ class ExercisesController < ApplicationController
     end
   end
 
+
+  # -------------------------------------------------------------
   def query_data
     @available_exercises = Exercise.visible_through_user(current_user)
       .union(Exercise.visible_through_user_group(current_user))
       .uniq.select(&:is_coding?)
   end
 
+
+  # -------------------------------------------------------------
   def download_attempt_data
     @exercise = Exercise.find params[:id]
     resultset = @exercise.attempt_data
     exercise_attributes = %w{ exercise_id exercise_name }
-    attempt_attributes = %w{ user_id exercise_version_id version_no answer_id answer error attempt_id submit_time
-      submit_num score workout_score workout_name course_number course_name term}
+    attempt_attributes = %w{
+      user_id
+      exercise_version_id
+      version_no
+      answer_id
+      answer
+      error
+      attempt_id
+      submit_time
+      submit_num
+      score
+      active_score_id
+      workout_score_id
+      workout_score
+      workout_offering_id
+      workout_id
+      workout_name
+      course_offering_id
+      course_number
+      course_name
+      term }
     data = CSV.generate(headers: true) do |csv|
       csv << (exercise_attributes + attempt_attributes)
       resultset.each do |submission|
-        csv << ([ @exercise.id, @exercise.name ] + attempt_attributes.map { |a| submission.attributes[a] })
+        csv << ([ @exercise.id, @exercise.name ] +
+          attempt_attributes.map { |a| submission.attributes[a] })
       end
     end
 
     respond_to do |format|
-      format.csv { send_data data, filename: "X#{params[:id]}-submissions.csv" }
+      format.csv do
+        send_data data, filename: "X#{params[:id]}-submissions.csv"
+      end
     end
   end
+
 
   # -------------------------------------------------------------
   def search
@@ -95,10 +122,9 @@ class ExercisesController < ApplicationController
   # GET /exercises/new
   def new
     @exercise = Exercise.new
-    # @coding_exercise = CodingQuestion.new
-    # @languages = Tag.where(tagtype: Tag.language).pluck(:tag_name)
-    # @areas = Tag.where(tagtype: Tag.area).pluck(:tag_name)
     @exercise_version = ExerciseVersion.new
+
+    @user_groups = current_user.andand.user_groups
   end
 
 
@@ -106,7 +132,19 @@ class ExercisesController < ApplicationController
   # GET /exercises/1/edit
   def edit
     @exercise_version = @exercise.current_version
-    @text_representation = @exercise_version.text_representation || ExerciseRepresenter.new(@exercise).to_hash.to_yaml
+    @text_representation = @exercise_version.text_representation || 
+      ExerciseRepresenter.new(@exercise).to_hash.to_yaml
+    @user_groups = current_user.user_groups
+    # figure out the edit rights to this exercise
+    if ec = @exercise.exercise_collection
+      if ec.owned_by?(current_user)
+        @exercise_collection = 0 # Only Me
+      elsif @user_groups.include?(ec.user_group)
+        @exercise_collection = ec.user_group_id
+      else
+        @exercise_collection = -1 # Everyone
+      end
+    end
   end
 
 
@@ -171,7 +209,16 @@ class ExercisesController < ApplicationController
         exercise_dump << exercise
       end
     end
-    redirect_to exercise_practice_path(exercise_dump.sample) and return
+
+    if exercise_dump.any?
+      redirect_to exercise_practice_path(exercise_dump.sample) and return
+    else
+      filters = []
+      filters << "language #{params[:language]}" if params[:language]
+      filters << "question type #{Exercise::TYPE_NAMES[params[:question_type].to_i]}" if params[:question_type]
+      message = "Sorry, there are currently no public exercises #{filters.any? ? "with #{filters.to_sentence}." : "."}"
+      redirect_to root_path, notice: message and return
+    end
   end
 
 
@@ -254,33 +301,66 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # POST /exercises/upload_create
   def upload_create
-    if params[:exercise_version] && params[:exercise_version]['text_representation'].present?
-      hash = YAML.load(params[:exercise_version]['text_representation'])
-    else
-      hash = YAML.load(File.read(params[:form][:file].path))
-    end
+    exercise_params = params[:exercise]
+    exercise_version_params = exercise_params[:exercise_version]
+    edit_rights = exercise_params['exercise_collection']
+    hash = YAML.load(exercise_version_params['text_representation'])
 
     if !hash.kind_of?(Array)
       hash = [hash]
     end
 
-    exercises = ExerciseRepresenter.for_collection.new([]).from_hash(hash)
-    exercises.each do |e|
-      if !e.save
-        # FIXME: Add these to alert message that can be sent back to user
-        puts 'cannot save exercise, name = ' + e.name.to_s +
-          ', external_id = ' + e.external_id.to_s + ': ' +
-          e.errors.full_messages.to_s
-        if e.current_version
-          puts "    #{e.current_version.errors.full_messages.to_s}"
-          if e.current_version.prompts.any?
-            puts "    #{e.current_version.prompts.first.errors.full_messages.to_s}"
-          end
-        end
+    # figure out if we need to add this to an exercise collection
+    exercise_collection = nil
+    if edit_rights == 0 
+      exercise_collection = current_user.exercise_collection
+      if exercise_collection.nil?
+        exercise_collection = ExerciseCollection.new(
+          name: "Personal exercise collection belonging to #{current_user.display_name}",
+          user: current_user 
+        )
+        exercise_collection.save!
+      end
+    elsif edit_rights != -1 # then it must be a user group
+      user_group = UserGroup.find(edit_rights)
+      exercise_collection = user_group.exercise_collection
+      if exercise_collection.nil?
+        exercise_collection = ExerciseCollection.new(
+          name: "Exercise collection for the #{user_group.name} group",
+          user_group: user_group
+        )
+        exercise_collection.save!
       end
     end
 
-    redirect_to exercises_url, notice: 'Exercise upload complete.'
+    # parse the text_representation
+    exercises = ExerciseRepresenter.for_collection.new([]).from_hash(hash)
+    exercises.each do |e|
+      if !e.save
+        errors = []
+        errors <<  "Cannot save exercise:<ul>"
+        e.errors.full_messages.each do |msg|
+          errors << "<li>#{msg}</li>"
+        end
+
+        if e.current_version
+          e.current_version.errors.full_messages.each do |msg|
+            errors << "<li>#{msg}</li>"
+          end
+          if e.current_version.prompts.any?
+            e.current_version.prompts.first.errors.full_messages.each do |msg|
+              errors << "<li>#{msg}</li>"
+            end
+          end
+        end
+        errors << "</ul>"
+        redirect_to exercises_url, flash: { error: errors.join("").html_safe } and return
+      else # successfully created the exercise
+        exercise_collection.andand.add(e)
+      end
+    end
+
+    redirect_to exercises_url, flash: { success: 'Exercise saved!' }
   end
 
 	def embed

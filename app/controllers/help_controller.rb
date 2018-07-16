@@ -4,4 +4,7 @@ class HelpController < ApplicationController
   def exercise_format
   end
 
+  def lti_configuration
+  end
+
 end

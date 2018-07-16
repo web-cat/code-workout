@@ -78,7 +78,7 @@ class LtiController < ApplicationController
 				redirect_to workout_embed_path(workout_id: params[:gym_workout_id]) and return
 			end
 
-      workout_from_collection = false # are we serving a workout from a pre-existing collection? (like OpenDSA)
+      workout_from_collection = params[:from_collection] # are we serving a workout from a pre-existing collection? (like OpenDSA)
       # Finding appropriate course offerings and workout offerings from the workout
       resource_link_title = params[:resource_link_title]
       if (/\A[0-9][0-9].[0-9][0-9].[0-9][0-9] -/ =~ resource_link_title).nil?
@@ -104,6 +104,14 @@ class LtiController < ApplicationController
       end
 
       @course = Course.find_by(slug: course_slug, organization: @organization)
+      if !@course && !params[:custom_course_number]
+        # Try searching again, assuming context label includes additional
+        # junk following the course number
+        course_number = params[:context_label].gsub(/[^a-zA-Z0-9 ]/, ' ').
+          sub(/([0-9]+) .*$/, '\1').gsub(/\s+/, ' ')
+        course_slug = course_number.gsub(/[^a-zA-Z0-9]/, '').downcase
+        @course = Course.find_by(slug: course_slug, organization: @organization)
+      end
       if @course.blank?
         if @tp.context_instructor?
           @course = Course.new(
