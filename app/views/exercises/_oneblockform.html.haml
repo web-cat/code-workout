@@ -6,7 +6,7 @@
 = semantic_form_for @exercise, url: exercises_upload_create_path, method: :post do |f|
   = f.semantic_errors
   .row
-    .col-md-4
+    .col-md-4.col-sm-4
       = f.input :exercise_collection, as: :select, collection: access_control_items, 
         label: "Who can edit this exercise?", include_blank: false,
         selected: @exercise_collection || 0
