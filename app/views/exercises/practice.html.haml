@@ -1,0 +1,173 @@
+- if !@lti_launch
+  = render partial: 'layouts/breadcrumb'
+
+- if @user_deadline
+  = javascript_include_tag('timeout')
+= javascript_include_tag("two_column_layout")
+= javascript_include_tag("practice")
+.col-md-7#user-deadline{ data: { deadline: @user_deadline, server_now: @server_now } }
+  = semantic_form_for @exercise_version,
+    url: (@workout_offering ? organization_workout_offering_exercise_evaluate_path(id: @exercise_version.exercise.id,
+      course_id: @workout_offering.course_offering.course.slug,
+      organization_id: @workout_offering.course_offering.course.organization.slug,
+      term_id: @workout_offering.course_offering.term.slug,
+      workout_offering_id: @workout_offering.id,
+      lti_launch: @lti_launch) : exercise_evaluate_path(@exercise_version.exercise,
+    exercise_version_id: @exercise_version.id,
+    feedback_return: true, lti_launch: @lti_launch)), remote: true do |f|
+    = f.semantic_errors
+    %h1= @exercise.display_name
+    - if @msg
+      #timer.alert.alert-warning
+        = "#{@msg}"
+    - if @exercise_version.stem && !@exercise_version.stem.preamble.blank?
+      - cache @exercise_version.stem do
+        = markdown @exercise_version.stem.preamble
+    - allow_write = true
+    - coding_questions = false
+    - @exercise_version.prompts.each do |question_prompt|
+      - cache question_prompt do
+        = markdown question_prompt.question
+      - prompt = question_prompt.specific
+      - if prompt.is_mcq?
+        - answers = @exercise_version.serve_choice_array(question_prompt)
+        - answers.each do |a|
+          - a[:answer] = markdown(a[:answer])
+        - answer = Choice.new
+        - if prompt.allow_multiple
+          %h2 Choose ALL that apply:
+          .answers
+            = f.semantic_fields_for answer do |p|
+              = p.input :id,
+                as: :check_boxes,
+                collection: answers,
+                member_value: :id,
+                member_label: :answer,
+                selected: false,
+                label: '&nbsp;'
+        - elsif @exercise_version.prompts.count > 1
+          %h3 Select only one answer for each of the sub-questions:
+          - prior_answer = @attempt && @attempt.prompt_answers.where(prompt: prompt.acting_as).first
+          - if prior_answer
+            - answer = prior_answer.specific.choices.first || answer
+          .answers
+            = f.semantic_fields_for answer do |p|
+              = p.input :id,
+                as: :radio,
+                input_html: {name: "prompt-" + prompt.id.to_s},
+                collection: answers,
+                member_value: :id,
+                member_label: :answer,
+                label: '&nbsp;'
+        - else
+          %h3 Select one answer:
+          - prior_answer = @attempt && @attempt.prompt_answers.where(prompt: prompt.acting_as).first
+          - if prior_answer
+            - answer = prior_answer.specific.choices.first || answer
+          .answers
+            = f.semantic_fields_for answer do |p|
+              = p.input :id,
+                as: :radio,
+                collection: answers,
+                member_value: :id,
+                member_label: :answer,
+                label: '&nbsp;'
+      - elsif prompt.is_coding?
+        - coding_questions = true
+        - examples = prompt.examples
+        - if !prompt.hide_examples && examples.any?
+          %p Examples:
+          %pre.examples
+            - examples.each do |example|
+              = example.display_description
+              %br
+        - prior_answer = @attempt && @attempt.prompt_answers.where(prompt: prompt.acting_as).first
+        - if !prior_answer && @workout_offering.andand.continue_from_workout
+          - prior_score = @workout_offering.continue_from_workout.score_for(@student_user)
+          - prior_attempt = prior_score.previous_attempt_for(@exercise_version.exercise)
+          - prior_answer = prior_attempt && prior_attempt.prompt_answers.where(prompt: prompt.acting_as).first
+        - if prior_answer && @workout_offering
+          - if !@workout_offering.can_be_practiced_by?(current_user)
+            - allow_write = false
+        - if allow_write && params[:review_user_id].nil?
+          = f.input :answer_code, as: :text, class: 'code',
+          input_html: { class: 'code', readonly: true, autofocus: true,
+            value: prior_answer ? prior_answer.specific.answer : prompt.prepare_starter_code,
+            data: { lang: 'text/x-' + (@exercise.language || 'java').downcase,
+            starter_code: prompt.prepare_starter_code } }
+        - else
+          %pre{ data: { lang: 'text/x-java' } }
+            = prior_answer ? prior_answer.specific.answer : prompt.prepare_starter_code
+    .actions
+      - if @workout_offering.nil? || @workout_offering.can_be_practiced_by?(current_user)
+        - if @workout_offering.andand.workout_policy.andand.hide_feedback_before_finish && params[:review_user_id].nil?
+          = f.submit 'Save my answer!', class: 'btn btn-primary btn-submit', id: 'primarybtn'
+        - elsif allow_write && params[:review_user_id].nil?
+          = f.submit 'Check my answer!', class: 'btn btn-primary btn-submit', id: 'primarybtn'
+      - if coding_questions
+        %div.btn.btn-default{ data: { toggle: 'modal', target: '#confirm-reset' } } Reset
+      -if @exercise.tag_list.include? 'Visualizable'
+        -if @workout
+          -if @workout_offering
+            %div.btn.btn-default{id: "visualize", disabled: true, data: {workout: @workout.id, workout_offering: @workout_offering.id}} Visualize
+          -else
+            %div.btn.btn-default{id: "visualize", disabled: true, data: {workout: @workout.id, workout_offering: 'null'}} Visualize
+        -else
+          %div.btn.btn-default{id: "visualize", disabled: true, data: {workout: 'null', workout_offering: 'null'}} Visualize
+
+      - if @workout_offering && params[:review_user_id].nil? && @workout_offering.workout.exercise_workouts.size > 1
+        = button_link 'Next exercise',
+          organization_workout_offering_practice_path(exercise_id: @workout.next_exercise(@exercise),
+          organization_id: @workout_offering.course_offering.course.organization.slug,
+          course_id: @workout_offering.course_offering.course.slug,
+          term_id: @workout_offering.course_offering.term.slug,
+          id: @workout_offering.id,
+          lti_launch: @lti_launch),
+          class: 'btn btn-default btn-next', id: 'nextbtn'
+      - elsif @workout && params[:review_user_id].nil? && @workout.exercise_workouts.size > 1
+        = button_link 'Next exercise',
+          exercise_practice_path(@workout.next_exercise(@exercise), workout_id: @workout.id, lti_launch: @lti_launch),
+          class: 'btn btn-info btn-next', id: 'nextbtn'
+
+    - if @workout.nil? && !@lti_launch
+      %br
+      = link_to "Practice a different #{@exercise.language} exercise",     |
+        (@exercise.language ?                                              |
+        random_exercise_path(language: @exercise.language) :               |
+        random_exercise_path)                                              |
+.col-md-5
+  #saved_assurance
+  #previous_answer.previous_answer
+  - if @attempt
+    #exercisefeedback
+      = render partial: 'sse/ajax_feedback'
+  - else
+    #exercisefeedback{style: 'display: none;'}
+
+.modal.fade#confirm-reset{ tabindex: '-1', role: 'dialog', aria_labelledby: 'resetModalLabel', aria_hidden: true }
+  .modal-dialog
+    .modal-content
+      .modal-header
+        %button.close{ type: 'button', data: { dismiss: 'modal' }, aria_hidden: true } &times
+        %p.lead.modal-title#resetModalLabel Confirm Reset
+
+      .modal-body
+        %p You are about to reset the editor to this exercise's original state. Your current work will be lost.
+        %p Continue?
+        %p.debug-url
+
+      .modal-footer
+        %button.btn.btn-default{ data: { dismiss: 'modal' }, type: 'button' } Cancel
+        %button.btn.btn-danger.btn-reset Reset Editor
+        
+.modal.fade#Visualize{ tabindex: '-2', role: 'dialog', aria_labelledby: 'VisualizeModal', aria_hidden: true }
+  .modal-dialog.modal-lg{ style: 'height:400; width: 800' }
+    .modal-content
+      .modal-header
+        %button.close{ type: 'button', data: { dismiss: 'modal' }, aria_hidden: true } &times
+        %p.lead.modal-title#resetModalLabel Code Visualization
+
+      .modal-body{ id: 'ModalBody'}
+        
+      .modal-footer
+        %button.btn.btn-default{ data: { dismiss: 'modal' }, type: 'button' } Cancel

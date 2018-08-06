@@ -1,0 +1,23 @@
+- headers = ['E-mail','First Name','Surname']
+- @course_offering.workouts.each do |wkt|
+  - headers<<wkt.name
+- headers<<'Total'
+= CSV.generate_line(headers).strip()
+- @course_enrolled.each do |ce|
+  - body = Array.new
+  - if ce.course_role_id == CourseRole.find_by(name: 'Student').id
+    - student =  User.find(ce.user_id)
+    - body << student.email
+    - body << (student.first_name.to_s.length > 0 ? student.first_name : nil)
+    - body << (student.last_name.to_s.length > 0 ? student.last_name : nil)
+    - grand_total = 0.00
+    - @course_offering.workouts.each do |wkt|
+      - workout_offering = @course_offering.workout_offerings.find_by(workout: wkt)
+      - if workout_score = WorkoutScore.find_by(user_id: ce.user_id, workout: wkt, workout_offering: workout_offering)
+        - tot = workout_score.score.round(2)
+        - body << tot
+        - grand_total += tot
+      - else
+        - body << ''
+    - body << grand_total.round(2).to_s
+    = CSV.generate_line(body).strip()

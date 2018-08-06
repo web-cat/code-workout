@@ -1,0 +1,99 @@
+%h1 Connecting to LMSes using LTI
+
+%h2 Add CodeWorkout to an LMS Course
+
+%p
+  To use CodeWorkout in an LTI-compatible Learning Management System (LMS),
+  you will need to install CodeWorkout as an external LTI application.
+  Depending on the LMS, this may be done system-wide, or at the level of
+  individual courses. For system-wide installation, talk to your LMS
+  administrator. For individual courses, follow the steps below.
+
+%p
+  If CodeWorkout is not installed system-wide on an LMS, instructors will
+  typically add it to their individual courses on the LMS instead. To do this,
+  you'll need 4 pieces of information:
+
+%table.table
+  %tr
+    %th Tool Name:
+    %td CodeWorkout
+  %tr
+    %th Configuration URL:
+    %td
+      %a{href: 'https://codeworkout.cs.vt.edu/codeworkout-lti.xml'}
+        https://codeworkout.cs.vt.edu/codeworkout-lti.xml
+  %tr
+    %th Consumer Key:
+    %td
+      (request by e-mailing:
+      %a{href: 'mailto:edwards@cs.vt.edu'} edwards@cs.vt.edu
+      )
+  %tr
+    %th Consumer Secret:
+    %td
+      (request by e-mailing:
+      %a{href: 'mailto:edwards@cs.vt.edu'} edwards@cs.vt.edu
+      )
+
+%p
+  Follow your LMS instructions for adding CodeWorkout as an external LTI tool
+  in your course. For reference, you can read the Canvas instructions for
+  doing this:
+
+%p
+  %a{href: 'https://guides.instructure.com/m/4152/l/74482-how-do-i-configure-an-external-app-for-a-course-using-a-url'}
+    Canvas instructions for adding to an LTI tool course
+
+%h2 Use CodeWorkout for an LMS Assignment
+
+%p
+  Before CodeWorkout can use used in a specific assignment, it must be
+  added as an external LTI tool to the course (or system-wide)--see the
+  instructions above. Next, you must also configure it for each assignment
+  where CodeWorkout will be used using the steps below.
+
+%h3 Step 1: Create Your Assignment Writeup
+
+%p
+  To use Web-CAT in an assignment, you will write your assignment
+  instructions as you normally would in your LMS. Perform that step first
+  (you can always edit the assignment later if corrections are needed).
+
+%h3 Step 2: Add CodeWorkout as an External LTI Tool
+
+%p
+  To use CodeWorkout in an assignment, you will configure the assignment on
+  your LMS to use an external tool for <strong>assignment submissions</strong>.
+  Follow your LMS instructions for using an external LTI tool
+  to accept assignment submissions. For reference, you can read the Canvas
+  instructions for doing this:
+
+%p
+  %a{href: 'https://guides.instructure.com/m/4152/l/501360-how-do-i-add-an-assignment-using-an-external-app'}
+    Canvas instructions for using an external LTI tool for assignment submissions
+
+%p
+  We recommend that you check the option to open CodeWorkout in a new/separate
+  window if your LMS provides that option. Canvas, for example, will try to
+  present CodeWorkout in an embedded iframe on the assignment page otherwise.
+
+%h3 Step 3: Create Your Assignment on CodeWorkout
+
+%p
+  Once you have added CodeWorkout as an external submission tool for your
+  assignment, save the assignment and view it normally. Click the button
+  provided there to enter CodeWorkout.
+
+%p
+  When entering CodeWorkout on a brand new assignment for the first time,
+  CodeWorkout will present you with the edit page for your new assignment,
+  where you can edit its description, add exercises, choose exercise point
+  values, and set other options. You can use this page to configure your
+  assignment the way you want.
+
+%p
+  Be sure to set the opening/closing dates for the assignment on CodeWorkout,
+  since the Learning Management System will not transmit this information
+  to CodeWorkout for you.
+  Once you have configured your assignment, it is ready to use.

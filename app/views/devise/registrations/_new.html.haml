@@ -1,0 +1,14 @@
+= semantic_form_for User.new,
+  url: registration_path(User.new),
+  html: { class: "form-horizontal" } do |f|
+
+  = f.inputs do
+    .form-group
+      = f.input :email, input_html:{ autofocus: true }
+    .form-group
+      = f.input :password
+    .form-group
+      = f.input :password_confirmation, required: true
+
+  = f.actions do
+    = f.submit 'Sign up', class: 'btn btn-primary'

@@ -1,0 +1,41 @@
+%p#notice= notice
+
+= image_tag @user.avatar_url
+
+%p
+  %strong First name:
+  = @user.first_name
+
+%p
+  %strong Last name:
+  = @user.last_name
+
+%p
+  %strong Timezone:
+  = @user.time_zone
+
+%p
+  %strong Email:
+  = link_to @user.email, 'mailto:' + @user.email
+%br
+- if @user.workout_scores.size > 0
+  %table.table.table-striped
+    %thead
+      %tr
+        %th Workout name
+        %th Score
+    %tbody
+      - @workout_scores.each do |user_score|
+        %tr
+          %td= user_score.workout.name
+          - score = user_score.andand.score
+          - if score && user_score.show_feedback?
+            %td= score
+          - else
+            %td.textblur -/-
+
+%br
+
+- if can? :update, @user
+  = button_link 'Edit', edit_user_path(@user)
+= button_link 'Back', users_path

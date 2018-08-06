@@ -1,0 +1,23 @@
+$ ->
+	deadline = 0
+	deadline = moment.utc($('#user-deadline').data('deadline'))
+	server_now = moment.utc($('#user-deadline').data('server-now'))
+	client_now = moment.utc()
+	offset = client_now.diff(server_now)
+	remaining = deadline.diff(client_now) + offset
+	duration = moment.duration(remaining, 'milliseconds')
+	one_second = 1000
+	interval = setInterval ->
+		if duration > 0
+			remaining = deadline.diff(moment.utc()) + offset
+			duration = moment.duration(remaining, 'milliseconds')
+			hours = ('0' + duration.hours()).slice -2
+			minutes = ('0' + duration.minutes()).slice -2
+			seconds = ('0' + duration.seconds()).slice -2
+			$("#timer").html("Time remaining - " + hours + ":" + minutes + ":" + seconds)
+		else
+			clearInterval(interval)
+			$('#timer').html 'The time limit has passed. The assignment is closed and no longer accepting submissions.'
+			$('.btn-submit').fadeOut 300, ->
+				$(this).remove();
+	, one_second

@@ -1,0 +1,16 @@
+%p
+  %strong
+    = @course_offering.display_name
+%br
+= form_tag course_offering_store_workout_path(@course_offering.id) do
+  = label_tag 'workoutids', 'Select Workouts'
+  = select_tag 'workoutids',
+    options_from_collection_for_select(@workouts, 'id', 'name'),
+    multiple: true
+  = label_tag 'opening_date', 'Workout opening'
+  = date_field_tag 'opening_date'
+  = label_tag 'soft_deadline', 'Soft deadline'
+  = date_field_tag 'soft_deadline'
+  = label_tag 'hard_deadline', 'Hard deadline'
+  = date_field_tag 'hard_deadline'
+  = submit_tag "Submit"

@@ -1,0 +1,38 @@
+%h2 Find your course
+%p
+  Type in the first few letters of your course to search for it.
+  %br
+  If you cannot find it, you may create a course by typing in a new
+  name.
+.form-horizontal
+  .form-group
+    = label_tag :course, 'Course Name', class: 'control-label col-xs-3'
+    .col-xs-12.col-md-5
+      .ui-widget
+        = text_field_tag :course, nil, id: 'course', class: 'form-control input-sm',
+          placeholder: 'Start typing your course name'
+    .col-xs-4
+      %button.new-course#btn-course.btn.btn-default.btn-sm{ style: 'display: none' }
+        Cancel
+    %small.new-course#new-course-hint.col-md-5.col-xs-12.text.text-warning{ style: 'display: none' }
+      To add a new course, type in a name, like: Data Structures and Algorithms
+
+  .form-group.new-course{ style: 'display: none' }
+    = label_tag :abbr, 'Course Number', class: 'control-label col-xs-3'
+    .col-xs-2
+      = text_field_tag :abbr, nil, id: 'number', class: 'form-control input-sm',
+        placeholder: "example: CS 3114"
+    .col-xs-1
+      %i#course-valid.fa.fa-question-circle{ aria_hidden: 'true' }
+    %small#course-hint.text.text-warning
+
+  .form-group.new-course{ style: 'display: none' }
+    = label_tag :is_hidden, 'Hide Course?', class: 'control-label col-xs-3'
+    .col-xs-1
+      = check_box_tag 'is_hidden', 'is_hidden', false, id: 'course-is-hidden'
+    %small.col-xs-6.text.text-warning
+      Check this box if you are creating a test course. This will hide the course
+      in lists of courses visible to the public.
+
+  .form-group.new-course{ style: 'display: none' }
+    %button.col-xs-offset-1#btn-submit-course.btn.btn-primary Submit

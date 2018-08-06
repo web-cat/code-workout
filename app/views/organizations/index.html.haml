@@ -1,0 +1,58 @@
+%ol.breadcrumb
+  %li= link_to 'Home', root_path
+  %li.active Courses
+
+
+%h1
+  = @term.display_name
+  Courses by Organization
+
+%p
+  Switch to a different term:
+  = select_tag 'term_id',
+    options_for_select(Term.all.collect{ |t| [t.display_name, t.id] },
+    @term.id),
+    class: 'form-control inline'
+  
+  = hidden_field_tag 'enrolled_only', params[:enrolled_only].to_b # see organizations.js.coffee
+
+- if @organizations.any?
+  - @organizations.each do |organization|
+    - courses_to_show = organization.courses.where(is_hidden: false).any?
+    - show_org = courses_to_show && !organization.is_hidden 
+    - if show_org
+      %h2= link_to organization.name, organization_path(organization)
+
+      %ul
+        - organization.courses.each do |course|
+          - show_course = !course.is_hidden || current_user.andand.is_a_member_of?(course.user_group)
+          - if show_course
+            %li
+              = link_to course.number_and_name,
+                organization_course_path(organization, course, @term)
+              - if course.is_hidden
+                %small.text.text-warning
+                  Hidden course, displayed because you have course privileges.
+              %table.table.table-striped{ style: 'width: auto' }
+                %thead
+                  %th Term
+                  %th Section
+                  %th Instructor(s)
+                  %th Enroll
+                %tbody
+                  - course.course_offerings.each do |o|
+                    - if !params[:enrolled_only].to_b || (params[:enrolled_only].to_b && current_user.andand.is_enrolled?(o))
+                      %tr
+                        %td= o.term.display_name
+                        %td= link_to o.display_name,
+                          organization_course_path(o.course.organization,
+                          o.course, o.term)
+                        %td!= o.instructors.map{ |i| link_to i.display_name,
+                          user_path(i) }.to_sentence
+                        %td= render partial: "course_offerings/self_enrollment",
+                          locals: { off: o }
+- else
+  %p
+    No organizations have courses offered in
+    = @term.display_name
+    at this time.

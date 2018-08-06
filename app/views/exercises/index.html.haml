@@ -1,0 +1,18 @@
+%ol.breadcrumb
+  %li= link_to 'Home', root_path
+  %li= link_to 'Gym', gym_url
+  %li.active Exercises
+
+%h1 Exercises
+- if can? :create, Exercise
+  %p= button_link 'Create New', new_exercise_path, class: 'btn btn-primary'
+- if @exercises.size > 0
+  - @exercises.in_groups_of(2, false) do |row|
+    = render row, user: current_user
+    .clearfix
+- else
+  %p
+    No public exercises are available to view right now.  Please wait for
+    contributors to add more.
+
+-#%p= button_link 'Write your own exercise', new_exercise_path, btn: 'primary'

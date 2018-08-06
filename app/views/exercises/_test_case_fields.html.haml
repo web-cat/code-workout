@@ -1,0 +1,22 @@
+.nested-fields
+  = f.inputs do
+    .row.darker-bkg
+      .row
+        .col-md-3
+          = f.input :input, as: :string,
+            label: "Input"
+      .row
+        .col-md-3
+          = f.input :expected_output, as: :string,
+            label: "Expected Output"
+      .row
+        .col-md-3
+          = f.input :description, as: :string,
+            label: "Test Description"
+      .row
+        .col-md-3
+          = f.input :negative_feedback, as: :string,
+            label: "Failure Feedback"
+      .row
+        .col-md-4
+          = link_to_remove_association "Remove", f

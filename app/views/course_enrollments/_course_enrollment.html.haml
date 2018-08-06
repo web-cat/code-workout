@@ -1,0 +1,10 @@
+- user = course_enrollment.user
+%tr{ data: { course_enrollment: course_enrollment.id, user_name: user.display_name, user_id: user.id } }
+  %td= image_tag user.avatar_url(size: 28), width: 28, height: 28
+  %td= user.last_name
+  %td= user.first_name
+  %td= link_to user.email, 'mailto:' + user.email
+  %td= course_enrollment.course_role.name
+  %td
+    - if course_enrollment.course_role.is_student?
+      %i.action.unenroll.fa.fa-times

@@ -1,0 +1,26 @@
+%h1 Course Offerings
+
+%table.table.table-striped.table-bordered
+  %thead
+    %tr
+      %th Term
+      %th Course Number
+      %th Label
+      %th URL
+      %th Self enrollment?
+      %th Actions
+
+  %tbody
+    - @course_offerings.each do |course_offering|
+      %tr
+        %td= course_offering.term.display_name
+        %td= course_offering.course.number
+        %td= link_to course_offering.label, { controller: 'course_offerings', action: 'show', id: course_offering.id, lti_launch: @lti_launch }
+        %td= course_offering.url
+        %td= course_offering.self_enrollment_allowed
+        %td
+          = button_link 'Show', course_offering, size: 'sm'
+          = button_link 'Edit', edit_course_offering_path(course_offering),
+            size: 'sm'
+          = button_link 'Destroy', course_offering, method: :delete,
+            size: 'sm', data: { confirm: 'Are you sure?' }

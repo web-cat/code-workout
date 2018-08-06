@@ -1,0 +1,45 @@
+%h1#head
+  Course Setup
+
+%h2 Find your organization
+%p
+  Type in the first few letters of your organization to search for it.
+  %br
+  If you cannot find it, you may create an organization by typing in a new
+  name.
+.org-setup
+  .form-horizontal
+    .form-group
+      = label_tag :organization, 'Organization Name', class: 'control-label col-xs-3'
+      .col-xs-12.col-md-5
+        .ui-widget
+          = text_field_tag :organization, nil, id: 'organization', class: 'form-control input-sm',
+            placeholder: 'Start typing your organization name'
+      .col-xs-4
+        %button.new-org#btn-org.btn.btn-default.btn-sm{ style: 'display: none' }
+          Cancel
+      %small.new-org#hint.col-md-5.col-xs-12.text.text-warning{ style: 'display: none' }
+        To add a new organization, type in a name, like: Monsters University
+
+    .form-group.new-org{ style: 'display: none' }
+      = label_tag :abbr, 'Abbreviation', class: 'control-label col-xs-3'
+      .col-xs-2
+        = text_field_tag :abbr, nil, id: 'abbr', class: 'form-control input-sm', maxlength: 6,
+          placeholder: "suggested: MU"
+      .col-xs-1
+        %i#uniqueness.fa.fa-question-circle{ aria_hidden: 'true' }
+      %small#org-hint.text.text-warning
+
+    .form-group.new-org{ style: 'display: none' }
+      = label_tag :is_hidden, 'Hide Organization?', class: 'control-label col-xs-3'
+      .col-xs-1
+        = check_box_tag 'is_hidden', 'is_hidden', false, id: 'org-is-hidden'
+      %small.col-xs-6.text.text-warning
+        Check this box if you are creating a test organization. This will hide the organization
+        in lists of organizations visible to the public.
+
+    .form-group.new-org{ style: 'display: none' }
+      %button.col-xs-offset-1#btn-submit-org.btn.btn-primary Submit
+
+.course-setup{ style: 'display: none' }
+  = render partial: 'course_fields'

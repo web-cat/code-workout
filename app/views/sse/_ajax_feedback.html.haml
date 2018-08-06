@@ -1,0 +1,98 @@
+%h2 Feedback
+- show_feedback = !@attempt.workout_score || @attempt.workout_score.show_feedback?
+- @workout ||= @attempt.workout_score.andand.workout
+- if @workout && show_feedback
+  - pts = @workout.exercise_workouts.find_by(exercise: @exercise).andand.points
+  - score = @attempt.score
+  - score_pct = pts > 0 ? score * 100.0 / pts : 0
+  .summary
+    .radial-progress{ 'data-progress' => score_pct.round() }
+      .circle
+        .mask.full
+          .fill
+        .mask.half
+          .fill
+          .fill.fix
+        .shadow
+      .inset
+        .score
+          = score.round(2).to_s
+          %span.outof>
+            = "/ "  + pts.to_s
+
+- if @exercise_version.is_mcq?
+  - if show_feedback
+    - if @attempt.earned_full_points?
+      %p Your choice is correct!
+    - elsif @attempt.score > 0
+      %p Your choice is partially correct.
+    - else
+      %p Your choice is incorrect.
+    -#= Choice.find(attempt.answer.to_i).feedback
+    - @attempt.prompt_answers.first.specific.choices.each do |choice|
+      %p= choice.feedback
+  - else
+    Your answer has been saved.
+- elsif @exercise_version.is_coding?
+  - answer = @attempt.prompt_answers.first.specific
+  - if !answer.error.blank?
+    %p Your answer could not be processed because it contains errors:
+    .alert.alert-danger{ role: 'alert' }
+      - answer.error.lines.each_with_index do |line, i|
+        - if i > 0
+          %br
+        = line
+  - elsif show_feedback
+    %table.table.table-striped.feedback
+      %thead
+        %tr
+          %th Behavior
+          %th Result
+      %tbody
+        - answer.test_case_results(true).each do |tcr|
+          %tr
+            - if tcr.pass
+              %td.pass
+                %i.fa.fa-check-square
+            - else
+              %td.fail
+                %i.fa.fa-minus-square
+            %td
+              - description = tcr.display_description
+              = description
+              - if !tcr.pass
+                - if !tcr.test_case.hidden?
+                  %br
+                  .out= tcr.execution_feedback
+  - else
+    - examples = @exercise_version.prompts.first.specific.examples
+    %table.table.table-striped.feedback
+      %thead
+        %tr
+          %th Example
+          %th.text-center Result
+      %tbody
+        - if examples.any?
+          - answer.test_case_results(true).each do |tcr|
+            - if tcr.test_case.is_example?
+              %tr
+                %td
+                  - description = tcr.display_description
+                  = description
+                  - if !tcr.pass
+                    - if !tcr.test_case.hidden?
+                      %br
+                      .out= tcr.execution_feedback
+                - if tcr.pass
+                  %td.pass
+                    %i.fa.fa-check-square
+                - else
+                  %td.fail
+                    %i.fa.fa-minus-square
+        %tr
+          %td Other hidden tests
+          %td.unknown
+            %i.fa.fa-question-circle
+
+-#= render partial: 'workout_scores/time_remaining',
+  locals: { workout_score: @attempt.workout_score }

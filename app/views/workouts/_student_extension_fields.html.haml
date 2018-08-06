@@ -1,0 +1,16 @@
+%tr.extension.fields
+  %td
+    Extensions:
+  %td
+    = collection_select nil, nil, students, :id, :display_name, { prompt: 'Select students' },
+      { class: 'student-select form-control input-sm', multiple: true }
+  %td
+    %input.opening-datepicker.datepicker{ type: 'text', class: 'form-control input-sm', placeholder: 'Opening date' }
+  %td
+    %input.soft-datepicker.datepicker{ type: 'text', class: 'form-control input-sm', placeholder: 'Soft deadline' }
+  %td
+    %input.hard-datepicker.datepicker{ type: 'text', class: 'form-control input-sm', placeholder: 'Hard deadline' }
+  %td
+    %input.form-control.time-limit.input-sm.input{ type: 'number', min: '0', placeholder: 'Time' }
+  %td
+    %i.fa.fa-times.action.delete-extension

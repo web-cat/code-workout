@@ -1,0 +1,6 @@
+- if @exs.any?
+  $('.search-results').empty();
+  - if @msg
+    $('.search-results').append("#{@msg}<br/><br/>");
+  - @exs.in_groups_of(1, false) do |row|
+    $('.search-results').append("#{escape_javascript(render row, user: current_user, size: 'single-lg', new_workout: true)}")

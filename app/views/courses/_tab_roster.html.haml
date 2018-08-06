@@ -1,0 +1,29 @@
+- if @course_offerings.any?
+  .pull-right.dropdown
+    = dropdown_button_tag 'Enroll Users', class: 'btn btn-primary'
+    %ul.dropdown-menu
+      %li
+        = link_to 'Manually...', new_course_enrollment_path(course_id: @course, term_id: @term), remote: true
+      %li
+        = link_to 'Upload a roster...', choose_roster_course_enrollments_path(course_id: @course, term_id: @term), remote: true
+
+= stylesheet_link_tag('pagination')
+
+- @course_offerings.each do |offering|
+  %table.table.table-striped
+    %thead
+      %tr.course-offering-label
+        %th= offering.label
+      %tr
+        %th Image
+        %th Last name
+        %th First name
+        %th Email
+        %th Role
+        %th
+          %i.fa.fa-cog
+    %tbody#roster
+      - @sec = offering.course_enrollments.               |
+        page(params[:page]).per(params[:per])             |
+      = render @sec
+  #roster_paginator= paginate @sec, remote: true

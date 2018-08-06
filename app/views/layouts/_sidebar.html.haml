@@ -1,0 +1,14 @@
+- user ||= current_user
+- workout_score = (@workout_score || user.andand.current_workout_score) || nil
+- workout_offering = (@workout_offering || workout_score.andand.workout_offering) || nil
+- if controller_name.eql?('workouts') && ['new', 'edit', 'clone'].include?(action_name)
+  = render partial: 'exercises/find_exercises_to_add'
+- elsif user_signed_in? && (workout_score || workout_offering)
+  = render partial: 'workouts/status',
+    locals: { workout_score: workout_score, workout_offering: workout_offering, review: params[:review_user_id].present? }
+- elsif user_signed_in? && session[:leaf_exercises]
+  = render Exercise.find(session[:leaf_exercises]),
+    user: user, size: 'sm'
+- elsif !user
+  = render @exercise, user: nil, size: 'sm'
+.clearfix

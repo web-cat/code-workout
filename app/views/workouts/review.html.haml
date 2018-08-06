@@ -1,0 +1,111 @@
+- course_offering ||= @workout_offering.andand.course_offering
+- review_user = User.find(params[:review_user_id])
+- workout_score ||= @workout.score_for(review_user, @workout_offering)
+= render partial: 'layouts/breadcrumb'
+
+%h1= @workout.name
+
+- if @workout.tags.any?
+  %p
+    Tags:
+    - @workout.tags.each do |t|
+      =link_to t.name, exercises_search_path(search: t.name), method: :post, class: 'tag'
+
+- if course_offering && course_offering.is_staff?(review_user)
+  %table.table.table-striped{ style: 'width: auto' }
+    %thead
+      %tr
+        %th Course
+        %th Open
+        %th Due
+        %th Close
+        %th Time Limit
+    %tbody
+      - Time.use_zone(ActiveSupport::TimeZone["America/New_York"]) do
+        - @workout.workout_offerings.each do |woff|
+          %tr
+            %td= woff.course_offering.display_name
+            -#%td.xeditable{ id: 'opening_date',
+              data: { type: 'text',
+              url: '/workout_offerings/' + woff.id.to_s,
+              resource: 'workout_offering',
+              name: 'opening_date',
+              xeditable: "true",
+              pk: woff.id.to_s,
+              model: 'workout_offering' } }= woff.opening_date
+            %td
+              - if woff.opening_date
+                = l user_time(current_user, woff.opening_date)
+            -#%td.xeditable{ id: 'soft_deadline',
+              data: { type: 'text',
+              url: '/workout_offerings/' + woff.id.to_s,
+              resource: 'workout_offering',
+              name: 'soft_deadline',
+              xeditable: "true",
+              pk: woff.id.to_s,
+              model: 'workout_offering' } }= woff.soft_deadline
+            %td= l user_time(current_user, woff.soft_deadline)
+            -#%td.xeditable{ id: 'hard_deadline',
+              data: { type: 'text',
+              url: '/workout_offerings/' + woff.id.to_s,
+              resource: 'workout_offering',
+              name: 'hard_deadline',
+              xeditable: "true",
+              pk: woff.id.to_s,
+              model: 'workout_offering' } }= woff.hard_deadline
+            %td= l user_time(current_user, woff.hard_deadline)
+- elsif @workout_offering
+  %p
+    - if  review_user.id != current_user.id
+      Student:
+      = "#{review_user.display_name}."
+    - if workout_score.last_attempted_at
+      &nbsp;&nbsp;&nbsp;Last Attempted:
+      = l user_time(current_user, workout_score.last_attempted_at)
+    - elsif @workout_offering.hard_deadline
+      Due:
+      = l user_time(current_user, @workout_offering.hard_deadline)
+    &nbsp;&nbsp;&nbsp;Score:
+    - if workout_score
+      - if workout_score.show_feedback?
+        = workout_score.score
+      - else
+        hidden
+    - else
+      0
+    = '/'
+    = @workout.total_points
+-else
+  %p.due
+    Score: 0 /
+    = @workout.total_points
+
+-# score_pct = wscore ? (wscore.score/workout.total_points * 100).round(0) : 0
+-# if score_pct == 100 && wscore.score < workout.total_points
+-#  - score_pct = 99
+
+- if @workout.description
+  %p= markdown(@workout.description)
+
+
+%h2 Exercises
+
+- manages_course = current_user.global_role.is_admin? || course_offering.andand.is_manager?(current_user)
+
+- if !manages_course && workout_score.nil? && @workout_offering.andand.workout_policy.andand.hide_thumbnails_before_start
+  .alert.alert-warning You must begin this workout before you can see its exercises.
+- elsif !manages_course && workout_score.andand.closed? && !@workout_offering.andand.shutdown? && (@workout_offering.andand.workout_policy.andand.no_review_before_close || @workout_offering.andand.workout_policy.andand.hide_thumbnails_in_review_before_close)
+  .alert.alert-warning Results will be visible after the assignment closes.
+- elsif @exs.empty?
+  .alert.alert-warning No exercises in this workout
+- else
+  - user = review_user
+  - @exs.in_groups_of(2, false) do |row|
+    = render row,
+      user: user,
+      workout_offering: @workout_offering,
+      workout_score: workout_score,
+      workout: @workout,
+      start_workout: false,
+      review: true
+    .clearfix

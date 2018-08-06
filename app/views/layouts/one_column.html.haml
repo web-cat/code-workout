@@ -1,0 +1,14 @@
+= inside_layout do
+  .max-height#main
+    .scrollable.max-height.content
+      .inner.max-height
+        .below-nav
+          = render partial: 'layouts/flash'
+          .container
+            - if controller_name.eql?('workouts') && ['new', 'edit', 'clone'].include?(action_name)
+              .row
+                = render partial: 'layouts/sidebar'
+              .row
+                = yield
+            - else
+              = yield

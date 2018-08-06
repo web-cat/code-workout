@@ -1,0 +1,32 @@
+= render partial: 'layouts/breadcrumb'
+
+%h1= @course.number_and_name
+
+- if @course.is_hidden
+  %p.text.text-warning.row
+    %small.col-md-5
+      - subject = "CodeWorkout - request to display hidden course (#{@course.number_and_name})"
+      This is a hidden course; these are typically used for testing purposes.
+      You may distribute this page's URL, but it will not appear publicly in CodeWorkout.
+      If you think this course should NOT be marked hidden, please
+      = mail_to('edwards@cs.vt.edu', 'email us.', subject: subject)
+
+- if @course.course_offerings.any?
+  %table.table.table-striped{ style: 'width: auto' }
+    %thead
+      %th Term
+      %th Section
+      %th Instructor(s)
+      %th Enroll
+    %tbody
+      - @course.course_offerings.by_date.each do |o|
+        %tr
+          %td= o.term.display_name
+          %td= link_to o.display_name,
+            organization_course_path(o.course.organization, o.course, o.term)
+          %td!= o.instructors.map{ |i| link_to i.display_name,
+            user_path(i) }.to_sentence
+          %td= render partial: 'course_offerings/self_enrollment',
+            locals: { off: o }
+- else
+  %p This course does not have any offerings at this time.

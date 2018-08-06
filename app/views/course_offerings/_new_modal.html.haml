@@ -1,0 +1,25 @@
+#new_course_modal.modal.fade{ role: 'dialog',
+  'aria-labelledby' => 'Create your course',
+  'data-keyboard' => 'true',
+  'aria-hidden' => 'true' }
+  .modal-dialog
+    .modal-content
+      .modal-header
+        %button.close{ 'data-dismiss' => 'modal', 'aria-label' => 'Close'}
+          %span{ 'aria-hidden' => 'true' }
+            &times
+        %p.lead.modal-title Please sign in to begin setting up your course.
+
+      .modal-body
+        -# %p
+        -#   This feature is currently disabled, and will be available in
+        -#   a future release of CodeWorkout.  Instead, please e-mail your
+        -#   request to create a new course to:
+        -#   = succeed '.' do
+        -#     %a{ href: 'mailto:edwards@cs.vt.edu' } edwards@cs.vt.edu
+        = render 'home/sign_in'
+
+      .modal-footer
+        %button.btn.btn-default{ type: 'button', 'data-dismiss' => 'modal' }
+          Close
+        -# %button.btn.btn-primary{ type: 'button' }

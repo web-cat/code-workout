@@ -1,0 +1,7 @@
+.container
+  %h1 New Exercise
+  - type = params[:question_type] == 'mcq' ? 1 : 2
+  = render 'oneblockform', qtype: type
+
+  %br
+  = link_to 'Back', exercises_path

@@ -1,0 +1,23 @@
+!!! 5
+%html
+  %head
+    %title CodeWorkout
+    %meta{ name: 'viewport', content: 'width=device-width, initial-scale=1.0' }
+    = stylesheet_link_tag 'application', media: 'all'
+    = javascript_include_tag 'application'
+    -#= stylesheet_link_tag 'theme/dark/theme', media: 'all'
+    -#= javascript_include_tag 'theme/dark/theme'
+    = stylesheet_link_tag 'theme/warm/theme', media: 'all'
+    = javascript_include_tag 'theme/warm/theme'
+    = controller_stylesheet_link_tag
+    = controller_javascript_include_tag
+    = csrf_meta_tags
+    = favicon_link_tag 'favicon.ico'
+    /[if lt IE 9]
+      %script{ src: 'http://html5shim.googlecode.com/svn/trunk/html5.js' }
+
+  - classes = ["#{controller_name}", "#{action_name}"]
+  - if @lti_launch
+    - classes << 'embedded'
+  %body{ class: classes }
+    = yield

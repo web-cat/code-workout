@@ -1,0 +1,171 @@
+-#%p
+  Build your
+  %strong programming skills
+  through practice!
+
+.cta
+  .row
+    .pitch.col-md-6
+      %p{ style: 'margin: 0;' }
+        Build your
+        %strong programming skills
+        through practice!
+  .row
+    .pitch.col-md-4.col-md-offset-4
+      %p
+        = succeed ',' do
+          %strong Students
+        is your course using CodeWorkout?
+      -#  data: { confirm: 'Unimplemented: needs to go to Piazza-style pop-up for finding/enrolling in course.' }
+      = button_link 'Find your course', organizations_path, color: 'primary', size: 'lg'
+
+
+  .row
+    .pitch.col-md-4
+      %p
+        = succeed ',' do
+          %strong Teachers
+        want to use CodeWorkout in your course?
+      - if user_signed_in?
+        = button_link 'Create your course', new_or_existing_organizations_path, color: 'primary', size: 'lg'
+      - else
+        = button_link 'Create your course', new_course_modal_path, color: 'primary', size: 'lg', remote: true
+
+  .row
+    .pitch.col-md-4.col-md-offset-8
+      %p
+        Want to
+        %strong try
+        CodeWorkout?
+      = button_link 'Try a question now', '/gym/exercises/any', color: 'primary', size: 'lg'
+      %p{ style: 'margin-top: 10px;' }
+        Or try a specific kind of question:
+        = succeed ',' do
+          = link_to 'multiple choice', random_exercise_path(question_type: 1)
+        = succeed ',' do
+          = link_to 'Java', random_exercise_path(language: 'Java')
+        = succeed ', or ' do
+          = link_to 'Ruby', python_ruby_modal_path, remote: :true
+        = succeed '.' do
+          = link_to 'Python', python_ruby_modal_path, remote: :true
+
+.row.blurb
+  .col-md-4
+    %i.fa.fa-pencil.fa-5x{ style: 'color: #efb04f;' }
+    %h2 Practice Your Skills
+    %p
+      For learners of any age, CodeWorkout provides a place for you
+      to practice your skills and develop your knowledge, both through
+      code writing activities and questions about programming knowledge.
+    %p
+      Practice using our existing bank of questions, or
+      %strong write your own!
+
+  .col-md-4
+    %i.fa.fa-graduation-cap.fa-5x{ style: 'color: darkblue;' }
+    %h2 Use in a Course
+    %p
+      For teachers, CodeWorkout allows you to create your own custom
+      assignments using exercises from our question bank, or exercises
+      =succeed '.' do
+        %strong you write yourself
+      Use CodeWorkout for homework, for quizzes, or even for on-line
+      testing.
+    %p
+      When you write your own questions, you can share them with others,
+      or limit them to your own assignments with your own students.
+
+  .col-md-4
+    %i.fa.fa-line-chart.fa-5x{ style: 'color: black;' }
+    %h2 Track Progress
+    %p
+      CodeWorkout tracks each learner's efforts and progress, letting you
+      know what skills you've mastered and which need more work.  CodeWorkout
+      can even suggest what exercises you should try next so you can
+      keep improving your skills.
+
+.row.blurb
+  .col-md-4
+    %i.fa.fa-question-circle.fa-5x{ style: 'color: #40312a;' }
+    %h2 What Is CodeWorkout?
+    %p
+      CodeWorkout is an online system for people learning a programming
+      language for the first time. It is a free, open-source solution for
+      practicing small programming problems. Students may practice
+      coding exercises on a variety of programming concepts within the
+      convenience of a web browser! Exercises provide customized, immediate
+      feedback to support learning and suggests appropriate exercises as
+      students improve their mastery.
+    %p
+      CodeWorkout was inspired by many great systems built by others, but
+      aims to bring together the best from earlier forerunners while adding
+      important new features.  It provides comprehensive support for teachers
+      who want to use coding exercises in their courses, while also
+      maintaining flexibility for self-paced learners who aren't part of an
+      organized course.
+
+  .col-md-4
+    %i.fa.fa-users.fa-5x{ style: 'color: #efb04f;' }
+    %h2 Have to Be a Student?
+    %p
+      No, you do not have to be a student in a course to use CodeWorkout.
+      While CodeWorkout provides comprehensive support for teachers who want
+      to use exercises as part of course assignments, quizzes, and tests,
+      this site also supports independent learners who are just practicing
+      on their own.  You can go to the "Gym" here and practice any exercises
+      that are available on any topic of your interest at any time, whether
+      or not you are enrolled in a course.  Even if you're in a course, you
+      can practice exercises on any topic you like, regardless of what your
+      teacher has assigned.  Build the skills you are interested in at
+      your own pace, in your own order of preference.
+
+  .col-md-4
+    %i.fa.fa-paw.fa-5x{ style: 'color: darkblue;' }
+    %h2 Why Not Web-CAT?
+    %p
+      Web-CAT is a separate open-source tool (by the same development team!)
+      for automatically grading programming assignments.  It is aimed at
+      larger assignments (lab assignments, programming assignments, group
+      projects, etc.) that take students from a few hours to a few months
+      to write, and that typically involve creating one or more entire
+      program classes, up to a producing complete program.
+    %p
+      CodeWorkout, on the other hand, focuses on small practice exercises
+      where a student might do 10 or 20 together as part of one assignment.
+      These are often multiple choice questions, or exercises that require
+      you to write, debug, or interpret a single method or function.  Think
+      "homework questions" rather than "programming projects".  At this scale,
+      CodeWorkout provides many services for both student feedback and for
+      instructor assignment management that are not provided by other systems.
+
+.row.blurb
+  .col-md-8.col-md-offset-2
+    %h2
+      %i.fa.fa-thumbs-o-up
+      CodeWorkout is Free to Use
+    %p
+      CodeWorkout is open-source software that is free to use.  All publicly
+      shared questions here carry a Creative Commons license.  If you write
+      your own questions, you are welcome to share them under the same license
+      here, or use them privately without licensing them for sharing.
+    %p
+      We welcome community contributions, both in the form of questions
+      (you can write them yourself, or
+      %strong send them to us
+      at
+      %a{ href: 'mailto:questionbank@vt.edu' }
+        questionbank@vt.edu
+      and we'll convert them for you!), and in the form of source code.
+      You can find us on github at
+      = succeed '.' do
+        %a{ href: 'https://github.com/web-cat/code-workout' }
+          https://github.com/web-cat/code-workout
+
+    %h2
+      Supported by the National Science Foundation
+    %p
+      This work is supported in part by the National Science
+      Foundation under grant DUE-1245589. Any opinions, findings,
+      conclusions, or recommendations expressed in this material
+      are those of the authors and do not necessarily reflect
+      the views of the National Science Foundation..

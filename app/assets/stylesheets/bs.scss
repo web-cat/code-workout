@@ -1,0 +1,20 @@
+@import "bootstrap-sprockets";
+@import "bootstrap";
+@import "bootstrap/theme";
+@import "bootstrap-social";
+
+
+.tag { @extend .label; @extend .label-info; }
+.debug { @extend .well; @extend .well-sm; }
+.thumbnail, .answers { @extend .well; @extend .well-sm; @extend .clearfix; }
+.thumbnail .due { @extend .bg-info; }
+.thumbnail .due.soon { @extend .bg-primary; }
+//.thumbnail .due.late { background-color: #e7c3c3; color: #a94442; }
+.thumbnail .due.late { color: #e7c3c3; background-color: #a94442; }
+
+.exercise_version table {
+  @extend .table;
+  @extend .table-striped;
+  @extend .table-bordered;
+  width: auto;
+}

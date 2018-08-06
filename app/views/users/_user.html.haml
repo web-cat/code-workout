@@ -1,0 +1,14 @@
+%tr
+  %td= image_tag user.avatar_url(size: 28), width: 28, height: 28
+  %td= user.last_name
+  %td= user.first_name
+  %td= user.email
+  - if user_signed_in?
+    %td= user.global_role.name
+    %td
+      = button_link 'Show', user, size: 'sm'
+      - if can? :update, user
+        = button_link 'Edit', edit_user_path(user), size: 'sm'
+      - if can? :manage, User
+        = button_link 'Destroy', user, method: :delete, size: 'sm',
+          data: { confirm: 'Are you sure?' }

@@ -1,0 +1,103 @@
+= render 'layouts/breadcrumb'
+
+%h1
+  = @course.number_and_name
+  %small= @term.display_name
+
+- if @course.is_hidden
+  %p.text.text-warning.row
+    %small.col-md-5
+      - subject = "CodeWorkout - request to display hidden course (#{@course.number_and_name})"
+      This is a hidden course; these are typically used for testing purposes.
+      You may distribute this page's URL, but it will not appear publicly in CodeWorkout.
+      If you think this course should NOT be marked hidden, please
+      = mail_to('edwards@cs.vt.edu', 'email us.', subject: subject)
+
+.privileged-access
+  = render partial: 'privileged_access', locals: { course: @course, is_instructor: @is_instructor, is_privileged: @is_privileged, access_request: @access_request }
+- if @course_offerings && @course_offerings.any?
+  = javascript_include_tag('course')
+  %p
+    - @course_offerings.each_with_index do |offering, i|
+      - if i > 0
+        %br/
+      %strong= offering.display_name
+      = surround '(', (offering.instructors.any? ? '),' : ')') do
+        - if offering.is_manager? current_user
+          = link_to 'edit', edit_course_offering_path(offering)
+        - else
+          = link_to 'unenroll', course_offering_unenroll_path(offering),
+            method: :delete
+      - if offering.instructors.any?
+        = succeed ':' do
+          = 'instructor'.pluralize(offering.instructors.size)
+        = succeed (offering.graders.any? ? ',' : '') do
+          != offering.instructors.map{ |i| link_to i.display_name,
+            user_path(i) }.to_sentence
+      - if offering.graders.any?
+        = succeed ':' do
+          = 'grader'.pluralize(offering.graders.size)
+        != offering.graders.map{ |i| link_to i.display_name,
+          user_path(i) }.to_sentence
+    %br
+    - if current_user.andand.is_a_member_of?(@course.user_group)
+      = link_to "+ Add a section",
+        organization_new_course_offering_path(organization_id: @course.organization.id, course_id: @course.id)
+
+  .container-fluid
+    .navbar-collapse.collapse
+      %ul.nav.nav-tabs
+        %li.active
+          %a{ href: '#tab_workouts', data: { toggle: 'tab' } } Workouts
+        - if !@is_student
+          %li
+            %a{ href: '#tab_exercises', data: { toggle: 'tab' } } Exercises
+        %li
+          %a{ href: '#tab_grades', data: { toggle: 'tab' } } Grades
+        - if !@is_student
+          %li
+            %a{ href: '#tab_roster', data: { toggle: 'tab' } } Roster
+
+  %div.tab-content.under-collapsible
+
+    .tab-pane.fade.in.active{ id: 'tab_workouts', data: { needs_update: 'false' } }
+      = render 'tab_workouts', is_student: @is_student, organization: @organization, course: @course, course_offerings: @course_offerings, term: @term
+
+    - if !@is_student
+      .tab-pane.fade{ id: 'tab_exercises', data: { needs_update: 'true' } }
+        .col-xs-offset-6
+          %i.fa.fa-spinner.fa-spin.fa-2x
+
+    .tab-pane.fade{ id: 'tab_grades', data: { needs_update: 'true' } }
+      .col-xs-offset-6
+        %i.fa.fa-spinner.fa-spin.fa-2x
+
+    - if !@is_student
+      .tab-pane.fade{ id: 'tab_roster', data: { needs_update: 'true' } }
+        .col-xs-offset-6
+          %i.fa.fa-spinner.fa-spin.fa-2x
+
+-else
+
+  %h2 Offerings
+
+  %table.table.table-striped{ style: 'width: auto' }
+    %thead
+      %tr
+        %th Term
+        %th Section
+        %th Instructors
+        %th Graders
+        %th Enroll
+    %tbody
+      - @course.course_offerings.where(term: @term).each do |off|
+        %tr
+          %td= off.term.display_name
+          %td= off.display_name
+          %td!= off.instructors.map{ |i| link_to i.display_name,
+            user_path(i) }.to_sentence
+          %td!= off.graders.map{ |i| link_to i.display_name,
+            user_path(i) }.to_sentence
+          %td
+            = render partial: 'course_offerings/self_enrollment',
+              locals: { off: off }

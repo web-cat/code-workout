@@ -1,0 +1,39 @@
+%h1 Question: A-level/B-status
+%p
+  What output will the following code fragment produce?
+
+%pre{ lang: 'text/x-java' }
+  :preserve
+    public void fn()
+    {
+        int grade = 91;
+        int level = -1;
+        if (grade >= 90)
+            if (level <= -2)
+                System.out.println("A-level");
+        else
+            System.out.println("B-status");
+    }
+
+%h2 Select your answer:
+%form
+  .answers
+    %label.radio
+      %input{ type: 'radio', name: 'answers', value: 'a' }
+      A-level
+    %label.radio
+      %input{ type: 'radio', name: 'answers', value: 'b' }
+      B-status
+    %label.radio
+      %input{ type: 'radio', name: 'answers', value: 'c' }
+      "A-level"
+    %label.radio
+      %input{ type: 'radio', name: 'answers', value: 'd' }
+      "B-status"
+    %label.radio
+      %input{ type: 'radio', name: 'answers', value: 'e' }
+      no output is produced
+
+  %button.btn.btn-primary{ type: 'button' }
+    %i.glyphicon.glyphicon-expand
+    Check my answer!

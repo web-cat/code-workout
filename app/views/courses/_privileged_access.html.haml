@@ -1,0 +1,16 @@
+- if current_user.andand.can? :request_privileged_access, @course
+  - url = organization_request_privileged_access_path(organization_id: course.organization.slug, id: course.id, requester_id: current_user.id)
+  = button_link 'Request access to course materials', url, id: 'request-privileged-access', remote: true
+  %br
+  %br
+- elsif access_request && access_request.pending
+  .text.text-warning
+    %i.fa.fa-hourglass
+    Course access request pending review
+    %br
+    %br
+- elsif is_privileged
+  .text.text-success
+    %i.fa.fa-check-circle
+    Privileged User
+  %br

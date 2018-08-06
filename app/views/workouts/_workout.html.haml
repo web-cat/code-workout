@@ -1,0 +1,110 @@
+- size ||= 'lg'
+- user ||= current_user
+- workout_offering ||= (offering ||= nil)
+- workout ||= @workout
+- workout ||= workout_offering ? workout_offering.workout : nil
+- course ||= @course
+- course ||= workout_offering ? workout_offering.course_offering.course : nil
+- workout_score ||= workout_offering ? user.current_workout_score : workout.score_for(current_user, workout_offering)
+- new_or_existing ||= false
+
+- if workout_score && ((workout && workout_score.workout != workout) ||      |
+  (workout_offering && workout_score.workout_offering != workout_offering))  |
+  - workout_score = nil
+- workout_score ||= user ? WorkoutScore.find_by(workout: workout,
+  workout_offering: workout_offering, user: user) : nil
+- workout ||= workout_score.andand.workout
+- workout ||= workout_offering.andand.workout
+- workout_offering ||= workout_score.andand.workout_offering
+- score_pct = workout_score ? ((workout.total_points > 0) ? (workout_score.score/workout.total_points * 100).round(0) : 0) : 0
+- if score_pct == 100 && workout_score.score < workout.total_points
+  - score_pct = 99
+- closed = (workout_offering.andand.hard_deadline && workout_offering.andand.hard_deadline < Time.zone.now)
+%article.workout.thumbnail{ class: (closed ? (size + " closed") : size) }
+  .title
+    - if workout_offering && workout_offering.current_deadline_distance == 4
+      %i.fa.fa-folder-open
+      .due.soon= user_time(current_user, workout_offering.soft_deadline).to_s.split(" ").first
+    - elsif workout_offering && workout_offering.current_deadline_distance == 1
+      %i.fa.fa-lock
+      .due= user_time(current_user, workout_offering.soft_deadline).to_s.split(" ").first
+    - elsif workout_offering && workout_offering.current_deadline_distance.nil?
+      %i.fa.fa-folder-open
+      .due Open
+    - elsif workout_offering && workout_offering.current_deadline_distance > 0
+      %i.fa.fa-folder-open
+      .due.soon
+        = 'In ' + workout_offering.current_deadline_distance.to_s + 'hrs'
+    - elsif workout_offering && workout_offering.current_deadline_distance > -24
+      %i.fa.fa-folder-open
+      .due.late
+        = workout_offering.current_deadline_distance.abs.to_s + ' hrs ago'
+    - elsif workout_offering && workout_offering.current_deadline_distance < -24
+      %i.fa.fa-folder-open
+      .due.late
+        = (workout_offering.current_deadline_distance.abs/24).to_s + ' days ago'
+    - elsif workout_offering
+      %i.fa.fa-folder-open
+      .due.late
+        = 'Due in a few minutes'
+
+    - if new_or_existing
+      = workout.name
+    - else
+      - if workout_offering
+        = link_to workout.name,
+            organization_workout_offering_path(id: workout_offering.id,
+            course_id: workout_offering.course_offering.course.slug,
+            term_id: workout_offering.course_offering.term.slug,
+            organization_id: workout_offering.course_offering.course.organization.slug)
+      - else
+        = link_to workout.name, workout_path(id: workout[:id])
+    %span.badge.badge-info= workout.exercises.count.to_s
+
+  .summary
+    - course_id = course.andand.slug
+    - organization_id = course.andand.organization.andand.slug
+
+    - if new_or_existing
+      - message = 'A clone of this workout will be created, which you can then offer in your course offerings. Is this okay?'
+      = link_to 'Clone', organization_clone_workout_path(course_id: course_id,
+        term_id: @term || Term.current_term.slug,
+        organization_id: organization_id,
+        workout_id: workout.id,
+        lms_assignment_id: lms_assignment_id,
+        lti_launch: @lti_launch,
+        suggested_name: suggested_name), class: 'btn btn-sm btn-primary',
+        data: { confirm: message }
+    - elsif !workout_score || workout_score.show_feedback?
+      .radial-progress{ 'data-progress' => score_pct }
+        .circle
+          .mask.full
+            .fill
+          .mask.half
+            .fill
+            .fill.fix
+          .shadow
+        .inset
+          .pct
+    - else
+      .radial-progress.masked
+        .circle
+          .shadow
+        .inset
+          .score= image_tag 'pct-blur.png'
+  .body
+    .text
+      = teaser(workout.description)
+  .info
+    = difficulty_image(workout.highest_difficulty.to_i)
+    .taglist
+      - workout.tags.each do |t|
+        = link_to t.name, exercises_search_path(search: t.name),
+          method: :post, class: 'tag'
+
+-#.well.well-sm.col-md-5
+  .row
+    .col-md-12
+      - xp_data = Workout.xp_distribution(1, workout.id)
+      = render partial: 'workouts/progress',
+        locals: { xp_data: Workout.xp_distribution(1, workout.id) }

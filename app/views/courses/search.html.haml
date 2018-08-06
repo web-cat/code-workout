@@ -1,0 +1,11 @@
+= form_tag(course_find_path,remote: true) do
+  %div{ style: "width: 65%; float: left; padding-left: 25px;" }
+    = text_field_tag :search, params[:search], id: "search_field",
+      class: "input input-medium form-control col-md-8 search-query",
+      style: "vertical-align: top;"
+  %br
+  %div
+    = content_tag :button, type: :submit, class: "btn btn-inverse btn-sm" do
+      %i.fa.fa-search
+      Search
+#searchresult{style: "display: none;" } WINTER CANNOT BE SEEN  

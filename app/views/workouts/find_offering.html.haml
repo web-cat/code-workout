@@ -1,0 +1,42 @@
+= inside_layout do
+  = javascript_tag do
+    window.codeworkout = window.codeworkout || {}
+    window.codeworkout.lms_assignment_id = "#{@lms_assignment_id}"
+    window.codeworkout.lis_result_sourcedid = "#{params[:lis_result_sourcedid]}"
+    window.codeworkout.lis_outcome_service_url = "#{params[:lis_outcome_service_url]}"
+
+  .container
+    = javascript_include_tag('available_offerings')
+    %h1 Section selection
+    - if @available_offerings.any?
+      %p Click on your course section to proceed to the assignment.
+      %ul.list-group
+        - @available_offerings.each do |o|
+          - existing_wo = o.workout_offerings.map(&:id).find{ |id| @existing_workout_offerings.include?(id) }
+          - if existing_wo
+            - practice_url = url_for(organization_workout_offering_practice_path(id: existing_wo,
+              lis_outcome_service_url: params[:lis_outcome_service_url],
+              lis_result_sourcedid: params[:lis_result_sourcedid],
+              organization_id: params[:organization_id],
+              term_id: params[:term_id],
+              course_id: params[:course_id],
+              lti_launch: true))
+            %a{ data: { practice_url: practice_url, course_offering_id: o.id, user_id: current_user.id }, class: 'workout-offering list-group-item action' }
+              = o.display_name_with_term
+          - else
+            %a{ data: { workout_name: params[:workout_name], course_offering_id: o.id, user_id: current_user.id, from_collection: params[:from_collection] }, class: 'course-offering list-group-item action' }
+              = o.display_name_with_term
+
+      %p.text.text-danger
+        If you cannot find your course section, or are not sure which one you belong in, ask your instructor.
+    - elsif @available_course_offerings && @available_course_offerings.any?
+      - @available_course_offerings.each do |co|
+        %a{ data: { workout_name: params[:workout_name], course_offering_id: co.id, user_id: current_user.id }, class: 'course-offering list-group-item action' }
+          = co.display_name_with_term
+
+      %p.text.text-danger
+        If you cannot find your course section, or are not sure which one you belong in, ask your instructor.
+    - else
+      %h2 No available offerings
+      %p.text.text-danger
+        Please notify your instructor. Your course's sections may not have been created yet.

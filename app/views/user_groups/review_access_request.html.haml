@@ -1,0 +1,25 @@
+.container
+  %h1 Review access request
+
+  %br
+  = link_to(@requester.display_name, user_path(@requester))
+  requests access to the group
+  %i
+    = @user_group.name
+    = "."
+  %br
+  %p
+    %small.text.text-warning
+      - if @user_group.description
+        = @user_group.description
+      - else
+        No group description available.
+  %p
+    %small.text.text-warning
+      You may exit this page without taking any action if you prefer. Another member of the course group can decide this request.
+
+  - if @access_request.pending
+    .col-md-4
+      .btn-group
+        = button_to 'Grant Access', user_group_decide_access_request_path(decision: true), class: 'btn btn-success btn-sm'
+        = button_to 'Deny Access', user_group_decide_access_request_path(decision: false), class: 'btn btn-danger btn-sm'

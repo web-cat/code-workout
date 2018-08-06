@@ -1,0 +1,5 @@
+.container
+  %h1.left-padded{ data: { id: @workout.id } }
+    Cloning workout: #{@workout.name}
+
+  = render 'form'

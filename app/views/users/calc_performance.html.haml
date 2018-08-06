@@ -1,0 +1,44 @@
+%h3= @user.display_name + "'s Performance"
+%table.table.table-striped.table-condensed.col-md-6
+  %thead
+    %tr
+      %th Tag
+      %th Experience Points
+      %th Exercises Completed
+  %tbody
+    - if @tag_scores.empty?
+      %td{ colspan: 4 }
+        .alert You have not attempted any tagged exercises.
+    - else
+      - @tag_scores.each do |t|
+        %tr
+          %td
+            =link_to t[:tag_name], exercises_search_path(:search => t[:tag_name]),
+              method: :post, class: 'tag'
+          %td
+            - earned = rand(500)
+            - possible = rand(500)
+            - gone = rand(500)
+            - tot = earned+possible+gone
+            - per_earned = earned*100.0/tot
+            - per_possible = possible*100.0/tot
+            - per_gone = gone*100.0/tot
+            .progress.col-md-4.slim
+              .bar.bar-success{:style => "width: #{per_earned}%;"}
+                -if per_earned >= 10
+                  ="#{earned}"
+                  %i.fa.fa-star
+              .bar.bar-warning{:style => "width: #{per_possible}%;"}
+                -if per_possible >= 10
+                  ="#{possible}"
+                  %i.fa.fa-star-o
+              .bar.bar-danger{:style => "width: #{per_gone}%;"}
+                -if per_gone >= 10
+                  ="#{gone}"
+                  %i.fa.fa-remove
+          %td= t[:completed_exercises].to_s + " of " + t[:total_exercises].to_s
+-#TODO replace dummy progress bars for tag performance
+          -#.progress#progressBar
+          -#    .progress-bar{:style => "width: #{t[:percent_experience]}%;"}
+          -#      %span{:class => "sr-only"}
+          -#        = t[:percent_experience].to_s + '%'

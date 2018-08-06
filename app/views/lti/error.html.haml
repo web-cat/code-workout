@@ -1,0 +1,21 @@
+= inside_layout 'header' do
+  .container
+    .alert.alert-danger
+      = @message
+    - if @redirect_url.present?
+      .text.text-warning
+        You will be redirected to your assignment at
+        = link_to @redirect_url, @redirect_url
+        in
+        %span#counter
+          10
+        seconds.
+        :javascript
+          setInterval(() => {
+            let div = document.querySelector('#counter');
+            let count = div.textContent * 1 - 1;
+            div.textContent = count;
+            if (count <= 0) {
+              location.href = "#{@redirect_url}"
+            }
+          }, 1000);

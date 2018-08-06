@@ -1,0 +1,607 @@
+%h1 Text Format for Exercises
+
+%p
+  CodeWorkout uses a plain-text representation for importing and exporting
+  exercises.  This format is designed to be easy to edit in a plain text
+  editor. Special formatting in the textual description of the exercise
+  can be written using
+  <a href="https://daringfireball.net/projects/markdown/syntax">Mardown</a>,
+  which also supports embedding HTML directly in exercise descriptions.
+  So use Markdown or HTML for adding formatting to your text.
+
+%p
+  Every exercise has specific properties that define it, so exercise
+  definitions are treated as a series of property <b>name/value pairs</b>.
+
+%h2 Properties and Values
+.row
+  .col-md-6
+    %p
+      Property names are simply words that start at the beginning of a line,
+      followed by a colon.
+    %p
+      The corresponding value follows the colon, and extends up to the
+      beginning of the next property (any leading/trailing white space
+      is trimmed).
+    %p
+      Property order doesn't matter.
+  .col-md-6
+    %pre.examples
+      :preserve
+        PropertyName: Some value goes here.
+
+        AnotherProperty: This value spans
+        multiple lines.
+
+        You don't have to start the value on the same line as
+        the property name. Instead, the value extends to the
+        start of the next property.
+
+%h2 Properties You'll Always See
+.row
+  .col-md-6
+    %p
+      Most exercises start off with some common information.
+    %p
+      The <b>title</b> does not have to be unique, but it should be both
+      descriptive and concise. Often, it is like a method name, naming
+      the method the student will write.  If it is too long, it won't
+      look nice when showing compact lists of exercises.
+    %p
+      <b>Language</b> is just a textual tag indicating the programming
+      language that is the focus of the question.  Use a comma-separated
+      list if the question applies to multiple languages.
+    %p
+      The <b>topics</b> are just a comma-separated list of topic keywords or
+      tags. Try to be consistent with the tags you use. [ToDo: provide a link
+      to a tag cloud as a reference.]
+    %p
+      The <b>stem</b> is the main textual content of the exercise, describing
+      the problem to be solved. Here, it is shown using Markdown syntax.
+  .col-md-6
+    %pre.examples
+      :preserve
+        Title: teenSum
+
+        Language: Java
+        Topics: if, condition, plus, integer
+
+        Stem:
+        Given two `int`s, _a_ and _b_, return their sum.
+        However, "teen" values in the range 13..19, inclusive,
+        are extra lucky. So if either value is a teen, just
+        return 19.
+
+%h2 Multiple-choice Exercises
+.row
+  .col-md-6
+    %p
+      For single-answer multiple-choice questions, add a "Choices" property
+      where you use a Markdown list (a numbered list) to indicate the
+      possible choices.
+    %p
+      Mark the correct choice by beginning it with "[correct]" (or "[1]").
+      Case doesn't matter.
+    %p
+      You can use Markdown formatting in the answer choices, if desired.
+    %p
+      Choices can span multiple lines and be as long as necessary.
+  .col-md-6
+    %pre.examples
+      :preserve
+        Title: not operator
+
+        Language: Java, C++, C#
+        Topics: condition, not, boolean
+
+        Stem:
+        Which operator is used to represent logical negation
+        in a boolean expression?
+
+        Choices:
+        1. &&
+        2. ||
+        3. -
+        4. [correct] !
+
+%h2 Adding Explanations for Feedback
+.row
+  .col-md-6
+    %p
+      You can use "Explanation" to define an overall explanation that will
+      be shown when someone answers the question.
+    %p
+      A top-level explanation is shown if the exercise is answered
+      incorrectly.
+  .col-md-6
+    %pre.examples
+      :preserve
+        Choices:
+        1. &&
+        2. ||
+        3. -
+        4. [correct] !
+
+        Explanation:
+        Logical negation is expressed using the exclamation
+        mark as a unary operator in boolean expressions.
+.row
+  .col-md-6
+    %p
+      An "Explanation" can also be added to individual incorrect choices,
+      and will be shown if the corresponding choice is selected.
+    %p
+      You can also specify a numeric (0.0-1.0) value for a specific choice
+      in the square brackets at the start of a choice, instead of "[correct]".
+      In fact, "[correct]" is simply a synonym for "[1.0]", meaning full
+      credit is earned for selecting that answer.
+    %p
+      Partial credit may be specified by using values less than [1.0] in
+      front of a choice.
+  .col-md-6
+    %pre.examples
+      :preserve
+        Choices:
+        1. &&
+           Explanation: The && operator represents logical AND.
+
+        2. ||
+           Explanation: The || operator represents logical OR.
+
+        3. -
+           Explanation: The - operator represents subtraction,
+           and can also be used to represent a negative number.
+           It is not used in logical expressions.
+
+        4. [1] !
+
+        Explanation:
+        Logical negation is expressed using the exclamation
+        mark as a unary operator in boolean expressions.
+
+%h2 Different Styles of Multiple-choice Questions
+%p
+  Multiple choice questions come in a variety of styles that test different
+  kinds of skills.  While many people associate multiple choice questions
+  with simple factual recall, other kinds of multiple choice options exist.
+
+%h3 Symbolic Execution
+%p
+  Provide a piece of code and ask "what is the output?" or "what is the
+  value of variable x?" This kind of question is about code reading and
+  understanding, instead of factual recall.
+
+%h3 Fill-in-the-Blank
+%p
+  Provide a piece of code with a statement or expression or condition
+  missing, and ask which of the following choices is the best way to
+  complete the code. Using a multiple choice question style for this
+  restricts the student to specific options for completing the code,
+  which is an alternative to asking the question as a more open-ended
+  code writing question.
+
+%h3 Find the Bug
+%p
+  Provide a piece of buggy code and ask which line contains the bug using
+  a multiple-choice format.  Alternatively, you can provide a piece of
+  buggy code that throws an exception, and ask what exception is thrown.
+  Alternatively, you can provide a piece of buggy code and ask what kind of
+  syntax error it has. Alternatively, you can provide a piece of buggy
+  code and ask whether it will produce a compiler error, a run-time error,
+  or simply incorrect behavior. All of these styles of questions can be asked
+  using a multiple-choice format.
+
+%h2 Coding Questions
+.row
+  .col-md-6
+    %p
+      For code writing questions, instead of "Choices", one provides sections
+      labeled "Code" and "Tests".
+    %p
+      The "Code" section serves as a single place to provide the code the
+      student sees, a sample (reference) solution, and the surrounding
+      wrapper/scaffolding needed to compile the student's answer.
+    %p
+      In this example, the student is asked to write a method called
+      <code>factorial()</code>, and is given the just the method signature
+      and outer braces to start with.
+  .col-md-6
+    %pre.examples
+      :preserve
+        Title: factorial
+
+        Language: Java
+        Topics: if, condition, factorial, recursion,
+                math, multiplication
+
+        Stem:
+        Write a function in Java called `factorial()` that
+        will take a positive integer as input and returns
+        its factorial as output.
+
+        Code:
+        public class Answer
+        {
+            \show[
+            public int factorial(int N)
+            {
+                \[
+                if (N <= 1)
+                {
+                    return 1;
+                }
+                else
+                {
+                    return N * factorial(N - 1);
+                }
+                ]\
+            }
+            ]\
+        }
+
+        Tests:
+        tests {
+            example tests {
+                factorial(1) is 1
+                factorial(3) is 6
+                factorial(5) is 120
+            }
+
+            factorial(0) is 1
+            factorial(2) is 2
+            factorial(4) is 24
+
+            hidden tests {
+                factorial(6) is 720
+            }
+        }
+
+
+%h2 Breaking Down the Code
+%p
+  The "Code" section of the exercise defines three key properties in one step.
+%p
+  First, the <b><i>wrapper</i></b> is a boilerplate piece of code that
+  is used to <i>surround</i> the student's answer in order to turn it from
+  a code fragment into something that is compilable and executable.  In many
+  languages, this may amount to providing a class definition that serves as
+  a shell, so that the student's answer may be injected into the shell at a
+  designated point in order to create a compilable artifact.
+%p
+  Second, the <b><i>starter code</i></b> is a boilterplate piece of code
+  that is used as the starting point for any student answer.  It is used
+  as the initial contents of the text editor, on which the student builds
+  an answer. This text is read only. [note: not implemented as read-only yet,
+  but soon.]
+%p
+  Third, is a <b><i>reference solution</i></b>, which serves as a sample
+  of how the exercise may be solved, visible to the exercise's author. [note:
+  in the future, testing by comparison with a reference solution will be
+  supported.]
+%p
+  All three of these pieces are optional.  If specified, they are written
+  as one seamless whole, separated using <b><code>\[...]\</code></b>
+  and/or <b><code>\show[...]\</code></b> markers.
+.row
+  .col-md-6
+    %p
+      Code appearing inside <b><code>\show[...]\</code></b> markers is taken
+      as the starter code, used to populate the editor when the exercise is
+      first visited or when it is reset. Multiple \show regions can be used,
+      if needed, but there is usually only one.
+  .col-md-6
+    %pre.examples
+      :preserve
+        Code:
+        ...
+            \show[
+            public int factorial(int N)
+            {
+                ...
+            }
+            ]\
+        ...
+.row
+  .col-md-6
+    %p
+      Code appearing inside <b><code>\[...]\</code></b> markers is never
+      visible to students, and serves as a way to provide a reference solution,
+      or to demark multiple blanks where students can enter code.
+      The "insertion point" of the editor when the student visits an exercise
+      is the start of the first <code>\[...]\</code> region (the
+      first "blank").  Typically, there is at least one blank, although there
+      can be more.
+    %p
+      Don't omit the blank, or the entire \show area will
+      be read-only!
+  .col-md-6
+    %pre.examples
+      :preserve
+        Code:
+        ...
+                \[
+                if (N <= 1)
+                {
+                    return 1;
+                }
+                else
+                {
+                    return N * factorial(N - 1);
+                }
+                ]\
+        ...
+.row
+  .col-md-6
+    %p
+      Code appearing outside the first <code>\show[...]\</code> region is
+      taken to define the wrapper that is used to surround the student's
+      answer.
+  .col-md-6
+    %pre.examples
+      :preserve
+        Code:
+        public class Answer
+        {
+            \show[
+            ...
+            ]\
+        }
+.row
+  .col-md-6
+    %p
+      If no wrapper is specified (i.e., the whole "Code" section is
+      surrounded in <code>\show[...]\</code>), then the wrapper defaults to
+      an empty public class called <code>Answer</code>.
+  .col-md-6
+    %pre.examples
+      :preserve
+        Code:
+        \show[
+        public int factorial(int N)
+        {
+            \[ ]\
+        }
+        ]\
+.row
+  .col-md-6
+    %p
+      If no <code>\show[...]\</code> is specified at all, it is assumed to
+      surround the entire "Code" section, meaning the default
+      empty <code>Answer</code> class is used as the wrapper (a shorthand
+      for writing <code>\show[...]\</code> at the top level surrounding
+      everything).
+  .col-md-6
+    %pre.examples
+      :preserve
+        Code:
+        public int factorial(int N)
+        {
+            \[ ]\
+        }
+
+%h2 Providing Test Data or Test Cases
+%p
+  There are multiple ways to describe tests for use in CodeWorkout exercises.
+  Two notations are provided that are streamlined and simplified, to make
+  the tests easier and cleaner to write in some circumstances. We'll discuss
+  those in subsections.
+%p
+  At the same time, it is also important to understand different types of
+  tests and how they correspond to the feedback that students see. In
+  addition to regular tests, there are also <b>example</b> tests and
+  <b>hidden</b> tests.  There are also <b>static</b> and <b>screening</b>
+  tests.
+
+%h3 Example Tests
+%p
+  <b>Example</b> tests are designated so that their descriptions are
+  shown as part of the question, at the end of the stem. In restricted
+  feedback situations, like tests or quizzes where students don't get
+  to see all the test results, the test results for examples are still
+  shown.
+
+%h3 Hidden Tests
+%p
+  <b>Hidden</b> tests are designated so that their descriptions are never
+  shown to students. Most questions have at least a few tests that are
+  hidden, to make hard-coding answers to tricky test cases relatively
+  impractical.  In practice situations or on homework assignments, students
+  typically see whether these tests pass or fail, but see those results
+  only, not a description of what is being tested, and without any indication
+  of how or why the test failed.
+
+%h3 Static Tests
+%p
+  While most coding exercises have <i>dynamic</i> tests that check run-time
+  behavior, CodeWorkout also allows simple, regular-expression-based
+  static checking of student answers.  This is often used to ensure that
+  specific constructs or method calls are present, or to prohibit others.
+  These are phrased similarly to run-time tests, but they are checked
+  against the source code of the answer before executing the answer.
+
+%h3 Screening Tests
+%p
+  The score for a coding question is usually a weighted average of the
+  scores for the individual test cases.  When test cases are weighted
+  equally (the default), this amounts to the percentage of test cases
+  that pass. In addition, test cases can be weighted, so that some count
+  for a larger (or smaller) portion of the exercise's score. However, in
+  some cases, you may wish for one or or more test cases to be necessary
+  for any credit to be received.  These "all or nothing" test cases are
+  called <i>screening</i> tests, since they act as filters on whether an
+  answer is acceptable for any credit at all, or is unacceptable. Often,
+  static checks are treated as screening tests (i.e., you only receive
+  credit if the answer meets the requirements of those static checks).
+
+%h2 Providing Test Data or Test Cases: Tabular (CSV) Format
+
+.row
+  .col-md-6
+    %p
+      Simple test cases for methods that behave like functions can be
+      written in CSV form.
+    %p
+      This format requires at least two columns, where the first contains
+      the input parameter(s), and the second contains the expected result.
+    %p
+      This example shows three test cases for <code>factorial()</code>.  The
+      first line represents a test that <code>factorial(1) == 1</code>. The
+      second represents <code>factorial(3) == 6</code>.  The third represents
+      <code>factorial(5) == 120</code>.
+    %p
+      By default, CodeWorkout will build a test description from the
+      input and output values that looks like this:
+    %pre.examples
+      factorial(3) -> 6
+  .col-md-6
+    %pre.examples
+      :preserve
+        Tests:
+        1,1
+        3,6
+        5,120
+.row
+  .col-md-6
+    %p
+      An optional third column an be used to indicate
+      example/hidden/static/screening status.
+    %p
+      "Static" tests allow checking of simple structural/textual properties
+      of solutions. The first (input) column specifies the pattern to check
+      for, and the second (expected output) column specifies whether the
+      pattern is required or prohibited. Static tests often are
+      also "screening" tests, which means answers will only receive credit
+      if the test passes (otherwise, the diagnostic is presented similar to
+      a compiler error).
+
+      In the example to the right,
+
+      Examples of static checks include:
+    %pre.examples
+      keyword: return
+      keywords: if, switch, else
+      class: Math
+      classes: List, ArrayList, LinkedList
+      method: toString()
+      methods: parseInt(), nextInt(), valueOf()
+      loops        // same as keywords:for,while,do
+      lists        // same as classes:List,ArrayList,LinkedList
+      maps         // same as classes:Map,HashMap,TreeMap
+      sets         // same as classes:Set,HashSet,TreeSet
+      arrays       // same as /\[[\]]*\]/
+      /any ruby regex/i
+    %p
+      The result/output of a static check can be specified in these ways:
+    %pre.examples
+      required
+      prohibited
+      present  // same as required
+      absent   // same as prohibited
+      true     // same as required
+      false    // same as prohibited
+      2        // required exactly 2 times
+      {1,3}    // must occur 1-3 times
+      {2,}     // must occur 2 or more times
+      {,3}     // must occur no more than 3 times
+  .col-md-6
+    %pre.examples
+      :preserve
+        Tests:
+        loops,prohibited,static:screening
+        1,1
+        3,6
+        5,120
+.row
+  .col-md-6
+    %p
+      The third column can also be used to provide a custom description
+      that will be shown in place of the default description when showing
+      the test to students. (Note: hidden tests don't need descriptions,
+      since they would never been shown.)
+    %p
+      An optional fourth column can be used to provide an "explanation" shown
+      when a test case fails.
+    %p
+      An optional fifth column can be used to specify a test case weight.
+      By default, test cases all have a default weight of 1.0.  Weights are
+      used to compute the weighted average of test case results for scoring.
+  .col-md-6
+    %pre.examples
+      :preserve
+        loops,prohibited,static:screening
+        1,1,example
+        3,6,example
+        5,120,example: with a custom description
+        0,1
+        2,2
+        4,24,another custom description
+        6,720,hidden
+
+%h2 Providing Test Data or Test Cases: Test Descriptions
+%p
+  [To be written!]
+
+%h2 Providing Test Data or Test Cases: Raw JUnit
+%p
+  [To be written!]
+
+%h2 Different Styles of Coding Questions
+%p
+  As with multiple choice questions, code writing questions come in a variety
+  of styles that test different kinds of skills.  While many people associate
+  code writing questions with direct "implement this method" tasks that
+  require the student to write code (from scratch), other kinds of code
+  writing options exist.
+
+%h3 Write a Method (or Function)
+%p
+  Actually, this was just described as the most obvious choice, and is included
+  here for completeness. Here, a student is given a description of the
+  behavior of a method/function/procedure, and asked to implement it.
+  The <code>factorial()</code> example shown above is a good illustration.
+%p
+  However, many variations of this basic question style can be achieved.
+  One can ask a student to write a new method to be added to an existing
+  class.  The method might change an object's state, instead of operating
+  as a function (do more than simply mapping input values to output values).
+
+%h3 Write a Collection of Methods, or a Whole Class
+%p
+  Instead of writing a single method, one can ask a student to write multiple
+  methods that must operate together. Or write a field declaration.  Or a field
+  declaration together with methods that operate on it, and/or a constructor
+  that initializes it. Or a complete class.  Even writing multiple classes is
+  possible, although perhaps more cumbersome given the size of the editor's
+  viewport. CodeWorkout supports a wide variety of code writing questions.
+
+%h3 Complete a Method (or Function)
+%p
+  Instead of writing a method from scratch, one can provide partial code
+  for portions of a method ... or provide complete code for some methods
+  and ask teh student to complete one method whose body is omitted. The
+  difference here lies in how much code is provided in the edit window
+  initially, when the student first views the exercise, as well as the
+  phrasing of the question.  However, this combines code reading/understanding
+  (of the provided portions of the code) together with code writing skills
+  (for the omitted portions of the code).
+
+%h3 Fill-in-the-Blank
+%p
+  As a more extreme case of completing a partially implemented method.
+  One can take a complete method implementation, and then turn a key
+  statement, expression, or condition into a "blank" where the student has
+  to fill in the correct answer in order for the code to operate.  One might
+  include a single blank to be filled, or even multiple blanks in the same
+  piece of code.  This is similar to multiple choice fill-in-the-blank
+  questions, but where the student must come up with the answer (and write
+  it syntactically correctly) in order to successfully answer the question,
+  instead of being presented with fixed choices to choose from.
+
+%h3 Fix the Bug
+%p
+  One can provide a complete but <i>incorrect</i> implementation of a
+  method, where the student is supposed to find and fix the bug.
+
+%h2 Optional Properties
+%p
+  [To be written!]

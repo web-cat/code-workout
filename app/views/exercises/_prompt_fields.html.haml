@@ -1,0 +1,17 @@
+.nested-fields
+  = f.inputs do
+    .row.darker-bkg
+      .row             
+        .col-md-3
+          = f.input :position, as: :number,
+            input_html: {value: 1}
+        .col-md-3
+          = f.input :question,  as: :text
+        .col-md-3
+          = f.input :feedback,  as: :text
+  - if qtype == 2
+    = f.semantic_fields_for :coding_prompt do |cp|
+      = render 'coding_question_fields', f: cp
+  - else
+    = f.semantic_fields_for :multiple_choice_prompt do |mcp|
+      = render 'mcq_prompt_fields', f: mcp
