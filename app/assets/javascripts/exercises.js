@@ -1,11 +1,10 @@
-
 (function() {
     var handle_submit;
     var VisualizeButton = null;
     $(document).ready(function() {
         VisualizeButton = $('#visualize');
         VisualizeButton.click(function() {
-            
+
             return handle_submit_action();
         });
     });
@@ -28,30 +27,31 @@
         $.ajax({
             url: url,
             type: 'GET',
-            async:    true,
+            async: true,
             data: {
                 exercise_id: exercise_id,
                 code: studentCode,
                 workoutID: workoutID,
                 workoutOfferingID: workoutOfferingID
             },
-            success: function (data) {
-                
+            success: function(data) {
+
                 studentCode = studentCode.split('\n').join('\\n');
                 studentCode = studentCode.substring(studentCode.indexOf('{') + 1, studentCode.indexOf('return'));
                 doModal2("", studentCode, data.exercise_trace);
             }
         });
     };
+
     function doModal2(heading, studentCode, exercise_trace) {
-    var html = "<html>\n" +"\<script>\
-        var testvisualizerTrace ={\"code\":\"" + studentCode + "\",\"trace\":[" + exercise_trace +"\
+        var html = "<html>\n" + "\<script>\
+        var testvisualizerTrace ={\"code\":\"" + studentCode + "\",\"trace\":[" + exercise_trace + "\
         ],\"userlog\":\"Debugger VM maxMemory: 807M \\n \"}\n\
         \n\
         \<\/script>\
         \n\
         \<body onload=\"visualize(testvisualizerTrace);\"/>\n";
-    html += "\<head>\n\
+        html += "\<head>\n\
         \<title>JSAV example\<\/title>\n \
         <meta charset=\"utf-8\"/>\n \
         <link rel=\"stylesheet\" href=\"https://opendsa-server.cs.vt.edu/OpenDSA/JSAV/css/JSAV.css\" type=\"text/css\"/>\n \
@@ -64,7 +64,7 @@
         }\n \
         \<\/style>\n \
         \<\/head>\n";
-    html += '\<body>\n\
+        html += '\<body>\n\
         \<div id=\"container\">\n\
         \<div class=\"avcontainer\">\n\
         \<span class=\"jsavcounter\">\<\/span>\n\
@@ -79,31 +79,48 @@
         \<script src=\"https://opendsa-server.cs.vt.edu/OpenDSA/JSAV/build/JSAV-min.js\">\<\/script>\n\
         \<script src=\"https://opendsa-server.cs.vt.edu/OpenDSA/lib/odsaUtils-min.js\">\<\/script>\n\
         \<script src=\"https://opendsa-server.cs.vt.edu/OpenDSA/lib/odsaAV-min.js\">\<\/script>\n\
-        \<script src=\"https://opendsa-server.cs.vt.edu:9292/assets/JsavWrapper.js\">\<\/script>\n\
-        \n\
-        \<\/body>' + "</html>";
-        if(document.getElementsByTagName('iframe').length !== 0)
-        {
+        \<script src=\"http://192.168.33.10:3000/assets/JsavWrapper.js\">\<\/script>\n';
+        html += loadScripts();
+        html += '\n \<\/body>' + "</html>";
+        if (document.getElementsByTagName('iframe').length !== 0) {
             document.getElementById('ModalBody').removeChild(document.getElementsByTagName('iframe')[0]);
         }
-        window.setTimeout(function(){ showIframe(html);}, 500);
+        window.setTimeout(function() { showIframe(html); }, 500);
         $('#Visualize').modal('toggle');
 
     };
-    function showIframe(html){
+
+    function showIframe(html) {
         var iframe = document.createElement('iframe');
         document.getElementById('ModalBody').appendChild(iframe);
         var iframeDoc = iframe.contentDocument;
-        $(iframeDoc).ready(function (event) {
+        $(iframeDoc).ready(function(event) {
             iframeDoc.open();
-           
+
             //html = html.replace("'",'"');
             //html = html.replace(/[^/\"_+-?![]{}()=*.|a-zA-Z 0-9]+/g,'');               
-            iframeDoc.write(html)               
+            iframeDoc.write(html)
             iframeDoc.close();
             iframe.height = "400px";
             iframe.width = "800px";
-        });             
-        
+        });
+
     };
+
+    function loadScripts() {
+        var server = 'http://192.168.33.10:3000';
+        //var server = 'https://opendsa-server.cs.vt.edu:9292';
+        var directory = server + '/assets/LinkedListVisualizationCode/';
+        var extension = '.js';
+        var files = ['EncodedLocal', 'JsavLinkedListObject', 'LinkClassValue', 'LinkedList',
+            'LinkedListNode', 'LinkedListPointersForStep', 'Pointer', 'StudentCode', 'Trace', 'TraceHeap',
+            'TraceList', 'TraceStack', 'Visualization', 'VisualizationStep'
+        ];
+        var html = "";
+        for (var i = 0; i < files.length; i++) {
+            var path = directory + files[i] + extension;
+            html += '<script src=' + '"' + path + '"' + '></script>\n';
+        }
+        return html;
+    }
 }).call(this);
