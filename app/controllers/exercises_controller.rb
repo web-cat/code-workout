@@ -9,6 +9,8 @@ class ExercisesController < ApplicationController
   after_action :allow_iframe, only: [:practice, :embed]
   # -------------------------------------------------------------
 
+  HTTP_URL = 'https://opendsax.cs.vt.edu:9292/answers/solve'
+
   # GET /exercises
   def index
     if current_user
@@ -747,20 +749,14 @@ class ExercisesController < ApplicationController
             'code' => params[:code]
     }
 
-    #request =  RestClient.post('https://192.168.33.10:9210/answers/solve',payload.to_json,content_type: :json)
-    #https_url = 'https://192.168.33.10:9210/answers/solve'
-    http_url = 'http://192.168.33.10:3000/answers/solve'
-    #http_url = 'https://opendsa-server.cs.vt.edu:9292/answers/solve'
-    #http_url = 'https://opendsax.cs.vt.edu:9292/answers/solve'
     request = RestClient::Request.execute(:method => :post,
-                                            :url => http_url,
+                                            :url => HTTP_URL,
                                             :payload => payload.to_json,
                                             :headers => {'Content-Type' => 'application/json'},
 					    :verify_ssl => OpenSSL::SSL::VERIFY_NONE)
     trace = JSON.parse(request.body)
     @openpop_results = trace
-    puts params
-    puts current_user.email
+    
     curr_user = nil
     unless current_user.nil?
       curr_user = current_user
