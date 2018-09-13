@@ -321,6 +321,8 @@ class ExercisesController < ApplicationController
         end
         errors << "</ul>"
         redirect_to exercises_url, flash: { error: errors.join("").html_safe } and return
+      else # successfully created the exercise
+        exercise_collection.andand.add(e, override: true)
       end
     end
 
