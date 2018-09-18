@@ -246,7 +246,7 @@ GEM
     multi_json (1.10.1)
     multi_xml (0.5.5)
     multipart-post (2.0.0)
-    mysql2 (0.3.15)
+    mysql2 (0.3.21)
     net-scp (1.2.1)
       net-ssh (>= 2.6.5)
     net-ssh (3.2.0)
@@ -450,7 +450,7 @@ DEPENDENCIES
   log_file
   loofah
   momentjs-rails (>= 2.9.0)
-  mysql2 (= 0.3.15)
+  mysql2 (~> 0.3.20)
   nokogiri
   oj
   oj_mimic_json
@@ -482,4 +482,4 @@ DEPENDENCIES
   wannabe_bool
 
 BUNDLED WITH
-   1.13.2
+   1.16.5
