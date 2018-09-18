@@ -134,6 +134,9 @@ CodeWorkout::Application.routes.draw do
     post 'add_workout/:workout_name' => 'course_offerings#add_workout', as: :add_workout
     post 'store_workout/:id' => :store_workout, as: :store_workout
     get '/search_enrolled_users' => :search_enrolled_users, as: :search_enrolled_users
+    collection do
+      post 'remote_create' => :remote_create, as: :remote_create
+    end
   end
 
   resources :course_enrollments, only: [ :new, :destroy ] do
