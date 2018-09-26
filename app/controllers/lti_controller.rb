@@ -16,53 +16,42 @@ class LtiController < ApplicationController
 
       # Retrieve user information and sign in the user.
 
-      # First check if we can find a user using the LtiIdentity
       lti_user_id = params[:user_id]
+
+      # First check if we can find a user using the LtiIdentity
       @lti_identity = LtiIdentity.find_by(lms_instance: @lms_instance, lti_user_id: lti_user_id)
       if @lti_identity
         @user = @lti_identity.user
-      else
-        # If not, check both email parameters
-        @user = User.find_by(email: params[:lis_person_contact_email_primary])
-        if @user.blank? && params[:custom_canvas_user_login_id]
-          @user = User.find_by(email: params[:custom_canvas_user_login_id])
-        end
       end
-
-      if @user.blank?
-        if params[:custom_canvas_user_login_id].andand.include?("@")
-          email = params[:custom_canvas_user_login_id]
-        else
-          email = params[:lis_person_contact_email_primary]
-        end
-
-        @user = User.new(
-          email: email,
+      
+      # Get a new or existing user based on LTI params
+      if @user.blank
+        @user = User.lti_new_or_existing_user({ 
+          lis_person_contact_email_primary: params[:lis_person_contact_email_primary],
+          custom_canvas_user_login_id: params[:custom_canvas_user_login_id],
           first_name: params[:lis_person_name_given],
           last_name: params[:lis_person_name_family]
-        )
-        @user.skip_password_validation = true
-        @user.save!
+        })
+        @user.save
+      end
+
+      # We've found or created a new user, so we'll check for incomplete fields 
+      # and give them values before proceeding
+      if @user.first_name.blank?
+        @user.first_name = params[:lis_person_name_given]
+      end
+
+      if @user.last_name.blank?
+        @user.last_name = params[:lis_person_name_family]
+      end
+     
+      # old users and newly created ones may not have LtiIdentity set up 
+      if !@user.lti_identities.where(lms_instance: @lms_instance).andand.first
         @lti_identity = LtiIdentity.new(user: @user, lms_instance: @lms_instance, lti_user_id: lti_user_id)
         @lti_identity.save!
-      else
-        # We've found a user, so we'll check for incomplete fields and give them values
-        # before proceeding
-        if @user.first_name.blank?
-          @user.first_name = params[:lis_person_name_given]
-        end
-
-        if @user.last_name.blank?
-          @user.last_name = params[:lis_person_name_family]
-        end
-
-        if !@user.lti_identities.where(lms_instance: @lms_instance).andand.first
-          @lti_identity = LtiIdentity.new(user: @user, lms_instance: @lms_instance, lti_user_id: lti_user_id)
-          @lti_identity.save!
-        end
-
-        @user.save!
       end
+
+      @user.save!
 
       # We have a user, sign them in
       sign_in @user

@@ -859,6 +859,40 @@ class User < ActiveRecord::Base
     end
   end
 
+  # -------------------------------------------------------------
+  # Convenience method for the LTI controller. Find or create a user based
+  # on information received in a launch request.
+  # Should include lis_person_contact_email_primary
+  def self.lti_new_or_existing_user(opts)
+    user = nil
+    if opts[:lis_person_contact_email_primary]
+      user = User.find_by(email: opts[:lis_person_contact_email_primary])
+    end
+
+    # check canvas_login
+    if user.blank? && opts[:custom_canvas_user_login_id]
+      # check if canvas login is email-like
+      if opts[:custom_canvas_user_login_id].match(Devise.email_regexp)
+        user = User.find_by(email: opts[:custom_canvas_user_login_id])
+      elsif match = opts[:lis_person_contact_email_primary].match(/[^@]+@([^@]+)/) # get domain
+        email_domain = match.captures[0]
+        email = "#{opts[:custom_canvas_user_login_id]}@#{email_domain}"
+        user = User.find_by(email: email)
+      end
+    end
+
+    if user.blank?
+      user = User.new(
+        email: opts[:lis_person_contact_email_primary],
+        first_name: opts[:first_name],
+        last_name: opts[:last_name]
+      )
+      user.skip_password_validation = true
+    end
+
+    return user
+  end
+
 
   #~ Private instance methods .................................................
   private
