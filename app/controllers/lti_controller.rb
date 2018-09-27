@@ -14,29 +14,19 @@ class LtiController < ApplicationController
 
       @lms_instance = LmsInstance.find_by(consumer_key: params[:oauth_consumer_key])
 
-      # Retrieve user information and sign in the user.
+      @lti_identity = LtiIdentity.find_by(lms_instance: @lms_instance, lti_user_id: params[:user_id])
 
-      lti_user_id = params[:user_id]
-
-      # First check if we can find a user using the LtiIdentity
-      @lti_identity = LtiIdentity.find_by(lms_instance: @lms_instance, lti_user_id: lti_user_id)
-      if @lti_identity
-        @user = @lti_identity.user
-      end
-      
       # Get a new or existing user based on LTI params
-      if @user.blank
-        @user = User.lti_new_or_existing_user({ 
-          lis_person_contact_email_primary: params[:lis_person_contact_email_primary],
-          custom_canvas_user_login_id: params[:custom_canvas_user_login_id],
-          first_name: params[:lis_person_name_given],
-          last_name: params[:lis_person_name_family]
-        })
-        @user.save
-      end
+      @user = User.lti_new_or_existing_user({
+        lti_identity: @lti_identity,
+        lis_person_contact_email_primary: params[:lis_person_contact_email_primary],
+        custom_canvas_user_login_id: params[:custom_canvas_user_login_id],
+        first_name: params[:lis_person_name_given],
+        last_name: params[:lis_person_name_family]
+      })
+      @user.save
 
-      # We've found or created a new user, so we'll check for incomplete fields 
-      # and give them values before proceeding
+      # Check for incomplete fields and update with info from LMS if needed
       if @user.first_name.blank?
         @user.first_name = params[:lis_person_name_given]
       end
@@ -45,9 +35,9 @@ class LtiController < ApplicationController
         @user.last_name = params[:lis_person_name_family]
       end
      
-      # old users and newly created ones may not have LtiIdentity set up 
+      # Old users and newly created ones may not have an LtiIdentity set up 
       if !@user.lti_identities.where(lms_instance: @lms_instance).andand.first
-        @lti_identity = LtiIdentity.new(user: @user, lms_instance: @lms_instance, lti_user_id: lti_user_id)
+        @lti_identity = LtiIdentity.new(user: @user, lms_instance: @lms_instance, lti_user_id: params[:user_id])
         @lti_identity.save!
       end
 
