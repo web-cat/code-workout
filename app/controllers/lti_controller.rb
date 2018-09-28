@@ -24,7 +24,6 @@ class LtiController < ApplicationController
         first_name: params[:lis_person_name_given],
         last_name: params[:lis_person_name_family]
       })
-      @user.save
 
       # Check for incomplete fields and update with info from LMS if needed
       if @user.first_name.blank?
@@ -34,8 +33,8 @@ class LtiController < ApplicationController
       if @user.last_name.blank?
         @user.last_name = params[:lis_person_name_family]
       end
-     
-      # Old users and newly created ones may not have an LtiIdentity set up 
+
+      # Old users and newly created ones may not have an LtiIdentity set up
       if !@user.lti_identities.where(lms_instance: @lms_instance).andand.first
         @lti_identity = LtiIdentity.new(user: @user, lms_instance: @lms_instance, lti_user_id: params[:user_id])
         @lti_identity.save!
