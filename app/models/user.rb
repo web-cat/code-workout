@@ -890,7 +890,7 @@ class User < ActiveRecord::Base
     return user unless user.nil?
     
     # Find user by LTI email (which is guaranteed to be present in LTI v1.x)
-    user = User.find_by(email: lis_email])
+    user = User.find_by(email: lis_email)
     return user unless user.nil?
 
     # Find user by canvas login 
