@@ -879,7 +879,7 @@ class User < ActiveRecord::Base
     end
 
     domain = lis_email_match.captures[0]
-    canvas_login = params[:custom_canvas_user_login_id]
+    canvas_login = opts[:custom_canvas_user_login_id]
 
     # Find by lti_identity
     user = opts[:lti_identity].andand.user
