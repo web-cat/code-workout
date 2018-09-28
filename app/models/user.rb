@@ -168,6 +168,10 @@ class User < ActiveRecord::Base
           1
         elsif b.attempts.count > 0
           -1
+        elsif a.course_enrollments.count > b.course_enrollments.count
+          1
+        elsif b.course_enrollments.count > 0
+          -1
         else
           a.sign_in_count <=> b.sign_in_count
         end
@@ -858,9 +862,9 @@ class User < ActiveRecord::Base
       enrollment.destroy
     end
   end
-  
+
   # -------------------------------------------------------------
-  # Find or create a user based on information received in a launch 
+  # Find or create a user based on information received in a launch
   # request.
   # Required params: lis_person_contact_email_primary (a valid email)
   # Optional params: lti_identity, custom_canvas_user_login_id, first_name, last_name
@@ -869,8 +873,9 @@ class User < ActiveRecord::Base
     lis_email_match = lis_email.andand.match(/[^@]+@([^@]+)/) # Devise.email_regexp, but capturing the domain
 
     unless lis_email_match
-      raise ArgumentError.new("Expected opts[:lis_person_contact_email_primary] to be "\
-                              "a valid email address. Got #{opts[:lis_person_contact_email_primary]}")
+      raise ArgumentError.new(
+        "Expected opts[:lis_person_contact_email_primary] to be "\
+        "a valid email address. Got #{opts[:lis_person_contact_email_primary]}")
     end
 
     domain = lis_email_match.captures[0]
@@ -878,42 +883,46 @@ class User < ActiveRecord::Base
 
     # Find by lti_identity
     user = opts[:lti_identity].andand.user
+
+    # Or find user by LTI email (guaranteed to be present in LTI v1.x)
+    if !user
+      user = User.find_by(email: lis_email)
+    end
+
     # Temporary patch for Canvas
-    if user.andand.email == lis_email && canvas_login.andand.match(Devise.email_regexp).nil?
+    if user.andand.email == lis_email &&
+      canvas_login.andand.match(Devise.email_regexp).nil?
       email = "#{canvas_login}@#{domain}" # PID-like email
       to_merge = User.find_by(email: email)
       if to_merge
         to_merge.merge_with(user, email)
-        return to_merge
+        to_merge.save!
+        user = to_merge
       end
     end
     return user unless user.nil?
-    
-    # Find user by LTI email (which is guaranteed to be present in LTI v1.x)
-    user = User.find_by(email: lis_email])
-    return user unless user.nil?
 
-    # Find user by canvas login 
-    if canvas_login 
+    # Find user by canvas login
+    if canvas_login
       if canvas_login.match(Devise.email_regexp)
-      # Is the canvas login email-like? 
+      # Is the canvas login email-like?
         user = User.find_by(email: canvas_login)
       else
         # Use the LTI email domain to build a valid email from the canvas login
         email = "#{canvas_login}@#{domain}"
         user = User.find_by(email: email)
       end
-
-      return user unless user.nil?
     end
+    return user unless user.nil?
 
-    # Haven't yet found a user 
+    # Haven't yet found a user
     user = User.new(
       email: lis_email,
       first_name: opts[:first_name],
       last_name: opts[:last_name]
     )
     user.skip_password_validation = true
+    user.save!
 
     return user
   end
