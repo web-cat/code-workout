@@ -577,6 +577,7 @@ class ExercisesController < ApplicationController
       fake_email = user_ip.clone().gsub('.','') + Time.now.to_i.to_s + '@cw.edu'
       fake_password = Time.now.to_i.to_s + user_ip.clone().gsub('.','')
       @student_drift_user = User.new(email: fake_email, slug: fake_email,
+                              password: fake_password,
                               current_sign_in_ip: request.remote_ip,
                               last_sign_in_ip: request.remote_ip,
                               global_role_id: 4)
