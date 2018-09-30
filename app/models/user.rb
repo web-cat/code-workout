@@ -486,7 +486,7 @@ class User < ActiveRecord::Base
     puts "update user #{self.id}: sign_in_count <= #{self.sign_in_count}"
     if user.current_sign_in_at
       if !self.current_sign_in_at ||
-        self.current_sign_in_at > user.current_sign_in_at
+        self.current_sign_in_at < user.current_sign_in_at
         puts "update user #{self.id}: " +
           "current_sign_in_at <= #{user.current_sign_in_at}"
         self.current_sign_in_at = user.current_sign_in_at
@@ -497,7 +497,7 @@ class User < ActiveRecord::Base
     end
     if user.last_sign_in_at
       if !self.last_sign_in_at ||
-        self.last_sign_in_at > user.last_sign_in_at
+        self.last_sign_in_at < user.last_sign_in_at
         puts "update user #{self.id}: " +
           "last_sign_in_at <= #{user.last_sign_in_at}"
         self.last_sign_in_at = user.last_sign_in_at
@@ -616,9 +616,11 @@ class User < ActiveRecord::Base
     end
 
     puts "destroy user #{user.id}"
+    user.reload
     user.destroy
     puts "update user #{self.id}: email <= #{email}, slug <= #{user.slug}"
     self.update(email: email, slug: email)
+    self.reload
   end
 
 
@@ -901,7 +903,7 @@ class User < ActiveRecord::Base
       end
     end
     return user unless user.nil?
-    
+
     # Find user by LTI email (which is guaranteed to be present in LTI v1.x)
     user = User.find_by(email: lis_email)
     return user unless user.nil?
