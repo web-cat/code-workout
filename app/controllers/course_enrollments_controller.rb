@@ -40,11 +40,13 @@ class CourseEnrollmentsController < ApplicationController
       user = User.find_by(email: email)
       if !user
         user = User.new(email: email, global_role: GlobalRole.regular_user)
-        user.password = user.email_without_domain
+        # user.password = user.email_without_domain
         user.first_name = has_headers ? row['first_name'] : row[1]
         user.last_name = has_headers ? row['last_name'] : row[2]
         if user.save
           created_count = created_count + 1
+        else
+          Rails.logger.error "Unable to save new user #{user.inspect}"
         end
       end
 
@@ -56,7 +58,7 @@ class CourseEnrollmentsController < ApplicationController
           course_role = CourseRole.student
         end
 
-        if CourseEnrollment.create(course_offering: @course_offering, user: user, course_role: course_role)
+        if user.id && CourseEnrollment.create(course_offering: @course_offering, user: user, course_role: course_role)
           enrolled_count = enrolled_count + 1
         end
       else
