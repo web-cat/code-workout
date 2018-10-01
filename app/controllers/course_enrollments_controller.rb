@@ -40,9 +40,9 @@ class CourseEnrollmentsController < ApplicationController
       user = User.find_by(email: email)
       if !user
         user = User.new(email: email, global_role: GlobalRole.regular_user)
-        # user.password = user.email_without_domain
         user.first_name = has_headers ? row['first_name'] : row[1]
         user.last_name = has_headers ? row['last_name'] : row[2]
+        user.skip_password_validation = true
         if user.save
           created_count = created_count + 1
         else
