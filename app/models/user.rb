@@ -545,6 +545,8 @@ class User < ActiveRecord::Base
         e.destroy
       end
     end
+    user.course_enrollments.reset
+    self.course_enrollments.reset
 
     # Extensions
     possible_ext_duplicates = {}
@@ -558,14 +560,20 @@ class User < ActiveRecord::Base
       puts "update student_extenstion #{ext.id}: user_id <= #{self.id}"
       ext.update(user_id: self.id)
     end
+    user.student_extensions.reset
+    self.student_extensions.reset
 
     # Attempts
     puts "update user ids for #{user.attempts.count} attempts"
     user.attempts.update_all(user_id: self.id)
+    user.attempts.reset
+    self.attempts.reset
 
     # Test case results
     puts "update user ids for #{user.test_case_results.count} test_cast_results"
     user.test_case_results.update_all(user_id: self.id)
+    user.test_case_results.reset
+    self.test_case_results.reset
 
     # Workout Scores
     possible_ws_duplicates = {}
@@ -581,6 +589,8 @@ class User < ActiveRecord::Base
       puts "update workout_score #{s.id}: user_id <= #{self.id}"
       s.update(user_id: self.id)
     end
+    user.workout_scores.reset
+    self.workout_scores.reset
 
     # LTI identities
     possible_lti_duplicates = {}
@@ -593,10 +603,14 @@ class User < ActiveRecord::Base
       puts "update lti_identities #{lti_id.id}: user_id <= #{self.id}"
       lti_id.update(user_id: self.id)
     end
+    user.lti_identities.reset
+    self.lti_identities.reset
 
     # devise identities
     puts "update user ids for #{user.identities.count} identities"
     user.identities.update_all(user_id: self.id)
+    user.identities.reset
+    self.identities.reset
 
 
     if !possible_ext_duplicates.empty? ||
@@ -616,7 +630,6 @@ class User < ActiveRecord::Base
     end
 
     puts "destroy user #{user.id}"
-    user.reload
     user.destroy
     puts "update user #{self.id}: email <= #{email}, slug <= #{user.slug}"
     self.update(email: email, slug: email)
