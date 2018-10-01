@@ -908,11 +908,13 @@ class User < ActiveRecord::Base
     if user.andand.email == lis_email &&
       canvas_login.andand.match(Devise.email_regexp).nil?
       email = "#{canvas_login}@#{domain}" # PID-like email
-      to_merge = User.find_by(email: email)
-      if to_merge
-        to_merge.merge_with(user, email)
-        to_merge.save!
-        user = to_merge
+      if email != lis_email
+        to_merge = User.find_by(email: email)
+        if to_merge
+          to_merge.merge_with(user, email)
+          to_merge.save!
+          user = to_merge
+        end
       end
     end
     return user unless user.nil?
