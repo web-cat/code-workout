@@ -124,10 +124,9 @@ class ExercisesController < ApplicationController
   # GET /exercises/new
   def new
     @exercise = Exercise.new
-    # @coding_exercise = CodingQuestion.new
-    # @languages = Tag.where(tagtype: Tag.language).pluck(:tag_name)
-    # @areas = Tag.where(tagtype: Tag.area).pluck(:tag_name)
     @exercise_version = ExerciseVersion.new
+
+    @user_groups = current_user.andand.user_groups
   end
 
 
