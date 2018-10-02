@@ -132,7 +132,7 @@ class ExercisesController < ApplicationController
   # GET /exercises/1/edit
   def edit
     @exercise_version = @exercise.current_version
-    @text_representation = @exercise_version.text_representation || 
+    @text_representation = @exercise_version.text_representation ||
       ExerciseRepresenter.new(@exercise).to_hash.to_yaml
     @user_groups = current_user.user_groups
     # figure out the edit rights to this exercise
@@ -301,10 +301,15 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # POST /exercises/upload_create
   def upload_create
-    exercise_params = params[:exercise]
-    exercise_version_params = exercise_params[:exercise_version]
-    edit_rights = exercise_params['exercise_collection']
-    hash = YAML.load(exercise_version_params['text_representation'])
+    if params[:exercise]
+      exercise_params = params[:exercise]
+      exercise_version_params = exercise_params[:exercise_version]
+      edit_rights = exercise_params['exercise_collection']
+      hash = YAML.load(exercise_version_params['text_representation'])
+    else
+      hash = YAML.load(File.read(params[:form][:file].path))
+      edit_rights = 0
+    end
 
     if !hash.kind_of?(Array)
       hash = [hash]
@@ -312,12 +317,12 @@ class ExercisesController < ApplicationController
 
     # figure out if we need to add this to an exercise collection
     exercise_collection = nil
-    if edit_rights == 0 
+    if edit_rights == 0
       exercise_collection = current_user.exercise_collection
       if exercise_collection.nil?
         exercise_collection = ExerciseCollection.new(
           name: "Personal exercise collection belonging to #{current_user.display_name}",
-          user: current_user 
+          user: current_user
         )
         exercise_collection.save!
       end
