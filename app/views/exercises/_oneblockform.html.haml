@@ -1,7 +1,9 @@
 %p.text.text-info
   Use the editor below or upload an existing YAML file from your computer.
 
-= semantic_form_for @exercise_version, url: exercises_upload_create_path, method: :post do |f|
+- # list will be [ "Only Me", "user's", "user", "groups", "Everybody"
+- access_control_items = @user_groups.map{ |g| [ g.name, g.id ] }.unshift(['Only Me', 0]).push(['Everybody', -1])
+= semantic_form_for @exercise, url: exercises_upload_create_path, method: :post do |f|
   = f.semantic_errors
   .row
     .col-md-4.col-sm-4
@@ -17,12 +19,3 @@
           label: 'YAML Representation of the Exercise:'
   .row
     = f.submit class: 'btn btn-primary', value: 'Submit'
-%br
-OR
-%br
-%br
-= form_tag exercises_url + '/upload_create', multipart: true, class: 'form-horizontal' do
-  .row
-    = file_field('form', 'file')
-  .row
-    = submit_tag 'Submit File', class: 'btn btn-primary'
