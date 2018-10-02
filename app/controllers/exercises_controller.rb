@@ -304,11 +304,11 @@ class ExercisesController < ApplicationController
     if params[:exercise]
       exercise_params = params[:exercise]
       exercise_version_params = exercise_params[:exercise_version]
-      edit_rights = exercise_params['exercise_collection']
+      edit_rights = exercise_params[:exercise_collection_id].to_i
       hash = YAML.load(exercise_version_params['text_representation'])
     else
       hash = YAML.load(File.read(params[:form][:file].path))
-      edit_rights = 0
+      edit_rights = 0 # Personal exercise
     end
 
     if !hash.kind_of?(Array)
@@ -342,6 +342,7 @@ class ExercisesController < ApplicationController
     exercises = ExerciseRepresenter.for_collection.new([]).from_hash(hash)
     exercises.each do |e|
       if !e.save
+        # put together an error message
         errors = []
         errors <<  "Cannot save exercise:<ul>"
         e.errors.full_messages.each do |msg|
