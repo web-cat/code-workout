@@ -467,6 +467,7 @@ class User < ActiveRecord::Base
   # Merge this user with the specifier user. The specified user's information
   # gets merged INTO this user
   def merge_with(user, email)
+    return unless user.id != self.id
     # Update these attributes from merged user if they are currently blank
     [:encrypted_password, :first_name, :last_name, :avatar].each do |attr|
       new_value = user.read_attribute(attr)
@@ -904,11 +905,10 @@ class User < ActiveRecord::Base
       user = User.find_by(email: lis_email)
     end
 
-    # Temporary patch for Canvas
-    if user.andand.email == lis_email &&
-      canvas_login.andand.match(Devise.email_regexp).nil?
+    # patch for VT Canvas non-PID e-mails
+    if user && canvas_login.andand.match(Devise.email_regexp).nil?
       email = "#{canvas_login}@#{domain}" # PID-like email
-      if email != lis_email
+      if email != user.email
         to_merge = User.find_by(email: email)
         if to_merge
           to_merge.merge_with(user, email)
