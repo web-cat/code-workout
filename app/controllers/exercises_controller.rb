@@ -135,7 +135,19 @@ class ExercisesController < ApplicationController
   # GET /exercises/1/edit
   def edit
     @exercise_version = @exercise.current_version
-    @text_representation = @exercise_version.text_representation || ExerciseRepresenter.new(@exercise).to_hash.to_yaml
+    @text_representation = @exercise_version.text_representation ||
+      ExerciseRepresenter.new(@exercise).to_hash.to_yaml
+    @user_groups = current_user.user_groups
+    # figure out the edit rights to this exercise
+    if ec = @exercise.exercise_collection
+      if ec.owned_by?(current_user)
+        @exercise_collection = 0 # Only Me
+      elsif @user_groups.include?(ec.user_group)
+        @exercise_collection = ec.user_group_id
+      else
+        @exercise_collection = -1 # Everyone
+      end
+    end
   end
 
 
@@ -292,16 +304,44 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # POST /exercises/upload_create
   def upload_create
-    if params[:exercise_version] && params[:exercise_version]['text_representation'].present?
-      hash = YAML.load(params[:exercise_version]['text_representation'])
+    if params[:exercise]
+      exercise_params = params[:exercise]
+      exercise_version_params = exercise_params[:exercise_version]
+      edit_rights = exercise_params['exercise_collection']
+      hash = YAML.load(exercise_version_params['text_representation'])
     else
       hash = YAML.load(File.read(params[:form][:file].path))
+      edit_rights = 0
     end
 
     if !hash.kind_of?(Array)
       hash = [hash]
     end
 
+    # figure out if we need to add this to an exercise collection
+    exercise_collection = nil
+    if edit_rights == 0
+      exercise_collection = current_user.exercise_collection
+      if exercise_collection.nil?
+        exercise_collection = ExerciseCollection.new(
+          name: "Personal exercise collection belonging to #{current_user.display_name}",
+          user: current_user
+        )
+        exercise_collection.save!
+      end
+    elsif edit_rights != -1 # then it must be a user group
+      user_group = UserGroup.find(edit_rights)
+      exercise_collection = user_group.exercise_collection
+      if exercise_collection.nil?
+        exercise_collection = ExerciseCollection.new(
+          name: "Exercise collection for the #{user_group.name} group",
+          user_group: user_group
+        )
+        exercise_collection.save!
+      end
+    end
+
+    # parse the text_representation
     exercises = ExerciseRepresenter.for_collection.new([]).from_hash(hash)
     exercises.each do |e|
       if !e.save
@@ -545,6 +585,7 @@ class ExercisesController < ApplicationController
       fake_email = user_ip.clone().gsub('.','') + Time.now.to_i.to_s + '@cw.edu'
       fake_password = Time.now.to_i.to_s + user_ip.clone().gsub('.','')
       @student_drift_user = User.new(email: fake_email, slug: fake_email,
+                              password: fake_password,
                               current_sign_in_ip: request.remote_ip,
                               last_sign_in_ip: request.remote_ip,
                               global_role_id: 4)

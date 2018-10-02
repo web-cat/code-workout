@@ -92,6 +92,36 @@ class CourseOfferingsController < ApplicationController
     end
   end
 
+  # --------------------------------------------------------------------
+  # Public: Generate course and course offering if the request comes from
+  # an authorised entity (like OpenDSA)
+  def remote_create
+    @message = 'This is not yet implemented.'
+    render 'lti/error' and return
+
+    @organization = Organization.find(params[:organization_id])
+    @term = Term.find(params[:term_id])
+
+    @course = Course.find_by(slug: params[:course][:slug])
+    if !@course
+      @course = Course.create(
+        slug: params[:course][:slug],
+        number: params[:course][:number],
+        name: params[:course][:name],
+        organization: @organization
+      )
+    end
+
+    @course_offering = CourseOffering.create(
+      course: @course,
+      term: @term,
+      label: params[:course_offering][:label],
+      self_enrollment_allowed: true,
+      cutoff_date: DateTime.now + 10.years
+    )
+
+  end
+
 
   # -------------------------------------------------------------
   # POST /course_enrollments
