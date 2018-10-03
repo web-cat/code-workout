@@ -387,7 +387,7 @@ class WorkoutsController < ApplicationController
       found_workout = workouts.andand.first
     end
 
-    if params[:is_instructor].to_b
+    if session[:is_instructor].to_b
       workout_offerings = WorkoutOffering.where(
         lms_assignment_id: @lms_assignment_id)
       if workout_offerings.blank?
@@ -585,7 +585,7 @@ class WorkoutsController < ApplicationController
     end
 
     # check enrollment and ties to LTI before proceeding
-    role = params[:is_instructor].to_b ? CourseRole.instructor : CourseRole.student
+    role = session[:is_instructor].to_b ? CourseRole.instructor : CourseRole.student
     @course_offering = @workout_offering.course_offering
 
     if @course_offering.lms_instance.nil?
