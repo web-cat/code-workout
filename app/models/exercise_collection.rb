@@ -39,9 +39,12 @@ class ExerciseCollection < ActiveRecord::Base
     end
   end
 
-  def add(*exercises)
+  def add(*exercises, override: false)
     exercises.flatten.each do |e|
       if e.exercise_collection.nil?
+        e.exercise_collection = self
+        e.save!
+      elsif override
         e.exercise_collection = self
         e.save!
       end

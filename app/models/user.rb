@@ -89,7 +89,7 @@ class User < ActiveRecord::Base
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, and :timeoutable
   devise :database_authenticatable, :omniauthable, :registerable,
-    :recoverable, :rememberable, :trackable, #:validatable,  # :confirmable,
+    :recoverable, :rememberable, :trackable, :validatable,  # :confirmable,
     :omniauth_providers => [:facebook, :google_oauth2, :cas]
 
   before_create :set_default_role
@@ -167,6 +167,10 @@ class User < ActiveRecord::Base
         if a.attempts.count > b.attempts.count
           1
         elsif b.attempts.count > 0
+          -1
+        elsif a.course_enrollments.count > b.course_enrollments.count
+          1
+        elsif b.course_enrollments.count > 0
           -1
         else
           a.sign_in_count <=> b.sign_in_count
@@ -463,6 +467,7 @@ class User < ActiveRecord::Base
   # Merge this user with the specifier user. The specified user's information
   # gets merged INTO this user
   def merge_with(user, email)
+    return unless user.id != self.id
     # Update these attributes from merged user if they are currently blank
     [:encrypted_password, :first_name, :last_name, :avatar].each do |attr|
       new_value = user.read_attribute(attr)
@@ -482,7 +487,7 @@ class User < ActiveRecord::Base
     puts "update user #{self.id}: sign_in_count <= #{self.sign_in_count}"
     if user.current_sign_in_at
       if !self.current_sign_in_at ||
-        self.current_sign_in_at > user.current_sign_in_at
+        self.current_sign_in_at < user.current_sign_in_at
         puts "update user #{self.id}: " +
           "current_sign_in_at <= #{user.current_sign_in_at}"
         self.current_sign_in_at = user.current_sign_in_at
@@ -493,7 +498,7 @@ class User < ActiveRecord::Base
     end
     if user.last_sign_in_at
       if !self.last_sign_in_at ||
-        self.last_sign_in_at > user.last_sign_in_at
+        self.last_sign_in_at < user.last_sign_in_at
         puts "update user #{self.id}: " +
           "last_sign_in_at <= #{user.last_sign_in_at}"
         self.last_sign_in_at = user.last_sign_in_at
@@ -541,6 +546,8 @@ class User < ActiveRecord::Base
         e.destroy
       end
     end
+    user.course_enrollments.reset
+    self.course_enrollments.reset
 
     # Extensions
     possible_ext_duplicates = {}
@@ -554,14 +561,20 @@ class User < ActiveRecord::Base
       puts "update student_extenstion #{ext.id}: user_id <= #{self.id}"
       ext.update(user_id: self.id)
     end
+    user.student_extensions.reset
+    self.student_extensions.reset
 
     # Attempts
     puts "update user ids for #{user.attempts.count} attempts"
     user.attempts.update_all(user_id: self.id)
+    user.attempts.reset
+    self.attempts.reset
 
     # Test case results
     puts "update user ids for #{user.test_case_results.count} test_cast_results"
     user.test_case_results.update_all(user_id: self.id)
+    user.test_case_results.reset
+    self.test_case_results.reset
 
     # Workout Scores
     possible_ws_duplicates = {}
@@ -577,6 +590,8 @@ class User < ActiveRecord::Base
       puts "update workout_score #{s.id}: user_id <= #{self.id}"
       s.update(user_id: self.id)
     end
+    user.workout_scores.reset
+    self.workout_scores.reset
 
     # LTI identities
     possible_lti_duplicates = {}
@@ -589,10 +604,14 @@ class User < ActiveRecord::Base
       puts "update lti_identities #{lti_id.id}: user_id <= #{self.id}"
       lti_id.update(user_id: self.id)
     end
+    user.lti_identities.reset
+    self.lti_identities.reset
 
     # devise identities
     puts "update user ids for #{user.identities.count} identities"
     user.identities.update_all(user_id: self.id)
+    user.identities.reset
+    self.identities.reset
 
 
     if !possible_ext_duplicates.empty? ||
@@ -614,7 +633,8 @@ class User < ActiveRecord::Base
     puts "destroy user #{user.id}"
     user.destroy
     puts "update user #{self.id}: email <= #{email}, slug <= #{user.slug}"
-    self.update(email: email, slug: user.slug)
+    self.update(email: email, slug: email)
+    self.reload
   end
 
 
@@ -778,7 +798,7 @@ class User < ActiveRecord::Base
     # user.destroy
     puts "destroy user #{user.id}"
     # self.update(email: email, user.slug)
-    puts "update user #{self.id}: email <= #{email}, slug <= #{user.slug}"
+    puts "update user #{self.id}: email <= #{email}, slug <= #{email}"
   end
 
 
@@ -859,6 +879,74 @@ class User < ActiveRecord::Base
     end
   end
 
+  # -------------------------------------------------------------
+  # Find or create a user based on information received in a launch
+  # request.
+  # Required params: lis_person_contact_email_primary (a valid email)
+  # Optional params: lti_identity, custom_canvas_user_login_id, first_name, last_name
+  def self.lti_new_or_existing_user(opts)
+    lis_email = opts[:lis_person_contact_email_primary]
+    lis_email_match = lis_email.andand.match(/[^@]+@([^@]+)/) # Devise.email_regexp, but capturing the domain
+
+    unless lis_email_match
+      raise ArgumentError.new(
+        "Expected opts[:lis_person_contact_email_primary] to be "\
+        "a valid email address. Got #{opts[:lis_person_contact_email_primary]}")
+    end
+
+    domain = lis_email_match.captures[0]
+    canvas_login = opts[:custom_canvas_user_login_id]
+
+    # Find by lti_identity
+    user = opts[:lti_identity].andand.user
+
+    # Or find user by LTI email (guaranteed to be present in LTI v1.x)
+    if !user
+      user = User.find_by(email: lis_email)
+    end
+
+    # patch for VT Canvas non-PID e-mails
+    if user && canvas_login.andand.match(Devise.email_regexp).nil?
+      email = "#{canvas_login}@#{domain}" # PID-like email
+      if email != user.email
+        to_merge = User.find_by(email: email)
+        if to_merge
+          to_merge.merge_with(user, email)
+          to_merge.save!
+          user = to_merge
+        end
+      end
+    end
+    return user unless user.nil?
+
+    # Find user by LTI email (which is guaranteed to be present in LTI v1.x)
+    user = User.find_by(email: lis_email)
+    return user unless user.nil?
+
+    # Find user by canvas login
+    if canvas_login
+      if canvas_login.match(Devise.email_regexp)
+      # Is the canvas login email-like?
+        user = User.find_by(email: canvas_login)
+      else
+        # Use the LTI email domain to build a valid email from the canvas login
+        email = "#{canvas_login}@#{domain}"
+        user = User.find_by(email: email)
+      end
+    end
+    return user unless user.nil?
+
+    # Haven't yet found a user
+    user = User.new(
+      email: lis_email,
+      first_name: opts[:first_name],
+      last_name: opts[:last_name]
+    )
+    user.skip_password_validation = true
+    user.save!
+
+    return user
+  end
 
   #~ Private instance methods .................................................
   private

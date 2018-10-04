@@ -24,6 +24,8 @@ class Ability
     # from links in emails.
     can :review_access_request, UserGroup
 
+    can :remote_create, CourseOffering
+
     if user
       # This ability allows admins impersonating other users to revert
       # back to their original user.
