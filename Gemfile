@@ -65,7 +65,6 @@ group :test do
 end
 
 group :production, :staging, :deploy  do
-  gem 'mysql2', '= 0.3.20'
   gem 'puma'
 end
 
