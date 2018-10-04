@@ -122,4 +122,3 @@ gem 'immigrant'
 gem 'ims-lti', '~> 1.1.8'
 #Gems for OpenPOP support
 gem 'rest-client'
-gem 'json'
