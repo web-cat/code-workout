@@ -25,8 +25,10 @@ module CodeWorkout
       },
       /application.(css|js)$/
     ]
-
-    # config.assets.precompile += %w(*.png *.jpg *.jpeg *.gif *.mustache.html)
+    
+    # other kinds of assets
+    config.assets.precompile += %w( theme/warm/theme.css theme/warm/theme.js )
+    config.assets.precompile += %w(*.png *.jpg *.jpeg *.gif *.mustache.html)
 
     # Custom directories with classes and modules you want to be autoloadable.
     # config.autoload_paths += %W(#{config.root}/extras)
