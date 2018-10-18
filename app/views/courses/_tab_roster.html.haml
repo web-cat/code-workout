@@ -1,4 +1,4 @@
-- if @course_offerings.any?
+- if @course_offerings.any? { |co| co.is_manager?(current_user) } 
   .pull-right.dropdown
     = dropdown_button_tag 'Enroll Users', class: 'btn btn-primary'
     %ul.dropdown-menu
