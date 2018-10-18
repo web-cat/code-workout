@@ -10,14 +10,22 @@ namespace :db do
     FactoryGirl.create(:term400)
     FactoryGirl.create(:term500)
     FactoryGirl.create(:course)
-    c = FactoryGirl.create(:course_offering_term_1_tr)
-    c2 = FactoryGirl.create(:course_offering_term_1_mwf)
-    c3 = FactoryGirl.create(:course_offering_term_2_tr)
+    FactoryGirl.create(:course_offering_term_1_tr)
+    FactoryGirl.create(:course_offering_term_1_mwf)
+    FactoryGirl.create(:course_offering_term_2_tr)
     FactoryGirl.create(:course_offering_term_2_mwf)
     FactoryGirl.create(:course_offering_term_3_tr)
     FactoryGirl.create(:course_offering_term_3_mwf)
+    FactoryGirl.create(:course_offering_term_4_mwf)
+    FactoryGirl.create(:course_offering_term_4_tr)
     FactoryGirl.create(:course_offering_term_5_mwf)
     FactoryGirl.create(:course_offering_term_5_tr)
+
+    t = Term.current_term
+    cos = CourseOffering.where(term: Term.current_term)
+    c = cos.first
+    c2 = cos.second
+    c3 = CourseOffering.where('term_id != ?', t.id).first
 
     FactoryGirl.create(:course_enrollment,
       user: FactoryGirl.create(:admin),
@@ -51,7 +59,7 @@ namespace :db do
 
     50.times do |n|
       co = nil
-      if n < 16
+      if n < 16 
         co = c
       elsif n < 32
         co = c2
