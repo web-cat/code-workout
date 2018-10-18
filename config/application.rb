@@ -21,13 +21,14 @@ module CodeWorkout
     # config.i18n.default_locale = :de
     config.assets.precompile += [
       Proc.new { |filename, path| 
-        path =~ /app\/assets/ && !%w(.js .css).include?(File.extname(filename)) 
-      },
-      /application.(css|js)$/
+        path =~ /app\/assets/ && 
+          path !~ /bootstrap-social/ &&
+          path !~ /active_admin/ &&
+          %w(.js .css).include?(File.extname(filename)) 
+      }
     ]
     
     # other kinds of assets
-    config.assets.precompile += %w( theme/warm/theme.css theme/warm/theme.js )
     config.assets.precompile += %w(*.png *.jpg *.jpeg *.gif *.mustache.html)
 
     # Custom directories with classes and modules you want to be autoloadable.
