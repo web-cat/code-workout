@@ -60,7 +60,6 @@ GEM
       activesupport (>= 4.2)
     active_record_union (1.3.0)
       activerecord (>= 4.0)
-    active_skin (0.0.12)
     activeadmin (1.3.1)
       arbre (>= 1.1.1)
       coffee-rails
@@ -454,7 +453,6 @@ DEPENDENCIES
   active_admin_import!
   active_record-acts_as
   active_record_union
-  active_skin
   activeadmin
   acts-as-taggable-on
   acts_as_list
@@ -532,4 +530,4 @@ DEPENDENCIES
   wannabe_bool
 
 BUNDLED WITH
-   1.16.5
+   1.16.6
