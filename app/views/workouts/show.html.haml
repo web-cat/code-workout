@@ -24,46 +24,22 @@
         %th Close
         %th Time Limit
     %tbody
-      -# Time.use_zone(ActiveSupport::TimeZone["America/New_York"]) do
       - @workout.workout_offerings.each do |woff|
-        %tr
-          %td= woff.course_offering.display_name
-          -#%td.xeditable{ id: 'opening_date',
-            data: { type: 'text',
-            url: '/workout_offerings/' + woff.id.to_s,
-            resource: 'workout_offering',
-            name: 'opening_date',
-            xeditable: "true",
-            pk: woff.id.to_s,
-            model: 'workout_offering' } }= woff.opening_date
-          %td
-            - if woff.opening_date
-              = l user_time(current_user, woff.opening_date)
-          -#%td.xeditable{ id: 'soft_deadline',
-            data: { type: 'text',
-            url: '/workout_offerings/' + woff.id.to_s,
-            resource: 'workout_offering',
-            name: 'soft_deadline',
-            xeditable: "true",
-            pk: woff.id.to_s,
-            model: 'workout_offering' } }= woff.soft_deadline
-          %td
-            - if woff.soft_deadline
-              = l user_time(current_user, woff.soft_deadline)
-          -#%td.xeditable{ id: 'hard_deadline',
-            data: { type: 'text',
-            url: '/workout_offerings/' + woff.id.to_s,
-            resource: 'workout_offering',
-            name: 'hard_deadline',
-            xeditable: "true",
-            pk: woff.id.to_s,
-            model: 'workout_offering' } }= woff.hard_deadline
-          %td
-            - if woff.hard_deadline
-              = l user_time(current_user, woff.hard_deadline)
-          %td
-            - if time_limit
-              = "#{n_to_s(time_limit)} minutes"
+        - if woff.course_offering.is_staff?(current_user)
+          %tr
+            %td= woff.course_offering.display_name
+            %td
+              - if woff.opening_date
+                = l user_time(current_user, woff.opening_date)
+            %td
+              - if woff.soft_deadline
+                = l user_time(current_user, woff.soft_deadline)
+            %td
+              - if woff.hard_deadline
+                = l user_time(current_user, woff.hard_deadline)
+            %td
+              - if time_limit
+                = "#{n_to_s(time_limit)} minutes"
 - elsif @workout_offering
   %p.due
     - if @workout_offering.soft_deadline
@@ -86,15 +62,8 @@
   %p.due
     = "Score: " + (workout_score ? workout_score.score.to_s  : "0") + " / " + @workout.total_points.to_s
 
--# score_pct = wscore ? (wscore.score/workout.total_points * 100).round(0) : 0
--# if score_pct == 100 && wscore.score < workout.total_points
--#  - score_pct = 99
-
 - if @workout.description
   %p= markdown(@workout.description)
-
--#= render @workout
--#.clearfix
 
 - manages_course = current_user ? (current_user.global_role.is_admin? || course_offering.andand.is_manager?(current_user)) : false
 
