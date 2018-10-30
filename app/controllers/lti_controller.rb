@@ -53,7 +53,12 @@ class LtiController < ApplicationController
 			if params[:gym_exercise_id].present?
 				redirect_to exercise_embed_path(id: params[:gym_exercise_id]) and return
 			elsif params[:gym_workout_id].present?
-				redirect_to workout_embed_path(workout_id: params[:gym_workout_id]) and return
+				redirect_to workout_embed_path(
+          lti_launch: true,
+          workout_id: params[:gym_workout_id],
+          lis_result_sourcedid: params[:lis_result_sourcedid],
+          lis_outcome_service_url: params[:lis_outcome_service_url]
+        ) and return
 			end
 
       workout_from_collection = params[:from_collection] # are we serving a workout from a pre-existing collection? (like OpenDSA)

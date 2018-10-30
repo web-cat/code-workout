@@ -446,8 +446,7 @@ class ExercisesController < ApplicationController
     end
 
     if @workout_score
-      if @workout_score.lis_result_sourcedid.nil? ||
-          @workout_score.lis_outcome_service_url.nil?
+      if @workout_score.lis_result_sourcedid.nil? && @workout_score.lis_outcome_service_url.nil?
         @workout_score.lis_result_sourcedid = params[:lis_result_sourcedid]
         @workout_score.lis_outcome_service_url = params[:lis_outcome_service_url]
 

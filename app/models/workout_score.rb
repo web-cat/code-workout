@@ -164,7 +164,6 @@ class WorkoutScore < ActiveRecord::Base
     end
   end
 
-  
   # -------------------------------------------------------------
   def attempts_left_for_exercise_version(exercise_version)
     if self.workout_offering.andand.attempt_limit
