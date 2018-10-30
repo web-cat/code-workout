@@ -165,7 +165,6 @@ class WorkoutScore < ActiveRecord::Base
     end
   end
 
-
   # -------------------------------------------------------------
   def scoring_attempt_for(exercise)
     workout_score = self

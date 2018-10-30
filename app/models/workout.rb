@@ -281,9 +281,22 @@ class Workout < ActiveRecord::Base
 
 
   # -------------------------------------------------------------
-  def score_for(user, workout_offering = nil)
-    workout_scores.where(user: user, workout_offering: workout_offering).
-      order('updated_at DESC').first
+  def score_for(user, workout_offering = nil, lis_params = nil)
+    if lis_params 
+      workout_scores.where(
+        user: user,
+        lis_outcome_service_url: lis_params[:lis_outcome_service_url],
+        lis_result_sourcedid: lis_params[:lis_result_sourcedid],
+        workout_offering: workout_offering
+      ).order('updated_at DESC').first
+    else
+      workout_scores.where(
+        user: user, 
+        workout_offering: workout_offering,
+        lis_outcome_service_url: nil,
+        lis_result_sourcedid: nil
+      ).order('updated_at DESC').first
+    end
   end
 
 

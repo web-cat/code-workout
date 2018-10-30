@@ -111,8 +111,12 @@ class WorkoutsController < ApplicationController
 			  params[:resource_name].downcase)
 			@workout = workouts.first
 		end
-    if @workout
-      redirect_to practice_workout_path(id: @workout.id, lti_launch: true) and return
+    if @workout.andand.is_public
+        redirect_to practice_workout_path(
+          id: @workout.id,
+          lis_result_sourcedid: params[:lis_result_sourcedid],
+          lis_outcome_service_url: params[:lis_outcome_service_url],
+          lti_launch: true) and return
     else
       @message = 'Sorry, there are no public workouts with that name or id.'
       render 'lti/error' and return
@@ -756,12 +760,23 @@ class WorkoutsController < ApplicationController
     if @workout
       session[:current_workout] = @workout.id
       if current_user
-        @workout_score = @workout.score_for(current_user)
+        if params[:lis_outcome_service_url]
+          # check if there's a workout_score with LTI ties
+          @workout_score = @workout.score_for(current_user, nil,
+                                              { lis_outcome_service_url: params[:lis_outcome_service_url],
+                                                lis_result_sourcedid: params[:lis_result_sourcedid] })
+        else
+          # check if there's a workout score without LTI ties
+          @workout_score = @workout.score_for(current_user)
+        end
         if @workout_score.nil?
+          # first time this workout is being accessed, create new
           @workout_score = WorkoutScore.new(
             score: 0,
             exercises_completed: 0,
             exercises_remaining: @workout.exercises.length,
+            lis_result_sourcedid: params[:lis_result_sourcedid],
+            lis_outcome_service_url: params[:lis_outcome_service_url],
             user: current_user,
             workout: @workout)
           @workout_score.save!
@@ -776,8 +791,8 @@ class WorkoutsController < ApplicationController
             notice: "The time limit has passed for this workout." and return
         end
       end
-      redirect_to exercise_practice_path(@workout.first_exercise,
-        workout_id: @workout.id, lti_launch: params[:lti_launch])
+      redirect_to exercise_practice_path(
+        @workout.first_exercise, workout_id: @workout.id, lti_launch: params[:lti_launch])
     else
       redirect_to workouts, notice: 'Workout not found' and return
     end
