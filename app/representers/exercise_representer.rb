@@ -2,15 +2,15 @@ require 'representable/hash'
 class ExerciseRepresenter < Representable::Decorator
   include Representable::Hash
 
-  collection_representer class: Exercise, instance: lambda { |fragment, i, args|
+  collection_representer instance: lambda { |options|
+    fragment = options[:fragment]
     if fragment.has_key? 'external_id'
       e = Exercise.where(external_id: fragment['external_id']).first
       e || Exercise.new
     else
       Exercise.new
     end
-    }
-
+  }
 
   property :name
   property :external_id
