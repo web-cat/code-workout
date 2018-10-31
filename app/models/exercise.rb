@@ -108,6 +108,7 @@ class Exercise < ActiveRecord::Base
   def self.search(terms, user = nil)
     # first, turn all ids of the form X4 to just the number
     ids = []
+    terms = terms.map{ |t| Regexp.escape(t) }
     terms.each do |t|
       if t =~ /^[x]\d+$/i
         ids.append t[1..-1]
