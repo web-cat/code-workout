@@ -699,7 +699,7 @@ class ExercisesController < ApplicationController
       #  @explain.to_sentence
 
       # TODO: calculate experience based on correctness and num submissions
-      count_submission()
+      # using count_submission()
       @xp = @exercise_version.mcq_experience_on(@responses, @attempt.submit_num)
 
       @attempt.score = @score
@@ -714,16 +714,24 @@ class ExercisesController < ApplicationController
         !@workout_score.andand.show_feedback?
         @is_perfect = true
       end
-      if @is_perfect && @workout_score.andand.workout
+      if @is_perfect
         flash.notice = "Your previous question's answer choice has been saved and scored"
-        render :js => "window.location = '" +
-          organization_workout_offering_practice_path(
-          exercise_id: @workout_score.workout.next_exercise(@exercise),
-          organization_id: @workout_offering.course_offering.course.organization.slug,
-          course_id: @workout_offering.course_offering.course.slug,
-          term_id: @workout_offering.course_offering.term.slug,
-          id: @workout_offering.id,
-          lti_launch: @lti_launch) + "' "
+        if @workout_score.andand.workout_offering
+          render :js => "window.location = '" +
+            organization_workout_offering_practice_path(
+            exercise_id: @workout_score.workout.next_exercise(@exercise),
+            organization_id: @workout_offering.course_offering.course.organization.slug,
+            course_id: @workout_offering.course_offering.course.slug,
+            term_id: @workout_offering.course_offering.term.slug,
+            id: @workout_offering.id,
+            lti_launch: @lti_launch) + "' "
+        elsif @workout_score.andand.workout
+          render :js => "window.location = '" +
+            exercise_practice_path(
+              @workout_score.workout.next_exercise(@exercise),
+              workout_id: @workout_score.workout.id,
+              lti_launch: @lti_launch) + "' "
+        end
       end
     elsif @exercise_version.is_coding?
       @answer_code = params[:exercise_version][:answer_code]
