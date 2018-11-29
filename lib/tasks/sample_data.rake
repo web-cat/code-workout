@@ -3,23 +3,23 @@ require 'factory_bot'
 namespace :db do
   desc "Reset database and then fill it with sample data"
   task populate: [:environment, :reset] do
-    FactoryGirl.create(:organization)
-    FactoryGirl.create(:term100)
-    FactoryGirl.create(:term200)
-    FactoryGirl.create(:term300)
-    FactoryGirl.create(:term400)
-    FactoryGirl.create(:term500)
-    FactoryGirl.create(:course)
-    FactoryGirl.create(:course_offering_term_1_tr)
-    FactoryGirl.create(:course_offering_term_1_mwf)
-    FactoryGirl.create(:course_offering_term_2_tr)
-    FactoryGirl.create(:course_offering_term_2_mwf)
-    FactoryGirl.create(:course_offering_term_3_tr)
-    FactoryGirl.create(:course_offering_term_3_mwf)
-    FactoryGirl.create(:course_offering_term_4_mwf)
-    FactoryGirl.create(:course_offering_term_4_tr)
-    FactoryGirl.create(:course_offering_term_5_mwf)
-    FactoryGirl.create(:course_offering_term_5_tr)
+    FactoryBot.create(:organization)
+    FactoryBot.create(:term100)
+    FactoryBot.create(:term200)
+    FactoryBot.create(:term300)
+    FactoryBot.create(:term400)
+    FactoryBot.create(:term500)
+    FactoryBot.create(:course)
+    FactoryBot.create(:course_offering_term_1_tr)
+    FactoryBot.create(:course_offering_term_1_mwf)
+    FactoryBot.create(:course_offering_term_2_tr)
+    FactoryBot.create(:course_offering_term_2_mwf)
+    FactoryBot.create(:course_offering_term_3_tr)
+    FactoryBot.create(:course_offering_term_3_mwf)
+    FactoryBot.create(:course_offering_term_4_mwf)
+    FactoryBot.create(:course_offering_term_4_tr)
+    FactoryBot.create(:course_offering_term_5_mwf)
+    FactoryBot.create(:course_offering_term_5_tr)
 
     t = Term.current_term
     cos = CourseOffering.where(term: Term.current_term)
@@ -27,8 +27,8 @@ namespace :db do
     c2 = cos.second
     c3 = CourseOffering.where('term_id != ?', t.id).first
 
-    FactoryGirl.create(:course_enrollment,
-      user: FactoryGirl.create(:admin),
+    FactoryBot.create(:course_enrollment,
+      user: FactoryBot.create(:admin),
       course_offering: c,
       course_role: CourseRole.instructor)
 
