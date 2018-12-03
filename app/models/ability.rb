@@ -271,7 +271,7 @@ class Ability
     # and use the Workout VIEWS, not controller actions.
     # So this permission affects ONLY gym access.
     can [:read, :practice, :embed], Workout, is_public: true
-    can :clone, Workout, is_public: true
+    can :clone, Workout
   end
 
   def process_workout_offerings(user)
