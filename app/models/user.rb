@@ -224,23 +224,21 @@ class User < ActiveRecord::Base
       course_enrollments.where(course_roles: { can_manage_course: true }).
         map(&:course_offering)
     elsif course.nil?
-      course_enrollments.joins(:course_offering).
-        where(course_roles:
-          { can_manage_course: true }, course_offering:
-            { term: term }
-        ).map(&:course_offering)
+      course_enrollments.joins(:course_offering)
+        .where('course_roles.can_manage_course = true and
+          course_offerings.term_id = ?', term.id)
+        .map(&:course_offering)
     elsif term.nil?
-      course_enrollments.joins(:course_offering).
-        where(course_roles:
-          { can_manage_course: true }, course_offering:
-            { course: course }
-        ).map(&:course_offering)
+      course_enrollments.joins(:course_offering)
+        .where('course_roles.can_manage_course = true and
+          course_offerings.course_id = ?', course.id)
+        .map(&:course_offering)
     else
-      course_enrollments.joins(:course_offering).
-        where(course_roles:
-          { can_manage_course: true }, course_offering:
-            { course: course, term: term }
-        ).map(&:course_offering)
+      course_enrollments.joins(:course_offering)
+        .where('course_roles.can_manage_course = true and
+          course_offerings.course_id = ? and course_offerings.term_id = ?',
+          course.id, term.id)
+        .map(&:course_offering)
     end
   end
 

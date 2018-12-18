@@ -72,12 +72,13 @@ class Workout < ActiveRecord::Base
 
 
   #~ Hooks ....................................................................
-  scope :visible_to_user, -> (u) { where { (creator_id == u.id) | (is_public == true) } }
 
   # paginates_per 1
 
-
   #~ Class methods ............................................................
+  def self.visible_to_user(user)
+    return Workout.where(creator_id: user.id).or(Workout.where(is_public: true))
+  end
 
   #~ Instance methods .........................................................
 
@@ -359,7 +360,7 @@ class Workout < ActiveRecord::Base
 
     if user
       available_workouts = Workout.where(
-        id: (Workout.visible_to_user(user) + user.managed_workouts)
+        id: (Workout.visible_to_user(user).union(user.managed_workouts))
         .map(&:id)
       )
 
