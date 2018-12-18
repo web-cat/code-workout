@@ -16,5 +16,6 @@ Rails.application.config.assets.precompile = [
       path !~ /bootstrap-social/ &&
       path !~ /active_admin/ &&
       %w(.js .css).include?(File.extname(filename))
-  }, /application.(css|.js)$/
+  }, /application.(css|.js)$/,
+  %w(*.png *.jpg *.jpeg *.gif *.mustache.html)
 ]

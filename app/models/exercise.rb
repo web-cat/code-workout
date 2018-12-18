@@ -98,11 +98,6 @@ class Exercise < ActiveRecord::Base
     'C++' => 'cpp'
   }
 
-
-  scope :visible_through_user, -> (u) { joins{exercise_owners.outer}.joins{exercise_collection.outer}.
-    where{ (exercise_owners.owner == u) | (exercise_collection.user == u) } }
-
-
   #~ Class methods ............................................................
 
   # -------------------------------------------------------------
@@ -136,8 +131,13 @@ class Exercise < ActiveRecord::Base
     end
   end
 
+  def self.visible_through_user(user)
+    return Exercise.left_outer_joins(:exercise_owners)
+      .left_outer_joins(:exercise_collection)
+      .where('exercise_owners.owner_id = ? or exercise_collections.user_id = ?', 
+        user.id, user.id)
+  end
 
-  # -------------------------------------------------------------
   # Get a list of Exercises that are visible to the specified user.
   #
   # It is the union of exercises that are publicly visible, created or owned by the user,
@@ -163,9 +163,9 @@ class Exercise < ActiveRecord::Base
     visible_through_user_group = Exercise.visible_through_user_group(user)
 
     return visible_through_user
-      .union(publicly_visible)
+      .union(Exercise.publicly_visible)
       .union(visible_through_course_offering)
-      .union(visible_through_user_group)
+      .union(Exercise.visible_through_user_group(user))
   end
 
 
@@ -186,7 +186,8 @@ class Exercise < ActiveRecord::Base
 
     public_exercise = Exercise.where(is_public: true)
 
-    return public_exercise.union(public_license)
+    return Exercise.joins(exercise_collection: [ license: :license_policy ])
+      .where('(exercises.is_public is null and license_policies.is_public = true) or exercises.is_public = true')
   end
 
 
