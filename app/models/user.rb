@@ -289,8 +289,7 @@ class User < ActiveRecord::Base
       enrollments.map { |e|
         if workout.kind_of?(String)
           workouts_with_name = Workout.where('lower(name) = ?', workout)
-          e.course_offering.workout_offerings.where{
-            workout_id.in(workouts_with_name.select{id}) }
+          e.course_offering.workout_offerings.where('workout_id in ?', workouts_with_name.select(:id))
         else
           e.course_offering.workout_offerings.where(workout: workout)
         end

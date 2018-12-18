@@ -42,8 +42,8 @@ class Ability
         # A user should only be able to update himself or herself (assuming no
         # other permissions granted below by the global role).
         can [:read, :index], User, User.visible_to_user(user) do |u|
-          u == user || u.course_enrollments.where{
-            course_role_id != CourseRole::STUDENT_ID}.any?
+          u == user || u.course_enrollments
+            .where('course_role_id != ?', CourseRole::STUDENT_ID).any?
         end
         can [:edit, :update], User, id: user.id
 
