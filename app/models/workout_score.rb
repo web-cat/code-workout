@@ -183,16 +183,19 @@ class WorkoutScore < ActiveRecord::Base
   # -------------------------------------------------------------
   def scoring_attempt_for(exercise)
     workout_score = self
-    Attempt.joins{exercise_version}.
-      where{(active_score_id == workout_score.id) &
-      (exercise_version.exercise_id == exercise.id)}.first
+    Attempt.joins(:exercise_version)
+      .where(
+        'attempts.active_score_id = ? and
+        exericise_versions.exercise_id = ?', workout_score.id, exercise.id
+      ).first
   end
 
 
   # -------------------------------------------------------------
   def previous_attempt_for(exercise)
-    attempts.joins{exercise_version}.
-      where{exercise_version.exercise_id == exercise.id}.first
+    attempts.joins(:exercise_version)
+      .where('exercise_versions.exercise_id = ?', exercise.id)
+      .first
   end
 
 
@@ -309,7 +312,7 @@ class WorkoutScore < ActiveRecord::Base
   # Class method to find workout scores that were computed after
   # they were closed. Outputs a list of workout scores.
   def self.late(options={})
-    WorkoutScore.joins{ workout_offering }
+    WorkoutScore.joins(:workout_offering)
       .joins('inner join student_extensions on student_extensions.workout_offering_id = workout_offerings.id
              and student_extensions.user_id = workout_scores.user_id')
       .where('workout_scores.last_attempted_at > 
@@ -329,9 +332,9 @@ class WorkoutScore < ActiveRecord::Base
         end
       end
       ws.workout.exercises.each do |e|
-        a = ws.attempts.joins{exercise_version}.
-          where{(exercise_version.exercise_id == e.id)}.
-          order('submit_time DESC').first
+        a = ws.attempts.joins(:exercise_version)
+          .where('exercise_versions.exercise_id = ?', e.id)
+          .order('submit_time DESC').first
         if a
           a.active_score = ws
           if !a.save

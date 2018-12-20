@@ -210,12 +210,12 @@ class Ability
 
       can :practice, Exercise do |e|
         now = Time.now
-        e.visible_to?(user) || WorkoutOffering.
-          joins{workout.exercises}.joins{course_offering.course_enrollments}.
-          where{
-            ((starts_on == nil) | (starts_on <= now)) &
-            course_offering.course_enrollments.user_id == user.id
-             }.any?
+        e.visible_to?(user) || WorkoutOffering
+          .joins(workout: :exercises, course_offering: [:course_enrollments, :term])
+          .where(
+            '(terms.starts_on is ? or terms.starts_on <= ?) and
+              course_enrollments.user_id = ?', nil, now, now
+          ).any?
       end
 
       can [ :gym_practice, :embed ], Exercise do |e|
@@ -224,13 +224,13 @@ class Ability
 
       can :evaluate, Exercise do |e|
         now = Time.now
-        WorkoutOffering.
-          joins{workout.exercises}.joins{course_offering.course_enrollments}.
-          where{
-            ((starts_on == nil) | (starts_on <= now)) &
-            ((hard_deadline >= now) | (soft_deadline >= now)) &
-            course_offering.course_enrollments.user_id == user.id
-             }.any?
+        WorkoutOffering
+          .joins(workout: :exercises, course_offering: [:course_enrollments, :term])
+          .where(
+            '(terms.starts_on is ? or terms.starts_on <= ?)
+            and (workout_offerings.hard_deadline >= ? or workout_offerings.soft_deadline >= ?)
+            and course_enrollments.user_id = ?', nil, now, now, now, user.id
+          ).any?
       end
       # can :create, Exercise if user.global_role.is_instructor?
       # can :edit, Exercise do |e|
