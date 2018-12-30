@@ -5,7 +5,7 @@
 - workout ||= workout_offering ? workout_offering.workout : nil
 - course ||= @course
 - course ||= workout_offering ? workout_offering.course_offering.course : nil
-- workout_score ||= workout_offering ? user.current_workout_score : workout.score_for(current_user, workout_offering)
+- workout_score ||= workout_offering ? user.andand.current_workout_score : workout.score_for(current_user, workout_offering)
 - new_or_existing ||= false
 
 - if workout_score && ((workout && workout_score.workout != workout) ||      |

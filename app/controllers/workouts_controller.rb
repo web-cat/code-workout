@@ -293,8 +293,17 @@ class WorkoutsController < ApplicationController
   # -------------------------------------------------------------
   def clone
     @workout = Workout.find params[:workout_id]
+
+    if current_user
+      message = 'You are not authorized to clone that workout.'
+    else
+      message = 'You must be signed in to clone workouts.'
+    end
+
+    authorize! :clone, @workout, message: message
+
     @course = Course.find params[:course_id]
-    @term = Term.find(params[:term_id])
+    @term = Term.find params[:term_id]
     @can_update = can? :edit, @workout
     @time_limit = @workout.workout_offerings.first.andand.time_limit
     @organization = Organization.find params[:organization_id]
@@ -313,7 +322,7 @@ class WorkoutsController < ApplicationController
     end
 
     @course_offerings =
-      current_user.managed_course_offerings course: @course, term: @term
+      current_user.andand.managed_course_offerings(course: @course, term: @term)
     @unused_course_offerings = nil
 
     render layout: 'two_columns'
