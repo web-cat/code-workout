@@ -3,11 +3,13 @@ class ExercisesController < ApplicationController
   require 'oauth/request_proxy/rack_request'
 
   load_and_authorize_resource
-  skip_authorize_resource only: :practice
+  skip_authorize_resource only: [:practice, :call_open_pop]
 
   #~ Action methods ...........................................................
   after_action :allow_iframe, only: [:practice, :embed]
   # -------------------------------------------------------------
+
+  HTTP_URL = 'https://opendsax.cs.vt.edu:9292/answers/solve'
 
   # GET /exercises
   def index
@@ -784,6 +786,49 @@ class ExercisesController < ApplicationController
   def destroy
     @exercise.destroy
     redirect_to exercises_url, notice: 'Exercise was successfully destroyed.'
+  end
+
+
+  #-------------------------------------------------------------------------------------
+  # OpenPOP support
+  def call_open_pop
+    require 'rest-client'
+    require 'json'
+    payload = {'exercise_id' => params[:exercise_id],
+            'code' => params[:code]
+    }
+
+    request = RestClient::Request.execute(:method => :post,
+                                            :url => HTTP_URL,
+                                            :payload => payload.to_json,
+                                            :headers => {'Content-Type' => 'application/json'},
+					    :verify_ssl => OpenSSL::SSL::VERIFY_NONE)
+    trace = JSON.parse(request.body)
+    @openpop_results = trace
+    
+    curr_user = nil
+    unless current_user.nil?
+      curr_user = current_user
+    end
+    workout_id = nil
+    if(params[:workoutID] != '')
+      workout_id = Workout.find(params[:workoutID])
+    end
+    workout_offering_id = nil
+    if(params[:workoutOfferingID] != '')
+      workout_offering_id = WorkoutOffering.find(params[:workoutOfferingID])
+    end
+    @visualization_logging = VisualizationLogging.new(
+      user: curr_user,
+      exercise: Exercise.find_by_name(params[:exercise_id]),
+      workout: workout_id,
+      workout_offering: workout_offering_id
+    )
+    @visualization_logging.save
+    respond_to do |format|
+      format.json { render :json => trace}  # note, no :location or :status options
+    end
+
   end
 
   #~ Private instance methods .................................................

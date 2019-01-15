@@ -37,6 +37,7 @@ server.key
 
 # workspace files are user-specific
 *.sublime-workspace
+*.vscode
 
 # project files should be checked into the repository, unless a significant
 # proportion of contributors will probably not be using SublimeText
@@ -49,3 +50,4 @@ tasks.todo
 # ignore swap files
 *.swp
 *.swo
+/.idea/

@@ -106,6 +106,15 @@
           = f.submit 'Check my answer!', class: 'btn btn-primary btn-submit', id: 'primarybtn'
       - if coding_questions
         %div.btn.btn-default{ data: { toggle: 'modal', target: '#confirm-reset' } } Reset
+      -if @exercise.tag_list.include? 'Visualizable'
+        -if @workout
+          -if @workout_offering
+            %div.btn.btn-default{id: "visualize", disabled: true, data: {workout: @workout.id, workout_offering: @workout_offering.id}} Visualize
+          -else
+            %div.btn.btn-default{id: "visualize", disabled: true, data: {workout: @workout.id, workout_offering: 'null'}} Visualize
+        -else
+          %div.btn.btn-default{id: "visualize", disabled: true, data: {workout: 'null', workout_offering: 'null'}} Visualize
+
       - if @workout_offering && params[:review_user_id].nil? && @workout_offering.workout.exercise_workouts.size > 1
         = button_link 'Next exercise',
           organization_workout_offering_practice_path(exercise_id: @workout.next_exercise(@exercise),
@@ -150,3 +159,15 @@
       .modal-footer
         %button.btn.btn-default{ data: { dismiss: 'modal' }, type: 'button' } Cancel
         %button.btn.btn-danger.btn-reset Reset Editor
+        
+.modal.fade#Visualize{ tabindex: '-2', role: 'dialog', aria_labelledby: 'VisualizeModal', aria_hidden: true }
+  .modal-dialog.modal-lg{ style: 'height:400; width: 800' }
+    .modal-content
+      .modal-header
+        %button.close{ type: 'button', data: { dismiss: 'modal' }, aria_hidden: true } &times
+        %p.lead.modal-title#resetModalLabel Code Visualization
+
+      .modal-body{ id: 'ModalBody'}
+        
+      .modal-footer
+        %button.btn.btn-default{ data: { dismiss: 'modal' }, type: 'button' } Cancel

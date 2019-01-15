@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170920191837) do
+ActiveRecord::Schema.define(version: 20180718193136) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -578,6 +578,20 @@ ActiveRecord::Schema.define(version: 20170920191837) do
   add_index "users", ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true, using: :btree
   add_index "users", ["slug"], name: "index_users_on_slug", unique: true, using: :btree
   add_index "users", ["time_zone_id"], name: "index_users_on_time_zone_id", using: :btree
+
+  create_table "visualization_loggings", force: true do |t|
+    t.integer  "user_id"
+    t.integer  "exercise_id"
+    t.integer  "workout_id"
+    t.integer  "workout_offering_id"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "visualization_loggings", ["exercise_id"], name: "index_visualization_loggings_on_exercise_id", using: :btree
+  add_index "visualization_loggings", ["user_id"], name: "index_visualization_loggings_on_user_id", using: :btree
+  add_index "visualization_loggings", ["workout_id"], name: "index_visualization_loggings_on_workout_id", using: :btree
+  add_index "visualization_loggings", ["workout_offering_id"], name: "index_visualization_loggings_on_workout_offering_id", using: :btree
 
   create_table "workout_offerings", force: true do |t|
     t.integer  "course_offering_id",                      null: false
