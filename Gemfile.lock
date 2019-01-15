@@ -245,6 +245,7 @@ GEM
     mime-types (2.3)
     mini_portile (0.6.0)
     minitest (5.9.0)
+    modernizr-rails (2.7.1)
     momentjs-rails (2.11.1)
       railties (>= 3.1)
     multi_json (1.10.1)
@@ -461,6 +462,7 @@ DEPENDENCIES
   kaminari
   log_file
   loofah
+  modernizr-rails
   momentjs-rails (>= 2.9.0)
   mysql2 (~> 0.3.20)
   nokogiri
