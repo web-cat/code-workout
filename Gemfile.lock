@@ -305,8 +305,8 @@ GEM
     msgpack (1.2.6)
     multi_json (1.13.1)
     multi_xml (0.6.0)
-    multipart-post (2.1.1)
-    mysql2 (0.3.21)
+    multipart-post (2.0.0)
+    mysql2 (0.5.2)
     net-scp (1.2.1)
       net-ssh (>= 2.6.5)
     net-ssh (5.1.0)
@@ -545,8 +545,8 @@ DEPENDENCIES
   loofah (>= 2.3.1)
   modernizr-rails
   momentjs-rails (>= 2.9.0)
-  mysql2 (~> 0.3.20)
-  nokogiri (~> 1.10.4)
+  mysql2 (~> 0.4)
+  nokogiri (= 1.8.1)
   oj (~> 2.16)
   oj_mimic_json
   omniauth
