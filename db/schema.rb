@@ -556,11 +556,11 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.index ["time_zone_id"], name: "index_users_on_time_zone_id", using: :btree
   end
 
-  create_table "visualization_loggings", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
-    t.integer  "user_id",             limit: 4
-    t.integer  "exercise_id",         limit: 4
-    t.integer  "workout_id",          limit: 4
-    t.integer  "workout_offering_id", limit: 4
+  create_table "visualization_loggings", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
+    t.integer  "user_id"
+    t.integer  "exercise_id"
+    t.integer  "workout_id"
+    t.integer  "workout_offering_id"
     t.datetime "created_at"
     t.datetime "updated_at"
     t.index ["exercise_id"], name: "index_visualization_loggings_on_exercise_id", using: :btree
