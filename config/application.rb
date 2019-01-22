@@ -8,7 +8,7 @@ Bundler.require(*Rails.groups)
 
 module CodeWorkout
   class Application < Rails::Application
-    # Initialize configuration defaults for originally generated Rails version
+    # Initialize configuration defaults for originally generated Rails version.
     config.load_defaults 5.1
     Rails.application.config.active_record.belongs_to_required_by_default = false
     # Settings in config/environments/* take precedence over those specified here.

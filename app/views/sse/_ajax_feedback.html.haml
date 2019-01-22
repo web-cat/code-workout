@@ -49,7 +49,7 @@
           %th Behavior
           %th Result
       %tbody
-        - answer.test_case_results(true).each do |tcr|
+        - answer.test_case_results.each do |tcr|
           %tr
             - if tcr.pass
               %td.pass

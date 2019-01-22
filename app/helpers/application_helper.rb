@@ -205,7 +205,8 @@ module ApplicationHelper
     puts "html_options = #{html_options}"
     button_to_without_style(name, options, html_options, &block)
   end
-  alias_method_chain :button_to, :style
+  alias_method :button_to_without_style, :button_to
+  alias_method :button_to, :button_to_with_style
 
 
   # -------------------------------------------------------------
