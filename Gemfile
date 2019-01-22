@@ -18,7 +18,7 @@ gem 'test-unit', '~> 3.0.9'
 gem 'nokogiri', '~> 1.10.4'
 gem 'csv_shaper'
 gem 'andand', github: 'raganwald/andand'
-gem 'responders' # Can't move above 1.1 until migrating to rails 4.2+
+gem 'responders'
 gem 'friendly_id', '~> 5'
 gem 'active_record-acts_as'
 gem 'acts_as_list'
@@ -32,6 +32,7 @@ gem 'active_record_union'
 gem 'mysql2', '~> 0.3.20'
 gem 'modernizr-rails'
 gem 'rubyzip', '>= 1.3.0'
+gem 'bootsnap' # Added during Rails 5.2 upgrade
 
 # For JSON support
 gem 'rabl'
