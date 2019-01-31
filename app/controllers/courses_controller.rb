@@ -30,6 +30,7 @@ class CoursesController < ApplicationController
       if current_user
         @is_instructor = current_user.global_role.is_admin? ||
           @course_offerings.any? { |co| co.is_instructor? current_user }
+        @is_student = !@is_instructor
       end
       @is_privileged = current_user.andand.is_a_member_of?(@course.user_group)
       @access_request = current_user.andand.access_request_for(@course.user_group)
