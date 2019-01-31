@@ -245,6 +245,7 @@ class WorkoutsController < ApplicationController
     @term = Term.find(params[:term_id])
     @can_update = can? :edit, @workout
     @time_limit = @workout.workout_offerings.first.andand.time_limit
+    @attempt_limit = @workout.workout_offerings.first.andand.attempt_limit
     @published = @workout.workout_offerings.first.andand.published
     @most_recent = @workout.workout_offerings.first.andand.most_recent
     @policy = @workout.workout_offerings.first.andand.workout_policy
