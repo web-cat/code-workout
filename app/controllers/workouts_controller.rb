@@ -813,6 +813,7 @@ class WorkoutsController < ApplicationController
       common = {}  # params that are common among all offerings of this workout
       common[:workout_policy] = WorkoutPolicy.find_by id: params[:policy_id]
       common[:time_limit] = params[:time_limit]
+      common[:attempt_limit] = params[:attempt_limit]
       common[:published] = params[:published]
       common[:most_recent] = params[:most_recent]
       common[:lms_assignment_id] = params[:lms_assignment_id]
