@@ -398,8 +398,6 @@ class ExercisesController < ApplicationController
       end
     end
 
-    # authorize! :practice, @exercise
-
     @student_user = params[:review_user_id] ? User.find(params[:review_user_id]) : current_user
 
     if params[:workout_offering_id]
@@ -420,15 +418,22 @@ class ExercisesController < ApplicationController
 
     if @workout_offering
       # Re-check workout-offering permission in case the URL was entered directly.
-      authorize! :practice, @workout_offering, message: 'You cannot access that exercise because it belongs to an unpublished workout offering, or a workout offering you are not enrolled in.'
-      authorize! :practice, @exercise, message: 'You are not authorized to practice that exercise at this time.'
+      authorize! :practice, @workout_offering, 
+        message: 'You cannot access that exercise because it belongs to an ' + 
+        'unpublished workout offering, or a workout offering you are not ' + 
+        'enrolled in.'
+      authorize! :practice, @exercise, 
+        message: 'You are not authorized to practice that exercise at this time.'
     else
-      authorize! :gym_practice, @exercise, message: 'You cannot practice that exercise because it is not present in the Gym.'
+      authorize! :gym_practice, @exercise, 
+        message: 'You cannot practice that exercise because it is ' + 
+          'not present in the Gym.'
     end
 
     @attempt = nil
-    @workout_score = @workout_offering ? @workout_offering.score_for(@student_user) :
-      @workout ? @workout.score_for(@student_user, @workout_offering) : nil
+    @workout_score = @workout_offering ? 
+      @workout_offering.score_for(@student_user) : @workout ? 
+        @workout.score_for(@student_user, @workout_offering) : nil
 
     if @student_user
       @student_user.current_workout_score = @workout_score ? @workout_score : nil
@@ -445,7 +450,8 @@ class ExercisesController < ApplicationController
     end
 
     if @workout_score
-      if @workout_score.lis_result_sourcedid.nil? || @workout_score.lis_outcome_service_url.nil?
+      if @workout_score.lis_result_sourcedid.nil? || 
+          @workout_score.lis_outcome_service_url.nil?
         @workout_score.lis_result_sourcedid = params[:lis_result_sourcedid]
         @workout_score.lis_outcome_service_url = params[:lis_outcome_service_url]
 
@@ -461,14 +467,16 @@ class ExercisesController < ApplicationController
           @workout_score.andand.lis_outcome_service_url.nil?)
 
       if should_force_lti && !current_user.manages?(@workout_offering.course_offering)
-        @message = "This assignment must be accessed through your course's Learning Management System (like Canvas)."
+        @message = "This assignment must be accessed through your course's " +
+          "Learning Management System (like Canvas)."
         @redirect_url = @workout_offering.lms_assignment_url
         render 'lti/error' and return
       end
     end
 
     @workout ||= @workout_score ? @workout_score.workout : nil
-    manages_course = current_user.andand.global_role.andand.is_admin? || @workout_offering.andand.course_offering.andand.is_manager?(current_user)
+    manages_course = current_user.andand.global_role.andand.is_admin? || 
+      @workout_offering.andand.course_offering.andand.is_manager?(current_user)
 
     if !manages_course && @workout_score.andand.closed? &&
       @workout_offering.andand.workout_policy.andand.no_review_before_close &&
@@ -493,7 +501,8 @@ class ExercisesController < ApplicationController
     student_review = false
     if @user_time_limit
       if @workout_score.andand.closed?
-        @msg = 'The time limit has passed. This assignment is closed and no longer accepting submissions.'
+        @msg = 'The time limit has passed. This assignment is closed and no ' + 
+          'longer accepting submissions.'
         student_review = true
       else
         @user_deadline = @workout_score.created_at + @user_time_limit.minutes
