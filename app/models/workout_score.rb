@@ -90,7 +90,7 @@ class WorkoutScore < ActiveRecord::Base
 
   validates :workout, presence: true
   validates :user, presence: true
-
+  validates :workout_offering, presence: true, if: :attempts_left?
 
   #~ Instance methods .........................................................
 
