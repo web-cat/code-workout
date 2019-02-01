@@ -222,13 +222,15 @@ class Workout < ActiveRecord::Base
     workout_offerings = [] # Workout offerings added from this submission.
     course_offerings.each do |id, offering|
       course_offering = CourseOffering.find(id)
-      workout_offering = WorkoutOffering.find_by(workout: self, course_offering: course_offering)
+      workout_offering = WorkoutOffering.find_by(workout: self, 
+                                                 course_offering: course_offering)
       if workout_offering.blank?
         workout_offering = WorkoutOffering.new
       end
       workout_offering.workout = self
       workout_offering.course_offering = course_offering
       workout_offering.time_limit = common[:time_limit]
+      workout_offering.attempt_limit = common[:attempt_limit]
       workout_offering.published = common[:published]
       if common[:most_recent].to_b != workout_offering.most_recent
         workout_offering.most_recent = common[:most_recent]

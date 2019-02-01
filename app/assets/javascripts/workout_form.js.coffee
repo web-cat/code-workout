@@ -8,10 +8,12 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
   window.codeworkout.removed_extensions = []
 
   init()
-
+  
+  # To allow reordering of exercises
   sortable = $('#ex-list').sortable
     handle: '.handle'
-
+  
+  # Add an exercise from search results to the workout
   $('.search-results').on 'click', '.add-ex', ->
     ex_id = $(this).data('ex-id')
     ex_name = $(this).data('ex-name')
@@ -26,7 +28,10 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
         name: name
         id: ex_id
         points: default_point_value
-      template = Mustache.render($(window.codeworkout.exercise_template).filter('#exercise-template').html(), data)
+      template = Mustache.render(
+        $(window.codeworkout.exercise_template)
+          .filter('#exercise-template').html(),
+        data)
       $('#ex-list').append(template)
       close_slider()
     else
@@ -36,10 +41,14 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
       setTimeout ->
         exercise.removeClass 'shake'
       , 1000
-
+  
+  # If we change the point value on an exercise, set the new default
+  # to that value, so the user doesn't need to change it each time
   $('#ex-list').on 'change', '.points', ->
     default_point_value = $(this).val()
-
+  
+  # From the modal showing available course offerings, add the
+  # selected one to this workout
   $('#course-offerings').on 'click', 'a', ->
     course_offering_id = $(this).data 'course-offering-id'
     course_offering_display = $(this).text().trim()
@@ -51,7 +60,9 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
     $(this).remove()
     $('#offerings-modal').modal 'hide'
     $('#workout-offering-fields tbody').append row
-
+  
+  # Remove the course offering from this workout
+  # If removable, it will again show up as 'available'
   $('#workout-offering-fields').on 'click', '.delete-offering', ->
     row = $(this).closest 'tr'
     workout_offering_id = row.data 'id'
@@ -61,7 +72,8 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
     if removable
       delete_confirmed = false
       if course_offering_id != ''
-        delete_confirmed = remove_extensions_if_any parseInt(course_offering_id)
+        course_offering_id = parseInt(course_offering_id)
+        delete_confirmed = remove_extensions_if_any course_offering_id
 
       if delete_confirmed
         if workout_offering_id? && workout_offering_id != ''
@@ -69,22 +81,26 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
         row.remove()
         $('#offerings-modal .msg').empty()
         unused_row =
-          "<a class='list-group-item action' data-course-offering-id='" + course_offering_id + "'>" +
+          "<a class='list-group-item action' data-course-offering-id='" +
+            course_offering_id + "'>" +
             course_offering_display +
-          "</a>";
+          "</a>"
         $('#offerings-modal #course-offerings').append unused_row
     else
       alert 'Cannot delete this workout. Some students have already attempted it.'
 
+  # Show the StudentSearch modal
   $('#workout-offering-fields').on 'click', '.add-extension', ->
     course_offering = $(this).closest('tr').find('.course-offering')
     course_offering_display = $(course_offering).text()
     course_offering_id = $(course_offering).data 'course-offering-id'
-    $('#student-search-modal').modal('show');
+    $('#student-search-modal').modal('show')
     searchable = $('.searchable').StudentSearch
       course_offering_display: course_offering_display
       course_offering_id: course_offering_id
-
+  
+  # When a student is selected, use the mustache template to add an extension
+  # for that student
   $('.searchable').on 'studentSelect', (e) ->
     if (searchable)
       $('#student-search-modal').modal('hide')
@@ -95,12 +111,16 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
         student_display: e.student_display
         student_id: e.student_id
 
-      template = $(Mustache.render($(window.codeworkout.student_extension_template).filter('#extension-template').html(), data))
+      template = $(Mustache.render(
+        $(window.codeworkout.student_extension_template)
+          .filter('#extension-template').html(),
+        data))
       $('#student-extension-fields tbody').append(template)
       $('#student-search-modal').modal('hide')
       $('#extensions').css 'display', 'block'
       init_row_datepickers template
-
+ 
+  # Remove student extension
   $(document).on 'click', '.delete-extension', ->
     row = $(this).closest('tr')
     extension_id = row.data 'id'
@@ -112,6 +132,7 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
     if extensions.length == 0
       $('#extensions').css 'display', 'none'
 
+  # Remove exercise from list
   $('#ex-list').on 'click', '.delete-ex', ->
     ex_row = $(this).closest 'li'
     ex_workout_id = ex_row.data 'exercise-workout-id'
@@ -127,16 +148,24 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
     handle_submit()
 
   $('#student-search-modal').on 'shown.bs.modal', ->
-    $('#terms').focus();
+    $('#terms').focus()
 
-# End event handlers, begin helper methods
+############################################
+# End event handlers, begin helper methods #
+############################################
 
+# Initialises the form, including mustache templates and datepickers
 init = ->
   description = $('textarea#description').data 'value'
   $('textarea#description').val description
   init_templates()
   init_datepickers()
 
+# Removes all extensions associated with a workout offering in the form.
+# Used when the workout offering itself is being deleted.
+# Keeps track of which extensions were removed, so we can tell the backend.
+# Asks to confirm first. Returns true if extensions were removed, false 
+# otherwise.
 remove_extensions_if_any = (course_offering_id) ->
   extensions = $('#student-extension-fields tbody').find 'tr'
   to_remove = []
@@ -147,7 +176,9 @@ remove_extensions_if_any = (course_offering_id) ->
         to_remove.push $(extension).index()
 
   if to_remove.length > 0
-    if confirm 'Removing this workout offering will also remove ' + to_remove.length + ' student extension(s).'
+    confirmation = confirm 'Removing this workout offering will also remove ' +
+      to_remove.length + ' student extension(s).'
+    if confirmation
       for index in to_remove
         do (index) ->
           id = $($(extensions)[index]).data 'id'
@@ -163,6 +194,7 @@ remove_extensions_if_any = (course_offering_id) ->
   else
     return true
 
+# Initialise mustache templates for student extensions and exercises.
 init_templates = ->
   $.get window.codeworkout.exercise_template_path, (template, textStatus, jqXHr) ->
     window.codeworkout.exercise_template = template
@@ -173,6 +205,8 @@ init_templates = ->
     if $('body').is '.workouts.edit'
       init_student_extensions()
 
+# Display any existing student extensions belonging to workout offerings
+# of this workout.
 init_student_extensions = ->
   student_extensions = $('#extensions').data 'student-extensions'
   if student_extensions
@@ -190,10 +224,14 @@ init_student_extensions = ->
           soft_deadline: extension.soft_deadline * 1000
           hard_deadline: extension.hard_deadline * 1000
         template =
-            $(Mustache.render($(window.codeworkout.student_extension_template).filter('#extension-template').html(), data))
+            $(Mustache.render(
+              $(window.codeworkout.student_extension_template)
+                .filter('#extension-template').html(),
+              data))
         $('#student-extension-fields tbody').append template
         init_row_datepickers template
 
+# Display any existing exercises in this workout.
 init_exercises = ->
   exercises = $('#ex-list').data 'exercises'
   if exercises
@@ -204,7 +242,8 @@ init_exercises = ->
           name = name + ": #{exercise.name}"
 
         # Only keep track of the exercise_workout_id if we're editing a workout
-        # If we're creating or cloning a workout, this information is not required.
+        # If we're creating or cloning a workout, this information is not 
+        # required.
         if $('body').is('.workouts.edit')
           exercise_workout_id = exercise.exercise_workout_id
         else
@@ -215,9 +254,14 @@ init_exercises = ->
           name: name
           points: exercise.points
         console.log(data)
-        $('#ex-list').append(Mustache.render($(window.codeworkout.exercise_template).filter('#exercise-template').html(), data))
+        $('#ex-list').append(Mustache.render(
+          $(window.codeworkout.exercise_template)
+            .filter('#exercise-template').html(),
+          data))
     $('#ex-list').removeData 'exercises'
 
+# Initialise the datepickers for each existing workout offering and 
+# student extension
 init_datepickers = ->
   offerings = $('tr', '#workout-offering-fields tbody')
   for offering in offerings
@@ -229,6 +273,7 @@ init_datepickers = ->
     do (extension) ->
       init_row_datepickers extension
 
+# Initialise datepickers for a single workout offering or student extension
 init_row_datepickers = (row) ->
   opening_input = $('.opening-datepicker', $(row))
   soft_input = $('.soft-datepicker', $(row))
@@ -283,12 +328,19 @@ init_row_datepickers = (row) ->
       date = parseInt(hard_input.data('date'))
       hard_datepicker.setDate(date, false)
 
+# Close the sidebar housing the exercise search bar. Appears on smaller
+# desktop screens.
 close_slider = ->
   if $('.sidebar').hasClass('slider') && $('.toggle-slider').attr('data-is-open')
     $('.toggle-slider').click()
     $('#search-terms').val('')
     $('.search-results').empty()
 
+#############################################################
+# Collect information from all over the form for submission #
+#############################################################
+
+# Get an object array containing all selected exercises.
 get_exercises = ->
   exs = $('#ex-list li')
   exercises = []
@@ -306,8 +358,6 @@ get_exercises = ->
 # Checks if an exercise with the specified ID
 # has already been added to the workout.
 #
-# exercises -- An array of exercise objects, as returned by
-#       get_exercises
 # ex_id -- An integer
 exercise_is_in_workout = (ex_id) ->
   for exercise in get_exercises() when exercise['id'] is ex_id
@@ -315,6 +365,7 @@ exercise_is_in_workout = (ex_id) ->
 
   return false
 
+# Get an object array of offerings of this workout 
 get_offerings = ->
   offerings = {}
   offering_rows = $('tr', '#workout-offering-fields tbody')
@@ -339,6 +390,7 @@ get_offerings = ->
         offerings[offering_id.toString()] = offering
   return offerings
 
+# Get all configured workout_offerings along with their student extensions 
 get_offerings_with_extensions = ->
   offerings = get_offerings()
   extension_rows = $('tr', '#student-extension-fields tbody')
@@ -362,6 +414,7 @@ get_offerings_with_extensions = ->
 
   return offerings
 
+# Helper method to alert the user of form errors
 form_alert = (messages) ->
   reset_alert_area()
 
@@ -372,15 +425,18 @@ form_alert = (messages) ->
 
   $('#alerts').css 'display', 'block'
 
+# Helper method to reset the alert area
 reset_alert_area = ->
   $('#alerts').find('.alert').alert 'close'
   alert_box =
     "<div class='alert alert-danger alert-dismissable' role='alert'>" +
-      "<button class='close' data-dismiss='alert' aria-label='Close'><i class='fa fa-times'></i></button>" +
+      "<button class='close' data-dismiss='alert' aria-label='Close'>" +
+      "<i class='fa fa-times'></i></button>" +
       "<ul></ul>" +
-    "</div>";
+    "</div>"
   $('#alerts').append alert_box
 
+# Are there any form errors? 
 check_completeness = ->
   messages = []
   messages.push 'Workout Name cannot be empty.' if $('#wo-name').val() == ''
@@ -388,15 +444,20 @@ check_completeness = ->
 
   return messages
 
+# Handle final submission of the form. Collect info from all over the form
+# and make a request to the appropriate endpoint, depending on whether we're
+# creating, editing, or cloning a workout.
 handle_submit = ->
   messages = check_completeness()
   if messages.length != 0
     form_alert messages
     return
-
+  
+  # Collect info
   name = $('#wo-name').val()
   description = $('#description').val()
   time_limit = $('#time-limit').val()
+  attempt_limit = $('#attempt-limit').val()
   policy_id = $('#policy-select').val()
   is_public = $('#is-public').is ':checked'
   published = $('#published').is ':checked'
@@ -404,10 +465,13 @@ handle_submit = ->
   removed_exercises = $('#ex-list').data 'removed-exercises'
   exercises = get_exercises()
   course_offerings = get_offerings_with_extensions()
+
+  # Put together form data
   fd = new FormData
   fd.append 'name', name
   fd.append 'description', description
   fd.append 'time_limit', time_limit
+  fd.append 'attempt_limit', attempt_limit
   fd.append 'policy_id', policy_id
   fd.append 'exercises', JSON.stringify exercises
   fd.append 'course_offerings', JSON.stringify course_offerings
@@ -423,7 +487,8 @@ handle_submit = ->
   fd.append 'lms_assignment_id', window.codeworkout.lms_assignment_id
   # Tells the server whether this form is being submitted through LTI or not.
   # The window.codeworkout namespace was declared in the workouts/_form partial.
-  fd.append 'lti_launch', window.codeworkout.lti_launch if window.codeworkout.lti_launch != ''
+  if window.codeworkout.lti_launch != ''
+    fd.append 'lti_launch', window.codeworkout.lti_launch
 
   if $('body').is '.workouts.new'
     url = '/gym/workouts'

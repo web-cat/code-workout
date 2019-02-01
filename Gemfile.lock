@@ -170,6 +170,8 @@ GEM
       thread_safe (~> 0.1)
       warden (~> 1.2.3)
     diff-lcs (1.2.5)
+    domain_name (0.5.20180417)
+      unf (>= 0.0.5, < 1.0.0)
     erubis (2.7.0)
     eventmachine (1.2.3)
     exception_handler (0.3.45)
@@ -208,6 +210,8 @@ GEM
     hashie (3.3.1)
     hike (1.2.3)
     hitimes (1.2.2)
+    http-cookie (1.0.3)
+      domain_name (~> 0.5)
     i18n (0.7.0)
     immigrant (0.3.1)
       activerecord (>= 3.0)
@@ -241,6 +245,7 @@ GEM
     mime-types (2.3)
     mini_portile (0.6.0)
     minitest (5.9.0)
+    modernizr-rails (2.7.1)
     momentjs-rails (2.11.1)
       railties (>= 3.1)
     multi_json (1.10.1)
@@ -250,6 +255,7 @@ GEM
     net-scp (1.2.1)
       net-ssh (>= 2.6.5)
     net-ssh (3.2.0)
+    netrc (0.11.0)
     nokogiri (1.6.3.1)
       mini_portile (= 0.6.0)
     oauth (0.4.7)
@@ -326,6 +332,10 @@ GEM
     request-log-analyzer (1.13.4)
     responders (1.1.1)
       railties (>= 3.2, < 4.2)
+    rest-client (2.0.2)
+      http-cookie (>= 1.0.2, < 2.0)
+      mime-types (>= 1.16, < 4.0)
+      netrc (~> 0.8)
     rspec-core (3.1.5)
       rspec-support (~> 3.1.0)
     rspec-expectations (3.1.2)
@@ -391,6 +401,9 @@ GEM
     uglifier (2.5.3)
       execjs (>= 0.3.0)
       json (>= 1.8.0)
+    unf (0.1.4)
+      unf_ext
+    unf_ext (0.0.7.5)
     wannabe_bool (0.1.1)
     warden (1.2.3)
       rack (>= 1.0)
@@ -449,6 +462,7 @@ DEPENDENCIES
   kaminari
   log_file
   loofah
+  modernizr-rails
   momentjs-rails (>= 2.9.0)
   mysql2 (~> 0.3.20)
   nokogiri
@@ -468,6 +482,7 @@ DEPENDENCIES
   representable
   request-log-analyzer
   responders (~> 1.1)
+  rest-client
   rspec-rails
   sass-rails
   sdoc

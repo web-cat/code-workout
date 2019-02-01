@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170920191837) do
+ActiveRecord::Schema.define(version: 20190201170347) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -579,6 +579,20 @@ ActiveRecord::Schema.define(version: 20170920191837) do
   add_index "users", ["slug"], name: "index_users_on_slug", unique: true, using: :btree
   add_index "users", ["time_zone_id"], name: "index_users_on_time_zone_id", using: :btree
 
+  create_table "visualization_loggings", force: true do |t|
+    t.integer  "user_id"
+    t.integer  "exercise_id"
+    t.integer  "workout_id"
+    t.integer  "workout_offering_id"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "visualization_loggings", ["exercise_id"], name: "index_visualization_loggings_on_exercise_id", using: :btree
+  add_index "visualization_loggings", ["user_id"], name: "index_visualization_loggings_on_user_id", using: :btree
+  add_index "visualization_loggings", ["workout_id"], name: "index_visualization_loggings_on_workout_id", using: :btree
+  add_index "visualization_loggings", ["workout_offering_id"], name: "index_visualization_loggings_on_workout_offering_id", using: :btree
+
   create_table "workout_offerings", force: true do |t|
     t.integer  "course_offering_id",                      null: false
     t.integer  "workout_id",                              null: false
@@ -594,6 +608,7 @@ ActiveRecord::Schema.define(version: 20170920191837) do
     t.string   "lms_assignment_id"
     t.boolean  "most_recent",              default: true
     t.string   "lms_assignment_url"
+    t.integer  "attempt_limit"
   end
 
   add_index "workout_offerings", ["continue_from_workout_id"], name: "workout_offerings_continue_from_workout_id_fk", using: :btree
@@ -640,6 +655,7 @@ ActiveRecord::Schema.define(version: 20170920191837) do
     t.integer  "workout_offering_id"
     t.string   "lis_outcome_service_url"
     t.string   "lis_result_sourcedid"
+    t.integer  "attempts_left"
   end
 
   add_index "workout_scores", ["user_id"], name: "index_workout_scores_on_user_id", using: :btree

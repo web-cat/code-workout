@@ -15,3 +15,4 @@ $('#sidebar').html("<%= j(render 'layouts/sidebar' ) %>")
 subbtn = $('.btn-submit')
 if subbtn?
   subbtn.removeAttr('disabled')
+  $('#visualize').removeAttr('disabled')

@@ -61,7 +61,9 @@
   %div.tab-content.under-collapsible
 
     .tab-pane.fade.in.active{ id: 'tab_workouts', data: { needs_update: 'false' } }
-      = render 'tab_workouts', is_student: @is_student, organization: @organization, course: @course, course_offerings: @course_offerings, term: @term
+      = render 'tab_workouts', is_student: @is_student, 
+        organization: @organization, course: @course, 
+        course_offerings: @course_offerings, term: @term
 
     - if !@is_student
       .tab-pane.fade{ id: 'tab_exercises', data: { needs_update: 'true' } }

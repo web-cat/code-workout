@@ -249,6 +249,7 @@ class WorkoutsController < ApplicationController
     @term = Term.find(params[:term_id])
     @can_update = can? :edit, @workout
     @time_limit = @workout.workout_offerings.first.andand.time_limit
+    @attempt_limit = @workout.workout_offerings.first.andand.attempt_limit
     @published = @workout.workout_offerings.first.andand.published
     @most_recent = @workout.workout_offerings.first.andand.most_recent
     @policy = @workout.workout_offerings.first.andand.workout_policy
@@ -297,8 +298,17 @@ class WorkoutsController < ApplicationController
   # -------------------------------------------------------------
   def clone
     @workout = Workout.find params[:workout_id]
+
+    if current_user
+      message = 'You are not authorized to clone that workout.'
+    else
+      message = 'You must be signed in to clone workouts.'
+    end
+
+    authorize! :clone, @workout, message: message
+
     @course = Course.find params[:course_id]
-    @term = Term.find(params[:term_id])
+    @term = Term.find params[:term_id]
     @can_update = can? :edit, @workout
     @time_limit = @workout.workout_offerings.first.andand.time_limit
     @organization = Organization.find params[:organization_id]
@@ -317,7 +327,7 @@ class WorkoutsController < ApplicationController
     end
 
     @course_offerings =
-      current_user.managed_course_offerings course: @course, term: @term
+      current_user.andand.managed_course_offerings(course: @course, term: @term)
     @unused_course_offerings = nil
 
     render layout: 'two_columns'
@@ -818,6 +828,7 @@ class WorkoutsController < ApplicationController
       common = {}  # params that are common among all offerings of this workout
       common[:workout_policy] = WorkoutPolicy.find_by id: params[:policy_id]
       common[:time_limit] = params[:time_limit]
+      common[:attempt_limit] = params[:attempt_limit]
       common[:published] = params[:published]
       common[:most_recent] = params[:most_recent]
       common[:lms_assignment_id] = params[:lms_assignment_id]

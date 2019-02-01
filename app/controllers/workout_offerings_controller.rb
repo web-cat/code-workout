@@ -65,7 +65,8 @@ class WorkoutOfferingsController < ApplicationController
     if @workout_offering
       unless current_user.andand.can? :practice, @workout_offering
         @message = 'You are not authorized to access that workout offering.'
-        if !@workout_offering.published && @workout_offering.course_offering.is_student?(current_user)
+        if !@workout_offering.published && 
+            @workout_offering.course_offering.is_student?(current_user)
           @message = "#{@message} Your instructor has not yet published it."
         end
 
@@ -98,7 +99,8 @@ class WorkoutOfferingsController < ApplicationController
         @workout_score.lis_outcome_service_url.nil?)
 
       if should_force_lti && !current_user.manages?(@workout_offering.course_offering)
-        @message = "This assignment must be accessed through your course's Learning Management System (like Canvas)."
+        @message = "This assignment must be accessed through your course's " +
+          "Learning Management System (like Canvas)."
         @redirect_url = @workout_offering.lms_assignment_url
         render 'lti/error' and return
       end
@@ -112,7 +114,9 @@ class WorkoutOfferingsController < ApplicationController
             exercises_remaining: @workout_offering.workout.exercises.length,
             user: current_user,
             workout_offering: @workout_offering,
-            workout: @workout_offering.workout)
+            workout: @workout_offering.workout,
+            attempts_left: @workout_offering.attempt_limit
+          )
           @workout_score.lis_outcome_service_url = lis_outcome_service_url
           @workout_score.lis_result_sourcedid = lis_result_sourcedid
           @workout_score.save!
@@ -137,8 +141,10 @@ class WorkoutOfferingsController < ApplicationController
       end
       if @workout_offering.course_offering.is_staff?(current_user) &&
           !@workout_offering.published &&
-          (@workout_offering.opening_date.nil? || @workout_offering.opening_date < DateTime.now)
-        flash[:warning] = 'This workout offering is OPEN but currently UNPUBLISHED. It cannot be accessed by studennts.'
+          (@workout_offering.opening_date.nil? || 
+           @workout_offering.opening_date < DateTime.now)
+        flash[:warning] = 'This workout offering is OPEN but currently ' +
+          'UNPUBLISHED. It cannot be accessed by studennts.'
       end
       redirect_to organization_workout_offering_exercise_path(
         id: ex1.id,

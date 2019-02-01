@@ -31,6 +31,7 @@ gem 'truncate_html'
 gem 'tzinfo' # For timezone support
 gem 'active_record_union'
 gem 'mysql2', '~> 0.3.20'
+gem 'modernizr-rails'
 
 # For JSON support
 gem 'rabl'
@@ -120,3 +121,5 @@ gem 'css3-progress-bar-rails'
 
 gem 'immigrant'
 gem 'ims-lti', '~> 1.1.8'
+#Gems for OpenPOP support
+gem 'rest-client'

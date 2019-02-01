@@ -3,11 +3,13 @@ class ExercisesController < ApplicationController
   require 'oauth/request_proxy/rack_request'
 
   load_and_authorize_resource
-  skip_authorize_resource only: :practice
+  skip_authorize_resource only: [:practice, :call_open_pop]
 
   #~ Action methods ...........................................................
   after_action :allow_iframe, only: [:practice, :embed]
   # -------------------------------------------------------------
+
+  HTTP_URL = 'https://opendsax.cs.vt.edu:9292/answers/solve'
 
   # GET /exercises
   def index
@@ -396,8 +398,6 @@ class ExercisesController < ApplicationController
       end
     end
 
-    # authorize! :practice, @exercise
-
     @student_user = params[:review_user_id] ? User.find(params[:review_user_id]) : current_user
 
     if params[:workout_offering_id]
@@ -418,15 +418,22 @@ class ExercisesController < ApplicationController
 
     if @workout_offering
       # Re-check workout-offering permission in case the URL was entered directly.
-      authorize! :practice, @workout_offering, message: 'You cannot access that exercise because it belongs to an unpublished workout offering, or a workout offering you are not enrolled in.'
-      authorize! :practice, @exercise, message: 'You are not authorized to practice that exercise at this time.'
+      authorize! :practice, @workout_offering, 
+        message: 'You cannot access that exercise because it belongs to an ' + 
+        'unpublished workout offering, or a workout offering you are not ' + 
+        'enrolled in.'
+      authorize! :practice, @exercise, 
+        message: 'You are not authorized to practice that exercise at this time.'
     else
-      authorize! :gym_practice, @exercise, message: 'You cannot practice that exercise because it is not present in the Gym.'
+      authorize! :gym_practice, @exercise, 
+        message: 'You cannot practice that exercise because it is ' + 
+          'not present in the Gym.'
     end
 
     @attempt = nil
-    @workout_score = @workout_offering ? @workout_offering.score_for(@student_user) :
-      @workout ? @workout.score_for(@student_user, @workout_offering) : nil
+    @workout_score = @workout_offering ? 
+      @workout_offering.score_for(@student_user) : @workout ? 
+        @workout.score_for(@student_user, @workout_offering) : nil
 
     if @student_user
       @student_user.current_workout_score = @workout_score ? @workout_score : nil
@@ -459,14 +466,16 @@ class ExercisesController < ApplicationController
           @workout_score.andand.lis_outcome_service_url.nil?)
 
       if should_force_lti && !current_user.manages?(@workout_offering.course_offering)
-        @message = "This assignment must be accessed through your course's Learning Management System (like Canvas)."
+        @message = "This assignment must be accessed through your course's " +
+          "Learning Management System (like Canvas)."
         @redirect_url = @workout_offering.lms_assignment_url
         render 'lti/error' and return
       end
     end
 
     @workout ||= @workout_score ? @workout_score.workout : nil
-    manages_course = current_user.andand.global_role.andand.is_admin? || @workout_offering.andand.course_offering.andand.is_manager?(current_user)
+    manages_course = current_user.andand.global_role.andand.is_admin? || 
+      @workout_offering.andand.course_offering.andand.is_manager?(current_user)
 
     if !manages_course && @workout_score.andand.closed? &&
       @workout_offering.andand.workout_policy.andand.no_review_before_close &&
@@ -491,7 +500,8 @@ class ExercisesController < ApplicationController
     student_review = false
     if @user_time_limit
       if @workout_score.andand.closed?
-        @msg = 'The time limit has passed. This assignment is closed and no longer accepting submissions.'
+        @msg = 'The time limit has passed. This assignment is closed and no ' + 
+          'longer accepting submissions.'
         student_review = true
       else
         @user_deadline = @workout_score.created_at + @user_time_limit.minutes
@@ -784,6 +794,49 @@ class ExercisesController < ApplicationController
   def destroy
     @exercise.destroy
     redirect_to exercises_url, notice: 'Exercise was successfully destroyed.'
+  end
+
+
+  #-------------------------------------------------------------------------------------
+  # OpenPOP support
+  def call_open_pop
+    require 'rest-client'
+    require 'json'
+    payload = {'exercise_id' => params[:exercise_id],
+            'code' => params[:code]
+    }
+
+    request = RestClient::Request.execute(:method => :post,
+                                            :url => HTTP_URL,
+                                            :payload => payload.to_json,
+                                            :headers => {'Content-Type' => 'application/json'},
+					    :verify_ssl => OpenSSL::SSL::VERIFY_NONE)
+    trace = JSON.parse(request.body)
+    @openpop_results = trace
+    
+    curr_user = nil
+    unless current_user.nil?
+      curr_user = current_user
+    end
+    workout_id = nil
+    if(params[:workoutID] != '')
+      workout_id = Workout.find(params[:workoutID])
+    end
+    workout_offering_id = nil
+    if(params[:workoutOfferingID] != '')
+      workout_offering_id = WorkoutOffering.find(params[:workoutOfferingID])
+    end
+    @visualization_logging = VisualizationLogging.new(
+      user: curr_user,
+      exercise: Exercise.find_by_name(params[:exercise_id]),
+      workout: workout_id,
+      workout_offering: workout_offering_id
+    )
+    @visualization_logging.save
+    respond_to do |format|
+      format.json { render :json => trace}  # note, no :location or :status options
+    end
+
   end
 
   #~ Private instance methods .................................................
