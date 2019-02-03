@@ -639,8 +639,15 @@ class ExercisesController < ApplicationController
     elsif @workout
       @workout_score = @workout.score_for(@student_drift_user)
     end
+
+    # Has the allotted time for the workout offering passed?
     if @workout_score.andand.closed? && !@workout_offering.andand.can_be_practiced_by?(@student_drift_user)
       p 'WARNING: attempt to evaluate exercise after time expired.'
+      return
+    end
+
+    if @workout_score.attempts_left == 0
+      p 'WARNING: attempt to evaluate workout_offering after attempts expired.'
       return
     end
     @attempt = @exercise_version.new_attempt(
