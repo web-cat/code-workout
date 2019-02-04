@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20190201170347) do
+ActiveRecord::Schema.define(version: 20190131151757) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -655,7 +655,6 @@ ActiveRecord::Schema.define(version: 20190201170347) do
     t.integer  "workout_offering_id"
     t.string   "lis_outcome_service_url"
     t.string   "lis_result_sourcedid"
-    t.integer  "attempts_left"
   end
 
   add_index "workout_scores", ["user_id"], name: "index_workout_scores_on_user_id", using: :btree
