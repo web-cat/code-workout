@@ -231,16 +231,38 @@ class Workout < ActiveRecord::Base
       workout_offering.course_offering = course_offering
       workout_offering.time_limit = common[:time_limit]
       workout_offering.attempt_limit = common[:attempt_limit]
+    
+      # update workout scores if the attempt limit is updated
+      if workout_offering.attempt_limit != common[:attempt_limit]
+        workout_offering.attempt_limit = common[:attempt_limit]
+        workout_offering.workout_scores.update_all(attempt_limit: common[:attempt_limit])
+      end
+      
       workout_offering.published = common[:published]
+
+      # update workout scores so they follow the new policy
       if common[:most_recent].to_b != workout_offering.most_recent
         workout_offering.most_recent = common[:most_recent]
         workout_offering.save!
         workout_offering.rescore_all
       end
+
       workout_offering.lms_assignment_url = offering['lms_assignment_url']
-      workout_offering.opening_date = DateTime.strptime(offering['opening_date'].to_s, '%Q') if offering['opening_date'].present?
-      workout_offering.soft_deadline = DateTime.strptime(offering['soft_deadline'].to_s, '%Q') if offering['soft_deadline'].present?
-      workout_offering.hard_deadline = DateTime.strptime(offering['hard_deadline'].to_s, '%Q') if offering['hard_deadline'].present?
+
+      # set deadlines
+      if offering['opening_date'].present?
+        workout_offering.opening_date =
+          DateTime.strptime(offering['opening_date'].to_s, '%Q')
+      end
+      if offering['soft_deadline'].present?
+        workout_offering.soft_deadline =
+          DateTime.strptime(offering['soft_deadline'].to_s, '%Q')
+      end
+      if offering['hard_deadline'].present?
+        workout_offering.hard_deadline =
+          DateTime.strptime(offering['hard_deadline'].to_s, '%Q')
+      end
+
       workout_offering.workout_policy = common[:workout_policy]
       if common[:lms_assignment_id].present?
         workout_offering.lms_assignment_id = common[:lms_assignment_id]
@@ -251,17 +273,7 @@ class Workout < ActiveRecord::Base
       extensions.each do |ext|
         student_id = ext['student_id']
         student = User.find(student_id)
-        student_extension = StudentExtension.find_by user: student, workout_offering: workout_offering
-        if student_extension.blank?
-          student_extension = StudentExtension.new
-        end
-        student_extension.user = student
-        student_extension.workout_offering = workout_offering
-        student_extension.opening_date = DateTime.strptime(ext['opening_date'].to_s, '%Q') if ext['opening_date'].present?
-        student_extension.soft_deadline = DateTime.strptime(ext['soft_deadline'].to_s, '%Q') if ext['soft_deadline'].present?
-        student_extension.hard_deadline = DateTime.strptime(ext['hard_deadline'].to_s, '%Q') if ext['hard_deadline'].present?
-        student_extension.time_limit = ext['time_limit'] if ext['time_limit'].present?
-        student_extension.save!
+        StudentExtension.create_or_update!(student, workout_offering, ext)
       end
     end
 

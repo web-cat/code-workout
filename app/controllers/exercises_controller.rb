@@ -523,6 +523,7 @@ class ExercisesController < ApplicationController
 
     # display the scored attempt if in review mode (for students or instructors)
     if @workout_score
+      @attempts_left = @workout_score.attempts_left
       @attempt = (params[:review_user_id] || student_review) ?
         @workout_score.scoring_attempt_for(@exercise_version.exercise) :
         @workout_score.previous_attempt_for(@exercise_version.exercise)
