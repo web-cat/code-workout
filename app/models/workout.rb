@@ -231,13 +231,6 @@ class Workout < ActiveRecord::Base
       workout_offering.course_offering = course_offering
       workout_offering.time_limit = common[:time_limit]
       workout_offering.attempt_limit = common[:attempt_limit]
-    
-      # update workout scores if the attempt limit is updated
-      if workout_offering.attempt_limit != common[:attempt_limit]
-        workout_offering.attempt_limit = common[:attempt_limit]
-        workout_offering.workout_scores.update_all(attempts_left: common[:attempt_limit])
-      end
-      
       workout_offering.published = common[:published]
 
       # update workout scores so they follow the new policy

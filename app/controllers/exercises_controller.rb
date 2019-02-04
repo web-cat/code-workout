@@ -472,6 +472,9 @@ class ExercisesController < ApplicationController
         @redirect_url = @workout_offering.lms_assignment_url
         render 'lti/error' and return
       end
+      
+      @attempts_left = @workout_score
+        .attempts_left_for_exercise_version(@exercise_version)
     end
 
     @workout ||= @workout_score ? @workout_score.workout : nil
@@ -523,7 +526,6 @@ class ExercisesController < ApplicationController
 
     # display the scored attempt if in review mode (for students or instructors)
     if @workout_score
-      @attempts_left = @workout_score.attempts_left
       @attempt = (params[:review_user_id] || student_review) ?
         @workout_score.scoring_attempt_for(@exercise_version.exercise) :
         @workout_score.previous_attempt_for(@exercise_version.exercise)
@@ -647,12 +649,16 @@ class ExercisesController < ApplicationController
       return
     end
     
-    @attempts_left = @workout_score.andand.attempts_left
+    @attempts_left = @workout_score
+      .attempts_left_for_exercise_version(@exercise_version)
     if !current_user.is_staff?(@workout_offering.andand.course_offering) && 
-        @workout_score.andand.attempts_left == 0
+        @attempts_left == 0
       p 'WARNING: attempt to evaluate workout_offering after attempts expired.'
       return
     end
+    
+    # update the in-memory count of attempts_left, so it is represented
+    # in the partial
     @attempts_left = (@attempts_left && @attempts_left > 0) ?
       @attempts_left - 1 : @attempts_left 
     @attempt = @exercise_version.new_attempt(

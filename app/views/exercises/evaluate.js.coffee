@@ -1,7 +1,9 @@
 att_id = <%= JSON.generate @attempt.andand.id %>
 user_id = <%= JSON.generate @student_drift_user.id %>
 is_coding = <%= JSON.generate @exercise.is_coding? %>
-
+attempts_exhausted = <%= JSON.generate(@attempts_left == 0) %>
+feedback_poll_url = "/sse/feedback_poll?att_id=#{att_id}&drift_user_id=#{user_id}" +
+  "&attempts_exhausted=#{attempts_exhausted}"
 if att_id
   $("#exercisefeedback").show()
   if is_coding
@@ -10,13 +12,15 @@ if att_id
     $("#visualize").attr('disabled', 'disabled')
     $("#exercisefeedback").html('<h2>Feedback</h2><i class="fa fa-spinner fa-spin fa-2x"></i>')
     setTimeout ( ->
-      $.ajax(url: "/sse/feedback_poll?att_id=#{att_id}&drift_user_id=#{user_id}")
+      $.ajax(url: feedback_poll_url)
     ), 2000
   else
-    $.ajax(url: "/sse/feedback_poll?att_id=#{att_id}&drift_user_id=#{user_id}")
+    $.ajax(url: feedback_poll_url)
   
   attempt_html = "<%= j(render 'exercises/attempts_left', attempts_left: @attempts_left) %>"
   $('#attempts-left').html(attempt_html)
+  if attempts_exhausted
+    $('.btn-submit').prop('disabled', true)
 else
   $("#saved_assurance").html("Invalid attempt")
   $("#exercisefeedback").hide()

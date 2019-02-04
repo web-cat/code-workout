@@ -90,7 +90,6 @@ class WorkoutScore < ActiveRecord::Base
 
   validates :workout, presence: true
   validates :user, presence: true
-  validates :workout_offering, presence: true, if: :attempts_left?
 
   #~ Instance methods .........................................................
 
@@ -165,6 +164,19 @@ class WorkoutScore < ActiveRecord::Base
     end
   end
 
+  
+  # -------------------------------------------------------------
+  def attempts_left_for_exercise_version(exercise_version)
+    if self.workout_offering.andand.attempt_limit
+      attempts_made = self
+        .attempts
+        .where(exercise_version: exercise_version)
+        .count
+      return self.workout_offering.attempt_limit - attempts_made
+    end
+
+    return nil
+  end
 
   # -------------------------------------------------------------
   def scoring_attempt_for(exercise)
@@ -200,16 +212,6 @@ class WorkoutScore < ActiveRecord::Base
   # -------------------------------------------------------------
   def record_attempt(attempt)
     self.with_lock do
-      # only process this attempt if it's allowed by the workout offering's
-      # attempt limit
-      if self.workout_offering.andand.attempt_limit
-        if self.attempts_left
-          self.attempts_left = self.attempts_left - 1 if self.attempts_left > 0 
-        elsif
-          self.attempts_left = self.workout_offering.attempt_limit - 1
-        end
-      end
-
       # scored_for_this = self.scored_attempts.joins{exercise_version}.
       #  where{(exercise_version.exercise_id == e.id)}
       scored_for_this = self.scored_attempts.

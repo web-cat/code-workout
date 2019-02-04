@@ -116,7 +116,6 @@ class WorkoutOfferingsController < ApplicationController
             user: current_user,
             workout_offering: @workout_offering,
             workout: @workout_offering.workout,
-            attempts_left: @workout_offering.attempt_limit
           )
           @workout_score.lis_outcome_service_url = lis_outcome_service_url
           @workout_score.lis_result_sourcedid = lis_result_sourcedid
