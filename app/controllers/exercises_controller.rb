@@ -646,11 +646,13 @@ class ExercisesController < ApplicationController
       p 'WARNING: attempt to evaluate exercise after time expired.'
       return
     end
-
-    if @workout_score.attempts_left == 0
+    
+    @attempts_left = @workout_score.andand.attempts_left
+    if @workout_score.andand.attempts_left == 0
       p 'WARNING: attempt to evaluate workout_offering after attempts expired.'
       return
     end
+    @attempts_left = @attempts_left ? @attempts_left - 1 : nil
     @attempt = @exercise_version.new_attempt(
       user: @student_drift_user, workout_score: @workout_score)
 

@@ -1,6 +1,7 @@
 att_id = <%= JSON.generate @attempt.andand.id %>
 user_id = <%= JSON.generate @student_drift_user.id %>
 is_coding = <%= JSON.generate @exercise.is_coding? %>
+
 if att_id
   $("#exercisefeedback").show()
   if is_coding
@@ -12,7 +13,10 @@ if att_id
       $.ajax(url: "/sse/feedback_poll?att_id=#{att_id}&drift_user_id=#{user_id}")
     ), 2000
   else
-  $.ajax(url: "/sse/feedback_poll?att_id=#{att_id}&drift_user_id=#{user_id}")
+    $.ajax(url: "/sse/feedback_poll?att_id=#{att_id}&drift_user_id=#{user_id}")
+  
+  attempt_html = "<%= j(render 'exercises/attempts_left', attempts_left: @attempts_left) %>"
+  $('#attempts-left').html(attempt_html)
 else
   $("#saved_assurance").html("Invalid attempt")
   $("#exercisefeedback").hide()

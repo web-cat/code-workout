@@ -248,7 +248,7 @@ class WorkoutScore < ActiveRecord::Base
         end
 
         self.scored_attempts << attempt
-
+        self.save!
         recalculate_score!(attempt: attempt)
       end
     end
