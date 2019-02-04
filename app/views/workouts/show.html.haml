@@ -6,6 +6,7 @@
 = render partial: 'workout_scores/time_remaining',
   locals: { workout_score: workout_score }
 
+
 %h1= @workout.name
 
 - if @workout.tags.any?
@@ -58,6 +59,8 @@
       0
     = '/'
     = @workout.total_points
+    - attempts = workout_score.andand.attempts_left ? workout_score.attempts_left : @workout_offering.attempt_limit 
+    = render partial: 'exercises/attempts_left', locals: { attempts_left: attempts }
 -else
   %p.due
     = "Score: " + (workout_score ? workout_score.score.to_s  : "0") + " / " + @workout.total_points.to_s

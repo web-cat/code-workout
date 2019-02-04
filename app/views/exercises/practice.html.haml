@@ -101,7 +101,7 @@
           %pre{ data: { lang: 'text/x-java' } }
             = prior_answer ? prior_answer.specific.answer : prompt.prepare_starter_code
     .actions
-      - disabled = @attempts_left && @attempts_left == 0 
+      - disabled = !current_user.andand.is_staff?(@workout_offering.andand.course_offering) && @attempts_left && @attempts_left == 0 
       - if @workout_offering.nil? || @workout_offering.can_be_practiced_by?(current_user)
         - if @workout_offering.andand.workout_policy.andand.hide_feedback_before_finish && params[:review_user_id].nil?
           = f.submit 'Save my answer!', 
