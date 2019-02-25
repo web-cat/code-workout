@@ -418,21 +418,21 @@ class ExercisesController < ApplicationController
 
     if @workout_offering
       # Re-check workout-offering permission in case the URL was entered directly.
-      authorize! :practice, @workout_offering, 
-        message: 'You cannot access that exercise because it belongs to an ' + 
-        'unpublished workout offering, or a workout offering you are not ' + 
+      authorize! :practice, @workout_offering,
+        message: 'You cannot access that exercise because it belongs to an ' +
+        'unpublished workout offering, or a workout offering you are not ' +
         'enrolled in.'
-      authorize! :practice, @exercise, 
+      authorize! :practice, @exercise,
         message: 'You are not authorized to practice that exercise at this time.'
     else
-      authorize! :gym_practice, @exercise, 
-        message: 'You cannot practice that exercise because it is ' + 
+      authorize! :gym_practice, @exercise,
+        message: 'You cannot practice that exercise because it is ' +
           'not present in the Gym.'
     end
 
     @attempt = nil
-    @workout_score = @workout_offering ? 
-      @workout_offering.score_for(@student_user) : @workout ? 
+    @workout_score = @workout_offering ?
+      @workout_offering.score_for(@student_user) : @workout ?
         @workout.score_for(@student_user, @workout_offering) : nil
 
     if @student_user
@@ -450,7 +450,7 @@ class ExercisesController < ApplicationController
     end
 
     if @workout_score
-      if @workout_score.lis_result_sourcedid.nil? || 
+      if @workout_score.lis_result_sourcedid.nil? ||
           @workout_score.lis_outcome_service_url.nil?
         @workout_score.lis_result_sourcedid = params[:lis_result_sourcedid]
         @workout_score.lis_outcome_service_url = params[:lis_outcome_service_url]
@@ -472,13 +472,13 @@ class ExercisesController < ApplicationController
         @redirect_url = @workout_offering.lms_assignment_url
         render 'lti/error' and return
       end
-      
+
       @attempts_left = @workout_score
         .attempts_left_for_exercise_version(@exercise_version)
     end
 
     @workout ||= @workout_score ? @workout_score.workout : nil
-    manages_course = current_user.andand.global_role.andand.is_admin? || 
+    manages_course = current_user.andand.global_role.andand.is_admin? ||
       @workout_offering.andand.course_offering.andand.is_manager?(current_user)
 
     if !manages_course && @workout_score.andand.closed? &&
@@ -504,7 +504,7 @@ class ExercisesController < ApplicationController
     student_review = false
     if @user_time_limit
       if @workout_score.andand.closed?
-        @msg = 'The time limit has passed. This assignment is closed and no ' + 
+        @msg = 'The time limit has passed. This assignment is closed and no ' +
           'longer accepting submissions.'
         student_review = true
       else
@@ -648,19 +648,20 @@ class ExercisesController < ApplicationController
       p 'WARNING: attempt to evaluate exercise after time expired.'
       return
     end
-    
-    @attempts_left = @workout_score
-      .attempts_left_for_exercise_version(@exercise_version)
-    if !current_user.is_staff?(@workout_offering.andand.course_offering) && 
+
+    @attempts_left = @workout_score ?
+      @workout_score.attempts_left_for_exercise_version(@exercise_version)
+      : nil
+    if !current_user.is_staff?(@workout_offering.andand.course_offering) &&
         @attempts_left == 0
       p 'WARNING: attempt to evaluate workout_offering after attempts expired.'
       return
     end
-    
+
     # update the in-memory count of attempts_left, so it is represented
     # in the partial
     @attempts_left = (@attempts_left && @attempts_left > 0) ?
-      @attempts_left - 1 : @attempts_left 
+      @attempts_left - 1 : @attempts_left
     @attempt = @exercise_version.new_attempt(
       user: @student_drift_user, workout_score: @workout_score)
 
@@ -832,7 +833,7 @@ class ExercisesController < ApplicationController
 					    :verify_ssl => OpenSSL::SSL::VERIFY_NONE)
     trace = JSON.parse(request.body)
     @openpop_results = trace
-    
+
     curr_user = nil
     unless current_user.nil?
       curr_user = current_user
