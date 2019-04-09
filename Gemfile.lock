@@ -112,7 +112,7 @@ GEM
     bcrypt (3.1.7)
     bootstrap-editable-rails (0.0.7)
       railties (>= 3.1)
-    bootstrap-sass (3.2.0.2)
+    bootstrap-sass (3.2.0.4)
       sass (~> 3.2)
     bootstrap-wysihtml5-rails (0.3.2.100)
       railties (>= 3.0)
@@ -497,4 +497,4 @@ DEPENDENCIES
   wannabe_bool
 
 BUNDLED WITH
-   1.16.5
+   1.17.1
