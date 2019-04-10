@@ -25,6 +25,7 @@ module CodeWorkout
     # config.autoload_paths += %W(#{config.root}/extras)
     
     # Timeout for feedback polls (milliseconds)
+    # This is an initial value on application startup, but it might change
     config.feedback_timeout = 2000
   end
 end

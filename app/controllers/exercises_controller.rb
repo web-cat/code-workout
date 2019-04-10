@@ -778,7 +778,6 @@ class ExercisesController < ApplicationController
         end
       end
       @workout ||= @workout_score.andand.workout
-      p Rails.application.config.feedback_timeout
     end
   end
 
