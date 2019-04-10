@@ -23,5 +23,8 @@ module CodeWorkout
 
     # Custom directories with classes and modules you want to be autoloadable.
     # config.autoload_paths += %W(#{config.root}/extras)
+    
+    # Timeout for feedback polls (milliseconds)
+    config.feedback_timeout = 2000
   end
 end

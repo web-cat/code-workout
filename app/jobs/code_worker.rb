@@ -57,9 +57,6 @@ class CodeWorker
         FileUtils.remove_dir(attempt_dir, true)
         FileUtils.mkdir_p(attempt_dir)
       end
-      #FileUtils.cp(
-      #  Dir["usr/resources/#{language}/#{prompt.class_name}*.#{lang}"],
-      #  attempt_dir)
       FileUtils.cp(prompt.test_file_name, attempt_dir)
       File.write(attempt_dir + '/' + prompt.class_name + '.' + lang, code_body)
 
@@ -130,13 +127,13 @@ class CodeWorker
       else
         attempt.save!
       end
+      
+      time_taken = (Time.now - start_time) * 1000 # difference in milliseconds
+      Rails.logger.info "[pid:#{Process.pid}/thread:#{Thread.current.object_id}] processed attempt #{attempt_id} in #{time_taken}ms"
 
-#      ActiveSupport::Notifications.instrument(
-#        "record_#{current_attempt}_attempt", extra: :nothing) do
-#        puts "SKYFALL"
-#      end
-
-      Rails.logger.info "[pid:#{Process.pid}/thread:#{Thread.current.object_id}] processed attempt #{attempt_id} in #{Time.now - start_time}s"
+      avg_timeout = (time_taken + Rails.application.config.feedback_timeout) / 2
+      # don't timeout for less than 2s
+      Rails.application.config.feedback_timeout = avg_timeout > 2000 ? avg_timeout : 2000
     end
   end
 
