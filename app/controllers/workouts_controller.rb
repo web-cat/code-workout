@@ -4,6 +4,7 @@ require 'wannabe_bool'
 
 class WorkoutsController < ApplicationController
   include ArrayHelper
+
   before_action :set_workout, only: [
     :show,
     :update,
