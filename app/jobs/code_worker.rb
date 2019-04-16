@@ -119,6 +119,15 @@ class CodeWorker
       attempt.score = correct * multiplier / total
       attempt.experience_earned = attempt.score * exv.exercise.experience / attempt.submit_num
       attempt.feedback_ready = true
+      
+      time_taken = Time.now - attempt.submit_time
+      avg_timeout = (time_taken + Rails.application.config.feedback_timeout) / 2
+      # don't timeout for less than 2s
+      Rails.application.config.feedback_timeout = avg_timeout > 2000 ? avg_timeout : 2000
+
+      attempt.time_taken = time_taken
+      attempt.feedback_timeout = avg_timeout 
+
       if attempt.workout_score
         attempt.score *= attempt.workout_score.workout.exercise_workouts.
           where(exercise: exv.exercise).first.points
@@ -128,12 +137,9 @@ class CodeWorker
         attempt.save!
       end
       
-      time_taken = (Time.now - start_time) * 1000 # difference in milliseconds
-      Rails.logger.info "[pid:#{Process.pid}/thread:#{Thread.current.object_id}] processed attempt #{attempt_id} in #{time_taken}ms"
-
-      avg_timeout = (time_taken + Rails.application.config.feedback_timeout) / 2
-      # don't timeout for less than 2s
-      Rails.application.config.feedback_timeout = avg_timeout > 2000 ? avg_timeout : 2000
+      Rails.logger.info "[pid:#{Process.pid}/thread:#{Thread.current.object_id}] " \
+        "processed attempt #{attempt_id} in #{Time.now - start_time}s"
+      
     end
   end
 
