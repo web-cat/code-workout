@@ -162,7 +162,8 @@ class Ability
         enrollment.course_offering.is_manager? user
       end
 
-      # A user can request tab content on the course page through AJAX if they are enrolled in an offering of the course
+      # A user can request tab content on the course page through AJAX if they are 
+      # enrolled in an offering of the course
       can :tab_content, Course do |course|
         course.course_offerings.any? { |co| co.is_enrolled? (user) }
       end
@@ -250,8 +251,7 @@ class Ability
 
       can :query_data, Exercise
       can :download_attempt_data, Exercise do |e|
-        Exercise.visible_through_user(user).map(&:id).include?(e.id) ||
-        Exercise.visible_through_user_group(user).map(&:id).include?(e.id)
+        e.owned_by?(user)
       end
     end
   end
