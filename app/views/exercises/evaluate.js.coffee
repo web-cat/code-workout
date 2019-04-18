@@ -2,9 +2,11 @@ att_id = <%= JSON.generate @attempt.andand.id %>
 user_id = <%= JSON.generate @student_drift_user.id %>
 is_coding = <%= JSON.generate @exercise.is_coding? %>
 attempts_exhausted = <%= JSON.generate(@attempts_left == 0) %>
-feedback_timeout = <%= Rails.application.config.feedback_timeout %>
+feedback_timeout = <%= JSON.generate Rails.application.config.feedback_timeout %>
+
 feedback_poll_url = "/sse/feedback_poll?att_id=#{att_id}&drift_user_id=#{user_id}" +
   "&attempts_exhausted=#{attempts_exhausted}"
+
 if att_id
   $("#exercisefeedback").show()
   if is_coding
