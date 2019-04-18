@@ -120,13 +120,17 @@ class CodeWorker
       attempt.experience_earned = attempt.score * exv.exercise.experience / attempt.submit_num
       attempt.feedback_ready = true
       
+      # calculate various time values. all times are in ms       
       time_taken = (Time.now - attempt.submit_time) * 1000
 
       updater = FeedbackTimeoutUpdater.instance 
       updater.update_timeout(time_taken)
 
       attempt.feedback_timeout = updater.avg_timeout
-      attempt_time_taken = time_taken
+      attempt.time_taken = time_taken
+
+      worker_time = (Time.now - start_time) * 1000
+      attempt.worker_time = worker_time
 
       if attempt.workout_score
         attempt.score *= attempt.workout_score.workout.exercise_workouts.
@@ -136,9 +140,12 @@ class CodeWorker
       else
         attempt.save!
       end
-
+      
       Rails.logger.info "[pid:#{Process.pid}/thread:#{Thread.current.object_id}] " \
-        "processed attempt #{attempt_id} in #{Time.now - start_time}s"
+        "processed attempt #{attempt_id} in #{worker_time}ms"
+      Rails.logger.info "[pid:#{Process.pid}/thread:#{Thread.current.object_id}] " \
+        "time taken for attempt: #{attempt.time_taken} new feedback timeout: " \
+        "#{attempt.feedback_timeout}"
     end
   end
 

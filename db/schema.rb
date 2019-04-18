@@ -29,19 +29,20 @@ ActiveRecord::Schema.define(version: 20190416161435) do
   add_index "active_admin_comments", ["resource_type", "resource_id"], name: "index_active_admin_comments_on_resource_type_and_resource_id", using: :btree
 
   create_table "attempts", force: true do |t|
-    t.integer  "user_id",                                      null: false
-    t.integer  "exercise_version_id",                          null: false
-    t.datetime "submit_time",                                  null: false
-    t.integer  "submit_num",                                   null: false
-    t.float    "score",               limit: 24, default: 0.0
+    t.integer  "user_id",                                                               null: false
+    t.integer  "exercise_version_id",                                                   null: false
+    t.datetime "submit_time",                                                           null: false
+    t.integer  "submit_num",                                                            null: false
+    t.float    "score",               limit: 24,                          default: 0.0
     t.integer  "experience_earned"
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "workout_score_id"
     t.integer  "active_score_id"
     t.boolean  "feedback_ready"
-    t.integer  "time_taken"
-    t.integer  "feedback_timeout"
+    t.decimal  "time_taken",                     precision: 10, scale: 0
+    t.decimal  "feedback_timeout",               precision: 10, scale: 0
+    t.decimal  "worker_time",                    precision: 10, scale: 0
   end
 
   add_index "attempts", ["active_score_id"], name: "index_attempts_on_active_score_id", using: :btree
