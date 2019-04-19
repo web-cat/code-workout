@@ -762,8 +762,8 @@ class WorkoutsController < ApplicationController
         if params[:lis_outcome_service_url]
           # check if there's a workout_score with LTI ties
           @workout_score = @workout.score_for(current_user, nil,
-                                              { lis_outcome_service_url: params[:lis_outcome_service_url],
-                                                lis_result_sourcedid: params[:lis_result_sourcedid] })
+                                              params[:lis_outcome_service_url],
+                                              params[:lis_result_sourcedid])
         else
           # check if there's a workout score without LTI ties
           @workout_score = @workout.score_for(current_user)
