@@ -47,40 +47,10 @@ class ExercisesController < ApplicationController
       .uniq.select(&:is_coding?)
   end
 
-
   # -------------------------------------------------------------
   def download_attempt_data
     @exercise = Exercise.find params[:id]
-    resultset = @exercise.attempt_data
-    exercise_attributes = %w{ exercise_id exercise_name }
-    attempt_attributes = %w{
-      user_id
-      exercise_version_id
-      version_no
-      answer_id
-      answer
-      error
-      attempt_id
-      submit_time
-      submit_num
-      score
-      active_score_id
-      workout_score_id
-      workout_score
-      workout_offering_id
-      workout_id
-      workout_name
-      course_offering_id
-      course_number
-      course_name
-      term }
-    data = CSV.generate(headers: true) do |csv|
-      csv << (exercise_attributes + attempt_attributes)
-      resultset.each do |submission|
-        csv << ([ @exercise.id, @exercise.name ] +
-          attempt_attributes.map { |a| submission.attributes[a] })
-      end
-    end
+    data = @exercise.denormalized_attempt_csv
 
     respond_to do |format|
       format.csv do
@@ -418,21 +388,16 @@ class ExercisesController < ApplicationController
 
     if @workout_offering
       # Re-check workout-offering permission in case the URL was entered directly.
-      authorize! :practice, @workout_offering, 
-        message: 'You cannot access that exercise because it belongs to an ' + 
-        'unpublished workout offering, or a workout offering you are not ' + 
-        'enrolled in.'
-      authorize! :practice, @exercise, 
-        message: 'You are not authorized to practice that exercise at this time.'
+      authorize! :practice, @workout_offering
+      authorize! :practice, @exercise
     else
-      authorize! :gym_practice, @exercise, 
-        message: 'You cannot practice that exercise because it is ' + 
-          'not present in the Gym.'
+      # are they trying to practice the exercise in the gym?
+      authorize! :gym_practice, @exercise
     end
 
     @attempt = nil
-    @workout_score = @workout_offering ? 
-      @workout_offering.score_for(@student_user) : @workout ? 
+    @workout_score = @workout_offering ?
+      @workout_offering.score_for(@student_user) : @workout ?
         @workout.score_for(@student_user, @workout_offering) : nil
 
     if @student_user
@@ -450,7 +415,8 @@ class ExercisesController < ApplicationController
     end
 
     if @workout_score
-      if @workout_score.lis_result_sourcedid.nil? && @workout_score.lis_outcome_service_url.nil?
+      if @workout_score.lis_result_sourcedid.nil? ||
+          @workout_score.lis_outcome_service_url.nil?
         @workout_score.lis_result_sourcedid = params[:lis_result_sourcedid]
         @workout_score.lis_outcome_service_url = params[:lis_outcome_service_url]
 
@@ -471,10 +437,13 @@ class ExercisesController < ApplicationController
         @redirect_url = @workout_offering.lms_assignment_url
         render 'lti/error' and return
       end
+
+      @attempts_left = @workout_score
+        .attempts_left_for_exercise_version(@exercise_version)
     end
 
     @workout ||= @workout_score ? @workout_score.workout : nil
-    manages_course = current_user.andand.global_role.andand.is_admin? || 
+    manages_course = current_user.andand.global_role.andand.is_admin? ||
       @workout_offering.andand.course_offering.andand.is_manager?(current_user)
 
     if !manages_course && @workout_score.andand.closed? &&
@@ -500,7 +469,7 @@ class ExercisesController < ApplicationController
     student_review = false
     if @user_time_limit
       if @workout_score.andand.closed?
-        @msg = 'The time limit has passed. This assignment is closed and no ' + 
+        @msg = 'The time limit has passed. This assignment is closed and no ' +
           'longer accepting submissions.'
         student_review = true
       else
@@ -638,10 +607,26 @@ class ExercisesController < ApplicationController
     elsif @workout
       @workout_score = @workout.score_for(@student_drift_user)
     end
+
+    # Has the allotted time for the workout offering passed?
     if @workout_score.andand.closed? && !@workout_offering.andand.can_be_practiced_by?(@student_drift_user)
       p 'WARNING: attempt to evaluate exercise after time expired.'
       return
     end
+
+    @attempts_left = @workout_score ?
+      @workout_score.attempts_left_for_exercise_version(@exercise_version)
+      : nil
+    if current_user && !current_user.is_staff?(@workout_offering.andand.course_offering) &&
+        @attempts_left == 0
+      p 'WARNING: attempt to evaluate workout_offering after attempts expired.'
+      return
+    end
+
+    # update the in-memory count of attempts_left, so it is represented
+    # in the partial
+    @attempts_left = (@attempts_left && @attempts_left > 0) ?
+      @attempts_left - 1 : @attempts_left
     @attempt = @exercise_version.new_attempt(
       user: @student_drift_user, workout_score: @workout_score)
 
@@ -813,7 +798,7 @@ class ExercisesController < ApplicationController
 					    :verify_ssl => OpenSSL::SSL::VERIFY_NONE)
     trace = JSON.parse(request.body)
     @openpop_results = trace
-    
+
     curr_user = nil
     unless current_user.nil?
       curr_user = current_user

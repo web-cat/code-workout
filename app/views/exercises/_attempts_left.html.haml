@@ -1,0 +1,4 @@
+- unless attempts_left.nil?
+  - textclass = attempts_left > 5 ? 'text-success' : (attempts_left < 3 ? 'text-danger' : 'text-warning')
+  %p.text{ class: textclass }
+    = "Attempts remaining: #{attempts_left}"

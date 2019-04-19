@@ -37,6 +37,7 @@ class SseController < ApplicationController
   # -------------------------------------------------------------
   def feedback_update
     @attempt = Attempt.find_by(id: params[:att_id])
+    @attempts_exhausted = params[:attempts_exhausted].to_b
     @exercise_version = @attempt.exercise_version
     @exercise = @exercise_version.exercise
     @max_points = @exercise.experience
@@ -65,7 +66,9 @@ class SseController < ApplicationController
         format.js
       end
     else
-      redirect_to action: 'feedback_update', att_id: params[:att_id] and return
+      redirect_to action: 'feedback_update', 
+        att_id: params[:att_id],
+        attempts_exhausted: params[:attempts_exhausted] and return
     end
   end
 

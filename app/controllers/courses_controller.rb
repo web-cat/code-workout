@@ -38,10 +38,8 @@ class CoursesController < ApplicationController
   end
 
   # -------------------------------------------------------------
-  # THIS IS NOT USED. LEAVING THIS ACTION HERE FOR FUTURE USE
   def privileged_users
-    @course = Course.find params[:course_id]
-    authorize! :privileged_users, @course, message: 'You cannot review privileged users for that course.'
+    @course = Course.find params[:id]
     @user_group = @course.user_group
     memberships = @user_group.andand.memberships.andand.order(created_at: :desc)
     @users = memberships.andand.map(&:user)

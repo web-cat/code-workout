@@ -57,9 +57,6 @@ class CodeWorker
         FileUtils.remove_dir(attempt_dir, true)
         FileUtils.mkdir_p(attempt_dir)
       end
-      #FileUtils.cp(
-      #  Dir["usr/resources/#{language}/#{prompt.class_name}*.#{lang}"],
-      #  attempt_dir)
       FileUtils.cp(prompt.test_file_name, attempt_dir)
       File.write(attempt_dir + '/' + prompt.class_name + '.' + lang, code_body)
 
@@ -122,6 +119,19 @@ class CodeWorker
       attempt.score = correct * multiplier / total
       attempt.experience_earned = attempt.score * exv.exercise.experience / attempt.submit_num
       attempt.feedback_ready = true
+      
+      # calculate various time values. all times are in ms       
+      time_taken = (Time.now - attempt.submit_time) * 1000
+
+      updater = FeedbackTimeoutUpdater.instance 
+      updater.update_timeout(time_taken)
+
+      attempt.feedback_timeout = updater.avg_timeout
+      attempt.time_taken = time_taken
+
+      worker_time = (Time.now - start_time) * 1000
+      attempt.worker_time = worker_time
+
       if attempt.workout_score
         attempt.score *= attempt.workout_score.workout.exercise_workouts.
           where(exercise: exv.exercise).first.points
@@ -130,13 +140,12 @@ class CodeWorker
       else
         attempt.save!
       end
-
-#      ActiveSupport::Notifications.instrument(
-#        "record_#{current_attempt}_attempt", extra: :nothing) do
-#        puts "SKYFALL"
-#      end
-
-      Rails.logger.info "[pid:#{Process.pid}/thread:#{Thread.current.object_id}] processed attempt #{attempt_id} in #{Time.now - start_time}s"
+      
+      Rails.logger.info "[pid:#{Process.pid}/thread:#{Thread.current.object_id}] " \
+        "processed attempt #{attempt_id} in #{worker_time}ms"
+      Rails.logger.info "[pid:#{Process.pid}/thread:#{Thread.current.object_id}] " \
+        "time taken for attempt: #{attempt.time_taken} new feedback timeout: " \
+        "#{attempt.feedback_timeout}"
     end
   end
 

@@ -258,7 +258,14 @@ class Exercise < ActiveRecord::Base
   def user_attempted?(u_id)
     self.attempts.where(user_id: u_id).any?
   end
-
+  
+  # Does the user own this exercise or its collection?
+  # Through themselves or through a user group?
+  def owned_by?(u)
+    return self.owners.include?(u) ||
+      self.exercise_collection.andand.owned_by?(u) ||
+      u.is_a_member_of?(self.exercise_collection.andand.user_group)
+  end
 
   # -------------------------------------------------------------
   def visible_to?(u)
@@ -279,8 +286,12 @@ class Exercise < ActiveRecord::Base
         self.exercise_collection.andand.is_public?
     end
   end
-
-  def attempt_data(workout_id = nil)
+  
+  # Return denormalized attempt data for this exercise.
+  # All relationship fields are in the same table, so null values
+  # are possible for workout_id, workout_offering_id, course_id,
+  # course_offering_id, etc.
+  def denormalized_attempt_csv(workout_id = nil)
     result = exercise_versions.joins{ attempts.prompt_answers }
       .joins('LEFT JOIN workout_scores ON
         workout_scores.id = attempts.workout_score_id')
@@ -316,7 +327,39 @@ class Exercise < ActiveRecord::Base
     if workout_id
       result = result.where("workouts.id = #{workout_id}")
     end
-    return result
+
+    exercise_attributes = %w{ exercise_id exercise_name }
+    attempt_attributes = %w{
+      user_id
+      exercise_version_id
+      version_no
+      answer_id
+      answer
+      error
+      attempt_id
+      submit_time
+      submit_num
+      score
+      active_score_id
+      workout_score_id
+      workout_score
+      workout_offering_id
+      workout_id
+      workout_name
+      course_offering_id
+      course_number
+      course_name
+      term }
+
+    data = CSV.generate(headers: true) do |csv|
+      csv << (exercise_attributes + attempt_attributes)
+      result.each do |submission|
+        csv << ([ self.id, self.name ] +
+          attempt_attributes.map { |a| submission.attributes[a] })
+      end
+    end
+
+    return data
   end
 
 

@@ -22,6 +22,10 @@ module CodeWorkout
     config.assets.precompile += %w(*.png *.jpg *.jpeg *.gif *.mustache.html)
 
     # Custom directories with classes and modules you want to be autoloadable.
-    # config.autoload_paths += %W(#{config.root}/extras)
+    config.autoload_paths += %W(#{config.root}/lib)
+    
+    # Timeout for feedback polls (milliseconds)
+    # This is an initial value on application startup, but it might change
+    config.feedback_timeout = 2000
   end
 end

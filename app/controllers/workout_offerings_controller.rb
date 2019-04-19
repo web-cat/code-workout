@@ -35,7 +35,8 @@ class WorkoutOfferingsController < ApplicationController
   # Controller action to add an extension for a workout offering
   # to a student.
   def add_extension
-    if params[:user_id] && student = User.find(params[:user_id]) && workoutoffering = WorkoutOffering.find(params[:workout_offering_id])
+    if params[:user_id] && student = User.find(params[:user_id]) &&
+        workoutoffering = WorkoutOffering.find(params[:workout_offering_id])
       if params[:soft_deadline] && params[:hard_deadline]
         normalized_hard_deadline = params[:hard_deadline]
         normalized_soft_deadline = params[:soft_deadline]
@@ -115,7 +116,6 @@ class WorkoutOfferingsController < ApplicationController
             user: current_user,
             workout_offering: @workout_offering,
             workout: @workout_offering.workout,
-            attempts_left: @workout_offering.attempt_limit
           )
           @workout_score.lis_outcome_service_url = lis_outcome_service_url
           @workout_score.lis_result_sourcedid = lis_result_sourcedid

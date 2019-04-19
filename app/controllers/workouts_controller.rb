@@ -4,6 +4,7 @@ require 'wannabe_bool'
 
 class WorkoutsController < ApplicationController
   include ArrayHelper
+
   before_action :set_workout, only: [
     :show,
     :update,
@@ -713,18 +714,6 @@ class WorkoutsController < ApplicationController
 
 
   # -------------------------------------------------------------
-  # PATCH/PUT /workouts/1
-  # def update
-  #   if cannot? :update, @workout
-  #     redirect_to root_path,
-  #       notice: 'Unauthorized to update workout' and return
-  #   end
-  #   if @workout.update(workout_params)
-  #     redirect_to @workout, notice: 'Workout was successfully updated.'
-  #   else
-  #     render action: 'edit'
-  #   end
-  # end
   def update
     if cannot? :update, @workout
       redirect_to root_path,

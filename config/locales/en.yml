@@ -27,3 +27,14 @@ en:
   time:
     formats:
       default: "%m/%d/%Y %l:%M%P"
+  unauthorized:
+    privileged_users: 
+      course: 'You cannot review privileged users for that course.'
+    practice:
+      workout_offering: 'You cannot access that exercise because it belongs to an unpublished workout offering, or a workout_offering you are not enrolled in'
+      exercise: 'You are not authorized to %{action} that %{subject} at this time.'
+    gym_practice:
+      exercise: 'You cannot practice that exercise because it is not present in the Gym.'
+    download_attempt_data:
+      exercise: 'You do not have ownership of that exercise.'
+

@@ -95,10 +95,11 @@ CodeWorkout::Application.routes.draw do
     get 'search' => 'courses#search', as: :courses_search
     post 'find' => 'courses#find', as: :course_find
     get 'new' => 'courses#new'
-    get ':id/request_privileged_access/:requester_id' => 'courses#request_privileged_access', as: :request_privileged_access
+    get ':id/request_privileged_access/:requester_id' => 'courses#request_privileged_access',
+      as: :request_privileged_access
     post 'create' => 'courses#create', as: :courses_create
     get ':id/edit' => 'courses#edit', as: :course_edit
-    get ':course_id/privileged_users' => 'courses#privileged_users', as: :course_privileged_users
+    get ':id/privileged_users' => 'courses#privileged_users', as: :course_privileged_users
     get ':course_id/new_offering' => 'course_offerings#new', as: :new_course_offering
     post ':course_id/create_offering' => 'course_offerings#create', as: :course_offering_create
     get ':course_id/:term_id/tab_content/:tab' => 'courses#tab_content'

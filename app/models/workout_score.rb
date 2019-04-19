@@ -90,7 +90,6 @@ class WorkoutScore < ActiveRecord::Base
 
   validates :workout, presence: true
   validates :user, presence: true
-  validates :workout_offering, presence: true, if: :attempts_left?
 
   #~ Instance methods .........................................................
 
@@ -166,6 +165,19 @@ class WorkoutScore < ActiveRecord::Base
   end
 
   # -------------------------------------------------------------
+  def attempts_left_for_exercise_version(exercise_version)
+    if self.workout_offering.andand.attempt_limit
+      attempts_made = self
+        .attempts
+        .where(exercise_version: exercise_version)
+        .count
+      return self.workout_offering.attempt_limit - attempts_made
+    end
+
+    return nil
+  end
+
+  # -------------------------------------------------------------
   def scoring_attempt_for(exercise)
     workout_score = self
     Attempt.joins{exercise_version}.
@@ -199,16 +211,6 @@ class WorkoutScore < ActiveRecord::Base
   # -------------------------------------------------------------
   def record_attempt(attempt)
     self.with_lock do
-      # only process this attempt if it's allowed by the workout offering's
-      # attempt limit
-      if self.workout_offering.andand.attempt_limit
-        if self.attempts_left
-          self.attempts_left = self.attempts_left - 1 if self.attempts_left > 0 
-        elsif
-          self.attempts_left = self.workout_offering.attempt_limit - 1
-        end
-      end
-
       # scored_for_this = self.scored_attempts.joins{exercise_version}.
       #  where{(exercise_version.exercise_id == e.id)}
       scored_for_this = self.scored_attempts.
@@ -233,7 +235,8 @@ class WorkoutScore < ActiveRecord::Base
           end
         else
           # update number of exercises completed
-          if self.exercises_completed && self.exercises_completed < self.workout.exercises.length
+          if self.exercises_completed &&
+              self.exercises_completed < self.workout.exercises.length
             self.exercises_completed += 1
           end
           if self.exercises_remaining && self.exercises_remaining > 0
@@ -246,7 +249,7 @@ class WorkoutScore < ActiveRecord::Base
         end
 
         self.scored_attempts << attempt
-
+        self.save!
         recalculate_score!(attempt: attempt)
       end
     end

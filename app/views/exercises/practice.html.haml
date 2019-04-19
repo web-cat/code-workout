@@ -20,6 +20,8 @@
     - if @msg
       #timer.alert.alert-warning
         = "#{@msg}"
+    #attempts-left
+      = render 'attempts_left', attempts_left: @attempts_left 
     - if @exercise_version.stem && !@exercise_version.stem.preamble.blank?
       - cache @exercise_version.stem do
         = markdown @exercise_version.stem.preamble
@@ -99,11 +101,16 @@
           %pre{ data: { lang: 'text/x-java' } }
             = prior_answer ? prior_answer.specific.answer : prompt.prepare_starter_code
     .actions
+      - disabled = !current_user.andand.is_staff?(@workout_offering.andand.course_offering) && @attempts_left && @attempts_left == 0 
       - if @workout_offering.nil? || @workout_offering.can_be_practiced_by?(current_user)
         - if @workout_offering.andand.workout_policy.andand.hide_feedback_before_finish && params[:review_user_id].nil?
-          = f.submit 'Save my answer!', class: 'btn btn-primary btn-submit', id: 'primarybtn'
+          = f.submit 'Save my answer!', 
+            class: 'btn btn-primary btn-submit', 
+            id: 'primarybtn', disabled: disabled
         - elsif allow_write && params[:review_user_id].nil?
-          = f.submit 'Check my answer!', class: 'btn btn-primary btn-submit', id: 'primarybtn'
+          = f.submit 'Check my answer!', 
+            class: 'btn btn-primary btn-submit', 
+            id: 'primarybtn', disabled: disabled
       - if coding_questions
         %div.btn.btn-default{ data: { toggle: 'modal', target: '#confirm-reset' } } Reset
       -if @exercise.tag_list.include? 'Visualizable'
@@ -171,3 +178,4 @@
         
       .modal-footer
         %button.btn.btn-default{ data: { dismiss: 'modal' }, type: 'button' } Cancel
+
