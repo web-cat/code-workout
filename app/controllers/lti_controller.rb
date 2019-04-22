@@ -49,19 +49,43 @@ class LtiController < ApplicationController
 
       @organization = @lms_instance.organization
       course_number = params[:custom_course_number] || params[:context_label].gsub(/[^a-zA-Z0-9 ]/, '')
+      
+      ext_lti_assignment_id = params[:ext_lti_assignment_id]
+      custom_canvas_assignment_id = params[:custom_canvas_assignment_id]
+      
+      # Serving a public workout?
+      lti_workout = LtiWorkout.find_by(lms_assignment_id: ext_lti_assignment_id) ||
+        LtiWorkout.find_by(lms_assignment_id: custom_canvas_assignment_id)
 
-			if params[:gym_exercise_id].present?
-				redirect_to exercise_embed_path(id: params[:gym_exercise_id]) and return
-			elsif params[:gym_workout_id].present?
-				redirect_to workout_embed_path(
+      if !lti_workout && params[:gym_workout_id].present?
+        # First time this workout is being accessed from the
+        # given LTI assignment
+        workout = Workout.find_by(id: params[:gym_workout_id])
+        if !workout.andand.is_public
+          @message = 'Error -- Public workout not found!'
+          render 'lti/error' and return
+        end
+
+        lti_workout = LtiWorkout.create(
+          lms_assignment_id: ext_lti_assignment_id,
+          workout: Workout.find(params[:gym_workout_id]),
+        )
+      end
+
+      if lti_workout
+        # Serving a public workout over LTI
+        redirect_to practice_workout_path(
+          id: lti_workout.workout_id,
           lti_launch: true,
-          workout_id: params[:gym_workout_id],
-          lis_result_sourcedid: params[:lis_result_sourcedid],
-          lis_outcome_service_url: params[:lis_outcome_service_url]
+          lti_workout_id: lti_workout.id,
+          lis_outcome_service_url: params[:lis_outcome_service_url],
+          lis_result_sourcedid: params[:lis_result_sourcedid]
         ) and return
-			end
+      end
 
-      workout_from_collection = params[:from_collection] # are we serving a workout from a pre-existing collection? (like OpenDSA)
+      # are we serving a workout from a pre-existing collection? (like OpenDSA)
+      workout_from_collection = params[:from_collection]
+
       # Finding appropriate course offerings and workout offerings from the workout
       resource_link_title = params[:resource_link_title]
       if (/\A[0-9][0-9].[0-9][0-9].[0-9][0-9] -/ =~ resource_link_title).nil?
@@ -74,12 +98,7 @@ class LtiController < ApplicationController
       term_slug = params[:custom_term]
       course_name = params[:context_title]
       course_slug = course_number.gsub(/[^a-zA-Z0-9]/, '').downcase
-      ext_lti_assignment_id = params[:ext_lti_assignment_id]
-      custom_canvas_assignment_id = params[:custom_canvas_assignment_id]
-
-      persistent_courses = ['1230385', '1230176', '1230392']
-      dynamic_lms_assignment = params[:dynamic].to_b || (params[:custom_canvas_course_id] &&
-        persistent_courses.include?(params[:custom_canvas_course_id]))
+      dynamic_lms_assignment = params[:dynamic].to_b
 
       if @organization.blank?
         @message = 'Organization not found'
