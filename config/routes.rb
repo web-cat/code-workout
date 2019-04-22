@@ -69,7 +69,7 @@ CodeWorkout::Application.routes.draw do
     resources :exercises
 
     # /gym/workouts ...
-    get  'workouts/embed' => 'workouts#embed', as: :workout_embed
+    get  'workouts/embed(/:workout_id)' => 'workouts#embed', as: :workout_embed
     get  'workouts/download' => 'workouts#download'
     get  'workouts/:id/add_exercises' => 'workouts#add_exercises'
     post 'workouts/link_exercises'  => 'workouts#link_exercises'
@@ -85,7 +85,7 @@ CodeWorkout::Application.routes.draw do
     post  'workouts_yaml_create' => 'workouts#yaml_create'
     post 'workouts/search' => 'workouts#search', as: :workouts_search
     get 'workouts/:id/download_attempt_data' =>
-      'workoutss#download_attempt_data', as: :download_workout_attempt_data
+      'workouts#download_attempt_data', as: :download_workout_attempt_data
     # At the bottom, so the routes above take precedence over existing ids
     resources :workouts, except: [ :new, :edit ]
   end

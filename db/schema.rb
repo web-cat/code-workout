@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20190416161435) do
+ActiveRecord::Schema.define(version: 20190422155326) do
 
   create_table "active_admin_comments", force: true do |t|
     t.string   "namespace"
@@ -363,6 +363,15 @@ ActiveRecord::Schema.define(version: 20190416161435) do
 
   add_index "lti_identities", ["lms_instance_id"], name: "index_lti_identities_on_lms_instance_id", using: :btree
   add_index "lti_identities", ["user_id"], name: "index_lti_identities_on_user_id", using: :btree
+
+  create_table "lti_workouts", force: true do |t|
+    t.integer  "workout_id"
+    t.string   "lms_assignment_id", null: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "lti_workouts", ["workout_id"], name: "index_lti_workouts_on_workout_id", using: :btree
 
   create_table "memberships", force: true do |t|
     t.integer  "user_id"

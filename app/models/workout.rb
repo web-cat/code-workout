@@ -52,6 +52,7 @@ class Workout < ActiveRecord::Base
   belongs_to :creator, class_name: 'User'
   has_many :workout_owners, inverse_of: :workout, dependent: :destroy
   has_many :owners, through: :workout_owners
+  has_many :lti_workouts
 
   accepts_nested_attributes_for :exercise_workouts
   accepts_nested_attributes_for :workout_offerings
