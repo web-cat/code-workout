@@ -26,6 +26,7 @@ module CodeWorkout
     
     # Timeout for feedback polls (milliseconds)
     # This is an initial value on application startup, but it might change
-    config.feedback_timeout = 2000
+    config.feedback_timeout = 1700 
+    config.feedback_timeout_padding = 300
   end
 end
