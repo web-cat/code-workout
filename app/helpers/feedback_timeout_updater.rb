@@ -6,6 +6,7 @@ class FeedbackTimeoutUpdater
   
   # constants in milliseconds 
   MIN_THRESHOLD = 1700 # minus the 300 padding
+  MAX_THRESHOLD = 7700
 
   def initialize
     @semaphore = Mutex.new
@@ -23,7 +24,11 @@ class FeedbackTimeoutUpdater
       )
       Rails.application.config.feedback_timeout =
         new_avg > MIN_THRESHOLD ?
-        new_avg :
+        (
+          new_avg < MAX_THRESHOLD ? 
+          new_avg :
+          MAX_THRESHOLD
+        ) :
         MIN_THRESHOLD
       @avg_timeout = new_avg
     end
