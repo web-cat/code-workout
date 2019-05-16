@@ -618,7 +618,7 @@ class ExercisesController < ApplicationController
       @workout_score.attempts_left_for_exercise_version(@exercise_version)
       : nil
     if current_user && !current_user.is_staff?(@workout_offering.andand.course_offering) &&
-        @attempts_left == 0
+        @attempts_left <= 0
       p 'WARNING: attempt to evaluate workout_offering after attempts expired.'
       return
     end
