@@ -21,6 +21,7 @@ ActiveAdmin.register Course, sort_order: :number_asc do
       f.input :organization
       f.input :number
       f.input :name
+      f.input :is_hidden
     end
     f.actions
   end
