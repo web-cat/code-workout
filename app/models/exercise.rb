@@ -286,12 +286,18 @@ class Exercise < ActiveRecord::Base
         self.exercise_collection.andand.is_public?
     end
   end
+
+  def progsnap2_attempt_data
+    denormalized = self.denormalized_attempt_data
+    main_events = progsnap2_main_events(denormalized)
+    code_states = progsnap2_code_states(denormalized)
+  end
   
   # Return denormalized attempt data for this exercise.
   # All relationship fields are in the same table, so null values
   # are possible for workout_id, workout_offering_id, course_id,
   # course_offering_id, etc.
-  def denormalized_attempt_csv(workout_id = nil)
+  def denormalized_attempt_data(workout_id = nil)
     result = exercise_versions.joins{ attempts.prompt_answers }
       .joins('LEFT JOIN workout_scores ON
         workout_scores.id = attempts.workout_score_id')
@@ -328,38 +334,7 @@ class Exercise < ActiveRecord::Base
       result = result.where("workouts.id = #{workout_id}")
     end
 
-    exercise_attributes = %w{ exercise_id exercise_name }
-    attempt_attributes = %w{
-      user_id
-      exercise_version_id
-      version_no
-      answer_id
-      answer
-      error
-      attempt_id
-      submit_time
-      submit_num
-      score
-      active_score_id
-      workout_score_id
-      workout_score
-      workout_offering_id
-      workout_id
-      workout_name
-      course_offering_id
-      course_number
-      course_name
-      term }
-
-    data = CSV.generate(headers: true) do |csv|
-      csv << (exercise_attributes + attempt_attributes)
-      result.each do |submission|
-        csv << ([ self.id, self.name ] +
-          attempt_attributes.map { |a| submission.attributes[a] })
-      end
-    end
-
-    return data
+    return result
   end
 
 
@@ -379,4 +354,70 @@ class Exercise < ActiveRecord::Base
     self.experience ||= 10
   end
 
+  def progsnap2_main_events(denormalized_data)
+    # MainTable 
+    main_attributes = %w{
+      EventID
+      EventType
+      SubjectID
+      ToolInstances
+      ServerTimestamp
+      ServerTimezone
+      CourseID
+      CourseSectionID
+      TermID
+      AssignmentID
+      ProblemID
+      Attempt
+      CodeStateID
+      Score
+      IsEventOrderingConsistent
+    }
+
+    data = CSV.generate(headers: true) do |csv|
+      csv << main_attributes
+      denormalized_data.each do |submission|
+        attrs = submission.attributes
+        user_id = attrs['user_id'] || 'UNKNOWN' 
+        csv << [
+          attrs['attempt_id'],
+          'Submit',
+          user_id,
+          'Java 8; CodeWorkout',
+          attrs['submit_time'],
+          'UTC',
+          attrs['course_number'],
+          attrs['course_offering_id'],
+          attrs['term'],
+          attrs['workout_id'],
+          attrs['exercise_version_id'],
+          attrs['submit_num'],
+          attrs['answer_id'],
+          attrs['score'],
+          'True'
+        ]
+      end 
+    end
+
+    return data
+  end
+
+  def progsnap2_code_states(denormalized_data)
+    code_state_attributes = %w{
+      CodeStateID
+      Code
+    }
+
+    data = CSV.generate(headers: true) do |csv|
+      csv << code_state_attributes
+      denormalized_data.each do |submission|
+        csv << [
+          submission.attributes['answer_id'],
+          submission.attributes['answer']
+        ]
+      end
+    end
+
+    return data
+  end
 end

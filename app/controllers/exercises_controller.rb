@@ -50,7 +50,38 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   def download_attempt_data
     @exercise = Exercise.find params[:id]
-    data = @exercise.denormalized_attempt_csv
+    result = @exercise.denormalized_attempt_data
+
+    exercise_attributes = %w{ exercise_id exercise_name }
+    attempt_attributes = %w{
+      user_id
+      exercise_version_id
+      version_no
+      answer_id
+      answer
+      error
+      attempt_id
+      submit_time
+      submit_num
+      score
+      active_score_id
+      workout_score_id
+      workout_score
+      workout_offering_id
+      workout_id
+      workout_name
+      course_offering_id
+      course_number
+      course_name
+      term }
+
+    data = CSV.generate(headers: true) do |csv|
+      csv << (exercise_attributes + attempt_attributes)
+      result.each do |submission|
+        csv << ([ self.id, self.name ] +
+          attempt_attributes.map { |a| submission.attributes[a] })
+      end
+    end
 
     respond_to do |format|
       format.csv do
