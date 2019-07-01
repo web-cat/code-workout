@@ -3,6 +3,7 @@ user_id = <%= JSON.generate @student_drift_user.id %>
 is_coding = <%= JSON.generate @exercise.is_coding? %>
 attempts_exhausted = <%= JSON.generate(@attempts_left == 0) %>
 feedback_timeout = <%= JSON.generate Rails.application.config.feedback_timeout %>
+feedback_padding = <%= JSON.generate Rails.application.config.feedback_timeout_padding %>
 
 feedback_poll_url = "/sse/feedback_poll?att_id=#{att_id}&drift_user_id=#{user_id}" +
   "&attempts_exhausted=#{attempts_exhausted}"
@@ -16,7 +17,7 @@ if att_id
     $("#exercisefeedback").html('<h2>Feedback</h2><i class="fa fa-spinner fa-spin fa-2x"></i>')
     setTimeout ( ->
       $.ajax(url: feedback_poll_url)
-    ), feedback_timeout
+    ), feedback_timeout + feedback_padding
   else
     $.ajax(url: feedback_poll_url)
   

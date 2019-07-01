@@ -49,7 +49,9 @@ class CodeWorker
 
       term = Term.current_term
       term_name = term ? term.slug : 'no-term'
-      attempt_dir = 'usr/attempts/' + term_name + '/' + current_attempt
+
+      # compile and evaluate the attempt in a temporary location 
+      attempt_dir = "usr/attempts/active/#{current_attempt}"
       # puts "DIRECTORY",attempt_dir,"DIRECTORY"
       FileUtils.mkdir_p(attempt_dir)
       if !Dir[attempt_dir].empty?
@@ -119,6 +121,18 @@ class CodeWorker
       attempt.score = correct * multiplier / total
       attempt.experience_earned = attempt.score * exv.exercise.experience / attempt.submit_num
       attempt.feedback_ready = true
+
+      # clean up log and class files that were generated during testing 
+      cleanup_files = Dir.glob("#{attempt_dir}/*.class") + Dir.glob("#{attempt_dir}/*.log") +
+        Dir.glob("#{attempt_dir}/reports/TEST-*.csv")
+      cleanup_files.each do |file|
+        File.delete(file)
+      end
+
+      # move the attempt to permanent storage
+      term_dir = "usr/attempts/#{term_name}/"
+      FileUtils.mkdir_p(term_dir) # create the term_dir if it doesn't exist
+      FileUtils.mv(attempt_dir, term_dir)
       
       # calculate various time values. all times are in ms       
       time_taken = (Time.now - attempt.submit_time) * 1000
