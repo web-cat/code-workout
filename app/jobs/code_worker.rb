@@ -123,7 +123,8 @@ class CodeWorker
       attempt.feedback_ready = true
 
       # clean up log and class files that were generated during testing 
-      cleanup_files = Dir.glob("#{attempt_dir}/*.class") + Dir.glob("#{attempt_dir}/**/*.log")
+      cleanup_files = Dir.glob("#{attempt_dir}/*.class") + Dir.glob("#{attempt_dir}/*.log") +
+        Dir.glob("#{attempt_dir}/reports/TEST-*.csv")
       cleanup_files.each do |file|
         File.delete(file)
       end
