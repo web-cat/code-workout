@@ -46,7 +46,7 @@ end
 group :development, :test do
   gem 'thin'
   gem 'byebug'
-  gem 'sqlite3'
+  gem 'sqlite3', '~> 1.3.0'
   gem 'rspec-rails'
   gem 'annotate'
   gem 'rails-erd', github: 'voormedia/rails-erd'
