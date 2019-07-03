@@ -12,9 +12,9 @@
 #  index_lms_types_on_name  (name) UNIQUE
 #
 
-# Read about factories at https://github.com/thoughtbot/factory_girl
+# Read about factories at https://github.com/thoughtbot/factory_bot
 
-FactoryGirl.define do
+FactoryBot.define do
   factory :lms_type do
   end
 end

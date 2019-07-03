@@ -28,9 +28,9 @@
 #  workout_offerings_continue_from_workout_id_fk  (continue_from_workout_id)
 #
 
-# Read about factories at https://github.com/thoughtbot/factory_girl
+# Read about factories at https://github.com/thoughtbot/factory_bot
 
-FactoryGirl.define do
+FactoryBot.define do
   factory :workout_offering do
     course_offering_id 1
     workout_id 1

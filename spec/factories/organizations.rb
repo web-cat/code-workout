@@ -15,7 +15,7 @@
 #  index_organizations_on_slug  (slug) UNIQUE
 #
 
-FactoryGirl.define do
+FactoryBot.define do
 
   factory :organization do
     name "Virginia Tech"

@@ -18,9 +18,9 @@
 #  lms_instances_lms_type_id_fk            (lms_type_id)
 #
 
-# Read about factories at https://github.com/thoughtbot/factory_girl
+# Read about factories at https://github.com/thoughtbot/factory_bot
 
-FactoryGirl.define do
+FactoryBot.define do
   factory :lms_instance do
     consumer_key "MyString"
     consumer_secret "MyString"

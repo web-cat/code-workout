@@ -14,9 +14,9 @@
 #  course_exercises_exercise_id_fk  (exercise_id)
 #
 
-# Read about factories at https://github.com/thoughtbot/factory_girl
+# Read about factories at https://github.com/thoughtbot/factory_bot
 
-FactoryGirl.define do
+FactoryBot.define do
   factory :course_exercise do
     course_id 1
     exercise_id 1

@@ -17,7 +17,7 @@
 #  index_terms_on_year_and_season  (year,season)
 #
 
-FactoryGirl.define do
+FactoryBot.define do
 
   factory :term do
     year Date.today.year 

@@ -16,9 +16,9 @@
 #  exercise_workouts_workout_id_fk   (workout_id)
 #
 
-# Read about factories at https://github.com/thoughtbot/factory_girl
+# Read about factories at https://github.com/thoughtbot/factory_bot
 
-FactoryGirl.define do
+FactoryBot.define do
   factory :exercise_workout do
     exercise_id 1
     workout_id 1

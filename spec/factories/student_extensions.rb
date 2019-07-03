@@ -18,9 +18,9 @@
 #  index_student_extensions_on_workout_offering_id  (workout_offering_id)
 #
 
-# Read about factories at https://github.com/thoughtbot/factory_girl
+# Read about factories at https://github.com/thoughtbot/factory_bot
 
-FactoryGirl.define do
+FactoryBot.define do
   factory :student_extension do
     soft_deadline "2015-09-26 22:05:04"
     hard_deadline "2015-09-26 22:05:04"

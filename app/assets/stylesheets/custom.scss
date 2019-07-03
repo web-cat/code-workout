@@ -275,7 +275,7 @@ ul.wysihtml5-toolbar li {
 }
 
 .thumbnail.single.lg{
-  @extend .thumbnail-lg;
+  @extend .thumbnail-lg !optional;
   width: 100%;
 }
 
