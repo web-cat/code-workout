@@ -82,7 +82,6 @@ gem 'omniauth-google-oauth2'
 gem 'omniauth-cas'
 gem 'cancancan'
 gem 'activeadmin'
-gem "active_admin_import" , github: 'activeadmin-plugins/active_admin_import'
 gem 'exception_handler'
 
 gem 'kaminari'        # Auto-paginated views
