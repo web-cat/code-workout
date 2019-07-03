@@ -19,8 +19,8 @@
 
 FactoryBot.define do
   factory :course_enrollment do
-    course_offering_id 1
+    course_offering_id { 1 }
     course_role        { CourseRole.student }
-    user_id 1
+    user_id { 1 }
   end
 end

@@ -12,6 +12,6 @@
 
 FactoryBot.define do
   factory :variation_group do
-    title "MyString"
+    title { "MyString" }
   end
 end

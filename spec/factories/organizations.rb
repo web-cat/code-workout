@@ -18,8 +18,8 @@
 FactoryBot.define do
 
   factory :organization do
-    name "Virginia Tech"
-    abbreviation "VT"
+    name { "Virginia Tech" }
+    abbreviation { "VT" }
   end
 
 end

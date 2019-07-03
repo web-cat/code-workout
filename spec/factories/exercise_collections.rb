@@ -25,13 +25,13 @@
 FactoryBot.define do
   factory :exercise_collection do
     factory :group_owned_collection do
-      name "MCQExercises"
-      description "Collection of multiple choice exercises." \
-        "Created by FactoryBot for testing."
+      name { "MCQExercises" }
+      description { "Collection of multiple choice exercises." \
+        "Created by FactoryBot for testing." }
     end
     factory :user_owned_collection do
-      name "Owned by user"
-      description "Exercises owned by a single user."
+      name { "Owned by user" }
+      description { "Exercises owned by a single user." }
     end
   end
 end

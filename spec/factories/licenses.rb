@@ -19,9 +19,9 @@
 
 FactoryBot.define do
   factory :license do
-    name "MyString"
-    description "MyText"
-    url "MyString"
-    license_policy nil
+    name { "MyString" }
+    description { "MyText" }
+    url { "MyString" }
+    license_policy { nil }
   end
 end

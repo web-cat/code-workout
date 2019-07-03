@@ -22,7 +22,7 @@
 
 FactoryBot.define do
   factory :student_extension do
-    soft_deadline "2015-09-26 22:05:04"
-    hard_deadline "2015-09-26 22:05:04"
+    soft_deadline { "2015-09-26 22:05:04" }
+    hard_deadline { "2015-09-26 22:05:04" }
   end
 end

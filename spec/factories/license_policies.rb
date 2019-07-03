@@ -15,9 +15,9 @@
 
 FactoryBot.define do
   factory :license_policy do
-    name "MyString"
-    description "MyText"
-    can_fork false
-    is_public false
+    name { "MyString" }
+    description { "MyText" }
+    can_fork { false }
+    is_public { false }
   end
 end

@@ -18,7 +18,7 @@
 
 FactoryBot.define do
   factory :course_exercise do
-    course_id 1
-    exercise_id 1
+    course_id { 1 }
+    exercise_id { 1 }
   end
 end

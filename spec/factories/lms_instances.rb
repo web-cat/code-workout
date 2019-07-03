@@ -22,7 +22,7 @@
 
 FactoryBot.define do
   factory :lms_instance do
-    consumer_key "MyString"
-    consumer_secret "MyString"
+    consumer_key { "MyString" }
+    consumer_secret { "MyString" }
   end
 end

@@ -29,48 +29,48 @@
 FactoryBot.define do
   sequence :exercise_no, 1
   factory :exercise do
-    ignore do
+    transient do
       num { generate :exercise_no }
     end
     external_id { 'E' + num.to_s }
     name { 'Factorial ' + num.to_s }
     question_type { Exercise::Q_CODING }
-    is_public true
-    experience 50
+    is_public { true }
+    experience { 50 }
 
     # tags: Java, factorial, multiplication, function
 
     factory :coding_exercise do
-      ignore do
-        creator_id 1
-        question "Write a function in Java called `factorial()` that will "\
+      transient do
+        creator_id { 1 }
+        question { "Write a function in Java called `factorial()` that will "\
           "take a\npositive integer as input and returns its factorial as "\
-          "output.\n"
-        feedback "Explanation for the correct answer goes here.  This is "\
-          "just\nan example.\n"
-        class_name 'Factorial'
-        method_name 'factorial'
-        starter_code "public int factorial(int n)\n"\
+          "output.\n" }
+        feedback { "Explanation for the correct answer goes here.  This is "\
+          "just\nan example.\n" }
+        class_name { 'Factorial' }
+        method_name { 'factorial' }
+        starter_code { "public int factorial(int n)\n"\
           "{\n"\
           "    ___\n"\
-          "}\n"
-        wrapper_code "public class Factorial\n"\
+          "}\n" }
+        wrapper_code { "public class Factorial\n"\
           "{\n"\
           "    ___\n"\
-          "}\n"
-        test_script ""\
+          "}\n" }
+        test_script { ""\
           "0,1\n"\
           "1,1\n"\
           "2,2\n"\
           "3,6\n"\
           "4,24,hidden\n"\
-          "5,120,hidden\n"
+          "5,120,hidden\n" }
       end
 
       question_type { Exercise::Q_CODING }
-      language_list 'Java'
-      tag_list 'factorial, function, multiplication'
-      style_list 'code writing'
+      language_list { 'Java' }
+      tag_list { 'factorial, function, multiplication' }
+      style_list { 'code writing' }
 
       after :create do |e, v|
         e.current_version = FactoryBot.create :exercise_version,
@@ -91,18 +91,18 @@ FactoryBot.define do
     end
 
     factory :mc_exercise do
-      ignore do
-        creator_id 1
-        question "This is a sample multiple choice question.  It has only "\
-          "one correct answer.\n"
-        feedback "Explanation for the correct answer goes here.  This is "\
-          "just\nan example.\n"
+      transient do
+        creator_id { 1 }
+        question { "This is a sample multiple choice question.  It has only "\
+          "one correct answer.\n" }
+        feedback { "Explanation for the correct answer goes here.  This is "\
+          "just\nan example.\n" }
       end
 
       name { 'Pick One ' + num.to_s }
       question_type { Exercise::Q_MC }
-      tag_list 'random'
-      style_list 'forced choice'
+      tag_list { 'random' }
+      style_list { 'forced choice' }
 
       after :create do |e, v|
         e.current_version = FactoryBot.create :exercise_version,

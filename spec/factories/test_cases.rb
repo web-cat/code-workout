@@ -25,11 +25,11 @@
 
 FactoryBot.define do
   factory :test_case do
-    test_script "MyString"
-    negative_feedback "MyText"
-    weight 1.5
-    description "MyText"
-    input "MyString"
-    expected_output "MyString"
+    test_script { "MyString" }
+    negative_feedback { "MyText" }
+    weight { 1.5 }
+    description { "MyText" }
+    input { "MyString" }
+    expected_output { "MyString" }
   end
 end

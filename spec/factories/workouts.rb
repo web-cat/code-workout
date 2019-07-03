@@ -24,12 +24,12 @@
 
 FactoryBot.define do
   factory :workout do
-    name 'Workout from Factory'
-    scrambled true
-    description 'Created by Factory Girl for testing.'
-    language_list 'Java'
-    tag_list 'factorial, function, multiplication'
-    style_list 'code writing'
+    name { 'Workout from Factory' }
+    scrambled { true }
+    description { 'Created by Factory Girl for testing.' }
+    language_list { 'Java' }
+    tag_list { 'factorial, function, multiplication' }
+    style_list { 'code writing' }
 
     factory :workout_with_exercises do
       after :create do |w|

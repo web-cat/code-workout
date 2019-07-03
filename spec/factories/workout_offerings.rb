@@ -32,11 +32,11 @@
 
 FactoryBot.define do
   factory :workout_offering do
-    course_offering_id 1
-    workout_id 1
-    opening_date "#{Date.today.year}-01-01 14:08:55"
-    soft_deadline "#{Date.today.year}-12-30 14:08:55"
-    hard_deadline "#{Date.today.year}-12-30 14:08:55"
-    published true
+    course_offering_id { 1 }
+    workout_id { 1 }
+    opening_date { "#{Date.today.year}-01-01 14:08:55" }
+    soft_deadline { "#{Date.today.year}-12-30 14:08:55" }
+    hard_deadline { "#{Date.today.year}-12-30 14:08:55" }
+    published { true }
   end
 end

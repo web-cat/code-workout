@@ -13,6 +13,6 @@
 
 FactoryBot.define do
   factory :user_group do
-    name 'mcq-group'
+    name { 'mcq-group' }
   end
 end

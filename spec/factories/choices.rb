@@ -18,7 +18,7 @@
 
 FactoryBot.define do
   factory :choice do
-    answer 'A choice'
-    value 0.0
+    answer { 'A choice' }
+    value { 0.0 }
   end
 end

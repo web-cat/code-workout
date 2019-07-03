@@ -9,8 +9,8 @@
 
 FactoryBot.define do
   factory :multiple_choice_prompt do
-    allow_multiple false
-    is_scrambled true
+    allow_multiple { false }
+    is_scrambled { true }
 
     factory :mc_with_choices do
       after :create do |p|

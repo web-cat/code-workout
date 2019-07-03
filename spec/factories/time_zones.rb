@@ -14,8 +14,8 @@
 
 FactoryBot.define do
   factory :time_zone do
-    name "MyString"
-    zone "MyString"
-    display_as "MyString"
+    name { "MyString" }
+    zone { "MyString" }
+    display_as { "MyString" }
   end
 end
