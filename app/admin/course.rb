@@ -1,6 +1,5 @@
 ActiveAdmin.register Course, sort_order: :number_asc do
   includes :organization
-  active_admin_import
 
   menu parent: 'University-oriented', priority: 30
   permit_params :name, :number, :organization_id

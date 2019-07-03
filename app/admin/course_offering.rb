@@ -1,6 +1,5 @@
 ActiveAdmin.register CourseOffering do
   includes :course, :term, :lms_instance
-  active_admin_import
 
   menu parent: 'University-oriented', priority: 40
   permit_params :course_id, :term_id, :name, :label, :url,

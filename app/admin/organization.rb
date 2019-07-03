@@ -1,6 +1,4 @@
 ActiveAdmin.register Organization do
-  active_admin_import
-
   menu parent: 'University-oriented', priority: 20
   permit_params :name, :abbreviation
   actions :all, except: [:destroy]

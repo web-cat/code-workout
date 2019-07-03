@@ -1,6 +1,5 @@
 ActiveAdmin.register UserGroup do
   includes :memberships, :exercise_collection
-  active_admin_import
 
   menu parent: 'Users', priority: 20
   permit_params :name, memberships_attributes: [

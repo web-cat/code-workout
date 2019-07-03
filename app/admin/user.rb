@@ -1,6 +1,5 @@
 ActiveAdmin.register User do
   includes :memberships
-  active_admin_import
 
   menu parent: 'Users', priority: 10
   permit_params :first_name, :last_name, :email,

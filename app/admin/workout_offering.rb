@@ -1,6 +1,5 @@
 ActiveAdmin.register WorkoutOffering do
   includes :workout, :course_offering
-  active_admin_import
 
   menu parent: 'University-oriented', priority: 40
   permit_params :course_offering_id, :workout_id, :opening_date, :soft_deadline, :hard_deadline
