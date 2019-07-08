@@ -98,7 +98,7 @@ GEM
     bootstrap-editable-rails (0.0.9)
       railties (>= 3.1)
       sass-rails
-    bootstrap-sass (3.2.0.4)
+    bootstrap-sass-backport (3.2.0.2)
       sass (~> 3.2)
     bootstrap-wysihtml5-rails (0.3.3.8)
       railties (>= 3.0)
@@ -487,7 +487,7 @@ DEPENDENCIES
   autoprefixer-rails
   awesome_print
   bootstrap-editable-rails
-  bootstrap-sass (~> 3.2.0)
+  bootstrap-sass-backport (~> 3.2.0)
   bootstrap-wysihtml5-rails
   bootstrap3-datetimepicker-rails (~> 4.17.37)
   byebug
