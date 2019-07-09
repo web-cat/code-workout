@@ -4,9 +4,9 @@
   window.codeworkout.lms_assignment_id = "#{@lms_assignment_id}"
   window.codeworkout.extension_template_path = "#{asset_path 'student_extension.mustache.html'}"
   window.codeworkout.exercise_template_path = "#{asset_path 'exercise.mustache.html'}"
-  window.codeworkout.organization_id = "#{@organization.slug}"
-  window.codeworkout.course_id = "#{@course.slug}"
-  window.codeworkout.term_id = "#{@term.slug}"
+  window.codeworkout.organization_id = "#{@organization.andand.slug}"
+  window.codeworkout.course_id = "#{@course.andand.slug}"
+  window.codeworkout.term_id = "#{@term.andand.slug}"
 
 = javascript_include_tag('two_column_layout')
 
@@ -50,24 +50,25 @@
       %i.fa.fa-info-circle.action{ data: { toggle: 'modal', 
         target: '#policy-help-modal' } }
       Click to see available policies regarding grade release, hints, etc. 
+  
+  - if @course
+    .form-group
+      = label_tag :attempt_limit, '# Attempts allowed', 
+        class: 'control-label col-xs-2'
+      .col-xs-2
+        %input#attempt-limit.text10.form-control.input-sm.input{ type: 'number',
+          min: '0', placeholder: 'Optional', 
+          value: @attempt_limit ? "#{@attempt_limit}" : '' }
+      %small.col-xs-8.text.text-warning
+        Max. number of attempts allowed, for each exercise in the workout.
 
-  .form-group
-    = label_tag :attempt_limit, '# Attempts allowed', 
-      class: 'control-label col-xs-2'
-    .col-xs-2
-      %input#attempt-limit.text10.form-control.input-sm.input{ type: 'number',
-        min: '0', placeholder: 'Optional', 
-        value: @attempt_limit ? "#{@attempt_limit}" : '' }
-    %small.col-xs-8.text.text-warning
-      Max. number of attempts allowed, for each exercise in the workout.
-
-  .form-group
-    = label_tag :time_limit, 'Time', 
-      class: 'control-label col-xs-2'
-    .col-xs-2
-      %input#time-limit.text10.form-control.input-sm.input{ type: 'number',
-        min: '0', placeholder: 'In minutes, optional', 
-        value: @time_limit ? "#{@time_limit}" : '' }
+    .form-group
+      = label_tag :time_limit, 'Time', 
+        class: 'control-label col-xs-2'
+      .col-xs-2
+        %input#time-limit.text10.form-control.input-sm.input{ type: 'number',
+          min: '0', placeholder: 'In minutes, optional', 
+          value: @time_limit ? "#{@time_limit}" : '' }
 
   .form-group
     = label_tag :is_public, 'Available in Gym?', class: 'control-label col-xs-2'
@@ -79,156 +80,161 @@
         Checking this box makes the Workout visible in the Gym for all users 
         to practice or use in their courses.
 
-  .form-group
-    = label_tag :published, 'Visible to students?', class: 'control-label col-xs-2'
-    .col-xs-8
-      .col-xs-1
-        - published = defined?(@published) ? @published : false
-        = check_box_tag 'published', 'published', published, id: 'published'
-      %small.col-xs-11.text.text-warning
-        Checking this box makes the Workout Offerings you create visible to 
-        students in your courses.
+  - if @course
+    .form-group
+      = label_tag :published, 'Visible to students?', class: 'control-label col-xs-2'
+      .col-xs-8
+        .col-xs-1
+          - published = defined?(@published) ? @published : false
+          = check_box_tag 'published', 'published', published, id: 'published'
+        %small.col-xs-11.text.text-warning
+          Checking this box makes the Workout Offerings you create visible to 
+          students in your courses.
 
-  .form-group
-    = label_tag :most_recent, 'Use most recent attempt?', 
-      class: 'control-label col-xs-2'
-    .col-xs-8
-      .col-xs-1
-        - most_recent = defined?(@most_recent) ? @most_recent : true
-        = check_box_tag 'most_recent', 'most_recent', most_recent, id: 'most_recent'
-      %small.col-xs-11.text.text-warning
-        Check this box to use a student's most recent attempt for the current 
-        score. Leave it blank to use the student's highest scoring attempt.
+    .form-group
+      = label_tag :most_recent, 'Use most recent attempt?', 
+        class: 'control-label col-xs-2'
+      .col-xs-8
+        .col-xs-1
+          - most_recent = defined?(@most_recent) ? @most_recent : true
+          = check_box_tag 'most_recent', 'most_recent', most_recent, id: 'most_recent'
+        %small.col-xs-11.text.text-warning
+          Check this box to use a student's most recent attempt for the current 
+          score. Leave it blank to use the student's highest scoring attempt.
 
-  .form-group
-    %p.lead Add to Course Offerings
-    .col-lg-9.col-md-6.col-xs-9
-      %table#workout-offering-fields.table{ data: { can_update: "#{@can_update}", 
-        lms_assignment_id: @lms_assignment_id } }
-        %thead
-          %tr
-            %th Course Offering
-            %th.lms-url
-              LMS URL
-              %i.fa.fa-info-circle.action{ data: { toggle: 'modal', 
-                target: '#lms-url-help-modal' } }
-            %th Opens On
-            %th Due Date
-            %th Accepts Until
-            %th Student Extensions
-            %th Remove
-        %tbody
-          - if ['new', 'clone'].include? action_name
-            - @course_offerings.each do |co|
-              = render partial: 'workout_offering_fields', 
-                locals: { removable: true,
-                workout_offering: nil, 
-                course_offering: co }
-          - else
-            - @workout_offerings.each do |offering|
-              - removable = offering.workout_scores.blank?
-              = render partial: 'workout_offering_fields', 
-                locals: { removable: "#{removable}", 
-                course_offering: offering.course_offering, 
-                workout_offering: offering }
-  .form-group
-    = button_tag type: 'button', id: 'add-offering', 
-      class: 'btn btn-success btn-sm', data: { toggle: 'modal', 
-      target: '#offerings-modal' } do
-      %i.fa.fa-plus{ style: 'padding-right 5px;' }
-      Add to Course Offering
+    .form-group
+      %p.lead Add to Course Offerings
+      .col-lg-9.col-md-6.col-xs-9
+        %table#workout-offering-fields.table{ data: { can_update: "#{@can_update}", 
+          lms_assignment_id: @lms_assignment_id } }
+          %thead
+            %tr
+              %th Course Offering
+              %th.lms-url
+                LMS URL
+                %i.fa.fa-info-circle.action{ data: { toggle: 'modal', 
+                  target: '#lms-url-help-modal' } }
+              %th Opens On
+              %th Due Date
+              %th Accepts Until
+              %th Student Extensions
+              %th Remove
+          %tbody
+            - if ['new', 'clone'].include?(action_name) && @course_offerings
+              - @course_offerings.each do |co|
+                = render partial: 'workout_offering_fields', 
+                  locals: { removable: true,
+                  workout_offering: nil, 
+                  course_offering: co }
+            - elsif @workout_offerings 
+              - @workout_offerings.each do |offering|
+                - removable = offering.workout_scores.blank?
+                = render partial: 'workout_offering_fields', 
+                  locals: { removable: "#{removable}", 
+                  course_offering: offering.course_offering, 
+                  workout_offering: offering }
 
-  .form-group#extensions{ style: 'display: none;', 
-    data: { student_extensions: "#{@student_extensions.to_json}" } }
-    %p.lead Student Extensions
-    .col-lg-10.col-md-6.col-xs-9
-      %table#student-extension-fields.table
-        %thead
-          %tr
-            %th Course Offering
-            %th Student
-            %th Opens On
-            %th Due Date
-            %th Accepts Until
-            %th Time Limit
-            %th Remove
-        %tbody
+    .form-group
+      = button_tag type: 'button', id: 'add-offering', 
+        class: 'btn btn-success btn-sm', data: { toggle: 'modal', 
+        target: '#offerings-modal' } do
+        %i.fa.fa-plus{ style: 'padding-right 5px;' }
+        Add to Course Offering
+
+    .form-group#extensions{ style: 'display: none;', 
+      data: { student_extensions: "#{@student_extensions.to_json}" } }
+      %p.lead Student Extensions
+      .col-lg-10.col-md-6.col-xs-9
+        %table#student-extension-fields.table
+          %thead
+            %tr
+              %th Course Offering
+              %th Student
+              %th Opens On
+              %th Due Date
+              %th Accepts Until
+              %th Time Limit
+              %th Remove
+          %tbody
 
   .form-group
     %button#btn-submit-wo.btn.btn-primary Submit
     = link_to 'Back', workouts_path
+  
+  - if @course
+    %table#add-offering-form{ style: 'display: none;' }
+      %tbody
+        = render partial: 'workout_offering_fields', 
+          locals: { removable: true, workout_offering: nil, 
+          course_offering: nil }
 
-  %table#add-offering-form{ style: 'display: none;' }
-    %tbody
-      = render partial: 'workout_offering_fields', 
-        locals: { removable: true, workout_offering: nil, 
-        course_offering: nil }
+- if @course
+  - modal_style = 'overflow-y: scroll; max-height: 85%; margin: 50px auto;'
 
-- modal_style = 'overflow-y: scroll; max-height: 85%; margin: 50px auto;'
 
-#student-search-modal.modal.fade{role: 'dialog', tabindex: '-1' }
-  .modal-dialog.modal-lg{ style: modal_style }
-    .modal-content.searchable
-      .modal-header.header
-        %p.lead
-      .modal-body
-        .form-group
-          = label_tag :student, 'Find a student', class: 'control-label col-xs-3'
-          .col-xs-12.col-md-9
-            .ui-widget
-              = text_field_tag :student, nil, id: 'student', 
-                class: 'form-control input-sm',
-                placeholder: "Start typing a name or email address"
+  #student-search-modal.modal.fade{role: 'dialog', tabindex: '-1' }
+    .modal-dialog.modal-lg{ style: modal_style }
+      .modal-content.searchable
+        .modal-header.header
+          %p.lead
+        .modal-body
+          .form-group
+            = label_tag :student, 'Find a student', class: 'control-label col-xs-3'
+            .col-xs-12.col-md-9
+              .ui-widget
+                = text_field_tag :student, nil, id: 'student', 
+                  class: 'form-control input-sm',
+                  placeholder: "Start typing a name or email address"
 
-#offerings-modal.modal.fade{role: 'dialog', tabindex: '-1' }
-  .modal-dialog.modal-lg{ style: modal_style }
-    .modal-content
-      .modal-header
-        %p.lead Add this workout to another offering of this course.
-      .modal-body
-        .msg
-          - if @unused_course_offerings.blank?
-            All course offerings already offer this workout.
-        #course-offerings.list-group
-          - @unused_course_offerings.andand.each do |co|
-            %a.list-group-item.action{ href: '#', 
-              data: { course_offering_id: co.id } }
-              = co.display_name_with_term
+  #offerings-modal.modal.fade{role: 'dialog', tabindex: '-1' }
+    .modal-dialog.modal-lg{ style: modal_style }
+      .modal-content
+        .modal-header
+          %p.lead Add this workout to another offering of this course.
+        .modal-body
+          .msg
+            - if @unused_course_offerings.blank?
+              All course offerings already offer this workout.
+          #course-offerings.list-group
+            - @unused_course_offerings.andand.each do |co|
+              %a.list-group-item.action{ href: '#', 
+                data: { course_offering_id: co.id } }
+                = co.display_name_with_term
 
-#policy-help-modal.modal.fade{role: 'dialog', tabindex: '-1' }
-  .modal-dialog.modal-md{ style: modal_style }
-    .modal-content
-      .modal-header
-        %p.lead Workout Policy Information
-      .modal-body
-        %small
-          Control policies like showing feedback before the assignment closes,
-          showing results from test cases, review ability, etc.
-        - if WorkoutPolicy.any?
-          %table.table
-            %thead
-              %th Name
-              %th Description
-            %tbody
-              - WorkoutPolicy.all.each do |policy|
-                %tr
-                  %td
-                    = policy.name
-                  %td
-                    = policy.description
-        - else
+  #policy-help-modal.modal.fade{role: 'dialog', tabindex: '-1' }
+    .modal-dialog.modal-md{ style: modal_style }
+      .modal-content
+        .modal-header
+          %p.lead Workout Policy Information
+        .modal-body
           %small
-            %br
-            There are no workout policies available for use at the moment.
+            Control policies like showing feedback before the assignment closes,
+            showing results from test cases, review ability, etc.
+          - if WorkoutPolicy.any?
+            %table.table
+              %thead
+                %th Name
+                %th Description
+              %tbody
+                - WorkoutPolicy.all.each do |policy|
+                  %tr
+                    %td
+                      = policy.name
+                    %td
+                      = policy.description
+          - else
+            %small
+              %br
+              There are no workout policies available for use at the moment.
 
-#lms-url-help-modal.modal.fade{role: 'dialog', tabindex: '-1' }
-  .modal-dialog.modal-md{ style: modal_style }
-    .modal-content
-      .modal-body
-        If you want this assignment to be accessed ONLY through a Learning 
-        Management System such as Canvas, CourseDen, or Moodle, paste the  
-        url to the LMS assignment here.
+  #lms-url-help-modal.modal.fade{role: 'dialog', tabindex: '-1' }
+    .modal-dialog.modal-md{ style: modal_style }
+      .modal-content
+        .modal-body
+          If you want this assignment to be accessed ONLY through a Learning 
+          Management System such as Canvas, CourseDen, or Moodle, paste the  
+          url to the LMS assignment here.
 
-        .text.text-danger
-          Including this field will automatically redirect students to the 
-          provided URL.
+          .text.text-danger
+            Including this field will automatically redirect students to the 
+            provided URL.

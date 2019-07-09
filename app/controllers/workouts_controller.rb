@@ -148,11 +148,15 @@ class WorkoutsController < ApplicationController
     end
     @lti_launch = params[:lti_launch]
     @workout = Workout.new
-    @course = Course.find params[:course_id]
-    @term = Term.find params[:term_id]
-    @organization = Organization.find params[:organization_id]
-    @course_offerings = current_user.managed_course_offerings(
-      course: @course, term: @term)
+    @course = params[:course_id] ? Course.find(params[:course_id]) : nil
+
+    if @course
+      @term = params[:term_id] ? Term.find(params[:term_id]) : nil
+      @organization = params[:organization_id] ? 
+        Organization.find(params[:organization_id]) : nil
+      @course_offerings = current_user.managed_course_offerings(
+        course: @course, term: @term)
+    end
     @lms_assignment_id = params[:lms_assignment_id]
     @suggested_name = params[:suggested_name]
 
@@ -167,34 +171,57 @@ class WorkoutsController < ApplicationController
   # GET /gym/workouts/existing_or_new
   def new_or_existing
     if cannot? :new, Workout
-      flash.now[:notice] = 'You are unauthorized to create new workouts. Choose from existing workouts instead.'
+      flash.now[:notice] = 
+        'You are unauthorized to create new workouts. Choose from existing workouts instead.'
     end
 
     @lti_launch = params[:lti_launch]
-    @course = Course.find params[:course_id]
-    @term = Term.find params[:term_id]
-    @organization = Organization.find params[:organization_id]
+    @course = !!params[:course_id] ? Course.find(params[:course_id]) : nil
+    @term = !!params[:term_id] ? Term.find(params[:term_id]) : nil
+    @organization = !!params[:organization_id] ? 
+      Organization.find(params[:organization_id]) : nil
     @lms_assignment_id = params[:lms_assignment_id]
     @suggested_name = params[:suggested_name]
+    
+    # if course is specified, we want to highlight existing workouts that have been used
+    # in the given course before
+    @searching_offerings = !!@course
+    
+    # we are finding or creating a workout for a course_offering
+    if @course
+      @new_workout_path = organization_new_workout_path(
+        lti_launch: @lti_launch,
+        organization_id: @organization.slug,
+        term_id: @term.slug,
+        lms_assignment_id: @lms_assignment_id,
+        suggested_name: @suggested_name
+      )
 
-    @workout_offerings = @course.course_offerings.joins(:workout_offerings, :term)
-      .order('terms.ends_on DESC')
-      .flat_map(&:workout_offerings)
+      @workout_offerings = @course.course_offerings.joins(:workout_offerings, :term)
+        .order('terms.ends_on DESC')
+        .flat_map(&:workout_offerings)
 
-    # workouts_with_term is of the form [[CourseOffering, WorkoutOffering],
-    # [CourseOffering, WorkoutOffering], [CourseOffering, WorkoutOffering]]
-    # we will convert it into a Hash where each key is a term, and each value
-    # is an array of Workouts
-    workouts_with_term = @workout_offerings.map { |wo|
-      [wo.course_offering.term, wo]
-    }.group_by(&:first).map{ |k, a| [k, a.map(&:last)] }
+      # workouts_with_term is of the form [[CourseOffering, WorkoutOffering],
+      # [CourseOffering, WorkoutOffering], [CourseOffering, WorkoutOffering]]
+      # we will convert it into a Hash where each key is a term, and each value
+      # is an array of Workouts
+      workouts_with_term = @workout_offerings.map { |wo|
+        [wo.course_offering.term, wo]
+      }.group_by(&:first).map{ |k, a| [k, a.map(&:last)] }
 
-    @default_results = array_to_hash(workouts_with_term)
+      @default_results = array_to_hash(workouts_with_term)
 
-    # make sure each term shows unique Workouts
-    @default_results.each do |term, workout_offerings|
-      @default_results[term] = workout_offerings.uniq{ |wo| wo.workout }
+      # make sure each term shows unique Workouts
+      @default_results.each do |term, workout_offerings|
+        @default_results[term] = workout_offerings.uniq{ |wo| wo.workout }
+      end
+    else 
+      @new_workout_path = new_workout_path(
+        lms_assignment_id: @lms_assignment_id,
+        suggested_name: @suggested_name
+      )
     end
+
     render layout: 'one_column'
   end
 
