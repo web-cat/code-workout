@@ -61,15 +61,17 @@ class LtiController < ApplicationController
         # First time this workout is being accessed from the
         # given LTI assignment
         workout = Workout.find_by(id: params[:gym_workout_id])
-        if !workout.andand.is_public
-          @message = 'Error -- Public workout not found!'
-          render 'lti/error' and return
+        if !workout
+          redirect_to new_or_existing_workout_path(
+            lms_assignment_id: ext_lti_assignment_id,
+            lti_launch: true
+          ) and return
+        else 
+          lti_workout = LtiWorkout.create(
+            lms_assignment_id: ext_lti_assignment_id,
+            workout: Workout.find(params[:gym_workout_id])
+          )
         end
-
-        lti_workout = LtiWorkout.create(
-          lms_assignment_id: ext_lti_assignment_id,
-          workout: Workout.find(params[:gym_workout_id]),
-        )
       end
 
       if lti_workout

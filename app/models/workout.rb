@@ -220,6 +220,17 @@ class Workout < ActiveRecord::Base
       self.description = params[:description]
       self.is_public = params[:is_public]
 
+      if params[:lms_assignment_id].present?
+        # if we don't have an lti workout, create it
+        lti_workout = LtiWorkout.find_by(lms_assignment_id: params[:lms_assignment_id])
+        if !lti_workout
+          lti_workout = LtiWorkout.create(
+            lms_assignment_id: params[:lms_assignment_id],
+            workout: self
+          )
+        end
+      end
+
       removed_exercises = JSON.parse params[:removed_exercises]
       removed_exercises.each do |exercise_workout_id|
         self.exercise_workouts.destroy exercise_workout_id

@@ -167,8 +167,6 @@ class WorkoutsController < ApplicationController
     render layout: 'two_columns'
   end
 
-  # -------------------------------------------------------------
-  # GET /gym/workouts/existing_or_new
   def new_or_existing
     if cannot? :new, Workout
       flash.now[:notice] = 
@@ -218,7 +216,8 @@ class WorkoutsController < ApplicationController
     else 
       @new_workout_path = new_workout_path(
         lms_assignment_id: @lms_assignment_id,
-        suggested_name: @suggested_name
+        suggested_name: @suggested_name,
+        lti_launch: @lti_launch
       )
     end
 
@@ -381,44 +380,32 @@ class WorkoutsController < ApplicationController
       removed_exercises: params[:removed_exercises],
       exercises: params[:exercises]
     }
-
-    if JSON.parse(params[:course]).blank?
+    
+    course = params[:course_id]
+    if course.blank?
       # no course, so this workout needs to manage its own LTI ties 
       workout_params[:lms_assignment_id] = params[:lms_assignment_id]
     end
     @workout = @workout.update_or_create(workout_params)
 
-    if @workout 
+    if @workout && course.present?
       workout_offering_id = create_or_update_offerings(@workout)
-      if @lti_launch
+      if workout_offering_id
         lti_params = session[:lti_params]
         url = url_for(organization_workout_offering_path(
             organization_id: params[:organization_id],
             course_id: params[:course_id],
             term_id: params[:term_id],
             id: workout_offering_id,
-            lti_launch: true
+            lti_launch: @lti_launch 
           )
         )
-      elsif workout_offering_id.nil?
-        url = url_for(workout_path(id: @workout.id))
       else
-        url = url_for(organization_workout_offering_path(
-            organization_id: params[:organization_id],
-            term_id: params[:term_id],
-            course_id: params[:course_id],
-            id: workout_offering_id
-          )
-        )
+        url = url_for(workout_path(id: @workout.id))
       end
-    else
+    elsif !@workout
       err_string = 'There was a problem while creating the workout.'
-      url = url_for organization_new_workout_path(
-        organization_id: params[:organization_id],
-        term_id: params[:term_id],
-        course_id: params[:course_id],
-        notice: err_string
-      )
+      url = url_for(root_path(notice: err_string)) 
     end
 
     respond_to do |format|
@@ -772,9 +759,14 @@ class WorkoutsController < ApplicationController
       removed_exercises: params[:removed_exercises],
       exercises: params[:exercises]
     }
+
+    if params[:course_id].blank?
+      # no course, this workout needs to manage its own LTI ties
+      workout_params[:lms_assignment_id] = params[:lms_assignment_id]
+    end
     @workout = @workout.update_or_create(workout_params)
 
-    if @workout
+    if @workout && params[:course_id].present?
       workout_offering_id = create_or_update_offerings(@workout)
       if workout_offering_id.nil?
         url = url_for(workout_path(id: @workout.id))
