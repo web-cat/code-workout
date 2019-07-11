@@ -330,8 +330,8 @@ class Workout < ActiveRecord::Base
     workout_scores.where(
       user: user, 
       workout_offering: workout_offering,
-      lis_outcome_service_url: nil,
-      lis_result_sourcedid: nil
+      lis_outcome_service_url: lis_outcome_service_url,
+      lis_result_sourcedid: lis_result_sourcedid 
     ).order('updated_at DESC').first
   end
 
