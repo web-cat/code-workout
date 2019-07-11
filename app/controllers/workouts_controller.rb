@@ -331,7 +331,7 @@ class WorkoutsController < ApplicationController
 
   # -------------------------------------------------------------
   def clone
-    @workout = Workout.find params[:workout_id]
+    @workout = params[:id] ? Workout.find(params[:id]) : Workout.find(params[:workout_id])
 
     if current_user
       message = 'You are not authorized to clone that workout.'
@@ -341,11 +341,6 @@ class WorkoutsController < ApplicationController
 
     authorize! :clone, @workout, message: message
 
-    @course = Course.find params[:course_id]
-    @term = Term.find params[:term_id]
-    @can_update = can? :edit, @workout
-    @time_limit = @workout.workout_offerings.first.andand.time_limit
-    @organization = Organization.find params[:organization_id]
     @lti_launch = params[:lti_launch]
     @lms_assignment_id = params[:lms_assignment_id]
     @suggested_name = params[:suggested_name]
@@ -359,10 +354,17 @@ class WorkoutsController < ApplicationController
       ex_data[:exercise_workout_id] = ex.id
       @exercises.push(ex_data)
     end
-
-    @course_offerings =
-      current_user.andand.managed_course_offerings(course: @course, term: @term)
-    @unused_course_offerings = nil
+    
+    if params[:course_id]
+      @course = Course.find params[:course_id]
+      @term = Term.find params[:term_id]
+      @can_update = can? :edit, @workout
+      @time_limit = @workout.workout_offerings.first.andand.time_limit
+      @organization = Organization.find params[:organization_id]
+      @course_offerings =
+        current_user.andand.managed_course_offerings(course: @course, term: @term)
+      @unused_course_offerings = nil
+    end
 
     render layout: 'two_columns'
   end
@@ -401,7 +403,7 @@ class WorkoutsController < ApplicationController
           )
         )
       else
-        url = url_for(workout_path(id: @workout.id))
+        url = url_for(practice_workout_path(id: @workout.id))
       end
     elsif !@workout
       err_string = 'There was a problem while creating the workout.'

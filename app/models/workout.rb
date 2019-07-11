@@ -340,7 +340,7 @@ class Workout < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def self.search(terms, user, course, searching_offerings)
-    split_terms = terms.blank? ? nil : terms.join('|')
+    split_terms = terms.blank? ? '.' : terms.join('|')
 
     if user
       available_workouts = Workout.where(

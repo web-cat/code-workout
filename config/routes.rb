@@ -80,6 +80,7 @@ CodeWorkout::Application.routes.draw do
     get 'workouts/new_or_existing' => 'workouts#new_or_existing', as: :new_or_existing_workout
     get 'workouts/new' => 'workouts#new', as: :new_workout
     get 'workouts/:id/edit' => 'workouts#edit', as: :edit_workout
+    get 'workouts/:id/clone' => 'workouts#clone', as: :clone_workout
     get  'workouts/:id/practice' => 'workouts#practice',
       as: :practice_workout
     get  'workouts/:id/evaluate' => 'workouts#evaluate', as: :workout_evaluate
