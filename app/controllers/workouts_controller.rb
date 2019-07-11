@@ -260,29 +260,62 @@ class WorkoutsController < ApplicationController
     end
   end
 
-
-  # -------------------------------------------------------------
-  # GET /workouts/1/edit
   def edit
-    @workout_offering = WorkoutOffering.find(params[:workout_offering_id])
-    @workout = @workout_offering.workout
+    @lti_launch = params[:lti_launch]
+    if params[:workout_offering_id]
+      # route is /courses/vt/:course_id/:term_id/:workout_offering_id/edit_workout/
+      @workout_offering = WorkoutOffering.find(params[:workout_offering_id])
+      @workout = @workout_offering.workout
+    else
+      @workout = Workout.find(params[:id]) 
+    end
 
     if cannot? :edit, @workout
       redirect_to root_path,
         notice: 'You are not authorized to edit this workout.' and return
     end
+    
+    if @workout_offering 
+      # we are editing a workout along with its workout offerings
+      @course = Course.find(params[:course_id])
+      @term = Term.find(params[:term_id])
+      @organization = Organization.find params[:organization_id]
+      @time_limit = @workout_offering.andand.time_limit
+      @attempt_limit = @workout_offering.andand.attempt_limit
+      @published = @workout_offering.andand.published
+      @most_recent = @workout_offering.andand.most_recent
+      @policy = @workout_offering.andand.workout_policy
 
-    @course = Course.find(params[:course_id])
-    @term = Term.find(params[:term_id])
+      @workout_offerings = current_user.managed_workout_offerings_in_term(
+        @workout, @course, @term).flatten
+
+      course_offerings = current_user.managed_course_offerings(
+        course: @course, term: @term)
+      used_course_offerings = @workout_offerings.flat_map(&:course_offering)
+      @unused_course_offerings = course_offerings - used_course_offerings
+
+      @student_extensions = []
+      @workout_offerings.each do |workout_offering|
+        workout_offering.student_extensions.each do |e|
+          ext = {}
+          ext[:id] = e.id
+          ext[:student_id] = e.user.id
+          ext[:student_display] = e.user.display_name
+          ext[:course_offering_id] = e.workout_offering.course_offering_id
+          ext[:course_offering_display] =
+            e.workout_offering.course_offering.display_name_with_term
+          ext[:opening_date] = e.opening_date.andand.to_i
+          ext[:soft_deadline] = e.soft_deadline.andand.to_i
+          ext[:hard_deadline] = e.hard_deadline.andand.to_i
+          ext[:time_limit] = e.time_limit
+          @student_extensions.push(ext)
+        end
+      end
+    end
+
     @can_update = can? :edit, @workout
-    @time_limit = @workout.workout_offerings.first.andand.time_limit
-    @attempt_limit = @workout.workout_offerings.first.andand.attempt_limit
-    @published = @workout.workout_offerings.first.andand.published
-    @most_recent = @workout.workout_offerings.first.andand.most_recent
-    @policy = @workout.workout_offerings.first.andand.workout_policy
-    @organization = Organization.find params[:organization_id]
-    @lti_launch = params[:lti_launch]
-
+    
+    # exercises for the workout, to populate the form
     @exercises = []
     @workout.exercise_workouts.each do |ex|
       ex_data = {}
@@ -291,31 +324,6 @@ class WorkoutsController < ApplicationController
       ex_data[:id] = ex.exercise_id
       ex_data[:exercise_workout_id] = ex.id
       @exercises.push(ex_data)
-    end
-    @workout_offerings = current_user.managed_workout_offerings_in_term(
-      @workout, @course, @term).flatten
-
-    course_offerings = current_user.managed_course_offerings(
-      course: @course, term: @term)
-    used_course_offerings = @workout_offerings.flat_map(&:course_offering)
-    @unused_course_offerings = course_offerings - used_course_offerings
-
-    @student_extensions = []
-    @workout_offerings.each do |workout_offering|
-      workout_offering.student_extensions.each do |e|
-        ext = {}
-        ext[:id] = e.id
-        ext[:student_id] = e.user.id
-        ext[:student_display] = e.user.display_name
-        ext[:course_offering_id] = e.workout_offering.course_offering_id
-        ext[:course_offering_display] =
-          e.workout_offering.course_offering.display_name_with_term
-        ext[:opening_date] = e.opening_date.andand.to_i
-        ext[:soft_deadline] = e.soft_deadline.andand.to_i
-        ext[:hard_deadline] = e.hard_deadline.andand.to_i
-        ext[:time_limit] = e.time_limit
-        @student_extensions.push(ext)
-      end
     end
 
     render layout: 'two_columns'
@@ -366,9 +374,22 @@ class WorkoutsController < ApplicationController
     @workout = Workout.new
     @workout.creator_id = current_user.id
     @lti_launch = params[:lti_launch]
-    workout_offering_id = create_or_update
+    workout_params = {
+      name: params[:name],
+      description: params[:description],
+      is_public: params[:is_public],
+      removed_exercises: params[:removed_exercises],
+      exercises: params[:exercises]
+    }
 
-    if @workout.save
+    if JSON.parse(params[:course]).blank?
+      # no course, so this workout needs to manage its own LTI ties 
+      workout_params[:lms_assignment_id] = params[:lms_assignment_id]
+    end
+    @workout = @workout.update_or_create(workout_params)
+
+    if @workout 
+      workout_offering_id = create_or_update_offerings(@workout)
       if @lti_launch
         lti_params = session[:lti_params]
         url = url_for(organization_workout_offering_path(
@@ -379,18 +400,16 @@ class WorkoutsController < ApplicationController
             lti_launch: true
           )
         )
+      elsif workout_offering_id.nil?
+        url = url_for(workout_path(id: @workout.id))
       else
-        if workout_offering_id.nil?
-          url = url_for(workout_path(id: @workout.id))
-        else
-          url = url_for(organization_workout_offering_path(
-              organization_id: params[:organization_id],
-              term_id: params[:term_id],
-              course_id: params[:course_id],
-              id: workout_offering_id
-            )
+        url = url_for(organization_workout_offering_path(
+            organization_id: params[:organization_id],
+            term_id: params[:term_id],
+            course_id: params[:course_id],
+            id: workout_offering_id
           )
-        end
+        )
       end
     else
       err_string = 'There was a problem while creating the workout.'
@@ -745,19 +764,29 @@ class WorkoutsController < ApplicationController
       redirect_to root_path,
         notice: 'Unauthorized to update workout' and return
     end
+    
+    workout_params = {
+      name: params[:name],
+      description: params[:description],
+      is_public: params[:is_public],
+      removed_exercises: params[:removed_exercises],
+      exercises: params[:exercises]
+    }
+    @workout = @workout.update_or_create(workout_params)
 
-    workout_offering_id = create_or_update
-    @workout.save!
-    if workout_offering_id.nil?
-      url = url_for(workout_path(id: @workout.id))
-    else
-      url = url_for(organization_workout_offering_path(
-          organization_id: params[:organization_id],
-          term_id: params[:term_id],
-          course_id: params[:course_id],
-          id: workout_offering_id
+    if @workout
+      workout_offering_id = create_or_update_offerings(@workout)
+      if workout_offering_id.nil?
+        url = url_for(workout_path(id: @workout.id))
+      else
+        url = url_for(organization_workout_offering_path(
+            organization_id: params[:organization_id],
+            term_id: params[:term_id],
+            course_id: params[:course_id],
+            id: workout_offering_id
+          )
         )
-      )
+      end
     end
 
     respond_to do |format|
@@ -829,11 +858,8 @@ class WorkoutsController < ApplicationController
       @xptogo = 60
       @remain = 10
     end
-
-    def create_or_update
-      @workout.name = params[:name]
-      @workout.description = params[:description]
-      @workout.is_public = params[:is_public]
+  
+    def create_or_update_offerings(workout)
       common = {}  # params that are common among all offerings of this workout
       common[:workout_policy] = WorkoutPolicy.find_by id: params[:policy_id]
       common[:time_limit] = params[:time_limit]
@@ -842,25 +868,6 @@ class WorkoutsController < ApplicationController
       common[:most_recent] = params[:most_recent]
       common[:lms_assignment_id] = params[:lms_assignment_id]
 
-      removed_exercises = JSON.parse params[:removed_exercises]
-      removed_exercises.each do |exercise_workout_id|
-        @workout.exercise_workouts.destroy exercise_workout_id
-      end
-
-      exercises = JSON.parse params[:exercises]
-      exercises.each_with_index do |ex, index|
-        exercise = Exercise.find ex['id']
-        exercise_workout =
-          ExerciseWorkout.find_by workout: @workout, exercise: exercise
-        if exercise_workout.blank?
-          exercise_workout =
-            ExerciseWorkout.new workout: @workout, exercise: exercise
-        end
-        exercise_workout.set_list_position index
-        exercise_workout.points = ex['points']
-        exercise_workout.save!
-      end
-
       removed_extensions = JSON.parse params[:removed_extensions]
       removed_extensions.each do |extension_id|
         StudentExtension.destroy extension_id
@@ -868,12 +875,13 @@ class WorkoutsController < ApplicationController
 
       removed_offerings = JSON.parse params[:removed_offerings]
       removed_offerings.each do |workout_offering_id|
-        @workout.workout_offerings.destroy workout_offering_id
+        workout.workout_offerings.destroy workout_offering_id
       end
 
       course_offerings = JSON.parse params[:course_offerings]
       workout_offerings =
-        @workout.add_workout_offerings(course_offerings, common)
+        workout.add_workout_offerings(course_offerings, common)
+      workout.save!
       return workout_offerings.first
     end
 

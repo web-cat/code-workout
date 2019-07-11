@@ -159,7 +159,9 @@ init = ->
   description = $('textarea#description').data 'value'
   $('textarea#description').val description
   init_templates()
-  init_datepickers()
+  course = window.codeworkout.course_id
+  if course
+    init_datepickers()
 
 # Removes all extensions associated with a workout offering in the form.
 # Used when the workout offering itself is being deleted.
@@ -200,10 +202,12 @@ init_templates = ->
     window.codeworkout.exercise_template = template
     if $('body').is('.workouts.edit') || $('body').is('.workouts.clone')
       init_exercises()
-  $.get window.codeworkout.extension_template_path, (template, textStatus, jqXHr) ->
-    window.codeworkout.student_extension_template = template
-    if $('body').is '.workouts.edit'
-      init_student_extensions()
+  course = window.codeworkout.course_id
+  if course
+    $.get window.codeworkout.extension_template_path, (template, textStatus, jqXHr) ->
+      window.codeworkout.student_extension_template = template
+      if $('body').is '.workouts.edit'
+        init_student_extensions()
 
 # Display any existing student extensions belonging to workout offerings
 # of this workout.

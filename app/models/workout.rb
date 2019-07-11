@@ -214,7 +214,33 @@ class Workout < ActiveRecord::Base
     gap_per = 100 - earned_per - remaining_per
     return [earned, remaining, gap, earned_per, remaining_per, gap_per]
   end
+  
+  def update_or_create(params)
+      self.name = params[:name]
+      self.description = params[:description]
+      self.is_public = params[:is_public]
 
+      removed_exercises = JSON.parse params[:removed_exercises]
+      removed_exercises.each do |exercise_workout_id|
+        self.exercise_workouts.destroy exercise_workout_id
+      end
+
+      exercises = JSON.parse params[:exercises]
+      exercises.each_with_index do |ex, index|
+        exercise = Exercise.find ex['id']
+        exercise_workout =
+          ExerciseWorkout.find_by workout: self, exercise: exercise
+        if exercise_workout.blank?
+          exercise_workout =
+            ExerciseWorkout.new workout: self, exercise: exercise
+        end
+        exercise_workout.set_list_position index
+        exercise_workout.points = ex['points']
+        exercise_workout.save!
+      end
+
+      return self.save ? self : false 
+  end
 
   # ----------------------------------------------------------------------------
   # Updates or creates offerings for this workout in the specified courses.

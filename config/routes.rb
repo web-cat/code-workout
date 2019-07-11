@@ -78,7 +78,8 @@ CodeWorkout::Application.routes.draw do
     post 'workouts/new_with_search'  => 'workouts#new_with_search',
       as: :workouts_exercise_search
     get 'workouts/new_or_existing' => 'workouts#new_or_existing', as: :new_or_existing_workout
-    get 'workouts/new' => 'workouts#new', as: :new_workout 
+    get 'workouts/new' => 'workouts#new', as: :new_workout
+    get 'workouts/:id/edit' => 'workouts#edit', as: :edit_workout
     get  'workouts/:id/practice' => 'workouts#practice',
       as: :practice_workout
     get  'workouts/:id/evaluate' => 'workouts#evaluate', as: :workout_evaluate
