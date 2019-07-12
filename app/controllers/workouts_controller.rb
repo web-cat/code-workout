@@ -834,7 +834,11 @@ class WorkoutsController < ApplicationController
         end
       end
       redirect_to exercise_practice_path(
-        @workout.first_exercise, workout_id: @workout.id, lti_launch: params[:lti_launch])
+        @workout.first_exercise, 
+        workout_id: @workout.id, 
+        lti_launch: params[:lti_launch],
+        workout_score_id: @workout_score.id
+      )
     else
       redirect_to workouts, notice: 'Workout not found' and return
     end

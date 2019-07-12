@@ -427,9 +427,10 @@ class ExercisesController < ApplicationController
     end
 
     @attempt = nil
-    @workout_score = @workout_offering ?
-      @workout_offering.score_for(@student_user) : @workout ?
-        @workout.score_for(@student_user, @workout_offering) : nil
+    @workout_score = params[:workout_score_id] ? WorkoutScore.find(params[:workout_score_id]) : (
+      @workout_offering ? @workout_offering.score_for(@student_user) : (
+          @workout ? @workout.score_for(@student_user, @workout_offering) : nil
+    ))
 
     if @student_user
       @student_user.current_workout_score = @workout_score ? @workout_score : nil
@@ -635,7 +636,9 @@ class ExercisesController < ApplicationController
     if @workout_offering
       @workout_score = @workout_offering.score_for(@student_drift_user)
     elsif @workout
-      @workout_score = @workout.score_for(@student_drift_user)
+      @workout_score = @workout.score_for(@student_drift_user, nil, 
+                                          params[:lis_outcome_service_url],
+                                          params[:lis_result_sourcedid])
     end
 
     # Has the allotted time for the workout offering passed?
@@ -755,6 +758,7 @@ class ExercisesController < ApplicationController
             exercise_practice_path(
               @workout_score.workout.next_exercise(@exercise),
               workout_id: @workout_score.workout.id,
+              workout_score_id: @workout_score.andand.id,
               lti_launch: @lti_launch) + "' "
         end
       end
