@@ -811,6 +811,7 @@ class WorkoutsController < ApplicationController
         @workout_score = @workout.score_for(current_user, nil,
                                             params[:lis_outcome_service_url],
                                             params[:lis_result_sourcedid])
+        @lti_workout = LtiWorkout.find_by(id: params[:lti_workout_id])
         if @workout_score.nil?
           # first time this workout is being accessed, create new
           @workout_score = WorkoutScore.new(
@@ -819,6 +820,7 @@ class WorkoutsController < ApplicationController
             exercises_remaining: @workout.exercises.length,
             lis_result_sourcedid: params[:lis_result_sourcedid],
             lis_outcome_service_url: params[:lis_outcome_service_url],
+            lti_workout: @lti_workout,
             user: current_user,
             workout: @workout)
           @workout_score.save!

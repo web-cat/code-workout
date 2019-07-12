@@ -669,8 +669,10 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.integer  "workout_offering_id",     limit: 4
     t.string   "lis_outcome_service_url", limit: 255
     t.string   "lis_result_sourcedid",    limit: 255
+    t.integer  "lti_workout_id",          limit: 4
   end
 
+  add_index "workout_scores", ["lti_workout_id"], name: "index_workout_scores_on_lti_workout_id", using: :btree
   add_index "workout_scores", ["user_id"], name: "index_workout_scores_on_user_id", using: :btree
   add_index "workout_scores", ["workout_id"], name: "index_workout_scores_on_workout_id", using: :btree
   add_index "workout_scores", ["workout_offering_id"], name: "workout_scores_workout_offering_id_fk", using: :btree
@@ -745,6 +747,7 @@ ActiveRecord::Schema.define(version: 20190712171251) do
   add_foreign_key "workout_offerings", "workouts", name: "workout_offerings_workout_id_fk"
   add_foreign_key "workout_owners", "users", column: "owner_id", name: "workout_owners_owner_id_fk"
   add_foreign_key "workout_owners", "workouts", name: "workout_owners_workout_id_fk"
+  add_foreign_key "workout_scores", "lti_workouts"
   add_foreign_key "workout_scores", "users", name: "workout_scores_user_id_fk"
   add_foreign_key "workout_scores", "workout_offerings", name: "workout_scores_workout_offering_id_fk"
   add_foreign_key "workout_scores", "workouts", name: "workout_scores_workout_id_fk"

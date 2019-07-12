@@ -23,6 +23,7 @@ class LmsInstance < ActiveRecord::Base
   belongs_to :organization
   has_many :course_offerings, inverse_of: :lms_instance
   has_many :lti_identities
+  has_many :lti_workouts, inverse_of: :lms_instnace
   #~ Validation ...............................................................
 
   validates_presence_of :url

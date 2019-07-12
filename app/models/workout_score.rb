@@ -74,6 +74,7 @@ class WorkoutScore < ActiveRecord::Base
   belongs_to :workout, inverse_of: :workout_scores
   belongs_to :workout_offering, inverse_of: :workout_scores
   belongs_to :user, inverse_of: :workout_scores
+  belongs_to :lti_workout, inverse_of: :workout_scores
   has_many :attempts,
     -> { order('submit_time desc') },
     inverse_of: :workout_score,
@@ -263,7 +264,6 @@ class WorkoutScore < ActiveRecord::Base
         self.score += a.score
       end
       self.score = self.score.round(2)
-
       if attempt && (!self.last_attempted_at ||
         self.last_attempted_at < attempt.submit_time)
         self.last_attempted_at = attempt.submit_time
@@ -395,11 +395,13 @@ class WorkoutScore < ActiveRecord::Base
   # Sends scores to the appropriate LTI consumer
   # -------------------------------------------------------------
   def update_lti
-    if self.workout_offering.andand.course_offering &&
-      self.workout_offering.course_offering.lms_instance &&
-      self.lis_outcome_service_url && self.lis_result_sourcedid
-
+    if self.workout_offering
       lms_instance = self.workout_offering.course_offering.lms_instance
+    elsif self.lti_workout
+      lms_instance = self.lti_workout.lms_instance
+    end
+
+    if lms_instance && self.lis_outcome_service_url && self.lis_result_sourcedid
       total_points = ExerciseWorkout.where(workout_id: self.workout_id).sum(:points)
       key = lms_instance.consumer_key
       secret = lms_instance.consumer_secret

@@ -69,7 +69,8 @@ class LtiController < ApplicationController
         else 
           lti_workout = LtiWorkout.create(
             lms_assignment_id: ext_lti_assignment_id,
-            workout: Workout.find(params[:gym_workout_id])
+            workout: workout,
+            lms_instance: @lms_instance
           )
         end
       end
