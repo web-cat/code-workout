@@ -158,6 +158,7 @@ class WorkoutsController < ApplicationController
         course: @course, term: @term)
     end
     @lms_assignment_id = params[:lms_assignment_id]
+    @lms_instance_id = params[:lms_instance_id]
     @suggested_name = params[:suggested_name]
 
     if params[:notice]
@@ -178,8 +179,9 @@ class WorkoutsController < ApplicationController
     @term = !!params[:term_id] ? Term.find(params[:term_id]) : nil
     @organization = !!params[:organization_id] ? 
       Organization.find(params[:organization_id]) : nil
-    @lms_assignment_id = params[:lms_assignment_id]
     @suggested_name = params[:suggested_name]
+
+    @lms_assignment_id = params[:lms_assignment_id]
     
     # if course is specified, we want to highlight existing workouts that have been used
     # in the given course before
@@ -339,12 +341,31 @@ class WorkoutsController < ApplicationController
       message = 'You must be signed in to clone workouts.'
     end
 
-    authorize! :clone, @workout, message: message
-
     @lti_launch = params[:lti_launch]
     @lms_assignment_id = params[:lms_assignment_id]
-    @suggested_name = params[:suggested_name]
 
+    authorize! :clone, @workout, message: message
+
+    if params[:lms_instance_id].present?
+      lti_workout = LtiWorkout.create(
+        lms_assignment_id: @lms_assignment_id,
+        workout: @workout,
+        lms_instance: LmsInstance.find(params[:lms_instance_id])
+      )
+      lis_outcome_service_url = session[:lis_outcome_service_url]
+      session.delete(:lis_outcome_service_url)
+      lis_result_sourcedid = session[:lis_result_sourcedid]
+      session.delete(:lis_result_sourcedid)
+      redirect_to practice_workout_path(
+        id: @workout.id,
+        lti_launch: @lti_launch,
+        lti_workout_id: lti_workout.id,
+        lis_outcome_service_url: lis_outcome_service_url,
+        lis_result_sourcedid: lis_result_sourcedid
+      ) and return
+    end
+
+    @suggested_name = params[:suggested_name]
     @exercises = []
     @workout.exercise_workouts.each do |ex|
       ex_data = {}
@@ -387,6 +408,7 @@ class WorkoutsController < ApplicationController
     if course.blank?
       # no course, so this workout needs to manage its own LTI ties 
       workout_params[:lms_assignment_id] = params[:lms_assignment_id]
+      workout_params[:lms_instance_id] = session[:lms_instance_id]
     end
     @workout = @workout.update_or_create(workout_params)
 
@@ -408,7 +430,14 @@ class WorkoutsController < ApplicationController
     elsif !@workout
       err_string = 'There was a problem while creating the workout.'
       url = url_for(root_path(notice: err_string)) 
-    end
+    else
+      session.delete(:lis_result_sourcedid)      
+      session.delete(:lis_outcome_service_url)
+      url = url_for(practice_workout_path(
+        id: @workout.id,
+        lti_launch: @lti_launch
+      ))
+    end 
 
     respond_to do |format|
       format.json { render json: { url: url } }

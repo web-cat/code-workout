@@ -226,6 +226,7 @@ class Workout < ActiveRecord::Base
         if !lti_workout
           lti_workout = LtiWorkout.create(
             lms_assignment_id: params[:lms_assignment_id],
+            lms_instance: LmsInstance.find(params[:lms_instance_id]),
             workout: self
           )
         end

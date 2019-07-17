@@ -57,14 +57,18 @@ class LtiController < ApplicationController
       lti_workout = LtiWorkout.find_by(lms_assignment_id: ext_lti_assignment_id) ||
         LtiWorkout.find_by(lms_assignment_id: custom_canvas_assignment_id)
 
+      session[:lis_outcome_service_url] = params[:lis_outcome_service_url]
+      session[:lis_result_sourcedid] = params[:lis_result_sourcedid]
+      session[:lms_instance_id] = @lms_instance.id
+
       if !lti_workout && params[:gym_workout_id].present?
         # First time this workout is being accessed from the
         # given LTI assignment
         workout = Workout.find_by(id: params[:gym_workout_id])
         if !workout
           redirect_to new_or_existing_workout_path(
-            lms_assignment_id: ext_lti_assignment_id,
-            lti_launch: true
+            lti_launch: true,
+            lms_assignment_id: ext_lti_assignment_id
           ) and return
         else 
           lti_workout = LtiWorkout.create(
@@ -77,6 +81,9 @@ class LtiController < ApplicationController
 
       if lti_workout
         # Serving a public workout over LTI
+        session[:lis_outcome_service_url] = nil
+        session[:lis_result_sourcedid] = nil
+        session[:lms_instance_id] = nil
         redirect_to practice_workout_path(
           id: lti_workout.workout_id,
           lti_launch: true,
