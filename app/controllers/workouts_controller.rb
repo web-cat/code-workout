@@ -868,7 +868,7 @@ class WorkoutsController < ApplicationController
         @workout.first_exercise, 
         workout_id: @workout.id, 
         lti_launch: params[:lti_launch],
-        workout_score_id: @workout_score.id
+        workout_score_id: @workout_score.andand.id
       )
     else
       redirect_to workouts, notice: 'Workout not found' and return
