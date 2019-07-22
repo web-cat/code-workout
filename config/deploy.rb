@@ -4,7 +4,6 @@ set :repo_url, 'git://github.com/web-cat/code-workout.git'
 # ask :branch, proc { `git rev-parse --abbrev-ref HEAD`.chomp }
 
 set :deploy_to, '/home/codeworkout/rails'
-set :scm, :git
 
 set :format_options, truncate: false
 set :log_level, :debug
