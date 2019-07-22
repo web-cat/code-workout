@@ -833,14 +833,17 @@ class WorkoutsController < ApplicationController
   # -------------------------------------------------------------
   def practice
     @workout = Workout.find_by(id: params[:id])
-    authorize! :practice, @workout
+    @lti_workout = LtiWorkout.find_by(id: params[:lti_workout_id])
+    
+    if !@lti_workout
+      authorize! :practice, @workout
+    end
     if @workout
       session[:current_workout] = @workout.id
       if current_user
         @workout_score = @workout.score_for(current_user, nil,
                                             params[:lis_outcome_service_url],
                                             params[:lis_result_sourcedid])
-        @lti_workout = LtiWorkout.find_by(id: params[:lti_workout_id])
         if @workout_score.nil?
           # first time this workout is being accessed, create new
           @workout_score = WorkoutScore.new(

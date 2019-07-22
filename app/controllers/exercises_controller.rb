@@ -421,7 +421,7 @@ class ExercisesController < ApplicationController
       # Re-check workout-offering permission in case the URL was entered directly.
       authorize! :practice, @workout_offering
       authorize! :practice, @exercise
-    else
+    elsif !@workout 
       # are they trying to practice the exercise in the gym?
       authorize! :gym_practice, @exercise
     end
