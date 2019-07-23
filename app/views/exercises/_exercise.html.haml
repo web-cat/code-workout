@@ -78,7 +78,10 @@
         - else
           = exercise.display_name
       - elsif workout
-        = link_to exercise.display_name, exercise_practice_path(exercise, workout_id: workout.id)
+        = link_to(exercise.display_name,
+          exercise_practice_path(exercise, 
+          workout_score_id: workout_score.andand.id,
+          workout_id: workout.id, lti_launch: @lti_launch))
       - else
         = link_to exercise.display_name, exercise_practice_path(exercise)
 
