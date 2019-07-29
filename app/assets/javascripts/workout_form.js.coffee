@@ -257,7 +257,6 @@ init_exercises = ->
           exercise_workout_id: exercise_workout_id
           name: name
           points: exercise.points
-        console.log(data)
         $('#ex-list').append(Mustache.render(
           $(window.codeworkout.exercise_template)
             .filter('#exercise-template').html(),
@@ -503,7 +502,7 @@ handle_submit = ->
   else if $('body').is '.workouts.clone'
     url = '/gym/workouts'
     type = 'post'
-
+  
   $.ajax
     url: url
     type: type

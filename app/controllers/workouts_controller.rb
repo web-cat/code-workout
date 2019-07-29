@@ -799,9 +799,7 @@ class WorkoutsController < ApplicationController
 
     if @workout && params[:course_id].present?
       workout_offering_id = create_or_update_offerings(@workout)
-      if workout_offering_id.nil?
-        url = url_for(workout_path(id: @workout.id))
-      else
+      if workout_offering_id
         url = url_for(organization_workout_offering_path(
             organization_id: params[:organization_id],
             term_id: params[:term_id],
@@ -810,6 +808,10 @@ class WorkoutsController < ApplicationController
           )
         )
       end
+    elsif @workout
+      url = url_for(workout_path(id: @workout.id))
+    else
+      url = url_for(root_path, notice: 'There was a problem updating the workout')
     end
 
     respond_to do |format|

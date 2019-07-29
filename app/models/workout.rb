@@ -148,7 +148,6 @@ class Workout < ActiveRecord::Base
     exercise_workouts.first.exercise
   end
 
-
   # ------------------------------------------------------------
   def next_exercise(ex)
     ew = nil
@@ -236,7 +235,6 @@ class Workout < ActiveRecord::Base
       removed_exercises.each do |exercise_workout_id|
         self.exercise_workouts.destroy exercise_workout_id
       end
-
       exercises = JSON.parse params[:exercises]
       exercises.each_with_index do |ex, index|
         exercise = Exercise.find ex['id']
@@ -246,7 +244,7 @@ class Workout < ActiveRecord::Base
           exercise_workout =
             ExerciseWorkout.new workout: self, exercise: exercise
         end
-        exercise_workout.set_list_position index
+        exercise_workout.set_list_position(index+1)
         exercise_workout.points = ex['points']
         exercise_workout.save!
       end
