@@ -326,12 +326,28 @@ class Workout < ActiveRecord::Base
   # -------------------------------------------------------------
   def score_for(user, workout_offering = nil,
                 lis_outcome_service_url = nil, lis_result_sourcedid = nil)
-    workout_scores.where(
-      user: user, 
-      workout_offering: workout_offering,
-      lis_outcome_service_url: lis_outcome_service_url,
-      lis_result_sourcedid: lis_result_sourcedid 
-    ).order('updated_at DESC').first
+    if workout_offering && (lis_outcome_service_url || lis_result_sourcedid)
+      workout_scores.where(
+        user: user,
+        workout_offering: workout_offering,
+        lis_outcome_service_url: lis_outcome_service_url,
+        lis_result_sourcedid: lis_result_sourcedid
+      ).order('updated_at DESC').first
+    elsif lis_outcome_service_url || lis_result_sourcedid
+      workout_scores.where(
+        user: user, 
+        workout_offering: nil,
+        lis_outcome_service_url: lis_outcome_service_url,
+        lis_result_sourcedid: lis_result_sourcedid
+      ).order('updated_at DESC').first
+    elsif workout_offering # can assume that the first one is what we want
+      workout_scores.where(
+        user: user,
+        workout_offering: workout_offering 
+      ).order('updated_at DESC').first
+    else # only user is specified
+      workout_scores.where(user: user)
+    end
   end
 
 
