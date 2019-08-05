@@ -8,7 +8,19 @@
       Click on an exercise to download submission data for it.
       %br
       Note that the download might take some time to start, depending on the number of attempts to query.
-
-    - @available_exercises.each do |ex|
-      .row
-        = link_to " #{ex.display_name}", download_exercise_attempt_data_path(id: ex.id,format: :csv), class: 'fa fa-download'
+    
+    %table.table
+      %thead
+        %tr
+          %th Exercise
+          %th ProgSnap2 Download
+          %th Denormalized Download
+      %tbody
+        - @available_exercises.each do |ex|
+          %tr
+            %td
+              = ex.display_name
+            %td
+              = link_to "", download_exercise_attempt_data_path(id: ex.id, progsnap: true, format: :csv), class: 'fa fa-download'
+            %td
+              = link_to "", download_exercise_attempt_data_path(id: ex.id, progsnap: false, format: :csv), class: 'fa fa-download'

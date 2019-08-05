@@ -42,14 +42,28 @@ class ExercisesController < ApplicationController
 
   # -------------------------------------------------------------
   def query_data
-    @available_exercises = Exercise.visible_through_user(current_user)
-      .union(Exercise.visible_through_user_group(current_user))
-      .uniq.select(&:is_coding?)
+    if current_user.global_role == GlobalRole.administrator
+      @available_exercises = Exercise.all.select(&:is_coding?)
+    else
+      @available_exercises = Exercise.visible_through_user(current_user)
+        .union(Exercise.visible_through_user_group(current_user))
+        .uniq.select(&:is_coding?)
+    end
   end
 
   # -------------------------------------------------------------
   def download_attempt_data
     @exercise = Exercise.find params[:id]
+
+    if params[:progsnap].to_b
+      result = @exercise.progsnap2_attempt_data
+      respond_to do |format|
+        format.csv do
+          send_data result, filename: "X#{params[:id]}-progsnap.csv"
+        end
+      end
+      return
+    end  
     result = @exercise.denormalized_attempt_data
 
     exercise_attributes = %w{ exercise_id exercise_name }
