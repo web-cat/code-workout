@@ -357,8 +357,6 @@ class Exercise < ActiveRecord::Base
   def progsnap2_main_events(denormalized_data)
     # MainTable 
     main_attributes = %w{
-      EventID
-      EventType
       SubjectID
       ToolInstances
       ServerTimestamp
@@ -370,8 +368,12 @@ class Exercise < ActiveRecord::Base
       ProblemID
       Attempt
       CodeStateID
-      Score
       IsEventOrderingConsistent
+      EventType
+      Score
+      Compile.Result
+      CompileMessageType
+      CompileMessageData
     }
 
     data = CSV.generate(headers: true) do |csv|
@@ -379,13 +381,15 @@ class Exercise < ActiveRecord::Base
       denormalized_data.each do |submission|
         attrs = submission.attributes
         user_id = attrs['user_id'] || 'UNKNOWN' 
-        csv << [
-          attrs['attempt_id'],
-          'Submit',
+        server_timezone = 'UTC'
+        tool_instances = 'Java 8; CodeWorkout' 
+        event_ordering_consistent = 'True' 
+
+        common_fields = [
           user_id,
-          'Java 8; CodeWorkout',
+          tool_instances,
           attrs['submit_time'],
-          'UTC',
+          server_timezone,
           attrs['course_number'],
           attrs['course_offering_id'],
           attrs['term'],
@@ -393,9 +397,44 @@ class Exercise < ActiveRecord::Base
           attrs['exercise_version_id'],
           attrs['submit_num'],
           attrs['answer_id'],
-          attrs['score'],
-          'True'
+          event_ordering_consistent
         ]
+        
+        # Compile event
+        compile_event = common_fields + [
+          'Compile',
+          nil, # no score
+          attrs['error'].nil? ? 'Success' : 'Error',
+          nil, # CompileMessageType
+          nil # CompileMessageData
+        ]
+
+        csv << compile_event
+
+        # Compile.Error events
+        if attrs['error']
+          errors = attrs['error'].split(/(?=line \d+:)/)
+          errors.each do |e|
+            error_event = common_fields + [
+              'Compile.Error',
+              nil, # no score
+              nil,
+              'SyntaxError',
+              e
+            ]
+          end
+        end
+
+        # Run.Program event
+        run_program_event = common_fields + [
+          'Run.Program',
+          attrs['score'],
+          nil,
+          nil,
+          nil
+        ]
+
+        csv << run_program_event
       end 
     end
 
