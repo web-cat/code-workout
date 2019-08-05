@@ -287,9 +287,46 @@ class Exercise < ActiveRecord::Base
     end
   end
 
-  def progsnap2_attempt_data
+  def progsnap2_attempt_csv
     denormalized = self.denormalized_attempt_data
-    main_events = progsnap2_main_events(denormalized)
+    main_events = progsnap2_main_events_csv(denormalized)
+    code_states = progsnap2_code_states_csv(denormalized)
+    return main_events, code_states
+  end
+
+  def denormalized_attempt_csv
+    denormalized_data = self.denormalized_attempt_data
+    exercise_attributes = %w{ exercise_id exercise_name }
+    attempt_attributes = %w{
+      user_id
+      exercise_version_id
+      version_no
+      answer_id
+      answer
+      error
+      attempt_id
+      submit_time
+      submit_num
+      score
+      active_score_id
+      workout_score_id
+      workout_score
+      workout_offering_id
+      workout_id
+      workout_name
+      course_offering_id
+      course_number
+      course_name
+      term }
+
+    data = CSV.generate(headers: true) do |csv|
+      csv << (exercise_attributes + attempt_attributes)
+      denormalized_data.each do |submission|
+        csv << ([ self.id, self.name ] +
+          attempt_attributes.map { |a| submission.attributes[a] })
+      end
+    end
+    return data
   end
   
   # Return denormalized attempt data for this exercise.
@@ -336,7 +373,6 @@ class Exercise < ActiveRecord::Base
     return result
   end
 
-
   #~ Private instance methods .................................................
   private
 
@@ -353,7 +389,7 @@ class Exercise < ActiveRecord::Base
     self.experience ||= 10
   end
 
-  def progsnap2_main_events(denormalized_data)
+  def progsnap2_main_events_csv(denormalized_data)
     # MainTable 
     main_attributes = %w{
       SubjectID
@@ -458,7 +494,7 @@ class Exercise < ActiveRecord::Base
     return data
   end
 
-  def progsnap2_code_states(denormalized_data)
+  def progsnap2_code_states_csv(denormalized_data)
     code_state_attributes = %w{
       CodeStateID
       Code

@@ -21,6 +21,6 @@
             %td
               = ex.display_name
             %td
-              = link_to "", download_exercise_attempt_data_path(id: ex.id, progsnap: true, format: :csv), class: 'fa fa-download'
+              = link_to "", download_exercise_attempt_data_path(id: ex.id, progsnap: true, format: :zip), class: 'fa fa-download'
             %td
               = link_to "", download_exercise_attempt_data_path(id: ex.id, progsnap: false, format: :csv), class: 'fa fa-download'

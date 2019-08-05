@@ -31,6 +31,7 @@ gem 'tzinfo' # For timezone support
 gem 'active_record_union'
 gem 'mysql2', '~> 0.3.20'
 gem 'modernizr-rails'
+gem 'rubyzip', '>= 1.0.0'
 
 # For JSON support
 gem 'rabl'

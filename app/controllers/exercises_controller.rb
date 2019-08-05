@@ -1,6 +1,7 @@
 class ExercisesController < ApplicationController
   require 'ims/lti'
   require 'oauth/request_proxy/rack_request'
+  require 'zip'
 
   load_and_authorize_resource
   skip_authorize_resource only: [:practice, :call_open_pop]
@@ -56,50 +57,30 @@ class ExercisesController < ApplicationController
     @exercise = Exercise.find params[:id]
 
     if params[:progsnap].to_b
-      result = @exercise.progsnap2_attempt_data
+      main_events, code_states = @exercise.progsnap2_attempt_csv
+      compressed_filestream = Zip::OutputStream.write_buffer do |zos|
+        main_events_file = "MainEvents.csv"
+        zos.put_next_entry main_events_file
+        zos.write main_events
+
+        code_states_file = "CodeStates.csv"
+        zos.put_next_entry code_states_file
+        zos.write code_states 
+      end
+
+      compressed_filestream.rewind
       respond_to do |format|
-        format.csv do
-          send_data result, filename: "X#{params[:id]}-progsnap.csv"
+        format.zip do
+          send_data compressed_filestream.read, filename: "X#{params[:id]}-progsnap.zip", type: 'application/zip'
         end
       end
-      return
-    end  
-    result = @exercise.denormalized_attempt_data
+    else
+      result = @exercise.denormalized_attempt_csv
 
-    exercise_attributes = %w{ exercise_id exercise_name }
-    attempt_attributes = %w{
-      user_id
-      exercise_version_id
-      version_no
-      answer_id
-      answer
-      error
-      attempt_id
-      submit_time
-      submit_num
-      score
-      active_score_id
-      workout_score_id
-      workout_score
-      workout_offering_id
-      workout_id
-      workout_name
-      course_offering_id
-      course_number
-      course_name
-      term }
-
-    data = CSV.generate(headers: true) do |csv|
-      csv << (exercise_attributes + attempt_attributes)
-      result.each do |submission|
-        csv << ([ self.id, self.name ] +
-          attempt_attributes.map { |a| submission.attributes[a] })
-      end
-    end
-
-    respond_to do |format|
-      format.csv do
-        send_data data, filename: "X#{params[:id]}-submissions.csv"
+      respond_to do |format|
+        format.csv do
+          send_data result, filename: "X#{params[:id]}-submissions.csv"
+        end
       end
     end
   end
