@@ -77,13 +77,13 @@ Basic Code Formatting
         https://github.com/bbatsov/ruby-style-guide
 
 +   Please use spaces around operators (e.g., "a = 10" instead of "a=10",
-    or "a + b" instead of "a+b").
+    or "a += 10" instead of "a+=10").
 
 +   Please use spaces after commas (e.g., "function(a, b)" instead of
     "function(a,b)".
 
 +   In comments, please use a space after the comment character, separating
-    it from the first word of the comment.
+    it from the first word of the comment. Example: // Coding is great.
 
 +   In Ruby control constructs, use a space after Ruby keywords like "if"
     (i.e., "if x == 0", not "if( x == 0 )").  Parentheses are OK, but are
