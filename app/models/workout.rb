@@ -346,7 +346,7 @@ class Workout < ActiveRecord::Base
         workout_offering: workout_offering 
       ).order('updated_at DESC').first
     else # only user is specified
-      workout_scores.where(user: user)
+      workout_scores.where(user: user).first
     end
   end
 
