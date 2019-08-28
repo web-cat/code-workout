@@ -59,7 +59,7 @@ class ExercisesController < ApplicationController
     if params[:progsnap].to_b
       main_events, code_states = @exercise.progsnap2_attempt_csv
       compressed_filestream = Zip::OutputStream.write_buffer do |zos|
-        main_events_file = "MainEvents.csv"
+        main_events_file = "MainTable.csv"
         zos.put_next_entry main_events_file
         zos.write main_events
 

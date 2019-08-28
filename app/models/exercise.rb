@@ -410,6 +410,7 @@ class Exercise < ActiveRecord::Base
       CompileMessageType
       CompileMessageData
       EventID
+      Order
       ParentEventID
     }
 
@@ -419,15 +420,14 @@ class Exercise < ActiveRecord::Base
       denormalized_data.each do |submission|
         attrs = submission.attributes
         user_id = attrs['user_id'] || 'UNKNOWN' 
-        server_timezone = 'UTC'
         tool_instances = 'Java 8; CodeWorkout' 
         event_ordering_consistent = 'True' 
 
         common_fields = [
           user_id,
           tool_instances,
-          attrs['submit_time'],
-          server_timezone,
+          attrs['submit_time'].strftime("%Y-%m-%dT%H:%M:%S"),
+          attrs['submit_time'].formatted_offset(false), # +0000
           attrs['course_number'],
           attrs['course_offering_id'],
           attrs['term'],
@@ -446,6 +446,7 @@ class Exercise < ActiveRecord::Base
           nil, # CompileMessageType
           nil, # CompileMessageData
           event_id,
+          event_id, # Order 
           nil # ParentEventID
         ]
 
@@ -462,6 +463,7 @@ class Exercise < ActiveRecord::Base
           nil, # CompileMessageType
           nil, # CompileMessageData
           event_id,
+          event_id, # Order
           parent_event_id
         ]
 
@@ -481,6 +483,7 @@ class Exercise < ActiveRecord::Base
               'SyntaxError',
               e,
               event_id,
+              event_id, # Order
               parent_event_id
             ]
 
