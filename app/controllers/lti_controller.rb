@@ -61,10 +61,11 @@ class LtiController < ApplicationController
       session[:lis_result_sourcedid] = params[:lis_result_sourcedid]
       session[:lms_instance_id] = @lms_instance.id
 
-      if !lti_workout && params[:gym_workout_id].present?
+      gym_workout_id = params[:custom_gym_workout_id] || params[:gym_workout_id]
+      if !lti_workout && gym_workout_id 
         # First time this workout is being accessed from the
         # given LTI assignment
-        workout = Workout.find_by(id: params[:gym_workout_id])
+        workout = Workout.find_by(id: gym_workout_id)
         if !workout
           redirect_to new_or_existing_workout_path(
             lti_launch: true,
