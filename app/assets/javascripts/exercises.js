@@ -34,11 +34,17 @@
                 workoutID: workoutID,
                 workoutOfferingID: workoutOfferingID
             },
+            before: function() {
+                    $('.loading-icon').show();
+            }
             success: function(data) {
 
                 studentCode = studentCode.split('\n').join('\\n');
                 studentCode = studentCode.substring(studentCode.indexOf('{') + 1, studentCode.indexOf('return'));
                 doModal2("", studentCode, data.exercise_trace);
+            },
+            complete: function() {
+                $('.loading-icon').hide();
             }
         });
     };

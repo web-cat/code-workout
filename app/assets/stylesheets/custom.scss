@@ -499,3 +499,10 @@ ul.ui-autocomplete {
     color: inherit;
   }
 }
+
+.loading-icon {
+    background-image: image-url('loading-icon.png');
+    position: relative;
+    margin: 0 auto;
+    display: none;
+}

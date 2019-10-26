@@ -118,11 +118,11 @@
       -if @exercise.tag_list.include? 'Visualizable'
         -if @workout
           -if @workout_offering
-            %div.btn.btn-default{id: "visualize", disabled: true, data: {workout: @workout.id, workout_offering: @workout_offering.id}} Visualize
+            %div.btn.btn-default{id: "visualize", disabled: true, data: {workout: @workout.id, workout_offering: @workout_offering.id}} Visualize .loading-icon
           -else
-            %div.btn.btn-default{id: "visualize", disabled: true, data: {workout: @workout.id, workout_offering: 'null'}} Visualize
+            %div.btn.btn-default{id: "visualize", disabled: true, data: {workout: @workout.id, workout_offering: 'null'}} Visualize .loading-icon
         -else
-          %div.btn.btn-default{id: "visualize", disabled: true, data: {workout: 'null', workout_offering: 'null'}} Visualize
+          %div.btn.btn-default{id: "visualize", disabled: true, data: {workout: 'null', workout_offering: 'null'}} Visualize .loading-icon
 
       - if @workout_offering && params[:review_user_id].nil? && @workout_offering.workout.exercise_workouts.size > 1
         = button_link 'Next exercise',
