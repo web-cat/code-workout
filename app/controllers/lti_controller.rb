@@ -52,7 +52,7 @@ class LtiController < ApplicationController
       
       ext_lti_assignment_id = params[:ext_lti_assignment_id]
       custom_canvas_assignment_id = params[:custom_canvas_assignment_id]
-      
+
       # Serving a public workout?
       lti_workout = LtiWorkout.find_by(lms_assignment_id: ext_lti_assignment_id) ||
         LtiWorkout.find_by(lms_assignment_id: custom_canvas_assignment_id)
@@ -60,18 +60,29 @@ class LtiController < ApplicationController
       session[:lis_outcome_service_url] = params[:lis_outcome_service_url]
       session[:lis_result_sourcedid] = params[:lis_result_sourcedid]
       session[:lms_instance_id] = @lms_instance.id
+      session[:is_instructor] = @tp.context_instructor?
 
       gym_workout_id = params[:custom_gym_workout_id] || params[:gym_workout_id]
       if !lti_workout && gym_workout_id 
         # First time this workout is being accessed from the
         # given LTI assignment
         workout = Workout.find_by(id: gym_workout_id)
-        if !workout
-          redirect_to new_or_existing_workout_path(
-            lti_launch: true,
-            lms_assignment_id: ext_lti_assignment_id
-          ) and return
-        else 
+        if !workout 
+          # no workout found. different paths forward based on LTI role 
+          if @tp.context_instructor?
+            redirect_to new_or_existing_workout_path(
+              lti_launch: true,
+              lms_assignment_id: ext_lti_assignment_id
+            ) and return
+          else
+            @message = 'The requested workout does not exist, and your role does
+              permit you to create one. Please contact your
+              instructor.'
+            render :error and return
+          end
+        else
+          # found a workout, setup LTI ties and continue
+          # either students or instructors can do this 
           lti_workout = LtiWorkout.create(
             lms_assignment_id: ext_lti_assignment_id,
             workout: workout,
@@ -82,9 +93,9 @@ class LtiController < ApplicationController
 
       if lti_workout
         # Serving a public workout over LTI
-        session[:lis_outcome_service_url] = nil
-        session[:lis_result_sourcedid] = nil
-        session[:lms_instance_id] = nil
+        session.delete(:lis_outcome_service_url)
+        session.delete(:lis_result_sourcedid)
+        session.delete(:lms_instance_id)
         redirect_to practice_workout_path(
           id: lti_workout.workout_id,
           lti_launch: true,
@@ -149,7 +160,6 @@ class LtiController < ApplicationController
         render 'lti/error' and return
       end
 
-      session[:is_instructor] = @tp.context_instructor?
       redirect_to organization_find_workout_offering_path(
         organization_id: @organization.slug,
         term_id: @term.slug,
