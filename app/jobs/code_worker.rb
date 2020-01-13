@@ -117,8 +117,6 @@ class CodeWorker
           end
         end  # CSV end
       end
-      #static analysis
-      result_sa= execute_java_sa(answer, attempt_dir,answer_lines, answer_text, prompt.test_cases)
       multiplier = 1.0
       attempt.score = correct * multiplier / total
       attempt.experience_earned = attempt.score * exv.exercise.experience / attempt.submit_num
@@ -235,66 +233,6 @@ class CodeWorker
     return error
   end
 
-
-  def execute_java_sa(answer, attempt_dir, answer_lines, answer_text, test_cases)
-    total = 0
-    correct = 0
-    #remove comments from code
-    answer_no_comments = answer_text.gsub(/\/\/[^\n]*|\/\*(?:[^*]|\*(?!\/))*\*\//,'')
-    function_name = answer_no_comments[/ \w*\d*\s*\(/]
-    function_name = function_name[/\w+\d*/]
-    test_cases.where(description: 'static_analysis').each do |tc|
-      case tc.expected_output
-        when /recursive/
-          #Count the number of times the function is called.
-          recursive_call=Regexp.new function_name+"\\s*\\("
-          #if the number of function calls is greater than 1, the solution is recursive
-          use_recursion = answer_no_comments.scan(recursive_call).count>1
-          if not use_recursion
-            line = Array.new(8)
-            line[6] = 'The solution is not recursive'
-            line[7] = 0;
-            correct += tc.record_result(answer, line)
-            total += tc.weight
-          end
-        when /^No\s*/i
-          answer_with_numbers = answer_text.lines.each_with_index{|line, index|
-            line.insert(0, "[#{index+1}]")
-          }.join('')
-          answer_with_numbers.gsub!(/\/\/[^\n]*|\/\*(?:[^*]|\*(?!\/))*\*\//,'')
-          not_allowed_text = tc.expected_output.sub(/No\s*/i,'')
-          not_allowed = not_allowed_text.gsub(/ +|\t+/, '')
-          lnum = Array.new
-          answer_with_numbers.gsub(/ +|\t+/, '').lines.each{|line|
-            lnum << (line.match(/\d+/)[0].to_i) if line.sub(/[\d]/,'')[not_allowed]
-          }
-          # not_allowed = Regexp.new not_allowed+"\\s*\\(" if tc.expected_output.include? '('
-          if lnum.any?
-            line = Array.new(8)
-            if !tc.negative_feedback.blank?
-              tc.negative_feedback << ' Lines: ' + lnum.join(", ")
-            else
-              line[6] = 'The use of "'+ not_allowed_text +'" is not allowed. Lines: ' + lnum.join(", ")
-            end
-            line[7] = 0
-            correct += tc.record_result(answer, line)
-            total += tc.weight
-          end
-
-        when /^Include\s*/i
-          must_include = tc.expected_output.sub(/Include\s*/i,'')
-          must_include.gsub!(/\s+/, '')
-          # must_include = Regexp.new must_include+"\\s*\\(" if tc.expected_output.include? '('
-          if answer_no_comments.gsub(/\s+/, '').scan(must_include).count == 0
-            line = Array.new(8)
-            line[6] = 'The use of "'+ must_include +'" is required'
-            line[7] = 0;
-            correct += tc.record_result(answer, line)
-            total += tc.weight
-          end
-      end
-    end
-  end
 
   # -------------------------------------------------------------
   def execute_rubytest(class_name, attempt_dir, pre_lines, answer_lines)
