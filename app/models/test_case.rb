@@ -358,13 +358,7 @@ class TestCase < ActiveRecord::Base
     TEST_METHOD_TEMPLATES = {
       'Ruby' => <<RUBY_TEST,
   def test%{id}
-    if %{method_name}(%{input}) ==
-      %{expected_output}
-      @@f.write("1,,%{id}\n")
-    else
-      @@f.write("0,\"%{negative_feedback}\",%{id}\n")
-    end
-    assert_equal(%{method_name}(%{input}), %{expected_output})
+    assert_equal(%{expected_output}, @@subject.%{method_name}(%{input}), "%{negative_feedback}")    
   end
 
 RUBY_TEST
