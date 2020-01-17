@@ -46,6 +46,17 @@ module CodeWorkout
           'make ' \
           '-C/usr/resources/Cpp ' \
           'SRC_DIR=$PWD'
+      },
+      python: {
+        docker_image: 'codeworkout/python',
+        cmd: 'cd "%{attempt_dir}"; docker run --rm ' \
+          '-v $(pwd):$(pwd) ' \
+          '-v $(pwd)/../../../../usr/resources/Python/:/usr/resources/Python/:ro ' \
+          '-w $(pwd) ' \
+          "%{docker_image} " \
+          'make ' \
+          '-C/usr/resources/Python ' \
+          'SRC_DIR=$PWD'
       }
     }
 
