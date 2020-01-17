@@ -20,23 +20,25 @@ module CodeWorkout
     # config.i18n.load_path += Dir[Rails.root.join('my', 'locales', '*.{rb,yml}').to_s]
     # config.i18n.default_locale = :de
     config.assets.precompile += [
-      Proc.new { |filename, path| 
-        path =~ /app\/assets/ && 
+      Proc.new { |filename, path|
+        path =~ /app\/assets/ &&
           path !~ /bootstrap-social/ &&
           path !~ /active_admin/ &&
-          %w(.js .css).include?(File.extname(filename)) 
+          %w(.js .css).include?(File.extname(filename))
       }
     ]
-    
+
     # other kinds of assets
     config.assets.precompile += %w(*.png *.jpg *.jpeg *.gif *.mustache.html)
 
     # Custom directories with classes and modules you want to be autoloadable.
     config.autoload_paths += %W(#{config.root}/lib)
-    
+
     # Timeout for feedback polls (milliseconds)
     # This is an initial value on application startup, but it might change
-    config.feedback_timeout = 1700 
+    config.feedback_timeout = 1700
     config.feedback_timeout_padding = 300
+
+    config.active_record.raise_in_transactional_callbacks = true
   end
 end
