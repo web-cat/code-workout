@@ -2,7 +2,7 @@
 - name: "Factorial Python"
   external_id: Factorialpython
   is_public: true
-  experience: 10
+  experience: 50
   language_list: Python
   style_list: code writing
   tag_list: recursion

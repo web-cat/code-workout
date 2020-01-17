@@ -2,7 +2,7 @@
 - name: "Factorial C++"
   external_id: Factorialcpp
   is_public: true
-  experience: 10
+  experience: 50
   language_list: C++
   style_list: code writing
   tag_list: recursion
