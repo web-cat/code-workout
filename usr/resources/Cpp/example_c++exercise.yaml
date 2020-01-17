@@ -1,0 +1,38 @@
+---
+- name: "Factorial C++"
+  external_id: Factorialcpp
+  is_public: true
+  experience: 10
+  language_list: Cpp
+  style_list: code writing
+  tag_list: recursion
+  current_version:
+    version: 1
+    creator: pxmore91@vt.edu
+    prompts:
+    - coding_prompt:
+        position: 1
+        question: |
+          Write a function in C++ called 'factorial' that will take a positive integer as input and returns its factorial as output.
+          backwards.
+        feedback: |
+        class_name: Factorial
+        method_name: factorial
+        starter_code: |
+          int factorial(int n) {
+
+
+          }
+        wrapper_code: |
+          class Factorial
+          {
+            public:
+              ___
+          };
+        tests: |
+          0,1,example
+          1,1
+          2,2
+          3,6
+          4,24,hidden
+          5,120,hidden

@@ -87,6 +87,9 @@ class CodeWorker
         when 'Python'
           result = execute_pythontest(
             prompt.class_name, attempt_dir, pre_lines, answer_lines)
+        when 'Cpp'
+          result = execute_cpptest(
+            prompt.class_name, attempt_dir, pre_lines, answer_lines)
         end
       end
 
@@ -95,7 +98,8 @@ class CodeWorker
       if static_screening_failed || !File.exist?(attempt_dir + '/results.csv')
         answer.error = result
         if result
-          m = /^line(:?)\s*(\d+)/.match(result)
+          # FIXME: need to support C++ error message line number extraction
+          m = /^[Ll]ine(:?)\s*(\d+)/.match(result)
           if m
             answer.error_line_no = m[2].to_i
           end
@@ -123,14 +127,14 @@ class CodeWorker
           end
         end  # CSV end
       end
-
       multiplier = 1.0
       attempt.score = correct * multiplier / total
       attempt.experience_earned = attempt.score * exv.exercise.experience / attempt.submit_num
       attempt.feedback_ready = true
 
       # clean up log and class files that were generated during testing
-      cleanup_files = Dir.glob("#{attempt_dir}/*.class") + Dir.glob("#{attempt_dir}/*.log") +
+      cleanup_files = Dir.glob("#{attempt_dir}/*.class") +
+        Dir.glob("#{attempt_dir}/*.log") +
         Dir.glob("#{attempt_dir}/reports/TEST-*.csv")
       cleanup_files.each do |file|
         File.delete(file)
@@ -163,9 +167,8 @@ class CodeWorker
       end
 
       Rails.logger.info "[pid:#{Process.pid}/thread:#{Thread.current.object_id}] " \
-        "processed attempt #{attempt_id} in #{worker_time}ms"
-      Rails.logger.info "[pid:#{Process.pid}/thread:#{Thread.current.object_id}] " \
-        "time taken for attempt: #{attempt.time_taken} new feedback timeout: " \
+        "processed attempt #{attempt_id}; #{worker_time}ms; " \
+        "time taken: #{attempt.time_taken}; new feedback timeout: " \
         "#{attempt.feedback_timeout}"
     end
   end
@@ -176,13 +179,13 @@ class CodeWorker
 
   # -------------------------------------------------------------
   def execute_javatest(class_name, attempt_dir, pre_lines, answer_lines)
-    if CodeWorkout::Config::JAVA.key? :daemon_url
-      url = CodeWorkout::Config::JAVA[:daemon_url] % {attempt_dir: attempt_dir}
+    if CodeWorkout::Config::CMD[:java].key? :daemon_url
+      url = CodeWorkout::Config::CMD[:java][:daemon_url] % {attempt_dir: attempt_dir}
       response = Net::HTTP.get_response(URI.parse(url))
-      puts "%{url} => response %{response.code}"
+      # puts "%{url} => response %{response.code}"
     else
-      cmd = CodeWorkout::Config::JAVA[:ant_cmd] % {attempt_dir: attempt_dir}
-      puts(cmd + '>> err.log 2>> err.log')
+      cmd = CodeWorkout::Config::CMD[:java][:cmd] % {attempt_dir: attempt_dir}
+      # puts(cmd + '>> err.log 2>> err.log')
       system(cmd + '>> err.log 2>> err.log')
     end
 
@@ -208,7 +211,8 @@ class CodeWorker
             xtra = ', maybe a missing delimiter or closing brace?'
           end
           if !error.blank?
-            error += '. '
+            # error += '. '
+            break
           end
           error += "line #{line_no}: #{$2}#{xtra}"
           # puts "error now: #{error}"
@@ -273,6 +277,42 @@ class CodeWorker
 #    else
 #      return File.read(attempt_dir + '/err.log')
 #    end
+  end
+
+
+  # -------------------------------------------------------------
+  def execute_cpptest(class_name, attempt_dir, pre_lines, answer_lines)
+    cmd = CodeWorkout::Config::CMD[:cpp][:cmd] %
+      CodeWorkout::Config::CMD[:cpp].merge({ attempt_dir: attempt_dir })
+    system(cmd + '>> err.log 2>> err.log')
+
+    # Parse compiler output for error messages to determine success
+    error = nil
+    logfile = attempt_dir + '/reports/compile.log'
+    if File.exist?(logfile) and !File.zero?(logfile)
+      compile_out = File.foreach(logfile) do |line|
+        line.chomp!
+        # puts "checking line: #{line}"
+        if line =~ /\s+(error):\s*(.*)/
+          if $1 == 'error'
+            error = "#{$2}"
+          else
+            error = "#{$1}: #{$2}"
+          end
+          break
+        end
+      end
+    end
+
+    if !error
+      # If there's an error, remove the test results, if any.
+      # This causes warnings to be treated the same as errors.
+      result_file = attempt_dir + '/results.csv'
+      if File.exist?(result_file)
+        File.delete(result_file)
+      end
+    end
+    return error
   end
 
 end
