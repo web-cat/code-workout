@@ -2,7 +2,7 @@ var codemirrors = [];
 var indentUnits = {
   'text/x-java': 4,
   'text/x-yaml': 2
-}
+};
 
 function prepareEditor() {
   $("pre").each(function() {
@@ -50,9 +50,9 @@ function prepareEditor() {
   	 * correctly, so need to leave it turned off until we can fix it.
   	 * Once fixed, remove the comment for autofocus above.
   	 */
-     var cmObj = { editor: codemirror, starterCode: $(codeNode).data('starter-code') }
-     cmObj.editor.widgets=[]
-     codemirrors.push(cmObj)
+     var cmObj = { editor: codemirror, starterCode: $(codeNode).data('starter-code') };
+     cmObj.editor.widgets=[];
+     codemirrors.push(cmObj);
   });
 }
 

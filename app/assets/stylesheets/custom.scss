@@ -61,10 +61,18 @@ html, body { height: 100%; }
 /* .practice .CodeMirror { min-height: 18px * 15; } */
 
 /* Error in Codemirror */
-.error-widget {width: 100%;
-  padding-left: 6px;
-  background: rgba(255, 0, 0, 0.7);
-  font-size: 80%}
+.error-widget {
+  display: inline-block;
+  padding: 4px 6px;
+  margin: 4px;
+  background-color: #a7000d;
+  color: white;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.5);
+  font-family: "PT Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: 600;
+  font-size: 110%;
+  box-shadow: 0 0px 4px rgba(167,0,13,0.3);
+}
 
 /* Right sidebar text */
 
