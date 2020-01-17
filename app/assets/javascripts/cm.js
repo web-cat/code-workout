@@ -51,6 +51,7 @@ function prepareEditor() {
   	 * Once fixed, remove the comment for autofocus above.
   	 */
      var cmObj = { editor: codemirror, starterCode: $(codeNode).data('starter-code') }
+     cmObj.editor.widgets=[]
      codemirrors.push(cmObj)
   });
 }
