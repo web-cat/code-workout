@@ -117,6 +117,7 @@ class CodeWorker
           end
         end  # CSV end
       end
+
       multiplier = 1.0
       attempt.score = correct * multiplier / total
       attempt.experience_earned = attempt.score * exv.exercise.experience / attempt.submit_num
