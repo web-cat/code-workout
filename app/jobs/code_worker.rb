@@ -50,7 +50,7 @@ class CodeWorker
       term = Term.current_term
       term_name = term ? term.slug : 'no-term'
 
-      # compile and evaluate the attempt in a temporary location 
+      # compile and evaluate the attempt in a temporary location
       attempt_dir = "usr/attempts/active/#{current_attempt}"
       # puts "DIRECTORY",attempt_dir,"DIRECTORY"
       FileUtils.mkdir_p(attempt_dir)
@@ -122,7 +122,7 @@ class CodeWorker
       attempt.experience_earned = attempt.score * exv.exercise.experience / attempt.submit_num
       attempt.feedback_ready = true
 
-      # clean up log and class files that were generated during testing 
+      # clean up log and class files that were generated during testing
       cleanup_files = Dir.glob("#{attempt_dir}/*.class") + Dir.glob("#{attempt_dir}/*.log") +
         Dir.glob("#{attempt_dir}/reports/TEST-*.csv")
       cleanup_files.each do |file|
@@ -133,11 +133,11 @@ class CodeWorker
       term_dir = "usr/attempts/#{term_name}/"
       FileUtils.mkdir_p(term_dir) # create the term_dir if it doesn't exist
       FileUtils.mv(attempt_dir, term_dir)
-      
-      # calculate various time values. all times are in ms       
+
+      # calculate various time values. all times are in ms
       time_taken = (Time.now - attempt.submit_time) * 1000
 
-      updater = FeedbackTimeoutUpdater.instance 
+      updater = FeedbackTimeoutUpdater.instance
       updater.update_timeout(time_taken)
 
       attempt.feedback_timeout = updater.avg_timeout
@@ -154,7 +154,7 @@ class CodeWorker
       else
         attempt.save!
       end
-      
+
       Rails.logger.info "[pid:#{Process.pid}/thread:#{Thread.current.object_id}] " \
         "processed attempt #{attempt_id} in #{worker_time}ms"
       Rails.logger.info "[pid:#{Process.pid}/thread:#{Thread.current.object_id}] " \
@@ -175,6 +175,7 @@ class CodeWorker
       puts "%{url} => response %{response.code}"
     else
       cmd = CodeWorkout::Config::JAVA[:ant_cmd] % {attempt_dir: attempt_dir}
+      puts(cmd + '>> err.log 2>> err.log')
       system(cmd + '>> err.log 2>> err.log')
     end
 
@@ -187,7 +188,13 @@ class CodeWorker
       compile_out = File.foreach(logfile) do |line|
         line.chomp!
         # puts "checking line: #{line}"
-        if line =~ /^\S+\.java:\s*([0-9]+)\s*:\s*(?:warning:\s*)?(.*)/
+        m = /^\s*\[javac\]\s/.match(line)
+        if m
+          line = m.post_match
+        end
+        if line =~ /^Compiling/
+          next
+        elsif line =~ /^\S+\.java:\s*([0-9]+)\s*:\s*(?:warning:\s*)?(.*)/
           line_no = $1.to_i - pre_lines
           if line_no > answer_lines
             line_no = answer_lines
