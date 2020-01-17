@@ -9,7 +9,7 @@
 #    all: compile and test the code.
 #    clean: remove the generated files
 #
-#Current makefile location: usr/resources/Cpp
+#Current makefile location: usr/resources/C++
 #---------------------------------------------------------------------------------------
 
 #Variables
@@ -28,7 +28,7 @@ compile_code: $(SRC_DIR)/reports $(OBJ_FILES)
 
 #Create folder for reports
 $(SRC_DIR)/reports:
-	mkdir $(SRC_DIR)/reports
+	mkdir $@
 
 #Compile student's code
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp

@@ -97,7 +97,7 @@
           = f.input :answer_code, as: :text, class: 'code',
           input_html: { class: 'code', readonly: true, autofocus: true,
             value: prior_answer ? prior_answer.specific.answer : prompt.prepare_starter_code,
-            data: { lang: 'text/x-' + ((@exercise.language && @exercise.language == 'Cpp'?'c++src': @exercise.language)|| 'java' ).downcase,
+            data: { lang: 'text/x-' + (@exercise.language + (@exercise.language == 'C++'?'src':'')|| 'java').downcase,
             starter_code: prompt.prepare_starter_code } }
         - else
           %pre{ data: { lang: 'text/x-java' } }
