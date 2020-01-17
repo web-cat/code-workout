@@ -4,19 +4,22 @@ var indentUnits = {
   'text/x-yaml': 2
 };
 
-function prepareEditor() {
-  $("pre").each(function() {
+function prepareEditor()
+{
+  $("pre").each(function()
+  {
     var codeNode = this;
     if ($(codeNode).data('lang') === 'plain'
         || $(codeNode).data('lang') === 'text'
         || $(codeNode).hasClass('example')
         || $(codeNode).hasClass('examples'))
     {
-        return; // do nothing
+      return; // do nothing
     }
     var body = codeNode.innerText || codeNode.textContent;
     if (body != null) { body = body.replace(/(\r?\n|\r)\s*$/, ''); }
-    CodeMirror(function(newEditor) {
+    CodeMirror(function(newEditor)
+    {
       $(codeNode).replaceWith(newEditor);
     }, {
       value: body,
@@ -28,11 +31,13 @@ function prepareEditor() {
     });
   });
 
-  $("textarea.code").each(function() {
+  $("textarea.code").each(function()
+  {
   	var codeNode = this;
     var lang = $(codeNode).data('lang') || 'text/x-java';
     var indentUnit = indentUnits[lang];
-  	var codemirror = CodeMirror.fromTextArea(codeNode, {
+  	var codemirror = CodeMirror.fromTextArea(codeNode,
+  	{
       theme: 'aptana',
       mode: lang,
       indentUnit: indentUnit,
@@ -50,18 +55,41 @@ function prepareEditor() {
   	 * correctly, so need to leave it turned off until we can fix it.
   	 * Once fixed, remove the comment for autofocus above.
   	 */
-     var cmObj = { editor: codemirror, starterCode: $(codeNode).data('starter-code') };
+     var cmObj =
+     {
+       editor: codemirror,
+       starterCode: $(codeNode).data('starter-code')
+     };
      cmObj.editor.widgets=[];
      codemirrors.push(cmObj);
   });
 }
 
-$(document).ready(function() {
+function clearLineWidgets(editor)
+{
+  editor.widgets.forEach(function(widget)
+  {
+    editor.removeLineWidget(widget);
+  });
+  editor.widgets.length = 0;
+}
+
+function addLineWidget(editor, msg, lineNumber, widgetType)
+{
+  var widget = $('<div class="widget ' + widgetType + '">' +
+    '<i class="fa fa-times-circle"></i> ' + msg + '</div>');
+  editor.widgets.push(editor.addLineWidget(lineNumber - 1, widget[0]));
+}
+
+$(document).ready(function()
+{
   prepareEditor();
 
-  $('.btn-reset').on('click', function() {
+  $('.btn-reset').on('click', function()
+  {
     $('#confirm-reset').modal('toggle');
-    codemirrors.forEach(function(cmObj, index, array) {
+    codemirrors.forEach(function(cmObj, index, array)
+    {
       cmObj.editor.setValue(cmObj.starterCode);
     });
   });
