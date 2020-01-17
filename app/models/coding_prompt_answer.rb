@@ -2,9 +2,10 @@
 #
 # Table name: coding_prompt_answers
 #
-#  id     :integer          not null, primary key
-#  answer :text
-#  error  :text
+#  id            :integer          not null, primary key
+#  answer        :text
+#  error         :text
+#  error_line_no :integer
 #
 
 # =============================================================================

@@ -6,6 +6,7 @@
 #  test_case_id            :integer          not null
 #  user_id                 :integer          not null
 #  execution_feedback      :text
+#  feedback_line_no        :integer
 #  created_at              :datetime
 #  updated_at              :datetime
 #  pass                    :boolean          not null

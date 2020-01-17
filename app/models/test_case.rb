@@ -50,7 +50,8 @@ class TestCase < ActiveRecord::Base
   validates :input, presence: true, if: :no_description?
   validates :expected_output, presence: true, if: :no_description?
   validates :coding_prompt, presence: true
-  validates :weight, presence: true, numericality: { greater_than_or_equal_to: 0.0 }
+  validates :weight, presence: true,
+    numericality: { greater_than_or_equal_to: 0.0 }
 
 
   #~ Instance methods .........................................................
@@ -174,7 +175,8 @@ class TestCase < ActiveRecord::Base
       test_case: self,
       user: answer.attempt.user,
       coding_prompt_answer: answer,
-      pass: passed
+      pass: passed,
+      feedback_line_no: first_occurrence_line
     )
     if !passed
       tcr.execution_feedback = nresp

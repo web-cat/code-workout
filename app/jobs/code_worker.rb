@@ -94,6 +94,12 @@ class CodeWorker
       total = 0.0
       if static_screening_failed || !File.exist?(attempt_dir + '/results.csv')
         answer.error = result
+        if result
+          m = /^line(:?)\s*(\d+)/.match(result)
+          if m
+            answer.error_line_no = m[2].to_i
+          end
+        end
         total = 1.0
         answer.save
       else

@@ -18,21 +18,19 @@ if subbtn? && !attempts_exhausted
   subbtn.removeAttr('disabled')
   $('#visualize').removeAttr('disabled')
 
+
 editor = codemirrors[0].editor
 clearLineWidgets(editor)
-attempt_error = '<%= @attempt.prompt_answers.first.specific.error %>'
-if attempt_error
-  # Need to fix this to use a colon, but that isn't working in the
-  # regex match?
-  m = attempt_error.match(/^line.\s*(\d+)/i)
-  if m
-    addLineWidget(editor, attempt_error, parseInt(m[1]), 'error')
+attempt_error_line_no =
+  '<%= @attempt.prompt_answers.first.specific.error_line_no %>'
+if attempt_error_line_no
+  addLineWidget(editor, '<%= @attempt.prompt_answers.first.specific.error %>',
+    attempt_error_line_no, 'error')
 
 tcrs = <%= raw @attempt.prompt_answers.first.specific.test_case_results(true).
            where.not(execution_feedback: :null).
-          select("test_case_id, execution_feedback").to_json %>;
+          select("test_case_id, execution_feedback, feedback_line_no").to_json %>;
 for tcr in tcrs
-  if tcr.execution_feedback.match(/Lines: \d+/)
-    line = tcr.execution_feedback.split "Lines: "
-    for line_num in line[1].split ", "
-      addLineWidget(editor, 'Error: ' + line[0], parseInt(line_num, 10), 'error')
+  if tcr.feedback_line_no
+    addLineWidget(editor, 'Error: ' + tcr.execution_feedback,
+      tcr.feedback_line_no, 'error')

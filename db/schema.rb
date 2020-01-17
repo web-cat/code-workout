@@ -79,8 +79,9 @@ ActiveRecord::Schema.define(version: 20190712171251) do
   add_index "choices_multiple_choice_prompt_answers", ["multiple_choice_prompt_answer_id"], name: "choices_MC_prompt_answers_MC_prompt_answer_id_fk", using: :btree
 
   create_table "coding_prompt_answers", force: :cascade do |t|
-    t.text "answer", limit: 65535
-    t.text "error",  limit: 65535
+    t.text    "answer",        limit: 65535
+    t.text    "error",         limit: 65535
+    t.integer "error_line_no", limit: 4
   end
 
   create_table "coding_prompts", force: :cascade do |t|
@@ -518,6 +519,7 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.integer  "test_case_id",            limit: 4,     null: false
     t.integer  "user_id",                 limit: 4,     null: false
     t.text     "execution_feedback",      limit: 65535
+    t.integer  "feedback_line_no",        limit: 4
     t.datetime "created_at"
     t.datetime "updated_at"
     t.boolean  "pass",                                  null: false
