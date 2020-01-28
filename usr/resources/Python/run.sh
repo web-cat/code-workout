@@ -14,3 +14,9 @@ for fname in *.py; do
 done
 
 pytest -c /resources/pytest.ini *Test.py > results.csv 2>> reports/compile.log
+
+rm -rf __pycache__
+if [[ ! -s reports/compile.log ]]                                               
+then                                                                            
+  rm reports/compile.log                                                        
+fi
