@@ -79,7 +79,7 @@
           data: { confirm: message }
       - else
         .btn-group
-          - session[:is_instructor]
+          - if session[:is_instructor]
             = link_to 'Clone', clone_workout_path(id: workout.id,
               lms_assignment_id: lms_assignment_id,
               lti_launch: @lti_launch,
