@@ -169,13 +169,18 @@ class WorkoutsController < ApplicationController
   end
 
   def new_or_existing
-    if cannot? :new, Workout
+    @lti_launch = params[:lti_launch]
+    @course = !!params[:course_id] ? Course.find(params[:course_id]) : nil
+
+    # If there is a course, check course roles (in the ability file)
+    # If there is no course, check LTI launch roles
+    @can_create = (@course && cannot?(:new, Workout)) || !session[:is_instructor]
+
+    if @can_create
       flash.now[:notice] = 
         'You are unauthorized to create new workouts. Choose from existing workouts instead.'
     end
 
-    @lti_launch = params[:lti_launch]
-    @course = !!params[:course_id] ? Course.find(params[:course_id]) : nil
     @term = !!params[:term_id] ? Term.find(params[:term_id]) : nil
     @organization = !!params[:organization_id] ? 
       Organization.find(params[:organization_id]) : nil
@@ -183,8 +188,8 @@ class WorkoutsController < ApplicationController
 
     @lms_assignment_id = params[:lms_assignment_id]
     
-    # if course is specified, we want to highlight existing workouts that have been used
-    # in the given course before
+    # if course is specified, we want to highlight existing workouts that have 
+    # been used in the given course before
     @searching_offerings = !!@course
     
     # we are finding or creating a workout for a course_offering

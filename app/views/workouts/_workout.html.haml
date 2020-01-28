@@ -79,11 +79,12 @@
           data: { confirm: message }
       - else
         .btn-group
-          = link_to 'Clone', clone_workout_path(id: workout.id,
-            lms_assignment_id: lms_assignment_id,
-            lti_launch: @lti_launch,
-            suggested_name: @suggested_name), class: 'btn btn-sm btn-primary',
-            data: { confirm: message }
+          - session[:is_instructor]
+            = link_to 'Clone', clone_workout_path(id: workout.id,
+              lms_assignment_id: lms_assignment_id,
+              lti_launch: @lti_launch,
+              suggested_name: @suggested_name), class: 'btn btn-sm btn-primary',
+              data: { confirm: message }
           = link_to 'Use', clone_workout_path(id: workout.id,
             lms_assignment_id: lms_assignment_id,
             lms_instance_id: session[:lms_instance_id],

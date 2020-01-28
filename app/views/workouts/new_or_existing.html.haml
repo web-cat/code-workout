@@ -11,7 +11,7 @@
       = hidden_field_tag :suggested_name, @suggested_name
     .col-xs-2
       = submit_tag 'Search', class: 'btn btn-default btn-sm'
-    - if can? :new, Workout 
+    - if @can_create # see workouts_controller#new_or_existing
       .col-xs-2
         - # create a link to create a new workout, either in the gym or for a course_offering 
         = link_to 'Create New', @new_workout_path, class: 'btn btn-success btn-sm'
