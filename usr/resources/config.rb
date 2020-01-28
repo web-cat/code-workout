@@ -34,7 +34,7 @@ module CodeWorkout
           '-Dbasedir=. ' \
           '-l ant.log ' \
           '-f ../../../../usr/resources/Java/build.xml',
-  #      daemon_url: "http://localhost:8080/javadaemon/cr?dir=%{attempt_dir}"
+        daemon_url: "http://localhost:8080/javadaemon/cr?dir=%{attempt_dir}"
       },
       cpp: {
         docker_image: 'codeworkout/cpp',
