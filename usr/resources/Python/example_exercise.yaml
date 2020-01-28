@@ -20,7 +20,7 @@
         method_name: factorial
         starter_code: |
           def factorial(n):
-
+              ___
         wrapper_code: |
           ___
         tests: |

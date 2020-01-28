@@ -136,6 +136,8 @@ class Exercise < ActiveRecord::Base
     end
   end
 
+
+  # -------------------------------------------------------------
   # Get a list of Exercises that are visible to the specified user.
   #
   # It is the union of exercises that are publicly visible, created or owned by the user,
@@ -150,7 +152,8 @@ class Exercise < ActiveRecord::Base
 
     publicly_visible = Exercise.publicly_visible
 
-    visible_through_course_offering = Exercise.joins(exercise_collection: [ course_offering: :course_enrollments ])
+    visible_through_course_offering = Exercise.joins(
+      exercise_collection: [ course_offering: :course_enrollments ])
       .where(exercise_collection:
         { course_offering:
           { course_enrollments:
@@ -165,13 +168,16 @@ class Exercise < ActiveRecord::Base
       .union(visible_through_user_group)
   end
 
+
+  # -------------------------------------------------------------
   # Get exercises that are publicly visible, either by the Exercise.is_public
   # property, or by the license assigned to the Exercise's collection.
   #
   # Also the list of exercises that can be seen/searched/practiced without being
   # signed in.
   def self.publicly_visible
-    public_license = Exercise.joins(exercise_collection: [ license: :license_policy ])
+    public_license = Exercise.joins(
+      exercise_collection: [ license: :license_policy ])
       .where(is_public: nil, exercise_collection:
         { license:
           { license_policy:
@@ -183,6 +189,8 @@ class Exercise < ActiveRecord::Base
     return public_exercise.union(public_license)
   end
 
+
+  # -------------------------------------------------------------
   def self.visible_through_user_group(user)
     Exercise.joins(exercise_collection: [ user_group: :memberships ])
       .where(exercise_collection:
@@ -191,6 +199,7 @@ class Exercise < ActiveRecord::Base
             { user: user } } }
       )
   end
+
 
   # -------------------------------------------------------------
   # return the extension of a given language
@@ -259,7 +268,7 @@ class Exercise < ActiveRecord::Base
   def user_attempted?(u_id)
     self.attempts.where(user_id: u_id).any?
   end
-  
+
   # Does the user own this exercise or its collection?
   # Through themselves or through a user group?
   def owned_by?(u)
@@ -329,7 +338,7 @@ class Exercise < ActiveRecord::Base
     end
     return data
   end
-  
+
   # Return denormalized attempt data for this exercise.
   # All relationship fields are in the same table, so null values
   # are possible for workout_id, workout_offering_id, course_id,
@@ -391,7 +400,7 @@ class Exercise < ActiveRecord::Base
   end
 
   def progsnap2_main_events_csv(denormalized_data)
-    # MainTable 
+    # MainTable
     main_attributes = %w{
       SubjectID
       ToolInstances
@@ -420,9 +429,9 @@ class Exercise < ActiveRecord::Base
       csv << main_attributes
       denormalized_data.each do |submission|
         attrs = submission.attributes
-        user_id = attrs['user_id'] || 'UNKNOWN' 
-        tool_instances = 'Java 8; CodeWorkout' 
-        event_ordering_consistent = 'True' 
+        user_id = attrs['user_id'] || 'UNKNOWN'
+        tool_instances = 'Java 8; CodeWorkout'
+        event_ordering_consistent = 'True'
 
         common_fields = [
           user_id,
@@ -447,15 +456,15 @@ class Exercise < ActiveRecord::Base
           nil, # CompileMessageType
           nil, # CompileMessageData
           event_id,
-          event_id, # Order 
+          event_id, # Order
           nil # ParentEventID
         ]
 
         csv << run_program_event
-        
+
         parent_event_id = event_id
         event_id = event_id + 1
-        
+
         # Compile event
         compile_event = common_fields + [
           'Compile',
@@ -492,7 +501,7 @@ class Exercise < ActiveRecord::Base
             csv << error_event
           end
         end
-      end 
+      end
     end
 
     return data

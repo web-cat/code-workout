@@ -39,35 +39,28 @@ module CodeWorkout
       cpp: {
         docker_image: 'codeworkout/cpp',
         cmd: 'cd "%{attempt_dir}"; docker run --rm ' \
-          '-v $(pwd):$(pwd) ' \
+          '-v $(pwd):$(pwd):consistent ' \
           '-v $(pwd)/../../../../usr/resources/Cpp/:/usr/resources/Cpp/:ro ' \
-          '-w $(pwd) ' \
           "%{docker_image} " \
-          'make ' \
-          '-C/usr/resources/Cpp ' \
-          'SRC_DIR=$PWD'
+          'make -C /usr/resources/Cpp ' \
+          'SRC_DIR=$(pwd)'
       },
       python: {
         docker_image: 'codeworkout/python',
-        cmd: 'cd "%{attempt_dir}"; docker run --rm ' \
-          '-v $(pwd):$(pwd) ' \
-          '-v $(pwd)/../../../../usr/resources/Python/:/usr/resources/Python/:ro ' \
-          '-w $(pwd) ' \
+        cmd: 'docker run --rm ' \
+          '-v "$(pwd)/%{attempt_dir}:/attempt:consistent" ' \
+          '-v "$(pwd)/usr/resources/Python:/resources:ro" ' \
           "%{docker_image} " \
-          'make ' \
-          '-C/usr/resources/Python ' \
-          'SRC_DIR=$PWD'
+          'bash /resources/run.sh'
       },
       ruby: {
         docker_image: 'codeworkout/ruby',
         cmd: 'cd "%{attempt_dir}"; docker run --rm ' \
-          '-v $(pwd):$(pwd) ' \
+          '-v $(pwd):$(pwd):consistent ' \
           '-v $(pwd)/../../../../usr/resources/Ruby/:/usr/resources/Ruby/:ro ' \
-          '-w $(pwd) ' \
           "%{docker_image} " \
-          'make ' \
-          '-C/usr/resources/Ruby ' \
-          'SRC_DIR=$PWD'
+          'make -C /usr/resources/Ruby ' \
+          'SRC_DIR=$(pwd)'
       },
     }
   end

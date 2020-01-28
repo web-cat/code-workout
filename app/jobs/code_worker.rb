@@ -59,6 +59,11 @@ class CodeWorker
         FileUtils.remove_dir(attempt_dir, true)
         FileUtils.mkdir_p(attempt_dir)
       end
+      if !File.exist?(prompt.test_file_name)
+        # Workaround for bug in correctly pre-generating test file
+        # on exercise creation. If it doesn't exist, force regeneration
+        prompt.reparse
+      end
       FileUtils.cp(prompt.test_file_name, attempt_dir)
       File.write(attempt_dir + '/' + prompt.class_name + '.' + lang, code_body)
 
@@ -133,11 +138,23 @@ class CodeWorker
       attempt.feedback_ready = true
 
       # clean up log and class files that were generated during testing
-      cleanup_files = Dir.glob("#{attempt_dir}/*.class") +
-        Dir.glob("#{attempt_dir}/*.log") +
-        Dir.glob("#{attempt_dir}/reports/TEST-*.csv")
+      cleanup_files = Dir.glob([
+        "#{attempt_dir}/*.class",
+        "#{attempt_dir}/*.log",
+        "#{attempt_dir}/reports/TEST-*.csv",
+        "#{attempt_dir}/__pycache__/*.pyc",
+      ])
       cleanup_files.each do |file|
         File.delete(file)
+      end
+      pycache = "#{attempt_dir}/__pycache__"
+      if Dir.exist? pycache
+        if Dir[pycache + '/*'].empty?
+          Dir.delete pycache
+        else
+          Rails.logger.error
+            "Directory #{pycache} is not empty, so cannot be cleaned"
+        end
       end
 
       # move the attempt to permanent storage
@@ -186,7 +203,7 @@ class CodeWorker
     else
       cmd = CodeWorkout::Config::CMD[:java][:cmd] % {attempt_dir: attempt_dir}
       # puts(cmd + '>> err.log 2>> err.log')
-      system(cmd + '>> err.log 2>> err.log')
+      system(cmd + ' >> err.log 2>> err.log')
     end
 
     # Parse compiler output for error messages to determine success
@@ -275,7 +292,7 @@ class CodeWorker
       end
     end
 
-    if !error
+    if error
       # If there's an error, remove the test results, if any.
       # This causes warnings to be treated the same as errors.
       result_file = attempt_dir + '/results.csv'
@@ -291,27 +308,36 @@ class CodeWorker
   def execute_pythontest(class_name, attempt_dir, pre_lines, answer_lines)
     cmd = CodeWorkout::Config::CMD[:python][:cmd] %
       CodeWorkout::Config::CMD[:python].merge({ attempt_dir: attempt_dir })
-    system(cmd + '>> err.log 2>> err.log')
+    Dir.mkdir "#{attempt_dir}/reports"
+    system(cmd + " >> #{attempt_dir}/err.log 2>> #{attempt_dir}/err.log")
 
     # Parse compiler output for error messages to determine success
-    error = nil
+    error = ''
     logfile = attempt_dir + '/reports/compile.log'
     if File.exist?(logfile) and !File.zero?(logfile)
       compile_out = File.foreach(logfile) do |line|
         line.chomp!
         # puts "checking line: #{line}"
-        if line =~ /(error):\s*(.*)/i
-          if $1.casecmp('error')
-            error = "#{$2}"
+        if line =~ /File "<unknown>", line\s*([0-9]+)/i
+          line_no = $1.to_i - pre_lines
+          if line_no > answer_lines
+            line_no = answer_lines
+          end
+          error += "line #{line_no}: "
+        elsif line =~ /^(.*error):\s*(.*)/i
+          if $1.casecmp('syntaxerror')
+            error += $2
           else
-            error = "\n#{$1}: #{$2}"
+            error += line
           end
           break
         end
       end
     end
 
-    if !error
+    if error.blank?
+      error = nil
+    else
       # If there's an error, remove the test results, if any.
       # This causes warnings to be treated the same as errors.
       result_file = attempt_dir + '/results.csv'
@@ -347,7 +373,7 @@ class CodeWorker
       end
     end
 
-    if !error
+    if error
       # If there's an error, remove the test results, if any.
       # This causes warnings to be treated the same as errors.
       result_file = attempt_dir + '/results.csv'

@@ -19,9 +19,9 @@
         class_name: Factorial
         method_name: factorial
         starter_code: |
-          int factorial(int n) {
-
-
+          int factorial(int n)
+          {
+              ___
           }
         wrapper_code: |
           class Factorial

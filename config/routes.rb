@@ -187,7 +187,7 @@ CodeWorkout::Application.routes.draw do
 
   get 'help' => 'help#index'
   match 'help/:action', to: 'help', via: [:get]
-  match 'static_pages/:action', to: 'static_pages', via: [:get]
+  match 'static_pages/:action', controller: 'static_pages', via: [:get]
 
 end
 
