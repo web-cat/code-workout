@@ -48,7 +48,7 @@ module CodeWorkout
       python: {
         docker_image: 'codeworkout/python',
         cmd: 'docker run --rm ' \
-          '-v "$(pwd)/%{attempt_dir}:/attempt:consistent" ' \
+          '-v "$(pwd)/%{attempt_dir}:/attempt" ' \
           '-v "$(pwd)/usr/resources/Python:/resources:ro" ' \
           "%{docker_image} " \
           'bash /resources/run.sh'
