@@ -6,7 +6,7 @@
 #  name        :string(255)
 #  created_at  :datetime
 #  updated_at  :datetime
-#  description :text
+#  description :text(65535)
 #
 
 class UserGroup < ActiveRecord::Base

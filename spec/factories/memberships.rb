@@ -8,7 +8,6 @@
 #  created_at    :datetime
 #  updated_at    :datetime
 #
-# Read about factories at https://github.com/thoughtbot/factory_bot
 
 FactoryBot.define do
   factory :membership do

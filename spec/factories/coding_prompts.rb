@@ -6,10 +6,10 @@
 #  created_at    :datetime
 #  updated_at    :datetime
 #  class_name    :string(255)
-#  wrapper_code  :text             not null
-#  test_script   :text             not null
+#  wrapper_code  :text(65535)      not null
+#  test_script   :text(65535)      not null
 #  method_name   :string(255)
-#  starter_code  :text
+#  starter_code  :text(65535)
 #  hide_examples :boolean          default(FALSE), not null
 #
 

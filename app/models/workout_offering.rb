@@ -47,6 +47,7 @@ class WorkoutOffering < ActiveRecord::Base
   has_many :workout_scores, inverse_of: :workout_offering, dependent: :nullify
   has_many :student_extensions
   has_many :users, through: :student_extensions
+  has_many :lti_workouts
 
   scope :visible_to_students, -> { joins{workout_policy.outer}.where{
     (published == true) &
