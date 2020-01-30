@@ -24,7 +24,7 @@ update-alternatives --set ruby /usr/bin/ruby2.3>/dev/null 2>&1
 update-alternatives --set gem /usr/bin/gem2.3>/dev/null 2>&1
 
 echo installing Bundler
-gem install bundler -N >/dev/null 2>&1
+gem install bundler -v 1.17.3 -N >/dev/null 2>&1
 
 install Git git
 
