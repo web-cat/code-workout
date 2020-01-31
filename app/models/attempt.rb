@@ -14,6 +14,9 @@
 #  workout_score_id    :integer
 #  active_score_id     :integer
 #  feedback_ready      :boolean
+#  time_taken          :decimal(10, )
+#  feedback_timeout    :decimal(10, )
+#  worker_time         :decimal(10, )
 #
 # Indexes
 #

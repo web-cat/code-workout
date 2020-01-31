@@ -3,7 +3,7 @@
 # Table name: stems
 #
 #  id         :integer          not null, primary key
-#  preamble   :text
+#  preamble   :text(65535)
 #  created_at :datetime
 #  updated_at :datetime
 #

@@ -3,14 +3,14 @@
 # Table name: test_cases
 #
 #  id                :integer          not null, primary key
-#  negative_feedback :text
+#  negative_feedback :text(65535)
 #  weight            :float(24)        not null
-#  description       :text
+#  description       :text(65535)
 #  created_at        :datetime
 #  updated_at        :datetime
 #  coding_prompt_id  :integer          not null
-#  input             :text             not null
-#  expected_output   :text             not null
+#  input             :text(65535)      not null
+#  expected_output   :text(65535)      not null
 #  static            :boolean          default(FALSE), not null
 #  screening         :boolean          default(FALSE), not null
 #  example           :boolean          default(FALSE), not null

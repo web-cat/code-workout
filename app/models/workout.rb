@@ -7,7 +7,7 @@
 #  scrambled         :boolean          default(FALSE)
 #  created_at        :datetime
 #  updated_at        :datetime
-#  description       :text
+#  description       :text(65535)
 #  points_multiplier :integer
 #  creator_id        :integer
 #  external_id       :string(255)
