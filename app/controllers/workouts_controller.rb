@@ -142,21 +142,33 @@ class WorkoutsController < ApplicationController
   # -------------------------------------------------------------
   # GET /workouts/new
   def new
-    if cannot? :new, Workout
-      redirect_to root_path,
-        notice: 'Unauthorized to create new workout' and return
-    end
     @lti_launch = params[:lti_launch]
     @workout = Workout.new
     @course = params[:course_id] ? Course.find(params[:course_id]) : nil
 
+    @message = 'Unauthorized to create new workout'
+
     if @course
+      # If there's a course, use role-based permissions from abilities.rb
+      if cannot? :new, Workout
+        redirect_to root_path,
+          notice: @message and return
+      end
       @term = params[:term_id] ? Term.find(params[:term_id]) : nil
       @organization = params[:organization_id] ? 
         Organization.find(params[:organization_id]) : nil
       @course_offerings = current_user.managed_course_offerings(
         course: @course, term: @term)
+    elsif !session[:is_instructor]
+      # If there's no course, use session-specific permissions 
+      if @lti_launch
+        render 'lti/error' and return
+      else
+        redirect_to root_path,
+          notice: @message and return
+      end
     end
+
     @lms_assignment_id = params[:lms_assignment_id]
     @lms_instance_id = params[:lms_instance_id]
     @suggested_name = params[:suggested_name]
@@ -174,9 +186,9 @@ class WorkoutsController < ApplicationController
 
     # If there is a course, check course roles (in the ability file)
     # If there is no course, check LTI launch roles
-    @can_create = (@course && cannot?(:new, Workout)) || !session[:is_instructor]
+    @can_create = (@course && can?(:new, Workout)) || session[:is_instructor]
 
-    if @can_create
+    if !@can_create
       flash.now[:notice] = 
         'You are unauthorized to create new workouts. Choose from existing workouts instead.'
     end
