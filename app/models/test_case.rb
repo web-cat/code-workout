@@ -364,7 +364,7 @@ class TestCase < ActiveRecord::Base
 RUBY_TEST
       'Python' => <<PYTHON_TEST,
     def test%{id}(self):
-        assert %{expected_output} == subject.%{method_name}(%{input}),"%{negative_feedback}"
+        self.assertEqual(%{expected_output}, self.__%{method_name}(%{input}))
 
 PYTHON_TEST
       'Java' => <<JAVA_TEST,

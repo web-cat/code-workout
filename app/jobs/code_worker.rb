@@ -62,7 +62,7 @@ class CodeWorker
       if !File.exist?(prompt.test_file_name)
         # Workaround for bug in correctly pre-generating test file
         # on exercise creation. If it doesn't exist, force regeneration
-        prompt.reparse
+        prompt.regenerate_tests
       end
       FileUtils.cp(prompt.test_file_name, attempt_dir)
       File.write(attempt_dir + '/' + prompt.class_name + '.' + lang, code_body)
