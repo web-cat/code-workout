@@ -288,7 +288,7 @@ GEM
     net-ssh (5.2.0)
     netrc (0.11.0)
     nio4r (2.3.1)
-    nokogiri (1.10.4)
+    nokogiri (1.10.8)
       mini_portile2 (~> 2.4.0)
     oauth (0.5.4)
     oauth2 (1.4.1)
@@ -527,7 +527,7 @@ DEPENDENCIES
   modernizr-rails
   momentjs-rails (>= 2.9.0)
   mysql2 (~> 0.3.20)
-  nokogiri (~> 1.10.4)
+  nokogiri (~> 1.10.8)
   oj (~> 2.16)
   oj_mimic_json
   omniauth
