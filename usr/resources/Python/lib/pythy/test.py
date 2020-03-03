@@ -103,14 +103,13 @@ def timeout(duration, func, *args, **kwargs):
     def terminate(self):
       self.raise_exc(SystemExit)
 
-
   target_thread = InterruptableThread()
   target_thread.start()
   target_thread.join(duration)
 
   if target_thread.isAlive():
     target_thread.terminate()
-    raise TimeoutError('Hint: Your code took too long to run '
+    raise TimeoutError('Your code took too long to run '
       '(it was given {} seconds); '
       'maybe you have an infinite loop?'.format(duration))
   else:
@@ -180,7 +179,7 @@ class _TimeoutData:
   def __init__(self, ceiling):
     self.ceiling = ceiling # sec
     self.maximum = ceiling * 2 # sec
-    self.minimum = 0.25 # sec
+    self.minimum = 0.1 # sec
     self.threshold = 0.6
     self.rampup = 1.4
     self.rampdown = 0.5
@@ -232,15 +231,22 @@ class TestCase(unittest.TestCase):
 
 
   # -------------------------------------------------------------
-  def runBare(self, function):
-    timeout(_timeoutData.ceiling, unittest.TestCase.runBare, self, function)
-
-
-  # -------------------------------------------------------------
   def run(self, testMethod):
+    # Dynamically wraps test method in timeout() before calling super,
+    # then unwraps it in finally clause.
+    __tm = getattr(self, self._testMethodName)
+    def __tm_protected():
+      timeout(_timeoutData.ceiling, __tm)
+    setattr(self, self._testMethodName, __tm_protected)
+
+    # Also performs callbacks on timeout data object.
     _timeoutData.beforeTest()
-    unittest.TestCase.run(self, testMethod)
-    _timeoutData.afterTest()
+
+    try:
+      unittest.TestCase.run(self, testMethod)
+    finally:
+      _timeoutData.afterTest()
+      setattr(self, self._testMethodName, __tm)      
 
 
   # -------------------------------------------------------------

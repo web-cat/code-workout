@@ -34,7 +34,7 @@ module CodeWorkout
           '-Dbasedir=. ' \
           '-l ant.log ' \
           '-f ../../../../usr/resources/Java/build.xml',
-        daemon_url: "http://localhost:8080/javadaemon/cr?dir=%{attempt_dir}"
+        # daemon_url: "http://localhost:8080/javadaemon/cr?dir=%{attempt_dir}"
       },
       cpp: {
         docker_image: 'codeworkout/cpp',
@@ -46,7 +46,7 @@ module CodeWorkout
           'SRC_DIR=$(pwd)'
       },
       python: {
-        docker_image: 'codeworkout/python',
+        docker_image: 'codeworkout/python:0.0.1',
         cmd: 'docker run --rm ' \
           '-v "$(pwd)/%{attempt_dir}:/attempt" ' \
           '-v "$(pwd)/usr/resources/Python:/resources:ro" ' \

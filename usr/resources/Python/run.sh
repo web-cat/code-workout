@@ -1,5 +1,7 @@
 #!/bin/bash
 
+umask 002
+
 cd /attempt
 mkdir -p reports
 
@@ -21,5 +23,5 @@ python /resources/_runner.py >> reports/compile.log 2>&1
 rm -rf __pycache__
 if [[ ! -s reports/compile.log ]]
 then
-  rm reports/compile.log
+  rm -f reports/compile.log
 fi
