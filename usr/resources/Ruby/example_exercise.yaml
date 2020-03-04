@@ -1,8 +1,8 @@
 ---
 - name: "Factorial Ruby"
-  external_id: Factorialruby
+  external_id: FactorialRuby
   is_public: true
-  experience: 10
+  experience: 50
   language_list: Ruby
   style_list: code writing
   tag_list: recursion
@@ -13,15 +13,14 @@
     - coding_prompt:
         position: 1
         question: |
-          Write a function in Python called 'factorial()' that will take a positive integer as input and returns its factorial as output.
+          Write a function in Ruby called 'factorial()' that will take a positive integer as input and returns its factorial as output.
           backwards.
         feedback: |
         class_name: Factorial
         method_name: factorial
         starter_code: |
             def factorial(n)
-                
-                
+              ___
             end
         wrapper_code: |
           class Factorial

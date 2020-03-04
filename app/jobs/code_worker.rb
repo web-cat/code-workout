@@ -282,11 +282,16 @@ class CodeWorker
       compile_out = File.foreach(logfile) do |line|
         line.chomp!
         # puts "checking line: #{line}"
-        if line =~ /(error),\s*(.*)/i
-          if $1.casecmp('error')
-            error = "#{$2}"
-            error.gsub!(/for #<.*>/i,'')
+        if line =~ /^\S*\.rb:([0-9]+):\s*(.*)/i
+          line_no = $1.to_i - pre_lines
+          if line_no > answer_lines
+            line_no = answer_lines
           end
+          error = "line #{line_no}: " + $2
+          break
+        end
+        if line =~ /(error),\s*(.*)/i
+          error = line
           break
         end
       end
