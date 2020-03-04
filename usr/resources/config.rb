@@ -40,7 +40,7 @@ module CodeWorkout
         docker_image: 'codeworkout/cpp',
         cmd: 'docker run --rm ' \
           '-v "$(pwd)/%{attempt_dir}:/attempt" ' \
-          '-v "$(pwd)/usr/resources/Cpp:/resources:ro" ' \
+          '-v "$(pwd)/usr/resources/C++:/resources:ro" ' \
           "%{docker_image} " \
           'bash /resources/run.sh'
       },

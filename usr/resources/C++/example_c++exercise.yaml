@@ -1,6 +1,6 @@
 ---
 - name: "Factorial C++"
-  external_id: Factorialcpp
+  external_id: FactorialCpp
   is_public: true
   experience: 50
   language_list: C++
