@@ -212,10 +212,11 @@ class WorkoutScore < ActiveRecord::Base
   # -------------------------------------------------------------
   def record_attempt(attempt)
     self.with_lock do
-      # scored_for_this = self.scored_attempts.joins{exercise_version}.
-      #  where{(exercise_version.exercise_id == e.id)}
       scored_for_this = self.scored_attempts.
-        where(exercise_version: attempt.exercise_version)
+        joins(exercise_version: :exercise).
+        where(exercise_version: {
+          exercise: attempt.exercise_version.exercise
+        })
 
       last_attempt = scored_for_this.first
 
