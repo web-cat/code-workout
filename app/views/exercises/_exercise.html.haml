@@ -120,8 +120,11 @@
     .info
       = difficulty_image(exercise.experience.to_i)
       .taglist
-        - exercise.tags.each do |t|
-          = link_to t.name, exercises_search_path(search: t.name),
+        - exercise.languages.each do |lang|
+          = link_to lang.name, exercises_search_path(search: lang.name),
+            method: :post, class: 'tag lang'
+        - exercise.tags.each do |tag|
+          = link_to tag.name, exercises_search_path(search: tag.name),
             method: :post, class: 'tag'
       -#
         - attempt = nil

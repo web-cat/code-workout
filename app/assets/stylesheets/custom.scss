@@ -258,12 +258,16 @@ ul.wysihtml5-toolbar li {
       text-overflow: ellipsis;
     }
   }
+
   .info {
     padding-bottom: 5px;
     .taglist {
       @extend .one-line;
       min-height: 17px;
       text-overflow: ellipsis;
+      .lang {
+        background-color: #ffc107;
+      }
     }
     .difficulty { float: right; margin: 5px -52px 0 0; }
   }
