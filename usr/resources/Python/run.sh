@@ -1,8 +1,11 @@
 #!/bin/bash
 
+umask 002
+
 cd /attempt
 mkdir -p reports
 
+# Perform syntax check of source files first
 for fname in *.py; do
   case $fname in
     *Test.py) ;;
@@ -13,4 +16,12 @@ for fname in *.py; do
   esac
 done
 
-pytest -c /resources/pytest.ini *Test.py > results.csv 2>> reports/compile.log
+# pytest -c /resources/pytest.ini *Test.py > pytest.log 2>> reports/compile.log
+python /resources/_runner.py >> reports/compile.log 2>&1
+
+# clean up unneeded files
+rm -rf __pycache__
+if [[ ! -s reports/compile.log ]]
+then
+  rm -f reports/compile.log
+fi

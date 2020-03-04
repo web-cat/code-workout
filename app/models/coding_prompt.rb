@@ -6,10 +6,10 @@
 #  created_at    :datetime
 #  updated_at    :datetime
 #  class_name    :string(255)
-#  wrapper_code  :text             not null
-#  test_script   :text             not null
+#  wrapper_code  :text(65535)      not null
+#  test_script   :text(65535)      not null
 #  method_name   :string(255)
-#  starter_code  :text
+#  starter_code  :text(65535)
 #  hide_examples :boolean          default(FALSE), not null
 #
 
@@ -98,9 +98,33 @@ class CodingPrompt < ActiveRecord::Base
     return result.gsub(/\b___\b/, '')
   end
 
-  def reparse
-    parse_tests
+
+  # -------------------------------------------------------------
+  # Duplicates some code in parse_tests, but too lazy to refactor ATM
+  def regenerate_tests
+    if self.test_cases.empty?
+      # Probably never generated anyway, so ...
+      parse_tests
+      return
+    end
+    if self.id && !self.test_script.blank?
+      # Prep the directory to contain the generated test class
+      dir = prompt_dir
+      if Dir.exist?(dir)
+        FileUtils.remove_dir(dir)
+      end
+      FileUtils.mkdir_p(dir)
+      case self.language
+      when 'Java'
+        if self.test_script =~ /\s*(import[^,;"']*;|public\s+class)/
+          raise NotImplementedError, "regenerate_JUnit_tests not implemented yet!"
+        end
+      end
+      # Default, if none of above cases return
+      generate_CSV_tests(test_file_name)
+    end
   end
+
 
   #~ Private instance methods .................................................
   private

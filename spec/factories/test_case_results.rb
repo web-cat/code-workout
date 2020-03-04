@@ -5,7 +5,8 @@
 #  id                      :integer          not null, primary key
 #  test_case_id            :integer          not null
 #  user_id                 :integer          not null
-#  execution_feedback      :text
+#  execution_feedback      :text(65535)
+#  feedback_line_no        :integer
 #  created_at              :datetime
 #  updated_at              :datetime
 #  pass                    :boolean          not null

@@ -4,9 +4,9 @@
 #
 #  id                  :integer          not null, primary key
 #  exercise_version_id :integer          not null
-#  question            :text             not null
+#  question            :text(65535)      not null
 #  position            :integer          not null
-#  feedback            :text
+#  feedback            :text(65535)
 #  created_at          :datetime
 #  updated_at          :datetime
 #  actable_id          :integer

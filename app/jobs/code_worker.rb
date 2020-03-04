@@ -62,7 +62,7 @@ class CodeWorker
       if !File.exist?(prompt.test_file_name)
         # Workaround for bug in correctly pre-generating test file
         # on exercise creation. If it doesn't exist, force regeneration
-        prompt.reparse
+        prompt.regenerate_tests
       end
       FileUtils.cp(prompt.test_file_name, attempt_dir)
       File.write(attempt_dir + '/' + prompt.class_name + '.' + lang, code_body)
@@ -273,7 +273,7 @@ class CodeWorker
   def execute_rubytest(class_name, attempt_dir, pre_lines, answer_lines)
     cmd = CodeWorkout::Config::CMD[:ruby][:cmd] %
       CodeWorkout::Config::CMD[:ruby].merge({ attempt_dir: attempt_dir })
-    system(cmd + '>> err.log 2>> err.log')
+    system(cmd + " >> #{attempt_dir}/err.log 2>> #{attempt_dir}/err.log")
 
     # Parse compiler output for error messages to determine success
     error = nil
@@ -282,11 +282,16 @@ class CodeWorker
       compile_out = File.foreach(logfile) do |line|
         line.chomp!
         # puts "checking line: #{line}"
-        if line =~ /(error),\s*(.*)/i
-          if $1.casecmp('error')
-            error = "#{$2}"
-            error.gsub!(/for #<.*>/i,'')
+        if line =~ /^\S*\.rb:([0-9]+):\s*(.*)/i
+          line_no = $1.to_i - pre_lines
+          if line_no > answer_lines
+            line_no = answer_lines
           end
+          error = "line #{line_no}: " + $2
+          break
+        end
+        if line =~ /(error),\s*(.*)/i
+          error = line
           break
         end
       end
@@ -308,7 +313,6 @@ class CodeWorker
   def execute_pythontest(class_name, attempt_dir, pre_lines, answer_lines)
     cmd = CodeWorkout::Config::CMD[:python][:cmd] %
       CodeWorkout::Config::CMD[:python].merge({ attempt_dir: attempt_dir })
-    Dir.mkdir "#{attempt_dir}/reports"
     system(cmd + " >> #{attempt_dir}/err.log 2>> #{attempt_dir}/err.log")
 
     # Parse compiler output for error messages to determine success
@@ -353,7 +357,8 @@ class CodeWorker
   def execute_cpptest(class_name, attempt_dir, pre_lines, answer_lines)
     cmd = CodeWorkout::Config::CMD[:cpp][:cmd] %
       CodeWorkout::Config::CMD[:cpp].merge({ attempt_dir: attempt_dir })
-    system(cmd + '>> err.log 2>> err.log')
+    puts "cmd = #{cmd}"
+    system(cmd + " >> #{attempt_dir}/err.log 2>> #{attempt_dir}/err.log")
 
     # Parse compiler output for error messages to determine success
     error = nil
@@ -362,7 +367,14 @@ class CodeWorker
       compile_out = File.foreach(logfile) do |line|
         line.chomp!
         # puts "checking line: #{line}"
-        if line =~ /\s+(error):\s*(.*)/
+        if line =~ /^\S*\.cpp:([0-9]+):([0-9]+):\s*(.*)/i
+          line_no = $1.to_i - pre_lines
+          if line_no > answer_lines
+            line_no = answer_lines
+          end
+          error = "line #{line_no}: " + $3.sub(/^\s*error:\s*/, '')
+          break
+        elsif line =~ /\s+(error):\s*(.*)/
           if $1.casecmp('error')
             error = "#{$2}"
           else

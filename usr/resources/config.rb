@@ -34,19 +34,18 @@ module CodeWorkout
           '-Dbasedir=. ' \
           '-l ant.log ' \
           '-f ../../../../usr/resources/Java/build.xml',
-  #      daemon_url: "http://localhost:8080/javadaemon/cr?dir=%{attempt_dir}"
+        # daemon_url: "http://localhost:8080/javadaemon/cr?dir=%{attempt_dir}"
       },
       cpp: {
         docker_image: 'codeworkout/cpp',
-        cmd: 'cd "%{attempt_dir}"; docker run --rm ' \
-          '-v $(pwd):$(pwd):consistent ' \
-          '-v $(pwd)/../../../../usr/resources/Cpp/:/usr/resources/Cpp/:ro ' \
+        cmd: 'docker run --rm ' \
+          '-v "$(pwd)/%{attempt_dir}:/attempt" ' \
+          '-v "$(pwd)/usr/resources/C++:/resources:ro" ' \
           "%{docker_image} " \
-          'make -C /usr/resources/Cpp ' \
-          'SRC_DIR=$(pwd)'
+          'bash /resources/run.sh'
       },
       python: {
-        docker_image: 'codeworkout/python',
+        docker_image: 'codeworkout/python:0.0.1',
         cmd: 'docker run --rm ' \
           '-v "$(pwd)/%{attempt_dir}:/attempt" ' \
           '-v "$(pwd)/usr/resources/Python:/resources:ro" ' \
@@ -55,12 +54,11 @@ module CodeWorkout
       },
       ruby: {
         docker_image: 'codeworkout/ruby',
-        cmd: 'cd "%{attempt_dir}"; docker run --rm ' \
-          '-v $(pwd):$(pwd):consistent ' \
-          '-v $(pwd)/../../../../usr/resources/Ruby/:/usr/resources/Ruby/:ro ' \
+        cmd: 'docker run --rm ' \
+          '-v "$(pwd)/%{attempt_dir}:/attempt" ' \
+          '-v "$(pwd)/usr/resources/Ruby:/resources:ro" ' \
           "%{docker_image} " \
-          'make -C /usr/resources/Ruby ' \
-          'SRC_DIR=$(pwd)'
+          'bash /resources/run.sh'
       },
     }
   end

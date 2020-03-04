@@ -4,7 +4,7 @@
 #
 #  id                :integer          not null, primary key
 #  name              :string(255)
-#  description       :text
+#  description       :text(65535)
 #  url               :string(255)
 #  license_policy_id :integer
 #  created_at        :datetime
