@@ -28,7 +28,7 @@ if attempt_error_line_no
     attempt_error_line_no, 'error')
 
 tcrs = <%= raw @attempt.prompt_answers.first.specific.test_case_results(true).
-           where.not(execution_feedback: :null).
+          where.not(execution_feedback: :null).
           select("test_case_id, execution_feedback, feedback_line_no").to_json %>;
 for tcr in tcrs
   if tcr.feedback_line_no

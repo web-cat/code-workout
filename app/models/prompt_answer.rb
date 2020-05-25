@@ -54,4 +54,18 @@ class PromptAnswer < ActiveRecord::Base
 
   #~ Instance methods .........................................................
 
+  # null method to catch calls from subclass MultipleChoicePromptAnswer
+  def error
+    nil
+  end
+
+  # null method to catch calls from subclass MultipleChoicePromptAnswer
+  def error_line_no
+    nil
+  end
+
+  # null method to catch calls from subclass MultipleChoicePromptAnswer
+  def test_case_results(order=true)
+    TestCaseResult.none
+  end
 end
