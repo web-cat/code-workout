@@ -269,6 +269,13 @@ class Exercise < ActiveRecord::Base
     self.attempts.where(user_id: u_id).any?
   end
 
+  # Get the latest "pure gym" attempt on the exercise by the given user
+  # If what one wants is a scoring attempt (without workouts, etc.), use
+  # the `score_for` methods on workouts and workout_offerings.
+  def latest_attempt_for(u)
+    self.attempts.where(user: u, workout_score: nil).order('updated_at DESC').first
+  end
+
   # Does the user own this exercise or its collection?
   # Through themselves or through a user group?
   def owned_by?(u)
