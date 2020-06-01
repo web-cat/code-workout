@@ -1,7 +1,7 @@
 - size ||= 'lg'
 - start_workout ||= nil
 - new_workout ||= nil
-- user ||= current_user
+- user ||= current_user || User.find_by(id: session[:student_drift_user_id])
 - review ||= false
 
 - if params[:review_user_id]
