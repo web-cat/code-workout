@@ -25,13 +25,13 @@ gem 'acts_as_list'
 gem 'acts-as-taggable-on'
 gem 'representable', '~> 2.1'
 gem 'redcarpet'
-gem 'loofah'
+gem 'loofah', '>= 2.3.1'
 gem 'truncate_html'
 gem 'tzinfo' # For timezone support
 gem 'active_record_union'
 gem 'mysql2', '~> 0.3.20'
 gem 'modernizr-rails'
-gem 'rubyzip', '>= 1.0.0'
+gem 'rubyzip', '>= 1.3.0'
 
 # For JSON support
 gem 'rabl'
@@ -67,7 +67,7 @@ group :test do
 end
 
 group :production, :staging, :deploy  do
-  gem 'puma'
+  gem 'puma', '~> 4.3.5'
 end
 
 group :doc do
@@ -85,7 +85,7 @@ gem 'cancancan'
 gem 'activeadmin'
 gem 'exception_handler'
 
-gem 'kaminari'        # Auto-paginated views
+gem 'kaminari', '~> 1.2.1'        # Auto-paginated views
 gem 'remotipart'      # Adds support for remote mulitpart forms (file uploads)
 gem 'gravtastic'      # For Gravatar integration
 gem 'js-routes'       # Route helpers in Javascript
