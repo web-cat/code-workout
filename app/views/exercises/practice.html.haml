@@ -46,7 +46,7 @@
                 as: :check_boxes,
                 collection: answers,
                 member_value: :id,
-                member_label: :answer,
+                member_label: Proc.new{ |p| "#{p[:answer]}".html_safe },
                 selected: false,
                 label: '&nbsp;'
         - elsif @exercise_version.prompts.count > 1
@@ -61,7 +61,7 @@
                 input_html: {name: "prompt-" + prompt.id.to_s},
                 collection: answers,
                 member_value: :id,
-                member_label: :answer,
+                member_label: Proc.new{ |p| "#{p[:answer]}".html_safe },
                 label: '&nbsp;'
         - else
           %h3 Select one answer:
@@ -74,7 +74,7 @@
                 as: :radio,
                 collection: answers,
                 member_value: :id,
-                member_label: :answer,
+                member_label: Proc.new{ |p| "#{p[:answer]}".html_safe },
                 label: '&nbsp;'
       - elsif prompt.is_coding?
         - coding_questions = true
