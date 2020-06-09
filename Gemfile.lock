@@ -431,7 +431,7 @@ GEM
     sdoc (1.1.0)
       rdoc (>= 5.0)
     sexp_processor (4.14.1)
-    sprockets (4.0.2)
+    sprockets (3.7.2)
       concurrent-ruby (~> 1.0)
       rack (> 1, < 3)
     sprockets-rails (3.2.1)
@@ -550,6 +550,7 @@ DEPENDENCIES
   rubyzip (>= 1.3.0)
   sass-rails
   sdoc
+  sprockets (~> 3.7.2)
   sqlite3 (~> 1.3.0)
   sucker_punch (~> 1.0)
   test-unit (~> 3.0.9)
