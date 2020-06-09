@@ -56,13 +56,12 @@ group :development, :test do
   gem 'faker'
   gem 'pry'
   gem 'request-log-analyzer'
+  gem 'capybara', '~> 3.12.0'
 end
 gem 'factory_bot_rails'
 gem 'log_file'
 
 group :test do
-  gem 'sqlite3'
-  gem 'capybara'
 end
 
 group :production, :staging, :deploy  do

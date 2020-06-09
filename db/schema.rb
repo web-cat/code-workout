@@ -12,7 +12,7 @@
 
 ActiveRecord::Schema.define(version: 20190712171251) do
 
-  create_table "active_admin_comments", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "active_admin_comments", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.string   "namespace"
     t.text     "body",          limit: 65535
     t.string   "resource_id",                 default: "", null: false
@@ -26,7 +26,7 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.index ["resource_type", "resource_id"], name: "index_active_admin_comments_on_resource_type_and_resource_id", using: :btree
   end
 
-  create_table "attempts", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "attempts", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.integer  "user_id",                                      null: false
     t.integer  "exercise_version_id",                          null: false
     t.datetime "submit_time",                                  null: false
@@ -54,7 +54,7 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.index ["tag_user_score_id"], name: "attempts_tag_user_scores_tag_user_score_id_fk", using: :btree
   end
 
-  create_table "choices", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "choices", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.integer  "multiple_choice_prompt_id",               null: false
     t.integer  "position",                                null: false
     t.text     "feedback",                  limit: 65535
@@ -72,12 +72,12 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.index ["multiple_choice_prompt_answer_id"], name: "choices_MC_prompt_answers_MC_prompt_answer_id_fk", using: :btree
   end
 
-  create_table "coding_prompt_answers", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "coding_prompt_answers", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.text "answer", limit: 65535
     t.text "error",  limit: 65535
   end
 
-  create_table "coding_prompts", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "coding_prompts", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.datetime "created_at"
     t.datetime "updated_at"
     t.string   "class_name"
@@ -88,7 +88,7 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.boolean  "hide_examples",               default: false, null: false
   end
 
-  create_table "course_enrollments", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "course_enrollments", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.integer "user_id",            null: false
     t.integer "course_offering_id", null: false
     t.integer "course_role_id",     null: false
@@ -98,7 +98,7 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.index ["user_id"], name: "index_course_enrollments_on_user_id", using: :btree
   end
 
-  create_table "course_exercises", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "course_exercises", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.integer  "course_id",   null: false
     t.integer  "exercise_id", null: false
     t.datetime "created_at"
@@ -107,7 +107,7 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.index ["exercise_id"], name: "course_exercises_exercise_id_fk", using: :btree
   end
 
-  create_table "course_offerings", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "course_offerings", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.integer  "course_id",                            null: false
     t.integer  "term_id",                              null: false
     t.string   "label",                   default: "", null: false
@@ -122,7 +122,7 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.index ["term_id"], name: "index_course_offerings_on_term_id", using: :btree
   end
 
-  create_table "course_roles", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "course_roles", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.string  "name",                       default: "",    null: false
     t.boolean "can_manage_course",          default: false, null: false
     t.boolean "can_manage_assignments",     default: false, null: false
@@ -131,7 +131,7 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.boolean "builtin",                    default: false, null: false
   end
 
-  create_table "courses", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "courses", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.string   "name",            default: "",    null: false
     t.string   "number",          default: "",    null: false
     t.integer  "organization_id",                 null: false
@@ -146,7 +146,7 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.index ["user_group_id"], name: "index_courses_on_user_group_id", using: :btree
   end
 
-  create_table "errors", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "errors", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.string   "usable_type"
     t.integer  "usable_id"
     t.string   "class_name"
@@ -162,7 +162,7 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.index ["created_at"], name: "index_errors_on_created_at", using: :btree
   end
 
-  create_table "exercise_collections", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "exercise_collections", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.string   "name"
     t.text     "description",        limit: 65535
     t.integer  "user_group_id"
@@ -177,20 +177,20 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.index ["user_id"], name: "index_exercise_collections_on_user_id", using: :btree
   end
 
-  create_table "exercise_families", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "exercise_families", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.string   "name",       default: "", null: false
     t.datetime "created_at"
     t.datetime "updated_at"
   end
 
-  create_table "exercise_owners", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "exercise_owners", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.integer "exercise_id", null: false
     t.integer "owner_id",    null: false
     t.index ["exercise_id", "owner_id"], name: "index_exercise_owners_on_exercise_id_and_owner_id", unique: true, using: :btree
     t.index ["owner_id"], name: "exercise_owners_owner_id_fk", using: :btree
   end
 
-  create_table "exercise_versions", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "exercise_versions", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.integer  "stem_id"
     t.datetime "created_at"
     t.datetime "updated_at"
@@ -212,7 +212,7 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.index ["resource_file_id"], name: "index_exercise_versions_resource_files_on_resource_file_id", using: :btree
   end
 
-  create_table "exercise_workouts", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "exercise_workouts", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.integer  "exercise_id",                          null: false
     t.integer  "workout_id",                           null: false
     t.integer  "position",                             null: false
@@ -223,7 +223,7 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.index ["workout_id"], name: "exercise_workouts_workout_id_fk", using: :btree
   end
 
-  create_table "exercises", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "exercises", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.integer  "question_type",                          null: false
     t.integer  "current_version_id"
     t.datetime "created_at"
@@ -244,7 +244,7 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.index ["is_public"], name: "index_exercises_on_is_public", using: :btree
   end
 
-  create_table "friendly_id_slugs", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "friendly_id_slugs", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.string   "slug",                      default: "", null: false
     t.integer  "sluggable_id",                           null: false
     t.string   "sluggable_type", limit: 50
@@ -256,14 +256,14 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.index ["sluggable_type"], name: "index_friendly_id_slugs_on_sluggable_type", using: :btree
   end
 
-  create_table "global_roles", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "global_roles", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.string  "name",                          default: "",    null: false
     t.boolean "can_manage_all_courses",        default: false, null: false
     t.boolean "can_edit_system_configuration", default: false, null: false
     t.boolean "builtin",                       default: false, null: false
   end
 
-  create_table "group_access_requests", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "group_access_requests", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.integer  "user_id"
     t.integer  "user_group_id"
     t.boolean  "pending",       default: true
@@ -274,7 +274,7 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.index ["user_id"], name: "index_group_access_requests_on_user_id", using: :btree
   end
 
-  create_table "identities", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "identities", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.integer  "user_id",                 null: false
     t.string   "provider",   default: "", null: false
     t.string   "uid",        default: "", null: false
@@ -284,14 +284,14 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.index ["user_id"], name: "index_identities_on_user_id", using: :btree
   end
 
-  create_table "irt_data", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "irt_data", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.integer "attempt_count",             null: false
     t.float   "sum_of_scores",  limit: 24, null: false
     t.float   "difficulty",     limit: 24, null: false
     t.float   "discrimination", limit: 24, null: false
   end
 
-  create_table "license_policies", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "license_policies", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.string   "name"
     t.text     "description", limit: 65535
     t.boolean  "can_fork"
@@ -300,7 +300,7 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.datetime "updated_at"
   end
 
-  create_table "licenses", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "licenses", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.string   "name"
     t.text     "description",       limit: 65535
     t.string   "url"
@@ -310,7 +310,7 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.index ["license_policy_id"], name: "index_licenses_on_license_policy_id", using: :btree
   end
 
-  create_table "lms_instances", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "lms_instances", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.string   "consumer_key"
     t.string   "consumer_secret"
     t.datetime "created_at"
@@ -323,14 +323,14 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.index ["url"], name: "index_lms_instances_on_url", unique: true, using: :btree
   end
 
-  create_table "lms_types", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "lms_types", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.string   "name",       default: "", null: false
     t.datetime "created_at"
     t.datetime "updated_at"
     t.index ["name"], name: "index_lms_types_on_name", unique: true, using: :btree
   end
 
-  create_table "lti_identities", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "lti_identities", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.string   "lti_user_id"
     t.integer  "user_id"
     t.integer  "lms_instance_id"
@@ -340,7 +340,7 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.index ["user_id"], name: "index_lti_identities_on_user_id", using: :btree
   end
 
-  create_table "lti_workouts", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "lti_workouts", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.integer  "workout_id",        limit: 4
     t.string   "lms_assignment_id", limit: 255, null: false
     t.datetime "created_at"
@@ -350,22 +350,22 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.index ["workout_id"], name: "index_lti_workouts_on_workout_id", using: :btree
   end
 
-  create_table "memberships", force: :cascade do |t|
+  create_table "memberships", id: :integer, force: :cascade do |t|
     t.integer  "user_id",       limit: 4
     t.integer  "user_group_id", limit: 4
     t.datetime "created_at"
     t.datetime "updated_at"
   end
 
-  create_table "multiple_choice_prompt_answers", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "multiple_choice_prompt_answers", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
   end
 
-  create_table "multiple_choice_prompts", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "multiple_choice_prompts", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.boolean "allow_multiple", default: false, null: false
     t.boolean "is_scrambled",   default: true,  null: false
   end
 
-  create_table "organizations", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "organizations", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.string   "name",         default: "",    null: false
     t.datetime "created_at"
     t.datetime "updated_at"
@@ -375,7 +375,7 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.index ["slug"], name: "index_organizations_on_slug", unique: true, using: :btree
   end
 
-  create_table "prompt_answers", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "prompt_answers", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.integer "attempt_id"
     t.integer "prompt_id"
     t.integer "actable_id"
@@ -386,7 +386,7 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.index ["prompt_id"], name: "index_prompt_answers_on_prompt_id", using: :btree
   end
 
-  create_table "prompts", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "prompts", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.integer  "exercise_version_id",               null: false
     t.text     "question",            limit: 65535, null: false
     t.integer  "position",                          null: false
@@ -401,7 +401,7 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.index ["irt_data_id"], name: "prompts_irt_data_id_fk", using: :btree
   end
 
-  create_table "resource_files", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "resource_files", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.string   "filename"
     t.string   "token",      default: "",   null: false
     t.integer  "user_id",                   null: false
@@ -412,7 +412,7 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.index ["user_id"], name: "index_resource_files_on_user_id", using: :btree
   end
 
-  create_table "signups", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "signups", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.string   "first_name"
     t.string   "last_name_name"
     t.string   "email"
@@ -422,13 +422,13 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.datetime "updated_at"
   end
 
-  create_table "stems", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "stems", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.text     "preamble",   limit: 65535
     t.datetime "created_at"
     t.datetime "updated_at"
   end
 
-  create_table "student_extensions", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "student_extensions", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.integer  "user_id"
     t.integer  "workout_offering_id"
     t.datetime "soft_deadline"
@@ -441,7 +441,7 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.index ["workout_offering_id"], name: "index_student_extensions_on_workout_offering_id", using: :btree
   end
 
-  create_table "tag_user_scores", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "tag_user_scores", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.integer  "user_id",                         null: false
     t.integer  "experience",          default: 0
     t.datetime "created_at"
@@ -450,7 +450,7 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.index ["user_id"], name: "index_tag_user_scores_on_user_id", using: :btree
   end
 
-  create_table "taggings", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "taggings", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.integer  "tag_id"
     t.integer  "taggable_id"
     t.string   "taggable_type"
@@ -462,13 +462,13 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.index ["taggable_id", "taggable_type", "context"], name: "index_taggings_on_taggable_id_and_taggable_type_and_context", using: :btree
   end
 
-  create_table "tags", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "tags", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.string  "name"
     t.integer "taggings_count", default: 0
     t.index ["name"], name: "index_tags_on_name", unique: true, using: :btree
   end
 
-  create_table "terms", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "terms", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.integer  "season",                  null: false
     t.date     "starts_on",               null: false
     t.date     "ends_on",                 null: false
@@ -480,7 +480,7 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.index ["year", "season"], name: "index_terms_on_year_and_season", using: :btree
   end
 
-  create_table "test_case_results", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "test_case_results", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.integer  "test_case_id",                          null: false
     t.integer  "user_id",                               null: false
     t.text     "execution_feedback",      limit: 65535
@@ -493,7 +493,7 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.index ["user_id"], name: "index_test_case_results_on_user_id", using: :btree
   end
 
-  create_table "test_cases", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "test_cases", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.text     "negative_feedback", limit: 65535
     t.float    "weight",            limit: 24,                    null: false
     t.text     "description",       limit: 65535
@@ -509,7 +509,7 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.index ["coding_prompt_id"], name: "index_test_cases_on_coding_prompt_id", using: :btree
   end
 
-  create_table "time_zones", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "time_zones", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.string   "name"
     t.string   "zone"
     t.string   "display_as"
@@ -517,14 +517,14 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.datetime "updated_at"
   end
 
-  create_table "user_groups", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "user_groups", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.string   "name"
     t.datetime "created_at"
     t.datetime "updated_at"
     t.text     "description", limit: 65535
   end
 
-  create_table "users", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "users", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.string   "email",                    default: "", null: false
     t.string   "encrypted_password",       default: "", null: false
     t.string   "reset_password_token"
@@ -556,7 +556,7 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.index ["time_zone_id"], name: "index_users_on_time_zone_id", using: :btree
   end
 
-  create_table "visualization_loggings", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
+  create_table "visualization_loggings", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|
     t.integer  "user_id"
     t.integer  "exercise_id"
     t.integer  "workout_id"
@@ -569,7 +569,7 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.index ["workout_offering_id"], name: "index_visualization_loggings_on_workout_offering_id", using: :btree
   end
 
-  create_table "workout_offerings", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "workout_offerings", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.integer  "course_offering_id",                      null: false
     t.integer  "workout_id",                              null: false
     t.datetime "created_at"
@@ -591,14 +591,14 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.index ["workout_policy_id"], name: "index_workout_offerings_on_workout_policy_id", using: :btree
   end
 
-  create_table "workout_owners", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "workout_owners", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.integer "workout_id", null: false
     t.integer "owner_id",   null: false
     t.index ["owner_id"], name: "workout_owners_owner_id_fk", using: :btree
     t.index ["workout_id", "owner_id"], name: "index_workout_owners_on_workout_id_and_owner_id", unique: true, using: :btree
   end
 
-  create_table "workout_policies", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "workout_policies", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.boolean  "hide_thumbnails_before_start"
     t.boolean  "hide_feedback_before_finish"
     t.boolean  "hide_compilation_feedback_before_finish"
@@ -614,7 +614,7 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.string   "description",                             limit: 255
   end
 
-  create_table "workout_scores", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "workout_scores", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.integer  "workout_id",                         null: false
     t.integer  "user_id",                            null: false
     t.float    "score",                   limit: 24
@@ -628,12 +628,14 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.integer  "workout_offering_id"
     t.string   "lis_outcome_service_url"
     t.string   "lis_result_sourcedid"
+    t.integer "lti_workout_id", limit: 4
+    t.index ["lti_workout_id"], name: "index_workout_scores_on_lti_workout_id", using: :btree
     t.index ["user_id"], name: "index_workout_scores_on_user_id", using: :btree
     t.index ["workout_id"], name: "index_workout_scores_on_workout_id", using: :btree
     t.index ["workout_offering_id"], name: "workout_scores_workout_offering_id_fk", using: :btree
   end
 
-  create_table "workouts", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
+  create_table "workouts", id: :integer, force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci" do |t|
     t.string   "name",                            default: "",    null: false
     t.boolean  "scrambled",                       default: false
     t.datetime "created_at"
