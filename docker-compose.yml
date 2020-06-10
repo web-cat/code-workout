@@ -1,0 +1,37 @@
+version: '3.8'
+services:
+  db_dev:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: codeworkout
+      MYSQL_PASSWORD: codeworkout
+      MYSQL_DATABASE: codeworkout
+    ports:
+      - "3307:3306"
+  db_test:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: codeworkout
+      MYSQL_PASSWORD: codeworkout
+      MYSQL_DATABASE: codeworkout_test
+    ports:
+      - "3308:3306"
+  web:
+    depends_on:
+      - "db_dev"
+      - "db_test"
+    build: .
+    ports:
+      - "9292:9292"
+    environment:
+      RUBYOPT: -W:no-deprecated
+      DB_USERNAME: codeworkout
+      DB_PASSWORD: codeworkout
+      DB_DATABASE: codeworkout
+      DB_PORT: 3306
+      DB_HOST: db
+      RAILS_ENV: development
+    volumes:
+      - ".:/code-workout"

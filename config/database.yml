@@ -8,7 +8,7 @@ development:
    database: codeworkout
    username: codeworkout
    password: codeworkout
-   host: localhost
+   host: db_dev 
 
 # development:
 #   adapter: sqlite3
@@ -32,4 +32,4 @@ test:
    database: codeworkout_test
    username: codeworkout
    password: codeworkout
-   host: localhost
+   host: db_test
