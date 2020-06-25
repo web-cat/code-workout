@@ -159,6 +159,11 @@ class WorkoutsController < ApplicationController
         Organization.find(params[:organization_id]) : nil
       @course_offerings = current_user.managed_course_offerings(
         course: @course, term: @term)
+      @return_to = organization_course_path(
+        organization_id: @organization.slug,
+        id: @course.slug,
+        term_id: @term.slug
+      )
     elsif !session[:is_instructor]
       # If there's no course, use session-specific permissions 
       if @lti_launch
@@ -329,6 +334,13 @@ class WorkoutsController < ApplicationController
           @student_extensions.push(ext)
         end
       end
+
+      @return_to = organization_workout_offering_path(
+        @workout_offering,
+        organization_id: @organization,
+        course_id: @course,
+        term_id: @term,
+      )
     end
 
     @can_update = can? :edit, @workout
@@ -404,6 +416,12 @@ class WorkoutsController < ApplicationController
       @unused_course_offerings = nil
     end
 
+    @return_to = organization_course_path(
+      organization_id: @organization.slug,
+      id: @course.slug,
+      term_id: @term.slug
+    )
+    
     render layout: 'two_columns'
   end
 
