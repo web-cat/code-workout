@@ -4,4 +4,4 @@
   = render 'oneblockform', qtype: type
 
   %br
-  = link_to 'Back', exercises_path
+  = link_to 'Back', request.referer || exercises_path 
