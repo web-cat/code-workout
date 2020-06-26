@@ -52,7 +52,7 @@ Everything under prompts should include the actual layout of the exercise.This i
 This should include the text for the actual question in the particular prompt.
 
 
-###Multiple Choice Questions
+### Multiple Choice Questions
 
 **allow_multiple** 
 
@@ -74,7 +74,7 @@ This is the similar to the position option for the prompts. It decides the order
 
 This determines the integer value of the answer. Let's say there is only one correct answer, every wrong answer could be set to 0 and the correct one to 1. Some answers could be more correct than others and some could offer partial credit. Some could even take multiple answers and the numbers could all be equal except for the wrong answer in order to determine the score.
 
-###Coding Questions
+### Coding Questions
 
 **class_name and method_name**
 
