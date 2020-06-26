@@ -9,6 +9,8 @@ services:
       MYSQL_DATABASE: codeworkout
     ports:
       - "3307:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
   db_test:
     image: mysql:5.7
     environment:
@@ -34,3 +36,5 @@ services:
       RAILS_ENV: development
     volumes:
       - ".:/code-workout"
+volumes:
+  dbdata:
