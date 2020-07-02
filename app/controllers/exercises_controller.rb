@@ -338,7 +338,7 @@ class ExercisesController < ApplicationController
       end
     end
 
-    @return_to = session.delete(:return_to)
+    @return_to = session.delete(:return_to) || exercises_path
 
     # parse the text_representation
     exercises = ExerciseRepresenter.for_collection.new([]).from_hash(hash)

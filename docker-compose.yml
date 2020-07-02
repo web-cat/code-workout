@@ -10,7 +10,7 @@ services:
     ports:
       - "3307:3306"
     volumes:
-      - dbdata:/var/lib/mysql
+      - dbdata:/var/lib/mysql:delegated
   db_test:
     image: mysql:5.7
     environment:
@@ -35,6 +35,6 @@ services:
       DB_HOST: db
       RAILS_ENV: development
     volumes:
-      - ".:/code-workout"
+      - .:/code-workout
 volumes:
   dbdata:
