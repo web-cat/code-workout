@@ -14,6 +14,11 @@ module CodeWorkout
     # Settings in config/environments/* take precedence over those specified here.
     # Application configuration should go into files in config/initializers
     # -- all .rb files in that directory are automatically loaded.
+
+    # exception_handler configuration (no longer relies on an initializer)
+    config.exception_handler = {
+      db: true
+    }
     
     # Timeout for feedback polls (milliseconds)
     # This is an initial value on application startup, but it might change
