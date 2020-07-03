@@ -143,6 +143,8 @@ class ExercisesController < ApplicationController
         @exercise_collection = -1 # Everyone
       end
     end
+    @return_to = request.referer || exercises_path
+    session[:return_to] = @return_to
   end
 
 
@@ -336,6 +338,8 @@ class ExercisesController < ApplicationController
       end
     end
 
+    @return_to = session.delete(:return_to) || exercises_path
+
     # parse the text_representation
     exercises = ExerciseRepresenter.for_collection.new([]).from_hash(hash)
     exercises.each do |e|
@@ -358,13 +362,13 @@ class ExercisesController < ApplicationController
           end
         end
         errors << "</ul>"
-        redirect_to exercises_url, flash: { error: errors.join("").html_safe } and return
+        redirect_to @return_to, flash: { error: errors.join("").html_safe } and return
       else # successfully created the exercise
         exercise_collection.andand.add(e, override: true)
       end
     end
 
-    redirect_to exercises_url, flash: { success: 'Exercise saved!' }
+    redirect_to @return_to, flash: { success: 'Exercise saved!' }
   end
 
 	def embed

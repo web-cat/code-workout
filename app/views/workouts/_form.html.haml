@@ -159,7 +159,7 @@
 
   .form-group
     %button#btn-submit-wo.btn.btn-primary Submit
-    = link_to 'Back', workouts_path
+    = link_to 'Back', @return_to
   
   - if @course
     %table#add-offering-form{ style: 'display: none;' }
