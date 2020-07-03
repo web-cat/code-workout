@@ -21,7 +21,7 @@ You can play around without signing up if you like.
 
 ## Setting up a Development Environment Using Docker
 
-> Note: If you are comfortable setting up a Rails application, i.e., installing Ruby (2.3.8), Rails (4.2), and MySQL (5.7) on your own machine, you can just do that instead of using Docker.
+> Note: If you are comfortable setting up a Rails application, i.e., installing Ruby (2.3.8), Rails (4.2), and MySQL (5.7) on your own machine, you can just do that instead of using Docker. You'll need to change the `host` keys in [config/database.yml](config/database.yml) to `localhost`.
 
 The following steps will help set up a development environment for CodeWorkout using Docker and Docker Compose.
 You can do your editing on your own machine using an editor of your choice; changes will be reflected in the Docker container.
@@ -31,6 +31,11 @@ You can do your editing on your own machine using an editor of your choice; chan
 ```bash
 $ git clone git@github.com:web-cat/code-workout.git
 $ cd code-workout
+```
+
+Check out the `staging` branch. Most new changes won't be accepted directly into the `master` branch.
+```bash
+$ git checkout staging
 ```
 
 ### Install Docker and build the containers
@@ -76,6 +81,17 @@ $ docker-compose run web rake db:populate
 ```
 
 The above command is telling Docker to "run the command `rake db:populate` on the `web` container and exit".
+This rake task is defined in [lib/tasks/sample_data.rake](lib/tasks/sample_data.rake), and runs the following tasks in order:
+
+```bash
+$ rake db:drop        # drop the database
+$ rake db:create      # create the database
+$ rake db:schema:load # load the schema from db/schema.rb
+$ rake db:seed        # load the seeded data (like timezones, seasons, etc.)
+$ rake db:populate    # load sample data; this is a custom rake task
+```
+
+> Run `rake -T` in your project root to see a list of available rake tasks. [What's rake?](https://github.com/ruby/rake)
 
 The initial database population is defined by [lib/tasks/sample_data.rake](lib/tasks/sample_data.rake).
 It uses the factories defined in [spec/factories](spec/factories) to generate entities.
@@ -100,6 +116,10 @@ Initial database contents provided for all new installs, including the productio
 - To reset the database to the initial state do the following:
   - `$ cd code-workout`
   - `$ docker-compose run web rake db:populate`
+
+**A note on setting up a development database.**
+
+We load the schema directly from [db/schema.rb](db/schema.rb), because database migrations tend to go stale over time&mdash;running over 100 migrations, many of which are years old, is likely to run into errors. Migrations are useful for making *new* changes or reversing *recent* changes to the schema.
 
 ### Run servers
 To run the development server, do the following in the `code-workout` directory:
