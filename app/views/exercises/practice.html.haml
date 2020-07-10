@@ -18,7 +18,11 @@
     lis_result_sourcedid: @workout_score.andand.lis_result_sourcedid,
     lis_outcome_service_url: @workout_score.andand.lis_outcome_service_url)), remote: true do |f|
     = f.semantic_errors
-    %h1= @exercise.display_name
+    %h1
+      = @exercise.display_name
+      - if current_user.andand.can? :edit, @exercise
+        %small
+          = link_to "", edit_exercise_path(@exercise), class: 'glyphicon glyphicon-pencil'
     - if @msg
       #timer.alert.alert-warning
         = "#{@msg}"
