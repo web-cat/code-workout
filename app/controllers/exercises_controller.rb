@@ -305,9 +305,11 @@ class ExercisesController < ApplicationController
       exercise_params = params[:exercise]
       exercise_version_params = exercise_params[:exercise_version]
       edit_rights = exercise_params[:exercise_collection_id].to_i
-      hash = YAML.load(exercise_version_params['text_representation'])
+      text_representation = exercise_version_params['text_representation']
+      hash = YAML.load(text_representation)
     else
-      hash = YAML.load(File.read(params[:form][:file].path))
+      text_representation = File.read(params[:form][:file].path)
+      hash = YAML.load(text_representation)
       edit_rights = 0 # Personal exercise
     end
 
@@ -356,6 +358,7 @@ class ExercisesController < ApplicationController
         error_msgs << "</ul>"
       else # successfully created the exercise
         exercise_collection.andand.add(e, override: true)
+        e.current_version.update(text_representation: text_representation)
         success_msgs <<
           "<li>X#{e.id}: #{e.name} saved, try it #{view_context.link_to 'here', exercise_practice_path(e)}.</li>"
       end
