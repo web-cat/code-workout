@@ -27,6 +27,8 @@ services:
     build: .
     ports:
       - "9292:9292"
+    stdin_open: true
+    tty: true
     environment:
       DB_USERNAME: codeworkout
       DB_PASSWORD: codeworkout

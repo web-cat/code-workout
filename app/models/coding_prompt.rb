@@ -185,7 +185,7 @@ class CodingPrompt < ActiveRecord::Base
       tc = TestCase.new(
         weight: 1.0,
         coding_prompt: self,
-        input: row[0],
+        input: row[0] || "", # empty string is truthy in ruby
         expected_output: row[1],
         example: false,
         hidden: false,
