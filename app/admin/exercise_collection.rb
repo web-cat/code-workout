@@ -22,8 +22,8 @@ ActiveAdmin.register ExerciseCollection do
       row :description
       row :license
       row 'owned_by' do |ec|
-        if ec.user
-          link_to ec.user.display_name, admin_user_path(ec.user)
+        if ec.owner
+          link_to ec.owner.display_name, admin_user_path(ec.owner)
         elsif ec.user_group
           link_to ec.user_group.name, admin_user_group_path(ec.user_group)
         end

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20190712171251) do
+ActiveRecord::Schema.define(version: 20200716203116) do
 
   create_table "active_admin_comments", force: :cascade do |t|
     t.string   "namespace",     limit: 255
@@ -174,6 +174,14 @@ ActiveRecord::Schema.define(version: 20190712171251) do
   add_index "errors", ["class_name"], name: "index_errors_on_class_name", using: :btree
   add_index "errors", ["created_at"], name: "index_errors_on_created_at", using: :btree
 
+  create_table "exercise_collection_memberships", force: :cascade do |t|
+    t.integer  "exercise_collection_id", limit: 4
+    t.integer  "exercise_id",            limit: 4
+    t.boolean  "is_collection_public",             default: false
+    t.datetime "created_at",                                       null: false
+    t.datetime "updated_at",                                       null: false
+  end
+
   create_table "exercise_collections", force: :cascade do |t|
     t.string   "name",               limit: 255
     t.text     "description",        limit: 65535
@@ -183,6 +191,8 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.datetime "updated_at"
     t.integer  "user_id",            limit: 4
     t.integer  "course_offering_id", limit: 4
+    t.string   "type",               limit: 255,                   null: false
+    t.boolean  "can_opt_in",                       default: false
   end
 
   add_index "exercise_collections", ["course_offering_id"], name: "index_exercise_collections_on_course_offering_id", using: :btree

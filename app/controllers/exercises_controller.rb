@@ -134,7 +134,10 @@ class ExercisesController < ApplicationController
       ExerciseRepresenter.new(@exercise).to_hash.to_yaml
     @user_groups = current_user.user_groups
     # figure out the edit rights to this exercise
-    if ec = @exercise.exercise_collection
+    # FIXME: Right now, this will populate the drop down in the form with
+    # the first exercise_collection that this exercise belongs to. Fix this once
+    # exercise permissions are in place
+    if ec = @exercise.exercise_collections.first
       if ec.owned_by?(current_user)
         @exercise_collection = 0 # Only Me
       elsif @user_groups.include?(ec.user_group)

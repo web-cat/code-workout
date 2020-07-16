@@ -55,7 +55,7 @@ describe ExerciseCollection, :type => :model do
     context 'collection belongs to a single user' do
       before :all do
         @exercise_collection = ExerciseCollection.find(2)
-        @user = @exercise_collection.user
+        @user = @exercise_collection.owner
       end
 
       it 'should allow a collection owner to edit the exercise from the collection' do

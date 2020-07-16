@@ -40,6 +40,7 @@ class Course < ActiveRecord::Base
   has_many    :exercises, through: :course_exercises
   # Associating with user groups
   belongs_to :user_group, inverse_of: :course
+  has_one :exercise_collection, through: :user_group
   #Kaminari for the show method
   paginates_per 100
 

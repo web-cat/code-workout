@@ -1,0 +1,2 @@
+class CopyrightOwnerCollection < ExerciseCollection
+end

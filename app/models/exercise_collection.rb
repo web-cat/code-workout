@@ -22,10 +22,15 @@
 
 class ExerciseCollection < ActiveRecord::Base
   belongs_to :user_group, inverse_of: :exercise_collection
-  belongs_to :user
+  belongs_to :owner, class_name: 'User'
   belongs_to :license
   belongs_to :course_offering, inverse_of: :exercise_collections
-  has_many :exercises
+  has_many :exercise_collection_memberships
+  has_many :exercises, through: :exercise_collection_memberships
+  has_one :course, through: :user_group
+
+  scope :course_collections, -> { where(type: 'CourseCollection') }
+  scope :copyright_owner_collections, -> { where(type: 'CopyrightOwnerCollection') }
 
   def is_public?
     return self.license.andand.license_policy.andand.is_public
@@ -41,12 +46,12 @@ class ExerciseCollection < ActiveRecord::Base
 
   def add(*exercises, override: false)
     exercises.flatten.each do |e|
-      if e.exercise_collection.nil?
-        e.exercise_collection = self
-        e.save!
-      elsif override
-        e.exercise_collection = self
-        e.save!
+      # If the exercise isn't already in this exercise collection, add it
+      if !e.exercise_collections.exists?(self.id)
+        ExerciseCollectionMembership.create(
+          exercise_id: e.id,
+          exercise_collection_id: self.id
+        )
       end
     end
   end

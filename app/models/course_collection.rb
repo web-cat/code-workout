@@ -1,0 +1,3 @@
+class CourseCollection < ExerciseCollection
+
+end

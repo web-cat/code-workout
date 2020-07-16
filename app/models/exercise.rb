@@ -57,6 +57,9 @@ class Exercise < ActiveRecord::Base
   has_many :exercise_workouts, inverse_of: :exercise, dependent: :destroy
   has_many :workouts, through: :exercise_workouts
   belongs_to :exercise_family, inverse_of: :exercises
+  has_many :exercise_collection_memberships
+  has_many :exercise_collections, through: :exercise_collection_memberships
+  delegate :course_collections, :copyright_owner_collections, to: :exercise_collections
   has_many :exercise_owners, inverse_of: :exercise, dependent: :destroy
   has_many :owners, through: :exercise_owners
   belongs_to :current_version, class_name: 'ExerciseVersion'
@@ -100,7 +103,7 @@ class Exercise < ActiveRecord::Base
 
 
   scope :visible_through_user, -> (u) { joins{exercise_owners.outer}.joins{exercise_collection.outer}.
-    where{ (exercise_owners.owner == u) | (exercise_collection.user == u) } }
+    where{ (exercise_owners.owner == u) | (exercise_collection.owner == u) } }
 
 
   #~ Class methods ............................................................
@@ -200,6 +203,16 @@ class Exercise < ActiveRecord::Base
       )
   end
 
+  # -------------------------------------------------------------
+  # Move all belongs_to exercise_collection associations to the ExerciseCollectionMemberships join table
+  def self.create_collection_memberships
+    Exercise.where.not(exercise_collection_id: nil).each do |e|
+      ExerciseCollectionMembership.create(
+        exercise_collection_id: e.exercise_collection_id,
+        exercise_id: e.id
+      )
+    end
+  end
 
   # -------------------------------------------------------------
   # return the extension of a given language
@@ -278,6 +291,7 @@ class Exercise < ActiveRecord::Base
 
   # Does the user own this exercise or its collection?
   # Through themselves or through a user group?
+  # FIXME: Needs refactoring once CourseCollection and CopyrightOwnerCollection have been worked out
   def owned_by?(u)
     return self.owners.include?(u) ||
       self.exercise_collection.andand.owned_by?(u) ||
