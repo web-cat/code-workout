@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20200716203116) do
+ActiveRecord::Schema.define(version: 20200717152311) do
 
   create_table "active_admin_comments", force: :cascade do |t|
     t.string   "namespace",     limit: 255
@@ -132,6 +132,14 @@ ActiveRecord::Schema.define(version: 20200716203116) do
   add_index "course_offerings", ["lms_instance_id"], name: "index_course_offerings_on_lms_instance_id", using: :btree
   add_index "course_offerings", ["term_id"], name: "index_course_offerings_on_term_id", using: :btree
 
+  create_table "course_offerings_exercise_collections", id: false, force: :cascade do |t|
+    t.integer "course_offering_id",     limit: 4, null: false
+    t.integer "exercise_collection_id", limit: 4, null: false
+  end
+
+  add_index "course_offerings_exercise_collections", ["course_offering_id", "exercise_collection_id"], name: "course_offering_collection", using: :btree
+  add_index "course_offerings_exercise_collections", ["exercise_collection_id", "course_offering_id"], name: "collection_course_offering", using: :btree
+
   create_table "course_roles", force: :cascade do |t|
     t.string  "name",                       limit: 255, default: "",    null: false
     t.boolean "can_manage_course",                      default: false, null: false
@@ -183,19 +191,17 @@ ActiveRecord::Schema.define(version: 20200716203116) do
   end
 
   create_table "exercise_collections", force: :cascade do |t|
-    t.string   "name",               limit: 255
-    t.text     "description",        limit: 65535
-    t.integer  "user_group_id",      limit: 4
-    t.integer  "license_id",         limit: 4
+    t.string   "name",          limit: 255
+    t.text     "description",   limit: 65535
+    t.integer  "user_group_id", limit: 4
+    t.integer  "license_id",    limit: 4
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer  "user_id",            limit: 4
-    t.integer  "course_offering_id", limit: 4
-    t.string   "type",               limit: 255,                   null: false
-    t.boolean  "can_opt_in",                       default: false
+    t.integer  "user_id",       limit: 4
+    t.string   "type",          limit: 255,                   null: false
+    t.boolean  "can_opt_in",                  default: false
   end
 
-  add_index "exercise_collections", ["course_offering_id"], name: "index_exercise_collections_on_course_offering_id", using: :btree
   add_index "exercise_collections", ["license_id"], name: "index_exercise_collections_on_license_id", using: :btree
   add_index "exercise_collections", ["user_group_id"], name: "index_exercise_collections_on_user_group_id", using: :btree
   add_index "exercise_collections", ["user_id"], name: "index_exercise_collections_on_user_id", using: :btree

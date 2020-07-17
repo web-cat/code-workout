@@ -39,7 +39,7 @@ class CourseOffering < ActiveRecord::Base
     inverse_of: :course_offering,
     dependent: :destroy
   has_many :users, through: :course_enrollments
-  has_many :exercise_collections
+  has_and_belongs_to_many :course_collections, association_foreign_key: 'exercise_collection_id'
 
   accepts_nested_attributes_for :term
 
