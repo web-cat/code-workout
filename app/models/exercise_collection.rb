@@ -21,13 +21,9 @@
 #
 
 class ExerciseCollection < ActiveRecord::Base
-  belongs_to :user_group, inverse_of: :exercise_collection
-  belongs_to :owner, class_name: 'User'
-  belongs_to :license
-  belongs_to :course_offering, inverse_of: :exercise_collections
+  belongs_to :user_group, inverse_of: :exercise_collection # FIXME: This should go after the prod data is refactored into ExerciseCollectionMemberships 
   has_many :exercise_collection_memberships
   has_many :exercises, through: :exercise_collection_memberships
-  has_one :course, through: :user_group
 
   scope :course_collections, -> { where(type: 'CourseCollection') }
   scope :copyright_owner_collections, -> { where(type: 'CopyrightOwnerCollection') }

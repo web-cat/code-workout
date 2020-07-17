@@ -28,10 +28,12 @@ FactoryBot.define do
       name { "MCQExercises" }
       description { "Collection of multiple choice exercises." \
         "Created by FactoryBot for testing." }
+      type { 'CourseCollection' }
     end
     factory :user_owned_collection do
       name { "Owned by user" }
       description { "Exercises owned by a single user." }
+      type { 'CopyrightOwnerCollection' }
     end
   end
 end

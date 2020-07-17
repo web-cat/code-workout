@@ -87,10 +87,14 @@ namespace :db do
     single_user_collection = FactoryBot.create :user_owned_collection
     instructor.exercise_collection = single_user_collection
 
-    FactoryBot.create :mc_exercise, name: 'Pick One 3', exercise_collection: group_owned_collection
-    FactoryBot.create :mc_exercise, name: 'Pick One 4', exercise_collection: group_owned_collection
-    FactoryBot.create :coding_exercise, name: 'User Owned Coding', exercise_collection: single_user_collection
-    FactoryBot.create :mc_exercise, name: 'User Owned MCQ', exercise_collection: single_user_collection
+    group_owned_collection.add(
+      FactoryBot.create(:mc_exercise, name: 'Pick One 3'),
+      FactoryBot.create(:mc_exercise, name: 'Pick One 4')
+    )
+    single_user_collection.add(
+      FactoryBot.create(:coding_exercise, name: 'User Owned Coding'),
+      FactoryBot.create(:mc_exercise, name: 'User Owned MCQ')
+    )
 
     # Create a workout_offering
     FactoryBot.create :workout_offering

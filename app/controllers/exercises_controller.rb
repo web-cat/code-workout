@@ -136,7 +136,7 @@ class ExercisesController < ApplicationController
     # figure out the edit rights to this exercise
     # FIXME: Right now, this will populate the drop down in the form with
     # the first exercise_collection that this exercise belongs to. Fix this once
-    # exercise permissions are in place
+    # exercise permissions are in place.
     if ec = @exercise.exercise_collections.first
       if ec.owned_by?(current_user)
         @exercise_collection = 0 # Only Me
