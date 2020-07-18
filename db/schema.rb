@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20200717152311) do
+ActiveRecord::Schema.define(version: 20200718031329) do
 
   create_table "active_admin_comments", force: :cascade do |t|
     t.string   "namespace",     limit: 255
@@ -257,22 +257,20 @@ ActiveRecord::Schema.define(version: 20200717152311) do
   add_index "exercise_workouts", ["workout_id"], name: "exercise_workouts_workout_id_fk", using: :btree
 
   create_table "exercises", force: :cascade do |t|
-    t.integer  "question_type",          limit: 4,                   null: false
-    t.integer  "current_version_id",     limit: 4
+    t.integer  "question_type",      limit: 4,                   null: false
+    t.integer  "current_version_id", limit: 4
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.integer  "versions",               limit: 4
-    t.integer  "exercise_family_id",     limit: 4
-    t.string   "name",                   limit: 255
-    t.boolean  "is_public",                          default: false, null: false
-    t.integer  "experience",             limit: 4,                   null: false
-    t.integer  "irt_data_id",            limit: 4
-    t.string   "external_id",            limit: 255
-    t.integer  "exercise_collection_id", limit: 4
+    t.integer  "versions",           limit: 4
+    t.integer  "exercise_family_id", limit: 4
+    t.string   "name",               limit: 255
+    t.boolean  "is_public",                      default: false, null: false
+    t.integer  "experience",         limit: 4,                   null: false
+    t.integer  "irt_data_id",        limit: 4
+    t.string   "external_id",        limit: 255
   end
 
   add_index "exercises", ["current_version_id"], name: "index_exercises_on_current_version_id", using: :btree
-  add_index "exercises", ["exercise_collection_id"], name: "index_exercises_on_exercise_collection_id", using: :btree
   add_index "exercises", ["exercise_family_id"], name: "index_exercises_on_exercise_family_id", using: :btree
   add_index "exercises", ["external_id"], name: "index_exercises_on_external_id", unique: true, using: :btree
   add_index "exercises", ["irt_data_id"], name: "exercises_irt_data_id_fk", using: :btree

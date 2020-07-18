@@ -204,17 +204,6 @@ class Exercise < ActiveRecord::Base
   end
 
   # -------------------------------------------------------------
-  # Move all belongs_to exercise_collection associations to the ExerciseCollectionMemberships join table
-  def self.create_collection_memberships
-    Exercise.where.not(exercise_collection_id: nil).each do |e|
-      ExerciseCollectionMembership.create(
-        exercise_collection_id: e.exercise_collection_id,
-        exercise_id: e.id
-      )
-    end
-  end
-
-  # -------------------------------------------------------------
   # return the extension of a given language
   # FIXME: This doesn't belong in this class and should be moved elsewhere
   #

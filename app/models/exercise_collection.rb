@@ -24,6 +24,7 @@ class ExerciseCollection < ActiveRecord::Base
   belongs_to :user_group, inverse_of: :exercise_collection # FIXME: This should go after the prod data is refactored into ExerciseCollectionMemberships 
   has_many :exercise_collection_memberships
   has_many :exercises, through: :exercise_collection_memberships
+  has_and_belongs_to_many :course_offerings, join_table: 'course_offerings_exercise_collections'
 
   scope :course_collections, -> { where(type: 'CourseCollection') }
   scope :copyright_owner_collections, -> { where(type: 'CopyrightOwnerCollection') }
