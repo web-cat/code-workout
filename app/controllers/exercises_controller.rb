@@ -305,9 +305,11 @@ class ExercisesController < ApplicationController
       exercise_params = params[:exercise]
       exercise_version_params = exercise_params[:exercise_version]
       edit_rights = exercise_params[:exercise_collection_id].to_i
-      hash = YAML.load(exercise_version_params['text_representation'])
+      text_representation = exercise_version_params['text_representation']
+      hash = YAML.load(text_representation)
     else
-      hash = YAML.load(File.read(params[:form][:file].path))
+      text_representation = File.read(params[:form][:file].path)
+      hash = YAML.load(text_representation)
       edit_rights = 0 # Personal exercise
     end
 
@@ -342,33 +344,36 @@ class ExercisesController < ApplicationController
 
     # parse the text_representation
     exercises = ExerciseRepresenter.for_collection.new([]).from_hash(hash)
+    success_all = true
+    error_msgs = []
+    success_msgs = []
     exercises.each do |e|
       if !e.save
+        success_all = false
         # put together an error message
-        errors = []
-        errors <<  "Cannot save exercise:<ul>"
+        error_msgs <<  "Errors while saving exercise #{e.andand.name}:<ul>"
         e.errors.full_messages.each do |msg|
-          errors << "<li>#{msg}</li>"
+          error_msgs << "<li>#{msg}</li>"
         end
-
-        if e.current_version
-          e.current_version.errors.full_messages.each do |msg|
-            errors << "<li>#{msg}</li>"
-          end
-          if e.current_version.prompts.any?
-            e.current_version.prompts.first.errors.full_messages.each do |msg|
-              errors << "<li>#{msg}</li>"
-            end
-          end
-        end
-        errors << "</ul>"
-        redirect_to @return_to, flash: { error: errors.join("").html_safe } and return
+        error_msgs << "</ul>"
       else # successfully created the exercise
         exercise_collection.andand.add(e, override: true)
+        e.current_version.update(text_representation: text_representation)
+        success_msgs <<
+          "<li>X#{e.id}: #{e.name} saved, try it #{view_context.link_to 'here', exercise_practice_path(e)}.</li>"
       end
     end
 
-    redirect_to @return_to, flash: { success: 'Exercise saved!' }
+    if success_all
+      success_msgs = 'Success!<ul>' + success_msgs.join("") + "</ul>"
+      redirect_to @return_to, flash: { success: success_msgs.html_safe } and return
+    else
+      if !success_msgs.blank?
+        error_msgs << "Some exercises were successfully saved."
+        error_msgs << "<ul>" + success_msgs.join("") + "</ul>"
+      end
+      redirect_to @return_to, flash: { error: error_msgs.join("").html_safe } and return
+    end
   end
 
 	def embed
@@ -744,6 +749,7 @@ class ExercisesController < ApplicationController
       if @is_perfect
         flash.notice = "Your previous question's answer choice has been saved and scored"
         if @workout_score.andand.workout_offering
+          @workout_offering = @workout_score.workout_offering
           render :js => "window.location = '" +
             organization_workout_offering_practice_path(
             exercise_id: @workout_score.workout.next_exercise(@exercise),

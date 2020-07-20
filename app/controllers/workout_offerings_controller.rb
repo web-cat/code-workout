@@ -66,7 +66,7 @@ class WorkoutOfferingsController < ApplicationController
     if @workout_offering
       unless current_user.andand.can? :practice, @workout_offering
         @message = 'You are not authorized to access that workout offering.'
-        if !@workout_offering.published && 
+        if !@workout_offering.published &&
             @workout_offering.course_offering.is_student?(current_user)
           @message = "#{@message} Your instructor has not yet published it."
         end
@@ -141,10 +141,10 @@ class WorkoutOfferingsController < ApplicationController
       end
       if @workout_offering.course_offering.is_staff?(current_user) &&
           !@workout_offering.published &&
-          (@workout_offering.opening_date.nil? || 
+          (@workout_offering.opening_date.nil? ||
            @workout_offering.opening_date < DateTime.now)
         flash[:warning] = 'This workout offering is OPEN but currently ' +
-          'UNPUBLISHED. It cannot be accessed by studennts.'
+          'UNPUBLISHED. It cannot be accessed by students.'
       end
       redirect_to organization_workout_offering_exercise_path(
         id: ex1.id,

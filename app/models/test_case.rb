@@ -47,7 +47,7 @@ class TestCase < ActiveRecord::Base
 
   #~ Validation ...............................................................
 
-  validates :input, presence: true, if: :no_description?
+  validates :input, allow_nil: false, length: { minimum: 0 }, if: :no_description?
   validates :expected_output, presence: true, if: :no_description?
   validates :coding_prompt, presence: true
   validates :weight, presence: true,

@@ -41,6 +41,7 @@ RUN apt-get update -qq \
       python-dev \
       python-feedvalidator \
       python-sphinx \
+      ant \
     && pip install --upgrade pip
 
 # install rubygems
@@ -72,6 +73,6 @@ RUN find ./runservers.sh -type f -exec chmod +x {} \;
 EXPOSE 80
 
 ## JAVA INSTALLATION
-RUN apt-get install -y default-jre
+RUN apt-get install -y default-jre default-jdk
 
 CMD ["bash", "./runservers.sh"]
