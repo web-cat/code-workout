@@ -10,6 +10,7 @@ CodeWorkout::Application.routes.draw do
   get 'main' => 'home#index'
   get 'home/about'
   get 'home/license'
+  get 'home/privacy'
   get 'home/contact'
   get 'home/new_course_modal', as: :new_course_modal
   get 'home/python_ruby_modal', as: :python_ruby_modal
