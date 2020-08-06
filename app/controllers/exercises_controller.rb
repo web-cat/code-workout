@@ -144,6 +144,9 @@ class ExercisesController < ApplicationController
       end
     end
     @return_to = request.referer || exercises_path
+    if @return_to.include?(exercises_search_path)
+      @return_to = exercises_path
+    end
     session[:return_to] = @return_to
   end
 
@@ -749,6 +752,7 @@ class ExercisesController < ApplicationController
       if @is_perfect
         flash.notice = "Your previous question's answer choice has been saved and scored"
         if @workout_score.andand.workout_offering
+          @workout_offering = @workout_score.workout_offering
           render :js => "window.location = '" +
             organization_workout_offering_practice_path(
             exercise_id: @workout_score.workout.next_exercise(@exercise),

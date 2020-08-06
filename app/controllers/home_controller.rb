@@ -18,6 +18,9 @@ class HomeController < ApplicationController
   def contact
   end
 
+  def privacy
+  end
+
   def new_course_modal
   end
 
