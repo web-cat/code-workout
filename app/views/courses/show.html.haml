@@ -13,6 +13,8 @@
       If you think this course should NOT be marked hidden, please
       = mail_to('edwards@cs.vt.edu', 'email us.', subject: subject)
 
+%p.alert.alert-info#notice{style: 'display: none;'}
+
 .privileged-access
   = render partial: 'privileged_access', locals: { course: @course, is_instructor: @is_instructor, is_privileged: @is_privileged, access_request: @access_request }
 - if @course_offerings && @course_offerings.any?
