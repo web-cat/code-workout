@@ -15,8 +15,8 @@
             = label_tag :student, 'Find a student', class: 'control-label col-xs-3'
             .col-xs-12.col-md-9
               .ui-widget
-                = text_field_tag :student, nil, id: 'student', class: 'form-control input-sm',
-                  placeholder: "Start typing a name or email address", disabled: true
+                = text_area_tag :student, nil, id: 'student', class: 'form-control input-sm',
+                  placeholder: "Paste user email addresses here, separated by whitespace", disabled: true
           .form-group
             = label_tag :course_role, 'Course role', class: 'control-label col-xs-3'
             .col-xs-12.col-md.9
