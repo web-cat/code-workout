@@ -52,13 +52,21 @@ class CourseEnrollmentsController < ApplicationController
 
       if !@course_offering.is_enrolled?(user)
         course_role_field = has_headers ? row['course_role'] : row[3]
-        if course_role_field.downcase.include?('instructor')
+        course_role_field = course_role_field.downcase
+        if course_role_field.include?('instructor')
           course_role = CourseRole.instructor
+        elsif course_role_field.include?('grader') ||
+          course_role_field.include?('ta')
+          course_role = CourseRole.grader
         else
           course_role = CourseRole.student
         end
 
-        if user.id && CourseEnrollment.create(course_offering: @course_offering, user: user, course_role: course_role)
+        if user.id && CourseEnrollment.create(
+          course_offering: @course_offering,
+          user: user,
+          course_role: course_role
+          )
           enrolled_count = enrolled_count + 1
         end
       else
@@ -90,7 +98,7 @@ class CourseEnrollmentsController < ApplicationController
 
     errors = []
     successes = 0
-    any_enrolled = false 
+    any_enrolled = false
     if @course_offering.can_enroll? || current_user.manages?(@course_offering)
       # The course offering is open for enrollment or the current user can override
       # the enrollment deadline
@@ -98,7 +106,7 @@ class CourseEnrollmentsController < ApplicationController
         user = User.find_by email: email
         if user
           if user.is_enrolled?(@course_offering) && !user.manages?(@course_offering)
-            # User is already enrolled in the course offering, but they do not 
+            # User is already enrolled in the course offering, but they do not
             # manage the course offering.
             errors.push("<li>Could not enroll #{email} because they are already enrolled in the course.</li>")
           else
