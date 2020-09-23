@@ -130,9 +130,14 @@ class LtiController < ApplicationController
     if !@course && !params[:custom_course_number]
       # Try searching again, assuming context label includes additional
       # junk following the course number
-      course_number = params[:context_label].gsub(/[^a-zA-Z0-9 _-]/, ' ').
+      course_number = params[:context_label].gsub(/[^a-zA-Z0-9 -]/, ' ').
         sub(/([0-9]+\S*) .*$/, '\1').gsub(/\s+/, ' ')
-      course_slug = course_number.gsub(/[^a-zA-Z0-9_-]/, '').downcase
+      # Does course_number match, e.g., "202080-ITSC-1213-007"
+      # If it does, capture the "ITSC-1213" part
+      if match = /^[0-9]+-([A-Z]+-[0-9]+)-[0-9]+$/.match(course_number)
+        course_number = match.captures[0].gsub(/-/, ' ') # replace dashes with spaces
+      end
+      course_slug = course_number.gsub(/[^a-zA-Z0-9-]/, '').downcase
       @course = Course.find_by(slug: course_slug, organization: @organization)
     end
     if @course.blank?

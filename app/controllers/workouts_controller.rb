@@ -623,14 +623,23 @@ class WorkoutsController < ApplicationController
         # is the user enrolled in an offering of the course?
 
         if !@course_offering
-          # let the user choose to enroll in a course_offering
+          # Let the user choose to enroll in a course_offering.
           @available_offerings = []
           @available_course_offerings = CourseOffering.where(course: @course, term: @term)
             .select{ |co| co.self_enrollment_allowed? }
-          render layout: 'one_column' and return
-        else
-          # have a course_offering, use the instructor to find appropriate workout_offerings
-          # by workout name
+
+          if @available_course_offerings.count == 1
+            # There is only one possible course offering. Continue on with it.
+            @course_offering = @available_course_offerings.first
+          else
+            # There are multiple or no possible course offerings. Render the selection page. 
+            render layout: 'one_column' and return
+          end
+        end
+
+        if @course_offering
+          # We have a course offering. Use the instructor to find appropriate 
+          # workout_offerings by workout name.
           instructor = @course_offering.instructors.first
           workout_offerings = instructor
             .managed_workout_offerings_in_term(params[:workout_name].downcase, @course, @term)
@@ -692,7 +701,28 @@ class WorkoutsController < ApplicationController
           }.map(&:id)
           @available_offerings = CourseOffering.where(course: @course, term: @term)
             .select{ |co| co.self_enrollment_allowed? }
-          render layout: 'one_column' and return
+          
+          if @available_offerings.count == 1
+            @course_offering = @available_offerings.first
+            @workout_offering = @course_offering.workout_offerings
+              .map(&:id).find{ |id| @existing_workout_offerings.include?(id) }
+
+            # If we still don't have a workout offering, try to create it.
+            @workout_offering ||= @course_offering.add_workout(
+                params[:workout_name],
+                { 
+                  lms_assignment_id: @lms_assignment_id,
+                  from_collection: params[:from_collection]
+                }
+              )
+
+            if !@workout_offering
+              @message = "The workout named '#{params[:workout_name]} does not exist or is not linked with this LMS assignment. Please contact your instructor."
+              render 'lti/error' and return
+            end
+          else
+            render layout: 'one_column' and return
+          end
         end
       end
     end
