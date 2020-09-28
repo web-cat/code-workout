@@ -148,12 +148,8 @@ class WorkoutsController < ApplicationController
 
     @message = 'Unauthorized to create new workout'
 
-    if @course
-      # If there's a course, use role-based permissions from abilities.rb
-      if cannot? :new, Workout
-        redirect_to root_path,
-          notice: @message and return
-      end
+    if @course 
+      # Working with workout_offerings; gather info to populate form
       @term = params[:term_id] ? Term.find(params[:term_id]) : nil
       @organization = params[:organization_id] ? 
         Organization.find(params[:organization_id]) : nil
@@ -164,14 +160,14 @@ class WorkoutsController < ApplicationController
         id: @course.slug,
         term_id: @term.slug
       )
-    elsif !session[:is_instructor]
-      # If there's no course, use session-specific permissions 
-      if @lti_launch
-        render 'lti/error' and return
-      else
-        redirect_to root_path,
-          notice: @message and return
-      end
+    end
+
+    # Only let the user through if
+    # they're an admin OR
+    # there's a course involved AND they have course level permissions 
+    unless current_user.global_role.is_admin? || 
+      (@course && current_user.can?(:new, Workout))
+      redirect_to root_path, notice: @message and return
     end
 
     @lms_assignment_id = params[:lms_assignment_id]
