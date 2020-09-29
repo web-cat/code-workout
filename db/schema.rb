@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20190712171251) do
+ActiveRecord::Schema.define(version: 20200929144816) do
 
   create_table "active_admin_comments", force: :cascade do |t|
     t.string   "namespace",     limit: 255
@@ -347,7 +347,7 @@ ActiveRecord::Schema.define(version: 20190712171251) do
   add_index "lms_instances", ["url"], name: "index_lms_instances_on_url", unique: true, using: :btree
 
   create_table "lms_types", force: :cascade do |t|
-    t.string   "name",       limit: 255, default: "", null: false
+    t.string   "name",       limit: 255, null: false
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -492,8 +492,15 @@ ActiveRecord::Schema.define(version: 20190712171251) do
     t.datetime "created_at"
   end
 
+  add_index "taggings", ["context"], name: "index_taggings_on_context", using: :btree
   add_index "taggings", ["tag_id", "taggable_id", "taggable_type", "context", "tagger_id", "tagger_type"], name: "taggings_idx", unique: true, using: :btree
+  add_index "taggings", ["tag_id"], name: "index_taggings_on_tag_id", using: :btree
   add_index "taggings", ["taggable_id", "taggable_type", "context"], name: "index_taggings_on_taggable_id_and_taggable_type_and_context", using: :btree
+  add_index "taggings", ["taggable_id", "taggable_type", "tagger_id", "context"], name: "taggings_idy", using: :btree
+  add_index "taggings", ["taggable_id"], name: "index_taggings_on_taggable_id", using: :btree
+  add_index "taggings", ["taggable_type"], name: "index_taggings_on_taggable_type", using: :btree
+  add_index "taggings", ["tagger_id", "tagger_type"], name: "index_taggings_on_tagger_id_and_tagger_type", using: :btree
+  add_index "taggings", ["tagger_id"], name: "index_taggings_on_tagger_id", using: :btree
 
   create_table "tags", force: :cascade do |t|
     t.string  "name",           limit: 255
