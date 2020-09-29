@@ -3,27 +3,27 @@
 # Table name: users
 #
 #  id                       :integer          not null, primary key
-#  email                    :string(255)      default(""), not null
-#  encrypted_password       :string(255)      default(""), not null
-#  reset_password_token     :string(255)
-#  reset_password_sent_at   :datetime
-#  remember_created_at      :datetime
-#  sign_in_count            :integer          default(0), not null
-#  current_sign_in_at       :datetime
-#  last_sign_in_at          :datetime
-#  current_sign_in_ip       :string(255)
-#  last_sign_in_ip          :string(255)
+#  avatar                   :string(255)
+#  confirmation_sent_at     :datetime
 #  confirmation_token       :string(255)
 #  confirmed_at             :datetime
-#  confirmation_sent_at     :datetime
-#  created_at               :datetime
-#  updated_at               :datetime
+#  current_sign_in_at       :datetime
+#  current_sign_in_ip       :string(255)
+#  email                    :string(255)      default(""), not null
+#  encrypted_password       :string(255)      default(""), not null
 #  first_name               :string(255)
 #  last_name                :string(255)
-#  global_role_id           :integer          not null
-#  avatar                   :string(255)
+#  last_sign_in_at          :datetime
+#  last_sign_in_ip          :string(255)
+#  remember_created_at      :datetime
+#  reset_password_sent_at   :datetime
+#  reset_password_token     :string(255)
+#  sign_in_count            :integer          default(0), not null
 #  slug                     :string(255)      default(""), not null
+#  created_at               :datetime
+#  updated_at               :datetime
 #  current_workout_score_id :integer
+#  global_role_id           :integer          not null
 #  time_zone_id             :integer
 #
 # Indexes
@@ -35,6 +35,12 @@
 #  index_users_on_reset_password_token      (reset_password_token) UNIQUE
 #  index_users_on_slug                      (slug) UNIQUE
 #  index_users_on_time_zone_id              (time_zone_id)
+#
+# Foreign Keys
+#
+#  users_current_workout_score_id_fk  (current_workout_score_id => workout_scores.id)
+#  users_global_role_id_fk            (global_role_id => global_roles.id)
+#  users_time_zone_id_fk              (time_zone_id => time_zones.id)
 #
 
 FactoryBot.define do

@@ -29,7 +29,7 @@ gem 'loofah', '>= 2.3.1'
 gem 'truncate_html'
 gem 'tzinfo' # For timezone support
 gem 'active_record_union'
-gem 'mysql2', '~> 0.3.20'
+gem 'mysql2', '~> 0.4.0'
 gem 'modernizr-rails'
 gem 'rubyzip', '>= 1.3.0'
 
@@ -125,5 +125,6 @@ gem 'ims-lti', '~> 1.1.8'
 gem 'rest-client'
 
 # Gems for cookie updates
-gem 'user_agent_parser', '< 2.5.2' # 2.6 requires ruby 2.4
+gem 'user_agent_parser' # 2.6 requires ruby 2.4
 gem 'rails_same_site_cookie'
+gem 'sprockets', '< 4.0.0'
