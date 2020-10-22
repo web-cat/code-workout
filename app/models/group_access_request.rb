@@ -16,7 +16,7 @@
 #  index_group_access_requests_on_user_id        (user_id)
 #
 
-class GroupAccessRequest < ActiveRecord::Base
+class GroupAccessRequest < ApplicationRecord
   belongs_to :user
   belongs_to :user_group
 end

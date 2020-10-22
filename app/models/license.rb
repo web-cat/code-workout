@@ -15,7 +15,7 @@
 #  index_licenses_on_license_policy_id  (license_policy_id)
 #
 
-class License < ActiveRecord::Base
+class License < ApplicationRecord
   belongs_to :license_policy, inverse_of: :licenses
   has_many :exercise_collections
 end

@@ -22,7 +22,7 @@
 # =============================================================================
 # Represents the outcome of a test case on a coding prompt.
 #
-class TestCaseResult < ActiveRecord::Base
+class TestCaseResult < ApplicationRecord
 
   #~ Relationships ............................................................
 

@@ -15,7 +15,7 @@
 #  index_lti_workouts_on_workout_id       (workout_id)
 #
 
-class LtiWorkout < ActiveRecord::Base
+class LtiWorkout < ApplicationRecord
   belongs_to :workout
   belongs_to :lms_instance
   has_many :workout_scores

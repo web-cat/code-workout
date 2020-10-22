@@ -69,7 +69,7 @@
 # offering, meaning a second workout offering of the same workout).
 # We want to support all of these situations.
 #
-class WorkoutScore < ActiveRecord::Base
+class WorkoutScore < ApplicationRecord
 
   #~ Relationships ............................................................
 

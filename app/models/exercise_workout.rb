@@ -21,7 +21,7 @@
 # indicating which exercises are included in a given workout, and in
 # what order.  The order is determined by "position", which starts at 1.
 #
-class ExerciseWorkout < ActiveRecord::Base
+class ExerciseWorkout < ApplicationRecord
 
   #~ Relationships ............................................................
 

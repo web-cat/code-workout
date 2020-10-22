@@ -30,7 +30,7 @@
 # A prompt answer represents a user's answer for one prompt in one attempt
 # at an exercise.
 #
-class PromptAnswer < ActiveRecord::Base
+class PromptAnswer < ApplicationRecord
 
   #~ Relationships ............................................................
 

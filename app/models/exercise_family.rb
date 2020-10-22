@@ -21,7 +21,7 @@
 # reflect the "closely related" nature of these variants of the same
 # question--they are different Exercises, but in the same family.
 #
-class ExerciseFamily < ActiveRecord::Base
+class ExerciseFamily < ApplicationRecord
 
   #~ Relationships ............................................................
 

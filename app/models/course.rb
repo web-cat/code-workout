@@ -25,7 +25,7 @@
 # description.  A course may have one or more course offerings in any
 # specific term.
 #
-class Course < ActiveRecord::Base
+class Course < ApplicationRecord
   extend FriendlyId
   friendly_id :number_without_spaces, use: [:history, :scoped],
     scope: :organization

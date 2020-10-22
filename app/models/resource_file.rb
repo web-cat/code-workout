@@ -20,7 +20,7 @@
 # Represents a file uploaded by a user for use in exercises, such as an
 # image or video file.
 #
-class ResourceFile < ActiveRecord::Base
+class ResourceFile < ApplicationRecord
   include Tokenable #for unique non-serial url tokens
 
 

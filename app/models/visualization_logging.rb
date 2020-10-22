@@ -18,7 +18,7 @@
 #  index_visualization_loggings_on_workout_offering_id  (workout_offering_id)
 #
 
-class VisualizationLogging < ActiveRecord::Base
+class VisualizationLogging < ApplicationRecord
   belongs_to :user
   belongs_to :exercise
   belongs_to :workout

@@ -9,7 +9,7 @@
 #  description :text(65535)
 #
 
-class UserGroup < ActiveRecord::Base
+class UserGroup < ApplicationRecord
   has_many :memberships
   has_many :users, through: :memberships
   has_many :group_access_requests, inverse_of: :user_group

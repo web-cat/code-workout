@@ -44,7 +44,7 @@
 # in effect when they gave their answer.  New users seeing an exercise
 # for the first time always see the newest version.
 #
-class Exercise < ActiveRecord::Base
+class Exercise < ApplicationRecord
 
   #~ Relationships ............................................................
 

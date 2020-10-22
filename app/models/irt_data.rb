@@ -12,7 +12,7 @@
 # =============================================================================
 # Represents IRT data used for calculating exercise performance.
 #
-class IRTData < ActiveRecord::Base
+class IRTData < ApplicationRecord
 
   #~ Validation ...............................................................
 

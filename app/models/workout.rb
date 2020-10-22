@@ -35,7 +35,7 @@
 # the "courses" associated with a workout are those for which course
 # offerings have been given workout offerings.
 #
-class Workout < ActiveRecord::Base
+class Workout < ApplicationRecord
   #~ Relationships ............................................................
 
   acts_as_taggable_on :tags, :languages, :styles

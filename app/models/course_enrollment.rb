@@ -20,7 +20,7 @@
 # indicating each user's role with respect to the course offerings in which
 # they are enrolled.
 #
-class CourseEnrollment < ActiveRecord::Base
+class CourseEnrollment < ApplicationRecord
 
   #~ Relationships ............................................................
 

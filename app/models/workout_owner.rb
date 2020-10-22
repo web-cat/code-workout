@@ -18,7 +18,7 @@
 # purpose of managing editing access to workouts, particularly "private"
 # workouts that are not publicly available in the gym.
 #
-class WorkoutOwner < ActiveRecord::Base
+class WorkoutOwner < ApplicationRecord
 
   #~ Relationships ............................................................
 

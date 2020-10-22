@@ -20,7 +20,7 @@
 #  index_exercise_collections_on_user_id             (user_id)
 #
 
-class ExerciseCollection < ActiveRecord::Base
+class ExerciseCollection < ApplicationRecord
   belongs_to :user_group, inverse_of: :exercise_collection
   belongs_to :user
   belongs_to :license
