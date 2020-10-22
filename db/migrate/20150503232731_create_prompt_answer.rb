@@ -1,4 +1,4 @@
-class CreatePromptAnswer < ActiveRecord::Migration
+class CreatePromptAnswer < ActiveRecord::Migration[5.1]
   def change
     create_table :prompt_answers do |t|
       t.belongs_to :attempt, required: true

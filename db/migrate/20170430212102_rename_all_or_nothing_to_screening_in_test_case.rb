@@ -1,4 +1,4 @@
-class RenameAllOrNothingToScreeningInTestCase < ActiveRecord::Migration
+class RenameAllOrNothingToScreeningInTestCase < ActiveRecord::Migration[5.1]
   def change
     rename_column :test_cases, :all_or_nothing, :screening
   end

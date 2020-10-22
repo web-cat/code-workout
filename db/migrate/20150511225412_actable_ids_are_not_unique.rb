@@ -1,4 +1,4 @@
-class ActableIdsAreNotUnique < ActiveRecord::Migration
+class ActableIdsAreNotUnique < ActiveRecord::Migration[5.1]
   def up
     # Remove unique: true from these two indices
     remove_index :prompts, :actable_id

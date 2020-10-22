@@ -1,4 +1,4 @@
-class AddSlugToTerm < ActiveRecord::Migration
+class AddSlugToTerm < ActiveRecord::Migration[5.1]
   def up
     add_column :terms, :slug, :string
     # Force generation of slug values for all entries

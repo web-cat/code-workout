@@ -1,4 +1,4 @@
-class AddNullConstraintsAndIndices < ActiveRecord::Migration
+class AddNullConstraintsAndIndices < ActiveRecord::Migration[5.1]
   def change
     # identities
     change_column_null :identities, :user_id, false

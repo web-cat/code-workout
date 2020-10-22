@@ -1,4 +1,4 @@
-class CreateTagUserScores < ActiveRecord::Migration
+class CreateTagUserScores < ActiveRecord::Migration[5.1]
   def change
     create_table :tag_user_scores do |t|
       t.belongs_to  :user, index: true, null: false

@@ -1,4 +1,4 @@
-class AddCodingExerciseColumns < ActiveRecord::Migration
+class AddCodingExerciseColumns < ActiveRecord::Migration[5.1]
   def change
     add_column :exercises, :starter_code, :text
 

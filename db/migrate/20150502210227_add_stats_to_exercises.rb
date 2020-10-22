@@ -1,4 +1,4 @@
-class AddStatsToExercises < ActiveRecord::Migration
+class AddStatsToExercises < ActiveRecord::Migration[5.1]
   def change
     change_table :exercises do |t|
       t.integer  :attempt_count,  null: false, default: 0

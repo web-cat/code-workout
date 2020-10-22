@@ -1,4 +1,4 @@
-class CreateVisualizationLoggings < ActiveRecord::Migration
+class CreateVisualizationLoggings < ActiveRecord::Migration[5.1]
   def change
     create_table :visualization_loggings do |t|
       t.references :user, index: true

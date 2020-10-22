@@ -1,4 +1,4 @@
-class ReviseTestCaseStructure < ActiveRecord::Migration
+class ReviseTestCaseStructure < ActiveRecord::Migration[5.1]
   def up
     change_table :test_cases do |t|
       t.remove :test_script, :string

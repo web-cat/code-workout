@@ -1,4 +1,4 @@
-class CreateResourceFiles < ActiveRecord::Migration
+class CreateResourceFiles < ActiveRecord::Migration[5.1]
   def change
     create_table :resource_files do |t|
       t.column :filename, :string
