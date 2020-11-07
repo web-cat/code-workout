@@ -37,9 +37,11 @@ class CoursesController < ApplicationController
     end
   end
 
-  # -------------------------------------------------------------
+  # /courses/:organization_id/:id/privileged_users
   def privileged_users
-    @course = Course.find params[:id]
+    @course = Course.find_with_id_or_slug(
+      params[:id], params[:organization_id]
+    )
     @user_group = @course.user_group
     memberships = @user_group.andand.memberships.andand.order(created_at: :desc)
     @users = memberships.andand.map(&:user)
@@ -51,11 +53,12 @@ class CoursesController < ApplicationController
   end
 
   # -------------------------------------------------------------
-  # GET /courses/:organization/:course/request_privileged_access/:user
+  # GET /courses/:organization_id/:id/request_privileged_access/:user
   def request_privileged_access
     @requester = User.find params[:requester_id]
-    @course = Course.find params[:id]
-
+    @course = Course.find_with_id_or_slug(
+      params[:id], params[:organization_id]
+    )
     @user_group = @course.user_group
     if @user_group.nil?
       @user_group = UserGroup.new(
@@ -98,9 +101,11 @@ class CoursesController < ApplicationController
   end
 
   # -------------------------------------------------------------
-  # GET /courses/vt/:course_id/:term_id
+  # GET /courses/:organization_id/:course_id/:term_id/tab_content/:tab
   def tab_content
-    @course = Course.find params[:course_id]
+    @course = Course.find_with_id_or_slug(
+      params[:course_id], params[:organization_id]
+    )
     @term = Term.find params[:term_id]
     @course_offerings = current_user.andand.course_offerings_for_term(@term, @course)
     @is_student = !user_signed_in? ||

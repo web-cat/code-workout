@@ -67,9 +67,9 @@ class Course < ActiveRecord::Base
     return resultant
   end
 
-  # --------------------------------------------------------------------
-  # Throw an error if slug is specified without specifying organization.
-  # This overrides find_by from ActiveRecord. Also affects find_by!
+  # Overrides ActiveRecord#find_by. Also affects find_by! If a slug is specified,
+  # requires that an organization or organization_id is also included. If a slug
+  # is not specified, proceeds with find_by as usual.
   def self.find_by(*args)
     kwargs = args[0]
 
@@ -97,7 +97,25 @@ class Course < ActiveRecord::Base
         'or organization_id must also be specified.'
     end
 
-    super(*args)
+    super
+  end
+
+  def self.find(*args)
+    id_or_slug = args[0]
+    if id_or_slug.friendly_id?
+      raise ArgumentError, 'To search by slug, please use Course#find_by and ' \
+        'specify an organization or organization_id.'
+    end
+
+    super
+  end
+
+  def self.find_with_id_or_slug(id_or_slug, organization_id)
+    if id_or_slug.friendly_id?
+      Course.find_by(slug: id_or_slug, organization_id: organization_id)
+    else
+      Course.find id_or_slug
+    end
   end
 
   # -------------------------------------------------------------
