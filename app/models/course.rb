@@ -110,9 +110,16 @@ class Course < ActiveRecord::Base
     super
   end
 
-  def self.find_with_id_or_slug(id_or_slug, organization_id)
+  def self.find_with_id_or_slug(id_or_slug, organization)
     if id_or_slug.friendly_id?
-      Course.find_by(slug: id_or_slug, organization_id: organization_id)
+      if organization.is_a?(Organization)
+        Course.find_by(slug: id_or_slug, organization: organization)
+      else
+        Course.find_by(
+          slug: id_or_slug, 
+          organization: Organization.find(organization)
+        )
+      end
     else
       Course.find id_or_slug
     end

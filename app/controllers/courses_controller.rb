@@ -1,5 +1,5 @@
 class CoursesController < ApplicationController
-  load_and_authorize_resource
+  # load_and_authorize_resource
   respond_to :html, :js, :json
 
 
@@ -12,11 +12,13 @@ class CoursesController < ApplicationController
 
 
   # -------------------------------------------------------------
-  # GET /courses/1
+  # GET /courses/:organization_id/:id/(:term_id)
   def show
     if params[:organization_id]
         @organization = Organization.find(params[:organization_id])
     end
+    @course = Course.find_with_id_or_slug(params[:id], @organization)
+    authorize! :show, @course
     if !@course
       flash[:warning] = 'Course not found.'
       redirect_to organizations_path
@@ -42,6 +44,7 @@ class CoursesController < ApplicationController
     @course = Course.find_with_id_or_slug(
       params[:id], params[:organization_id]
     )
+    authorize! :privileged_users, @course
     @user_group = @course.user_group
     memberships = @user_group.andand.memberships.andand.order(created_at: :desc)
     @users = memberships.andand.map(&:user)
@@ -59,6 +62,7 @@ class CoursesController < ApplicationController
     @course = Course.find_with_id_or_slug(
       params[:id], params[:organization_id]
     )
+    authorize! :request_privileged_access, @course
     @user_group = @course.user_group
     if @user_group.nil?
       @user_group = UserGroup.new(
@@ -106,6 +110,7 @@ class CoursesController < ApplicationController
     @course = Course.find_with_id_or_slug(
       params[:course_id], params[:organization_id]
     )
+    authorize! :tab_content, @course
     @term = Term.find params[:term_id]
     @course_offerings = current_user.andand.course_offerings_for_term(@term, @course)
     @is_student = !user_signed_in? ||
@@ -171,6 +176,7 @@ class CoursesController < ApplicationController
   # -------------------------------------------------------------
   # PATCH/PUT /courses/1
   def update
+    @course = Course.find params[:id]
     if @course.update(course_params)
       redirect_to organization_courses_path(
         @course.organization,
@@ -185,6 +191,7 @@ class CoursesController < ApplicationController
   # -------------------------------------------------------------
   # DELETE /courses/1
   def destroy
+    @course = Course.find params[:id]
     description = @course.display_name
     if @course.destroy
       redirect_to organization_path(@course.organization),
@@ -222,8 +229,9 @@ class CoursesController < ApplicationController
 
 
   # -------------------------------------------------------------
-  # POST /courses/:id/generate_gradebook
+  # POST /courses/:organization_id/:id/:term_id/generate_gradebook
   def generate_gradebook
+    @course = Course.find_with_id_or_slug(params[:id], params[:organization_id])
     respond_to do |format|
       format.html
       format.csv do
