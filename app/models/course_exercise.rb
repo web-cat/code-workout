@@ -3,15 +3,20 @@
 # Table name: course_exercises
 #
 #  id          :integer          not null, primary key
-#  course_id   :integer          not null
-#  exercise_id :integer          not null
 #  created_at  :datetime
 #  updated_at  :datetime
+#  course_id   :integer          not null
+#  exercise_id :integer          not null
 #
 # Indexes
 #
 #  course_exercises_course_id_fk    (course_id)
 #  course_exercises_exercise_id_fk  (exercise_id)
+#
+# Foreign Keys
+#
+#  course_exercises_course_id_fk    (course_id => courses.id)
+#  course_exercises_exercise_id_fk  (exercise_id => exercises.id)
 #
 
 # =============================================================================

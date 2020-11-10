@@ -3,10 +3,10 @@
 # Table name: prompt_answers
 #
 #  id           :integer          not null, primary key
+#  actable_type :string(255)
+#  actable_id   :integer
 #  attempt_id   :integer
 #  prompt_id    :integer
-#  actable_id   :integer
-#  actable_type :string(255)
 #
 # Indexes
 #
@@ -14,6 +14,11 @@
 #  index_prompt_answers_on_attempt_id                (attempt_id)
 #  index_prompt_answers_on_attempt_id_and_prompt_id  (attempt_id,prompt_id) UNIQUE
 #  index_prompt_answers_on_prompt_id                 (prompt_id)
+#
+# Foreign Keys
+#
+#  prompt_answers_attempt_id_fk  (attempt_id => attempts.id)
+#  prompt_answers_prompt_id_fk   (prompt_id => prompts.id)
 #
 
 # =============================================================================

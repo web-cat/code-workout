@@ -11,6 +11,11 @@
 #  exercise_owners_owner_id_fk                        (owner_id)
 #  index_exercise_owners_on_exercise_id_and_owner_id  (exercise_id,owner_id) UNIQUE
 #
+# Foreign Keys
+#
+#  exercise_owners_exercise_id_fk  (exercise_id => exercises.id)
+#  exercise_owners_owner_id_fk     (owner_id => users.id)
+#
 
 # =============================================================================
 # Represents a many-to-many relationship between exercises and users,

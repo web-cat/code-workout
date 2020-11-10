@@ -3,18 +3,18 @@
 # Table name: exercises
 #
 #  id                     :integer          not null, primary key
+#  experience             :integer          not null
+#  is_public              :boolean          default(FALSE), not null
+#  name                   :string(255)
 #  question_type          :integer          not null
-#  current_version_id     :integer
+#  versions               :integer
 #  created_at             :datetime
 #  updated_at             :datetime
-#  versions               :integer
-#  exercise_family_id     :integer
-#  name                   :string(255)
-#  is_public              :boolean          default(FALSE), not null
-#  experience             :integer          not null
-#  irt_data_id            :integer
-#  external_id            :string(255)
+#  current_version_id     :integer
 #  exercise_collection_id :integer
+#  exercise_family_id     :integer
+#  external_id            :string(255)
+#  irt_data_id            :integer
 #
 # Indexes
 #
@@ -24,6 +24,12 @@
 #  index_exercises_on_exercise_family_id      (exercise_family_id)
 #  index_exercises_on_external_id             (external_id) UNIQUE
 #  index_exercises_on_is_public               (is_public)
+#
+# Foreign Keys
+#
+#  exercises_current_version_id_fk  (current_version_id => exercise_versions.id)
+#  exercises_exercise_family_id_fk  (exercise_family_id => exercise_families.id)
+#  exercises_irt_data_id_fk         (irt_data_id => irt_data.id)
 #
 
 FactoryBot.define do
