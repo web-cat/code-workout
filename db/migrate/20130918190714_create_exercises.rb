@@ -1,4 +1,4 @@
-class CreateExercises < ActiveRecord::Migration
+class CreateExercises < ActiveRecord::Migration[5.1]
   def change
   	create_table :exercises do |t|
     	t.belongs_to  :user, index: true, null: false

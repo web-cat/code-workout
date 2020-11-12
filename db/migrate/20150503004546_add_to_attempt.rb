@@ -1,4 +1,4 @@
-class AddToAttempt < ActiveRecord::Migration
+class AddToAttempt < ActiveRecord::Migration[5.1]
   def change
     change_table :attempts do |t|
       t.belongs_to :workout_score

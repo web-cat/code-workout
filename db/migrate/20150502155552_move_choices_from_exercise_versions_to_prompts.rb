@@ -1,4 +1,4 @@
-class MoveChoicesFromExerciseVersionsToPrompts < ActiveRecord::Migration
+class MoveChoicesFromExerciseVersionsToPrompts < ActiveRecord::Migration[5.1]
   def up
     remove_foreign_key :choices, :exercise_versions
     Choice.delete_all

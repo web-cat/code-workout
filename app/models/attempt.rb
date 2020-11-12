@@ -58,7 +58,7 @@
 # active_score relation ... and that non-nil active_score should be the
 # same as its workout_score relation.
 #
-class Attempt < ActiveRecord::Base
+class Attempt < ApplicationRecord
 
   #~ Relationships ............................................................
 

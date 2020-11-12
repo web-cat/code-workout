@@ -1,4 +1,4 @@
-class RemoveTags < ActiveRecord::Migration
+class RemoveTags < ActiveRecord::Migration[5.1]
   def up
     drop_table :exercises_tags
     remove_column :tag_user_scores, :tag_id, :integer

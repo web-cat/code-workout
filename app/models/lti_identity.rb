@@ -15,7 +15,7 @@
 #  index_lti_identities_on_user_id          (user_id)
 #
 
-class LtiIdentity < ActiveRecord::Base
+class LtiIdentity < ApplicationRecord
   belongs_to :user
   belongs_to :lms_instance
 end

@@ -1,4 +1,4 @@
-class RenameExercisesToExerciseVersions < ActiveRecord::Migration
+class RenameExercisesToExerciseVersions < ActiveRecord::Migration[5.1]
   def change
     rename_table :exercises, :exercise_versions
     rename_column :attempts, :exercise_id, :exercise_version_id

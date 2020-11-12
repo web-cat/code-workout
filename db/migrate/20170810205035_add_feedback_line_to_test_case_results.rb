@@ -1,4 +1,4 @@
-class AddFeedbackLineToTestCaseResults < ActiveRecord::Migration
+class AddFeedbackLineToTestCaseResults < ActiveRecord::Migration[5.1]
   def change
     add_column :test_case_results, :feedback_line_no, :integer,
       :after => :execution_feedback

@@ -18,7 +18,7 @@
 #  index_student_extensions_on_workout_offering_id  (workout_offering_id)
 #
 
-class StudentExtension < ActiveRecord::Base
+class StudentExtension < ApplicationRecord
 
   belongs_to :user
   belongs_to :workout_offering

@@ -1,4 +1,4 @@
-class CreateAttempts < ActiveRecord::Migration
+class CreateAttempts < ActiveRecord::Migration[5.1]
   def change
     create_table :attempts do |t|
       t.belongs_to :user, index: true, null: false

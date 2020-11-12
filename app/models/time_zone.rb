@@ -10,7 +10,7 @@
 #  updated_at :datetime
 #
 
-class TimeZone < ActiveRecord::Base
+class TimeZone < ApplicationRecord
   has_many :users
   def to_s
     return display_as

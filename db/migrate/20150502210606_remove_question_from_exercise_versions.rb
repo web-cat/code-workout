@@ -1,4 +1,4 @@
-class RemoveQuestionFromExerciseVersions < ActiveRecord::Migration
+class RemoveQuestionFromExerciseVersions < ActiveRecord::Migration[5.1]
   def up
     remove_column :exercise_versions, :question, :text
     change_column :choices, :answer, :text

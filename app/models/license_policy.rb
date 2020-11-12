@@ -11,7 +11,7 @@
 #  updated_at  :datetime
 #
 
-class LicensePolicy < ActiveRecord::Base
+class LicensePolicy < ApplicationRecord
   has_many :licenses, inverse_of: :license_policy
   accepts_nested_attributes_for :licenses
 end

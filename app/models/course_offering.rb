@@ -23,7 +23,7 @@
 # =============================================================================
 # Represents a single section (or offering) of a course in a specific term.
 #
-class CourseOffering < ActiveRecord::Base
+class CourseOffering < ApplicationRecord
 
   #~ Relationships ............................................................
 

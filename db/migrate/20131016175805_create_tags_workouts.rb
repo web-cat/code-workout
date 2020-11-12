@@ -1,4 +1,4 @@
-class CreateTagsWorkouts < ActiveRecord::Migration
+class CreateTagsWorkouts < ActiveRecord::Migration[5.1]
   def change
     create_table :tags_workouts do |t|
       t.belongs_to :tag, index: true

@@ -31,7 +31,7 @@ require 'test_case_result'
 # Represents a test case used to evaluate a student's answer to a coding
 # prompt.
 #
-class TestCase < ActiveRecord::Base
+class TestCase < ApplicationRecord
 
   #~ Relationships ............................................................
 

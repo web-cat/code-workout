@@ -20,7 +20,7 @@
 # authentication provider.  A single user object may be associated with
 # multiple identities, each from a separate provider.
 #
-class Identity < ActiveRecord::Base
+class Identity < ApplicationRecord
 
   #~ Relationships ............................................................
 

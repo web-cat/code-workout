@@ -26,7 +26,7 @@
 # ExerciseVersions on the same edit history for one exercise may refer
 # to the same stem, if the stem was not edited.
 #
-class Stem < ActiveRecord::Base
+class Stem < ApplicationRecord
 
   #~ Relationships ............................................................
 

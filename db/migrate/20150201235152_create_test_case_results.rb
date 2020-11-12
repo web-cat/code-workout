@@ -1,4 +1,4 @@
-class CreateTestCaseResults < ActiveRecord::Migration
+class CreateTestCaseResults < ActiveRecord::Migration[5.1]
   def change
     create_table :test_case_results do |t|
       t.integer :test_case_id, index: true

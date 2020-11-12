@@ -1,4 +1,4 @@
-class RenameWorkoutsExercisesExercisesWorkouts < ActiveRecord::Migration
+class RenameWorkoutsExercisesExercisesWorkouts < ActiveRecord::Migration[5.1]
   def change
   	rename_table :workouts_exercises, :exercises_workouts
   	#add_index "exercises_workouts", ["exercise_id"], name: "index_exercises_workouts_on_exercise_id"

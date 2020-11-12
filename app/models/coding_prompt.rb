@@ -22,7 +22,7 @@ require 'csv'
 # acts_as (see the documentation on-line for the activerecord-acts_as
 # gem).
 #
-class CodingPrompt < ActiveRecord::Base
+class CodingPrompt < ApplicationRecord
 
   #~ Relationships ............................................................
 

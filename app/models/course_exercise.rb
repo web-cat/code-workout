@@ -20,7 +20,7 @@
 # If we really need many-to-many, though, since right now, exercises can
 # only belong to one course?
 #
-class CourseExercise < ActiveRecord::Base
+class CourseExercise < ApplicationRecord
 
   #~ Relationships ............................................................
 

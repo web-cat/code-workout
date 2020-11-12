@@ -1,4 +1,4 @@
-class AddContinueFromWorkoutIdToWorkoutOfferings < ActiveRecord::Migration
+class AddContinueFromWorkoutIdToWorkoutOfferings < ActiveRecord::Migration[5.1]
   def change
     change_table :workout_offerings do |t|
       t.integer :continue_from_workout_id

@@ -1,4 +1,4 @@
-class RenamePromptFeatures < ActiveRecord::Migration
+class RenamePromptFeatures < ActiveRecord::Migration[5.1]
   def change
     change_table :prompts do |t|
       t.remove :language_id, :integer

@@ -1,4 +1,4 @@
-class FixChoiceAnswer < ActiveRecord::Migration
+class FixChoiceAnswer < ActiveRecord::Migration[5.1]
   def up
     remove_column :choices, :answer
     add_column :choices, :answer, :text

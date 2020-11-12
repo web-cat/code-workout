@@ -1,4 +1,4 @@
-class CreateExerciseOwners < ActiveRecord::Migration
+class CreateExerciseOwners < ActiveRecord::Migration[5.1]
   def change
     create_table :exercise_owners do |t|
       t.belongs_to :exercise, null: false

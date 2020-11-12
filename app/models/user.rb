@@ -40,7 +40,7 @@
 # =============================================================================
 # Represents a single user account on the system.
 #
-class User < ActiveRecord::Base
+class User < ApplicationRecord
   include Gravtastic
   gravtastic secure: true, default: 'monsterid'
 

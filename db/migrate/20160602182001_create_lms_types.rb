@@ -1,4 +1,4 @@
-class CreateLmsTypes < ActiveRecord::Migration
+class CreateLmsTypes < ActiveRecord::Migration[5.1]
   def change
     create_table :lms_types do |t|
       t.string :name, null: false

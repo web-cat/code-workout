@@ -17,7 +17,7 @@
 # =============================================================================
 # Represents a user's xp score for a given tag.
 #
-class TagUserScore < ActiveRecord::Base
+class TagUserScore < ApplicationRecord
 
   #~ Relationships ............................................................
 
