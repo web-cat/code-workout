@@ -17,7 +17,8 @@ module CodeWorkout
 
     # exception_handler configuration (no longer relies on an initializer)
     config.exception_handler = {
-      db: true
+      db: true,
+      dev: true
     }
     
     # Timeout for feedback polls (milliseconds)
