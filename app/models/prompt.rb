@@ -3,14 +3,14 @@
 # Table name: prompts
 #
 #  id                  :integer          not null, primary key
-#  exercise_version_id :integer          not null
-#  question            :text(65535)      not null
-#  position            :integer          not null
+#  actable_type        :string(255)
 #  feedback            :text(65535)
+#  position            :integer          not null
+#  question            :text(65535)      not null
 #  created_at          :datetime
 #  updated_at          :datetime
 #  actable_id          :integer
-#  actable_type        :string(255)
+#  exercise_version_id :integer          not null
 #  irt_data_id         :integer
 #
 # Indexes
@@ -18,6 +18,11 @@
 #  index_prompts_on_actable_id           (actable_id)
 #  index_prompts_on_exercise_version_id  (exercise_version_id)
 #  prompts_irt_data_id_fk                (irt_data_id)
+#
+# Foreign Keys
+#
+#  prompts_exercise_version_id_fk  (exercise_version_id => exercise_versions.id)
+#  prompts_irt_data_id_fk          (irt_data_id => irt_data.id)
 #
 
 # =============================================================================

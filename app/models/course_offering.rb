@@ -3,21 +3,26 @@
 # Table name: course_offerings
 #
 #  id                      :integer          not null, primary key
-#  course_id               :integer          not null
-#  term_id                 :integer          not null
+#  cutoff_date             :date
 #  label                   :string(255)      default(""), not null
-#  url                     :string(255)
 #  self_enrollment_allowed :boolean
+#  url                     :string(255)
 #  created_at              :datetime
 #  updated_at              :datetime
-#  cutoff_date             :date
+#  course_id               :integer          not null
 #  lms_instance_id         :integer
+#  term_id                 :integer          not null
 #
 # Indexes
 #
 #  index_course_offerings_on_course_id        (course_id)
 #  index_course_offerings_on_lms_instance_id  (lms_instance_id)
 #  index_course_offerings_on_term_id          (term_id)
+#
+# Foreign Keys
+#
+#  course_offerings_course_id_fk  (course_id => courses.id)
+#  course_offerings_term_id_fk    (term_id => terms.id)
 #
 
 # =============================================================================

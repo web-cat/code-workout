@@ -144,6 +144,9 @@ class ExercisesController < ApplicationController
       end
     end
     @return_to = request.referer || exercises_path
+    if @return_to.include?(exercises_search_path)
+      @return_to = exercises_path
+    end
     session[:return_to] = @return_to
   end
 

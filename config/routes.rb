@@ -10,6 +10,7 @@ Rails.application.routes.draw do
   get 'main' => 'home#index'
   get 'home/about'
   get 'home/license'
+  get 'home/privacy'
   get 'home/contact'
   get 'home/new_course_modal', as: :new_course_modal
   get 'home/python_ruby_modal', as: :python_ruby_modal
@@ -140,6 +141,7 @@ Rails.application.routes.draw do
     post 'add_workout/:workout_name' => 'course_offerings#add_workout', as: :add_workout
     post 'store_workout/:id' => :store_workout, as: :store_workout
     get '/search_enrolled_users' => :search_enrolled_users, as: :search_enrolled_users
+    post 'enroll_users' => 'course_enrollments#enroll_users'
     collection do
       post 'remote_create' => :remote_create, as: :remote_create
     end

@@ -112,7 +112,7 @@ class WorkoutsController < ApplicationController
 			  params[:resource_name].downcase)
 			@workout = workouts.first
     end
- 
+
     if @workout.andand.is_public
         redirect_to practice_workout_path(
           id: @workout.id,
@@ -144,19 +144,15 @@ class WorkoutsController < ApplicationController
   def new
     @lti_launch = params[:lti_launch]
     @workout = Workout.new
-    @course = params[:course_id] ? Course.find(params[:course_id]) : nil
 
     @message = 'Unauthorized to create new workout'
 
-    if @course
-      # If there's a course, use role-based permissions from abilities.rb
-      if cannot? :new, Workout
-        redirect_to root_path,
-          notice: @message and return
-      end
+    if params[:course_id]
+      # Working with workout_offerings; gather info to populate form
       @term = params[:term_id] ? Term.find(params[:term_id]) : nil
-      @organization = params[:organization_id] ? 
+      @organization = params[:organization_id] ?
         Organization.find(params[:organization_id]) : nil
+      @course = Course.find_with_id_or_slug(params[:course_id], params[:organization_id])
       @course_offerings = current_user.managed_course_offerings(
         course: @course, term: @term)
       @return_to = organization_course_path(
@@ -164,14 +160,14 @@ class WorkoutsController < ApplicationController
         id: @course.slug,
         term_id: @term.slug
       )
-    elsif !session[:is_instructor]
-      # If there's no course, use session-specific permissions 
-      if @lti_launch
-        render 'lti/error' and return
-      else
-        redirect_to root_path,
-          notice: @message and return
-      end
+    end
+
+    # Only let the user through if
+    # they're an admin OR
+    # there's a course involved AND they have course level permissions
+    unless current_user.global_role.is_admin? ||
+      (@course && current_user.can?(:new, Workout))
+      redirect_to root_path, notice: @message and return
     end
 
     @lms_assignment_id = params[:lms_assignment_id]
@@ -185,30 +181,38 @@ class WorkoutsController < ApplicationController
     render layout: 'two_columns'
   end
 
+  # /gym/workouts/new_or_existing
+  # /courses/:organization_id/:course_id/:term_id/workouts/new_or_existing
   def new_or_existing
     @lti_launch = params[:lti_launch]
-    @course = !!params[:course_id] ? Course.find(params[:course_id]) : nil
+
+    if params[:course_id]
+      @course = Course.find_with_id_or_slug(
+        params[:course_id],
+        params[:organization_id]
+      )
+    end
 
     # If there is a course, check course roles (in the ability file)
     # If there is no course, check LTI launch roles
     @can_create = (@course && can?(:new, Workout)) || session[:is_instructor]
 
-    if !@can_create
+    unless @can_create
       flash.now[:notice] = 
         'You are unauthorized to create new workouts. Choose from existing workouts instead.'
     end
 
     @term = !!params[:term_id] ? Term.find(params[:term_id]) : nil
-    @organization = !!params[:organization_id] ? 
+    @organization = !!params[:organization_id] ?
       Organization.find(params[:organization_id]) : nil
     @suggested_name = params[:suggested_name]
 
     @lms_assignment_id = params[:lms_assignment_id]
-    
-    # if course is specified, we want to highlight existing workouts that have 
+
+    # if course is specified, we want to highlight existing workouts that have
     # been used in the given course before
     @searching_offerings = !!@course
-    
+
     # we are finding or creating a workout for a course_offering
     if @course
       @new_workout_path = organization_new_workout_path(
@@ -237,7 +241,7 @@ class WorkoutsController < ApplicationController
       @default_results.each do |term, workout_offerings|
         @default_results[term] = workout_offerings.uniq{ |wo| wo.workout }
       end
-    else 
+    else
       @new_workout_path = new_workout_path(
         lms_assignment_id: @lms_assignment_id,
         suggested_name: @suggested_name,
@@ -290,17 +294,20 @@ class WorkoutsController < ApplicationController
       @workout_offering = WorkoutOffering.find(params[:workout_offering_id])
       @workout = @workout_offering.workout
     else
-      @workout = Workout.find(params[:id]) 
+      @workout = Workout.find(params[:id])
     end
 
     if cannot? :edit, @workout
       redirect_to root_path,
         notice: 'You are not authorized to edit this workout.' and return
     end
-    
-    if @workout_offering 
+
+    if @workout_offering
       # we are editing a workout along with its workout offerings
-      @course = Course.find(params[:course_id])
+      @course = Course.find_with_id_or_slug(
+        params[:course_id],
+        params[:organization_id]
+      )
       @term = Term.find(params[:term_id])
       @organization = Organization.find params[:organization_id]
       @time_limit = @workout_offering.andand.time_limit
@@ -344,7 +351,7 @@ class WorkoutsController < ApplicationController
     end
 
     @can_update = can? :edit, @workout
-    
+
     # exercises for the workout, to populate the form
     @exercises = []
     @workout.exercise_workouts.each do |ex|
@@ -404,9 +411,12 @@ class WorkoutsController < ApplicationController
       ex_data[:exercise_workout_id] = ex.id
       @exercises.push(ex_data)
     end
-    
+
     if params[:course_id]
-      @course = Course.find params[:course_id]
+      @course = Course.find_with_id_or_slug(
+        params[:course_id],
+        params[:organization_id]
+      )
       @term = Term.find params[:term_id]
       @can_update = can? :edit, @workout
       @time_limit = @workout.workout_offerings.first.andand.time_limit
@@ -421,7 +431,7 @@ class WorkoutsController < ApplicationController
       id: @course.slug,
       term_id: @term.slug
     )
-    
+
     render layout: 'two_columns'
   end
 
@@ -438,10 +448,10 @@ class WorkoutsController < ApplicationController
       removed_exercises: params[:removed_exercises],
       exercises: params[:exercises]
     }
-    
+
     course = params[:course_id]
     if course.blank?
-      # no course, so this workout needs to manage its own LTI ties 
+      # no course, so this workout needs to manage its own LTI ties
       workout_params[:lms_assignment_id] = params[:lms_assignment_id]
       workout_params[:lms_instance_id] = session[:lms_instance_id]
     end
@@ -456,7 +466,7 @@ class WorkoutsController < ApplicationController
             course_id: params[:course_id],
             term_id: params[:term_id],
             id: workout_offering_id,
-            lti_launch: @lti_launch 
+            lti_launch: @lti_launch
           )
         )
       else
@@ -464,15 +474,15 @@ class WorkoutsController < ApplicationController
       end
     elsif !@workout
       err_string = 'There was a problem while creating the workout.'
-      url = url_for(root_path(notice: err_string)) 
+      url = url_for(root_path(notice: err_string))
     else
-      session.delete(:lis_result_sourcedid)      
+      session.delete(:lis_result_sourcedid)
       session.delete(:lis_outcome_service_url)
       url = url_for(practice_workout_path(
         id: @workout.id,
         lti_launch: @lti_launch
       ))
-    end 
+    end
 
     respond_to do |format|
       format.json { render json: { url: url } }
@@ -480,11 +490,13 @@ class WorkoutsController < ApplicationController
   end
 
 
-  # -------------------------------------------------------------
+  # /courses/:organization_id/:course_id/:term_id/find_offering/:workout_name
   def find_offering
     @user = User.find params[:user_id]
     @term = Term.find params[:term_id]
-    @course = Course.find params[:course_id]
+    @course = Course.find_with_id_or_slug(
+      params[:course_id], params[:organization_id]
+    )
     @lti_launch = true
     dynamic_lms_assignment = params[:dynamic_lms_assignment]
     ext_lti_assignment_id = params[:ext_lti_assignment_id]
@@ -623,21 +635,32 @@ class WorkoutsController < ApplicationController
         # is the user enrolled in an offering of the course?
 
         if !@course_offering
-          # let the user choose to enroll in a course_offering
-          @available_offerings = []
-          @available_course_offerings = CourseOffering.where(course: @course, term: @term)
+          # Let the user choose to enroll in a course_offering.
+          available_offerings = []
+          available_course_offerings = CourseOffering
+            .where(course: @course, term: @term)
             .select{ |co| co.self_enrollment_allowed? }
-          render layout: 'one_column' and return
-        else
-          # have a course_offering, use the instructor to find appropriate workout_offerings
-          # by workout name
+
+          if available_course_offerings.count == 1
+            # There is only one possible course offering. Continue on with it.
+            @course_offering = available_course_offerings.first
+          else
+            # There are multiple or no possible course offerings. Render the selection page.
+            render layout: 'one_column' and return
+          end
+        end
+
+        if @course_offering
+          # We have a course offering. Use the instructor to find appropriate
+          # workout_offerings by workout name.
           instructor = @course_offering.instructors.first
-          workout_offerings = instructor
-            .managed_workout_offerings_in_term(params[:workout_name].downcase, @course, @term)
+          workout_offerings = instructor.managed_workout_offerings_in_term(
+            params[:workout_name].downcase, @course, @term)
           if workout_offerings.blank?
             # no current workout_offerings, check all semesters
             old_workout_offerings = instructor
-              .managed_workout_offerings_in_term(params[:workout_name].downcase, @course, nil)
+              .managed_workout_offerings_in_term(
+              params[:workout_name].downcase, @course, nil)
             found_workout ||= old_workout_offerings.andand
               .uniq{ |wo| wo.workout }.andand
               .sort_by{ |wo| wo.course_offering.term.starts_on }.andand
@@ -647,7 +670,8 @@ class WorkoutsController < ApplicationController
               render 'lti/error' and return
             else
               # we have a course offering and a workout -- just find or create the workout and redirect
-              @workout_offering = WorkoutOffering.find_by(course_offering: @course_offering, workout: found_workout)
+              @workout_offering = WorkoutOffering.find_by(
+                course_offering: @course_offering, workout: found_workout)
               if !@workout_offering
                 @workout_offering = WorkoutOffering.new(
                   course_offering: @course_offering,
@@ -667,7 +691,8 @@ class WorkoutsController < ApplicationController
       if !@workout_offering
         # don't have a workout_offering, but may have narrowed it down
         workout_offerings = workout_offerings.flatten.uniq
-        enrolled_workout_offerings = workout_offerings.andand.select { |wo| @user.is_enrolled?(wo.course_offering) }
+        enrolled_workout_offerings = workout_offerings.andand
+          .select { |wo| @user.is_enrolled?(wo.course_offering) }
 
         if enrolled_workout_offerings.any?
           @workout_offering = enrolled_workout_offerings.andand.first
@@ -678,21 +703,42 @@ class WorkoutsController < ApplicationController
             lms_assignment_id: @lms_assignment_id,
             from_collection: params[:from_collection]
           }
-          @workout_offering = @course_offering.add_workout(params[:workout_name], workout_offering_options)
+          @workout_offering = @course_offering.add_workout(
+            params[:workout_name], workout_offering_options)
           if !@workout_offering
             @message = "The workout named '#{params[:workout_name]}' does not exist or is not linked with this LMS assignment. Please contact your instructor."
             render 'lti/error' and return
           end
         else
           # let the user choose to enroll in a course_offering
-          @existing_workout_offerings = workout_offerings.uniq { |wo|
-            wo.course_offering
-          }.select { |wo|
-            wo.course_offering.self_enrollment_allowed?
-          }.map(&:id)
-          @available_offerings = CourseOffering.where(course: @course, term: @term)
+          existing_workout_offerings = workout_offerings
+            .uniq { |wo| wo.course_offering }
+            .select { |wo| wo.course_offering.self_enrollment_allowed? }
+          available_offerings = CourseOffering
+            .where(course: @course, term: @term)
             .select{ |co| co.self_enrollment_allowed? }
-          render layout: 'one_column' and return
+
+          if available_offerings.count == 1
+            @course_offering = available_offerings.first
+            @workout_offering = @course_offering.workout_offerings
+              .find{ |wo| existing_workout_offerings.include?(wo) }
+
+            # If we still don't have a workout offering, try to create it.
+            @workout_offering ||= @course_offering.add_workout(
+                params[:workout_name],
+                {
+                  lms_assignment_id: @lms_assignment_id,
+                  from_collection: params[:from_collection]
+                }
+              )
+
+            if !@workout_offering
+              @message = "The workout named '#{params[:workout_name]} does not exist or is not linked with this LMS assignment. Please contact your instructor."
+              render 'lti/error' and return
+            end
+          else
+            render layout: 'one_column' and return
+          end
         end
       end
     end
@@ -817,7 +863,7 @@ class WorkoutsController < ApplicationController
       redirect_to root_path,
         notice: 'Unauthorized to update workout' and return
     end
-    
+
     workout_params = {
       name: params[:name],
       description: params[:description],
@@ -871,7 +917,7 @@ class WorkoutsController < ApplicationController
   def practice
     @workout = Workout.find_by(id: params[:id])
     @lti_workout = LtiWorkout.find_by(id: params[:lti_workout_id])
-    
+
     if !@lti_workout
       authorize! :practice, @workout
     end
@@ -905,8 +951,8 @@ class WorkoutsController < ApplicationController
         end
       end
       redirect_to exercise_practice_path(
-        @workout.first_exercise, 
-        workout_id: @workout.id, 
+        @workout.first_exercise,
+        workout_id: @workout.id,
         lti_launch: params[:lti_launch],
         workout_score_id: @workout_score.andand.id
       )
@@ -927,7 +973,7 @@ class WorkoutsController < ApplicationController
       @xptogo = 60
       @remain = 10
     end
-  
+
     def create_or_update_offerings(workout)
       common = {}  # params that are common among all offerings of this workout
       common[:workout_policy] = WorkoutPolicy.find_by id: params[:policy_id]

@@ -3,13 +3,18 @@
 # Table name: workout_owners
 #
 #  id         :integer          not null, primary key
-#  workout_id :integer          not null
 #  owner_id   :integer          not null
+#  workout_id :integer          not null
 #
 # Indexes
 #
 #  index_workout_owners_on_workout_id_and_owner_id  (workout_id,owner_id) UNIQUE
 #  workout_owners_owner_id_fk                       (owner_id)
+#
+# Foreign Keys
+#
+#  workout_owners_owner_id_fk    (owner_id => users.id)
+#  workout_owners_workout_id_fk  (workout_id => workouts.id)
 #
 
 # =============================================================================

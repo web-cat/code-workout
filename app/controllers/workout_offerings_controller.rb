@@ -11,13 +11,13 @@ class WorkoutOfferingsController < ApplicationController
   # the consumer keys/secrets
   $oauth_creds = {"test" => "secret"}
 
-  # -------------------------------------------------------------
+  # /courses/:organization_id/:course_id/:term_id/:id
   def show
     if @workout_offering
       @workout = @workout_offering.workout
-      @course = Course.find params[:course_id]
-      @term = Term.find params[:term_id]
       @organization = Organization.find params[:organization_id]
+      @course = Course.find_with_id_or_slug(params[:course_id], params[:organization_id])
+      @term = Term.find params[:term_id]
       @course_offering = CourseOffering.find_by course: @course, term: @term
       @exs = @workout.exercises
     end
