@@ -70,7 +70,8 @@ class LtiController < ApplicationController
         # no workout found. different paths forward based on LTI role
         if @tp.context_instructor?
           redirect_to new_or_existing_workout_path(
-            lti_launch: true,
+            lti_launch: ("iframe" ==
+              params[:launch_presentation_document_target]),
             lms_assignment_id: ext_lti_assignment_id
           ) and return
         else
@@ -97,7 +98,7 @@ class LtiController < ApplicationController
       session.delete(:lms_instance_id)
       redirect_to practice_workout_path(
         id: lti_workout.workout_id,
-        lti_launch: true,
+        lti_launch: ("iframe" == params[:launch_presentation_document_target]),
         lti_workout_id: lti_workout.id,
         lis_outcome_service_url: params[:lis_outcome_service_url],
         lis_result_sourcedid: params[:lis_result_sourcedid]
@@ -177,6 +178,7 @@ class LtiController < ApplicationController
       label: params[:custom_label], # can be nil
       lis_outcome_service_url: params[:lis_outcome_service_url],
       lis_result_sourcedid: params[:lis_result_sourcedid],
+      lti_launch: ("iframe" == params[:launch_presentation_document_target]),
       from_collection: workout_from_collection
     )
   end
