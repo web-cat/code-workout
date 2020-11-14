@@ -5,7 +5,34 @@
   = javascript_include_tag('timeout')
 = javascript_include_tag("two_column_layout")
 = javascript_include_tag("practice")
+.col-12
+  %h1
+    = @exercise.display_name
+    - if current_user.andand.can? :edit, @exercise
+      %small
+        = link_to "", edit_exercise_path(@exercise), class: 'glyphicon glyphicon-pencil'
+  - if @exercise_version.stem && !@exercise_version.stem.preamble.blank?
+    - cache @exercise_version.stem do
+      = markdown @exercise_version.stem.preamble
+  -#
+    This loop repeats the one below in the answer column, so that the
+    prompt can go up top in the full-width div. This is broken, since it
+    will really only work for single-part exercises and will look bad for
+    multi-part exercises ... but we don't have real support for multi-part
+    exercises yet anyway.
+  - @exercise_version.prompts.each do |question_prompt|
+    - cache question_prompt do
+      = markdown question_prompt.question
+    - prompt = question_prompt.specific
+    - if prompt.is_coding?
+      - if !prompt.hide_examples && prompt.examples.any?
+        %p Examples:
+        %pre.examples
+          - prompt.examples.each do |example|
+            = example.display_description
+            %br
 .col-md-7#user-deadline{ data: { deadline: @user_deadline, server_now: @server_now } }
+  %h2 Your Answer:
   = semantic_form_for @exercise_version,
     url: (@workout_offering ? organization_workout_offering_exercise_evaluate_path(id: @exercise_version.exercise.id,
       course_id: @workout_offering.course_offering.course.slug,
@@ -18,24 +45,14 @@
     lis_result_sourcedid: @workout_score.andand.lis_result_sourcedid,
     lis_outcome_service_url: @workout_score.andand.lis_outcome_service_url)), remote: true do |f|
     = f.semantic_errors
-    %h1
-      = @exercise.display_name
-      - if current_user.andand.can? :edit, @exercise
-        %small
-          = link_to "", edit_exercise_path(@exercise), class: 'glyphicon glyphicon-pencil'
     - if @msg
       #timer.alert.alert-warning
         = "#{@msg}"
     #attempts-left
-      = render 'attempts_left', attempts_left: @attempts_left 
-    - if @exercise_version.stem && !@exercise_version.stem.preamble.blank?
-      - cache @exercise_version.stem do
-        = markdown @exercise_version.stem.preamble
+      = render 'attempts_left', attempts_left: @attempts_left
     - allow_write = true
     - coding_questions = false
     - @exercise_version.prompts.each do |question_prompt|
-      - cache question_prompt do
-        = markdown question_prompt.question
       - prompt = question_prompt.specific
       - if prompt.is_mcq?
         - answers = @exercise_version.serve_choice_array(question_prompt)
@@ -82,13 +99,6 @@
                 label: '&nbsp;'
       - elsif prompt.is_coding?
         - coding_questions = true
-        - examples = prompt.examples
-        - if !prompt.hide_examples && examples.any?
-          %p Examples:
-          %pre.examples
-            - examples.each do |example|
-              = example.display_description
-              %br
         - prior_answer = @attempt && @attempt.prompt_answers.where(prompt: prompt.acting_as).first
         - if !prior_answer && @workout_offering.andand.continue_from_workout
           - prior_score = @workout_offering.continue_from_workout.score_for(@student_user)
@@ -111,15 +121,15 @@
           %pre{ data: { lang: 'text/x-java' } }
             = prior_answer ? prior_answer.specific.answer : prompt.prepare_starter_code
     .actions
-      - disabled = !current_user.andand.is_staff?(@workout_offering.andand.course_offering) && @attempts_left && @attempts_left == 0 
+      - disabled = !current_user.andand.is_staff?(@workout_offering.andand.course_offering) && @attempts_left && @attempts_left == 0
       - if @workout_offering.nil? || @workout_offering.can_be_practiced_by?(current_user)
         - if @workout_offering.andand.workout_policy.andand.hide_feedback_before_finish && params[:review_user_id].nil?
-          = f.submit 'Save my answer!', 
-            class: 'btn btn-primary btn-submit', 
+          = f.submit 'Save my answer!',
+            class: 'btn btn-primary btn-submit',
             id: 'primarybtn', disabled: disabled
         - elsif allow_write && params[:review_user_id].nil?
-          = f.submit 'Check my answer!', 
-            class: 'btn btn-primary btn-submit', 
+          = f.submit 'Check my answer!',
+            class: 'btn btn-primary btn-submit',
             id: 'primarybtn', disabled: disabled
       - if coding_questions
         %div.btn.btn-default{ data: { toggle: 'modal', target: '#confirm-reset' } } Reset
@@ -143,7 +153,7 @@
           class: 'btn btn-default btn-next', id: 'nextbtn'
       - elsif @workout && params[:review_user_id].nil? && @workout.exercise_workouts.size > 1
         = button_link 'Next exercise',
-          exercise_practice_path(@workout.next_exercise(@exercise), 
+          exercise_practice_path(@workout.next_exercise(@exercise),
           workout_id: @workout.id, workout_score_id: @workout_score.andand.id,
           lti_launch: @lti_launch),
           class: 'btn btn-info btn-next', id: 'nextbtn'
@@ -155,13 +165,15 @@
         random_exercise_path(language: @exercise.language) :               |
         random_exercise_path)                                              |
 .col-md-5
+  %h2 Feedback
   #saved_assurance
   #previous_answer.previous_answer
   - if @attempt
     #exercisefeedback
       = render partial: 'sse/ajax_feedback'
   - else
-    #exercisefeedback{style: 'display: none;'}
+    #exercisefeedback
+      %p Your feedback will appear here when you check your answer.
 
 .modal.fade#confirm-reset{ tabindex: '-1', role: 'dialog', aria_labelledby: 'resetModalLabel', aria_hidden: true }
   .modal-dialog
@@ -178,7 +190,7 @@
       .modal-footer
         %button.btn.btn-default{ data: { dismiss: 'modal' }, type: 'button' } Cancel
         %button.btn.btn-danger.btn-reset Reset Editor
-        
+
 .modal.fade#Visualize{ tabindex: '-2', role: 'dialog', aria_labelledby: 'VisualizeModal', aria_hidden: true }
   .modal-dialog.modal-lg{ style: 'height:400; width: 800' }
     .modal-content
@@ -187,7 +199,7 @@
         %p.lead.modal-title#resetModalLabel Code Visualization
 
       .modal-body{ id: 'ModalBody'}
-        
+
       .modal-footer
         %button.btn.btn-default{ data: { dismiss: 'modal' }, type: 'button' } Cancel
 

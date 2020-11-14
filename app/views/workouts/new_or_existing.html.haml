@@ -5,7 +5,7 @@
     .col-xs-7
       = text_field_tag :search, nil, placeholder: 'e.g. Looping', class: 'form-control input-sm', id: 'search-terms'
       - if @course
-        = hidden_field_tag :course, @course.id
+        = hidden_field_tag :course, @course.id # important that this is an id, not a slug
       = hidden_field_tag :offerings, @searching_offerings # to pass to Workout.search
       = hidden_field_tag :lms_assignment_id, @lms_assignment_id
       = hidden_field_tag :suggested_name, @suggested_name

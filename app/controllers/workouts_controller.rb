@@ -144,15 +144,15 @@ class WorkoutsController < ApplicationController
   def new
     @lti_launch = params[:lti_launch]
     @workout = Workout.new
-    @course = params[:course_id] ? Course.find(params[:course_id]) : nil
 
     @message = 'Unauthorized to create new workout'
 
-    if @course
+    if params[:course_id]
       # Working with workout_offerings; gather info to populate form
       @term = params[:term_id] ? Term.find(params[:term_id]) : nil
       @organization = params[:organization_id] ?
         Organization.find(params[:organization_id]) : nil
+      @course = Course.find_with_id_or_slug(params[:course_id], params[:organization_id])
       @course_offerings = current_user.managed_course_offerings(
         course: @course, term: @term)
       @return_to = organization_course_path(
@@ -181,15 +181,23 @@ class WorkoutsController < ApplicationController
     render layout: 'two_columns'
   end
 
+  # /gym/workouts/new_or_existing
+  # /courses/:organization_id/:course_id/:term_id/workouts/new_or_existing
   def new_or_existing
     @lti_launch = params[:lti_launch]
-    @course = !!params[:course_id] ? Course.find(params[:course_id]) : nil
+
+    if params[:course_id]
+      @course = Course.find_with_id_or_slug(
+        params[:course_id],
+        params[:organization_id]
+      )
+    end
 
     # If there is a course, check course roles (in the ability file)
     # If there is no course, check LTI launch roles
     @can_create = (@course && can?(:new, Workout)) || session[:is_instructor]
 
-    if !@can_create
+    unless @can_create
       flash.now[:notice] =
         'You are unauthorized to create new workouts. Choose from existing workouts instead.'
     end
@@ -296,7 +304,10 @@ class WorkoutsController < ApplicationController
 
     if @workout_offering
       # we are editing a workout along with its workout offerings
-      @course = Course.find(params[:course_id])
+      @course = Course.find_with_id_or_slug(
+        params[:course_id],
+        params[:organization_id]
+      )
       @term = Term.find(params[:term_id])
       @organization = Organization.find params[:organization_id]
       @time_limit = @workout_offering.andand.time_limit
@@ -402,7 +413,10 @@ class WorkoutsController < ApplicationController
     end
 
     if params[:course_id]
-      @course = Course.find params[:course_id]
+      @course = Course.find_with_id_or_slug(
+        params[:course_id],
+        params[:organization_id]
+      )
       @term = Term.find params[:term_id]
       @can_update = can? :edit, @workout
       @time_limit = @workout.workout_offerings.first.andand.time_limit
@@ -476,12 +490,14 @@ class WorkoutsController < ApplicationController
   end
 
 
-  # -------------------------------------------------------------
+  # /courses/:organization_id/:course_id/:term_id/find_offering/:workout_name
   def find_offering
     @user = User.find params[:user_id]
     @term = Term.find params[:term_id]
-    @course = Course.find params[:course_id]
-    @lti_launch = true
+    @course = Course.find_with_id_or_slug(
+      params[:course_id], params[:organization_id]
+    )
+    @lti_launch = params[:lti_launch]
     dynamic_lms_assignment = params[:dynamic_lms_assignment]
     ext_lti_assignment_id = params[:ext_lti_assignment_id]
     custom_canvas_assignment_id = params[:custom_canvas_assignment_id]
