@@ -61,7 +61,9 @@ html, body { height: 100%; }
 /* Codemirror */
 
 .CodeMirror { height: auto; margin-bottom: 9px; }
-.CodeMirror-scroll { max-height: 400px; }
+.form-group .CodeMirror-scroll,
+.form-group .CodeMirror-gutter,
+.form-group .CodeMirror-gutters { min-height: 18px * 12; }
 /* .practice .CodeMirror { min-height: 18px * 15; } */
 
 .CodeMirror .widget {

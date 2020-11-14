@@ -14,13 +14,13 @@ if att_id
     $("#saved_assurance").html("Your answer has been saved.  You can move on to another exercise if you don't want to wait for more feedback.")
     $(".btn-submit").attr('disabled', 'disabled')
     $("#visualize").attr('disabled', 'disabled')
-    $("#exercisefeedback").html('<h2>Feedback</h2><i class="fa fa-spinner fa-spin fa-2x"></i>')
+    $("#exercisefeedback").html('<i class="fa fa-spinner fa-spin fa-2x"></i>')
     setTimeout ( ->
       $.ajax(url: feedback_poll_url)
     ), feedback_timeout + feedback_padding
   else
     $.ajax(url: feedback_poll_url)
-  
+
   attempt_html = "<%= j(render 'exercises/attempts_left', attempts_left: @attempts_left) %>"
   $('#attempts-left').html(attempt_html)
   if attempts_exhausted

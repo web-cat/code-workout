@@ -347,7 +347,7 @@ ActiveRecord::Schema.define(version: 20200929144816) do
   add_index "lms_instances", ["url"], name: "index_lms_instances_on_url", unique: true, using: :btree
 
   create_table "lms_types", force: :cascade do |t|
-    t.string   "name",       limit: 255, null: false
+    t.string   "name",       limit: 255, default: "", null: false
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -367,7 +367,7 @@ ActiveRecord::Schema.define(version: 20200929144816) do
 
   create_table "lti_workouts", force: :cascade do |t|
     t.integer  "workout_id",        limit: 4
-    t.string   "lms_assignment_id", limit: 255, null: false
+    t.string   "lms_assignment_id", limit: 255, default: "", null: false
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "lms_instance_id",   limit: 4

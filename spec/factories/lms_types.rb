@@ -3,7 +3,7 @@
 # Table name: lms_types
 #
 #  id         :integer          not null, primary key
-#  name       :string(255)      not null
+#  name       :string(255)      default(""), not null
 #  created_at :datetime
 #  updated_at :datetime
 #

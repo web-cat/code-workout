@@ -5,7 +5,7 @@
 #  id                :integer          not null, primary key
 #  created_at        :datetime
 #  updated_at        :datetime
-#  lms_assignment_id :string(255)      not null
+#  lms_assignment_id :string(255)      default(""), not null
 #  lms_instance_id   :integer
 #  workout_id        :integer
 #
