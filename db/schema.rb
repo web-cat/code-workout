@@ -336,7 +336,6 @@ ActiveRecord::Schema.define(version: 2020_09_29_144816) do
 
   create_table "lms_types", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
     t.string "name", default: "", null: false
-
     t.datetime "created_at"
     t.datetime "updated_at"
     t.index ["name"], name: "index_lms_types_on_name", unique: true
@@ -355,7 +354,6 @@ ActiveRecord::Schema.define(version: 2020_09_29_144816) do
   create_table "lti_workouts", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
     t.integer "workout_id"
     t.string "lms_assignment_id", null: false
-
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer "lms_instance_id"
