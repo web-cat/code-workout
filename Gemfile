@@ -1,7 +1,7 @@
 source 'https://rubygems.org'
 
 gem 'rails', '~> 5.1'
-gem 'sprockets', '~> 3.7.2' # 4.0 requires ruby 2.5
+gem 'sprockets', '< 4.0.0'
 gem 'bootstrap-sass', '~> 3.2.0'
 gem 'jquery-rails'
 gem 'jquery-ui-rails'
@@ -123,4 +123,3 @@ gem 'rest-client'
 # Gems for cookie updates
 gem 'user_agent_parser' # 2.6 requires ruby 2.4
 gem 'rails_same_site_cookie'
-gem 'sprockets', '< 4.0.0'
