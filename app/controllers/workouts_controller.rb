@@ -198,7 +198,7 @@ class WorkoutsController < ApplicationController
     @can_create = (@course && can?(:new, Workout)) || session[:is_instructor]
 
     unless @can_create
-      flash.now[:notice] = 
+      flash.now[:notice] =
         'You are unauthorized to create new workouts. Choose from existing workouts instead.'
     end
 
@@ -497,7 +497,7 @@ class WorkoutsController < ApplicationController
     @course = Course.find_with_id_or_slug(
       params[:course_id], params[:organization_id]
     )
-    @lti_launch = true
+    @lti_launch = params[:lti_launch]
     dynamic_lms_assignment = params[:dynamic_lms_assignment]
     ext_lti_assignment_id = params[:ext_lti_assignment_id]
     custom_canvas_assignment_id = params[:custom_canvas_assignment_id]
