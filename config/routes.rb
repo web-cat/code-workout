@@ -108,6 +108,8 @@ CodeWorkout::Application.routes.draw do
     get ':course_id/new_offering' => 'course_offerings#new', as: :new_course_offering
     post ':course_id/create_offering' => 'course_offerings#create', as: :course_offering_create
     get ':course_id/:term_id/tab_content/:tab' => 'courses#tab_content'
+    get ':course_id/:term_id/course_enrollments/new' => 'course_enrollments#new', as: :new_course_enrollment
+    post ':course_id/:term_id/course_enrollments/:course_offering_id/enroll_users' => 'course_enrollments#enroll_users', as: :course_enroll_users
     get ':course_id/:term_id/workouts/new' => 'workouts#new', as: :new_workout
     get ':course_id/:term_id/workouts/:workout_id/clone' => 'workouts#clone', as: :clone_workout
     get ':course_id/:term_id/workouts/new_or_existing' => 'workouts#new_or_existing', as: :new_or_existing_workout
@@ -141,13 +143,12 @@ CodeWorkout::Application.routes.draw do
     post 'add_workout/:workout_name' => 'course_offerings#add_workout', as: :add_workout
     post 'store_workout/:id' => :store_workout, as: :store_workout
     get '/search_enrolled_users' => :search_enrolled_users, as: :search_enrolled_users
-    post 'enroll_users' => 'course_enrollments#enroll_users'
     collection do
       post 'remote_create' => :remote_create, as: :remote_create
     end
   end
 
-  resources :course_enrollments, only: [ :new, :destroy ] do
+  resources :course_enrollments, only: [ :destroy ] do
     collection do
       get 'choose_roster'
       post 'roster_upload'

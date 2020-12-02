@@ -150,7 +150,8 @@ class CourseEnrollmentsController < ApplicationController
 
   def parse_params
     @term = Term.find params[:term_id] if params[:term_id]
-    @course = Course.find_with_id_or_slug(params[:course_id], nil) if params[:course_id]
+    @organization = Organization.find params[:organization_id] if params[:organization_id]
+    @course = Course.find_with_id_or_slug(params[:course_id], @organization) if params[:course_id]
     @course_offerings = current_user.andand.course_offerings_for_term(@term, @course)
   end
 end

@@ -107,6 +107,7 @@ class CoursesController < ApplicationController
   # -------------------------------------------------------------
   # GET /courses/:organization_id/:course_id/:term_id/tab_content/:tab
   def tab_content
+    @organization = Organization.find params[:organization_id]
     @course = Course.find_with_id_or_slug(
       params[:course_id], params[:organization_id]
     )
