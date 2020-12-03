@@ -26,7 +26,7 @@ class CourseEnrollmentsController < ApplicationController
   end
 
   def roster_upload
-    @course_offering = CourseOffering.find params[:course_offering]
+    @course_offering = CourseOffering.find params[:course_offering_id]
     file = params[:rosterfile]
     has_headers = !!params[:has_headers] # "true" or "false"
 

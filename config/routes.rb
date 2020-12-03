@@ -110,6 +110,8 @@ CodeWorkout::Application.routes.draw do
     get ':course_id/:term_id/tab_content/:tab' => 'courses#tab_content'
     get ':course_id/:term_id/course_enrollments/new' => 'course_enrollments#new', as: :new_course_enrollment
     post ':course_id/:term_id/course_enrollments/:course_offering_id/enroll_users' => 'course_enrollments#enroll_users', as: :course_enroll_users
+    get ':course_id/:term_id/course_enrollments/choose_roster' => 'course_enrollments#choose_roster', as: :course_choose_roster
+    post ':course_id/:term_id/course_enrollments/roster_upload' => 'course_enrollments#roster_upload', as: :course_roster_upload
     get ':course_id/:term_id/workouts/new' => 'workouts#new', as: :new_workout
     get ':course_id/:term_id/workouts/:workout_id/clone' => 'workouts#clone', as: :clone_workout
     get ':course_id/:term_id/workouts/new_or_existing' => 'workouts#new_or_existing', as: :new_or_existing_workout
@@ -149,10 +151,6 @@ CodeWorkout::Application.routes.draw do
   end
 
   resources :course_enrollments, only: [ :destroy ] do
-    collection do
-      get 'choose_roster'
-      post 'roster_upload'
-    end
   end
 
   resources :user_groups, only: [ :new ] do
