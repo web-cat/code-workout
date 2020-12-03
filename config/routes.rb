@@ -150,8 +150,7 @@ CodeWorkout::Application.routes.draw do
     end
   end
 
-  resources :course_enrollments, only: [ :destroy ] do
-  end
+  resources :course_enrollments, only: [ :destroy ]
 
   resources :user_groups, only: [ :new ] do
     get 'members' => 'user_groups#members', as: :members
