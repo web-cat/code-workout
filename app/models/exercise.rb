@@ -86,6 +86,9 @@ class Exercise < ActiveRecord::Base
   # exercises, so I'm leaving it out for now:
   # validates :current_version, presence: true
 
+  #~ Pagination ...............................................................
+  max_paginates_per 50 
+
   Q_MC     = 1
   Q_CODING = 2
   Q_BLANKS = 3
