@@ -36,13 +36,19 @@ require 'spec_helper'
 
 describe Exercise do
   before :all do
-    @exercise = Exercise.find(1)
+    @admin = FactoryBot.build :admin
+    @user = FactoryBot.build :confirmed_user
   end
 
-  describe 'creator edit permissions' do
-    it 'should be editable by the exercise creator' do
-      user = @exercise.current_version.andand.creator
-      expect(user.can?(:edit, @exercise)).to eq(true)
+  context 'creator edit permissions' do
+    it 'should not be editable by the exercise creator' do
+      ex = FactoryBot.build :mc_exercise
+      expect(@user.cannot? :edit, ex).to be_truthy
+    end
+
+    it 'should be editable by an administrator' do
+      ex = FactoryBot.build :coding_exercise
+      expect(@admin.can? :edit, ex).to be_truthy
     end
   end
 end

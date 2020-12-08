@@ -98,7 +98,7 @@ FactoryBot.define do
 
     factory :mc_exercise do
       transient do
-        creator_id { 1 }
+        creator_id { 2 }
         question { "This is a sample multiple choice question.  It has only "\
           "one correct answer.\n" }
         feedback { "Explanation for the correct answer goes here.  This is "\
