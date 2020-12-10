@@ -87,7 +87,7 @@ class Exercise < ActiveRecord::Base
   # validates :current_version, presence: true
 
   #~ Pagination ...............................................................
-  max_paginates_per 50 
+  max_paginates_per 40
 
   Q_MC     = 1
   Q_CODING = 2
@@ -130,19 +130,16 @@ class Exercise < ActiveRecord::Base
     end
     if user
       visible = Exercise.visible_to_user(user)
-      result = visible.tagged_with(terms, any: true, wild: true, on: :tags) +
-        visible.tagged_with(terms, any: true, wild: true, on: :languages) +
-        visible.tagged_with(terms, any: true, wild: true, on: :styles) +
-        visible.where('(name regexp (?)) or (exercises.id in (?))', r, ids)
-      return result.uniq
     else
       visible = Exercise.publicly_visible
-      result = visible.tagged_with(terms, any: true, wild: true, on: :tags) +
-        visible.tagged_with(terms, any: true, wild: true, on: :languages) +
-        visible.tagged_with(terms, any: true, wild: true, on: :styles) +
-        visible.where('(name regexp (?)) or (exercises.id in (?))', r, ids)
-      return result.uniq
     end
+    
+    result = visible.tagged_with(terms, any: true, wild: true, on: :tags)
+      .union(visible.tagged_with(terms, any: true, wild: true, on: :languages))
+      .union(visible.tagged_with(terms, any: true, wild: true, on: :styles)) 
+      .union(visible.where('(name regexp (?)) or (exercises.id in (?))', r, ids))
+      .distinct
+    return result
   end
 
 
