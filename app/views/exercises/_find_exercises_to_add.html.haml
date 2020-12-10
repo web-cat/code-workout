@@ -1,6 +1,6 @@
 %h2 Search for exercises
 .row.search-area
-  = form_tag exercises_search_path(params[:search]), remote: true do
+  = form_tag exercises_search_path(params[:search]), method: :get, remote: true do
     .col-xs-8
       = text_field_tag :search, nil, placeholder: 'e.g. recursion', class: 'form-control input-sm', id: 'search-terms'
     .col-xs-3

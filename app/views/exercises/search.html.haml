@@ -2,7 +2,7 @@
 %p
   Searching for:
   - @terms.each do |t|
-    = link_to t, exercises_search_path(search: t), method: :post, class: 'tag'
+    = link_to t, exercises_search_path(search: t), class: 'tag'
 
 - uid = user_signed_in? ? current_user.id : 0
 - if not(@msg.empty?)
@@ -15,7 +15,9 @@
     .clearfix
 
 - if not(@exs.empty?)
+  - @exs = @exs.page params[:page]
   %h2 Individual Exercises
   - @exs.in_groups_of(2, false) do |row|
     = render row, user: current_user
     .clearfix
+  = paginate @exs

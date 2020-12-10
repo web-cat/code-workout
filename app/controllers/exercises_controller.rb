@@ -19,6 +19,8 @@ class ExercisesController < ApplicationController
     else
       @exercises = Exercise.publicly_visible
     end
+
+    @exercises = @exercises.page params[:page]
   end
 
 

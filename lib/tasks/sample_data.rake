@@ -76,7 +76,11 @@ namespace :db do
 
     # Create a workout with one exercise, and a second exercise
     w = FactoryBot.create :workout_with_exercises
-    FactoryBot.create :coding_exercise, name: 'Factorial 3'
+
+    50.times do |i|
+      FactoryBot.create :coding_exercise, name: "Factorial #{i}"
+      FactoryBot.create :mc_exercise, name: "MCQ #{i}"
+    end
 
     user_group = FactoryBot.create :user_group
     user_group.users << [ instructor, instructor2 ]
