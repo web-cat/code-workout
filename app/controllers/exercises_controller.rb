@@ -56,14 +56,14 @@ class ExercisesController < ApplicationController
 
   # -------------------------------------------------------------
   def download_attempt_data
-    exercise_id = params[:id] # may be one or more ids
-    course_offering_id = params[:course_offering_id]
-    workout_id = params[:workout_id]
+    exercise_id = params[:id] # may be zero, one, or more ids (see Exercise.denormalized_attempt_data)
+    course_id = params[:course_id]
+    term_id = params[:term_id]
 
     time = Time.now.utc.strftime("%Y%m%d%H%M%S")
 
     if params[:progsnap].to_b
-      main_events, code_states = Exercise.progsnap2_attempt_csv(exercise_id, course_offering_id, workout_id)
+      main_events, code_states = Exercise.progsnap2_attempt_csv(exercise_id, course_id, term_id)
       compressed_filestream = Zip::OutputStream.write_buffer do |zos|
         main_events_file = "MainTable.csv"
         zos.put_next_entry main_events_file

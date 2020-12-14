@@ -310,8 +310,8 @@ class Exercise < ActiveRecord::Base
     end
   end
 
-  def self.progsnap2_attempt_csv(exercise_id, course_offering_id = nil, workout_id = nil) 
-    denormalized = Exercise.denormalized_attempt_data(exercise_id, course_offering_id, workout_id)
+  def self.progsnap2_attempt_csv(exercise_id, course_id=nil, term_id=nil) 
+    denormalized = Exercise.denormalized_attempt_data(exercise_id, course_id, term_id)
     main_events = Exercise.progsnap2_main_events_csv(denormalized)
     code_states = Exercise.progsnap2_code_states_csv(denormalized)
     return main_events, code_states
@@ -356,28 +356,49 @@ class Exercise < ActiveRecord::Base
   # All relationship fields are in the same table, so null values
   # are possible for workout_id, workout_offering_id, course_id,
   # course_offering_id, etc.
-  def self.denormalized_attempt_data(exercise_id, course_offering_id = nil, workout_id = nil)
-    course_offering_filter = course_offering_id ? 
-      "AND course_offerings.id = #{course_offering_id}" :
+  def self.denormalized_attempt_data(exercise_id=nil, course_id=nil, term_id=nil)
+
+    unless exercise_id || (course_id && term_id)
+      raise ArgumentError, 'Please specify one or more exercise ids, OR ' \
+        'a course id and term id.'
+    end
+
+    course_filter = course_id ? 
+      "AND courses.id = #{course_id}" :
       ""
-    workout_filter = workout_id ?
-      "AND workouts.id = #{workout_id}" :
+    term_filter = term_id ?
+      "AND terms.id = #{term_id}" :
       ""
 
-    result = Exercise.where(:id, exercise_id)
-      .joins(exercise_versions: { attempts: :prompt_answers })
+    if exercise_id
+      result = Exercise.where(:id, exercise_id)
+        .joins(exercise_versions: { attempts: :prompt_answers })
+    else
+      result = Exercise.joins(exercise_versions: { attempts: :prompt_answers })
+    end
+    result = result
       .joins('LEFT JOIN workout_scores ON
         workout_scores.id = attempts.workout_score_id')
       .joins('LEFT JOIN workout_offerings ON
         workout_offerings.id = workout_scores.workout_offering_id')
-      .joins("LEFT JOIN workouts ON workouts.id = workout_scores.workout_id #{workout_filter}")
-      .joins("LEFT JOIN course_offerings ON
-        course_offerings.id = workout_offerings.course_offering_id #{course_offering_filter}")
+      .joins('LEFT JOIN workouts ON workouts.id = workout_scores.workout_id')
+      .joins('LEFT JOIN course_offerings ON
+        course_offerings.id = workout_offerings.course_offering_id')
       .joins('LEFT JOIN terms ON terms.id = course_offerings.term_id')
       .joins('LEFT JOIN courses ON courses.id = course_offerings.course_id')
       .joins('LEFT JOIN coding_prompt_answers ON
         prompt_answers.actable_id = coding_prompt_answers.id')
-      .select('attempts.user_id,
+      
+      if course_id
+        result = result.where('courses.id = ?', course_id)
+      end
+
+      if term_id
+        result = result.where('terms.id = ?', term_id)
+      end
+
+      result = result
+        .select('attempts.user_id,
         exercise_versions.id as exercise_version_id,
         exercise_versions.version as version_no,
         coding_prompt_answers.id as answer_id,
