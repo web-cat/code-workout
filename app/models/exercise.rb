@@ -310,15 +310,15 @@ class Exercise < ActiveRecord::Base
     end
   end
 
-  def progsnap2_attempt_csv
-    denormalized = self.denormalized_attempt_data
-    main_events = progsnap2_main_events_csv(denormalized)
-    code_states = progsnap2_code_states_csv(denormalized)
+  def self.progsnap2_attempt_csv(exercise_id, course_id=nil, term_id=nil) 
+    denormalized = Exercise.denormalized_attempt_data(exercise_id, course_id, term_id)
+    main_events = Exercise.progsnap2_main_events_csv(denormalized)
+    code_states = Exercise.progsnap2_code_states_csv(denormalized)
     return main_events, code_states
   end
 
-  def denormalized_attempt_csv
-    denormalized_data = self.denormalized_attempt_data
+  def self.denormalized_attempt_csv(exercise_id)
+    denormalized_data = Exercise.denormalized_attempt_data(exercise_id)
     exercise_attributes = %w{ exercise_id exercise_name }
     attempt_attributes = %w{
       user_id
@@ -356,8 +356,27 @@ class Exercise < ActiveRecord::Base
   # All relationship fields are in the same table, so null values
   # are possible for workout_id, workout_offering_id, course_id,
   # course_offering_id, etc.
-  def denormalized_attempt_data(workout_id = nil)
-    result = exercise_versions.joins{ attempts.prompt_answers }
+  def self.denormalized_attempt_data(exercise_id=nil, course_id=nil, term_id=nil)
+
+    unless exercise_id || (course_id && term_id)
+      raise ArgumentError, 'Please specify one or more exercise ids, OR ' \
+        'a course id and term id.'
+    end
+
+    course_filter = course_id ? 
+      "AND courses.id = #{course_id}" :
+      ""
+    term_filter = term_id ?
+      "AND terms.id = #{term_id}" :
+      ""
+
+    if exercise_id
+      result = Exercise.where(:id, exercise_id)
+        .joins(exercise_versions: { attempts: :prompt_answers })
+    else
+      result = Exercise.joins(exercise_versions: { attempts: :prompt_answers })
+    end
+    result = result
       .joins('LEFT JOIN workout_scores ON
         workout_scores.id = attempts.workout_score_id')
       .joins('LEFT JOIN workout_offerings ON
@@ -369,7 +388,17 @@ class Exercise < ActiveRecord::Base
       .joins('LEFT JOIN courses ON courses.id = course_offerings.course_id')
       .joins('LEFT JOIN coding_prompt_answers ON
         prompt_answers.actable_id = coding_prompt_answers.id')
-      .select('attempts.user_id,
+      
+      if course_id
+        result = result.where('courses.id = ?', course_id)
+      end
+
+      if term_id
+        result = result.where('terms.id = ?', term_id)
+      end
+
+      result = result
+        .select('attempts.user_id,
         exercise_versions.id as exercise_version_id,
         exercise_versions.version as version_no,
         coding_prompt_answers.id as answer_id,
@@ -389,9 +418,9 @@ class Exercise < ActiveRecord::Base
         courses.number as course_number,
         courses.name as course_name,
         terms.slug as term')
-    if workout_id
-      result = result.where("workouts.id = #{workout_id}")
-    end
+    # if workout_id
+    #   result = result.where("workouts.id = #{workout_id}")
+    # end
 
     return result
   end
@@ -412,7 +441,7 @@ class Exercise < ActiveRecord::Base
     self.experience ||= 10
   end
 
-  def progsnap2_main_events_csv(denormalized_data)
+  def self.progsnap2_main_events_csv(denormalized_data)
     # MainTable
     main_attributes = %w{
       SubjectID
@@ -520,7 +549,7 @@ class Exercise < ActiveRecord::Base
     return data
   end
 
-  def progsnap2_code_states_csv(denormalized_data)
+  def self.progsnap2_code_states_csv(denormalized_data)
     code_state_attributes = %w{
       CodeStateID
       Code

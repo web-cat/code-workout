@@ -45,6 +45,10 @@
     - if current_user.andand.is_a_member_of?(@course.user_group)
       = link_to "+ Add a section",
         organization_new_course_offering_path(organization_id: @course.organization.id, course_id: @course.id)
+    - if current_user.global_role.is_admin?
+      = link_to "Download exercise attempt data for this term",
+        download_exercise_attempt_data_path(course_id: @course.id, 
+        term_id: @term.id, progsnap: true, format: :zip)
 
   .container-fluid
     .navbar-collapse.collapse
