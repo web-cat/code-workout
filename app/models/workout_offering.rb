@@ -225,7 +225,7 @@ class WorkoutOffering < ActiveRecord::Base
       exercise_versions = workout_score.attempts.map(&:exercise_version)
       exercise_versions.each do |ex|
         if most_recent
-          att = workout_score.attempts.where(exercise_version: ex).max_by(&:created_at)
+          att = workout_score.attempts.where(exercise_version: ex).max_by(&:started_at)
         else
           att = workout_score.attempts.where(exercise_version: ex).max_by(&:score)
         end

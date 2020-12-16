@@ -71,7 +71,7 @@ class ExercisesController < ApplicationController
 
         code_states_file = "CodeStates.csv"
         zos.put_next_entry code_states_file
-        zos.write code_states 
+        zos.write code_states
       end
 
       compressed_filestream.rewind
@@ -434,7 +434,7 @@ class ExercisesController < ApplicationController
       # Re-check workout-offering permission in case the URL was entered directly.
       authorize! :practice, @workout_offering
       authorize! :practice, @exercise
-    elsif !@workout 
+    elsif !@workout
       # are they trying to practice the exercise in the gym?
       authorize! :gym_practice, @exercise
     end
@@ -517,7 +517,7 @@ class ExercisesController < ApplicationController
           'longer accepting submissions.'
         student_review = true
       else
-        @user_deadline = @workout_score.created_at + @user_time_limit.minutes
+        @user_deadline = @workout_score.started_at + @user_time_limit.minutes
         if @workout_score.workout_offering.hard_deadline_for(current_user)
           @user_deadline = [@user_deadline,
             @workout_score.workout_offering.hard_deadline_for(current_user)].min
@@ -649,7 +649,7 @@ class ExercisesController < ApplicationController
     if @workout_offering
       @workout_score = @workout_offering.score_for(@student_drift_user)
     elsif @workout
-      @workout_score = @workout.score_for(@student_drift_user, nil, 
+      @workout_score = @workout.score_for(@student_drift_user, nil,
                                           params[:lis_outcome_service_url],
                                           params[:lis_result_sourcedid])
     end
