@@ -11,6 +11,7 @@
 #  lis_outcome_service_url :string(255)
 #  lis_result_sourcedid    :string(255)
 #  score                   :float(24)
+#  started_at              :datetime
 #  created_at              :datetime
 #  updated_at              :datetime
 #  lti_workout_id          :integer
@@ -110,11 +111,11 @@ class WorkoutScore < ActiveRecord::Base
     end
 
     now = Time.zone.now
-    minutes_open = (now - self.created_at)/60.0
+    minutes_open = (now - self.started_at)/60.0
     time_limit = workout_offering.time_limit_for(user)
     hard_deadline = workout_offering.hard_deadline_for(user)
 
-    (time_limit && self.created_at && minutes_open >= time_limit) ||
+    (time_limit && self.started_at && minutes_open >= time_limit) ||
         (hard_deadline && now > hard_deadline)
   end
 
@@ -136,7 +137,7 @@ class WorkoutScore < ActiveRecord::Base
 
     if time_limit
       now = Time.zone.now
-      remaining = time_limit - (now - self.created_at)/60.0
+      remaining = time_limit - (now - self.started_at)/60.0
       hard_deadline = workout_offering.hard_deadline_for(user)
 
       if hard_deadline
@@ -319,7 +320,7 @@ class WorkoutScore < ActiveRecord::Base
     WorkoutScore.joins{ workout_offering }
       .joins('inner join student_extensions on student_extensions.workout_offering_id = workout_offerings.id
              and student_extensions.user_id = workout_scores.user_id')
-      .where('workout_scores.last_attempted_at > 
+      .where('workout_scores.last_attempted_at >
         coalesce(student_extensions.hard_deadline, workout_offerings.hard_deadline, "2030-12-31")')
   end
 
@@ -422,6 +423,17 @@ class WorkoutScore < ActiveRecord::Base
         "lis_result_sourcedid" => "#{self.lis_result_sourcedid}"
       })
       tp.post_replace_result!(result)
+    end
+  end
+
+
+  # -------------------------------------------------------------
+  after_initialize do |ws|
+    if ws.has_attribute?(:started_at) && !ws.started_at
+      ws.started_at = Time.zone.now
+      if ws.persisted?
+        ws.save
+      end
     end
   end
 end
