@@ -119,6 +119,21 @@ class WorkoutScore < ActiveRecord::Base
         (hard_deadline && now > hard_deadline)
   end
 
+
+  # -------------------------------------------------------------
+  def started_at
+    val = self.read_attribute(:started_at)
+    if !val
+      # If started_at is null, set it to current time on first access
+      # and save to database
+      val = Time.zone.now
+      write_attribute(:started_at, val)
+      save
+    end
+    val
+  end
+
+
   # -------------------------------------------------------------
   # Increase the score of a workout by a specified amount
   # FIXME: misnamed method.  Used in ExerciseVersion code, though.
@@ -127,6 +142,7 @@ class WorkoutScore < ActiveRecord::Base
     self.score = self.score.round(2)
     self.save!
   end
+
 
   # -------------------------------------------------------------
   def time_remaining
@@ -166,14 +182,18 @@ class WorkoutScore < ActiveRecord::Base
       if workout_offering.shutdown?
         # FIXME: ???
         # true
-        !workout_offering.andand.workout_policy.andand.hide_feedback_in_review_before_close
+        !workout_offering.andand.workout_policy.andand.
+          hide_feedback_in_review_before_close
       else
-        !workout_offering.andand.workout_policy.andand.hide_feedback_in_review_before_close
+        !workout_offering.andand.workout_policy.andand.
+          hide_feedback_in_review_before_close
       end
     else
-      !workout_offering.andand.workout_policy.andand.hide_feedback_before_finish
+      !workout_offering.andand.workout_policy.andand.
+        hide_feedback_before_finish
     end
   end
+
 
   # -------------------------------------------------------------
   def attempts_left_for_exercise_version(exercise_version)
@@ -187,6 +207,7 @@ class WorkoutScore < ActiveRecord::Base
 
     return nil
   end
+
 
   # -------------------------------------------------------------
   def scoring_attempt_for(exercise)
@@ -218,6 +239,7 @@ class WorkoutScore < ActiveRecord::Base
       end
     end
   end
+
 
   # -------------------------------------------------------------
   def record_attempt(attempt)
@@ -267,6 +289,8 @@ class WorkoutScore < ActiveRecord::Base
     end
   end
 
+
+  # ------------------------------------------------------------
   def recalculate_score!(options = {})
     self.with_lock do
       attempt = options[:attempt]
@@ -403,6 +427,7 @@ class WorkoutScore < ActiveRecord::Base
     end
   end
 
+
   # Sends scores to the appropriate LTI consumer
   # -------------------------------------------------------------
   def update_lti
@@ -428,12 +453,10 @@ class WorkoutScore < ActiveRecord::Base
 
 
   # -------------------------------------------------------------
+  # Initialize the started_at field for new objects only
   after_initialize do |ws|
-    if ws.has_attribute?(:started_at) && !ws.started_at
+    if ws.new_record? && ws.has_attribute?(:started_at) && !ws.started_at
       ws.started_at = Time.zone.now
-      if ws.persisted?
-        ws.save
-      end
     end
   end
 end
