@@ -636,14 +636,14 @@ class WorkoutsController < ApplicationController
 
         if !@course_offering
           # Let the user choose to enroll in a course_offering.
-          available_offerings = []
-          available_course_offerings = CourseOffering
+          @available_offerings = []
+          @available_course_offerings = CourseOffering
             .where(course: @course, term: @term)
             .select{ |co| co.self_enrollment_allowed? }
 
-          if available_course_offerings.count == 1
+          if @available_course_offerings.count == 1
             # There is only one possible course offering. Continue on with it.
-            @course_offering = available_course_offerings.first
+            @course_offering = @available_course_offerings.first
           else
             # There are multiple or no possible course offerings. Render the selection page.
             render layout: 'one_column' and return
@@ -711,17 +711,17 @@ class WorkoutsController < ApplicationController
           end
         else
           # let the user choose to enroll in a course_offering
-          existing_workout_offerings = workout_offerings
+          @existing_workout_offerings = workout_offerings
             .uniq { |wo| wo.course_offering }
             .select { |wo| wo.course_offering.self_enrollment_allowed? }
-          available_offerings = CourseOffering
+          @available_offerings = CourseOffering
             .where(course: @course, term: @term)
             .select{ |co| co.self_enrollment_allowed? }
 
-          if available_offerings.count == 1
-            @course_offering = available_offerings.first
+          if @available_offerings.count == 1
+            @course_offering = @available_offerings.first
             @workout_offering = @course_offering.workout_offerings
-              .find{ |wo| existing_workout_offerings.include?(wo) }
+              .find{ |wo| @existing_workout_offerings.include?(wo) }
 
             # If we still don't have a workout offering, try to create it.
             @workout_offering ||= @course_offering.add_workout(
