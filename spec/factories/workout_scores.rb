@@ -11,6 +11,7 @@
 #  lis_outcome_service_url :string(255)
 #  lis_result_sourcedid    :string(255)
 #  score                   :float(24)
+#  started_at              :datetime
 #  created_at              :datetime
 #  updated_at              :datetime
 #  lti_workout_id          :integer
