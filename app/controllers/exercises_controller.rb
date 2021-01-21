@@ -633,8 +633,12 @@ class ExercisesController < ApplicationController
       end
     end
 
-    if @workout_offering && @workout.nil?
-      @workout = @workout_offering.workout
+    if @workout.nil?
+      if @workout_offering
+        @workout = @workout_offering.workout
+      elsif params[:workout_id]
+        @workout = Workout.find_by(id: params[:workout_id])
+      end
     end
 
     if @workout.nil? && session[:current_workout]
