@@ -41,6 +41,7 @@
       workout_offering_id: @workout_offering.id,
       lti_launch: @lti_launch) : exercise_evaluate_path(@exercise_version.exercise,
     exercise_version_id: @exercise_version.id,
+    workout_id: @workout.andand.id,
     feedback_return: true, lti_launch: @lti_launch,
     lis_result_sourcedid: @workout_score.andand.lis_result_sourcedid,
     lis_outcome_service_url: @workout_score.andand.lis_outcome_service_url)), remote: true do |f|
