@@ -52,7 +52,8 @@ class ExerciseVersion < ActiveRecord::Base
     inverse_of: :exercise_version, dependent: :destroy
   accepts_nested_attributes_for :prompts, allow_destroy: true  
   has_many :attempts, dependent: :destroy
-  has_and_belongs_to_many :resource_files
+  has_many :ownerships 
+  has_many :resource_files, through: :ownerships
   belongs_to :creator, class_name: 'User'
   belongs_to :irt_data, dependent: :destroy
 

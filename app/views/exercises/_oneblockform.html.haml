@@ -17,5 +17,10 @@
           input_html: { class: 'code', autofocus: true, data: { lang: 'text/x-yaml' },
           value: @text_representation.present? ? @text_representation : '' }, 
           label: 'YAML Representation of the Exercise:'
+  %p      
+  = f.file_field :files, multiple: true
+  %p 
+
   .row
-    = f.submit class: 'btn btn-primary', value: 'Submit'
+    .col-md-9
+      = f.submit class: 'btn btn-primary', value: 'Submit'

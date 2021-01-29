@@ -2,7 +2,8 @@ class ExercisesController < ApplicationController
   require 'ims/lti'
   require 'oauth/request_proxy/rack_request'
   require 'zip'
-
+  require 'tempfile'
+  
   load_and_authorize_resource
   skip_authorize_resource only: [:practice, :call_open_pop]
 
@@ -321,7 +322,7 @@ class ExercisesController < ApplicationController
       hash = YAML.load(text_representation)
       edit_rights = 0 # Personal exercise
     end
-
+    files = exercise_params[:files]
     if !hash.kind_of?(Array)
       hash = [hash]
     end
@@ -366,6 +367,29 @@ class ExercisesController < ApplicationController
         end
         error_msgs << "</ul>"
       else # successfully created the exercise
+        ex_ver = e.exercise_versions.first
+        # inherit ownertable
+        if !e.exercise_versions.offset(1).first.nil?
+          oldversion = e.exercise_versions.offset(1).first
+          oldversion.ownerships.each do |ownerentry|
+            ownertable = ex_ver.ownerships.create(filename: ownerentry.filename, resource_file_id: ownerentry.resource_file_id)
+          end
+        end
+        # add new ownertable
+        unless files.nil? 
+          files.each do |file|
+            tempfile = Tempfile.create{file}
+            hashval = ImageHash.new("#{tempfile.path}").hash
+            if ResourceFile.all.where(hashval: hashval).exists?
+              ownertable = ex_ver.ownerships.create(filename: file.original_filename,resource_file_id: ResourceFile.all.where(hashval: hashval).first.id)
+            else       
+              res = ex_ver.resource_files.create!(user_id: current_user.id,filename:file, hashval:hashval)
+              ownertable = res.ownerships.last
+              ownertable.filename = file.original_filename
+              ownertable.save
+            end
+          end
+        end
         exercise_collection.andand.add(e, override: true)
         e.current_version.update(text_representation: text_representation)
         success_msgs <<
@@ -568,7 +592,13 @@ class ExercisesController < ApplicationController
 		@workout ||= @workout_score.andand.workout || @workout_offering.andand.workout
 		ex_count = @workout.andand.exercises.andand.count
 		@hide_sidebar = (!@workout && @lti_launch) || (ex_count && ex_count < 2)
-
+    allOwnerships =  ExerciseVersion.where(id: @exercise.current_version_id)[0].ownerships
+    allresfiles = @exercise_version.prompts[0].question.scan(/\!\[\]\((.*?)\)/)
+    allresfiles.each do |filename|
+      uniqueFile = ResourceFile.where(id: allOwnerships.find_by(filename: filename[0]).resource_file_id)[0].filename
+      uniqueFilename = uniqueFile.model.token+uniqueFile.file.file.match(/\.\w*/)[0]
+      @exercise_version.prompts[0].question = @exercise_version.prompts[0].question.gsub("![](#{filename[0]})", "![](/uploads/resource_file/#{uniqueFilename})")
+    end
     render layout: 'two_columns'
 
   end
@@ -932,7 +962,7 @@ class ExercisesController < ApplicationController
         :experience, :id, :is_public, :priority, :question_type,
         :exercise_version, :exercise_version_id, :commit,
         :mcq_allow_multiple, :mcq_is_scrambled, :languages, :styles,
-        :tag_ids)
+        :tag_ids, {files: []})
     end
 
 
