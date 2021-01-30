@@ -308,6 +308,15 @@ class ExercisesController < ApplicationController
   end
 
 
+  def cleanFile(files,fileList)
+    files.each_with_index  do |t,index|
+      if !fileList.include? t.original_filename
+        files = files.dup.tap{|i| i.delete_at(index)}
+      end
+    end
+    return files
+  end
+
   # -------------------------------------------------------------
   # POST /exercises/upload_create
   def upload_create
@@ -323,6 +332,8 @@ class ExercisesController < ApplicationController
       edit_rights = 0 # Personal exercise
     end
     files = exercise_params[:files]
+    fileList = exercise_params[:name]
+    files = cleanFile(files,fileList)
     if !hash.kind_of?(Array)
       hash = [hash]
     end

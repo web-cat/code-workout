@@ -1,0 +1,7 @@
+.inputWrapper {
+  height: 32px;
+  width: 114px;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+}
