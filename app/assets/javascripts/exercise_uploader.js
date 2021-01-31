@@ -1,4 +1,13 @@
-var allfiles = [];
+var allfiles = []
+var oldfiles = []
+oldfileList =  document.getElementById("exercise_oldfileList").value.split(' ')
+for( var i = 0; i < oldfileList.length; i++){ 
+  if(oldfileList[i].replace(/\s/g, '').length){
+    oldfiles.push(oldfileList[i])
+  }
+
+  createTextAndButton(oldfiles)
+}
 
 function removeEle(arr,ele){
   for( var i = 0; i < arr.length; i++){ 
@@ -17,8 +26,9 @@ function addButtonListener(allfiles){
     text.nextSibling.remove()
     text.remove()
     button.remove()
-    document.getElementById("exercise_name").value = allfiles.toString()   
+    document.getElementById("exercise_fileList").value = allfiles.toString()  
   });
+
 }
 
 // update file name and delete button
@@ -40,7 +50,10 @@ function createTextAndButton(allfiles){
 // listener for upload button
 $("#exercise_files").bind("change", function (e)
 {
-  allfiles = [];
+  allfiles = []
+  for (var i of oldfiles) {
+    allfiles.push(i);
+  } 
   var file = document.getElementById("exercise_files")
   for (var i = 0; i < file.files.length; i++) {
     filename = file.files[i].name
@@ -48,6 +61,6 @@ $("#exercise_files").bind("change", function (e)
       allfiles.push(filename.trim()); 
     }
   } 
-  document.getElementById("exercise_name").value = allfiles.toString()     
+  document.getElementById("exercise_fileList").value = allfiles.toString()     
   createTextAndButton(allfiles)
 });

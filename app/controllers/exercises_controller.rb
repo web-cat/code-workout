@@ -137,6 +137,11 @@ class ExercisesController < ApplicationController
   # GET /exercises/1/edit
   def edit
     @exercise_version = @exercise.current_version
+    @ownerships_all = Array.new
+    @exercise_version.ownerships.each do |e|
+      @ownerships_all.push e.filename
+    end
+
     @text_representation = @exercise_version.text_representation ||
       ExerciseRepresenter.new(@exercise).to_hash.to_yaml
     @user_groups = current_user.user_groups
@@ -332,8 +337,10 @@ class ExercisesController < ApplicationController
       edit_rights = 0 # Personal exercise
     end
     files = exercise_params[:files]
-    fileList = exercise_params[:name]
-    files = cleanFile(files,fileList)
+    fileList = exercise_params[:fileList] 
+    if fileList != "" && !files.nil?
+      files = cleanFile(files,fileList)
+    end
     if !hash.kind_of?(Array)
       hash = [hash]
     end
@@ -383,9 +390,15 @@ class ExercisesController < ApplicationController
         if !e.exercise_versions.offset(1).first.nil?
           oldversion = e.exercise_versions.offset(1).first
           oldversion.ownerships.each do |ownerentry|
-            ownertable = ex_ver.ownerships.create(filename: ownerentry.filename, resource_file_id: ownerentry.resource_file_id)
+            if fileList != "" 
+              if fileList.include? ownerentry.filename
+                ownertable = ex_ver.ownerships.create(filename: ownerentry.filename, resource_file_id: ownerentry.resource_file_id)
+              end
+            end
           end
         end
+        # p "&&&&&&&&&&&&&"
+        # p ex_ver.ownerships
         # add new ownertable
         unless files.nil? 
           files.each do |file|
@@ -401,6 +414,8 @@ class ExercisesController < ApplicationController
             end
           end
         end
+        # p "current added akll ownership"
+        # p ex_ver.ownerships
         exercise_collection.andand.add(e, override: true)
         e.current_version.update(text_representation: text_representation)
         success_msgs <<
