@@ -21,7 +21,7 @@
   %p 
   .inputWrapper   
     = f.file_field :files, multiple: true,:class => "fileInput"
-  = f.text_field :fileList, value: nil, :type => "hidden"
+  = f.text_field :fileList, value: "", :type => "hidden"
   = f.text_field :oldfileList, value: @ownerships_all, :type => "hidden"
   #fileName
   = stylesheet_link_tag "exercise_uploader.scss"

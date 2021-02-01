@@ -137,9 +137,9 @@ class ExercisesController < ApplicationController
   # GET /exercises/1/edit
   def edit
     @exercise_version = @exercise.current_version
-    @ownerships_all = Array.new
+    @ownerships_all = []
     @exercise_version.ownerships.each do |e|
-      @ownerships_all.push e.filename
+      @ownerships_all.push(e.filename)
     end
 
     @text_representation = @exercise_version.text_representation ||
@@ -414,8 +414,8 @@ class ExercisesController < ApplicationController
             end
           end
         end
-        # p "current added akll ownership"
-        # p ex_ver.ownerships
+        p "current added akll ownership"
+        p ex_ver.ownerships
         exercise_collection.andand.add(e, override: true)
         e.current_version.update(text_representation: text_representation)
         success_msgs <<
