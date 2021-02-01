@@ -1,23 +1,19 @@
 var allfiles = []
 var oldfiles = []
 var oldfileList
-var oldfiles
-checkoudFile()
-
-function checkoudFile(){
-  oldfiles = []
-  oldfileList =  document.getElementById("exercise_oldfileList").value.split(' ')
-  for( var i = 0; i < oldfileList.length; i++){ 
-    if(oldfileList[i].replace(/\s/g, '').length){
-      oldfiles.push(oldfileList[i])
-    }
-    createTextAndButton(oldfiles)
+var oldfiles= []
+oldfileList =  document.getElementById("exercise_oldfileList").value.split(' ')
+for( var i = 0; i < oldfileList.length; i++){ 
+  if(oldfileList[i].replace(/\s/g, '').length){
+    oldfiles.push(oldfileList[i])
   }
 }
-
+createTextAndButton(oldfiles)
 
 function removeEle(arr,ele){
-	arr = arr.split(",")
+  if(!Array.isArray(arr)){
+    arr = arr.split(",")
+  }
   for( var i = 0; i < arr.length; i++){ 
     if ( arr[i] == ele.trim()) { 
         arr.splice(i, 1); 
@@ -27,20 +23,19 @@ function removeEle(arr,ele){
 }
 
 function addButtonListener(allfiles){
-
   document.querySelector('#fileName').addEventListener('click', function(event) {
-      allfiles = document.getElementById("exercise_fileList").value
-      allfiles += oldfileList 
+
       var text= document.getElementById(event.target.id.match(/\d*/g)[0])
+      allfiles = document.getElementById("exercise_fileList").value
+      oldfiles = removeEle(oldfiles, text.innerHTML.toString().trim())
+      allfiles += oldfiles 
       allfiles = removeEle(allfiles, text.innerHTML.toString().trim())
       var button = document.getElementById(event.target.id)
       text.nextSibling.remove()
       text.remove()
       button.remove()
-      document.getElementById("exercise_fileList").value = allfiles.toString()  
-      document.getElementById("exercise_oldfileList").value = allfiles.toString()  
+      document.getElementById("exercise_fileList").value = allfiles.toString()   
   });
-
 }
 
 // update file name and delete button
@@ -63,7 +58,7 @@ function createTextAndButton(allfiles){
 $("#exercise_files").bind("change", function (e)
 {
   allfiles = []
-  checkoudFile()
+
   for (var i of oldfiles) {
     allfiles.push(i);
   } 
