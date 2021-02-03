@@ -108,7 +108,7 @@
     };
 
     function loadScripts() {
-        var server = 'https://opendsax.cs.vt.edu:9292';
+        var server = 'https://opendsa-server.cs.vt.edu:9292';
         var directory = server + '/assets/LinkedListVisualizationCode/';
         var extension = '.js';
         var files = ['EncodedLocal', 'JsavLinkedListObject', 'LinkClassValue', 'LinkedList',
