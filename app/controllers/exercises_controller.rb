@@ -10,7 +10,7 @@ class ExercisesController < ApplicationController
   after_action :allow_iframe, only: [:practice, :embed]
   # -------------------------------------------------------------
 
-  HTTP_URL = 'https://opendsax.cs.vt.edu:9292/answers/solve'
+  HTTP_URL = 'https://opendsa-server.cs.vt.edu:9292/answers/solve'
 
   # GET /exercises
   def index
