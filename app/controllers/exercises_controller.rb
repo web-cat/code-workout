@@ -3,7 +3,8 @@ class ExercisesController < ApplicationController
   require 'oauth/request_proxy/rack_request'
   require 'zip'
   require 'tempfile'
-  
+
+
   load_and_authorize_resource
   skip_authorize_resource only: [:practice, :call_open_pop]
 
@@ -138,8 +139,12 @@ class ExercisesController < ApplicationController
   def edit
     @exercise_version = @exercise.current_version
     @ownerships_all = []
+    @ownerships_res_name = []
     @exercise_version.ownerships.each do |e|
       @ownerships_all.push(e.filename)
+      uniqueFile = ResourceFile.all.where(id: e.resource_file_id)[0]
+      uniqueFilename = uniqueFile.token+uniqueFile.filename.file.file.match(/\.\w*/)[0]
+      @ownerships_res_name.push(uniqueFilename)
     end
 
     @text_representation = @exercise_version.text_representation ||
@@ -397,13 +402,11 @@ class ExercisesController < ApplicationController
             end
           end
         end
-        # p "&&&&&&&&&&&&&"
-        # p ex_ver.ownerships
-        # add new ownertable
         unless files.nil? 
           files.each do |file|
+            file.original_filename = file.original_filename.gsub(/ /, '_')
             tempfile = Tempfile.create{file}
-            hashval = ImageHash.new("#{tempfile.path}").hash
+            hashval = Digest::MD5.hexdigest File.read "#{tempfile.path}"
             if ResourceFile.all.where(hashval: hashval).exists?
               ownertable = ex_ver.ownerships.create(filename: file.original_filename,resource_file_id: ResourceFile.all.where(hashval: hashval).first.id)
             else       
@@ -414,8 +417,6 @@ class ExercisesController < ApplicationController
             end
           end
         end
-        p "current added akll ownership"
-        p ex_ver.ownerships
         exercise_collection.andand.add(e, override: true)
         e.current_version.update(text_representation: text_representation)
         success_msgs <<
@@ -617,19 +618,44 @@ class ExercisesController < ApplicationController
 		# hide it if this workout (if present) has less than two exercises
 		@workout ||= @workout_score.andand.workout || @workout_offering.andand.workout
 		ex_count = @workout.andand.exercises.andand.count
-		@hide_sidebar = (!@workout && @lti_launch) || (ex_count && ex_count < 2)
+    @hide_sidebar = (!@workout && @lti_launch) || (ex_count && ex_count < 2)
     allOwnerships =  ExerciseVersion.where(id: @exercise.current_version_id)[0].ownerships
     allresfiles = @exercise_version.prompts[0].question.scan(/\!\[\]\((.*?)\)/)
     allresfiles.each do |filename|
-      uniqueFile = ResourceFile.where(id: allOwnerships.find_by(filename: filename[0]).resource_file_id)[0].filename
-      uniqueFilename = uniqueFile.model.token+uniqueFile.file.file.match(/\.\w*/)[0]
-      @exercise_version.prompts[0].question = @exercise_version.prompts[0].question.gsub("![](#{filename[0]})", "![](/uploads/resource_file/#{uniqueFilename})")
+      if allOwnerships.find_by(filename: filename[0]).nil? 
+        @exercise_version.prompts[0].question = @exercise_version.prompts[0].question.gsub("![](#{filename[0]})", "![](**IMAGE DOES NOT EXIST**)")
+      else
+        uniqueFile = ResourceFile.where(id: allOwnerships.find_by(filename: filename[0]).resource_file_id)[0].filename
+        uniqueFilename = uniqueFile.model.token+uniqueFile.file.file.match(/\.\w*/)[0]
+        @exercise_version.prompts[0].question = @exercise_version.prompts[0].question.gsub("![](#{filename[0]})", "![](/uploads/resource_file/#{uniqueFilename})")
+      end
+
     end
     render layout: 'two_columns'
 
   end
 
+  
 
+  
+  def download_file
+    client = Client.find(params[:id])
+    send_data generate_file(client),
+              filename: "#{client.name}.pdf",
+              type: "application/pdf"
+  end
+
+  private
+
+  def generate_file(client)
+    Prawn::Document.new do
+      text client.name, align: :center
+      text "Address: #{client.address}"
+      text "Email: #{client.email}"
+    end.render
+  end
+
+  
   # -------------------------------------------------------------
   def create_choice
     @ans = Choice.create

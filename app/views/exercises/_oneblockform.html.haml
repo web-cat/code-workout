@@ -17,16 +17,43 @@
           input_html: { class: 'code', autofocus: true, data: { lang: 'text/x-yaml' },
           value: @text_representation.present? ? @text_representation : '' }, 
           label: 'YAML Representation of the Exercise:'
-  %p
-  %p 
-  .inputWrapper   
-    = f.file_field :files, multiple: true,:class => "fileInput"
+  
+
+
+
   = f.text_field :fileList, value: "", :type => "hidden"
   = f.text_field :oldfileList, value: @ownerships_all, :type => "hidden"
+  = f.text_field :ownerships_res_name, value: @ownerships_res_name, :type => "hidden"
+
+
+
   #fileName
+  #filelist.container.hidden
+    .row
+      .col-sm-9
+        %table#tablelist.table
+          %thead  
+            %tr
+              //%th.col-sm-1{:style => "background-color:lavender;"}  Type
+              %th.col-sm-1  Type 
+              %th.col-sm-2  Thumbnail
+              %th.col-sm-2  Name
+              %th.col-sm-1  Pixel
+              %th.col-sm-1  Uploaded
+              %th.col-sm-1  Delete
+  
+
+  .image-upload
+    %label{:for => "exercise_files"}
+      %a.btn.btn-info.btn-lg{class: 'btn btn-primary'}
+        %span.glyphicon.glyphicon-file
+
+    = f.file_field :files, multiple: true
+
+
+
   = stylesheet_link_tag "exercise_uploader.scss"
   = javascript_include_tag 'exercise_uploader.js'
-
   %p 
   .row
     .col-md-9
