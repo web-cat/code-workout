@@ -623,16 +623,26 @@ class ExercisesController < ApplicationController
     allresfiles = @exercise_version.prompts[0].question.scan(/\!\[\]\((.*?)\)/)
     allresfiles.each do |filename|
       if allOwnerships.find_by(filename: filename[0]).nil? 
-        @exercise_version.prompts[0].question = @exercise_version.prompts[0].question.gsub("![](#{filename[0]})", "![](**IMAGE DOES NOT EXIST**)")
+        @exercise_version.prompts[0].question = @exercise_version.prompts[0].question.gsub("![](#{filename[0]})", "[**#{filename[0]}** does not exist!]")
+
       else
         uniqueFile = ResourceFile.where(id: allOwnerships.find_by(filename: filename[0]).resource_file_id)[0].filename
         uniqueFilename = uniqueFile.model.token+uniqueFile.file.file.match(/\.\w*/)[0]
         @exercise_version.prompts[0].question = @exercise_version.prompts[0].question.gsub("![](#{filename[0]})", "![](/uploads/resource_file/#{uniqueFilename})")
       end
-
     end
+    @allFiles= []
+    @allFilesRegularName= []
+    allOwnerships.each do |res|
+      if ![".jpg",".jpeg",".png",".gif"].include?(File.extname(res.filename))
+        @allFilesRegularName.push(res.filename)
+        uniqueFile = ResourceFile.where(id: res.resource_file_id)[0].filename
+        uniqueFilename = uniqueFile.model.token+uniqueFile.file.file.match(/\.\w*/)[0]
+        @allFiles.push(uniqueFilename)
+      end
+    end
+    @fileres = @allFiles.zip @allFilesRegularName
     render layout: 'two_columns'
-
   end
 
   
