@@ -1,14 +1,65 @@
 - url = @url
 - method = action_name == 'edit' ? :put : :post
-= semantic_form_for @course_offering, url: url, html: { class: "form-horizontal col-xs-10", method: method } do |f|
-  = f.semantic_errors
-  = f.inputs do
-    = f.input :label, input_html: { placeholder: "e.g. MWF 10:00am" }
-    = f.input :term, collection: Term.where('ends_on > (?)', DateTime.now)
-    = f.input :url
-    = f.input :self_enrollment_allowed, label: false
-    %br
-    = f.input :cutoff_date, as: :date_picker, hint: 'The last date for self-enrollment.'
-  = f.actions do
-    = f.action :submit, as: :button, button_html: { class: 'btn btn-primary' }
-    = f.action :cancel, as: :link, label: 'Cancel', url: organizations_path, button_html: { class: 'btn btn-default' }
+- if action_name == 'edit'
+  - method = :put
+- else
+  - method = :post
+
+= javascript_include_tag 'course_offering_form'
+
+= form_tag @url do
+  - if action_name == 'new'
+    %p Fields for all offerings
+  #common-fields
+    = hidden_field_tag 'course_offering[lti_context_id]', params[:lti_context_id] 
+    = hidden_field_tag 'course_offering[course_id]', params[:course_id]
+    = hidden_field_tag 'lti_launch', params[:lti_launch]
+    = hidden_field_tag 'lis_result_sourcedid', params[:lis_result_sourcedid]
+    = hidden_field_tag 'lis_outcome_service_url', params[:lis_outcome_service_url]
+    = hidden_field_tag 'lms_assignment_id', params[:lms_assignment_id]
+    = hidden_field_tag 'from_collection', params[:from_collection]
+    = hidden_field_tag 'workout_id', params[:workout_id]
+    = hidden_field_tag 'workout_name', params[:workout_name]
+    
+    .form-group.col-xs-12
+      = label_tag :term, 'Term', class: 'control-label col-xs-2'
+      .col-xs-6
+        = select_tag 'course_offering[term_id]',
+                     options_from_collection_for_select(Term.where('ends_on > ?', DateTime.now), :slug, :display_name),
+                     class: 'form-control input-sm', 
+                     prompt: 'Select a term'
+
+    .form-group.col-xs-12
+      = label_tag :self_enrollment_allowed, 'Allow Self Enrollment?', class: 'control-label col-xs-2'
+      .col-xs-6
+        = check_box_tag 'course_offering[self_enrollment_allowed]', :self_enrollment_allowed, false, id: 'self-enrollment-allowed'
+
+    .form-group.col-xs-12
+      = label_tag :url, 'Course URL', class: 'control-label col-xs-2'
+      .col-xs-6
+        = text_field_tag 'course_offering[url]'
+
+    .form-group.col-xs-12
+      = label_tag :cutoff_date, 'Cutoff Date', class: 'control-label col-xs-2'
+      .col-xs-6
+        %input#cutoff_date.datepicker{ name: 'course_offering[cutoff_date]', type: 'text', class: 'form-control input-sm', placeholder: 'MM/DD/YY' }
+
+    - if action_name == 'new'
+      %p Fields for individual offerings
+  #individual-fields
+    .form-group.col-xs-12
+      = label_tag 'labels', 'Offering Label', class: 'control-label col-xs-2'
+      .col-xs-6
+        = text_field_tag 'labels[]'
+  = submit_tag 'Submit', class: 'btn btn-primary'
+
+= button_tag type: 'button', id: 'add-offering', class: 'btn btn-success btn-sm' do
+  %i.fa.fa-plus{ style: 'padding-right: 5px;' }
+  Add Course Offering
+
+#label-field{ style: 'display: none;' }
+  .form-group.col-xs-12
+    = label_tag 'labels', 'Offering Label', class: 'control-label col-xs-2'
+    .col-xs-6
+      = text_field_tag 'labels[]'
+

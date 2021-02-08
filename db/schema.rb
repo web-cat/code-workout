@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20201216191207) do
+ActiveRecord::Schema.define(version: 20210208031649) do
 
   create_table "active_admin_comments", force: :cascade do |t|
     t.string   "namespace",     limit: 255
@@ -126,6 +126,9 @@ ActiveRecord::Schema.define(version: 20201216191207) do
     t.datetime "updated_at"
     t.date     "cutoff_date"
     t.integer  "lms_instance_id",         limit: 4
+    t.string   "lti_context_id",          limit: 255
+    t.string   "lms_course_id",           limit: 255
+    t.string   "lms_section_id",          limit: 255
   end
 
   add_index "course_offerings", ["course_id"], name: "index_course_offerings_on_course_id", using: :btree

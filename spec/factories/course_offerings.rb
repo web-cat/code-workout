@@ -10,7 +10,10 @@
 #  created_at              :datetime
 #  updated_at              :datetime
 #  course_id               :integer          not null
+#  lms_course_id           :string(255)
 #  lms_instance_id         :integer
+#  lms_section_id          :string(255)
+#  lti_context_id          :string(255)
 #  term_id                 :integer          not null
 #
 # Indexes

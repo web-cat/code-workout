@@ -164,7 +164,7 @@ class LtiController < ApplicationController
       @message = 'Term not found.'
       render 'lti/error' and return
     end
-
+    lti_context_id = params[:context_id]
     redirect_to organization_find_workout_offering_path(
       organization_id: @organization.slug,
       term_id: @term.slug,
@@ -175,6 +175,7 @@ class LtiController < ApplicationController
       custom_canvas_assignment_id: custom_canvas_assignment_id,
       dynamic_lms_assignment: dynamic_lms_assignment,
       lms_instance_id: @lms_instance.id,
+      lti_context_id: lti_context_id,
       label: params[:custom_label], # can be nil
       lis_outcome_service_url: params[:lis_outcome_service_url],
       lis_result_sourcedid: params[:lis_result_sourcedid],
