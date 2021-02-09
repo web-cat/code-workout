@@ -79,7 +79,7 @@
         \<script src=\"https://opendsa-server.cs.vt.edu/OpenDSA/JSAV/build/JSAV-min.js\">\<\/script>\n\
         \<script src=\"https://opendsa-server.cs.vt.edu/OpenDSA/lib/odsaUtils-min.js\">\<\/script>\n\
         \<script src=\"https://opendsa-server.cs.vt.edu/OpenDSA/lib/odsaAV-min.js\">\<\/script>\n\
-        \<script src=\"http://openpop:9295/assets/JsavWrapper.js\">\<\/script>\n';
+        \<script src=\"https://openpop:9295/assets/JsavWrapper.js\">\<\/script>\n';
         html += loadScripts();
         html += '\n \<\/body>' + "</html>";
         if (document.getElementsByTagName('iframe').length !== 0) {
@@ -108,7 +108,7 @@
     };
 
     function loadScripts() {
-      var server = 'http://openpop:9295';
+      var server = 'https://openpop:9295';
         var directory = server + '/assets/LinkedListVisualizationCode/';
         var extension = '.js';
         var files = ['EncodedLocal', 'JsavLinkedListObject', 'LinkClassValue', 'LinkedList',

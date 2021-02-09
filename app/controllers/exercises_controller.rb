@@ -10,7 +10,7 @@ class ExercisesController < ApplicationController
   after_action :allow_iframe, only: [:practice, :embed]
   # -------------------------------------------------------------
 
-  HTTP_URL = 'http://openpop:9295/answers/solve'
+  HTTP_URL = 'https://openpop:9295/answers/solve'
 
   # GET /exercises
   def index
