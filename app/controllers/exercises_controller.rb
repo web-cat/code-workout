@@ -619,18 +619,45 @@ class ExercisesController < ApplicationController
 		@workout ||= @workout_score.andand.workout || @workout_offering.andand.workout
 		ex_count = @workout.andand.exercises.andand.count
     @hide_sidebar = (!@workout && @lti_launch) || (ex_count && ex_count < 2)
+    
     allOwnerships =  ExerciseVersion.where(id: @exercise.current_version_id)[0].ownerships
-    allresfiles = @exercise_version.prompts[0].question.scan(/\!\[\]\((.*?)\)/)
-    allresfiles.each do |filename|
-      if allOwnerships.find_by(filename: filename[0]).nil? 
-        @exercise_version.prompts[0].question = @exercise_version.prompts[0].question.gsub("![](#{filename[0]})", "[**#{filename[0]}** does not exist!]")
+    checkMarkDown = @exercise_version.prompts[0].question.scan(/(\!\[.*?\]\((.*?)\))/)
+    if checkMarkDown.length()>0
+        checkMarkDown.each do |block| 
+          arr = block[1].strip.split(" ")
+          counter = 0
+          arr.each do |name|
+            enterName = File.basename(name)
+            if !allOwnerships.find_by(filename: enterName).nil?
+              uniqueFile = ResourceFile.where(id: allOwnerships.find_by(filename: enterName).resource_file_id)[0].filename
+              uniqueFilename = uniqueFile.model.token+uniqueFile.file.file.match(/\.\w*/)[0]
+              fb = block[0].gsub("#{block[1]}", "/uploads/resource_file/#{uniqueFilename}")
+              @exercise_version.prompts[0].question = @exercise_version.prompts[0].question.gsub("#{block[0]}", "#{fb}")
+            else
+              counter = counter + 1 
+            end
+          end
+          if counter == arr.length()
+            @exercise_version.prompts[0].question = @exercise_version.prompts[0].question.gsub("#{block[0]}", "(**!#{block[0]}** Image does not exist!)")
+          end
+        end
 
-      else
-        uniqueFile = ResourceFile.where(id: allOwnerships.find_by(filename: filename[0]).resource_file_id)[0].filename
-        uniqueFilename = uniqueFile.model.token+uniqueFile.file.file.match(/\.\w*/)[0]
-        @exercise_version.prompts[0].question = @exercise_version.prompts[0].question.gsub("![](#{filename[0]})", "![](/uploads/resource_file/#{uniqueFilename})")
+    end
+    checkHTMLtag = @exercise_version.prompts[0].question.scan(/(\<img .*?src=(.*? ).*?>)/)
+    if checkHTMLtag.length()>0
+      checkHTMLtag.each do |block| 
+          enterName = File.basename(block[1]).strip
+          if !allOwnerships.find_by(filename: enterName).nil? 
+            uniqueFile = ResourceFile.where(id: allOwnerships.find_by(filename: enterName).resource_file_id)[0].filename
+            uniqueFilename = uniqueFile.model.token+uniqueFile.file.file.match(/\.\w*/)[0]
+            fb = block[0].gsub("#{enterName}", "/uploads/resource_file/#{uniqueFilename}")
+            @exercise_version.prompts[0].question = @exercise_version.prompts[0].question.gsub("#{block[0]}", "#{fb}")
+          else
+            @exercise_version.prompts[0].question = @exercise_version.prompts[0].question.gsub("#{block[0]}", "(Image **src=#{enterName}** does not exist!)")
+          end
       end
     end
+
     @allFiles= []
     @allFilesRegularName= []
     allOwnerships.each do |res|
