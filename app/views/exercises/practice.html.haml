@@ -31,7 +31,7 @@
           - prompt.examples.each do |example|
             = example.display_description
             %br
-  -@fileres.each do |uniqueName, realName|
+  -@fileRes.each do |uniqueName, realName|
     %p
     =link_to "#{realName}", "/uploads/resource_file/#{uniqueName}"
 .col-md-7#user-deadline{ data: { deadline: @user_deadline, server_now: @server_now } }

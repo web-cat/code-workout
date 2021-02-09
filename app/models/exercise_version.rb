@@ -188,6 +188,60 @@ class ExerciseVersion < ActiveRecord::Base
     exercise.is_mcq?
   end
 
+  def imageProcessing
+    ownerships = ExerciseVersion.where(id:self.id)[0].ownerships
+    checkMarkDown = self.prompts[0].question.scan(/(\!\[.*?\]\((.*?)\))/)
+    if checkMarkDown.length()>0
+      checkMarkDown.each do |block| 
+        arr = block[1].strip.split(" ")
+        counter = 0
+        arr.each do |name|
+          enterName = File.basename(name)
+          if !ownerships.find_by(filename: enterName).nil?
+            uniqueFile = ResourceFile.where(id: ownerships.find_by(filename: enterName).resource_file_id)[0].filename
+            uniqueFilename = uniqueFile.model.token+uniqueFile.file.file.match(/\.\w*/)[0]
+            fb = block[0].gsub("#{block[1]}", "/uploads/resource_file/#{uniqueFilename}")
+            self.prompts[0].question = self.prompts[0].question.gsub("#{block[0]}", "#{fb}")
+          else
+            counter = counter + 1 
+          end
+        end
+        if counter == arr.length()
+          self.prompts[0].question = self.prompts[0].question.gsub("#{block[0]}", "(**!#{block[0]}** Image does not exist!)")
+        end
+      end
+    end
+    checkHTMLtag = self.prompts[0].question.scan(/(\<img .*?src=(.*? ).*?>)/)
+    if checkHTMLtag.length()>0
+        checkHTMLtag.each do |block| 
+          enterName = File.basename(block[1]).strip
+          if !ownerships.find_by(filename: enterName).nil? 
+            uniqueFile = ResourceFile.where(id: ownerships.find_by(filename: enterName).resource_file_id)[0].filename
+            uniqueFilename = uniqueFile.model.token+uniqueFile.file.file.match(/\.\w*/)[0]
+            fb = block[0].gsub("#{enterName}", "/uploads/resource_file/#{uniqueFilename}")
+            self.prompts[0].question = self.prompts[0].question.gsub("#{block[0]}", "#{fb}")
+          else
+            self.prompts[0].question = self.prompts[0].question.gsub("#{block[0]}", "(Image **src=#{enterName}** does not exist!)")
+          end
+        end
+    end
+  end
+
+
+  def fileProcessing
+    @allFiles= []
+    @allFilesRegularName= []
+    ownerships = ExerciseVersion.where(id:self.id)[0].ownerships
+    ownerships.each do |res|
+      if ![".jpg",".jpeg",".png",".gif"].include?(File.extname(res.filename))
+        @allFilesRegularName.push(res.filename)
+        uniqueFile = ResourceFile.where(id: res.resource_file_id)[0].filename
+        uniqueFilename = uniqueFile.model.token+uniqueFile.file.file.match(/\.\w*/)[0]
+        @allFiles.push(uniqueFilename)
+      end
+    end
+    @fileRes = @allFiles.zip @allFilesRegularName
+  end
 
   # -------------------------------------------------------------
   def is_coding?
