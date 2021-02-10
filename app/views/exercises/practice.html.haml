@@ -5,6 +5,7 @@
   = javascript_include_tag('timeout')
 = javascript_include_tag("two_column_layout")
 = javascript_include_tag("practice")
+<<<<<<< HEAD
 .row
   .col-md-12
     %h1
@@ -32,6 +33,9 @@
             - prompt.examples.each do |example|
               = example.display_description
               %br
+    -@fileRes.each do |uniqueName, realName|
+      %p
+      =link_to "#{realName}", "/uploads/resource_file/#{uniqueName}"
   .col-md-7#user-deadline{ data: { deadline: @user_deadline, server_now: @server_now } }
     %h2 Your Answer:
     = semantic_form_for @exercise_version,

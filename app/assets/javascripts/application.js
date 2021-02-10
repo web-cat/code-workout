@@ -87,3 +87,4 @@ $.fn.editable.defaults.mode = 'inline';
 $(document).ready(function() {
   $('.xeditable').editable();
 });
+
