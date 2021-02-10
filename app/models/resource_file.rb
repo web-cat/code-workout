@@ -4,6 +4,7 @@
 #
 #  id         :integer          not null, primary key
 #  filename   :string(255)
+#  hashval    :string(255)
 #  public     :boolean          default(TRUE)
 #  token      :string(255)      default(""), not null
 #  created_at :datetime
@@ -30,15 +31,18 @@ class ResourceFile < ActiveRecord::Base
 
   #~ Relationships ............................................................
 
-  has_and_belongs_to_many :exercise_versions
+  has_many :ownerships
+  has_many :exercise_versions, through: :ownerships
   belongs_to :user
 
 
   #~ Validation ...............................................................
 
   validates :user, presence: true
-  validates :token, presence: true
+  # validates :token, presence: true
 
+  #~ Validation ...............................................................
+  mount_uploader :filename, FileUploader
 
   #~ Hooks ....................................................................
 

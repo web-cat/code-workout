@@ -7,7 +7,7 @@ Students may practice coding exercises or multiple-choice-questions on a variety
 CodeWorkout was inspired by many great systems built by others, but aims to bring together the best from earlier forerunners while adding important new features.
 It provides comprehensive support for teachers who want to use coding exercises in their courses, while also maintaining flexibility for self-paced learners who aren't part of an organized course.
 
-Try it out at [https://code-workout.cs.vt.edu].
+Try it out at https://codeworkout.cs.vt.edu.
 You can play around without signing up if you like.
 
 ## Contents
