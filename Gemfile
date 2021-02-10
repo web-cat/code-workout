@@ -15,7 +15,7 @@ gem 'haml-rails'
 gem 'coffee-rails', '~> 4.0.0'
 gem 'coffee-script-source'
 gem 'test-unit', '~> 3.0.9'
-gem 'nokogiri', '~> 1.10.4'
+gem 'nokogiri', '~> 1.11.1'
 gem 'csv_shaper'
 gem 'andand', github: 'raganwald/andand'
 gem 'responders' # Can't move above 1.1 until migrating to rails 4.2+

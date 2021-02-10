@@ -278,7 +278,7 @@ GEM
     mime-types-data (3.2019.0331)
     mini_magick (4.11.0)
     mini_mime (1.0.2)
-    mini_portile2 (2.4.0)
+    mini_portile2 (2.5.0)
     minitest (5.14.1)
     modernizr-rails (2.7.1)
     momentjs-rails (2.20.1)
@@ -292,8 +292,9 @@ GEM
     net-ssh (5.2.0)
     netrc (0.11.0)
     nio4r (2.5.2)
-    nokogiri (1.10.9)
-      mini_portile2 (~> 2.4.0)
+    nokogiri (1.11.1)
+      mini_portile2 (~> 2.5.0)
+      racc (~> 1.4)
     oauth (0.5.4)
     oauth2 (1.4.1)
       faraday (>= 0.8, < 0.16.0)
@@ -334,6 +335,7 @@ GEM
       nio4r (~> 2.0)
     rabl (0.14.1)
       activesupport (>= 2.3.14)
+    racc (1.5.2)
     rack (1.6.13)
     rack-test (0.6.3)
       rack (>= 1.0)
@@ -537,7 +539,7 @@ DEPENDENCIES
   modernizr-rails
   momentjs-rails (>= 2.9.0)
   mysql2 (~> 0.4.0)
-  nokogiri (~> 1.10.4)
+  nokogiri (~> 1.11.1)
   oj (~> 2.16)
   oj_mimic_json
   omniauth
