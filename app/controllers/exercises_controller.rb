@@ -631,25 +631,6 @@ class ExercisesController < ApplicationController
 
   
 
-
-  
-  def download_file
-    client = Client.find(params[:id])
-    send_data generate_file(client),
-              filename: "#{client.name}.pdf",
-              type: "application/pdf"
-  end
-
-  private
-
-  def generate_file(client)
-    Prawn::Document.new do
-      text client.name, align: :center
-      text "Address: #{client.address}"
-      text "Email: #{client.email}"
-    end.render
-  end
-
   
   # -------------------------------------------------------------
   def create_choice
