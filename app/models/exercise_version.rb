@@ -211,17 +211,18 @@ class ExerciseVersion < ActiveRecord::Base
         end
       end
     end
+
     checkHTMLtag = self.prompts[0].question.scan(/(\<img .*?src=(.*? ).*?>)/)
     if checkHTMLtag.length()>0
         checkHTMLtag.each do |block| 
-          enterName = File.basename(block[1]).strip
-          if !ownerships.find_by(filename: enterName).nil? 
+          enterName = File.basename(block[1]).strip.gsub("\"", "")
+          if !ownerships.find_by(filename: enterName).nil?
             uniqueFile = ResourceFile.where(id: ownerships.find_by(filename: enterName).resource_file_id)[0].filename
             uniqueFilename = uniqueFile.model.token+uniqueFile.file.file.match(/\.\w*/)[0]
             fb = block[0].gsub("#{enterName}", "/uploads/resource_file/#{uniqueFilename}")
             self.prompts[0].question = self.prompts[0].question.gsub("#{block[0]}", "#{fb}")
           else
-            self.prompts[0].question = self.prompts[0].question.gsub("#{block[0]}", "(Image **src=#{enterName}** does not exist!)")
+            self.prompts[0].question = self.prompts[0].question.gsub("#{block[0]}", "(**src=#{enterName}** Image does not exist!)")
           end
         end
     end
