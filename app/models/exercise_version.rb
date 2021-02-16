@@ -188,8 +188,26 @@ class ExerciseVersion < ActiveRecord::Base
     exercise.is_mcq?
   end
 
-  def imageProcessing
+  def imageProcessing(tag)
     ownerships = ExerciseVersion.where(id:self.id)[0].ownerships
+    checkHTMLtag = self.prompts[0].question.scan(/(\<img .*?src=\"(.*?)\".*?>)/)
+    if checkHTMLtag.length()>0
+        checkHTMLtag.each do |block| 
+          enterName = File.basename(block[1]).strip.gsub("\"", "")
+          if !ownerships.find_by(filename: enterName).nil?
+            uniqueFile = ResourceFile.where(id: ownerships.find_by(filename: enterName).resource_file_id)[0].filename
+            uniqueFilename = uniqueFile.model.token+uniqueFile.file.file.match(/\.\w*/)[0]
+            if tag
+              fb = block[0].gsub("#{block[1]}", "/uploads/resource_file/#{uniqueFilename}")
+            else
+              fb = block[0].gsub("#{block[0]}", "<img src=\"/uploads/resource_file/#{uniqueFilename}\" width=\"30\" height=\"30\">")
+            end
+            self.prompts[0].question = self.prompts[0].question.gsub("#{block[0]}", "#{fb}")
+          else
+            self.prompts[0].question = self.prompts[0].question.gsub("#{block[0]}", "(**src=#{enterName}** Image does not exist!)")
+          end
+        end
+    end
     checkMarkDown = self.prompts[0].question.scan(/(\!\[.*?\]\((.*?)\))/)
     if checkMarkDown.length()>0
       checkMarkDown.each do |block| 
@@ -200,8 +218,12 @@ class ExerciseVersion < ActiveRecord::Base
           if !ownerships.find_by(filename: enterName).nil?
             uniqueFile = ResourceFile.where(id: ownerships.find_by(filename: enterName).resource_file_id)[0].filename
             uniqueFilename = uniqueFile.model.token+uniqueFile.file.file.match(/\.\w*/)[0]
-            fb = block[0].gsub("#{block[1]}", "/uploads/resource_file/#{uniqueFilename}")
-            self.prompts[0].question = self.prompts[0].question.gsub("#{block[0]}", "#{fb}")
+            if tag
+              fb = block[0].gsub("#{block[1]}", "/uploads/resource_file/#{uniqueFilename}")
+              self.prompts[0].question = self.prompts[0].question.gsub("#{block[0]}", "#{fb}")
+            else
+              self.prompts[0].question = self.prompts[0].question.gsub("#{block[0]}", "<img src=\"/uploads/resource_file/#{uniqueFilename}\" width=\"30\" height=\"30\">")
+            end
           else
             counter = counter + 1 
           end
@@ -212,20 +234,7 @@ class ExerciseVersion < ActiveRecord::Base
       end
     end
 
-    checkHTMLtag = self.prompts[0].question.scan(/(\<img .*?src=(.*? ).*?>)/)
-    if checkHTMLtag.length()>0
-        checkHTMLtag.each do |block| 
-          enterName = File.basename(block[1]).strip.gsub("\"", "")
-          if !ownerships.find_by(filename: enterName).nil?
-            uniqueFile = ResourceFile.where(id: ownerships.find_by(filename: enterName).resource_file_id)[0].filename
-            uniqueFilename = uniqueFile.model.token+uniqueFile.file.file.match(/\.\w*/)[0]
-            fb = block[0].gsub("#{block[1]}", "\"/uploads/resource_file/#{uniqueFilename}\"")
-            self.prompts[0].question = self.prompts[0].question.gsub("#{block[0]}", "#{fb}")
-          else
-            self.prompts[0].question = self.prompts[0].question.gsub("#{block[0]}", "(**src=#{enterName}** Image does not exist!)")
-          end
-        end
-    end
+    return nil
   end
 
 

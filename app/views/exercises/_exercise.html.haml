@@ -115,8 +115,10 @@
       .summary
         .btn.btn-primary.add-ex{data: { ex_id: exercise.id, ex_name: exercise.name } }
           %i.fa.fa-arrow-right
+    = exercise.current_version.imageProcessing(false)
     .body
       .text
+        -# = p exercise.current_version.prompts.first.question
         = teaser(exercise.current_version.andand.prompts.andand.first.andand.question)
     .info
       = difficulty_image(exercise.experience.to_i)
