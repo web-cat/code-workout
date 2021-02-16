@@ -200,7 +200,7 @@ class ExerciseVersion < ActiveRecord::Base
             if tag
               fb = block[0].gsub("#{block[1]}", "/uploads/resource_file/#{uniqueFilename}")
             else
-              fb = block[0].gsub("#{block[0]}", "<img src=\"/uploads/resource_file/#{uniqueFilename}\" width=\"30\" height=\"30\">")
+              fb = block[0].gsub("#{block[0]}", "<img src=\"/uploads/resource_file/#{uniqueFilename}\" class=\"img-for-ex\">")
             end
             self.prompts[0].question = self.prompts[0].question.gsub("#{block[0]}", "#{fb}")
           else
@@ -222,7 +222,7 @@ class ExerciseVersion < ActiveRecord::Base
               fb = block[0].gsub("#{block[1]}", "/uploads/resource_file/#{uniqueFilename}")
               self.prompts[0].question = self.prompts[0].question.gsub("#{block[0]}", "#{fb}")
             else
-              self.prompts[0].question = self.prompts[0].question.gsub("#{block[0]}", "<img src=\"/uploads/resource_file/#{uniqueFilename}\" width=\"30\" height=\"30\">")
+              self.prompts[0].question = self.prompts[0].question.gsub("#{block[0]}", "<img src=\"/uploads/resource_file/#{uniqueFilename}\" class=\"img-for-ex\">")
             end
           else
             counter = counter + 1 
