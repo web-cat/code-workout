@@ -32,9 +32,9 @@
             - prompt.examples.each do |example|
               = example.display_description
               %br
-    -@fileRes.each do |uniqueName, realName|
+    -@file_res.each do |unique_name, real_name|
       %p
-      =link_to "#{realName}", "/uploads/resource_file/#{uniqueName}"
+      =link_to "#{real_name}", "/uploads/resource_file/#{unique_name}"
   .col-md-7#user-deadline{ data: { deadline: @user_deadline, server_now: @server_now } }
     %h2 Your Answer:
     = semantic_form_for @exercise_version,

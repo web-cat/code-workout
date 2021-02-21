@@ -622,9 +622,9 @@ class ExercisesController < ApplicationController
 		ex_count = @workout.andand.exercises.andand.count
     @hide_sidebar = (!@workout && @lti_launch) || (ex_count && ex_count < 2)
     # Updata image tags in the exercise question
-    @exercise_version.imageProcessing(true)
+    @exercise_version.image_processing(true)
     # Display all files to students
-    @fileRes = @exercise_version.fileProcessing
+    @file_res = @exercise_version.file_processing
     render layout: 'two_columns'
 
   end
