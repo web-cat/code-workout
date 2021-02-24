@@ -427,6 +427,7 @@ class Exercise < ActiveRecord::Base
   end
 
     # -------------------------------------------------------------
+    # split(create) multiple current_version and add relationship to exercise
     def split_by_language(language_list)
       self.current_versions.delete_all
       if language_list.include? "language_list"
@@ -437,13 +438,17 @@ class Exercise < ActiveRecord::Base
       language_list.each do |lan|
         temp = self.current_versions.create(exercise_id: self.id)
         temp.coding_language_list.add(lan)
-        self.languages_list.add(lan)
         temp.save
+        self.language_list.add(lan)
         self.save
       end
+      return language_list[0]
     end
   
 
+    
+    # -------------------------------------------------------------
+    # List all kinds of language tags, so user can choose which one they want to query
     def self.get_all_language_tags()
       language_list = []
       Exercise.tags_on(:languages).each do |e|

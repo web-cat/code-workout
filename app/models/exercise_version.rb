@@ -185,6 +185,12 @@ class ExerciseVersion < ActiveRecord::Base
   end
 
   # -------------------------------------------------------------
+    # get a sepcific current_version by coding language required
+  def self.get_version_by_lan(lan)
+    ExerciseVersion.tagged_with(lan, :on => :coding_langauge)
+  end
+
+  # -------------------------------------------------------------
   def is_mcq?
     exercise.is_mcq?
   end

@@ -137,7 +137,7 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # GET /exercises/1/edit
   def edit
-    @exercise_version = @exercise.current_version
+    @exercise_version = @exercise.current_versions.get_version_by_lan(params[:coding_language])
     @ownerships_all = []
     @ownerships_res_name = []
     @exercise_version.ownerships.each do |e|
@@ -372,8 +372,8 @@ class ExercisesController < ApplicationController
         exercise_collection.save!
       end
     end
-
-    @return_to = session.delete(:return_to) || exercises_path("all")
+    language="all"
+    @return_to = session.delete(:return_to) || exercises_path(language)
 
     # parse the text_representation
     exercises = ExerciseRepresenter.for_collection.new([]).from_hash(hash)
@@ -390,45 +390,45 @@ class ExercisesController < ApplicationController
         end
         error_msgs << "</ul>"
       else # successfully created the exercise
-        ex_ver = e.exercise_versions.first
-        # inherit ownertable
-        if !e.exercise_versions.offset(1).first.nil?
-          oldversion = e.exercise_versions.offset(1).first
-          oldversion.ownerships.each do |ownerentry|
-            if fileList != "" 
-              if fileList.include? ownerentry.filename
-                ownertable = ex_ver.ownerships.create(filename: ownerentry.filename, resource_file_id: ownerentry.resource_file_id)
+        language = e.split_by_language(text_representation)
+        e.exercise_versions.each do | ex_ver|
+          # inherit ownership
+          if !e.exercise_versions.offset(1).first.nil?
+            oldversion = e.exercise_versions.offset(1).first
+            oldversion.ownerships.each do |ownerentry|
+              if fileList != "" 
+                if fileList.include? ownerentry.filename
+                  ownertable = ex_ver.ownerships.create(filename: ownerentry.filename, resource_file_id: ownerentry.resource_file_id)
+                end
+              end
+            end
+          end
+          unless files.nil? 
+            files.each do |file|
+              file.original_filename = file.original_filename.gsub(/ /, '_')
+              tempfile = Tempfile.create{file}
+              hashval = Digest::MD5.hexdigest File.read "#{tempfile.path}"
+              if ResourceFile.all.where(hashval: hashval).exists?
+                ownertable = ex_ver.ownerships.create(filename: file.original_filename,resource_file_id: ResourceFile.all.where(hashval: hashval).first.id)
+              else       
+                res = ex_ver.resource_files.create!(user_id: current_user.id,filename:file, hashval:hashval)
+                ownertable = res.ownerships.last
+                ownertable.filename = file.original_filename
+                ownertable.save
               end
             end
           end
         end
-        unless files.nil? 
-          files.each do |file|
-            file.original_filename = file.original_filename.gsub(/ /, '_')
-            tempfile = Tempfile.create{file}
-            hashval = Digest::MD5.hexdigest File.read "#{tempfile.path}"
-            if ResourceFile.all.where(hashval: hashval).exists?
-              ownertable = ex_ver.ownerships.create(filename: file.original_filename,resource_file_id: ResourceFile.all.where(hashval: hashval).first.id)
-            else       
-              res = ex_ver.resource_files.create!(user_id: current_user.id,filename:file, hashval:hashval)
-              ownertable = res.ownerships.last
-              ownertable.filename = file.original_filename
-              ownertable.save
-            end
-          end
-        end
         exercise_collection.andand.add(e, override: true)
-        e.split_by_language(text_representation)
         e.cv_text_representation(text_representation)
         # e.current_version.update(text_representation: text_representation)
         success_msgs <<
           "<li>X#{e.id}: #{e.name} saved, try it #{view_context.link_to 'here', exercise_practice_path(e)}.</li>"
       end
     end
-
     if success_all
       success_msgs = 'Success!<ul>' + success_msgs.join("") + "</ul>"
-      redirect_to @return_to, flash: { success: success_msgs.html_safe } and return
+      redirect_to  exercises_path(language), flash: { success: success_msgs.html_safe } and return
     else
       if !success_msgs.blank?
         error_msgs << "Some exercises were successfully saved."
