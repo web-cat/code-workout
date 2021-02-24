@@ -1,7 +1,7 @@
 = render partial: 'layouts/breadcrumb'
 
 %p#notice= notice
-= link_to 'Edit', edit_exercise_path(@exercise)
+= link_to 'Edit', edit_exercise_path("python",@exercise)#TBD edit_exercise_path
 %p
   %strong Name:
   %p.xeditable{ id: 'name',

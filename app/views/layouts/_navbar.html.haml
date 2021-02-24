@@ -1,3 +1,4 @@
+= javascript_include_tag 'navbar.js'
 %header.navbar.yamm.navbar-inverse.navbar-fixed-top
   .container-fluid
     .navbar-header
@@ -20,7 +21,14 @@
                   %li= link_to 'Browse all', exercises_path
                 %ul.list-unstyled
                   %li= link_to 'All workouts', workouts_path
-                  %li= link_to 'All exercises', exercises_path
+                  %li.dropdown-submenu
+                    %a.second{:href => "#", :tabindex => "-1"}
+                      All exercises
+                      %ul.dropright.hidden#coding_language
+                        %li= link_to "List all exercises", exercises_path("all")
+                        -@language_list = Exercise.get_all_language_tags()
+                        -@language_list.andand.each do |coding_language|
+                          %li= link_to "#{coding_language}", exercises_path(coding_language)
         %li.dropdown
           %a.dropdown-toggle{ href: organizations_path,
             data: { toggle: 'dropdown' }, value: 'Course' }

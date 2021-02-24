@@ -10,8 +10,9 @@
     %h1
       = @exercise.display_name
       - if current_user.andand.can? :edit, @exercise
-        %small
-          = link_to "", edit_exercise_path(@exercise), class: 'glyphicon glyphicon-pencil'
+        %small 
+          -# TBD edit_exercise_path
+          = link_to "", edit_exercise_path("python",@exercise), class: 'glyphicon glyphicon-pencil'
     - if @exercise_version.stem && !@exercise_version.stem.preamble.blank?
       - cache @exercise_version.stem do
         = markdown @exercise_version.stem.preamble

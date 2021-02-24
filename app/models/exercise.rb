@@ -65,8 +65,8 @@ class Exercise < ActiveRecord::Base
   belongs_to :exercise_family, inverse_of: :exercises
   has_many :exercise_owners, inverse_of: :exercise, dependent: :destroy
   has_many :owners, through: :exercise_owners
-  belongs_to :current_version, class_name: 'ExerciseVersion'
-  # has_many :current_versions, class_name: 'ExerciseVersion',foreign_key: "associated_id"
+  # belongs_to :current_version, class_name: 'ExerciseVersion'
+  has_many :current_versions, class_name: 'ExerciseVersion',foreign_key: "associated_id"
   belongs_to :irt_data, dependent: :destroy
   belongs_to :exercise_collection
 
@@ -426,18 +426,60 @@ class Exercise < ActiveRecord::Base
     return result
   end
 
+    # -------------------------------------------------------------
+    def split_by_language(language_list)
+      self.current_versions.delete_all
+      if language_list.include? "language_list"
+        language_list = language_list.scan(/language_list:(.*)\r/)[0][0].delete(" ").split(/[\|,\,]/)
+      else
+        language_list = language_list.delete(" ").split(/[\|,\,]/)
+      end
+      language_list.each do |lan|
+        temp = self.current_versions.create(exercise_id: self.id)
+        temp.coding_language_list.add(lan)
+        self.languages_list.add(lan)
+        temp.save
+        self.save
+      end
+    end
+  
+
+    def self.get_all_language_tags()
+      language_list = []
+      Exercise.tags_on(:languages).each do |e|
+        unless language_list.include? e.name
+          language_list.push(e.name)
+        end       
+      end
+      return language_list
+    end
+  
+  
+    def cv_text_representation(text_representation)
+      self.current_versions.each do |curr|
+        curr.update(text_representation: text_representation)
+      end
+    end
+
+
   #~ Private instance methods .................................................
   private
 
   def set_defaults
     # Update current_version if necessary
-    if !self.current_version
-      self.current_version = self.exercise_versions.first
+    # TBD
+    if !self.current_versions
+      self.current_versions = self.exercise_versions.first
     end
 
+    # self.question_type ||=
+    #   (current_version && current_version.prompts.first) ?
+    #     current_version.question_type : Q_MC
+    # self.name ||= ''
+    # self.experience ||= 10
     self.question_type ||=
-      (current_version && current_version.prompts.first) ?
-        current_version.question_type : Q_MC
+    (current_versions.last && current_versions.last.prompts.first) ?
+      current_versions.last.question_type : Q_MC
     self.name ||= ''
     self.experience ||= 10
   end

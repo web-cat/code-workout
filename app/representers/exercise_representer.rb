@@ -34,9 +34,10 @@ class ExerciseRepresenter < Representable::Decorator
       }
   property :current_version, class: ExerciseVersion,
     setter: lambda { |val, *|
-      self.current_version = val
-      self.exercise_versions << self.current_version
-      self.current_version.exercise = self
+      # self.current_version = val
+      # self.exercise_versions << self.current_version
+      # self.current_version.exercise = self
+      #TBD
     }, instance: lambda { |*| ExerciseVersion.new } do
     property :version, setter: lambda { |*| }
     property :creator,

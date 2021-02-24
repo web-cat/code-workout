@@ -146,9 +146,9 @@ class ExercisesController < ApplicationController
       uniqueFilename = uniqueFile.token+uniqueFile.filename.file.file.match(/\.\w*/)[0]
       @ownerships_res_name.push(uniqueFilename)
     end
-
-    @text_representation = @exercise_version.text_representation ||
-      ExerciseRepresenter.new(@exercise).to_hash.to_yaml
+    # TBD need to update ExerciseRepresenter
+    # @text_representation = @exercise_version.text_representation ||
+    #   ExerciseRepresenter.new(@exercise).to_hash.to_yaml
     @user_groups = current_user.user_groups
     # figure out the edit rights to this exercise
     if ec = @exercise.exercise_collection
@@ -373,7 +373,7 @@ class ExercisesController < ApplicationController
       end
     end
 
-    @return_to = session.delete(:return_to) || exercises_path
+    @return_to = session.delete(:return_to) || exercises_path("all")
 
     # parse the text_representation
     exercises = ExerciseRepresenter.for_collection.new([]).from_hash(hash)
@@ -418,7 +418,9 @@ class ExercisesController < ApplicationController
           end
         end
         exercise_collection.andand.add(e, override: true)
-        e.current_version.update(text_representation: text_representation)
+        e.split_by_language(text_representation)
+        e.cv_text_representation(text_representation)
+        # e.current_version.update(text_representation: text_representation)
         success_msgs <<
           "<li>X#{e.id}: #{e.name} saved, try it #{view_context.link_to 'here', exercise_practice_path(e)}.</li>"
       end
