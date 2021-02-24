@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20210201051643) do
+ActiveRecord::Schema.define(version: 20210223194031) do
 
   create_table "active_admin_comments", force: :cascade do |t|
     t.string   "namespace",     limit: 255
@@ -213,6 +213,7 @@ ActiveRecord::Schema.define(version: 20210201051643) do
     t.integer  "creator_id",          limit: 4
     t.integer  "irt_data_id",         limit: 4
     t.text     "text_representation", limit: 16777215
+    t.integer  "associated_id",       limit: 4
   end
 
   add_index "exercise_versions", ["creator_id"], name: "exercise_versions_creator_id_fk", using: :btree

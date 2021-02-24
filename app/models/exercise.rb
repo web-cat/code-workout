@@ -66,6 +66,7 @@ class Exercise < ActiveRecord::Base
   has_many :exercise_owners, inverse_of: :exercise, dependent: :destroy
   has_many :owners, through: :exercise_owners
   belongs_to :current_version, class_name: 'ExerciseVersion'
+  # has_many :current_versions, class_name: 'ExerciseVersion',foreign_key: "associated_id"
   belongs_to :irt_data, dependent: :destroy
   belongs_to :exercise_collection
 

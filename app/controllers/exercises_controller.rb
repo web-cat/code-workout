@@ -990,7 +990,7 @@ class ExercisesController < ApplicationController
         :experience, :id, :is_public, :priority, :question_type,
         :exercise_version, :exercise_version_id, :commit,
         :mcq_allow_multiple, :mcq_is_scrambled, :languages, :styles,
-        :tag_ids, {files: []})
+        :tag_ids, :coding_language_list, {files: []})
     end
 
 
