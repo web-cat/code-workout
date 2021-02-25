@@ -56,11 +56,13 @@ CodeWorkout::Application.routes.draw do
     post 'exercises/create_mcqs' => 'exercises#create_mcqs'
     get  '/exercises/any' => 'exercises#random_exercise',
       as: :random_exercise
-    get 'exercises/:id/practice' => 'exercises#practice',
+    get 'exercises/:coding_language/:id/practice' => 'exercises#practice',
       as: :exercise_practice
     patch 'exercises/:id/practice' => 'exercises#evaluate',
       as: :exercise_evaluate
-		get 'exercises/:id/embed' => 'exercises#embed', as: :exercise_embed
+    get 'exercises/:id/embed' => 'exercises#embed', as: :exercise_embed
+    #TBD
+    # get 'exercises/:coding_language/:id/embed' => 'exercises#embed', as: :exercise_embed
     get 'exercises/search' => 'exercises#search', as: :exercises_search
     get 'exercises/query_data' => 'exercises#query_data',
       as: :exercises_query_data

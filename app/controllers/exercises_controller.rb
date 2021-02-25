@@ -17,11 +17,11 @@ class ExercisesController < ApplicationController
   # GET /exercises
   def index
     if current_user
-      @exercises = Exercise.visible_to_user(current_user)
+      @exercises = Exercise.visible_to_user(current_user,params[:coding_language])
     else
       @exercises = Exercise.publicly_visible
     end
-
+  
     @exercises = @exercises.page params[:page]
   end
 
@@ -218,6 +218,7 @@ class ExercisesController < ApplicationController
 
   # -------------------------------------------------------------
   def random_exercise
+
     exercise_dump = []
     Exercise.where(is_public: true).each do |exercise|
       if params[:language] ?
@@ -231,7 +232,7 @@ class ExercisesController < ApplicationController
     end
 
     if exercise_dump.any?
-      redirect_to exercise_practice_path(exercise_dump.sample) and return
+      redirect_to exercise_practice_path(params[:language],exercise_dump.sample) and return
     else
       filters = []
       filters << "language #{params[:language]}" if params[:language]
@@ -423,7 +424,7 @@ class ExercisesController < ApplicationController
         e.cv_text_representation(text_representation)
         # e.current_version.update(text_representation: text_representation)
         success_msgs <<
-          "<li>X#{e.id}: #{e.name} saved, try it #{view_context.link_to 'here', exercise_practice_path(e)}.</li>"
+          "<li>X#{e.id}: #{e.name} saved, try it #{view_context.link_to 'here', exercise_practice_path(language,e)}.</li>"
       end
     end
     if success_all
@@ -438,7 +439,7 @@ class ExercisesController < ApplicationController
     end
   end
 
-	def embed
+  def embed
     if params[:exercise_version_id] || params[:id]
       set_exercise_from_params
     else
@@ -452,8 +453,8 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   def practice
     # lti launch
-    @lti_launch = params[:lti_launch]
 
+    @lti_launch = params[:lti_launch]
     if params[:exercise_version_id] || params[:id]
       set_exercise_from_params
     else
@@ -466,7 +467,6 @@ class ExercisesController < ApplicationController
     end
 
     @student_user = params[:review_user_id] ? User.find(params[:review_user_id]) : current_user
-
     if params[:workout_offering_id]
       @workout_offering =
         WorkoutOffering.find_by(id: params[:workout_offering_id])
@@ -482,7 +482,6 @@ class ExercisesController < ApplicationController
         @workout = Workout.find(params[:workout_id])
       end
     end
-
     if @workout_offering
       # Re-check workout-offering permission in case the URL was entered directly.
       authorize! :practice, @workout_offering
@@ -522,7 +521,6 @@ class ExercisesController < ApplicationController
         # we set LMS gradebook ties for the first time, so force-send scores to LMS
         @workout_score.update_lti if @workout_score.score
       end
-
       should_force_lti = !@lti_launch &&
         @workout_offering.andand.lms_assignment_id.present? &&
         (@workout_score.andand.lis_result_sourcedid.nil? ||
@@ -624,9 +622,10 @@ class ExercisesController < ApplicationController
 		ex_count = @workout.andand.exercises.andand.count
     @hide_sidebar = (!@workout && @lti_launch) || (ex_count && ex_count < 2)
     # Updata image tags in the exercise question
-    @exercise_version.image_processing(true)
+    #TBD
+    # @exercise_version.image_processing(true)
     # Display all files to students
-    @file_res = @exercise_version.file_processing
+    # @file_res = @exercise_version.file_processing
     render layout: 'two_columns'
 
   end
@@ -957,9 +956,12 @@ class ExercisesController < ApplicationController
           redirect_to exercises_url,
             notice: "Exercise E#{params[:id]} not found" and return
         end
-        @exercise_version = @exercise.current_version
+        @exercise_version = @exercise.current_versions.tagged_with([params[:coding_language]], :on => :coding_language, :match_all => true)[0]
       end
     end
+
+
+
 
     # -------------------------------------------------------------
     def create_new_version

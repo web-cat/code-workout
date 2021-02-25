@@ -130,7 +130,7 @@ class Exercise < ActiveRecord::Base
       return nil
     end
     if user
-      visible = Exercise.visible_to_user(user)
+      visible = Exercise.visible_to_user(user,"")
     else
       visible = Exercise.publicly_visible
     end
@@ -144,20 +144,23 @@ class Exercise < ActiveRecord::Base
   end
 
 
-  # -------------------------------------------------------------
+
+
+
+# -------------------------------------------------------------
   # Get a list of Exercises that are visible to the specified user.
   #
   # It is the union of exercises that are publicly visible, created or owned by the user,
   # part of an exercise collection owned by the user or by a group the user is a
   # member of, and exercises that are visible through a course_offering.
-  def self.visible_to_user(user)
+  def self.visible_to_user(user, language_tag)
     # If updating this method, remember to update the instance method
     # exercise.visible_to?(user).
 
     # Get exercises owned or created by the user
-    visible_through_user = Exercise.visible_through_user(user)
+    visible_through_user = Exercise.filter_exercises(Exercise.visible_through_user(user),language_tag)
 
-    publicly_visible = Exercise.publicly_visible
+    publicly_visible = Exercise.filter_exercises(Exercise.publicly_visible,language_tag)
 
     visible_through_course_offering = Exercise.joins(
       exercise_collection: [ course_offering: :course_enrollments ])
@@ -166,13 +169,27 @@ class Exercise < ActiveRecord::Base
           { course_enrollments:
             { user: user } } }
       )
+    visible_through_course_offering=Exercise.filter_exercises(visible_through_course_offering,language_tag)
 
-    visible_through_user_group = Exercise.visible_through_user_group(user)
+    visible_through_user_group = Exercise.filter_exercises(Exercise.visible_through_user_group(user),language_tag)
 
     return visible_through_user
       .union(publicly_visible)
       .union(visible_through_course_offering)
       .union(visible_through_user_group)
+  end
+
+
+  def self.filter_exercises(ex_list,language_tag)
+    if language_tag == "all" || ex_list.count == 0
+      return ex_list
+    else
+      temp_array = ex_list.reject{|ex| (ex.current_versions.tagged_with([language_tag],:on => :coding_language).count == 0)}
+      if temp_array.length == 0
+        temp_array = ex_list.reject{|ex| (!ex.tag_list_on(:languages).include? language_tag)}
+      end
+      return Exercise.where(id: temp_array.map(&:id))
+    end
   end
 
 
@@ -442,6 +459,8 @@ class Exercise < ActiveRecord::Base
         self.language_list.add(lan)
         self.save
       end
+      p self.id
+      p self.tag_list_on(:languages).include? 'Java'
       return language_list[0]
     end
   
