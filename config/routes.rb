@@ -60,9 +60,9 @@ CodeWorkout::Application.routes.draw do
       as: :exercise_practice
     patch 'exercises/:id/practice' => 'exercises#evaluate',
       as: :exercise_evaluate
+    #TBD embed?
     get 'exercises/:id/embed' => 'exercises#embed', as: :exercise_embed
-    #TBD
-    # get 'exercises/:coding_language/:id/embed' => 'exercises#embed', as: :exercise_embed
+    #TBD search?
     get 'exercises/search' => 'exercises#search', as: :exercises_search
     get 'exercises/query_data' => 'exercises#query_data',
       as: :exercises_query_data

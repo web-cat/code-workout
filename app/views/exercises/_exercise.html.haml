@@ -118,8 +118,8 @@
     -# = exercise.current_versions.last.image_processing(false)
     .body
       .text
-        -# TBD
-        = teaser(exercise.current_versions.last.andand.prompts.andand.first.andand.question)
+        -cv = Exercise.get_correct_version_by_language(exercise, params[:coding_language])
+        = teaser(cv.andand.prompts.andand.first.andand.question)
     .info
       = difficulty_image(exercise.experience.to_i)
       .taglist

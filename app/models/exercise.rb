@@ -459,8 +459,6 @@ class Exercise < ActiveRecord::Base
         self.language_list.add(lan)
         self.save
       end
-      p self.id
-      p self.tag_list_on(:languages).include? 'Java'
       return language_list[0]
     end
   
@@ -485,6 +483,14 @@ class Exercise < ActiveRecord::Base
       end
     end
 
+
+    def self.get_correct_version_by_language(ex, lan)
+      ex.current_versions.map{|cv| 
+        if cv.tag_list_on(:coding_language).include? lan
+          return cv
+        end
+      }
+    end
 
   #~ Private instance methods .................................................
   private

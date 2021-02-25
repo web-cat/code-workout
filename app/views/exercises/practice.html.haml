@@ -23,8 +23,8 @@
       will really only work for single-part exercises and will look bad for
       multi-part exercises ... but we don't have real support for multi-part
       exercises yet anyway.
-    -p "herhhhhhh"
-    -p @exercise_version
+
+    -# TBD for prompts
     - @exercise_version.prompts.each do |question_prompt|
       - cache question_prompt do
         = markdown question_prompt.question
@@ -167,8 +167,6 @@
             workout_id: @workout.id, workout_score_id: @workout_score.andand.id,
             lti_launch: @lti_launch),
             class: 'btn btn-info btn-next', id: 'nextbtn'
-      -p "hrereererererer"
-      -p params[:coding_language]
       - if @workout.nil? && !@lti_launch
         %br
         = link_to "Practice a different #{params[:coding_language]} exercise",     |

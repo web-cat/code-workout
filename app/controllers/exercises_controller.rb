@@ -21,7 +21,7 @@ class ExercisesController < ApplicationController
     else
       @exercises = Exercise.publicly_visible
     end
-  
+
     @exercises = @exercises.page params[:page]
   end
 
@@ -105,12 +105,13 @@ class ExercisesController < ApplicationController
       @msg = 'No exercises were found for your search request. ' \
         'Try these instead...'
       @exs = Exercise.publicly_visible.shuffle.first(16)
+      # @exs2 = Exercise.where(id: @exs.map(&:id))
     end
     if @exs.blank?
       @msg = 'No public exercises are available to search right now. ' \
         'Wait for contributors to add more.'
     end
-
+    
     respond_to do |format|
       format.html
       format.js
@@ -137,7 +138,8 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # GET /exercises/1/edit
   def edit
-    @exercise_version = @exercise.current_versions.get_version_by_lan(params[:coding_language])
+    @language = params[:coding_language]
+    @exercise_version = Exercise.get_correct_version_by_language(@exercise,@language)
     @ownerships_all = []
     @ownerships_res_name = []
     @exercise_version.ownerships.each do |e|
@@ -218,7 +220,7 @@ class ExercisesController < ApplicationController
 
   # -------------------------------------------------------------
   def random_exercise
-
+  
     exercise_dump = []
     Exercise.where(is_public: true).each do |exercise|
       if params[:language] ?
@@ -864,6 +866,7 @@ class ExercisesController < ApplicationController
     new_exercise = create_new_version()
     @exercise.base_exercise.exercises << new_exercise
     new_exercise.save
+    #TBD 
     @exercise.base_exercise.current_version = new_exercise
     @exercise.base_exercise.save
     if new_exercise.update_attributes(exercise_params)
@@ -940,7 +943,7 @@ class ExercisesController < ApplicationController
 
     # set @exercise and @exercise_version based on params
     # ----------------------------------------------------------
-    def set_exercise_from_params
+    def set_exercise_from_params  
       if params[:exercise_version_id]
         @exercise_version =
           ExerciseVersion.find_by(id: params[:exercise_version_id])
@@ -956,11 +959,12 @@ class ExercisesController < ApplicationController
           redirect_to exercises_url,
             notice: "Exercise E#{params[:id]} not found" and return
         end
-        @exercise_version = @exercise.current_versions.tagged_with([params[:coding_language]], :on => :coding_language, :match_all => true)[0]
+        @exercise_version = Exercise.get_correct_version_by_language(@exercise,params[:coding_language])
+        if params[:coding_language] == "all"
+          @exercise_version = @exercise.current_versions.last
+        end
       end
     end
-
-
 
 
     # -------------------------------------------------------------
