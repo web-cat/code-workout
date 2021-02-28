@@ -1,11 +1,10 @@
 = form_tag controller: "/exercises", action: "search" do
   .row.search
-    %div{ style: "width: 65%; float: left; padding-left: 25px;" }
+    .input-group
       = text_field_tag :search, params[:search], id: "search_field",
-        class: "input input-medium form-control col-md-8 search-query",
-        placeholder: "search exercises...",
-        style: "vertical-align: top;"
-    %div{ style: "float: left;" }
-      = content_tag :button, type: :submit, class: "btn btn-inverse btn-sm" do
-        %i.fa.fa-search
-        Search
+          class: "input input-medium form-control search-query",
+          placeholder: "Search exercises..."
+      %span.input-group-btn
+        = content_tag :button, type: :submit, class: "btn btn-default" do
+          %i.fa.fa-search
+          Search

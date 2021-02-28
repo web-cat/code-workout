@@ -10,6 +10,7 @@
   - @exercises.in_groups_of(2, false) do |row|
     = render row, user: current_user
     .clearfix
+  = paginate @exercises
 - else
   %p
     No public exercises are available to view right now.  Please wait for

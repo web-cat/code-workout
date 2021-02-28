@@ -42,7 +42,7 @@
                     %strong= link_to 'Find a course', organizations_path
 
       %ul.nav.navbar-nav.navbar-right.nav-top
-        %li= render :partial => 'exercises/search'
+        %li.search= render :partial => 'exercises/search'
         - if user_signed_in?
           - if current_user.global_role.can_edit_system_configuration?
             %li= link_to icon_tag_for('wrench'), admin_dashboard_path

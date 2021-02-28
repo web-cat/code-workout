@@ -5,9 +5,9 @@
 #  id              :integer          not null, primary key
 #  consumer_key    :string(255)
 #  consumer_secret :string(255)
+#  url             :string(255)
 #  created_at      :datetime
 #  updated_at      :datetime
-#  url             :string(255)
 #  lms_type_id     :integer
 #  organization_id :integer
 #
@@ -16,6 +16,10 @@
 #  index_lms_instances_on_organization_id  (organization_id)
 #  index_lms_instances_on_url              (url) UNIQUE
 #  lms_instances_lms_type_id_fk            (lms_type_id)
+#
+# Foreign Keys
+#
+#  lms_instances_lms_type_id_fk  (lms_type_id => lms_types.id)
 #
 
 # Read about factories at https://github.com/thoughtbot/factory_bot

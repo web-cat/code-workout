@@ -40,5 +40,9 @@ module CodeWorkout
     config.feedback_timeout_padding = 300
 
     config.active_record.raise_in_transactional_callbacks = true
+
+    # Allow iframe embedding?
+    config.action_dispatch.default_headers.merge!(
+      {'X-Frame-Options' => 'ALLOWALL'})
   end
 end

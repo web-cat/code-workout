@@ -10,7 +10,7 @@ class ExercisesController < ApplicationController
   after_action :allow_iframe, only: [:practice, :embed]
   # -------------------------------------------------------------
 
-  HTTP_URL = 'https://opendsax.cs.vt.edu:9292/answers/solve'
+  HTTP_URL = 'https://opendsa-server.cs.vt.edu:9292/answers/solve'
 
   # GET /exercises
   def index
@@ -19,6 +19,8 @@ class ExercisesController < ApplicationController
     else
       @exercises = Exercise.publicly_visible
     end
+
+    @exercises = @exercises.page params[:page]
   end
 
 
@@ -54,10 +56,14 @@ class ExercisesController < ApplicationController
 
   # -------------------------------------------------------------
   def download_attempt_data
-    @exercise = Exercise.find params[:id]
+    exercise_id = params[:id] # may be zero, one, or more ids (see Exercise.denormalized_attempt_data)
+    course_id = params[:course_id]
+    term_id = params[:term_id]
+
+    time = Time.now.utc.strftime("%Y%m%d%H%M%S")
 
     if params[:progsnap].to_b
-      main_events, code_states = @exercise.progsnap2_attempt_csv
+      main_events, code_states = Exercise.progsnap2_attempt_csv(exercise_id, course_id, term_id)
       compressed_filestream = Zip::OutputStream.write_buffer do |zos|
         main_events_file = "MainTable.csv"
         zos.put_next_entry main_events_file
@@ -65,21 +71,21 @@ class ExercisesController < ApplicationController
 
         code_states_file = "CodeStates.csv"
         zos.put_next_entry code_states_file
-        zos.write code_states 
+        zos.write code_states
       end
 
       compressed_filestream.rewind
       respond_to do |format|
         format.zip do
-          send_data compressed_filestream.read, filename: "X#{params[:id]}-progsnap.zip", type: 'application/zip'
+          send_data compressed_filestream.read, filename: "CW-progsnap-#{time}.zip", type: 'application/zip'
         end
       end
     else
-      result = @exercise.denormalized_attempt_csv
+      result = Exercise.denormalized_attempt_csv(exercise_id)
 
       respond_to do |format|
         format.csv do
-          send_data result, filename: "X#{params[:id]}-submissions.csv"
+          send_data result, filename: "CW-#{time}-submissions.csv"
         end
       end
     end
@@ -428,7 +434,7 @@ class ExercisesController < ApplicationController
       # Re-check workout-offering permission in case the URL was entered directly.
       authorize! :practice, @workout_offering
       authorize! :practice, @exercise
-    elsif !@workout 
+    elsif !@workout
       # are they trying to practice the exercise in the gym?
       authorize! :gym_practice, @exercise
     end
@@ -511,7 +517,7 @@ class ExercisesController < ApplicationController
           'longer accepting submissions.'
         student_review = true
       else
-        @user_deadline = @workout_score.created_at + @user_time_limit.minutes
+        @user_deadline = @workout_score.started_at + @user_time_limit.minutes
         if @workout_score.workout_offering.hard_deadline_for(current_user)
           @user_deadline = [@user_deadline,
             @workout_score.workout_offering.hard_deadline_for(current_user)].min
@@ -627,8 +633,12 @@ class ExercisesController < ApplicationController
       end
     end
 
-    if @workout_offering && @workout.nil?
-      @workout = @workout_offering.workout
+    if @workout.nil?
+      if @workout_offering
+        @workout = @workout_offering.workout
+      elsif params[:workout_id]
+        @workout = Workout.find_by(id: params[:workout_id])
+      end
     end
 
     if @workout.nil? && session[:current_workout]
@@ -643,7 +653,7 @@ class ExercisesController < ApplicationController
     if @workout_offering
       @workout_score = @workout_offering.score_for(@student_drift_user)
     elsif @workout
-      @workout_score = @workout.score_for(@student_drift_user, nil, 
+      @workout_score = @workout.score_for(@student_drift_user, nil,
                                           params[:lis_outcome_service_url],
                                           params[:lis_result_sourcedid])
     end
