@@ -3,21 +3,25 @@
 # Table name: courses
 #
 #  id              :integer          not null, primary key
+#  is_hidden       :boolean          default(FALSE)
 #  name            :string(255)      default(""), not null
 #  number          :string(255)      default(""), not null
-#  organization_id :integer          not null
+#  slug            :string(255)      default(""), not null
 #  created_at      :datetime
 #  updated_at      :datetime
 #  creator_id      :integer
-#  slug            :string(255)      default(""), not null
+#  organization_id :integer          not null
 #  user_group_id   :integer
-#  is_hidden       :boolean          default(FALSE)
 #
 # Indexes
 #
 #  index_courses_on_organization_id  (organization_id)
 #  index_courses_on_slug             (slug)
 #  index_courses_on_user_group_id    (user_group_id)
+#
+# Foreign Keys
+#
+#  courses_organization_id_fk  (organization_id => organizations.id)
 #
 
 # =============================================================================
@@ -67,6 +71,63 @@ class Course < ActiveRecord::Base
     return resultant
   end
 
+  # Overrides ActiveRecord#find_by. Also affects find_by! If a slug is specified,
+  # requires that an organization or organization_id is also included. If a slug
+  # is not specified, proceeds with find_by as usual.
+  def self.find_by(*args)
+    kwargs = args[0]
+
+    # Check if slug is included
+    if kwargs.is_a?(Hash) # Args were specified as keywords
+      has_slug = kwargs.key?(:slug)
+    else # Args were specified as strings and interpolated values
+      has_slug = args.any? { |arg| 
+        arg.include?('slug')
+      }
+    end
+
+    # Check if organization is included
+    if kwargs.is_a?(Hash) # Args were specified as keywords
+      has_org = kwargs.key?(:organization) || kwargs.key?(:organization_id)
+    else # Args were specified as strings and interpolated values
+      has_org = args.any? { |arg| 
+        arg.include?('organization') ||
+        arg.include?('organization_id')
+      }
+    end
+
+    if has_slug && !has_org
+      raise ArgumentError, 'If slug is specified, organization ' \
+        'or organization_id must also be specified.'
+    end
+
+    super
+  end
+
+  def self.find(*args)
+    id_or_slug = args[0]
+    if id_or_slug.friendly_id?
+      raise ArgumentError, 'To search by slug, please use Course#find_by and ' \
+        'specify an organization or organization_id.'
+    end
+
+    super
+  end
+
+  def self.find_with_id_or_slug(id_or_slug, organization)
+    if id_or_slug.friendly_id?
+      if organization.is_a?(Organization)
+        Course.find_by(slug: id_or_slug, organization: organization)
+      else
+        Course.find_by(
+          slug: id_or_slug, 
+          organization: Organization.find(organization)
+        )
+      end
+    else
+      Course.find id_or_slug
+    end
+  end
 
   # -------------------------------------------------------------
   def display_name

@@ -26,7 +26,7 @@ class CourseEnrollmentsController < ApplicationController
   end
 
   def roster_upload
-    @course_offering = CourseOffering.find params[:course_offering]
+    @course_offering = CourseOffering.find params[:course_offering_id]
     file = params[:rosterfile]
     has_headers = !!params[:has_headers] # "true" or "false"
 
@@ -52,13 +52,21 @@ class CourseEnrollmentsController < ApplicationController
 
       if !@course_offering.is_enrolled?(user)
         course_role_field = has_headers ? row['course_role'] : row[3]
-        if course_role_field.downcase.include?('instructor')
+        course_role_field = course_role_field.downcase
+        if course_role_field.include?('instructor')
           course_role = CourseRole.instructor
+        elsif course_role_field.include?('grader') ||
+          course_role_field.include?('ta')
+          course_role = CourseRole.grader
         else
           course_role = CourseRole.student
         end
 
-        if user.id && CourseEnrollment.create(course_offering: @course_offering, user: user, course_role: course_role)
+        if user.id && CourseEnrollment.create(
+          course_offering: @course_offering,
+          user: user,
+          course_role: course_role
+          )
           enrolled_count = enrolled_count + 1
         end
       else
@@ -79,11 +87,71 @@ class CourseEnrollmentsController < ApplicationController
     ) and return
   end
 
+  def enroll_users
+    emails = params[:emails]
+    @course_offering = CourseOffering.find params[:course_offering_id]
+    if params[:course_role_id]
+      @course_role = CourseRole.find params[:course_role_id]
+    else
+      @course_role = CourseRole.student
+    end
+
+    errors = []
+    successes = 0
+    any_enrolled = false
+    if @course_offering.can_enroll? || current_user.manages?(@course_offering)
+      # The course offering is open for enrollment or the current user can override
+      # the enrollment deadline
+      emails.each do |email|
+        user = User.find_by email: email
+        if user
+          if user.is_enrolled?(@course_offering) && !user.manages?(@course_offering)
+            # User is already enrolled in the course offering, but they do not
+            # manage the course offering.
+            errors.push("<li>Could not enroll #{email} because they are already enrolled in the course.</li>")
+          else
+            cs = CourseEnrollment.new(
+              user: user,
+              course_offering: @course_offering,
+              course_role: @course_role
+            )
+            cs.save
+            successes = successes + 1
+          end
+        else
+          errors.push("<li>Did not find a user associated with the email #{email}.</li>")
+        end
+      end
+    else
+      errors.push("<li>The enrollment cutoff date for this course offering has already passed.</li>")
+    end
+
+    all = successes == emails.length
+    any = successes > 0
+
+    respond_to do |format|
+      notice = all ? "All students successfully enrolled." : (
+        any ? "There were errors while trying to enroll some students.<ul>#{errors.join('')}</ul>"
+          : "No students enrolled. Ran into the following errors.<ul>#{errors.join('')}</ul>"
+      ).html_safe
+      format.html {
+        redirect_to organization_course_path(
+          @course_offering.course.organization,
+          @course_offering.course,
+          @course_offering.term),
+          notice: notice
+      }
+
+      format.json { render json: { any: any, notice: notice } }
+    end
+  end
+
   private
 
   def parse_params
     @term = Term.find params[:term_id] if params[:term_id]
-    @course = Course.find params[:course_id] if params[:course_id]
+    @organization = Organization.find params[:organization_id] if params[:organization_id]
+    @course = Course.find_with_id_or_slug(params[:course_id], @organization) if params[:course_id]
     @course_offerings = current_user.andand.course_offerings_for_term(@term, @course)
   end
 end

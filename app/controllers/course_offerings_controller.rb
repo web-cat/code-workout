@@ -23,7 +23,9 @@ class CourseOfferingsController < ApplicationController
   # GET /course_offerings/new
   def new
     @organization = Organization.find(params[:organization_id])
-    @course = Course.find(params[:course_id])
+    @course = Course.find_with_id_or_slug(
+      params[:course_id], params[:organization_id]
+    )
     @url = organization_course_offering_create_path(
       organization_id: params[:organization_id],
       course_id: params[:course_id]
@@ -63,13 +65,14 @@ class CourseOfferingsController < ApplicationController
     render json: @results.uniq.to_json and return
   end
 
-  # -------------------------------------------------------------
-  # POST /course_offerings
+  # POST /courses/:organization_id/:course_id/create_offering
   def create
     @course_offering = CourseOffering.new(course_offering_params)
 
     # until we figure out how to use formtastic hidden fields
-    @course = Course.find(params[:course_id])
+    @course = Course.find_with_id_or_slug(
+      params[:course_id], params[:organization_id]
+    )
     @course_offering.course = @course
 
     if @course_offering.save

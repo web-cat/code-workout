@@ -10,7 +10,7 @@ html, body { height: 100%; }
 .max-height { height: 100%; }
 .full-height { min-height: 100%; }
 .no-overflow { overflow-y: hidden; }
-.below-nav { padding: 60px 10px 0; }
+.below-nav { padding: 56px 10px 0; }
 .embedded .below-nav { padding-top: 0; }
 .breadcrumb { margin-bottom: 15px; }
 
@@ -18,8 +18,8 @@ html, body { height: 100%; }
   padding-left: 0px;
   padding-right: 0px;
 }
-.content, .maincol {
-  padding-bottom: 40px;
+.content .inner, .maincol {
+  padding-bottom: 60px;
 }
 .content {
   h1.left-padded {
@@ -28,15 +28,19 @@ html, body { height: 100%; }
 }
 .below-nav > .alert { margin: 10px 15px 20px; }
 
-#main { margin: 0 0 44px; }
+#main, .sidebar { margin: 0 0 44px; }
 
 .navbar .nav > li > a, .navbar-inverse .navbar-link { padding: 2px 6px; }
 .navbar .nav > li { padding: 8px 9px; }
 .navbar .nav > li.nav-text { padding: 8px 9px 0 0; }
-.navbar { min-height: 44px; }
+.navbar { min-height: 51px; }
 .navbar .nav-top { margin-top: 4px; }
 .navbar .form-control.search-query { padding: 0 6px; }
 .navbar .search .btn-sm {  padding: 7px 10px; }
+.navbar .input-group { display: block; margin-right: 5em; }
+.navbar .input-group-btn { display: block; }
+.navbar .nav.navbar-right > li { padding: 3px 9px; }
+.navbar li.search { margin: 0 1.5em; }
 
 /* yamm */
 
@@ -57,7 +61,9 @@ html, body { height: 100%; }
 /* Codemirror */
 
 .CodeMirror { height: auto; margin-bottom: 9px; }
-.CodeMirror-scroll { max-height: 400px; }
+.form-group .CodeMirror-scroll,
+.form-group .CodeMirror-gutter,
+.form-group .CodeMirror-gutters { min-height: 18px * 12; }
 /* .practice .CodeMirror { min-height: 18px * 15; } */
 
 .CodeMirror .widget {
@@ -270,6 +276,42 @@ ul.wysihtml5-toolbar li {
       }
     }
     .difficulty { float: right; margin: 5px -52px 0 0; }
+  }
+}
+
+/* Exercise index page pagination */
+
+.pagination {
+  display: flex;
+  justify-content: center;
+
+  ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+
+    li {
+      display: inline;
+      float: left;
+    }
+  }
+
+  .page, .next, .prev, .first, .last {
+    a {
+      text-decoration: none;
+      color: white;
+      padding: 2px 10px;
+      margin: 2px;
+      border-radius: 3px;
+      background-color: #5bc0de;
+      &:hover {
+        filter: brightness(80%);
+      }
+    }
+
+    &.active > a {
+      background-color: #ffc107;
+    }
   }
 }
 

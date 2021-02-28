@@ -8,7 +8,7 @@
     remote:        data-remote
 
 - unless current_page.last?
-  %li{ class: "next_page" }
+  %li{ class: "next" }
     = link_to_unless current_page.last?,
       raw(t 'views.pagination.next'),
       url,

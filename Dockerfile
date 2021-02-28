@@ -1,4 +1,4 @@
-FROM ruby:2.3.8
+FROM ruby:2.6.3
 
 LABEL MAINTAINER Jihane Najdi <jnajdi@vt.edu>
 

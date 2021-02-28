@@ -5,13 +5,13 @@
       .modal-header
         %h3 Upload a roster
       - if show_form
-        = form_tag roster_upload_course_enrollments_path, multipart: true, remote: true do
+        = form_tag organization_course_roster_upload_path(@organization, @course, @term), multipart: true, remote: true do
           .modal-body
             .form-group
-              = label_tag :course_offering, 'Course Offering', class: 'control-label col-xs-3'
+              = label_tag :course_offering_id, 'Course Offering', class: 'control-label col-xs-3'
               .col-xs-12.col-md-9
                 // course_offerings is a local variable passed to the partial
-                = select_tag :course_offering, options_for_select(course_offerings.collect{ |co| [co.display_name_with_term, co.id] }), class: 'form-control input-sm', id: 'course-offering'
+                = select_tag :course_offering_id, options_for_select(course_offerings.collect{ |co| [co.display_name_with_term, co.id] }), class: 'form-control input-sm', id: 'course-offering'
             .form-group
               %small.text.text-warning
                 :markdown
