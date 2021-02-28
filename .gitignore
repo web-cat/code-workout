@@ -51,3 +51,8 @@ tasks.todo
 *.swp
 *.swo
 /.idea/
+
+# Ignore self-signed certificates
+server.csr
+server.key
+server.crt
