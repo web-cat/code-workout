@@ -127,6 +127,19 @@ class ExerciseVersion < ActiveRecord::Base
     return true
   end
 
+
+  def self.get_resources(ex)
+    ownerships_all = []
+    ownerships_res_name = []
+    ex.current_versions.first.ownerships.each do |e|
+      ownerships_all.push(e.filename)
+      uniqueFile = ResourceFile.all.where(id: e.resource_file_id)[0]
+      uniqueFilename = uniqueFile.token+uniqueFile.filename.file.file.match(/\.\w*/)[0]
+      ownerships_res_name.push(uniqueFilename)
+    end
+    return ownerships_all,ownerships_res_name
+  end
+
   # --------------------------------------------------------------------
   # Method to correct the scoring of a Coding question where a test case
   # is faulty. Need to specify the id of the incorrect test case.

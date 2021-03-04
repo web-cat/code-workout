@@ -1,12 +1,18 @@
 .container
   %h1 Edit Exercise
-  %p.lead
+  %p.h3.strong
     Editing 
-    = link_to @exercise.display_name, exercise_practice_path(@language,@exercise)
+    = @exercise.display_name
+  .h5 
+  Language:
+  - @lan_list.each_with_index do |lan, index|
+    =link_to lan , exercise_practice_path(lan,@exercise)
+    -unless index == @lan_list.size - 1
+      ,
 
   = render 'oneblockform', qtype: @exercise.question_type
   
-  %p
-    = link_to 'Show', exercise_practice_path(@language,@exercise)
-    \|
-    = link_to 'Back', @return_to
+  -# %p
+  -#   = link_to 'Show', exercise_practice_path(@language,@exercise)
+  -#   \|
+  -#   = link_to 'Back', @return_to

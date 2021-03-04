@@ -1,0 +1,25 @@
+= stylesheet_link_tag "tag_cloud.scss"
+%ol.breadcrumb
+  %li= link_to 'Home', root_path
+  %li= link_to 'Gym', gym_url
+  %li.active Exercises
+%br
+%br
+%br
+%ul.cloud.nav_cloud{"label" => "tag cloud", role: "navigation"}
+  - tag_cloud(@languages_tags, %w()) do |tag, css_class|
+    %li
+      -size = (tag.taggings_count/2)%6
+      = link_to tag.name, { :controller => 'exercises', :action => 'search',:search=> tag.name}, :class => css_class, :enforce_utf8 =>false, :method => 'get', :data_weight => size,:count => tag.taggings_count
+
+%br
+%br
+%br
+%br
+%ul.cloud.nav_cloud{"label" => "tag cloud", role: "navigation"}
+  - tag_cloud(@style_tags, %w()) do |tag, css_class|
+    %li
+      -# =tag.taggings_count
+      -size = tag.taggings_count%6
+      = link_to tag.name, { :controller => 'exercises', :action => 'search',:search=> tag.name}, :class => css_class, :enforce_utf8 =>false, :method => 'get', :data_weight => size,:count => tag.taggings_count
+

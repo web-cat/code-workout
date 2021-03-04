@@ -48,6 +48,9 @@
                       %strong= link_to 'Your older courses', organizations_path(enrolled_only: true)
                   %li
                     %strong= link_to 'Find a course', organizations_path
+        %li.dropdown
+          %a.dropdown-toggle{ href: exercise_tags_path}
+            Tags
 
       %ul.nav.navbar-nav.navbar-right.nav-top
         %li.search= render :partial => 'exercises/search'

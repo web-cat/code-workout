@@ -1,5 +1,5 @@
-%p.text.text-info
-  Use the editor below or upload an existing YAML file from your computer.
+-# %p.text.text-info
+-#   Use the editor below or upload an existing YAML file from your computer.
 - # list will be [ "Only Me", "user's", "user", "groups", "Everybody"
 - access_control_items = @user_groups.map{ |g| [ g.name, g.id ] }.unshift(['Only Me', 0]).push(['Everybody', -1])
 = semantic_form_for @exercise, url: exercises_upload_create_path, method: :post do |f|
@@ -17,8 +17,8 @@
           value: @text_representation.present? ? @text_representation : '' }, 
           label: 'YAML Representation of the Exercise:'
   = f.text_field :fileList, value: "", :type => "hidden"
-  = f.text_field :oldfileList, value: @ownerships_all, :type => "hidden"
-  = f.text_field :ownerships_res_name, value: @ownerships_res_name, :type => "hidden"
+  = f.text_field :oldfileList, value: @file_name, :type => "hidden"
+  = f.text_field :ownerships_res_name, value: @unique_file_name, :type => "hidden"
   #fileName
   #filelist.container.hidden
     .row
@@ -42,4 +42,5 @@
   %p 
   .row
     .col-md-9
-      = f.submit class: 'btn btn-primary', value: 'Submit'
+      = f.submit class: 'btn btn-primary', value: 'Save'
+      = link_to 'Back', @return_to ,class: 'btn btn-primary'

@@ -4,7 +4,6 @@ class ExercisesController < ApplicationController
   require 'zip'
   require 'tempfile'
 
-
   load_and_authorize_resource
   skip_authorize_resource only: [:practice, :call_open_pop]
 
@@ -17,11 +16,17 @@ class ExercisesController < ApplicationController
   # GET /exercises
   def index
     if current_user
-      @exercises = Exercise.visible_to_user(current_user,params[:coding_language])
+      @exercises = Exercise.visible_to_user(current_user)
+      unless params[:coding_language].nil? 
+        @exercises = Exercise.filter_by_language(@exercises,params[:coding_language])
+      end
     else
       @exercises = Exercise.publicly_visible
+      unless params[:coding_language].nil? 
+        @exercises = Exercise.filter_by_language(@exercises,params[:coding_language])
+      end
     end
-
+    @tags = Exercise.all_tag_counts() 
     @exercises = @exercises.page params[:page]
   end
 
@@ -55,6 +60,14 @@ class ExercisesController < ApplicationController
         .uniq.select(&:is_coding?)
     end
   end
+
+  # -------------------------------------------------------------
+  def cloud_index
+    @languages_tags = Exercise.tag_counts_on(:languages)
+    @style_tags = Exercise.tag_counts_on(:styles).union(Exercise.tag_counts_on(:tags)) 
+    .distinct
+  end
+
 
   # -------------------------------------------------------------
   def download_attempt_data
@@ -111,7 +124,8 @@ class ExercisesController < ApplicationController
       @msg = 'No public exercises are available to search right now. ' \
         'Wait for contributors to add more.'
     end
-    
+    @exs = Exercise.where(id: @exs.map(&:id))
+
     respond_to do |format|
       format.html
       format.js
@@ -138,16 +152,25 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # GET /exercises/1/edit
   def edit
-    @language = params[:coding_language]
-    @exercise_version = Exercise.get_correct_version_by_language(@exercise,@language)
-    @ownerships_all = []
-    @ownerships_res_name = []
-    @exercise_version.ownerships.each do |e|
-      @ownerships_all.push(e.filename)
-      uniqueFile = ResourceFile.all.where(id: e.resource_file_id)[0]
-      uniqueFilename = uniqueFile.token+uniqueFile.filename.file.file.match(/\.\w*/)[0]
-      @ownerships_res_name.push(uniqueFilename)
+    # @language = params[:coding_language]
+    # @exercise_version = Exercise.get_correct_version_by_language(@exercise,@language)
+    # @ownerships_all = []
+    # @ownerships_res_name = []
+    # @exercise_version.ownerships.each do |e|
+    #   @ownerships_all.push(e.filename)
+    #   uniqueFile = ResourceFile.all.where(id: e.resource_file_id)[0]
+    #   uniqueFilename = uniqueFile.token+uniqueFile.filename.file.file.match(/\.\w*/)[0]
+    #   @ownerships_res_name.push(uniqueFilename)
+    # end
+    @exercise.current_versions.each do |each_cv|
+      # TBD need to update ExerciseRepresenter
+      # @text_representation = @exercise_version.text_representation ||
+      #   ExerciseRepresenter.new(@exercise).to_hash.to_yaml
     end
+    current_res = ExerciseVersion.get_resources(@exercise)
+    @file_name = current_res[0]
+    @unique_file_name = current_res[1]
+    @lan_list = Exercise.where(id: @exercise.id).get_all_language_tags()
     # TBD need to update ExerciseRepresenter
     # @text_representation = @exercise_version.text_representation ||
     #   ExerciseRepresenter.new(@exercise).to_hash.to_yaml
@@ -164,7 +187,7 @@ class ExercisesController < ApplicationController
     end
     @return_to = request.referer || exercises_path
     if @return_to.include?(exercises_search_path)
-      @return_to = exercises_path
+      @return_to = exercise_tags_path
     end
     session[:return_to] = @return_to
   end
@@ -448,8 +471,7 @@ class ExercisesController < ApplicationController
       @message = 'Choose an exercise to embed!'
       render 'lti/error' and return
     end
-
-    redirect_to exercise_practice_path(id: @exercise.id, lti_launch: true) and return
+    redirect_to exercise_practice_path(params[:coding_language], @exercise.id, lti_launch: true) and return
 	end
 
   # -------------------------------------------------------------
@@ -943,7 +965,7 @@ class ExercisesController < ApplicationController
 
     # set @exercise and @exercise_version based on params
     # ----------------------------------------------------------
-    def set_exercise_from_params  
+    def set_exercise_from_params 
       if params[:exercise_version_id]
         @exercise_version =
           ExerciseVersion.find_by(id: params[:exercise_version_id])

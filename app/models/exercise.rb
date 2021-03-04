@@ -130,11 +130,11 @@ class Exercise < ActiveRecord::Base
       return nil
     end
     if user
-      visible = Exercise.visible_to_user(user,"")
+      visible = Exercise.visible_to_user(user)
     else
       visible = Exercise.publicly_visible
     end
-    
+
     result = visible.tagged_with(terms, any: true, wild: true, on: :tags)
       .union(visible.tagged_with(terms, any: true, wild: true, on: :languages))
       .union(visible.tagged_with(terms, any: true, wild: true, on: :styles)) 
@@ -153,14 +153,14 @@ class Exercise < ActiveRecord::Base
   # It is the union of exercises that are publicly visible, created or owned by the user,
   # part of an exercise collection owned by the user or by a group the user is a
   # member of, and exercises that are visible through a course_offering.
-  def self.visible_to_user(user, language_tag)
+  def self.visible_to_user(user)
     # If updating this method, remember to update the instance method
     # exercise.visible_to?(user).
 
     # Get exercises owned or created by the user
-    visible_through_user = Exercise.filter_exercises(Exercise.visible_through_user(user),language_tag)
+    visible_through_user = Exercise.visible_through_user(user)
 
-    publicly_visible = Exercise.filter_exercises(Exercise.publicly_visible,language_tag)
+    publicly_visible = Exercise.publicly_visible
 
     visible_through_course_offering = Exercise.joins(
       exercise_collection: [ course_offering: :course_enrollments ])
@@ -169,18 +169,19 @@ class Exercise < ActiveRecord::Base
           { course_enrollments:
             { user: user } } }
       )
-    visible_through_course_offering=Exercise.filter_exercises(visible_through_course_offering,language_tag)
 
-    visible_through_user_group = Exercise.filter_exercises(Exercise.visible_through_user_group(user),language_tag)
+    visible_through_user_group = Exercise.visible_through_user_group(user)
 
     return visible_through_user
       .union(publicly_visible)
       .union(visible_through_course_offering)
       .union(visible_through_user_group)
   end
+  
 
 
-  def self.filter_exercises(ex_list,language_tag)
+
+  def self.filter_by_language(ex_list,language_tag)
     if language_tag == "all" || ex_list.count == 0
       return ex_list
     else
@@ -446,18 +447,17 @@ class Exercise < ActiveRecord::Base
     # -------------------------------------------------------------
     # split(create) multiple current_version and add relationship to exercise
     def split_by_language(language_list)
-      self.current_versions.delete_all
+      self.current_versions.destroy_all
       if language_list.include? "language_list"
         language_list = language_list.scan(/language_list:(.*)\r/)[0][0].delete(" ").split(/[\|,\,]/)
       else
         language_list = language_list.delete(" ").split(/[\|,\,]/)
       end
       language_list.each do |lan|
+        lan = lan.delete(" ")
         temp = self.current_versions.create(exercise_id: self.id)
         temp.coding_language_list.add(lan)
         temp.save
-        self.language_list.add(lan)
-        self.save
       end
       return language_list[0]
     end
@@ -470,7 +470,7 @@ class Exercise < ActiveRecord::Base
       language_list = []
       Exercise.tags_on(:languages).each do |e|
         unless language_list.include? e.name
-          language_list.push(e.name)
+          language_list.push(e.name.capitalize)
         end       
       end
       return language_list
@@ -485,11 +485,12 @@ class Exercise < ActiveRecord::Base
 
 
     def self.get_correct_version_by_language(ex, lan)
-      ex.current_versions.map{|cv| 
-        if cv.tag_list_on(:coding_language).include? lan
-          return cv
-        end
-      }
+      return ex.current_versions.tagged_with([lan], :match_all => true)[0]
+      # ex.current_versions.map{|cv| 
+      #   if cv.tag_list_on(:coding_language).include? lan
+      #     return cv
+      #   end
+      # }
     end
 
   #~ Private instance methods .................................................

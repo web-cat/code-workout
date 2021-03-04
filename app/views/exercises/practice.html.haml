@@ -11,7 +11,7 @@
       = @exercise.display_name
       - if current_user.andand.can? :edit, @exercise
         %small 
-          = link_to "", edit_exercise_path(params[:coding_language],@exercise), class: 'glyphicon glyphicon-pencil'
+          = link_to "", edit_exercise_path(@exercise), class: 'glyphicon glyphicon-pencil'
     -# TBD stem
     -# - if @exercise_version.stem && !@exercise_version.stem.preamble.blank?
     -#   - cache @exercise_version.stem do
@@ -48,7 +48,7 @@
         organization_id: @workout_offering.course_offering.course.organization.slug,
         term_id: @workout_offering.course_offering.term.slug,
         workout_offering_id: @workout_offering.id,
-        lti_launch: @lti_launch) : exercise_evaluate_path(@exercise_version.exercise,
+        lti_launch: @lti_launch) : exercise_evaluate_path(params[:coding_language],@exercise_version.exercise,
       exercise_version_id: @exercise_version.id,
       workout_id: @workout.andand.id,
       feedback_return: true, lti_launch: @lti_launch,

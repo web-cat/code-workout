@@ -58,11 +58,9 @@ CodeWorkout::Application.routes.draw do
       as: :random_exercise
     get 'exercises/:coding_language/:id/practice' => 'exercises#practice',
       as: :exercise_practice
-    patch 'exercises/:id/practice' => 'exercises#evaluate',
+    patch 'exercises/:coding_language/:id/practice' => 'exercises#evaluate',
       as: :exercise_evaluate
-    #TBD embed?
-    get 'exercises/:id/embed' => 'exercises#embed', as: :exercise_embed
-    #TBD search?
+    get 'exercises/:coding_language/:id/embed' => 'exercises#embed', as: :exercise_embed
     get 'exercises/search' => 'exercises#search', as: :exercises_search
     get 'exercises/query_data' => 'exercises#query_data',
       as: :exercises_query_data
@@ -71,7 +69,11 @@ CodeWorkout::Application.routes.draw do
     # At the bottom, so the routes above take precedence over existing ids
     # resources :exercises
     get 'exercises/new' => 'exercises#new', as: :new_exercise
-    get '/gym/exercises/:coding_language/:id/edit' => 'exercises#edit', as: :edit_exercise
+    # get '/gym/exercises/:coding_language/:id/edit' => 'exercises#edit', as: :edit_exercise
+    get '/gym/exercises/:id/edit' => 'exercises#edit', as: :edit_exercise
+    # #TBD cloud_index
+    get 'exercises' => 'exercises#cloud_index', as: :exercise_tags
+
     get 'exercises/:coding_language' => 'exercises#index', as: :exercises
     resources :exercises, except: [ :index, :edit ]
 

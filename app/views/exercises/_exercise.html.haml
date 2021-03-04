@@ -84,10 +84,14 @@
           workout_score_id: workout_score.andand.id,
           workout_id: workout.id, lti_launch: @lti_launch))
       - else
-        = link_to exercise.display_name, exercise_practice_path(params[:coding_language],exercise)
+        - unless params[:coding_language].nil? 
+          -lan = params[:coding_language]
+        - unless params[:search].nil? 
+          -lan = params[:search]
+        = link_to exercise.display_name, exercise_practice_path(lan,exercise)
       -#TBD edit_exercise_path
       - if [ 'show', 'index', 'search' ].include?(action_name) && (current_user.andand.can? :edit, exercise)
-        .right= button_link 'Edit', edit_exercise_path(params[:coding_language],exercise), class: 'btn btn-primary btn-sm'
+        .right= button_link 'Edit', edit_exercise_path(exercise), class: 'btn btn-primary btn-sm'
     - if !new_workout
       .summary
         - if !attempt || !workout_score || workout_score.show_feedback?
@@ -118,8 +122,9 @@
     -# = exercise.current_versions.last.image_processing(false)
     .body
       .text
-        -cv = Exercise.get_correct_version_by_language(exercise, params[:coding_language])
-        = teaser(cv.andand.prompts.andand.first.andand.question)
+        -# -cv = Exercise.get_correct_version_by_language(exercise, params[:coding_language])
+        -# = teaser(cv.andand.prompts.andand.first.andand.question)
+        = teaser(exercise.current_versions.last.andand.prompts.andand.first.andand.question)
     .info
       = difficulty_image(exercise.experience.to_i)
       .taglist

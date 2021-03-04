@@ -3,5 +3,5 @@
   - type = params[:question_type] == 'mcq' ? 1 : 2
   = render 'oneblockform', qtype: type
 
-  %br
-  = link_to 'Back', request.referer || exercises_path 
+  -# %br
+  -# = link_to 'Back', request.referer || exercises_path 
