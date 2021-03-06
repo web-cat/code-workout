@@ -27,6 +27,7 @@ class ExercisesController < ApplicationController
       end
     end
     @tags = Exercise.all_tag_counts() 
+    @max_tag_count = ActsAsTaggableOn::Tag.most_used[0].taggings_count
     @exercises = @exercises.page params[:page]
   end
 

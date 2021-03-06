@@ -6,20 +6,27 @@
 %br
 %br
 %br
+-range = @languages_tags[0].taggings_count / 5
 %ul.cloud.nav_cloud{"label" => "tag cloud", role: "navigation"}
   - tag_cloud(@languages_tags, %w()) do |tag, css_class|
     %li
-      -size = (tag.taggings_count/2)%6
-      = link_to tag.name, { :controller => 'exercises', :action => 'search',:search=> tag.name}, :class => css_class, :enforce_utf8 =>false, :method => 'get', :data_weight => size,:count => tag.taggings_count
-
+      -if range > 0
+        -size = (tag.taggings_count/2)/range
+      -else
+        -size = 0
+      -count = tag.taggings_count / 2
+      = link_to tag.name, { :controller => 'exercises', :action => 'search',:search=> tag.name}, :class => css_class, :enforce_utf8 =>false, :method => 'get', :data_weight => size,:count => count
 %br
 %br
 %br
 %br
+-range = @style_tags[0].taggings_count / 5
 %ul.cloud.nav_cloud{"label" => "tag cloud", role: "navigation"}
   - tag_cloud(@style_tags, %w()) do |tag, css_class|
     %li
-      -# =tag.taggings_count
-      -size = tag.taggings_count%6
+      -if range > 0
+        -size = tag.taggings_count/range
+      -else
+        -size = 0
       = link_to tag.name, { :controller => 'exercises', :action => 'search',:search=> tag.name}, :class => css_class, :enforce_utf8 =>false, :method => 'get', :data_weight => size,:count => tag.taggings_count
 
