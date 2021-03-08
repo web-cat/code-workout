@@ -3,6 +3,7 @@
 # Table name: exercise_workouts
 #
 #  id          :integer          not null, primary key
+#  language    :string(255)
 #  points      :float(24)        default(1.0)
 #  position    :integer          not null
 #  created_at  :datetime

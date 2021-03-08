@@ -22,6 +22,10 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
     ex_lan_sel =  $(this).data('ex-sel')
     if ex_lan_sel != "All"
       default_language = ex_lan_sel
+    if ex_lan_sel == "All" && default_language != "" && ex_lan_sel.include? default_language
+      default_language = ex_lan_sel
+    else
+      default_language = ""
     name = "X#{ex_id}"
     can_add = !exercise_is_in_workout(ex_id)
     if can_add
@@ -39,7 +43,7 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
           .filter('#exercise-template').html(),
         data)
       $('#ex-list').append(template)
-      last = document.getElementById("X#{ex_id}:")  
+      last = document.getElementById("X#{ex_id}:")
       for lan in ex_lan
         if lan != default_language
           option = document.createElement("option");
@@ -366,9 +370,12 @@ get_exercises = ->
   i = 0
   while i < exs.length
     ex_id = $(exs[i]).data('id')
+    ex_lan = document.getElementById("X#{ex_id}:") 
+    if ex_lan.options[ex_lan.selectedIndex].text != ""
+        selectedText = ex_lan.options[ex_lan.selectedIndex].text
     ex_points = $(exs[i]).find('.points').val()
     ex_points = '0' if ex_points == ''
-    ex_obj = { id: ex_id, points: ex_points }
+    ex_obj = { id: ex_id, points: ex_points , language: selectedText}
     position = i + 1
     exercises.push(ex_obj)
     i++

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20210223194031) do
+ActiveRecord::Schema.define(version: 20210308144233) do
 
   create_table "active_admin_comments", force: :cascade do |t|
     t.string   "namespace",     limit: 255
@@ -230,12 +230,13 @@ ActiveRecord::Schema.define(version: 20210223194031) do
   add_index "exercise_versions_resource_files", ["resource_file_id"], name: "index_exercise_versions_resource_files_on_resource_file_id", using: :btree
 
   create_table "exercise_workouts", force: :cascade do |t|
-    t.integer  "exercise_id", limit: 4,                null: false
-    t.integer  "workout_id",  limit: 4,                null: false
-    t.integer  "position",    limit: 4,                null: false
-    t.float    "points",      limit: 24, default: 1.0
+    t.integer  "exercise_id", limit: 4,                 null: false
+    t.integer  "workout_id",  limit: 4,                 null: false
+    t.integer  "position",    limit: 4,                 null: false
+    t.float    "points",      limit: 24,  default: 1.0
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.string   "language",    limit: 255
   end
 
   add_index "exercise_workouts", ["exercise_id"], name: "exercise_workouts_exercise_id_fk", using: :btree

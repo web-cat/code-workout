@@ -179,7 +179,7 @@ class WorkoutsController < ApplicationController
     if params[:notice]
       flash.now[:notice] = params[:notice]
     end
-
+    
     render layout: 'two_columns'
   end
 
@@ -458,6 +458,8 @@ class WorkoutsController < ApplicationController
       workout_params[:lms_instance_id] = session[:lms_instance_id]
     end
     @workout = @workout.update_or_create(workout_params)
+    # p "list all realated exercise_workouts"
+    # p @workout.exercise_workouts.all
 
     if @workout && course.present?
       workout_offering_id = create_or_update_offerings(@workout)
@@ -953,6 +955,7 @@ class WorkoutsController < ApplicationController
         end
       end
       redirect_to exercise_practice_path(
+        @workout.first_language,
         @workout.first_exercise,
         workout_id: @workout.id,
         lti_launch: params[:lti_launch],

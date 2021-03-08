@@ -163,7 +163,7 @@
             class: 'btn btn-default btn-next', id: 'nextbtn'
         - elsif @workout && params[:review_user_id].nil? && @workout.exercise_workouts.size > 1
           = button_link 'Next exercise',
-            exercise_practice_path(@workout.next_exercise(@exercise),
+            exercise_practice_path(@workout.next_exercise_language(@exercise),@workout.next_exercise(@exercise),
             workout_id: @workout.id, workout_score_id: @workout_score.andand.id,
             lti_launch: @lti_launch),
             class: 'btn btn-info btn-next', id: 'nextbtn'

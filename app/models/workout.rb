@@ -152,6 +152,11 @@ class Workout < ActiveRecord::Base
     exercise_workouts.first.exercise
   end
 
+    # ------------------------------------------------------------
+  def first_language
+    self.exercise_workouts.first.language
+  end
+
   # ------------------------------------------------------------
   def next_exercise(ex)
     ew = nil
@@ -166,7 +171,12 @@ class Workout < ActiveRecord::Base
     end
     return ew.andand.exercise
   end
-
+  # ------------------------------------------------------------
+  def next_exercise_language(ex)
+    ex = next_exercise(ex)
+    ew = exercise_workouts.where(exercise: ex).first
+    return ew.language
+  end
 
   # -------------------------------------------------------------
   def all_tags
@@ -250,9 +260,9 @@ class Workout < ActiveRecord::Base
         end
         exercise_workout.set_list_position(index+1)
         exercise_workout.points = ex['points']
+        exercise_workout.language = ex['language']
         exercise_workout.save!
       end
-
       return self.save ? self : false 
   end
 

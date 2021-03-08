@@ -34,7 +34,7 @@
       - ex_any = @workout.andand.exercise_workouts.any?
       .empty-msg.alert-msg{ style: "display: #{ex_any ? 'none;' : 'block;'}" }
         Use the menu on the left to search for exercises.
-
+        
       %ul.list-group#ex-list{ style: "display: #{ex_any ? 'block;' : 'none;'}",
         data: { exercises: "#{@exercises.to_json}" } }
 
