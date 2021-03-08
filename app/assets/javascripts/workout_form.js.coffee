@@ -1,5 +1,6 @@
 default_point_value = 1
 searchable = null
+default_language = ""
 
 $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
   window.codeworkout ?= {}
@@ -16,7 +17,11 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
   # Add an exercise from search results to the workout
   $('.search-results').on 'click', '.add-ex', ->
     ex_id = $(this).data('ex-id')
+    ex_lan = $(this).data('ex-lan').split(",");
     ex_name = $(this).data('ex-name')
+    ex_lan_sel =  $(this).data('ex-sel')
+    if ex_lan_sel != "All"
+      default_language = ex_lan_sel
     name = "X#{ex_id}"
     can_add = !exercise_is_in_workout(ex_id)
     if can_add
@@ -28,11 +33,19 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
         name: name
         id: ex_id
         points: default_point_value
+        lan: default_language
       template = Mustache.render(
         $(window.codeworkout.exercise_template)
           .filter('#exercise-template').html(),
         data)
       $('#ex-list').append(template)
+      last = document.getElementById("X#{ex_id}:")  
+      for lan in ex_lan
+        if lan != default_language
+          option = document.createElement("option");
+          option.text = lan;
+          option.value = lan;
+          last.append(option);
       close_slider()
     else
       form_alert(["Exercise #{name} has already been added to this workout."])
@@ -46,7 +59,10 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
   # to that value, so the user doesn't need to change it each time
   $('#ex-list').on 'change', '.points', ->
     default_point_value = $(this).val()
-  
+
+  $('#ex-list').on 'change', '.lan', ->
+    default_language = $(this).val()
+
   # From the modal showing available course offerings, add the
   # selected one to this workout
   $('#course-offerings').on 'click', 'a', ->
@@ -357,6 +373,7 @@ get_exercises = ->
     exercises.push(ex_obj)
     i++
   return exercises
+
 
 # Checks if an exercise with the specified ID
 # has already been added to the workout.

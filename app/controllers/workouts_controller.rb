@@ -142,6 +142,8 @@ class WorkoutsController < ApplicationController
   # -------------------------------------------------------------
   # GET /workouts/new
   def new
+    @languages_list = ["All"]
+    Exercise.tag_counts_on(:languages).each do |tag| @languages_list << tag.name end
     @lti_launch = params[:lti_launch]
     @workout = Workout.new
 

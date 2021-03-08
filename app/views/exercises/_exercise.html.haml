@@ -116,7 +116,9 @@
               .score= image_tag 'pct-blur.png'
     - else
       .summary
-        .btn.btn-primary.add-ex{data: { ex_id: exercise.id, ex_name: exercise.name } }
+        -lan = exercise.language_list
+        -sel = @language_selected.to_s
+        .btn.btn-primary.add-ex{data: { ex_id: exercise.id, ex_name: exercise.name, ex_lan: lan, ex_sel: sel} }
           %i.fa.fa-arrow-right
     -# TBD
     -# = exercise.current_versions.last.image_processing(false)

@@ -182,7 +182,7 @@ class Exercise < ActiveRecord::Base
 
 
   def self.filter_by_language(ex_list,language_tag)
-    if language_tag == "all" || ex_list.count == 0
+    if language_tag == "all" || ex_list.count == 0 ||language_tag == "All"
       return ex_list
     else
       temp_array = ex_list.reject{|ex| (ex.current_versions.tagged_with([language_tag],:on => :coding_language).count == 0)}

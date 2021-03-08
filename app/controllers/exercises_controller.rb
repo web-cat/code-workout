@@ -110,16 +110,17 @@ class ExercisesController < ApplicationController
 
   # -------------------------------------------------------------
   def search
+    @language_selected = params[:language]
     @terms = escape_javascript(params[:search])
     @terms = @terms.split(@terms.include?(',') ? /\s*,\s*/ : nil)
     @wos = []
     @exs = Exercise.search(@terms, current_user)
+    @exs =  Exercise.filter_by_language(@exs,@language_selected)
     @msg = ''
     if @exs.blank?
       @msg = 'No exercises were found for your search request. ' \
         'Try these instead...'
       @exs = Exercise.publicly_visible.shuffle.first(16)
-      # @exs2 = Exercise.where(id: @exs.map(&:id))
     end
     if @exs.blank?
       @msg = 'No public exercises are available to search right now. ' \
