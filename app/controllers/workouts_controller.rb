@@ -458,8 +458,6 @@ class WorkoutsController < ApplicationController
       workout_params[:lms_instance_id] = session[:lms_instance_id]
     end
     @workout = @workout.update_or_create(workout_params)
-    # p "list all realated exercise_workouts"
-    # p @workout.exercise_workouts.all
 
     if @workout && course.present?
       workout_offering_id = create_or_update_offerings(@workout)

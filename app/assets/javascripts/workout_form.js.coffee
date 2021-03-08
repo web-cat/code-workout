@@ -17,13 +17,15 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
   # Add an exercise from search results to the workout
   $('.search-results').on 'click', '.add-ex', ->
     ex_id = $(this).data('ex-id')
-    ex_lan = $(this).data('ex-lan').split(",");
+    ex_lan = $(this).data('ex-lan').replace(/\s/g, '').toLowerCase().split(",");
     ex_name = $(this).data('ex-name')
     ex_lan_sel =  $(this).data('ex-sel')
     if ex_lan_sel != "All"
-      default_language = ex_lan_sel
-    if ex_lan_sel == "All" && default_language != "" && ex_lan_sel.include? default_language
-      default_language = ex_lan_sel
+      default_language = ex_lan_sel.toLowerCase()
+    else if ex_lan_sel == "All" && default_language != "" && ex_lan.includes(default_language)
+      default_language = default_language
+    else if ex_lan.length == 1
+      default_language = ex_lan[0]
     else
       default_language = ""
     name = "X#{ex_id}"
@@ -45,6 +47,7 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
       $('#ex-list').append(template)
       last = document.getElementById("X#{ex_id}:")
       for lan in ex_lan
+        lan = lan.toLowerCase()
         if lan != default_language
           option = document.createElement("option");
           option.text = lan;
