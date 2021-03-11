@@ -174,8 +174,7 @@ class Workout < ActiveRecord::Base
   # ------------------------------------------------------------
   def next_exercise_language(ex)
     ex = next_exercise(ex)
-    ew = exercise_workouts.where(exercise: ex).first
-    return ew.language
+    return exercise_workouts.where(exercise: ex).first.language
   end
 
   # -------------------------------------------------------------

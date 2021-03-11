@@ -154,16 +154,6 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # GET /exercises/1/edit
   def edit
-    # @language = params[:coding_language]
-    # @exercise_version = Exercise.get_correct_version_by_language(@exercise,@language)
-    # @ownerships_all = []
-    # @ownerships_res_name = []
-    # @exercise_version.ownerships.each do |e|
-    #   @ownerships_all.push(e.filename)
-    #   uniqueFile = ResourceFile.all.where(id: e.resource_file_id)[0]
-    #   uniqueFilename = uniqueFile.token+uniqueFile.filename.file.file.match(/\.\w*/)[0]
-    #   @ownerships_res_name.push(uniqueFilename)
-    # end
     @exercise.current_versions.each do |each_cv|
       # TBD need to update ExerciseRepresenter
       # @text_representation = @exercise_version.text_representation ||
@@ -173,9 +163,6 @@ class ExercisesController < ApplicationController
     @file_name = current_res[0]
     @unique_file_name = current_res[1]
     @lan_list = Exercise.where(id: @exercise.id).get_all_language_tags()
-    # TBD need to update ExerciseRepresenter
-    # @text_representation = @exercise_version.text_representation ||
-    #   ExerciseRepresenter.new(@exercise).to_hash.to_yaml
     @user_groups = current_user.user_groups
     # figure out the edit rights to this exercise
     if ec = @exercise.exercise_collection
@@ -245,19 +232,27 @@ class ExercisesController < ApplicationController
 
   # -------------------------------------------------------------
   def random_exercise
-  
-    exercise_dump = []
-    Exercise.where(is_public: true).each do |exercise|
-      if params[:language] ?
-        (exercise.language == params[:language]) :
-        params[:question_type] ?
-        (exercise.question_type == params[:question_type].to_i) :
-        true
-
-        exercise_dump << exercise
-      end
+    #TBD Remove nil check
+    if params[:type].nil?
+      exercise_dump = Exercise.where(is_public: true).tagged_with([params[:language]])
+    elsif params[:type]
+      exercise_dump = Exercise.where(is_public: true).tagged_with(["multiple choice","single answer"], :any => true)
+    else
+      exercise_dump = Exercise.where(is_public: true).tagged_with([params[:language]])
     end
+  
+    # exercise_dump = []
+    # Exercise.where(is_public: true).each do |exercise|
+    #   if params[:language] ?
+    #     (exercise.language == params[:language]) :
+    # TBD
+    #     params[:question_type] ?
+    #     (exercise.question_type == params[:question_type].to_i) :
+    #     true
 
+    #     exercise_dump << exercise
+    #   end
+    # end
     if exercise_dump.any?
       redirect_to exercise_practice_path(params[:language],exercise_dump.sample) and return
     else
@@ -279,7 +274,7 @@ class ExercisesController < ApplicationController
       end
       exercise = Exercise.new(external_id: row['ID'])
       exercise.is_public = false
-      exercise.language = ''
+      exercise.default_language = ''
     end
   end# def
 
@@ -404,6 +399,7 @@ class ExercisesController < ApplicationController
     @return_to = session.delete(:return_to) || exercises_path(language)
 
     # parse the text_representation
+    #TBD exercises can not be used
     exercises = ExerciseRepresenter.for_collection.new([]).from_hash(hash)
     success_all = true
     error_msgs = []
@@ -419,34 +415,7 @@ class ExercisesController < ApplicationController
         error_msgs << "</ul>"
       else # successfully created the exercise
         language = e.split_by_language(text_representation)
-        e.exercise_versions.each do | ex_ver|
-          # inherit ownership
-          if !e.exercise_versions.offset(1).first.nil?
-            oldversion = e.exercise_versions.offset(1).first
-            oldversion.ownerships.each do |ownerentry|
-              if fileList != "" 
-                if fileList.include? ownerentry.filename
-                  ownertable = ex_ver.ownerships.create(filename: ownerentry.filename, resource_file_id: ownerentry.resource_file_id)
-                end
-              end
-            end
-          end
-          unless files.nil? 
-            files.each do |file|
-              file.original_filename = file.original_filename.gsub(/ /, '_')
-              tempfile = Tempfile.create{file}
-              hashval = Digest::MD5.hexdigest File.read "#{tempfile.path}"
-              if ResourceFile.all.where(hashval: hashval).exists?
-                ownertable = ex_ver.ownerships.create(filename: file.original_filename,resource_file_id: ResourceFile.all.where(hashval: hashval).first.id)
-              else       
-                res = ex_ver.resource_files.create!(user_id: current_user.id,filename:file, hashval:hashval)
-                ownertable = res.ownerships.last
-                ownertable.filename = file.original_filename
-                ownertable.save
-              end
-            end
-          end
-        end
+        Ownership.create_ownership(e,fileList, files, current_user)
         exercise_collection.andand.add(e, override: true)
         e.cv_text_representation(text_representation)
         # e.current_version.update(text_representation: text_representation)

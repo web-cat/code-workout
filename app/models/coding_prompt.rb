@@ -66,7 +66,7 @@ class CodingPrompt < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def language
-    exercise_version.exercise.language || 'Java'
+    exercise_version.coding_language_list[0] || 'Java'
   end
 
 

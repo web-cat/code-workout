@@ -40,7 +40,7 @@ class CodeWorker
         end
       end
       current_attempt = attempt.id.to_s
-      language = exv.exercise.language
+      language = exv.coding_language_list[0]
 
       lang =  Exercise.extension_of(language)
       # codeworkout_home=`echo $CODEWORKOUT`

@@ -125,7 +125,7 @@
             = f.input :answer_code, as: :text, class: 'code',
             input_html: { class: 'code', readonly: true, autofocus: true,
               value: prior_answer ? prior_answer.specific.answer : prompt.prepare_starter_code,
-              data: { lang: 'text/x-' + (@exercise.language + (@exercise.language == 'C++'?'src':'')|| 'java').downcase,
+              data: { lang: 'text/x-' + (@exercise.default_language + (@exercise.default_language == 'C++'?'src':'')|| 'java').downcase,
               starter_code: prompt.prepare_starter_code } }
           - else
             %pre{ data: { lang: 'text/x-java' } }
@@ -167,11 +167,13 @@
             workout_id: @workout.id, workout_score_id: @workout_score.andand.id,
             lti_launch: @lti_launch),
             class: 'btn btn-info btn-next', id: 'nextbtn'
+      -# TBD, Look at first promp? or all
+      -ex_type = @exercise_version.prompts.first.andand.specific.andand.is_mcq?
       - if @workout.nil? && !@lti_launch
         %br
         = link_to "Practice a different #{params[:coding_language]} exercise",     |
-          (@exercise.language ?                                              |
-          random_exercise_path(language: params[:coding_language]) :               |
+          (@exercise.default_language ?                                              |
+          random_exercise_path(language: params[:coding_language], type: ex_type) :               |
           random_exercise_path)                                              |
   .col-md-5
     %h2 Feedback

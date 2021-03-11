@@ -179,12 +179,15 @@ class Exercise < ActiveRecord::Base
   end
   
 
-
+  def self.sensitive_list(list)
+    temp=[list.capitalize,list.downcase,list.upcase ]
+  end
 
   def self.filter_by_language(ex_list,language_tag)
     if language_tag == "all" || ex_list.count == 0 ||language_tag == "All" || language_tag.nil?
       return ex_list
     else
+      language_tag = sensitive_list(language_tag)
       temp_array = ex_list.reject{|ex| (ex.current_versions.tagged_with([language_tag],:on => :coding_language).count == 0)}
       if temp_array.length == 0
         temp_array = ex_list.reject{|ex| (!ex.tag_list_on(:languages).include? language_tag)}
@@ -192,6 +195,7 @@ class Exercise < ActiveRecord::Base
       return Exercise.where(id: temp_array.map(&:id))
     end
   end
+
 
 
   # -------------------------------------------------------------
@@ -280,13 +284,19 @@ class Exercise < ActiveRecord::Base
   end
 
 
+  # # -------------------------------------------------------------
+  # # Determine the programming language of the exercise from its language tag
+  # def language
+  #   tag = self.languages.first
+  #   return tag ? tag.name : nil
+  # end
+
   # -------------------------------------------------------------
   # Determine the programming language of the exercise from its language tag
-  def language
+  def default_language
     tag = self.languages.first
     return tag ? tag.name : nil
   end
-
 
   # -------------------------------------------------------------
   # return true if user has attempted this exercise version or not.
@@ -456,6 +466,7 @@ class Exercise < ActiveRecord::Base
       language_list.each do |lan|
         lan = lan.delete(" ")
         temp = self.current_versions.create(exercise_id: self.id)
+        temp.save
         temp.coding_language_list.add(lan)
         temp.save
       end
