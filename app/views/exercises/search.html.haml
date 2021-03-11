@@ -14,6 +14,7 @@
     = render row, uid: uid
     .clearfix
 
+-# If @exs was empty, user would have been sent to exercises_path
 - if not(@exs.empty?)
   - @exs = @exs.page params[:page]
   %h2 Individual Exercises
