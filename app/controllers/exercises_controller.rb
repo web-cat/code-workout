@@ -7,6 +7,7 @@ class ExercisesController < ApplicationController
 
   load_and_authorize_resource
   skip_authorize_resource only: [:practice, :call_open_pop]
+  skip_before_action :verify_authenticity_token, :only [:call_open_pop]
 
   #~ Action methods ...........................................................
   after_action :allow_iframe, only: [:practice, :embed]
