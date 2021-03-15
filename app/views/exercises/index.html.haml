@@ -4,7 +4,7 @@
   %li= link_to 'Gym', gym_url
   %li.active Exercises
 
--range = @tags[0].taggings_count / 5
+-range = @tags[0].taggings_count / 4
 %ul.cloud{"aria-label" => "Webdev tag cloud", role: "navigation"}
   - tag_cloud(@tags, %w()) do |tag, css_class|
     %li

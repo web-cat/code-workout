@@ -233,12 +233,12 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   def random_exercise
     #TBD Remove nil check
-    if params[:type].nil?
-      exercise_dump = Exercise.where(is_public: true).tagged_with([params[:language]])
-    elsif params[:type]
-      exercise_dump = Exercise.where(is_public: true).tagged_with(["multiple choice","single answer"], :any => true)
+    public_exercises = Exercise.where(is_public: true)
+
+    if params[:type]
+      exercise_dump = public_exercises.tagged_with(["multiple choice","single answer"], :any => true)
     else
-      exercise_dump = Exercise.where(is_public: true).tagged_with([params[:language]])
+      exercise_dump = public_exercises.tagged_with([params[:language]])
     end
   
     # exercise_dump = []
@@ -448,7 +448,10 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   def practice
     # lti launch
-
+    if session[:leaf_language]
+      session[:leaf_language] = params[:coding_language] 
+    end
+    
     @lti_launch = params[:lti_launch]
     if params[:exercise_version_id] || params[:id]
       set_exercise_from_params
@@ -592,11 +595,9 @@ class ExercisesController < ApplicationController
     end
 
 
-  
-
     @responses = ['There are no responses yet!']
     @explain = ['There are no explanations yet!']
-    if session[:leaf_exercises]
+    if session[:leaf_exercises] 
       session[:leaf_exercises] << @exercise.id
     else
       session[:leaf_exercises] = [@exercise.id]

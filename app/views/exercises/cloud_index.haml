@@ -6,7 +6,7 @@
 %br
 %br
 %br
--range = @languages_tags[0].taggings_count / 5
+-range = @languages_tags[0].taggings_count / 4
 %ul.cloud.nav_cloud{"label" => "tag cloud", role: "navigation"}
   - tag_cloud(@languages_tags, %w()) do |tag, css_class|
     %li
@@ -20,7 +20,7 @@
 %br
 %br
 %br
--range = @style_tags[0].taggings_count / 5
+-range = @style_tags[0].taggings_count / 4
 %ul.cloud.nav_cloud{"label" => "tag cloud", role: "navigation"}
   - tag_cloud(@style_tags, %w()) do |tag, css_class|
     %li
