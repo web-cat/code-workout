@@ -110,7 +110,7 @@
     .text
       = teaser(workout.description)
   .info
-    = difficulty_image(workout.highest_difficulty.to_i)
+    -# = difficulty_image(workout.highest_difficulty.to_i)
     .taglist
       - workout.tags.each do |t|
         = link_to t.name, exercises_search_path(search: t.name), class: 'tag'

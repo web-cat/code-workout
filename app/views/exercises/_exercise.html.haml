@@ -34,7 +34,8 @@
     - score -= 1
 - else
   - score = score.round(2)
--#
+-ex_id = exercise.id.to_s 
+
 
 - cache [exercise, exercise.current_version, workout, workout_offering, new_workout, start_workout,
   score, pts, size, review, workout_score] do
@@ -91,26 +92,47 @@
 
     - if !new_workout
       .summary
-        - if !attempt || !workout_score || workout_score.show_feedback?
-          .radial-progress{ 'data-progress' => score_pct }
-            .circle
-              .mask.full
-                .fill
-              .mask.half
-                .fill
-                .fill.fix
-              .shadow
-            .inset
-              .score
-                = score.to_s
-                %span.outof>
-                  = "/ "  + pts.to_s
-        - else
-          .radial-progress.masked
-            .circle
-              .shadow
-            .inset
-              .score= image_tag 'pct-blur.png'
+        -# - if !attempt || !workout_score || workout_score.show_feedback?
+        -#   -if @base != "index"
+        -#     .radial-progress{ 'data-progress' => score_pct }
+        -#       .circle
+        -#         .mask.full
+        -#           .fill
+        -#         .mask.half
+        -#           .fill
+        -#           .fill.fix
+        -#         .shadow
+        -#       .inset
+        -#         .score
+        -#           - if pts <= 2
+        -#             = score_pct.to_s
+        -#             %span.outof>
+        -#               = "%" 
+        -#           -else   
+        -#             = score.to_s
+        -#             %span.outof>
+        -#               = "/ "  + pts.to_s
+        -# - else
+        -if @submit_exer.include? ex_id
+          .inset
+            .score= image_tag 'status_submit.png', width: 30, height: 30      
+        -elsif @error_exer.include? ex_id
+          .inset
+            .score= image_tag 'status_error.png', width: 30, height: 30 
+        -elsif @continue_exer.include? ex_id
+          .inset
+            .score= image_tag 'status_continue.png', width: 30, height: 30   
+        -elsif @working_exer.include? ex_id
+          .inset
+            .score= image_tag 'status_working.png', width: 30, height: 30   
+        -else
+          .inset
+            .score= image_tag 'status_unopen.png', width: 30, height: 30  
+        -# .radial-progress.masked
+          -#   .circle
+          -#     .shadow
+          -#   .inset
+          -#     .score= image_tag 'pct-blur.png'   
     - else
       .summary
         .btn.btn-primary.add-ex{data: { ex_id: exercise.id, ex_name: exercise.name } }
@@ -120,12 +142,13 @@
       .text
         = teaser(exercise.current_version.andand.prompts.andand.first.andand.question)
     .info
-      = difficulty_image(exercise.experience.to_i)
-      .taglist
-        - exercise.languages.each do |lang|
-          = link_to lang.name, exercises_search_path(search: lang.name), class: 'tag lang'
-        - exercise.tags.each do |tag|
-          = link_to tag.name, exercises_search_path(search: tag.name), class: 'tag'
+      -# = difficulty_image(exercise.experience.to_i)
+      -if @base != "practice" && (!@base.nil?)
+        .taglist
+          - exercise.languages.each do |lang|
+            = link_to lang.name, exercises_search_path(search: lang.name), class: 'tag lang'
+          - exercise.tags.each do |tag|
+            = link_to tag.name, exercises_search_path(search: tag.name), class: 'tag'
       -#
         - attempt = nil
         - uid = 0

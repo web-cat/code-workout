@@ -16,6 +16,10 @@ grant codeBase "file:${ant.home}/-" {
     permission java.security.AllPermission;
 };
 
+grant {
+  permission java.security.AllPermission;
+};
+
 grant codeBase "file:/usr/share/java/-" {
     permission java.security.AllPermission;
 };

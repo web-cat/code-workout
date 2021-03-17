@@ -15,10 +15,15 @@
         .shadow
       .inset
         .score
-          = score.round(2).to_s
-          %span.outof>
-            = "/ "  + pts.to_s
-
+          - if pts <= 2
+            = score_pct.to_s
+            %span.outof>
+              = "%" 
+          -else   
+            = score.to_s
+            %span.outof>
+              = "/ "  + pts.to_s
+-ex_id = @exercise.id.to_s
 - if @exercise_version.is_mcq?
   - if show_feedback
     - if @attempt.earned_full_points?
@@ -33,6 +38,8 @@
   - else
     Your answer has been saved.
 - elsif @exercise_version.is_coding?
+  -pass = true  
+  -compile = true;
   - answer = @attempt.prompt_answers.first.specific
   - if !answer.error.blank?
     %p Your answer could not be processed because it contains errors:
@@ -41,6 +48,7 @@
         - if i > 0
           %br
         = line
+        -compile = false
   - elsif show_feedback
     %table.table.table-striped.feedback
       %thead
@@ -62,6 +70,7 @@
               - else
                 %td.fail
                   %i.fa.fa-minus-square
+                  -pass = false
               %td
                 = tcr.display_description
                 - if !tcr.pass
@@ -75,6 +84,7 @@
             - else
               %td.fail
                 %i.fa.fa-minus-square
+                -pass = false
             %td hidden test(s)
   - else
     - examples = @exercise_version.prompts.first.specific.examples
@@ -101,10 +111,33 @@
                 - else
                   %td.fail
                     %i.fa.fa-minus-square
+                    -pass = false
         %tr
           %td Other hidden tests
           %td.unknown
             %i.fa.fa-question-circle
 
+  -@working_exer.delete(ex_id)
+  -@continue_exer.delete(ex_id)
+  -@error_exer.delete(ex_id)
+  -@submit_exer.delete(ex_id)
+
+  -session[:working_exer] = @working_exer.uniq
+  -session[:continue_exer] = @continue_exer.uniq
+  -session[:error_exer] = @error_exer.uniq
+  -session[:submit_exer] = @submit_exer.uniq
+
+  -if pass && compile
+    -@submit_exer << ex_id 
+    -session[:submit_exer] = @submit_exer.uniq
+  -elsif !pass 
+    -@continue_exer << ex_id 
+    -session[:continue_exer] = @continue_exer.uniq
+  -elsif !compile 
+    -@error_exer << @exercise.id.to_s  
+    -session[:error_exer] = @error_exer.uniq
+     
+       
+  
 -#= render partial: 'workout_scores/time_remaining',
   locals: { workout_score: @attempt.workout_score }
