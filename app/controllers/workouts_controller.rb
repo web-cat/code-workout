@@ -950,10 +950,6 @@ class WorkoutsController < ApplicationController
             notice: "The time limit has passed for this workout." and return
         end
       end
-      session[:working_exer] = [""]
-      session[:error_exer] = [""]
-      session[:submit_exer] = [""]
-      session[:continue_exer] = [""]
       redirect_to exercise_practice_path(
         @workout.first_exercise,
         workout_id: @workout.id,

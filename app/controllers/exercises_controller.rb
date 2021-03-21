@@ -450,10 +450,13 @@ class ExercisesController < ApplicationController
 
   # -------------------------------------------------------------
   def practice
-    @working_exer = session[:working_exer]
-    @submit_exer= session[:submit_exer]
-    @error_exer = session[:error_exer]
-    @continue_exer = session[:continue_exer]
+    # @display_exercise = @exercise.id
+    # @unopen = false 
+    # @opened = true
+    # @uncompile = false 
+    # @unfinish = false 
+    # @finish = false 
+
     # lti launch
     @lti_launch = params[:lti_launch]
     @base = File.basename(request.env['PATH_INFO'])
@@ -483,9 +486,6 @@ class ExercisesController < ApplicationController
       @workout_offering = nil
       if params[:workout_id]
         @workout = Workout.find(params[:workout_id])
-        @working_exer << params[:id]
-        @working_exer = @working_exer.uniq
-        session[:working_exer] = @working_exer.uniq
       end
     end
 
@@ -650,10 +650,10 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   #GET /evaluate/1
   def evaluate
-    @working_exer = session[:working_exer]
-    @submit_exer= session[:submit_exer]
-    @error_exer = session[:error_exer]
-    @continue_exer = session[:continue_exer]
+    # @working_exer = session[:working_exer]
+    # @submit_exer= session[:submit_exer]
+    # @error_exer = session[:error_exer]
+    # @continue_exer = session[:continue_exer]
 
     @lti_launch = params[:lti_launch]
 		if params[:exercise_version_id] || params[:id]
@@ -819,17 +819,18 @@ class ExercisesController < ApplicationController
 
       @attempt.score = @score
       @attempt.feedback_ready = true
-      @working_exer.delete(@exercise.id.to_s)
-      if @attempt.score == 1.0
-        @submit_exer << @exercise.id.to_s  
-        @submit_exer = @submit_exer.uniq
-        session[:submit_exer] = @submit_exer.uniq
+      # @working_exer.delete(@exercise.id.to_s)
+
+      # if @attempt.score == 1.0
+      #   @submit_exer << @exercise.id.to_s  
+      #   @submit_exer = @submit_exer.uniq
+        # session[:submit_exer] = @submit_exer.uniq
       #Do not show error icon if it is a MCQ question
       # else
       #   @error_exer << @exercise.id.to_s  
       #   @error_exer = @error_exer.uniq
       #   session[:error_exer] = @error_exer.uniq
-      end
+      # end
       @attempt.experience_earned = @xp
       @attempt.save!
       if @workout_score

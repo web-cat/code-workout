@@ -34,11 +34,27 @@
     - score -= 1
 - else
   - score = score.round(2)
--ex_id = exercise.id.to_s 
+-ex_id = exercise.id.to_s
 
+-opened = true
+-unopen = false 
+-uncompile= false
+-unfinish = false
+-finish= false
 
+-p "test"
 - cache [exercise, exercise.current_version, workout, workout_offering, new_workout, start_workout,
-  score, pts, size, review, workout_score] do
+  score, pts, size, review, workout_score, opened, unopen, uncompile, unfinish, finish] do
+
+  -p exercise.id
+  -p opened 
+  -p unopen 
+  -p uncompile
+  -p unfinish
+  -p finish
+  -p score_pct.to_s
+  -p "end print cache value"
+  -finish = true
   %article.exercise.thumbnail{ class: size }
     .title
       - if exercise.is_mcq?
@@ -89,50 +105,51 @@
 
       - if [ 'show', 'index', 'search' ].include?(action_name) && (current_user.andand.can? :edit, exercise)
         .right= button_link 'Edit', edit_exercise_path(exercise), class: 'btn btn-primary btn-sm'
-
+    
     - if !new_workout
       .summary
-        -# - if !attempt || !workout_score || workout_score.show_feedback?
-        -#   -if @base != "index"
-        -#     .radial-progress{ 'data-progress' => score_pct }
-        -#       .circle
-        -#         .mask.full
-        -#           .fill
-        -#         .mask.half
-        -#           .fill
-        -#           .fill.fix
-        -#         .shadow
-        -#       .inset
-        -#         .score
-        -#           - if pts <= 2
-        -#             = score_pct.to_s
-        -#             %span.outof>
-        -#               = "%" 
-        -#           -else   
-        -#             = score.to_s
-        -#             %span.outof>
-        -#               = "/ "  + pts.to_s
-        -# - else
-        -if @submit_exer.include? ex_id
-          .inset
-            .score= image_tag 'status_submit.png', width: 30, height: 30      
-        -elsif @error_exer.include? ex_id
-          .inset
-            .score= image_tag 'status_error.png', width: 30, height: 30 
-        -elsif @continue_exer.include? ex_id
-          .inset
-            .score= image_tag 'status_continue.png', width: 30, height: 30   
-        -elsif @working_exer.include? ex_id
-          .inset
-            .score= image_tag 'status_working.png', width: 30, height: 30   
-        -else
-          .inset
-            .score= image_tag 'status_unopen.png', width: 30, height: 30  
-        -# .radial-progress.masked
-          -#   .circle
-          -#     .shadow
+    
+        - if !attempt || !workout_score || workout_score.show_feedback?
+          -if @base != "index"
+            .radial-progress{ 'data-progress' => score_pct }
+              .circle
+                .mask.full
+                  .fill
+                .mask.half
+                  .fill
+                  .fill.fix
+                .shadow
+              .inset
+                .score
+                  - if pts <= 2
+                    = score_pct.to_s
+                    %span.outof>
+                      = "%" 
+                  -else   
+                    = score.to_s
+                    %span.outof>
+                      = "/ "  + pts.to_s
+        - else
+          -# -if finish
           -#   .inset
-          -#     .score= image_tag 'pct-blur.png'   
+          -#     .score= image_tag 'status_submit.png', width: 30, height: 30      
+          -# -elsif uncompile
+          -#   .inset
+          -#     .score= image_tag 'status_error.png', width: 30, height: 30 
+          -# -elsif unfinish
+          -#   .inset
+          -#     .score= image_tag 'status_continue.png', width: 30, height: 30   
+          -# -elsif opened
+          -#   .inset
+          -#     .score= image_tag 'status_working.png', width: 30, height: 30   
+          -# -else
+          -#   .inset
+          -#     .score= image_tag 'status_unopen.png', width: 30, height: 30  
+      -# .radial-progress.masked
+      -#     .circle
+      -#       .shadow
+      -#     .inset
+      -#       .score= image_tag 'pct-blur.png'   
     - else
       .summary
         .btn.btn-primary.add-ex{data: { ex_id: exercise.id, ex_name: exercise.name } }

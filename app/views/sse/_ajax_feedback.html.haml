@@ -117,25 +117,25 @@
           %td.unknown
             %i.fa.fa-question-circle
 
-  -@working_exer.delete(ex_id)
-  -@continue_exer.delete(ex_id)
-  -@error_exer.delete(ex_id)
-  -@submit_exer.delete(ex_id)
+  -# -@working_exer.delete(ex_id)
+  -# -@continue_exer.delete(ex_id)
+  -# -@error_exer.delete(ex_id)
+  -# -@submit_exer.delete(ex_id)
 
-  -session[:working_exer] = @working_exer.uniq
-  -session[:continue_exer] = @continue_exer.uniq
-  -session[:error_exer] = @error_exer.uniq
-  -session[:submit_exer] = @submit_exer.uniq
+  -# -session[:working_exer] = @working_exer.uniq
+  -# -session[:continue_exer] = @continue_exer.uniq
+  -# -session[:error_exer] = @error_exer.uniq
+  -# -session[:submit_exer] = @submit_exer.uniq
 
-  -if pass && compile
-    -@submit_exer << ex_id 
-    -session[:submit_exer] = @submit_exer.uniq
-  -elsif !pass 
-    -@continue_exer << ex_id 
-    -session[:continue_exer] = @continue_exer.uniq
-  -elsif !compile 
-    -@error_exer << @exercise.id.to_s  
-    -session[:error_exer] = @error_exer.uniq
+  -# -if pass && compile
+  -#   -@submit_exer << ex_id 
+  -#   -session[:submit_exer] = @submit_exer.uniq
+  -# -elsif !pass 
+  -#   -@continue_exer << ex_id 
+  -#   -session[:continue_exer] = @continue_exer.uniq
+  -# -elsif !compile 
+  -#   -@error_exer << @exercise.id.to_s  
+  -#   -session[:error_exer] = @error_exer.uniq
      
        
   
