@@ -42,18 +42,18 @@
 -unfinish = false
 -finish= false
 
--p "test"
+
 - cache [exercise, exercise.current_version, workout, workout_offering, new_workout, start_workout,
   score, pts, size, review, workout_score, opened, unopen, uncompile, unfinish, finish] do
 
-  -p exercise.id
-  -p opened 
-  -p unopen 
-  -p uncompile
-  -p unfinish
-  -p finish
-  -p score_pct.to_s
-  -p "end print cache value"
+  -# -p exercise.id
+  -# -p opened 
+  -# -p unopen 
+  -# -p uncompile
+  -# -p unfinish
+  -# -p finish
+  -# -p score_pct.to_s
+  -# -p "end print cache value"
   -finish = true
   %article.exercise.thumbnail{ class: size }
     .title

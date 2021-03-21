@@ -41,7 +41,7 @@ class TestCase < ActiveRecord::Base
 
   belongs_to :coding_prompt, inverse_of: :test_cases
   has_many :test_case_results, inverse_of: :test_case, dependent: :destroy
-
+  has_one :test_template
   scope :only_examples, -> { where(example: true) }
   scope :only_hidden, -> { where(hidden: true) }
   scope :only_static, -> { where(static: true) }
@@ -287,7 +287,7 @@ class TestCase < ActiveRecord::Base
         }.join('"')
       end
     end
-    TEST_METHOD_TEMPLATES[language] % {
+    code = TEST_METHOD_TEMPLATES[language] % {
       id: self.id.to_s,
       method_name: coding_prompt.method_name,
       class_name: coding_prompt.class_name,
@@ -298,6 +298,10 @@ class TestCase < ActiveRecord::Base
         self.expected_output.include?('[]')) ||
         self.expected_output.start_with?('array(')) ? 'Array' : ''
     }
+    test_template = TestTemplate.create(test_case_id: self.id, code_template: code)
+    test_template.template_language_list.add(language)
+    test_template.save!
+    return code
   end
 
 

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20210201051643) do
+ActiveRecord::Schema.define(version: 20210321190445) do
 
   create_table "active_admin_comments", force: :cascade do |t|
     t.string   "namespace",     limit: 255
@@ -566,6 +566,15 @@ ActiveRecord::Schema.define(version: 20210201051643) do
 
   add_index "test_cases", ["coding_prompt_id"], name: "index_test_cases_on_coding_prompt_id", using: :btree
 
+  create_table "test_templates", force: :cascade do |t|
+    t.text     "code_template", limit: 65535
+    t.integer  "test_case_id",  limit: 4
+    t.datetime "created_at",                  null: false
+    t.datetime "updated_at",                  null: false
+  end
+
+  add_index "test_templates", ["test_case_id"], name: "index_test_templates_on_test_case_id", using: :btree
+
   create_table "time_zones", force: :cascade do |t|
     t.string   "name",       limit: 255
     t.string   "zone",       limit: 255
@@ -762,6 +771,7 @@ ActiveRecord::Schema.define(version: 20210201051643) do
   add_foreign_key "test_case_results", "test_cases", name: "test_case_results_test_case_id_fk"
   add_foreign_key "test_case_results", "users", name: "test_case_results_user_id_fk"
   add_foreign_key "test_cases", "coding_prompts", name: "test_cases_coding_prompt_id_fk"
+  add_foreign_key "test_templates", "test_cases"
   add_foreign_key "users", "global_roles", name: "users_global_role_id_fk"
   add_foreign_key "users", "time_zones", name: "users_time_zone_id_fk"
   add_foreign_key "users", "workout_scores", column: "current_workout_score_id", name: "users_current_workout_score_id_fk"
