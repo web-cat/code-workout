@@ -32,7 +32,7 @@ gem 'active_record_union'
 gem 'mysql2', '~> 0.4.0'
 gem 'modernizr-rails'
 gem 'rubyzip', '>= 1.3.0'
-
+gem "mustache", "~> 1.0"
 # For JSON support
 gem 'rabl'
 gem 'oj', '~> 2.16'

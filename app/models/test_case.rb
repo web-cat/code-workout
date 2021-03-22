@@ -30,11 +30,11 @@
 
 require 'test_case_result'
 
-
 # =============================================================================
 # Represents a test case used to evaluate a student's answer to a coding
 # prompt.
 #
+
 class TestCase < ActiveRecord::Base
 
   #~ Relationships ............................................................
@@ -56,7 +56,7 @@ class TestCase < ActiveRecord::Base
   validates :coding_prompt, presence: true
   validates :weight, presence: true,
     numericality: { greater_than_or_equal_to: 0.0 }
-
+ 
 
   #~ Instance methods .........................................................
 
@@ -287,20 +287,56 @@ class TestCase < ActiveRecord::Base
         }.join('"')
       end
     end
-    code = TEST_METHOD_TEMPLATES[language] % {
-      id: self.id.to_s,
-      method_name: coding_prompt.method_name,
-      class_name: coding_prompt.class_name,
-      input: inp,
-      expected_output: self.expected_output,
-      negative_feedback: self.negative_feedback,
-      array: ((self.expected_output.start_with?('new ') &&
-        self.expected_output.include?('[]')) ||
-        self.expected_output.start_with?('array(')) ? 'Array' : ''
-    }
+    java = false
+    ruby = false
+    python = false
+    cpp = false
+
+    if language.capitalize == "Java"
+      java = true
+    end
+    if language.capitalize == "Ruby"
+      ruby = true
+    end
+    if language.capitalize == "Python"
+      python = true
+    end
+    if language.capitalize == "C++"
+      cpp = true
+    end
+    
+    lan = Template.new
+    lan[:java] = java
+    lan[:ruby] = ruby
+    lan[:python] = python
+    lan[:cpp] = cpp
+    lan[:id] = self.id.to_s
+    lan[:method_name] = coding_prompt.method_name
+    lan[:class_name] = coding_prompt.class_name
+    lan[:input] = inp
+    lan[:expected_output] = self.expected_output
+    lan[:negative_feedback] = self.negative_feedback
+    lan[:array] = ((self.expected_output.start_with?('new ') &&
+                    self.expected_output.include?('[]')) ||
+                    self.expected_output.start_with?('array(')) ? 'Array' : ''
+    code = lan.render
+
+    # code = TEST_METHOD_TEMPLATES[language] % {
+    #   id: self.id.to_s,
+    #   method_name: coding_prompt.method_name,
+    #   class_name: coding_prompt.class_name,
+    #   input: inp,
+    #   expected_output: self.expected_output,
+    #   negative_feedback: self.negative_feedback,
+    #   array: ((self.expected_output.start_with?('new ') &&
+    #     self.expected_output.include?('[]')) ||
+    #     self.expected_output.start_with?('array(')) ? 'Array' : ''
+    # }
+
     test_template = TestTemplate.create(test_case_id: self.id, code_template: code)
     test_template.template_language_list.add(language)
     test_template.save!
+
     return code
   end
 
@@ -363,37 +399,37 @@ class TestCase < ActiveRecord::Base
   end
 
 
-    TEST_METHOD_TEMPLATES = {
-      'Ruby' => <<RUBY_TEST,
-  def test%{id}
-    assert_equal(%{expected_output}, @@subject.%{method_name}(%{input}), "%{negative_feedback}")
-  end
+#     TEST_METHOD_TEMPLATES = {
+#       'Ruby' => <<RUBY_TEST,
+#   def test%{id}
+#     assert_equal(%{expected_output}, @@subject.%{method_name}(%{input}), "%{negative_feedback}")
+#   end
 
-RUBY_TEST
-      'Python' => <<PYTHON_TEST,
-    def test%{id}(self):
-        self.assertEqual(%{expected_output}, self.__%{method_name}(%{input}))
+# RUBY_TEST
+#       'Python' => <<PYTHON_TEST,
+#     def test%{id}(self):
+#         self.assertEqual(%{expected_output}, self.__%{method_name}(%{input}))
 
-PYTHON_TEST
-      'Java' => <<JAVA_TEST,
-    @Test
-    public void test_%{id}()
-    {
-        assertEquals(
-          "%{negative_feedback}",
-          %{expected_output},
-          subject.%{method_name}(%{input}));
-    }
-JAVA_TEST
-      'C++' => <<CPP_TEST
-    void test%{id}()
-    {
-        TSM_ASSERT_EQUALS(
-          "%{negative_feedback}",
-          %{expected_output},
-          subject.%{method_name}(%{input}));
-    }
-CPP_TEST
-    }
+# PYTHON_TEST
+#       'Java' => <<JAVA_TEST,
+#     @Test
+#     public void test_%{id}()
+#     {
+#         assertEquals(
+#           "%{negative_feedback}",
+#           %{expected_output},
+#           subject.%{method_name}(%{input}));
+#     }
+# JAVA_TEST
+#       'C++' => <<CPP_TEST
+#     void test%{id}()
+#     {
+#         TSM_ASSERT_EQUALS(
+#           "%{negative_feedback}",
+#           %{expected_output},
+#           subject.%{method_name}(%{input}));
+#     }
+# CPP_TEST
+#     }
 
 end
