@@ -287,57 +287,40 @@ class TestCase < ActiveRecord::Base
         }.join('"')
       end
     end
-    java = false
-    ruby = false
-    python = false
-    cpp = false
 
-    if language.capitalize == "Java"
-      java = true
-    end
-    if language.capitalize == "Ruby"
-      ruby = true
-    end
-    if language.capitalize == "Python"
-      python = true
-    end
-    if language.capitalize == "C++"
-      cpp = true
+    if self.test_template.nil?
+      code = test_render(
+        language.capitalize,
+        self.id.to_s,
+        coding_prompt.
+        method_name, 
+        coding_prompt.class_name,
+        inp,
+        self.expected_output,self.negative_feedback, 
+        ((self.expected_output.start_with?('new ') &&
+        self.expected_output.include?('[]')) ||
+        self.expected_output.start_with?('array(')) ? 'Array' : '' )
+
+      # TEST_METHOD_TEMPLATES[language] % {
+      #   id: self.id.to_s,
+      #   method_name: coding_prompt.method_name,
+      #   class_name: coding_prompt.class_name,
+      #   input: inp,
+      #   expected_output: self.expected_output,
+      #   negative_feedback: self.negative_feedback,
+      #   array: ((self.expected_output.start_with?('new ') &&
+      #     self.expected_output.include?('[]')) ||
+      #     self.expected_output.start_with?('array(')) ? 'Array' : ''
+      # }
+  
+      self.build_test_template(code_template:code)
+      test_template.template_language_list.add(language)
+      test_template.save!
+      return code
+    else
+      return self.test_template.code_template
     end
     
-    lan = Template.new
-    lan[:java] = java
-    lan[:ruby] = ruby
-    lan[:python] = python
-    lan[:cpp] = cpp
-    lan[:id] = self.id.to_s
-    lan[:method_name] = coding_prompt.method_name
-    lan[:class_name] = coding_prompt.class_name
-    lan[:input] = inp
-    lan[:expected_output] = self.expected_output
-    lan[:negative_feedback] = self.negative_feedback
-    lan[:array] = ((self.expected_output.start_with?('new ') &&
-                    self.expected_output.include?('[]')) ||
-                    self.expected_output.start_with?('array(')) ? 'Array' : ''
-    code = lan.render
-
-    # code = TEST_METHOD_TEMPLATES[language] % {
-    #   id: self.id.to_s,
-    #   method_name: coding_prompt.method_name,
-    #   class_name: coding_prompt.class_name,
-    #   input: inp,
-    #   expected_output: self.expected_output,
-    #   negative_feedback: self.negative_feedback,
-    #   array: ((self.expected_output.start_with?('new ') &&
-    #     self.expected_output.include?('[]')) ||
-    #     self.expected_output.start_with?('array(')) ? 'Array' : ''
-    # }
-
-    test_template = TestTemplate.create(test_case_id: self.id, code_template: code)
-    test_template.template_language_list.add(language)
-    test_template.save!
-
-    return code
   end
 
 
@@ -398,7 +381,85 @@ class TestCase < ActiveRecord::Base
     str.sub(regex, '').tr(',', ' ').strip.split(/\s+/).uniq.join('|')
   end
 
+  def test_render(lan,id,method_name,class_name,input,expected_output,negative_feedback,array)
+    case lan
+    when "Java"
+      Mustache.render('  
+        @Test
+        public void test_{{id}}()
+        {
+            assertEquals(
+              "{{negative_feedback}}",
+              {{expected_output}},
+              subject.{{method_name}}({{input}}));
+        }',
+        id: id,
+        method_name: 
+        method_name,
+        class_name:
+        class_name,
+        input:input, 
+        expected_output:
+        expected_output,
+        negative_feedback:negative_feedback,
+        array:array
+      )
+    when "Ruby"
+      Mustache.render(
+        'def test{{id}}
+          assert_equal({{expected_output}}, @@subject.{{method_name}}({{input}}), "{{negative_feedback}}")
+        end',
+        id: id,
+        method_name: 
+        method_name,
+        class_name:
+        class_name,
+        input:input, 
+        expected_output:
+        expected_output,
+        negative_feedback:negative_feedback,
+        array:array
+      ) 
+    when "Python"
+      Mustache.render(
+        'def test{{id}}(self):
+          self.assertEqual({{expected_output}}, self.__{{method_name}}({{input}}))',
+        id: id,
+        method_name: 
+        method_name,
+        class_name:
+        class_name,
+        input:input, 
+        expected_output:
+        expected_output,
+        negative_feedback:negative_feedback,
+        array:array
+      )
+    when "c++"
+      Mustache.render(
+        'void test{{id}}()
+        {
+            TSM_ASSERT_EQUALS(
+              "{{negative_feedback}}",
+              {{expected_output}},
+              subject.{{method_name}}({{input}}));
+        }',
+        id: id,
+        method_name: 
+        method_name,
+        class_name:
+        class_name,
+        input:input, 
+        expected_output:
+        expected_output,
+        negative_feedback:negative_feedback,
+        array:array
+      )
+    end
+  end
 
+
+  
 #     TEST_METHOD_TEMPLATES = {
 #       'Ruby' => <<RUBY_TEST,
 #   def test%{id}
