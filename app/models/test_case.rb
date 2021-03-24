@@ -287,10 +287,26 @@ class TestCase < ActiveRecord::Base
         }.join('"')
       end
     end
+    java = false
+    ruby = false
+    python = false
+    cpp = false
+    if language.capitalize == "Java"
+      java = true
+    end
+    if language.capitalize == "Ruby"
+      ruby = true
+    end
+    if language.capitalize == "Python"
+      python = true
+    end
+    if language.capitalize == "C++"
+      cpp = true
+    end
 
     if self.test_template.nil?
       code = test_render(
-        language.capitalize,
+        java,python,ruby,cpp,
         self.id.to_s,
         coding_prompt.
         method_name, 
@@ -381,18 +397,42 @@ class TestCase < ActiveRecord::Base
     str.sub(regex, '').tr(',', ' ').strip.split(/\s+/).uniq.join('|')
   end
 
-  def test_render(lan,id,method_name,class_name,input,expected_output,negative_feedback,array)
-    case lan
-    when "Java"
+  def test_render(java,python,ruby,cpp,id,method_name,class_name,input,expected_output,negative_feedback,array)
       Mustache.render('  
-        @Test
-        public void test_{{id}}()
-        {
+        {{#java}}
+          public void test_{{id}}()
+          {
             assertEquals(
               "{{negative_feedback}}",
               {{expected_output}},
               subject.{{method_name}}({{input}}));
-        }',
+          }
+        {{/java}}
+
+        {{#ruby}}
+          def test{{id}}
+            assert_equal({{expected_output}}, @@subject.{{method_name}}({{input}}), "{{negative_feedback}}")
+          end
+        {{/ruby}}
+
+        {{#python}}
+          def test{{id}}(self):
+            self.assertEqual({{expected_output}}, self.__{{method_name}}({{input}}))
+        {{/python}}
+
+        {{#cpp}}
+          void test{{id}}()
+          {
+              TSM_ASSERT_EQUALS(
+                "{{negative_feedback}}",
+                {{expected_output}},
+                subject.{{method_name}}({{input}}));
+          }
+        {{/cpp}}',
+        java:java,
+        python:python,
+        ruby:ruby,
+        cpp:cpp,
         id: id,
         method_name: 
         method_name,
@@ -404,58 +444,6 @@ class TestCase < ActiveRecord::Base
         negative_feedback:negative_feedback,
         array:array
       )
-    when "Ruby"
-      Mustache.render(
-        'def test{{id}}
-          assert_equal({{expected_output}}, @@subject.{{method_name}}({{input}}), "{{negative_feedback}}")
-        end',
-        id: id,
-        method_name: 
-        method_name,
-        class_name:
-        class_name,
-        input:input, 
-        expected_output:
-        expected_output,
-        negative_feedback:negative_feedback,
-        array:array
-      ) 
-    when "Python"
-      Mustache.render(
-        'def test{{id}}(self):
-          self.assertEqual({{expected_output}}, self.__{{method_name}}({{input}}))',
-        id: id,
-        method_name: 
-        method_name,
-        class_name:
-        class_name,
-        input:input, 
-        expected_output:
-        expected_output,
-        negative_feedback:negative_feedback,
-        array:array
-      )
-    when "c++"
-      Mustache.render(
-        'void test{{id}}()
-        {
-            TSM_ASSERT_EQUALS(
-              "{{negative_feedback}}",
-              {{expected_output}},
-              subject.{{method_name}}({{input}}));
-        }',
-        id: id,
-        method_name: 
-        method_name,
-        class_name:
-        class_name,
-        input:input, 
-        expected_output:
-        expected_output,
-        negative_feedback:negative_feedback,
-        array:array
-      )
-    end
   end
 
 
