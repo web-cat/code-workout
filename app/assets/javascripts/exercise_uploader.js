@@ -176,3 +176,43 @@ $("#exercise_files").bind("change", function (e)
 
 apply_hide_and_show()
 create_text_and_button(old_files_name,"old")
+
+
+// upload yaml file
+document.getElementById('yaml')
+  .addEventListener('change', getFile)
+
+function getFile(event) {
+	const input = event.target
+  if ('files' in input && input.files.length > 0) {
+	  placeFileContent(
+      document.getElementById('exercise_exercise_version_text_representation'),
+      input.files[0])
+  }
+}
+
+//upcate textarea
+function placeFileContent(target, file) {
+	readFileContent(file).then(content => {
+    target.innerHTML = content
+    //update CodeMirror
+    $('.cm-s-aptana').remove();
+    var editor = CodeMirror.fromTextArea(document.getElementById("exercise_exercise_version_text_representation"), {
+      mode: "yaml",
+      gutters: ["code"], 
+      lineNumbers: true,
+    });
+    $('.cm-s-default').addClass("cm-s-aptana CodeMirror-wrap CodeMirror");
+    editor.setValue(content)
+  }).catch(error => console.log(error))
+}
+
+
+function readFileContent(file) {
+	const reader = new FileReader()
+  return new Promise((resolve, reject) => {
+    reader.onload = event => resolve(event.target.result)
+    reader.onerror = error => reject(error)
+    reader.readAsText(file)
+  })
+}

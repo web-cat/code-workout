@@ -44,9 +44,11 @@ class ExerciseCollection < ActiveRecord::Base
       if e.exercise_collection.nil?
         e.exercise_collection = self
         e.save!
+        return false;
       elsif override
         e.exercise_collection = self
         e.save!
+        return true;
       end
     end
   end

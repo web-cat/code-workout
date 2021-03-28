@@ -377,10 +377,17 @@ class ExercisesController < ApplicationController
 
     # parse the text_representation
     exercises = ExerciseRepresenter.for_collection.new([]).from_hash(hash)
+
     success_all = true
     error_msgs = []
     success_msgs = []
     exercises.each do |e|
+      unless e.exercise_collection.nil?
+        unless e.exercise_collection.owned_by?(current_user)
+          success_all = false
+          error_msgs <<  "You do not have right to overwrite this existing exercise!"
+        end
+      end
       if !e.save
         success_all = false
         # put together an error message
@@ -417,7 +424,9 @@ class ExercisesController < ApplicationController
             end
           end
         end
-        exercise_collection.andand.add(e, override: true)
+        if exercise_collection.andand.add(e, override: true)
+          flash.alert = "You are overwrite an existing exercise."
+        end
         e.current_version.update(text_representation: text_representation)
         success_msgs <<
           "<li>X#{e.id}: #{e.name} saved, try it #{view_context.link_to 'here', exercise_practice_path(e)}.</li>"
@@ -427,6 +436,7 @@ class ExercisesController < ApplicationController
     if success_all
       success_msgs = 'Success!<ul>' + success_msgs.join("") + "</ul>"
       redirect_to @return_to, flash: { success: success_msgs.html_safe } and return
+     
     else
       if !success_msgs.blank?
         error_msgs << "Some exercises were successfully saved."
@@ -449,13 +459,7 @@ class ExercisesController < ApplicationController
 
   # -------------------------------------------------------------
   def practice
-    # @display_exercise = @exercise.id
-    # @unopen = false 
-    # @opened = true
-    # @uncompile = false 
-    # @unfinish = false 
-    # @finish = false 
-
+  
     # lti launch
     @lti_launch = params[:lti_launch]
     @base = File.basename(request.env['PATH_INFO'])
