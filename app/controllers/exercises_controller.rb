@@ -341,6 +341,11 @@ class ExercisesController < ApplicationController
       hash = YAML.load(text_representation)
       edit_rights = 0 # Personal exercise
     end
+    if params[:org_external_id] !=  hash['external_id'] && !params[:org_external_id].nil?
+      flash.alert = "Submit fail, external_id does not match." 
+      redirect_to edit_exercise_path(params[:exer_id])
+      return
+    end
     files = exercise_params[:files]
     fileList = exercise_params[:fileList] 
     if fileList != "" && !files.nil?
@@ -377,17 +382,11 @@ class ExercisesController < ApplicationController
 
     # parse the text_representation
     exercises = ExerciseRepresenter.for_collection.new([]).from_hash(hash)
-
+    
     success_all = true
     error_msgs = []
     success_msgs = []
     exercises.each do |e|
-      unless e.exercise_collection.nil?
-        unless e.exercise_collection.owned_by?(current_user)
-          success_all = false
-          error_msgs <<  "You do not have right to overwrite this existing exercise!"
-        end
-      end
       if !e.save
         success_all = false
         # put together an error message
@@ -424,9 +423,7 @@ class ExercisesController < ApplicationController
             end
           end
         end
-        if exercise_collection.andand.add(e, override: true)
-          flash.alert = "You are overwrite an existing exercise."
-        end
+        exercise_collection.andand.add(e, override: true)
         e.current_version.update(text_representation: text_representation)
         success_msgs <<
           "<li>X#{e.id}: #{e.name} saved, try it #{view_context.link_to 'here', exercise_practice_path(e)}.</li>"

@@ -10,7 +10,7 @@
 = text_field_tag :yamltext, "", type:"hidden"
 - # list will be [ "Only Me", "user's", "user", "groups", "Everybody"
 - access_control_items = @user_groups.map{ |g| [ g.name, g.id ] }.unshift(['Only Me', 0]).push(['Everybody', -1])
-= semantic_form_for @exercise, url: exercises_upload_create_path, method: :post do |f|
+= semantic_form_for @exercise, url: exercises_upload_create_path(:org_external_id => @exercise.external_id, :exer_id => @exercise.id), method: :post do |f|
   = f.semantic_errors
   .row
     .col-md-4.col-sm-4
