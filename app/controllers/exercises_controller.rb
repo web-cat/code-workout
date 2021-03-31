@@ -342,7 +342,7 @@ class ExercisesController < ApplicationController
       edit_rights = 0 # Personal exercise
     end
     if params[:org_external_id] !=  hash['external_id'] && !params[:org_external_id].nil?
-      flash.alert = "Submit fail, external_id does not match." 
+      flash.alert = " Submission Failed!  External_id does not match. You should use #{params[:org_external_id]} as an external_id for editting current exercise."
       redirect_to edit_exercise_path(params[:exer_id])
       return
     end

@@ -3,6 +3,41 @@
   %p.lead
     Editing 
     = link_to @exercise.display_name, exercise_practice_path(@exercise)
+  .row
+    .col-sm-9
+      %table.table
+        %thead  
+          %tr
+            %th.col-sm-2  Title 
+            %th.col-sm-6  Info
+        %tbody 
+          %tr
+            %th.col-sm-3  Exercise id: 
+            %td.col-sm-6  #{@exercise.id}
+          %tr
+            %th.col-sm-2  Exercise name: 
+            %td.col-sm-6  #{@exercise.name}   
+          %tr
+            %th.col-sm-2  Exercise external id: 
+            %td.col-sm-6  #{@exercise.external_id}
+          %tr
+            %th.col-sm-2  Coding Language: 
+            %td.col-sm-6  TBD
+          %tr
+            %th.col-sm-2  Number of versions:
+            %td.col-sm-6  #{@exercise.current_version_id}
+          %tr
+            %th.col-sm-2  Created at: 
+            %td.col-sm-6  #{@exercise.created_at}
+          %tr
+            %th.col-sm-2  Updated at: 
+            %td.col-sm-6  #{@exercise.updated_at}
+          %tr
+            %th.col-sm-2  Owned by: 
+            %td.col-sm-6  #{current_user.first_name+" "+ current_user.last_name}
+          %tr
+            %th.col-sm-2  Contect email:
+            %td.col-sm-6  #{current_user.email}
 
   = render 'oneblockform', qtype: @exercise.question_type
 
