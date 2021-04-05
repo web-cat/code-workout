@@ -164,7 +164,9 @@ class ExercisesController < ApplicationController
     if @return_to.include?(exercises_search_path)
       @return_to = exercises_path
     end
-    session[:return_to] = @return_to
+    if params[:return_to_mark].nil?
+      session[:return_to] = @return_to
+    end
   end
 
 
@@ -330,6 +332,9 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # POST /exercises/upload_create
   def upload_create
+
+    p exercise_params[:description]
+
     if params[:exercise]
       exercise_params = params[:exercise]
       exercise_version_params = exercise_params[:exercise_version]
@@ -341,9 +346,14 @@ class ExercisesController < ApplicationController
       hash = YAML.load(text_representation)
       edit_rights = 0 # Personal exercise
     end
-    if params[:org_external_id] !=  hash['external_id'] && !params[:org_external_id].nil?
-      flash.alert = " Submission Failed!  External_id does not match. You should use #{params[:org_external_id]} as an external_id for editting current exercise."
-      redirect_to edit_exercise_path(params[:exer_id])
+    if hash && params[:org_external_id].nil? && !Exercise.find_by(external_id: hash['external_id']).nil?
+      flash.alert = " Submission Failed!  External_id #{hash['external_id']} already be used."
+      redirect_to new_exercise_path
+      return
+    end
+    if hash && params[:org_external_id] !=  hash['external_id'] && !params[:org_external_id].nil? 
+      flash.alert = " Submission Failed!  External_id does not match. You should use #{params[:org_external_id]} as an external_id to edit current exercise."
+      redirect_to edit_exercise_path(params[:exer_id], return_to_mark: false)
       return
     end
     files = exercise_params[:files]
@@ -354,7 +364,7 @@ class ExercisesController < ApplicationController
     if !hash.kind_of?(Array)
       hash = [hash]
     end
-
+    @return_to = session.delete(:return_to) || exercises_path
     # figure out if we need to add this to an exercise collection
     exercise_collection = nil
     if edit_rights == 0
@@ -377,8 +387,6 @@ class ExercisesController < ApplicationController
         exercise_collection.save!
       end
     end
-
-    @return_to = session.delete(:return_to) || exercises_path
 
     # parse the text_representation
     exercises = ExerciseRepresenter.for_collection.new([]).from_hash(hash)

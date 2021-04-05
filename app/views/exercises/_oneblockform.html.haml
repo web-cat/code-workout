@@ -1,16 +1,18 @@
 = stylesheet_link_tag "exercise_uploader.scss"
+= javascript_include_tag 'jszip.js'
 = javascript_include_tag 'exercise_uploader.js'
 %p.text.text-info
-  Use the editor below or upload an existing YAML file from your computer.
-%div
-  %input{onclick: "document.getElementById('yaml').click()", type: "button", value: "Load a YAML file", class: 'btn btn-primary'}
-  %span#fileName
-%input#yaml{accept: ".yaml",onchange: "FileSelected()", style: "width: 0;", type: "file"}
--# %button#insert Load File
-= text_field_tag :yamltext, "", type:"hidden"
+  Upload an existing YAML file or a Tar file from your computer.
+-# %div
+-#   %input{onclick: "document.getElementById('yaml').click()", type: "button", value: "Load An Exercise Description", class: 'btn btn-primary'}
+-#   %span#fileName
+-# %input#yaml{accept: ".yaml, .tar, .zip",onchange: "FileSelected()", style: "width: 0;", type: "file"}
+-# = text_field_tag :yamltext, "", type:"hidden"
+
 - # list will be [ "Only Me", "user's", "user", "groups", "Everybody"
 - access_control_items = @user_groups.map{ |g| [ g.name, g.id ] }.unshift(['Only Me', 0]).push(['Everybody', -1])
 = semantic_form_for @exercise, url: exercises_upload_create_path(:org_external_id => @exercise.external_id, :exer_id => @exercise.id), method: :post do |f|
+  = f.file_field :description, multiple: true
   = f.semantic_errors
   .row
     .col-md-4.col-sm-4
