@@ -3,7 +3,7 @@ class ExercisesController < ApplicationController
   require 'oauth/request_proxy/rack_request'
   require 'zip'
   require 'tempfile'
-
+  require 'fileutils'
   load_and_authorize_resource
   skip_authorize_resource only: [:practice, :call_open_pop]
   #skip_before_action :verify_authenticity_token, :only [:call_open_pop]
@@ -324,17 +324,55 @@ class ExercisesController < ApplicationController
     files.each_with_index  do |t,index|
       if !fileList.include? t.original_filename
         files = files.dup.tap{|i| i.delete_at(index)}
-      end
+      end 
     end
     return files
   end
 
+  def update_description(zip_object)
+    self.new
+    @exercise.name = "sample"
+    @exercise.save!
+    ex_ver = @exercise.exercise_versions.create()
+    Zip::File.open(zip_object[0].tempfile) do |zip_file|
+      zip_file.each do |entry|
+        entry.extract
+        content = entry.get_input_stream.read
+        original_filename = entry.name.gsub(/ /, '_')
+        hashval = Digest::MD5.hexdigest File.read "#{entry.name}"
+        uni_filename = hashval + File.extname(entry.name)
+        FileUtils.mv("#{entry.name}", "public/uploads/resource_file/#{uni_filename}")
+        if ResourceFile.all.where(hashval: hashval).exists?
+          ownertable = ex_ver.ownerships.create(filename: original_filename,resource_file_id: ResourceFile.all.where(hashval: hashval).first.id)
+        else      
+          res = ex_ver.resource_files.create!(user_id: current_user.id,filename:uni_filename, hashval:hashval)
+          ownertable = res.ownerships.last
+          ownertable.filename = original_filename
+          ownertable.save
+        end
+      end
+    entry = zip_file.glob('*.yaml').first
+    @text_representation = entry.get_input_stream.read
+    @ownerships_all = []
+    @ownerships_res_name = []
+    ex_ver.ownerships.each do |e|
+      if File.extname(e.filename).match(/jpg|jpeg|png|gif/)
+        @ownerships_all.push(e.filename)
+        uniqueFile = ResourceFile.all.where(id: e.resource_file_id)[0]
+        p uniqueFile.filename
+        @ownerships_res_name.push(uniqueFile.filename)
+      end
+    end
+    render "exercises/new"
+    return
+    end
+  end
+
+
+
   # -------------------------------------------------------------
   # POST /exercises/upload_create
   def upload_create
-
-    p exercise_params[:description]
-
     if params[:exercise]
       exercise_params = params[:exercise]
       exercise_version_params = exercise_params[:exercise_version]
@@ -354,6 +392,10 @@ class ExercisesController < ApplicationController
     if hash && params[:org_external_id] !=  hash['external_id'] && !params[:org_external_id].nil? 
       flash.alert = " Submission Failed!  External_id does not match. You should use #{params[:org_external_id]} as an external_id to edit current exercise."
       redirect_to edit_exercise_path(params[:exer_id], return_to_mark: false)
+      return
+    end
+    unless exercise_params[:description].nil?
+      self.update_description(exercise_params[:description])
       return
     end
     files = exercise_params[:files]
