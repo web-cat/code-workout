@@ -1,0 +1,25 @@
+<p>
+  <strong>ID:</strong>
+  <%= @exercise.exercise_id %>
+</p>
+
+<p>
+  <strong>Code:</strong>
+  <%= @exercise.code %>
+</p>
+
+<h2>Answers</h2>
+<%= render @exercise.answers%>
+
+<h2>Add an answer:</h2>
+<%= form_with(model: [ @exercise, @exercise.answers.build], local: true) do |form| %>
+  <p>
+    <%= form.label :StudentCode %><br>
+    <%= form.text_area :StudentCode %>
+  </p>
+  <p>
+    <%= form.submit %>
+  </p>
+<% end %>
+<%= link_to 'Edit', edit_exercise_path(@exercise) %> |
+<%= link_to 'Back', exercises_path %>

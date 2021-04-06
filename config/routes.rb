@@ -191,6 +191,21 @@ CodeWorkout::Application.routes.draw do
 
 end
 
+#copied from OpenPOP 
+
+#get 'answers/visualize' => 'answers#visualize'
+get 'answers/visualize/pop_exercises/:exercise_id/answers/:id' => 'answers#visualize', as: 'visualize'
+post 'answers/solve/' => 'answers#solve', as: 'solve'
+#get 'answers/solve/:exercise_id' => 'answers#solve', as: 'solve'
+
+resources :pop_exercises do
+  resources :answers do
+    resource :trace
+  end
+end
+#---------------------------------------------------
+
+
 #== Route Map
 =begin
  Prefix Verb   URI Pattern                            Controller#Action

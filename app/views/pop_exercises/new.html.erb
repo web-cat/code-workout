@@ -1,0 +1,34 @@
+<h1>New Exercise</h1>
+<%= form_with scope: @exercise, url: pop_exercises_path, local: true do |form| %>
+
+  <% if @exercise.errors.any? %>
+    <div id="error_explanation">
+      <h2>
+        <%= pluralize(@exercise.errors.count, "error") %> prohibited
+        this article from being saved:
+      </h2>
+      <ul>
+        <% @exercise.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <p>
+    <%= form.label :exercise_id %><br>
+    <%= form.text_field :exercise_id %>
+  </p>
+
+  <p>
+    <%= form.label :code %><br>
+    <%= form.text_area :code %>
+  </p>
+
+  <p>
+    <%= form.submit %>
+  </p>
+
+<% end %>
+
+<%= link_to 'Back', pop_exercises_path %>
