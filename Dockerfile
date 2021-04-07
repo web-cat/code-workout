@@ -56,13 +56,13 @@ RUN gem install bundler -v $BUNDLER_VERSION \
 	&& bundle config --global bin "$GEM_HOME/bin" \
 	&& bundle config git.allow_insecure true
 
-VOLUME ${BASEDIR}
-WORKDIR ${BASEDIR}
-
 COPY Gemfile Gemfile
 COPY Gemfile.lock Gemfile.lock
 
 RUN bundle install
+
+VOLUME ${BASEDIR}
+WORKDIR ${BASEDIR}
 
 COPY runservers.sh runservers.sh
 

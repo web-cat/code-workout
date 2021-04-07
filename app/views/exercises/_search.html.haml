@@ -1,4 +1,4 @@
-= form_tag url_for(:controller => 'exercises', :action => 'search'), :method => 'get' , :enforce_utf8 =>false do 
+= form_tag({controller: "/exercises", action: "search"}, method: "get") do
   .row.search
     .input-group
       = text_field_tag :search, params[:search], id: "search_field",

@@ -3,7 +3,7 @@
 - new_workout ||= nil
 - user ||= current_user || User.find_by(id: session[:student_drift_user_id])
 - review ||= false
-= stylesheet_link_tag "custom.scss"
+
 - if params[:review_user_id]
   - user = User.find(params[:review_user_id])
 - workout_offering ||= nil
@@ -80,7 +80,7 @@
           = exercise.display_name
       - elsif workout
         = link_to(exercise.display_name,
-          exercise_practice_path(exercise, 
+          exercise_practice_path(exercise,
           workout_score_id: workout_score.andand.id,
           workout_id: workout.id, lti_launch: @lti_launch))
       - else
