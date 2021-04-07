@@ -7,7 +7,6 @@ class ExercisesController < ApplicationController
 
   load_and_authorize_resource
   skip_authorize_resource only: [:practice, :call_open_pop]
-  #skip_before_action :verify_authenticity_token, :only [:call_open_pop]
 
   #~ Action methods ...........................................................
   after_action :allow_iframe, only: [:practice, :embed]
@@ -898,8 +897,8 @@ class ExercisesController < ApplicationController
   def call_open_pop
     require 'rest-client'
     require 'json'
-    payload = {'exercise_id' => params[:exercise_id],
-            'code' => params[:code]
+    payload = {'exercise_id' => params[:exercise_id].strip,
+               'code' => params[:code].strip
     }
 
     request = RestClient::Request.execute(:method => :post,
