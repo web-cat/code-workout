@@ -2,16 +2,14 @@
 = javascript_include_tag 'exercise_uploader.js'
 %p.text.text-info
   Upload an existing YAML file or a Tar file from your computer.
--# %div
--#   %input{onclick: "document.getElementById('yaml').click()", type: "button", value: "Load An Exercise Description", class: 'btn btn-primary'}
--#   %span#fileName
--# %input#yaml{accept: ".yaml, .tar, .zip",onchange: "FileSelected()", style: "width: 0;", type: "file"}
--# = text_field_tag :yamltext, "", type:"hidden"
 
 - # list will be [ "Only Me", "user's", "user", "groups", "Everybody"
 - access_control_items = @user_groups.map{ |g| [ g.name, g.id ] }.unshift(['Only Me', 0]).push(['Everybody', -1])
 = semantic_form_for @exercise, url: exercises_upload_create_path(:org_external_id => @exercise.external_id, :exer_id => @exercise.id), method: :post do |f|
-  = f.file_field :description, multiple: true
+  .description-upload
+    %label{:for => "exercise_description", :value => "test"}
+      %a.btn.btn-info.btn-sm{class: 'btn btn-primary'} Load An Exercise Description
+    = f.file_field :description, multiple: true, accept: '.zip,.yaml'
   = f.semantic_errors
   .row
     .col-md-4.col-sm-4
@@ -25,10 +23,9 @@
           input_html: { class: 'code', autofocus: true, data: { lang: 'text/x-yaml' },
           value: @text_representation.present? ? @text_representation : '' }, 
           label: 'YAML Representation of the Exercise:' 
-
   = f.text_field :fileList, value: "", :type => "hidden"
-  = f.text_field :oldfileList, value: @ownerships_all, :type => "hidden"
-  = f.text_field :ownerships_res_name, value: @ownerships_res_name, :type => "hidden"
+  = f.text_field :file_orig_name, value: @ownerships_all, :type => "hidden"
+  = f.text_field :file_hash_name, value: @ownerships_res_name, :type => "hidden"
   #fileName
   #filelist.container.hidden
     .row
@@ -39,14 +36,14 @@
               %th.col-sm-1  Type 
               %th.col-sm-2  Thumbnail
               %th.col-sm-2  Name
-              %th.col-sm-1  Pixel
-              %th.col-sm-1  Uploaded
+              %th.col-sm-2  Pixel
+              -# %th.col-sm-1  Uploaded
               %th.col-sm-1  Delete
   .image-upload
-    %label{:for => "exercise_files"}
+    %label{:for => "exercise_files"} 
       %a.btn.btn-info.btn-lg{class: 'btn btn-primary'}
-        %span.glyphicon.glyphicon-file
-    = f.file_field :files, multiple: true
+        %span.glyphicon.glyphicon-plus  
+    = f.file_field :files, multiple: true, accept: 'image/png,image/gif,image/jpeg,image/jpg'
   = stylesheet_link_tag "exercise_uploader.scss"
   = javascript_include_tag 'exercise_uploader.js'
   %p 

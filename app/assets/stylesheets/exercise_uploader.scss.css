@@ -9,6 +9,13 @@ img {
    display: none;
 }
 
+
+.description-upload > input
+{
+  display: none;
+}
+
+
 .image-upload > label{
   cursor:pointer;
   padding-left: 1em;

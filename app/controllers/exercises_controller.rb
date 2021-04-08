@@ -138,16 +138,15 @@ class ExercisesController < ApplicationController
   # GET /exercises/1/edit
   def edit
     @exercise_version = @exercise.current_version
-    @ownerships_all = []
-    @ownerships_res_name = []
+    @ownerships_all = params[:ownerships_all] || []
+    @ownerships_res_name = params[:ownerships_res_name] || []
     @exercise_version.ownerships.each do |e|
-      @ownerships_all.push(e.filename)
+      @ownerships_all.push(e.filename) unless @ownerships_all.include?(e.filename)
       uniqueFile = ResourceFile.all.where(id: e.resource_file_id)[0]
-      uniqueFilename = uniqueFile.token+uniqueFile.filename.file.file.match(/\.\w*/)[0]
-      @ownerships_res_name.push(uniqueFilename)
+      uniqueFilename = uniqueFile.hashval+File.extname(e.filename) 
+      @ownerships_res_name.push(uniqueFilename) unless @ownerships_res_name.include?(uniqueFilename)
     end
-
-    @text_representation = @exercise_version.text_representation ||
+    @text_representation = params[:text_representation] ||@exercise_version.text_representation ||
       ExerciseRepresenter.new(@exercise).to_hash.to_yaml
     @user_groups = current_user.user_groups
     # figure out the edit rights to this exercise
@@ -320,54 +319,59 @@ class ExercisesController < ApplicationController
   end
 
 
-  def cleanFile(files,fileList)
-    files.each_with_index  do |t,index|
-      if !fileList.include? t.original_filename
-        files = files.dup.tap{|i| i.delete_at(index)}
-      end 
+  def move_and_rename_res(path,tag)
+    temp = File.basename(path, ".*")
+    temp_name = temp.gsub(/ /, '_')
+    temp_extention = File.extname(path)
+    temp_uniqe_hash =  Digest::MD5.hexdigest File.read "#{path}"
+    if tag
+      FileUtils.mv("#{path}", "public/uploads/resource_file/#{temp_uniqe_hash+temp_extention}")
     end
-    return files
+    return temp_name,temp_extention,temp_uniqe_hash
   end
 
-  def update_description(zip_object)
+  def update_description(obj,tag,file_name,resource_name,id)
     self.new
-    @exercise.name = "sample"
-    @exercise.save!
-    ex_ver = @exercise.exercise_versions.create()
-    Zip::File.open(zip_object[0].tempfile) do |zip_file|
-      zip_file.each do |entry|
-        entry.extract
-        content = entry.get_input_stream.read
-        original_filename = entry.name.gsub(/ /, '_')
-        hashval = Digest::MD5.hexdigest File.read "#{entry.name}"
-        uni_filename = hashval + File.extname(entry.name)
-        FileUtils.mv("#{entry.name}", "public/uploads/resource_file/#{uni_filename}")
-        if ResourceFile.all.where(hashval: hashval).exists?
-          ownertable = ex_ver.ownerships.create(filename: original_filename,resource_file_id: ResourceFile.all.where(hashval: hashval).first.id)
-        else      
-          res = ex_ver.resource_files.create!(user_id: current_user.id,filename:uni_filename, hashval:hashval)
-          ownertable = res.ownerships.last
-          ownertable.filename = original_filename
-          ownertable.save
+    @ownerships_all = file_name
+    @ownerships_res_name = resource_name
+    if tag == "description"
+      if File.extname(obj[0].tempfile) == ".zip"
+        Zip::File.open(obj[0].tempfile) do |zip_file|
+          zip_file.each do |entry|
+            entry.extract
+            content = entry.get_input_stream.read
+            res = move_and_rename_res(entry.name, true)
+            if res[1].match(/jpg|jpeg|png|gif/)
+              @ownerships_all.push(res[0]+res[1]) unless @ownerships_all.include?(res[0]+res[1])
+              @ownerships_res_name.push(res[2]+res[1]) unless @ownerships_res_name.include?(res[2]+res[1])
+            end
+          end
+        entry = zip_file.glob('*.yaml').first
+        @text_representation = entry.get_input_stream.read
+        end
+      elsif File.extname(obj[0].tempfile) == ".yaml"
+        @text_representation = File.read(obj[0].tempfile)
+      else
+        flash.alert = " Upload Failed!  Please upload a zip file or a yaml file."
+      end
+    end
+    if tag == "img"
+      unless obj.nil? 
+        obj.each do |file|
+          tempfile = Tempfile.create{file}
+          res = move_and_rename_res(tempfile.path,false)
+          @ownerships_all.push(file.original_filename) unless @ownerships_all.include?(file.original_filename)
+          @ownerships_res_name.push(res[2]+res[1]) unless @ownerships_res_name.include?(res[2]+res[1])
         end
       end
-    entry = zip_file.glob('*.yaml').first
-    @text_representation = entry.get_input_stream.read
-    @ownerships_all = []
-    @ownerships_res_name = []
-    ex_ver.ownerships.each do |e|
-      if File.extname(e.filename).match(/jpg|jpeg|png|gif/)
-        @ownerships_all.push(e.filename)
-        uniqueFile = ResourceFile.all.where(id: e.resource_file_id)[0]
-        p uniqueFile.filename
-        @ownerships_res_name.push(uniqueFile.filename)
-      end
     end
-    render "exercises/new"
+    if id.nil?
+      render "exercises/new"
+    else
+      redirect_to edit_exercise_path(id, return_to_mark: false, ownerships_all:@ownerships_all, ownerships_res_name:@ownerships_res_name,text_representation: @text_representation )
+    end
     return
-    end
   end
-
 
 
   # -------------------------------------------------------------
@@ -384,25 +388,28 @@ class ExercisesController < ApplicationController
       hash = YAML.load(text_representation)
       edit_rights = 0 # Personal exercise
     end
+    file_name = exercise_params[:file_orig_name].split(" ")
+    resource_name = exercise_params[:file_hash_name].split(" ")
+    unless exercise_params[:description].nil? 
+      self.update_description(exercise_params[:description],"description",file_name,resource_name,params[:exer_id])
+      return
+    end
+    unless exercise_params[:files].nil?
+      self.update_description(exercise_params[:files],"img",file_name,resource_name,params[:exer_id])
+      return
+    end 
+
     if hash && params[:org_external_id].nil? && !Exercise.find_by(external_id: hash['external_id']).nil?
       flash.alert = " Submission Failed!  External_id #{hash['external_id']} already be used."
       redirect_to new_exercise_path
       return
     end
-    if hash && params[:org_external_id] !=  hash['external_id'] && !params[:org_external_id].nil? 
+    if hash && params[:org_external_id] !=  hash['external_id'].to_s && !params[:org_external_id].nil? 
       flash.alert = " Submission Failed!  External_id does not match. You should use #{params[:org_external_id]} as an external_id to edit current exercise."
-      redirect_to edit_exercise_path(params[:exer_id], return_to_mark: false)
+      redirect_to  edit_exercise_path(params[:exer_id], return_to_mark: false)
       return
     end
-    unless exercise_params[:description].nil?
-      self.update_description(exercise_params[:description])
-      return
-    end
-    files = exercise_params[:files]
-    fileList = exercise_params[:fileList] 
-    if fileList != "" && !files.nil?
-      files = cleanFile(files,fileList)
-    end
+
     if !hash.kind_of?(Array)
       hash = [hash]
     end
@@ -429,7 +436,6 @@ class ExercisesController < ApplicationController
         exercise_collection.save!
       end
     end
-
     # parse the text_representation
     exercises = ExerciseRepresenter.for_collection.new([]).from_hash(hash)
     
@@ -447,31 +453,17 @@ class ExercisesController < ApplicationController
         error_msgs << "</ul>"
       else # successfully created the exercise
         ex_ver = e.exercise_versions.first
-        # inherit ownertable
-        if !e.exercise_versions.offset(1).first.nil?
-          oldversion = e.exercise_versions.offset(1).first
-          oldversion.ownerships.each do |ownerentry|
-            if fileList != "" 
-              if fileList.include? ownerentry.filename
-                ownertable = ex_ver.ownerships.create(filename: ownerentry.filename, resource_file_id: ownerentry.resource_file_id)
-              end
-            end
-          end
-        end
-        unless files.nil? 
-          files.each do |file|
-            file.original_filename = file.original_filename.gsub(/ /, '_')
-            tempfile = Tempfile.create{file}
-            hashval = Digest::MD5.hexdigest File.read "#{tempfile.path}"
+        file_name.each_with_index  do |file,index|
+            hashval = File.basename(resource_name[index], ".*")   
             if ResourceFile.all.where(hashval: hashval).exists?
-              ownertable = ex_ver.ownerships.create(filename: file.original_filename,resource_file_id: ResourceFile.all.where(hashval: hashval).first.id)
+              ownertable = ex_ver.ownerships.create(filename: file,resource_file_id: ResourceFile.all.where(hashval: hashval).first.id)
             else       
               res = ex_ver.resource_files.create!(user_id: current_user.id,filename:file, hashval:hashval)
               ownertable = res.ownerships.last
-              ownertable.filename = file.original_filename
+              ownertable.filename = file
               ownertable.save
             end
-          end
+        
         end
         exercise_collection.andand.add(e, override: true)
         e.current_version.update(text_representation: text_representation)
