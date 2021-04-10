@@ -102,13 +102,8 @@ class ExercisesController < ApplicationController
     @exs = Exercise.search(@terms, current_user)
     @msg = ''
     if @exs.blank?
-      @msg = 'No exercises were found for your search request. ' \
-        'Try these instead...'
-      @exs = Exercise.publicly_visible.shuffle.first(16)
-    end
-    if @exs.blank?
-      @msg = 'No public exercises are available to search right now. ' \
-        'Wait for contributors to add more.'
+      @msg = "No exercises were found for the search terms: #{@terms}"
+      redirect_to(exercises_path, alert: @msg) and return
     end
 
     respond_to do |format|

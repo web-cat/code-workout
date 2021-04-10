@@ -1,4 +1,5 @@
-- if current_user.andand.can? :request_privileged_access, @course
+-# !is_privileged condition needed for administrators. 
+- if !is_privileged && current_user.andand.can?(:request_privileged_access, @course)
   - url = organization_request_privileged_access_path(organization_id: course.organization.slug, id: course.id, requester_id: current_user.id)
   = button_link 'Request access to course materials', url, id: 'request-privileged-access', remote: true
   %br
