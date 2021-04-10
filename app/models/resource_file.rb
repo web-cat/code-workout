@@ -13,6 +13,7 @@
 #
 # Indexes
 #
+#  index_resource_files_on_hashval  (hashval)
 #  index_resource_files_on_token    (token)
 #  index_resource_files_on_user_id  (user_id)
 #

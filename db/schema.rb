@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20210201051643) do
+ActiveRecord::Schema.define(version: 20210410232421) do
 
   create_table "active_admin_comments", force: :cascade do |t|
     t.string   "namespace",     limit: 255
@@ -411,6 +411,7 @@ ActiveRecord::Schema.define(version: 20210201051643) do
   end
 
   add_index "ownerships", ["exercise_version_id"], name: "index_ownerships_on_exercise_version_id", using: :btree
+  add_index "ownerships", ["filename"], name: "index_ownerships_on_filename", using: :btree
   add_index "ownerships", ["resource_file_id"], name: "index_ownerships_on_resource_file_id", using: :btree
 
   create_table "prompt_answers", force: :cascade do |t|
@@ -451,6 +452,7 @@ ActiveRecord::Schema.define(version: 20210201051643) do
     t.string   "hashval",    limit: 255
   end
 
+  add_index "resource_files", ["hashval"], name: "index_resource_files_on_hashval", using: :btree
   add_index "resource_files", ["token"], name: "index_resource_files_on_token", using: :btree
   add_index "resource_files", ["user_id"], name: "index_resource_files_on_user_id", using: :btree
 

@@ -12,6 +12,7 @@
 # Indexes
 #
 #  index_ownerships_on_exercise_version_id  (exercise_version_id)
+#  index_ownerships_on_filename             (filename)
 #  index_ownerships_on_resource_file_id     (resource_file_id)
 #
 # Foreign Keys
