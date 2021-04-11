@@ -203,8 +203,8 @@ class ExerciseVersion < ActiveRecord::Base
               fb = block[0].gsub("#{block[0]}", "<img src=\"/uploads/resource_file/#{unique_file_name}\" class=\"img-for-ex\">")
             end
             self.prompts[0].question = self.prompts[0].question.gsub("#{block[0]}", "#{fb}")
-          else
-            self.prompts[0].question = self.prompts[0].question.gsub("#{block[0]}", "(**src=#{enter_name}** Image does not exist!)")
+          # else
+          #   self.prompts[0].question = self.prompts[0].question.gsub("#{block[0]}", "(**src=#{enter_name}** Image does not exist!)")
           end
         end
     end
