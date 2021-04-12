@@ -56,3 +56,6 @@ tasks.todo
 server.csr
 server.key
 server.crt
+
+# OpenDSA-DevStack repo management
+devstackPlaceholder.md

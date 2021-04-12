@@ -125,11 +125,13 @@ gem 'ims-lti', '~> 1.1.8'
 gem 'rest-client'
 
 # Gems for cookie updates
-gem 'user_agent_parser' # 2.6 requires ruby 2.4
+gem 'user_agent_parser', '~> 2.7.0'
 gem 'rails_same_site_cookie'
 gem 'sprockets', '< 4.0.0'
 gem 'image_hash'
-gem 'carrierwave', '1.3.1'
+
+# Gems for resource uploder
+gem 'carrierwave', '1.3.2'
 
 gem 'ed25519'
 gem 'bcrypt_pbkdf'
