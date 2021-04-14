@@ -319,19 +319,8 @@ class ExercisesController < ApplicationController
   end
 
 
-  def move_and_rename_res(path,tag)
-    temp = File.basename(path, ".*")
-    temp_name = temp.gsub(/ /, '_')
-    temp_extention = File.extname(path)
-    temp_uniqe_hash =  Digest::MD5.hexdigest File.read "#{path}"
-    if tag
-      FileUtils.mv("#{path}", "public/uploads/resource_file/#{temp_uniqe_hash+temp_extention}")
-    end
-    return temp_name,temp_extention,temp_uniqe_hash
-  end
 
   def update_description(obj,tag,file_name,resource_name,id)
-    self.new
     @ownerships_all = file_name
     @ownerships_res_name = resource_name
     if tag == "description"
@@ -340,7 +329,7 @@ class ExercisesController < ApplicationController
           zip_file.each do |entry|
             entry.extract
             content = entry.get_input_stream.read
-            res = move_and_rename_res(entry.name, true)
+            res = move_and_rename_res(entry.name)
             if res[1].match(/jpg|jpeg|png|gif/)
               @ownerships_all.push(res[0]+res[1]) unless @ownerships_all.include?(res[0]+res[1])
               @ownerships_res_name.push(res[2]+res[1]) unless @ownerships_res_name.include?(res[2]+res[1])
@@ -358,8 +347,7 @@ class ExercisesController < ApplicationController
     if tag == "img"
       unless obj.nil? 
         obj.each do |file|
-          tempfile = Tempfile.create{file}
-          res = move_and_rename_res(tempfile.path,false)
+          res = move_and_rename_res("public/uploads/resource_file/#{file.original_filename}")
           @ownerships_all.push(file.original_filename) unless @ownerships_all.include?(file.original_filename)
           @ownerships_res_name.push(res[2]+res[1]) unless @ownerships_res_name.include?(res[2]+res[1])
         end
@@ -391,10 +379,12 @@ class ExercisesController < ApplicationController
     file_name = exercise_params[:file_orig_name].split(" ")
     resource_name = exercise_params[:file_hash_name].split(" ")
     unless exercise_params[:description].nil? 
+      trigger_uploader(exercise_params[:description])
       self.update_description(exercise_params[:description],"description",file_name,resource_name,params[:exer_id])
       return
     end
     unless exercise_params[:files].nil?
+      trigger_uploader(exercise_params[:files])
       self.update_description(exercise_params[:files],"img",file_name,resource_name,params[:exer_id])
       return
     end 
@@ -475,7 +465,6 @@ class ExercisesController < ApplicationController
     if success_all
       success_msgs = 'Success!<ul>' + success_msgs.join("") + "</ul>"
       redirect_to @return_to, flash: { success: success_msgs.html_safe } and return
-     
     else
       if !success_msgs.blank?
         error_msgs << "Some exercises were successfully saved."
@@ -1049,6 +1038,25 @@ class ExercisesController < ApplicationController
     end
 
 
+    def trigger_uploader(obj)
+      obj.each do |res|
+        File.open(Rails.root.join('public', 'uploads',"resource_file", res.original_filename), 'wb')  do |file|
+          file.write(res.read)
+        end
+      end
+    end
+
+    def move_and_rename_res(path)
+      temp = File.basename(path, ".*")
+      temp_name = temp.gsub(/ /, '_')
+      temp_extention = File.extname(path)
+      temp_uniqe_hash =  Digest::MD5.hexdigest File.read "#{path}"
+      FileUtils.mkdir_p("public/uploads/resource_file")
+      FileUtils.mv("#{path}", "public/uploads/resource_file/#{temp_uniqe_hash+temp_extention}")
+      return temp_name,temp_extention,temp_uniqe_hash
+    end
+
+    
     # -------------------------------------------------------------
     # Only allow a trusted parameter "white list" through.
     def exercise_params
