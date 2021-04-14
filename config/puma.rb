@@ -1,23 +1,20 @@
 # Default to production
 rails_env = rails_env || ENV['RAILS_ENV'] || 'production'
 environment rails_env
+puma_workers = puma_workers || ENV['PUMA_WORKERS'] || 10
+puma_threads_min = puma_threads_min || ENV['PUMA_THREADS_MIN'] || 2
+puma_threads_max = puma_threads_max || ENV['PUMA_THREADS_MAX'] || 2
+puma_daemonize = puma_daemonize|| ENV['PUMA_DAEMONIZE'] || "true"
 
 # For MRI, use workers instead of threads for greater parallelism
-if rails_env == 'production'
-  workers 10
-  threads 2, 2
+workers puma_workers.to_i 
+threads puma_threads_min.to_i , puma_threads_max.to_i
+if puma_daemonize == "true"
   daemonize
   preload_app!
-elsif rails_env == 'staging'
-  workers 4
-  threads 2, 8
-  daemonize
-  preload_app!
-else
-  # development settings are smaller; at least two workers, for SSE
-  workers 2
-  threads 2, 4
 end
+
+
 
 app_dir = File.expand_path('../..', __FILE__)
 

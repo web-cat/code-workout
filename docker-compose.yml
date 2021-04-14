@@ -36,6 +36,10 @@ services:
       DB_PORT: 3306
       DB_HOST: db
       RAILS_ENV: development
+      PUMA_WORKERS: 2
+      PUMA_THREADS_MIN: 2
+      PUMA_THREADS_MAX: 4
+      PUMA_DAEMONIZE: "false"
     volumes:
       - .:/code-workout
 volumes:

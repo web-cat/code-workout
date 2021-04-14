@@ -335,7 +335,7 @@ class ExercisesController < ApplicationController
         Zip::File.open(obj[0].tempfile) do |zip_file|
           zip_file.each do |entry|
             entry.extract
-            content = entry.get_input_stream.read
+            # content = entry.get_input_stream.read
             res = move_and_rename_res(entry.name)
             if res[2].match(/jpg|jpeg|png|gif/)
               image = MiniMagick::Image.open(

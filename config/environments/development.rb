@@ -51,7 +51,7 @@ CodeWorkout::Application.configure do
 
 
   config.assets.initialize_on_precompile = true
-
+ 
   config.middleware.use LogFile::Display
   config.log_level = :info
   config.log_formatter = proc do |severity, datetime, progname, msg|
@@ -79,4 +79,11 @@ CodeWorkout::Application.configure do
         ]
     end
   end
+
+  # Setup puma worker and thread
+  ENV['PUMA_WORKERS'] = "2"
+  ENV['PUMA_THREADS_MIN'] = "2"
+  ENV['PUMA_THREADS_MAX'] = "4"
+  ENV['PUMA_DAEMONIZE'] = 'false'
+
 end

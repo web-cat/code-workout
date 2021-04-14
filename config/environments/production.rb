@@ -89,4 +89,10 @@ CodeWorkout::Application.configure do
 
   config.action_mailer.default_url_options = { :host => 'http://codeworkout.cs.vt.edu/' }
   config.middleware.use LogFile::Display
+
+  # # Setup puma worker and thread
+  ENV['PUMA_WORKERS'] = "10"
+  ENV['PUMA_THREADS_MIN'] = "2"
+  ENV['PUMA_THREADS_MAX'] = "2"
+  ENV['PUMA_DAEMONIZE'] = 'true'
 end
