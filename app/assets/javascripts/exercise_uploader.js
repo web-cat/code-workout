@@ -1,5 +1,6 @@
 var file_orig_name =  document.getElementById("exercise_file_orig_name").value.split(/[ ,]+/)
 var file_hash_name =  document.getElementById("exercise_file_hash_name").value.split(/[ ,]+/)
+var image_dimensions =  document.getElementById("exercise_image_dimensions").value.split(/[ ]+/)
 var table = document.getElementById("tablelist")
 var path = "/uploads/resource_file/"
 
@@ -44,8 +45,10 @@ function add_button_listener(){
         var id = parseInt(e.target.id)
         file_orig_name.splice(id-1, 1)
         file_hash_name.splice(id-1, 1)
+        image_dimensions.splice(id-1, 1)
         document.getElementById("exercise_file_orig_name").value = file_orig_name.toString() 
         document.getElementById("exercise_file_hash_name").value = file_hash_name.toString() 
+        document.getElementById("exercise_image_dimensions").value = image_dimensions.toString() 
         delete_table_row(id) 
         apply_hide_and_show()
     }
@@ -53,10 +56,7 @@ function add_button_listener(){
 }
 
 
-function create_text_and_button(file_orig_name,file_hash_name){
-  console.log(file_orig_name)
-  console.log(file_hash_name)
-  console.log("end create")
+function create_text_and_button(file_orig_name,file_hash_name,image_dimensions){
   delete_table_row(-1)
   for (var i = 0; i < file_orig_name.length; i++) {
     var hash_name = file_hash_name[i]
@@ -88,11 +88,8 @@ function create_text_and_button(file_orig_name,file_hash_name){
     cell2.innerHTML = file_orig_name[i]
     //Pixel text
     var cell3 = row.insertCell(3)
-    var temp_src = path+file_hash_name[i]
     if(image_or_not){
-      var img = new Image()
-      img.src = temp_src
-      cell3.innerHTML = img.width + 'x' + img.height+" pixels" 
+      cell3.innerHTML = image_dimensions[i*2] + 'x' + image_dimensions[(i*2)+1] +" pixels" 
     }
     else {
       cell3.innerHTML =  ""
@@ -106,8 +103,9 @@ function create_text_and_button(file_orig_name,file_hash_name){
 
 file_orig_name = removeDuplicates(file_orig_name)
 file_hash_name = removeDuplicates(file_hash_name)
+// image_dimensions = removeDuplicates(image_dimensions)
 apply_hide_and_show()
-create_text_and_button(file_orig_name,file_hash_name)
+create_text_and_button(file_orig_name,file_hash_name,image_dimensions)
 
 
 

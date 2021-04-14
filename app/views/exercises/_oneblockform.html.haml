@@ -1,7 +1,7 @@
 = stylesheet_link_tag "exercise_uploader.scss"
 = javascript_include_tag 'exercise_uploader.js'
 %p.text.text-info
-  Upload an existing YAML file or a Tar file from your computer.
+  Upload an existing YAML file or a TAR file from your computer.
 
 - # list will be [ "Only Me", "user's", "user", "groups", "Everybody"
 - access_control_items = @user_groups.map{ |g| [ g.name, g.id ] }.unshift(['Only Me', 0]).push(['Everybody', -1])
@@ -26,6 +26,7 @@
   = f.text_field :fileList, value: "", :type => "hidden"
   = f.text_field :file_orig_name, value: @ownerships_all, :type => "hidden"
   = f.text_field :file_hash_name, value: @ownerships_res_name, :type => "hidden"
+  = f.text_field :image_dimensions, value: @ownerships_image_dimensions, :type => "hidden"
   #fileName
   #filelist.container.hidden
     .row

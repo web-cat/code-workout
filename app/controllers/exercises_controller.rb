@@ -4,6 +4,8 @@ class ExercisesController < ApplicationController
   require 'zip'
   require 'tempfile'
   require 'fileutils'
+  require "mini_magick"
+
   load_and_authorize_resource
   skip_authorize_resource only: [:practice, :call_open_pop]
   #skip_before_action :verify_authenticity_token, :only [:call_open_pop]
@@ -140,11 +142,14 @@ class ExercisesController < ApplicationController
     @exercise_version = @exercise.current_version
     @ownerships_all = params[:ownerships_all] || []
     @ownerships_res_name = params[:ownerships_res_name] || []
+    @ownerships_image_dimensions =  params[:ownerships_image_dimensions] || []
     @exercise_version.ownerships.each do |e|
       @ownerships_all.push(e.filename) unless @ownerships_all.include?(e.filename)
       uniqueFile = ResourceFile.all.where(id: e.resource_file_id)[0]
       uniqueFilename = uniqueFile.hashval+File.extname(e.filename) 
       @ownerships_res_name.push(uniqueFilename) unless @ownerships_res_name.include?(uniqueFilename)
+      image =  MiniMagick::Image.open("public/uploads/resource_file/#{uniqueFilename}")
+      @ownerships_image_dimensions.push(image.dimensions.join(" "))unless @ownerships_image_dimensions.include?(image.dimensions.join(" "))
     end
     @text_representation = params[:text_representation] ||@exercise_version.text_representation ||
       ExerciseRepresenter.new(@exercise).to_hash.to_yaml
@@ -320,9 +325,11 @@ class ExercisesController < ApplicationController
 
 
 
-  def update_description(obj,tag,file_name,resource_name,id)
+  def update_description(obj,tag,file_name,resource_name,id,dimensions)
+  
     @ownerships_all = file_name
     @ownerships_res_name = resource_name
+    @ownerships_image_dimensions = dimensions
     if tag == "description"
       if File.extname(obj[0].tempfile) == ".zip"
         Zip::File.open(obj[0].tempfile) do |zip_file|
@@ -330,9 +337,13 @@ class ExercisesController < ApplicationController
             entry.extract
             content = entry.get_input_stream.read
             res = move_and_rename_res(entry.name)
-            if res[1].match(/jpg|jpeg|png|gif/)
-              @ownerships_all.push(res[0]+res[1]) unless @ownerships_all.include?(res[0]+res[1])
-              @ownerships_res_name.push(res[2]+res[1]) unless @ownerships_res_name.include?(res[2]+res[1])
+            if res[2].match(/jpg|jpeg|png|gif/)
+              image = MiniMagick::Image.open(
+                "public/uploads/resource_file/#{res[1]}"
+              )
+              @ownerships_all.push(res[0]) unless @ownerships_all.include?(res[0])
+              @ownerships_res_name.push(res[1]) unless @ownerships_res_name.include?(res[1])
+              @ownerships_image_dimensions.push(image.dimensions.join(" ")) unless @ownerships_image_dimensions.include?(image.dimensions.join(" "))
             end
           end
         entry = zip_file.glob('*.yaml').first
@@ -348,15 +359,19 @@ class ExercisesController < ApplicationController
       unless obj.nil? 
         obj.each do |file|
           res = move_and_rename_res("public/uploads/resource_file/#{file.original_filename}")
+          image = MiniMagick::Image.open(
+            "public/uploads/resource_file/#{res[1]}"
+          )
           @ownerships_all.push(file.original_filename) unless @ownerships_all.include?(file.original_filename)
-          @ownerships_res_name.push(res[2]+res[1]) unless @ownerships_res_name.include?(res[2]+res[1])
+          @ownerships_res_name.push(res[1]) unless @ownerships_res_name.include?(res[1])
+          @ownerships_image_dimensions.push(image.dimensions.join(" ")) unless @ownerships_image_dimensions.include?(image.dimensions.join(" "))
         end
       end
     end
     if id.nil?
       render "exercises/new"
     else
-      redirect_to edit_exercise_path(id, return_to_mark: false, ownerships_all:@ownerships_all, ownerships_res_name:@ownerships_res_name,text_representation: @text_representation )
+      redirect_to edit_exercise_path(id, return_to_mark: false, ownerships_all:@ownerships_all, ownerships_res_name:@ownerships_res_name,text_representation: @text_representation,ownerships_image_dimensions: @ownerships_image_dimensions )
     end
     return
   end
@@ -378,14 +393,15 @@ class ExercisesController < ApplicationController
     end
     file_name = exercise_params[:file_orig_name].split(" ")
     resource_name = exercise_params[:file_hash_name].split(" ")
+    image_dimensions = exercise_params[:image_dimensions].split(" ")
     unless exercise_params[:description].nil? 
       trigger_uploader(exercise_params[:description])
-      self.update_description(exercise_params[:description],"description",file_name,resource_name,params[:exer_id])
+      self.update_description(exercise_params[:description],"description",file_name,resource_name,params[:exer_id],image_dimensions)
       return
     end
     unless exercise_params[:files].nil?
       trigger_uploader(exercise_params[:files])
-      self.update_description(exercise_params[:files],"img",file_name,resource_name,params[:exer_id])
+      self.update_description(exercise_params[:files],"img",file_name,resource_name,params[:exer_id],image_dimensions)
       return
     end 
 
@@ -447,7 +463,7 @@ class ExercisesController < ApplicationController
             hashval = File.basename(resource_name[index], ".*")   
             if ResourceFile.all.where(hashval: hashval).exists?
               ownertable = ex_ver.ownerships.create(filename: file,resource_file_id: ResourceFile.all.where(hashval: hashval).first.id)
-            else       
+            else   
               res = ex_ver.resource_files.create!(user_id: current_user.id,filename:file, hashval:hashval)
               ownertable = res.ownerships.last
               ownertable.filename = file
@@ -1053,7 +1069,7 @@ class ExercisesController < ApplicationController
       temp_uniqe_hash =  Digest::MD5.hexdigest File.read "#{path}"
       FileUtils.mkdir_p("public/uploads/resource_file")
       FileUtils.mv("#{path}", "public/uploads/resource_file/#{temp_uniqe_hash+temp_extention}")
-      return temp_name,temp_extention,temp_uniqe_hash
+      return temp_name+temp_extention,temp_uniqe_hash+temp_extention,temp_extention
     end
 
     
