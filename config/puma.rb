@@ -1,15 +1,15 @@
 # Default to production
 rails_env = rails_env || ENV['RAILS_ENV'] || 'production'
 environment rails_env
-puma_workers = puma_workers || ENV['PUMA_WORKERS'] || 10
-puma_threads_min = puma_threads_min || ENV['PUMA_THREADS_MIN'] || 2
-puma_threads_max = puma_threads_max || ENV['PUMA_THREADS_MAX'] || 2
-puma_daemonize = puma_daemonize|| ENV['PUMA_DAEMONIZE'] || "true"
+puma_workers = puma_workers || ENV['PUMA_WORKERS'] || Rails.configuration.puma_workers
+puma_threads_min = puma_threads_min || ENV['PUMA_THREADS_MIN'] ||  Rails.configuration.puma_threads_min
+puma_threads_max = puma_threads_max || ENV['PUMA_THREADS_MAX'] ||  Rails.configuration.puma_threads_max
+puma_daemonize = puma_daemonize|| ENV['PUMA_DAEMONIZE'] || Rails.configuration.puma_daemonize
 
 # For MRI, use workers instead of threads for greater parallelism
-workers puma_workers.to_i 
-threads puma_threads_min.to_i , puma_threads_max.to_i
-if puma_daemonize == "true"
+workers puma_workers
+threads puma_threads_min , puma_threads_max
+if puma_daemonize
   daemonize
   preload_app!
 end

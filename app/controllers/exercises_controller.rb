@@ -323,10 +323,16 @@ class ExercisesController < ApplicationController
     redirect_to exercises_path
   end
 
-
+  
 
   def update_description(obj,tag,file_name,resource_name,id,dimensions)
-  
+    if Exercise.all.where(id: id).exists?
+      @exercise = Exercise.all.where(id: id)
+    else
+      @exercise = Exercise.new
+    end
+    @exercise_version = ExerciseVersion.new(exercise: @exercise)
+    @user_groups = current_user.andand.user_groups
     @ownerships_all = file_name
     @ownerships_res_name = resource_name
     @ownerships_image_dimensions = dimensions

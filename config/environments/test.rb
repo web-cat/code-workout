@@ -36,9 +36,11 @@ CodeWorkout::Application.configure do
 
   config.action_mailer.default_url_options = { :host => 'localhost:3000' }
 
-  # # Setup puma worker and thread
-  ENV['PUMA_WORKERS'] = "2"
-  ENV['PUMA_THREADS_MIN'] = "2"
-  ENV['PUMA_THREADS_MAX'] = "4"
-  ENV['PUMA_DAEMONIZE'] = 'false'
+  # Setup default values
+  config.puma_workers = 2
+  config.puml_threads_min = 2
+  config.puml_threads_max = 4
+  config.puma_daemonize = false
+  config.student_attempt_records = true
+  
 end

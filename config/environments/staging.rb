@@ -90,10 +90,10 @@ CodeWorkout::Application.configure do
   config.action_mailer.default_url_options = { :host => 'http://codeworkoutdev.cs.vt.edu/' }
   config.middleware.use LogFile::Display
 
-
-  # # Setup puma worker and thread
-  ENV['PUMA_WORKERS'] = "4"
-  ENV['PUMA_THREADS_MIN'] = "2"
-  ENV['PUMA_THREADS_MAX'] = "8"
-  ENV['PUMA_DAEMONIZE'] = 'true'
+  # Setup default values
+  config.puma_workers = 4
+  config.puml_threads_min = 2
+  config.puml_threads_max = 8
+  config.puma_daemonize = true
+  config.student_attempt_records = true
 end

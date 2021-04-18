@@ -39,7 +39,8 @@ services:
       PUMA_WORKERS: 2
       PUMA_THREADS_MIN: 2
       PUMA_THREADS_MAX: 4
-      PUMA_DAEMONIZE: "false"
+      PUMA_DAEMONIZE: 'false'
+      STUDENT_ATTEMPT_RECORDS: 'true'
     volumes:
       - .:/code-workout
 volumes:

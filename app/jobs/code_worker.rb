@@ -157,11 +157,22 @@ class CodeWorker
         end
       end
 
-      # move the attempt to permanent storage
-      term_dir = "usr/attempts/#{term_name}/"
-      FileUtils.mkdir_p(term_dir) # create the term_dir if it doesn't exist
-      FileUtils.mv(attempt_dir, term_dir)
+      # avoid case nil.to_b => false
+      if ENV["STUDENT_ATTEMPT_RECORDS"].nil?
+        student_attempt_records = Rails.configuration.student_attempt_records
+      else
+        student_attempt_records = ENV["STUDENT_ATTEMPT_RECORDS"].to_b
+      end
 
+      if student_attempt_records
+        # move the attempt to permanent storage
+        term_dir = "usr/attempts/#{term_name}/"
+        FileUtils.mkdir_p(term_dir) # create the term_dir if it doesn't exist
+        FileUtils.mv(attempt_dir, term_dir)
+      else
+        FileUtils.rm_rf(attempt_dir)
+      end
+      
       # calculate various time values. all times are in ms
       time_taken = (Time.now - attempt.submit_time) * 1000
 
