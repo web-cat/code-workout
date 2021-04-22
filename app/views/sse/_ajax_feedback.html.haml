@@ -1,4 +1,6 @@
 - show_feedback = !@attempt.workout_score || @attempt.workout_score.show_feedback?
+- if authorized_user(current_user,@course_offering)[0]
+  - show_feedback = true
 - @workout ||= @attempt.workout_score.andand.workout
 - if @workout && show_feedback
   - pts = @workout.exercise_workouts.find_by(exercise: @exercise).andand.points

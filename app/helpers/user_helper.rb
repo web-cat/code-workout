@@ -43,4 +43,19 @@ module UserHelper
     return utc_time
   end
 
+
+  def authorized_user(user, course_offering)
+    if user.teaches?(course_offering)
+      return true, "Instructor"
+    elsif user.manages?(course_offering)
+      return true, "Manager"
+    elsif user.grades?(course_offering)
+      return true, "Grader"
+    elsif user.is_staff?(course_offering)
+      return true, "Staff"
+    else
+      return false, ""
+    end
+  end
+  
 end

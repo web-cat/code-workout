@@ -1,4 +1,5 @@
 class WorkoutOfferingsController < ApplicationController
+  include UserHelper
   skip_before_filter :authenticate_user!, :only => :practice
 
   load_and_authorize_resource
@@ -25,6 +26,16 @@ class WorkoutOfferingsController < ApplicationController
   end
 
   def review
+    notice = []
+    review_user = User.where(id:params[:review_user_id]).andand.first 
+    @course_offering ||= @workout_offering.andand.course_offering
+    if  review_user.id != current_user.id
+      notice << "Hello " + authorized_user(current_user,@course_offering)[1] + "!"
+    end
+    notice << "View Student: #{review_user.display_name}."
+    notice << "Last Attempt:  #{l user_time(review_user, @workout_offering.workout.score_for(review_user, @workout_offering).last_attempted_at)}."
+    flash.now[:notice] = notice.join("<br/>").html_safe 
+    
     if @workout_offering
       @workout = @workout_offering.workout
       @exs = @workout.exercises
