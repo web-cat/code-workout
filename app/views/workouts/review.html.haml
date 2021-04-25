@@ -21,39 +21,14 @@
         %th Close
         %th Time Limit
     %tbody
-      - Time.use_zone(ActiveSupport::TimeZone["America/New_York"]) do
-        - @workout.workout_offerings.each do |woff|
-          %tr
-            %td= woff.course_offering.display_name
-            -#%td.xeditable{ id: 'opening_date',
-              data: { type: 'text',
-              url: '/workout_offerings/' + woff.id.to_s,
-              resource: 'workout_offering',
-              name: 'opening_date',
-              xeditable: "true",
-              pk: woff.id.to_s,
-              model: 'workout_offering' } }= woff.opening_date
-            %td
-              - if woff.opening_date
-                = l user_time(current_user, woff.opening_date)
-            -#%td.xeditable{ id: 'soft_deadline',
-              data: { type: 'text',
-              url: '/workout_offerings/' + woff.id.to_s,
-              resource: 'workout_offering',
-              name: 'soft_deadline',
-              xeditable: "true",
-              pk: woff.id.to_s,
-              model: 'workout_offering' } }= woff.soft_deadline
-            %td= l user_time(current_user, woff.soft_deadline)
-            -#%td.xeditable{ id: 'hard_deadline',
-              data: { type: 'text',
-              url: '/workout_offerings/' + woff.id.to_s,
-              resource: 'workout_offering',
-              name: 'hard_deadline',
-              xeditable: "true",
-              pk: woff.id.to_s,
-              model: 'workout_offering' } }= woff.hard_deadline
-            %td= l user_time(current_user, woff.hard_deadline)
+      - @workout.workout_offerings.each do |woff|
+        %tr
+          %td= woff.course_offering.display_name
+          %td
+            - if woff.opening_date
+              = l user_time(current_user, woff.opening_date)
+          %td= l user_time(current_user, woff.soft_deadline)
+          %td= l user_time(current_user, woff.hard_deadline)
 - elsif @workout_offering
   %p
     - if  review_user.id != current_user.id
