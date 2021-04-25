@@ -8,11 +8,11 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
   window.codeworkout.removed_extensions = []
 
   init()
-  
+
   # To allow reordering of exercises
   sortable = $('#ex-list').sortable
     handle: '.handle'
-  
+
   # Add an exercise from search results to the workout
   $('.search-results').on 'click', '.add-ex', ->
     ex_id = $(this).data('ex-id')
@@ -41,12 +41,12 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
       setTimeout ->
         exercise.removeClass 'shake'
       , 1000
-  
+
   # If we change the point value on an exercise, set the new default
   # to that value, so the user doesn't need to change it each time
   $('#ex-list').on 'change', '.points', ->
     default_point_value = $(this).val()
-  
+
   # From the modal showing available course offerings, add the
   # selected one to this workout
   $('#course-offerings').on 'click', 'a', ->
@@ -60,7 +60,7 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
     $(this).remove()
     $('#offerings-modal').modal 'hide'
     $('#workout-offering-fields tbody').append row
-  
+
   # Remove the course offering from this workout
   # If removable, it will again show up as 'available'
   $('#workout-offering-fields').on 'click', '.delete-offering', ->
@@ -98,7 +98,7 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
     searchable = $('.searchable').StudentSearch
       course_offering_display: course_offering_display
       course_offering_id: course_offering_id
-  
+
   # When a student is selected, use the mustache template to add an extension
   # for that student
   $('.searchable').on 'studentSelect', (e) ->
@@ -119,7 +119,7 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
       $('#student-search-modal').modal('hide')
       $('#extensions').css 'display', 'block'
       init_row_datepickers template
- 
+
   # Remove student extension
   $(document).on 'click', '.delete-extension', ->
     row = $(this).closest('tr')
@@ -166,7 +166,7 @@ init = ->
 # Removes all extensions associated with a workout offering in the form.
 # Used when the workout offering itself is being deleted.
 # Keeps track of which extensions were removed, so we can tell the backend.
-# Asks to confirm first. Returns true if extensions were removed, false 
+# Asks to confirm first. Returns true if extensions were removed, false
 # otherwise.
 remove_extensions_if_any = (course_offering_id) ->
   extensions = $('#student-extension-fields tbody').find 'tr'
@@ -200,13 +200,13 @@ remove_extensions_if_any = (course_offering_id) ->
 init_templates = ->
   $.get window.codeworkout.exercise_template_path, (template, textStatus, jqXHr) ->
     window.codeworkout.exercise_template = template
-    if $('body').is('.workouts.edit') || $('body').is('.workouts.clone')
+    if $('body').is('.workouts.edit.js.coffee') || $('body').is('.workouts.clone')
       init_exercises()
   course = window.codeworkout.course_id
   if course
     $.get window.codeworkout.extension_template_path, (template, textStatus, jqXHr) ->
       window.codeworkout.student_extension_template = template
-      if $('body').is '.workouts.edit'
+      if $('body').is '.workouts.edit.js.coffee'
         init_student_extensions()
 
 # Display any existing student extensions belonging to workout offerings
@@ -246,9 +246,9 @@ init_exercises = ->
           name = name + ": #{exercise.name}"
 
         # Only keep track of the exercise_workout_id if we're editing a workout
-        # If we're creating or cloning a workout, this information is not 
+        # If we're creating or cloning a workout, this information is not
         # required.
-        if $('body').is('.workouts.edit')
+        if $('body').is('.workouts.edit.js.coffee')
           exercise_workout_id = exercise.exercise_workout_id
         else
           exercise_workout_id = ''
@@ -263,7 +263,7 @@ init_exercises = ->
           data))
     $('#ex-list').removeData 'exercises'
 
-# Initialise the datepickers for each existing workout offering and 
+# Initialise the datepickers for each existing workout offering and
 # student extension
 init_datepickers = ->
   offerings = $('tr', '#workout-offering-fields tbody')
@@ -318,7 +318,7 @@ init_row_datepickers = (row) ->
           hard_input.data 'date', date
 
   # Set existing values, if applicable
-  if $('body').is '.workouts.edit'
+  if $('body').is '.workouts.edit.js.coffee'
     if opening_input.data('date')? && opening_input.data('date') != ''
       date = parseInt(opening_input.data('date'))
       opening_datepicker.setDate(date, false)
@@ -368,7 +368,7 @@ exercise_is_in_workout = (ex_id) ->
 
   return false
 
-# Get an object array of offerings of this workout 
+# Get an object array of offerings of this workout
 get_offerings = ->
   offerings = {}
   offering_rows = $('tr', '#workout-offering-fields tbody')
@@ -393,7 +393,7 @@ get_offerings = ->
         offerings[offering_id.toString()] = offering
   return offerings
 
-# Get all configured workout_offerings along with their student extensions 
+# Get all configured workout_offerings along with their student extensions
 get_offerings_with_extensions = ->
   offerings = get_offerings()
   extension_rows = $('tr', '#student-extension-fields tbody')
@@ -439,7 +439,7 @@ reset_alert_area = ->
     "</div>"
   $('#alerts').append alert_box
 
-# Are there any form errors? 
+# Are there any form errors?
 check_completeness = ->
   messages = []
   messages.push 'Workout Name cannot be empty.' if $('#wo-name').val() == ''
@@ -455,7 +455,7 @@ handle_submit = ->
   if messages.length != 0
     form_alert messages
     return
-  
+
   # Collect info
   name = $('#wo-name').val()
   description = $('#description').val()
@@ -496,13 +496,13 @@ handle_submit = ->
   if $('body').is '.workouts.new'
     url = '/gym/workouts'
     type = 'post'
-  else if $('body').is '.workouts.edit'
+  else if $('body').is '.workouts.edit.js.coffee'
     url = '/gym/workouts/' + $('h1').data('id')
     type = 'patch'
   else if $('body').is '.workouts.clone'
     url = '/gym/workouts'
     type = 'post'
-  
+
   $.ajax
     url: url
     type: type

@@ -98,7 +98,7 @@
             iframeDoc.open();
 
             //html = html.replace("'",'"');
-            //html = html.replace(/[^/\"_+-?![]{}()=*.|a-zA-Z 0-9]+/g,'');               
+            //html = html.replace(/[^/\"_+-?![]{}()=*.|a-zA-Z 0-9]+/g,'');
             iframeDoc.write(html)
             iframeDoc.close();
             iframe.height = "400px";
