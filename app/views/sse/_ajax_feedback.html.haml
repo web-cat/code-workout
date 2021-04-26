@@ -1,8 +1,12 @@
+= javascript_include_tag 'instructor_feedback_view.js'
 - show_feedback = !@attempt.workout_score || @attempt.workout_score.show_feedback?
 - if authorized_user(current_user,@course_offering)[0]
-  - show_feedback = true
+  - instructor = true
+-else
+  - instructor = false
+-# -show_feedback = false
 - @workout ||= @attempt.workout_score.andand.workout
-- if @workout && show_feedback
+- if @workout && show_feedback || instructor
   - pts = @workout.exercise_workouts.find_by(exercise: @exercise).andand.points
   - score = @attempt.score
   - score_pct = pts > 0 ? score * 100.0 / pts : 0
@@ -20,7 +24,7 @@
           = score.round(2).to_s
           %span.outof>
             = "/ "  + pts.to_s
-
+%br
 - if @exercise_version.is_mcq?
   - if show_feedback
     - if @attempt.earned_full_points?
@@ -43,41 +47,133 @@
         - if i > 0
           %br
         = line
-  - elsif show_feedback
-    %table.table.table-striped.feedback
-      %thead
-        %tr
-          %th{ style: 'text-align: center;' } Result
-          %th Behavior
-      %tbody
-        - has_hidden = false
-        - hidden_pass = true
-        - answer.test_case_results(true).each do |tcr|
-          - if tcr.test_case.hidden?
-            - has_hidden = true
-            - hidden_pass = hidden_pass && tcr.pass
-          - else
+  - elsif show_feedback || instructor
+    -if instructor 
+      .tab
+        %button#student.tablinks{:onclick => "open_view(event, 'Student')"} Student View
+        %button.tablinks{:onclick => "open_view(event, 'Instructor')"} Instructor View
+      #Student.tabcontent
+        -if show_feedback
+          %table.table.table-striped.feedback
+            %thead
+              %tr
+                %th{ style: 'text-align: center;' } Result
+                %th Behavior
+            %tbody
+              - has_hidden = false
+              - hidden_pass = true
+              - answer.test_case_results(true).each do |tcr|
+                - if tcr.test_case.hidden?
+                  - has_hidden = true
+                  - hidden_pass = hidden_pass && tcr.pass
+                - else
+                  %tr
+                    - if tcr.pass
+                      %td.pass
+                        %i.fa.fa-check-square
+                    - else
+                      %td.fail
+                        %i.fa.fa-minus-square
+                    %td
+                      = tcr.display_description
+                      - if !tcr.pass
+                        %br
+                        .out= tcr.execution_feedback
+              - if has_hidden
+                %tr
+                  - if hidden_pass
+                    %td.pass
+                      %i.fa.fa-check-square
+                  - else
+                    %td.fail
+                      %i.fa.fa-minus-square
+                  %td hidden test(s)
+        -else 
+          - examples = @exercise_version.prompts.first.specific.examples
+          %table.table.table-striped.feedback
+            %thead
+              %tr
+                %th Example
+                %th.text-center Result
+            %tbody
+              - if examples.any?
+                - answer.test_case_results(true).each do |tcr|
+                  - if tcr.test_case.is_example?
+                    %tr
+                      %td
+                        - description = tcr.display_description
+                        = description
+                        - if !tcr.pass
+                          - if !tcr.test_case.hidden?
+                            %br
+                            .out= tcr.execution_feedback
+                      - if tcr.pass
+                        %td.pass
+                          %i.fa.fa-check-square
+                      - else
+                        %td.fail
+                          %i.fa.fa-minus-square
+              %tr
+                %td Other hidden tests
+                %td.unknown
+                  %i.fa.fa-question-circle
+      #Instructor.tabcontent
+        %table.table.table-striped.feedback
+          %thead
             %tr
-              - if tcr.pass
+              %th{ style: 'text-align: center;' } Result
+              %th Behavior
+          %tbody
+            - has_hidden = false
+            - hidden_pass = true
+            - answer.test_case_results(true).each do |tcr|
+              %tr
+                - if tcr.pass
+                  %td.pass
+                    %i.fa.fa-check-square
+                - else
+                  %td.fail
+                    %i.fa.fa-minus-square
+                %td
+                  = tcr.display_description
+                  - if !tcr.pass
+                    %br
+                    .out= tcr.execution_feedback
+    -else
+      %table.table.table-striped.feedback
+        %thead
+          %tr
+            %th{ style: 'text-align: center;' } Result
+            %th Behavior
+        %tbody
+          - has_hidden = false
+          - hidden_pass = true
+          - answer.test_case_results(true).each do |tcr|
+            - if tcr.test_case.hidden?
+              - has_hidden = true
+              - hidden_pass = hidden_pass && tcr.pass
+            - else
+              %tr
+                - if tcr.pass
+                  %td.pass
+                    %i.fa.fa-check-square
+                - else
+                  %td.fail
+                    %i.fa.fa-minus-square
+                %td
+                  = tcr.display_description
+                  - if !tcr.pass
+                    %br
+                    .out= tcr.execution_feedback
+          - if has_hidden
+            %tr
+              - if hidden_pass
                 %td.pass
                   %i.fa.fa-check-square
               - else
                 %td.fail
                   %i.fa.fa-minus-square
-              %td
-                = tcr.display_description
-                - if !tcr.pass
-                  %br
-                  .out= tcr.execution_feedback
-        - if has_hidden
-          %tr
-            - if hidden_pass
-              %td.pass
-                %i.fa.fa-check-square
-            - else
-              %td.fail
-                %i.fa.fa-minus-square
-            %td hidden test(s)
+              %td hidden test(s)
   - else
     - examples = @exercise_version.prompts.first.specific.examples
     %table.table.table-striped.feedback

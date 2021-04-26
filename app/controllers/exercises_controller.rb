@@ -1,4 +1,5 @@
 class ExercisesController < ApplicationController
+  include UserHelper
   require 'ims/lti'
   require 'oauth/request_proxy/rack_request'
   require 'zip'
@@ -464,6 +465,19 @@ class ExercisesController < ApplicationController
     end
 
     @student_user = params[:review_user_id] ? User.find(params[:review_user_id]) : current_user
+
+    workout_offering = WorkoutOffering.where(id:params[:workout_offering_id]).andand.first 
+    review_user = User.where(id:params[:review_user_id]).andand.first 
+    course_offering ||= workout_offering.andand.course_offering
+    if params[:workout_offering_id] && review_user && course_offering
+      @notice = []
+      if review_user.andand.id != current_user.andand.id
+        attempt = (Workout.where(id:workout_offering.workout_id).first).workout_scores.where(user_id:params[:review_user_id]).andand.first.scoring_attempt_for(Exercise.where(id:params[:id])[0])
+        @notice << "Reviewing submission " +  attempt.andand.submit_num.to_s|| "0"
+        @notice << "from #{review_user.andand.display_name}"
+        @notice << "submitted at: #{l user_time(review_user, attempt.submit_time)}."
+      end
+    end 
 
     if params[:workout_offering_id]
       @workout_offering =

@@ -14,6 +14,11 @@
 -#     Some text inside the toast body
 .row
   .col-md-12
+    %h2
+      -unless @notice.nil?
+        .highlight.text
+          =@notice.join(', ')     
+        %p  
     %h1
       = @exercise.display_name
       - if current_user.andand.can? :edit, @exercise
