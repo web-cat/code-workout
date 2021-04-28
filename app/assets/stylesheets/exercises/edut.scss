@@ -1,0 +1,15 @@
+img.thumb { max-width: 128px; max-height: 128px; }
+.image-upload input { display: none; }
+
+
+.description-upload > input
+{
+  display: none;
+}
+
+
+.image-upload > label{
+  cursor:pointer;
+  padding-left: 1em;
+
+}

@@ -139,6 +139,8 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # GET /exercises/1/edit
   def edit
+    puts "ResourceFile.UPLOAD_PATH = #{ResourceFile::UPLOAD_PATH}"
+    
     @exercise_version = @exercise.current_version
     @ownerships_all = params[:ownerships_all] || []
     @ownerships_res_name = params[:ownerships_res_name] || []

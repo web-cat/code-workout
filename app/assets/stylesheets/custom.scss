@@ -60,7 +60,7 @@ html, body { height: 100%; }
 
 /* Codemirror */
 
-.CodeMirror { height: auto; margin-bottom: 9px; }
+.CodeMirror { height: auto; margin-bottom: 9px; max-width: 85ch; }
 .form-group .CodeMirror-scroll,
 .form-group .CodeMirror-gutter,
 .form-group .CodeMirror-gutters { min-height: 18px * 12; }

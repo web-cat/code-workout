@@ -13,14 +13,43 @@ module ApplicationHelper
   # -------------------------------------------------------------
   def controller_stylesheet_link_tag
     c = params[:controller] || controller_name
-    stylesheet_link_tag c if (Rails.application.assets || ::Sprockets::Railtie.build_environment(Rails.application)).find_asset("#{c}.css")
+    stylesheet_link_tag c if (Rails.application.assets ||
+      ::Sprockets::Railtie.build_environment(Rails.application)).
+      find_asset("#{c}.css")
+  end
+
+
+  # -------------------------------------------------------------
+  def action_stylesheet_link_tag
+    c = params[:controller] || controller_name
+    a = params[:action]
+    if c && a
+      c_a = "#{c}/#{a}"
+      stylesheet_link_tag c_a if (Rails.application.assets ||
+        ::Sprockets::Railtie.build_environment(Rails.application)).
+        find_asset("#{c_a}.css")
+    end
   end
 
 
   # -------------------------------------------------------------
   def controller_javascript_include_tag
     c = params[:controller] || controller_name
-    javascript_include_tag c if (Rails.application.assets || ::Sprockets::Railtie.build_environment(Rails.application)).find_asset("#{c}.js")
+    javascript_include_tag c if (Rails.application.assets ||
+      ::Sprockets::Railtie.build_environment(Rails.application)).
+      find_asset("#{c}.js")
+  end
+
+  # -------------------------------------------------------------
+  def action_javascript_include_tag
+    c = params[:controller] || controller_name
+    a = params[:action]
+    if c && a
+      c_a = "#{c}/#{a}"
+      javascript_include_tag c_a if (Rails.application.assets ||
+        ::Sprockets::Railtie.build_environment(Rails.application)).
+        find_asset("#{c_a}.js")
+    end
   end
 
   # -------------------------------------------------------------
