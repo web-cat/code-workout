@@ -1,10 +1,9 @@
 = javascript_include_tag 'instructor_feedback_view.js'
 - show_feedback = !@attempt.workout_score || @attempt.workout_score.show_feedback?
-- if authorized_user(current_user,@course_offering)[0]
+- if current_user.is_staff?(@course_offering)
   - instructor = true
 -else
   - instructor = false
--# -show_feedback = false
 - @workout ||= @attempt.workout_score.andand.workout
 - if @workout && show_feedback || instructor
   - pts = @workout.exercise_workouts.find_by(exercise: @exercise).andand.points

@@ -90,7 +90,7 @@
         .right= button_link 'Edit', edit_exercise_path(exercise), class: 'btn btn-primary btn-sm'
     - if !new_workout
       .summary
-        - if !attempt || !workout_score || workout_score.show_feedback? || authorized_user(current_user, @course_offering)[0]
+        - if !attempt || !workout_score || workout_score.show_feedback? || current_user.is_staff?(@course_offering)
           .radial-progress{ 'data-progress' => score_pct }
             .circle
               .mask.full

@@ -56,6 +56,7 @@
             %td= l user_time(current_user, woff.hard_deadline)
 - elsif @workout_offering
   %p
+  .highlight.text
     - if  review_user.id != current_user.id
       Student:
       = "#{review_user.display_name}."
