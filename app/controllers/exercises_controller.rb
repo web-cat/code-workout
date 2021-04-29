@@ -142,14 +142,16 @@ class ExercisesController < ApplicationController
     puts "ResourceFile.UPLOAD_PATH = #{ResourceFile::UPLOAD_PATH}"
     @exercise_version = @exercise.current_version
     @attached_files = params[:attached_files] || []
-    @exercise_version.ownerships.each do |e|
-      @attached_files.push({
-        name: e.filename,
-        url: e.resource_file.url,
-        x_dimension: e.resource_file.x_dimension,
-        y_dimension: e.resource_file.y_dimension,
-        size:  e.resource_file.size
-      })
+    if params[:return_to_flag].nil?
+      @exercise_version.ownerships.each do |e|
+        @attached_files.push({
+          name: e.filename,
+          url: e.resource_file.url,
+          x_dimension: e.resource_file.x_dimension,
+          y_dimension: e.resource_file.y_dimension,
+          size:  e.resource_file.size
+        })
+      end
     end
     @text_representation = params[:text_representation] ||@exercise_version.text_representation ||
       ExerciseRepresenter.new(@exercise).to_hash.to_yaml
@@ -168,7 +170,7 @@ class ExercisesController < ApplicationController
     if @return_to.include?(exercises_search_path)
       @return_to = exercise_practice_path(@exercise)
     end
-    if params[:return_to_mark].nil?
+    if params[:return_to_flag].nil?
       session[:return_to] = @return_to
     end
   end
@@ -369,7 +371,7 @@ class ExercisesController < ApplicationController
     if id.nil?
       render "exercises/new"
     else
-      redirect_to edit_exercise_path(id, return_to_mark: false,text_representation: @text_representation,attached_files: attached_files )
+      redirect_to edit_exercise_path(id, return_to_flag: false,text_representation: @text_representation,attached_files: attached_files )
     end
     return
   end
@@ -418,7 +420,7 @@ class ExercisesController < ApplicationController
     end
     if hash && params[:org_external_id] !=  hash['external_id'].to_s && !params[:org_external_id].nil? 
       flash.alert = " Submission Failed!  External_id does not match. You should use #{params[:org_external_id]} as an external_id to edit current exercise."
-      redirect_to  edit_exercise_path(params[:exer_id], return_to_mark: false)
+      redirect_to  edit_exercise_path(params[:exer_id], return_to_flag: false)
       return
     end
 
@@ -470,12 +472,10 @@ class ExercisesController < ApplicationController
         if prev_version
           puts "processing ownerships from prev version #{prev_version.id}"
           prev_version.ownerships.each do |o|
-            puts "checking ownership #{o.inspect}"
             # Double-loop isn't the greatest design, but both lists are short
             @attached_files.each do |a|
-              puts "checking against attachment #{a.inspect}"
-              if a['name'] == o.filename
-                @attached_files.reject { |obj| obj[:name] == a['name'] }
+              if a['name'] == o.filename && File.basename(a['url'], ".*") == o.resource_file.hashval
+                @attached_files = @attached_files.reject { |obj| obj['name'] == a['name'] }
                 ownertable = ex_ver.ownerships.create!(
                   filename: o.filename,
                   resource_file: o.resource_file)
@@ -483,8 +483,6 @@ class ExercisesController < ApplicationController
             end
           end
         end
-        p "??????????"
-        p @attached_files
         @attached_files.each do |a|
           Ownership.create!(
             filename: a['name'],
@@ -701,9 +699,9 @@ class ExercisesController < ApplicationController
 		ex_count = @workout.andand.exercises.andand.count
     @hide_sidebar = (!@workout && @lti_launch) || (ex_count && ex_count < 2)
     # Updata image tags in the exercise question
-    @exercise_version.image_processing(true)
+    @exercise_version.replace_image_url(true)
     # Display all files to students
-    @file_res = @exercise_version.file_processing
+    # @file_res = @exercise_version.file_processing
     render layout: 'two_columns'
 
   end
@@ -1093,6 +1091,7 @@ class ExercisesController < ApplicationController
         FileUtils.mv("#{file_name}", res_path+hash+File.extname(file_name))
       end
       url = ResourceFile::UPLOAD_PATH+"/"+hash+File.extname(file_name)
+      attached_files = attached_files.reject { |obj| obj['name'] == file_name }
       return attached_files.push({
         name: file_name,
         url: url,
@@ -1113,7 +1112,7 @@ class ExercisesController < ApplicationController
       end
     end
 
-    
+
     # -------------------------------------------------------------
     # Only allow a trusted parameter "white list" through.
     def exercise_params

@@ -14,7 +14,7 @@ class FileUploader < CarrierWave::Uploader::Base
   end
 
   # def filename
-  #   "#{model.hashval}.#{file.extension}" if original_filename.present?
+  #   "#{model.hashval}.#{file.extension}" if model.hashval.present?
   # end
 
   # Provide a default URL as a default if there hasn't been a file uploaded:

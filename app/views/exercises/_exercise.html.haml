@@ -147,7 +147,7 @@
       .summary
         .btn.btn-primary.add-ex{data: { ex_id: exercise.id, ex_name: exercise.name } }
           %i.fa.fa-arrow-right
-    = exercise.andand.current_version.andand.image_processing(false)
+    = exercise.andand.current_version.andand.replace_image_url(false)
     .body
       .text
         = teaser(exercise.current_version.andand.prompts.andand.first.andand.question)

@@ -3,7 +3,7 @@
 # Table name: resource_files
 #
 #  id          :integer          not null, primary key
-#  file        :string(255)
+#  filename    :string(255)
 #  hashval     :string(255)
 #  public      :boolean          default(TRUE)
 #  size        :integer

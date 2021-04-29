@@ -188,15 +188,14 @@ class ExerciseVersion < ActiveRecord::Base
     exercise.is_mcq?
   end
 
-  def image_processing(tag)
-    ownerships = ExerciseVersion.where(id:self.id)[0].ownerships
+
+  def replace_image_url(tag)
     check_HTML_tag = self.prompts[0].question.scan(/(\<img .*?src=\"(.*?)\".*?>)/)
     if check_HTML_tag.length()>0
       check_HTML_tag.each do |block| 
           enter_name = File.basename(block[1]).strip.gsub("\"", "")
-          if !ownerships.find_by(filename: enter_name).nil?
-            unique_file = ResourceFile.where(id: ownerships.find_by(filename: enter_name).resource_file_id)[0].filename
-            unique_file_name = unique_file.model.token+unique_file.file.file.match(/\.\w*/)[0]
+          if !self.ownerships.find_by(filename: enter_name).nil?
+            unique_file_name = self.ownerships.find_by(filename: enter_name).resource_file.filename
             if tag
               fb = block[0].gsub("#{block[1]}", "/uploads/resource_file/#{unique_file_name}")
             else
@@ -215,9 +214,8 @@ class ExerciseVersion < ActiveRecord::Base
         counter = 0
         arr.each do |name|
           enter_name = File.basename(name)
-          if !ownerships.find_by(filename: enter_name).nil?
-            unique_file = ResourceFile.where(id: ownerships.find_by(filename: enter_name).resource_file_id)[0].filename
-            unique_file_name = unique_file.model.token+unique_file.file.file.match(/\.\w*/)[0]
+          if !self.ownerships.find_by(filename: enter_name).nil?
+            unique_file_name = self.ownerships.find_by(filename: enter_name).resource_file.filename
             if tag
               fb = block[0].gsub("#{block[1]}", "/uploads/resource_file/#{unique_file_name}")
               self.prompts[0].question = self.prompts[0].question.gsub("#{block[0]}", "#{fb}")
@@ -237,20 +235,19 @@ class ExerciseVersion < ActiveRecord::Base
   end
 
 
-  def file_processing
-    @all_files= []
-    @files_regular_name= []
-    ownerships = ExerciseVersion.where(id:self.id)[0].ownerships
-    ownerships.each do |res|
-      if ![".jpg",".jpeg",".png",".gif"].include?(File.extname(res.filename))
-        @files_regular_name.push(res.filename)
-        unique_file = ResourceFile.where(id: res.resource_file_id)[0].filename
-        unique_file_name = unique_file.model.token+unique_file.file.file.match(/\.\w*/)[0]
-        @all_files.push(unique_file_name)
-      end
-    end
-    @file_res = @all_files.zip @files_regular_name
-  end
+  # def file_processing
+  #   @all_files= []
+  #   @files_regular_name= []
+  #   self.ownerships.each do |res|
+  #     if ![".jpg",".jpeg",".png",".gif"].include?(File.extname(res.filename))
+  #       @files_regular_name.push(res.filename)
+  #       unique_file = res.resource_file.filename
+  #       unique_file_name = unique_file.model.token+unique_file.file.file.match(/\.\w*/)[0]
+  #       @all_files.push(unique_file_name)
+  #     end
+  #   end
+  #   @file_res = @all_files.zip @files_regular_name
+  # end
 
   # -------------------------------------------------------------
   def is_coding?

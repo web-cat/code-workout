@@ -3,7 +3,7 @@
 # Table name: resource_files
 #
 #  id          :integer          not null, primary key
-#  file        :string(255)
+#  filename    :string(255)
 #  hashval     :string(255)
 #  public      :boolean          default(TRUE)
 #  size        :integer
@@ -45,7 +45,7 @@ class ResourceFile < ActiveRecord::Base
   # validates :token, presence: true
 
   #~ Validation ...............................................................
-  mount_uploader :filename, FileUploader
+  # mount_uploader :filename, FileUploader
 
   #~ Hooks ....................................................................
 
@@ -85,18 +85,10 @@ class ResourceFile < ActiveRecord::Base
       y_dimension: upload['y_dimension'],
       size: upload['size']
     )
+    # puts res
     res
   end
 
-
-  # # -------------------------------------------------------------
-  # # FIXME: This is the actual file name using the token value, but this
-  # # method is bogus. The value /should/ be stored in the filename attribute,
-  # # but the filename attribute is only the file extension, not the full file
-  # # name(!) This method can be fixed when the filename attribute gets fixed
-  # def tokenized_file_name
-  #   self.token + self.read_attribute(:filename)
-  # end
 
 
   # -------------------------------------------------------------

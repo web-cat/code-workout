@@ -118,6 +118,10 @@ $(document).ready(function()
   {
     add_row_for_attachment(i)
   }
+  console.log("test")
+  console.log(attached_files)
+  document.getElementById('exercise_attached_files').value = JSON.stringify(attached_files)
+  console.log(  document.getElementById('exercise_attached_files').value)
   show_files_if_any()
 
 
