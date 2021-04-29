@@ -140,18 +140,16 @@ class ExercisesController < ApplicationController
   # GET /exercises/1/edit
   def edit
     puts "ResourceFile.UPLOAD_PATH = #{ResourceFile::UPLOAD_PATH}"
-    
     @exercise_version = @exercise.current_version
-    @ownerships_all = params[:ownerships_all] || []
-    @ownerships_res_name = params[:ownerships_res_name] || []
-    @ownerships_image_dimensions =  params[:ownerships_image_dimensions] || []
+    @attached_files = params[:attached_files] || []
     @exercise_version.ownerships.each do |e|
-      @ownerships_all.push(e.filename) unless @ownerships_all.include?(e.filename)
-      uniqueFile = ResourceFile.all.where(id: e.resource_file_id)[0]
-      uniqueFilename = uniqueFile.hashval+File.extname(e.filename) 
-      @ownerships_res_name.push(uniqueFilename) unless @ownerships_res_name.include?(uniqueFilename)
-      image =  MiniMagick::Image.open("public/uploads/resource_file/#{uniqueFilename}")
-      @ownerships_image_dimensions.push(image.dimensions.join(" "))unless @ownerships_image_dimensions.include?(image.dimensions.join(" "))
+      @attached_files.push({
+        name: e.filename,
+        url: e.resource_file.url,
+        x_dimension: e.resource_file.x_dimension,
+        y_dimension: e.resource_file.y_dimension,
+        size:  e.resource_file.size
+      })
     end
     @text_representation = params[:text_representation] ||@exercise_version.text_representation ||
       ExerciseRepresenter.new(@exercise).to_hash.to_yaml
@@ -166,9 +164,9 @@ class ExercisesController < ApplicationController
         @exercise_collection = -1 # Everyone
       end
     end
-    @return_to = request.referer || exercises_path
+    @return_to = request.referer || exercise_practice_path(@exercise)
     if @return_to.include?(exercises_search_path)
-      @return_to = exercises_path
+      @return_to = exercise_practice_path(@exercise)
     end
     if params[:return_to_mark].nil?
       session[:return_to] = @return_to
@@ -326,60 +324,52 @@ class ExercisesController < ApplicationController
   end
 
   
-
-  def update_description(obj,tag,file_name,resource_name,id,dimensions)
+  def update_description(obj,tag,id,attached_files)
     if Exercise.all.where(id: id).exists?
       @exercise = Exercise.all.where(id: id)
     else
       @exercise = Exercise.new
     end
-    @exercise_version = ExerciseVersion.new(exercise: @exercise)
     @user_groups = current_user.andand.user_groups
-    @ownerships_all = file_name
-    @ownerships_res_name = resource_name
-    @ownerships_image_dimensions = dimensions
+    res_path = "public#{ResourceFile::UPLOAD_PATH}/"
+
+    # upload an exercise description
     if tag == "description"
-      if File.extname(obj[0].tempfile) == ".zip"
-        Zip::File.open(obj[0].tempfile) do |zip_file|
+      file_name = obj[0].original_filename
+      file_path = res_path + obj[0].original_filename
+      if File.extname(file_name) == ".zip"
+        Zip::File.open(file_path) do |zip_file|
           zip_file.each do |entry|
             entry.extract
-            # content = entry.get_input_stream.read
-            res = move_and_rename_res(entry.name)
-            if res[2].match(/jpg|jpeg|png|gif/)
-              image = MiniMagick::Image.open(
-                "public/uploads/resource_file/#{res[1]}"
-              )
-              @ownerships_all.push(res[0]) unless @ownerships_all.include?(res[0])
-              @ownerships_res_name.push(res[1]) unless @ownerships_res_name.include?(res[1])
-              @ownerships_image_dimensions.push(image.dimensions.join(" ")) unless @ownerships_image_dimensions.include?(image.dimensions.join(" "))
+            if File.extname(entry.name).match(/jpg|jpeg|png|gif/)
+              attached_files = add_arrtibutes(res_path,entry.name,attached_files,tag)
+            elsif File.extname(entry.name) == ".yaml"
+              @text_representation = entry.get_input_stream.read
+              File.delete(entry.name)
             end
           end
-        entry = zip_file.glob('*.yaml').first
-        @text_representation = entry.get_input_stream.read
         end
-      elsif File.extname(obj[0].tempfile) == ".yaml"
+      elsif File.extname(file_name) == ".yaml"
         @text_representation = File.read(obj[0].tempfile)
       else
-        flash.alert = " Upload Failed!  Please upload a zip file or a yaml file."
       end
+      File.delete(file_path)
     end
+
+    # upload exercise images
     if tag == "img"
       unless obj.nil? 
         obj.each do |file|
-          res = move_and_rename_res("public/uploads/resource_file/#{file.original_filename}")
-          image = MiniMagick::Image.open(
-            "public/uploads/resource_file/#{res[1]}"
-          )
-          @ownerships_all.push(file.original_filename) unless @ownerships_all.include?(file.original_filename)
-          @ownerships_res_name.push(res[1]) unless @ownerships_res_name.include?(res[1])
-          @ownerships_image_dimensions.push(image.dimensions.join(" ")) unless @ownerships_image_dimensions.include?(image.dimensions.join(" "))
+          attached_files = add_arrtibutes(res_path,file.original_filename,attached_files,tag)
         end
       end
     end
+
+    # redirect back to edit page
     if id.nil?
       render "exercises/new"
     else
-      redirect_to edit_exercise_path(id, return_to_mark: false, ownerships_all:@ownerships_all, ownerships_res_name:@ownerships_res_name,text_representation: @text_representation,ownerships_image_dimensions: @ownerships_image_dimensions )
+      redirect_to edit_exercise_path(id, return_to_mark: false,text_representation: @text_representation,attached_files: attached_files )
     end
     return
   end
@@ -399,17 +389,25 @@ class ExercisesController < ApplicationController
       hash = YAML.load(text_representation)
       edit_rights = 0 # Personal exercise
     end
-    file_name = exercise_params[:file_orig_name].split(" ")
-    resource_name = exercise_params[:file_hash_name].split(" ")
-    image_dimensions = exercise_params[:image_dimensions].split(" ")
-    unless exercise_params[:description].nil? 
-      trigger_uploader(exercise_params[:description])
-      self.update_description(exercise_params[:description],"description",file_name,resource_name,params[:exer_id],image_dimensions)
+    ex_id = params[:exer_id]
+    files = exercise_params[:files]
+    description = exercise_params[:description]
+
+    # puts "files = #{files.inspect}"
+    @attached_files = exercise_params[:attached_files]
+    if @attached_files
+      @attached_files = JSON.parse(@attached_files)
+    end
+    # puts "attached files = #{@attached_files.inspect}"
+
+    unless description.nil? 
+      trigger_uploader(description)
+      self.update_description(description,"description", ex_id, @attached_files)
       return
     end
-    unless exercise_params[:files].nil?
-      trigger_uploader(exercise_params[:files])
-      self.update_description(exercise_params[:files],"img",file_name,resource_name,params[:exer_id],image_dimensions)
+    unless files.nil?
+      trigger_uploader(files)
+      self.update_description(files,"img", ex_id, @attached_files)
       return
     end 
 
@@ -466,38 +464,60 @@ class ExercisesController < ApplicationController
         end
         error_msgs << "</ul>"
       else # successfully created the exercise
-        ex_ver = e.exercise_versions.first
-        file_name.each_with_index  do |file,index|
-            hashval = File.basename(resource_name[index], ".*")   
-            if ResourceFile.all.where(hashval: hashval).exists?
-              ownertable = ex_ver.ownerships.create(filename: file,resource_file_id: ResourceFile.all.where(hashval: hashval).first.id)
-            else   
-              res = ex_ver.resource_files.create!(user_id: current_user.id,filename:file, hashval:hashval)
-              ownertable = res.ownerships.last
-              ownertable.filename = file
-              ownertable.save
+        ex_ver = e.current_version
+        # copy all retained resource files, skipping any to be removed
+        prev_version = e.exercise_versions.offset(1).first
+        if prev_version
+          puts "processing ownerships from prev version #{prev_version.id}"
+          prev_version.ownerships.each do |o|
+            puts "checking ownership #{o.inspect}"
+            # Double-loop isn't the greatest design, but both lists are short
+            @attached_files.each do |a|
+              puts "checking against attachment #{a.inspect}"
+              if a['name'] == o.filename
+                @attached_files.reject { |obj| obj[:name] == a['name'] }
+                ownertable = ex_ver.ownerships.create!(
+                  filename: o.filename,
+                  resource_file: o.resource_file)
+              end
             end
-        
+          end
         end
+        p "??????????"
+        p @attached_files
+        @attached_files.each do |a|
+          Ownership.create!(
+            filename: a['name'],
+            exercise_version: ex_ver,
+            resource_file: ResourceFile.for_upload(a, current_user)
+          )
+        end
+
+        # Add exercise to collection
         exercise_collection.andand.add(e, override: true)
+
+        # Update the text representation
         e.current_version.update(text_representation: text_representation)
+
+        # Notify user of success
         success_msgs <<
           "<li>X#{e.id}: #{e.name} saved, try it #{view_context.link_to 'here', exercise_practice_path(e)}.</li>"
       end
     end
 
     if success_all
-      success_msgs = 'Success!<ul>' + success_msgs.join("") + "</ul>"
+      success_msgs = '<ul>' + success_msgs.join("") + '</ul>'
       redirect_to @return_to, flash: { success: success_msgs.html_safe } and return
     else
       if !success_msgs.blank?
-        error_msgs << "Some exercises were successfully saved."
-        error_msgs << "<ul>" + success_msgs.join("") + "</ul>"
+        error_msgs << 'Some exercises were successfully saved.'
+        error_msgs << '<ul>' + success_msgs.join('') + '</ul>'
       end
       redirect_to @return_to, flash: { error: error_msgs.join("").html_safe } and return
     end
   end
 
+  # ----------------------------------------------------------
 	def embed
     if params[:exercise_version_id] || params[:id]
       set_exercise_from_params
@@ -511,7 +531,6 @@ class ExercisesController < ApplicationController
 
   # -------------------------------------------------------------
   def practice
-  
     # lti launch
     @lti_launch = params[:lti_launch]
     @base = File.basename(request.env['PATH_INFO'])
@@ -654,14 +673,11 @@ class ExercisesController < ApplicationController
         @workout_score.previous_attempt_for(@exercise_version.exercise)
     end
 
-    if @workout.andand.exercise_workouts.andand.where(exercise: @exercise).andand.any?
+    if @workout.andand.exercise_workouts.andand.where(
+      exercise: @exercise).andand.any?
       @max_points = @workout.exercise_workouts.
         where(exercise: @exercise).first.points
     end
-
-
-  
-
     @responses = ['There are no responses yet!']
     @explain = ['There are no explanations yet!']
     if session[:leaf_exercises]
@@ -750,8 +766,10 @@ class ExercisesController < ApplicationController
     else
       @workout_offering = nil
     end
-    if @workout_offering.nil? && @student_drift_user.andand.current_workout_score &&
-      @student_drift_user.current_workout_score.workout.contains?(@exercise_version.exercise)
+    if @workout_offering.nil? &&
+      @student_drift_user.andand.current_workout_score &&
+      @student_drift_user.current_workout_score.workout.contains?(
+        @exercise_version.exercise)
       @workout_offering = @student_drift_user.current_workout_score.workout_offering
       if @workout_offering.nil?
         @workout = @student_drift_user.current_workout_score.workout
@@ -1062,22 +1080,37 @@ class ExercisesController < ApplicationController
     end
 
 
+
+    def add_arrtibutes(res_path,file_name,attached_files,tag)
+      if tag == "img"
+        file_path = res_path + file_name
+        image = MiniMagick::Image.open(file_path)
+        hash =  Digest::MD5.hexdigest File.read "#{file_path}"
+        File.rename(file_path, res_path + hash + File.extname(file_name))
+      else
+        image = MiniMagick::Image.open(file_name)
+        hash =  Digest::MD5.hexdigest File.read "#{file_name}"
+        FileUtils.mv("#{file_name}", res_path+hash+File.extname(file_name))
+      end
+      url = ResourceFile::UPLOAD_PATH+"/"+hash+File.extname(file_name)
+      return attached_files.push({
+        name: file_name,
+        url: url,
+        x_dimension: image.dimensions[0],
+        y_dimension: image.dimensions[1],
+        size: File.size?("public" + url)/1000
+      })
+    end
+
+
+
     def trigger_uploader(obj)
+      FileUtils.mkdir_p("public/#{ResourceFile::UPLOAD_PATH}")
       obj.each do |res|
         File.open(Rails.root.join('public', 'uploads',"resource_file", res.original_filename), 'wb')  do |file|
           file.write(res.read)
         end
       end
-    end
-
-    def move_and_rename_res(path)
-      temp = File.basename(path, ".*")
-      temp_name = temp.gsub(/ /, '_')
-      temp_extention = File.extname(path)
-      temp_uniqe_hash =  Digest::MD5.hexdigest File.read "#{path}"
-      FileUtils.mkdir_p("public/uploads/resource_file")
-      FileUtils.mv("#{path}", "public/uploads/resource_file/#{temp_uniqe_hash+temp_extention}")
-      return temp_name+temp_extention,temp_uniqe_hash+temp_extention,temp_extention
     end
 
     

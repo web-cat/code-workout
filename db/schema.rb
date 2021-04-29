@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20210321190445) do
+ActiveRecord::Schema.define(version: 20210428174147) do
 
   create_table "active_admin_comments", force: :cascade do |t|
     t.string   "namespace",     limit: 255
@@ -442,13 +442,16 @@ ActiveRecord::Schema.define(version: 20210321190445) do
   add_index "prompts", ["irt_data_id"], name: "prompts_irt_data_id_fk", using: :btree
 
   create_table "resource_files", force: :cascade do |t|
-    t.string   "filename",   limit: 255
-    t.string   "token",      limit: 255, default: "",   null: false
-    t.integer  "user_id",    limit: 4,                  null: false
-    t.boolean  "public",                 default: true
+    t.string   "file",        limit: 255
+    t.string   "token",       limit: 255, default: "",   null: false
+    t.integer  "user_id",     limit: 4,                  null: false
+    t.boolean  "public",                  default: true
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.string   "hashval",    limit: 255
+    t.string   "hashval",     limit: 255
+    t.integer  "x_dimension", limit: 4
+    t.integer  "y_dimension", limit: 4
+    t.integer  "size",        limit: 4
   end
 
   add_index "resource_files", ["token"], name: "index_resource_files_on_token", using: :btree

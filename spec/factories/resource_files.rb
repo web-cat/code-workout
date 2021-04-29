@@ -2,14 +2,17 @@
 #
 # Table name: resource_files
 #
-#  id         :integer          not null, primary key
-#  filename   :string(255)
-#  hashval    :string(255)
-#  public     :boolean          default(TRUE)
-#  token      :string(255)      default(""), not null
-#  created_at :datetime
-#  updated_at :datetime
-#  user_id    :integer          not null
+#  id          :integer          not null, primary key
+#  file        :string(255)
+#  hashval     :string(255)
+#  public      :boolean          default(TRUE)
+#  size        :integer
+#  token       :string(255)      default(""), not null
+#  x_dimension :integer
+#  y_dimension :integer
+#  created_at  :datetime
+#  updated_at  :datetime
+#  user_id     :integer          not null
 #
 # Indexes
 #
