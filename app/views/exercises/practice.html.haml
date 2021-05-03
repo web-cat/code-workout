@@ -150,6 +150,23 @@
               id: 'primarybtn', disabled: disabled
         - if coding_questions
           %div.btn.btn-default{ data: { toggle: 'modal', target: '#confirm-reset' } } Reset
+          -unless @all_attempts.nil?
+            %p
+            .row
+              .col-sm-9
+                %table#tablelist.table
+                  %thead  
+                    %tr
+                      %th.col-sm-2  Review 
+                      %th.col-sm-2  Score
+                      %th.col-sm-2  TimeStamp
+                  %tbody
+                    - attempts = @all_attempts.where(exercise_version_id: @exercise_version.id)
+                    - attempts.each_with_index do |attempt,index|
+                      %tr             
+                        %td= link_to "Attempt: #{attempts.length-index}", organization_workout_offering_exercise_review_path(organization_id: params[:organization_id], course_id: params[:course_id], term_id: params[:term_id], workout_offering_id: params[:workout_offering_id], review_user_id: params[:review_user_id], id: params[:id], attempt: attempt.id, review: true)
+                        %td="#{format('%.2f', attempt.score)}/#{@workout.exercise_workouts.find_by(exercise: @exercise).andand.points}"
+                        %td= l user_time(@review_user, attempt.submit_time)
         -if @exercise.tag_list.include? 'Visualizable'
           -if @workout
             -if @workout_offering

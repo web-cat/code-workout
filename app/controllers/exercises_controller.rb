@@ -452,7 +452,6 @@ class ExercisesController < ApplicationController
   def practice
     # lti launch
     @lti_launch = params[:lti_launch]
-
     if params[:exercise_version_id] || params[:id]
       set_exercise_from_params
     else
@@ -465,19 +464,6 @@ class ExercisesController < ApplicationController
     end
 
     @student_user = params[:review_user_id] ? User.find(params[:review_user_id]) : current_user
-
-    workout_offering = WorkoutOffering.where(id:params[:workout_offering_id]).andand.first 
-    review_user = User.where(id:params[:review_user_id]).andand.first 
-    course_offering ||= workout_offering.andand.course_offering
-    if params[:workout_offering_id] && review_user && course_offering
-      @notice = []
-      if review_user.andand.id != current_user.andand.id
-        attempt = (Workout.where(id:workout_offering.workout_id).first).workout_scores.where(user_id:params[:review_user_id]).andand.first.scoring_attempt_for(Exercise.where(id:params[:id])[0])
-        @notice << "Reviewing submission " +  attempt.andand.submit_num.to_s|| "0"
-        @notice << "from #{review_user.andand.display_name}"
-        @notice << "submitted at: #{l user_time(review_user, attempt.submit_time)}."
-      end
-    end 
 
     if params[:workout_offering_id]
       @workout_offering =
@@ -504,7 +490,7 @@ class ExercisesController < ApplicationController
       authorize! :gym_practice, @exercise
     end
 
-    @attempt = nil
+    # @attempt = nil
     @workout_score = params[:workout_score_id] ? WorkoutScore.find(params[:workout_score_id]) : (
       @workout_offering ? @workout_offering.score_for(@student_user) : (
           @workout ? @workout.score_for(@student_user, @workout_offering) : nil
@@ -599,19 +585,35 @@ class ExercisesController < ApplicationController
     end
 
     # display the scored attempt if in review mode (for students or instructors)
-    if @workout_score
-      @attempt = (params[:review_user_id] || student_review) ?
-        @workout_score.scoring_attempt_for(@exercise_version.exercise) :
-        @workout_score.previous_attempt_for(@exercise_version.exercise)
-    end
+    # if @workout_score
+    #   @attempt = (params[:review_user_id] || student_review) ?
+    #     @workout_score.scoring_attempt_for(@exercise_version.exercise) :
+    #     @workout_score.previous_attempt_for(@exercise_version.exercise)
+    # end
 
+ 
     if @workout.andand.exercise_workouts.andand.where(exercise: @exercise).andand.any?
       @max_points = @workout.exercise_workouts.
         where(exercise: @exercise).first.points
     end
 
-
-  
+    @student_user = params[:review_user_id] ? User.find(params[:review_user_id]) : current_user
+    @review_user = (@student_user != current_user) ? @student_user : nil
+    course_offering ||= @workout_offering.andand.course_offering
+    if params[:workout_offering_id] && @review_user && course_offering
+      if @review_user.andand.id != current_user.andand.id
+        @all_attempts = @workout_offering.workout.workout_scores.where(user_id:params[:review_user_id])[0].attempts
+        if params[:review].nil?
+          @attempt = @workout_offering.workout.workout_scores.where(user_id:params[:review_user_id]).andand.first.scoring_attempt_for(@exercise_version.exercise)
+        else
+          @attempt = Attempt.find(params[:attempt])
+        end
+        @notice = []
+        @notice << "Reviewing submission " +  @attempt.andand.submit_num.to_s|| "0"
+        @notice << "from #{@review_user.andand.display_name}"
+        @notice << "submitted at: #{l user_time(@review_user, @attempt.submit_time)}."
+      end
+    end 
 
     @responses = ['There are no responses yet!']
     @explain = ['There are no explanations yet!']
