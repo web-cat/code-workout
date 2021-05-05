@@ -114,6 +114,31 @@
                   member_value: :id,
                   member_label: Proc.new{ |p| "#{p[:answer]}".html_safe },
                   label: '&nbsp;'
+            - attempts = @all_attempts.where(exercise_version_id: @exercise_version.id)
+            - show_attempt_date = false;
+            - if (l user_time(@review_user, attempts.first.submit_time)).to_s.split(" ")[0] != (l user_time(@review_user, attempts.last.submit_time)).to_s.split(" ")[0]
+              - show_attempt_date = true;
+            %p
+            .row
+              .col-sm-9
+                %table#tablelist.table.table-hover
+                  %thead  
+                    %tr
+                      %th Attempt 
+                      -if show_attempt_date
+                        %th Time 
+                      -else
+                        %th=(l user_time(@review_user, attempts.first.submit_time)).to_s.split(" ")[0]
+                      %th Score
+                  %tbody
+                    - attempts.each_with_index do |attempt,index|
+                      %tr             
+                        %td="#{attempts.length-index}"
+                        -if show_attempt_date
+                          %td=link_to "#{(l user_time(@review_user, attempt.submit_time)).to_s.split(" ")[0]} #{user_time(@review_user, attempt.submit_time).to_s.split(" ")[1]}",organization_workout_offering_exercise_review_path(organization_id: params[:organization_id], course_id: params[:course_id], term_id: params[:term_id], workout_offering_id: params[:workout_offering_id], review_user_id: params[:review_user_id], id: params[:id], attempt: attempt.id, review: true)
+                        -else
+                          %td=link_to "#{user_time(@review_user, attempt.submit_time).to_s.split(" ")[1]}",organization_workout_offering_exercise_review_path(organization_id: params[:organization_id], course_id: params[:course_id], term_id: params[:term_id], workout_offering_id: params[:workout_offering_id], review_user_id: params[:review_user_id], id: params[:id], attempt: attempt.id, review: true)      
+                        %td=link_to "#{format('%.2f', attempt.score.to_f/@workout.exercise_workouts.find_by(exercise: @exercise).andand.points * 100)}%",organization_workout_offering_exercise_review_path(organization_id: params[:organization_id], course_id: params[:course_id], term_id: params[:term_id], workout_offering_id: params[:workout_offering_id], review_user_id: params[:review_user_id], id: params[:id], attempt: attempt.id, review: true)   
         - elsif prompt.is_coding?
           - coding_questions = true
           - prior_answer = @attempt && @attempt.prompt_answers.where(prompt: prompt.acting_as).first
@@ -151,22 +176,31 @@
         - if coding_questions
           %div.btn.btn-default{ data: { toggle: 'modal', target: '#confirm-reset' } } Reset
           -unless @all_attempts.nil?
+            - attempts = @all_attempts.where(exercise_version_id: @exercise_version.id)
+            - show_attempt_date = false;
+            - if (l user_time(@review_user, attempts.first.submit_time)).to_s.split(" ")[0] != (l user_time(@review_user, attempts.last.submit_time)).to_s.split(" ")[0]
+              - show_attempt_date = true;
             %p
             .row
               .col-sm-9
-                %table#tablelist.table
+                %table#tablelist.table.table-hover
                   %thead  
                     %tr
-                      %th.col-sm-2  Review 
-                      %th.col-sm-2  Score
-                      %th.col-sm-2  TimeStamp
+                      %th Attempt 
+                      -if show_attempt_date
+                        %th Time 
+                      -else
+                        %th=(l user_time(@review_user, attempts.first.submit_time)).to_s.split(" ")[0]
+                      %th Score
                   %tbody
-                    - attempts = @all_attempts.where(exercise_version_id: @exercise_version.id)
                     - attempts.each_with_index do |attempt,index|
                       %tr             
-                        %td= link_to "Attempt: #{attempts.length-index}", organization_workout_offering_exercise_review_path(organization_id: params[:organization_id], course_id: params[:course_id], term_id: params[:term_id], workout_offering_id: params[:workout_offering_id], review_user_id: params[:review_user_id], id: params[:id], attempt: attempt.id, review: true)
-                        %td="#{format('%.2f', attempt.score)}/#{@workout.exercise_workouts.find_by(exercise: @exercise).andand.points}"
-                        %td= l user_time(@review_user, attempt.submit_time)
+                        %td="#{attempts.length-index}"
+                        -if show_attempt_date
+                          %td=link_to "#{(l user_time(@review_user, attempt.submit_time)).to_s.split(" ")[0]} #{user_time(@review_user, attempt.submit_time).to_s.split(" ")[1]}",organization_workout_offering_exercise_review_path(organization_id: params[:organization_id], course_id: params[:course_id], term_id: params[:term_id], workout_offering_id: params[:workout_offering_id], review_user_id: params[:review_user_id], id: params[:id], attempt: attempt.id, review: true)
+                        -else
+                          %td=link_to "#{user_time(@review_user, attempt.submit_time).to_s.split(" ")[1]}",organization_workout_offering_exercise_review_path(organization_id: params[:organization_id], course_id: params[:course_id], term_id: params[:term_id], workout_offering_id: params[:workout_offering_id], review_user_id: params[:review_user_id], id: params[:id], attempt: attempt.id, review: true)      
+                        %td=link_to "#{format('%.2f', attempt.score.to_f/@workout.exercise_workouts.find_by(exercise: @exercise).andand.points * 100)}%",organization_workout_offering_exercise_review_path(organization_id: params[:organization_id], course_id: params[:course_id], term_id: params[:term_id], workout_offering_id: params[:workout_offering_id], review_user_id: params[:review_user_id], id: params[:id], attempt: attempt.id, review: true)      
         -if @exercise.tag_list.include? 'Visualizable'
           -if @workout
             -if @workout_offering

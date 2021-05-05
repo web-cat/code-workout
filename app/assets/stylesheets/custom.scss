@@ -614,3 +614,9 @@ ul.ui-autocomplete {
   border: 1px solid #ccc;
   border-top: none;
 }
+
+.table td.fit, 
+.table th.fit {
+    white-space: nowrap;
+    width: 1%;
+}

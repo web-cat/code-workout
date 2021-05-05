@@ -611,7 +611,7 @@ class ExercisesController < ApplicationController
         @notice = []
         @notice << "Reviewing submission " +  @attempt.andand.submit_num.to_s|| "0"
         @notice << "from #{@review_user.andand.display_name}"
-        @notice << "submitted at: #{l user_time(@review_user, @attempt.submit_time)}."
+        @notice << "submitted at: #{(l user_time(@review_user, @attempt.submit_time)).to_s.split(" ")[0]} #{user_time(@review_user, @attempt.submit_time).to_s.split(" ")[1]}"
       end
     end 
 
