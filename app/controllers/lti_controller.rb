@@ -164,7 +164,6 @@ class LtiController < ApplicationController
       @message = 'Term not found.'
       render 'lti/error' and return
     end
-
     redirect_to organization_find_workout_offering_path(
       organization_id: @organization.slug,
       term_id: @term.slug,

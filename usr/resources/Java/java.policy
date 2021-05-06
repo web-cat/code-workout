@@ -23,6 +23,11 @@ grant codeBase "file:/usr/share/java/-" {
 grant codeBase "file:/Library/Java/JavaVirtualMachines/-" {
     permission java.security.AllPermission;
 };
+
+grant {
+    permission java.security.AllPermission;
+};
+
 // For CentOS
 grant codeBase "file:/usr/lib/jvm/-" {
     permission java.security.AllPermission;
