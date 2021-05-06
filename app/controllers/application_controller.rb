@@ -63,4 +63,10 @@ class ApplicationController < ActionController::Base
     response.headers.except! 'X-Frame-Options'
   end
 
+  #---------------------------------------------------------------
+  #method from OpenPOP
+  def go
+    redirect_to exercise_answer_path
+  end
+
 end

@@ -1,6 +1,6 @@
 <h1>Edit exercise</h1>
 
-<%= form_with(model: @exercise) do |form| %>
+<%= form_for @exercise, url:pop_exercise_path do |form| %>
 
   <% if @exercise.errors.any? %>
     <div id="error_explanation">
@@ -32,4 +32,4 @@
 
 <% end %>
 
-<%= link_to 'Back', exercises_path %>
+<%= link_to 'Back', pop_exercises_path %>

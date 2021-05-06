@@ -20,7 +20,7 @@ class PopExercisesController < ApplicationController
     def create
       @exercise = Popexercise.new(exercise_params)
       if @exercise.save
-        redirect_to @exercise
+        redirect_to pop_exercises_path
       else
         render 'new'
       end
@@ -30,7 +30,7 @@ class PopExercisesController < ApplicationController
     def update
       @exercise = Popexercise.find(params[:id])
       if @exercise.update(exercise_params)
-        redirect_to @exercise
+        redirect_to edit_pop_exercise_path(@exercise)
       else
         render 'edit'
       end
@@ -39,7 +39,7 @@ class PopExercisesController < ApplicationController
     def destroy
       @exercise = Popexercise.find(params[:id])
       @exercise.destroy
-      redirect_to popexercises_path
+      redirect_to pop_exercises_path
     end
   
     private

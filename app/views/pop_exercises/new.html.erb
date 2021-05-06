@@ -1,5 +1,6 @@
 <h1>New Exercise</h1>
-<%= form_with scope: @exercise, url: pop_exercises_path, local: true do |form| %>
+
+<%= form_for @exercise, url:pop_exercises_path do |form| %>
 
   <% if @exercise.errors.any? %>
     <div id="error_explanation">
@@ -26,9 +27,11 @@
   </p>
 
   <p>
-    <%= form.submit %>
+    <%= form.submit "Create Exercise" %>
   </p>
 
-<% end %>
+<% end %> 
+
+
 
 <%= link_to 'Back', pop_exercises_path %>

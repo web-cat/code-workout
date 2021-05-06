@@ -1,0 +1,17 @@
+<p>
+  <strong>Answer:</strong>
+  <%= answer.StudentCode %>
+</p>
+<h2>Trace</h2>
+<p>
+    <strong>Trace:</strong>
+    <%= answer.trace.nil? ? "NONE": answer.trace.exercise_trace%>
+</p>
+<p>
+  <%= link_to 'Visualize', visualize_path(answer.popexercise, answer)%> |
+
+
+  <%= link_to 'Destroy Answer', pop_exercise_answer_path(answer.popexercise, answer),
+              method: :delete,
+              data: { confirm: 'Are you sure?' } %>
+</p>
