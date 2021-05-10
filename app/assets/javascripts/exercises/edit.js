@@ -69,9 +69,9 @@ $(document).ready(function()
     {
       var row = document.getElementById("tablelist").insertRow();
       row.setAttribute("id",(index + 1) + "row")
-      const fname = f.name
-      const is_img = is_image(fname)
-      const file_url = f.url
+      var fname = f.name
+      var is_img = is_image(fname)
+      var file_url = f.url
       var col = 0
       // Type info
       var cell = row.insertCell(col++)
