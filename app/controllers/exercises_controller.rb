@@ -596,7 +596,7 @@ class ExercisesController < ApplicationController
       @max_points = @workout.exercise_workouts.
         where(exercise: @exercise).first.points
     end
-
+    @select_row = params[:select_row]
     @student_user = params[:review_user_id] ? User.find(params[:review_user_id]) : current_user
     @review_user = (@student_user != current_user) ? @student_user : nil
     course_offering ||= @workout_offering.andand.course_offering

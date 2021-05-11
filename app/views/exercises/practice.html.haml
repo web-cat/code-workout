@@ -12,6 +12,18 @@
 -#     %button.ml-2.mb-1.close{"data-dismiss" => "toast", type: "button"} ×
 -#   .toast-body
 -#     Some text inside the toast body
+
+
+-# Move this javascript to assets/javascripts/exercises/practice after merge to staging
+:javascript
+    $(document).ready(function(){
+      var select_row=document.getElementById("select_row").value; 
+      var table = document.getElementById("tablelist").getElementsByTagName("tr");
+      (select_row == "") ? select_row=1: select_row = parseInt(select_row, 10) + 1;
+      table[select_row].style.background = "#f0e8d0"    
+    })
+
+
 .row
   .col-md-12
     %h2
@@ -114,31 +126,35 @@
                   member_value: :id,
                   member_label: Proc.new{ |p| "#{p[:answer]}".html_safe },
                   label: '&nbsp;'
-            - attempts = @all_attempts.where(exercise_version_id: @exercise_version.id)
-            - show_attempt_date = false;
-            - if (l user_time(@review_user, attempts.first.submit_time)).to_s.split(" ")[0] != (l user_time(@review_user, attempts.last.submit_time)).to_s.split(" ")[0]
-              - show_attempt_date = true;
-            %p
-            .row
-              .col-sm-9
-                %table#tablelist.table.table-hover
-                  %thead  
-                    %tr
-                      %th Attempt 
-                      -if show_attempt_date
-                        %th Time 
-                      -else
-                        %th=(l user_time(@review_user, attempts.first.submit_time)).to_s.split(" ")[0]
-                      %th Score
-                  %tbody
-                    - attempts.each_with_index do |attempt,index|
-                      %tr             
-                        %td="#{attempts.length-index}"
+            - attempts = @all_attempts.andand.where(exercise_version_id: @exercise_version.id)
+            -unless @all_attempts.nil?
+              -p "hhhhhhhhh"
+              -p @select_row
+              = hidden_field_tag 'select_row',  @select_row
+              - show_attempt_date = false;
+              - if (l user_time(@review_user, attempts.first.submit_time)).to_s.split(" ")[0] != (l user_time(@review_user, attempts.last.submit_time)).to_s.split(" ")[0]
+                - show_attempt_date = true;
+              %p
+              .row
+                .col-sm-9
+                  %table#tablelist
+                    %thead  
+                      %tr
+                        %th Attempt 
                         -if show_attempt_date
-                          %td=link_to "#{(l user_time(@review_user, attempt.submit_time)).to_s.split(" ")[0]} #{user_time(@review_user, attempt.submit_time).to_s.split(" ")[1]}",organization_workout_offering_exercise_review_path(organization_id: params[:organization_id], course_id: params[:course_id], term_id: params[:term_id], workout_offering_id: params[:workout_offering_id], review_user_id: params[:review_user_id], id: params[:id], attempt: attempt.id, review: true)
+                          %th Time 
                         -else
-                          %td=link_to "#{user_time(@review_user, attempt.submit_time).to_s.split(" ")[1]}",organization_workout_offering_exercise_review_path(organization_id: params[:organization_id], course_id: params[:course_id], term_id: params[:term_id], workout_offering_id: params[:workout_offering_id], review_user_id: params[:review_user_id], id: params[:id], attempt: attempt.id, review: true)      
-                        %td=link_to "#{format('%.2f', attempt.score.to_f/@workout.exercise_workouts.find_by(exercise: @exercise).andand.points * 100)}%",organization_workout_offering_exercise_review_path(organization_id: params[:organization_id], course_id: params[:course_id], term_id: params[:term_id], workout_offering_id: params[:workout_offering_id], review_user_id: params[:review_user_id], id: params[:id], attempt: attempt.id, review: true)   
+                          %th=(l user_time(@review_user, attempts.first.submit_time)).to_s.split(" ")[0]
+                        %th Score
+                    %tbody
+                      - attempts.each_with_index do |attempt,index|
+                        %tr          
+                          %td="#{attempts.length-index}"
+                          -if show_attempt_date
+                            %td=link_to "#{(l user_time(@review_user, attempt.submit_time)).to_s.split(" ")[0]} #{user_time(@review_user, attempt.submit_time).to_s.split(" ")[1]}",organization_workout_offering_exercise_review_path(organization_id: params[:organization_id], course_id: params[:course_id], term_id: params[:term_id], workout_offering_id: params[:workout_offering_id], review_user_id: params[:review_user_id], id: params[:id], attempt: attempt.id, review: true,select_row: index)
+                          -else
+                            %td=link_to "#{user_time(@review_user, attempt.submit_time).to_s.split(" ")[1]}",organization_workout_offering_exercise_review_path(organization_id: params[:organization_id], course_id: params[:course_id], term_id: params[:term_id], workout_offering_id: params[:workout_offering_id], review_user_id: params[:review_user_id], id: params[:id], attempt: attempt.id, review: true,select_row: index)      
+                          %td=link_to "#{format('%.2f', attempt.score.to_f/@workout.exercise_workouts.find_by(exercise: @exercise).andand.points * 100)}%",organization_workout_offering_exercise_review_path(organization_id: params[:organization_id], course_id: params[:course_id], term_id: params[:term_id], workout_offering_id: params[:workout_offering_id], review_user_id: params[:review_user_id], id: params[:id], attempt: attempt.id, review: true,select_row: index)   
         - elsif prompt.is_coding?
           - coding_questions = true
           - prior_answer = @attempt && @attempt.prompt_answers.where(prompt: prompt.acting_as).first
@@ -177,13 +193,15 @@
           %div.btn.btn-default{ data: { toggle: 'modal', target: '#confirm-reset' } } Reset
           -unless @all_attempts.nil?
             - attempts = @all_attempts.where(exercise_version_id: @exercise_version.id)
+            -p @select_row
+            = hidden_field_tag 'select_row',  @select_row
             - show_attempt_date = false;
             - if (l user_time(@review_user, attempts.first.submit_time)).to_s.split(" ")[0] != (l user_time(@review_user, attempts.last.submit_time)).to_s.split(" ")[0]
               - show_attempt_date = true;
             %p
             .row
               .col-sm-9
-                %table#tablelist.table.table-hover
+                %table#tablelist
                   %thead  
                     %tr
                       %th Attempt 
@@ -194,13 +212,13 @@
                       %th Score
                   %tbody
                     - attempts.each_with_index do |attempt,index|
-                      %tr             
+                      %tr        
                         %td="#{attempts.length-index}"
                         -if show_attempt_date
-                          %td=link_to "#{(l user_time(@review_user, attempt.submit_time)).to_s.split(" ")[0]} #{user_time(@review_user, attempt.submit_time).to_s.split(" ")[1]}",organization_workout_offering_exercise_review_path(organization_id: params[:organization_id], course_id: params[:course_id], term_id: params[:term_id], workout_offering_id: params[:workout_offering_id], review_user_id: params[:review_user_id], id: params[:id], attempt: attempt.id, review: true)
+                          %td=link_to "#{(l user_time(@review_user, attempt.submit_time)).to_s.split(" ")[0]} #{user_time(@review_user, attempt.submit_time).to_s.split(" ")[1]}",organization_workout_offering_exercise_review_path(organization_id: params[:organization_id], course_id: params[:course_id], term_id: params[:term_id], workout_offering_id: params[:workout_offering_id], review_user_id: params[:review_user_id], id: params[:id], attempt: attempt.id, review: true ,select_row: index)
                         -else
-                          %td=link_to "#{user_time(@review_user, attempt.submit_time).to_s.split(" ")[1]}",organization_workout_offering_exercise_review_path(organization_id: params[:organization_id], course_id: params[:course_id], term_id: params[:term_id], workout_offering_id: params[:workout_offering_id], review_user_id: params[:review_user_id], id: params[:id], attempt: attempt.id, review: true)      
-                        %td=link_to "#{format('%.2f', attempt.score.to_f/@workout.exercise_workouts.find_by(exercise: @exercise).andand.points * 100)}%",organization_workout_offering_exercise_review_path(organization_id: params[:organization_id], course_id: params[:course_id], term_id: params[:term_id], workout_offering_id: params[:workout_offering_id], review_user_id: params[:review_user_id], id: params[:id], attempt: attempt.id, review: true)      
+                          %td=link_to "#{user_time(@review_user, attempt.submit_time).to_s.split(" ")[1]}",organization_workout_offering_exercise_review_path(organization_id: params[:organization_id], course_id: params[:course_id], term_id: params[:term_id], workout_offering_id: params[:workout_offering_id], review_user_id: params[:review_user_id], id: params[:id], attempt: attempt.id, review: true,select_row: index)      
+                        %td=link_to "#{format('%.2f', attempt.score.to_f/@workout.exercise_workouts.find_by(exercise: @exercise).andand.points * 100)}%",organization_workout_offering_exercise_review_path(organization_id: params[:organization_id], course_id: params[:course_id], term_id: params[:term_id], workout_offering_id: params[:workout_offering_id], review_user_id: params[:review_user_id], id: params[:id], attempt: attempt.id, review: true,select_row: index)      
         -if @exercise.tag_list.include? 'Visualizable'
           -if @workout
             -if @workout_offering

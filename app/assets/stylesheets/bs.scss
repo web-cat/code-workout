@@ -14,7 +14,7 @@
 
 .exercise_version table {
   @extend .table;
-  @extend .table-striped;
+  // @extend .table-striped;
   @extend .table-bordered;
   width: auto;
 }
