@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20210410232421) do
+ActiveRecord::Schema.define(version: 20210512032109) do
 
   create_table "active_admin_comments", force: :cascade do |t|
     t.string   "namespace",     limit: 255
@@ -694,6 +694,7 @@ ActiveRecord::Schema.define(version: 20210410232421) do
     t.string   "lis_result_sourcedid",    limit: 255
     t.integer  "lti_workout_id",          limit: 4
     t.datetime "started_at"
+    t.boolean  "has_attempted"
   end
 
   add_index "workout_scores", ["lti_workout_id"], name: "index_workout_scores_on_lti_workout_id", using: :btree

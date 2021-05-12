@@ -7,6 +7,7 @@
 #  completed_at            :datetime
 #  exercises_completed     :integer
 #  exercises_remaining     :integer
+#  has_attempted           :boolean
 #  last_attempted_at       :datetime
 #  lis_outcome_service_url :string(255)
 #  lis_result_sourcedid    :string(255)
@@ -227,6 +228,8 @@ class WorkoutScore < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def update_attempt(attempt, old_score)
+    self.has_attempted = true
+    self.save!
     self.transaction do
       if attempt.workout_score == self
         # recalculate workout score
@@ -243,6 +246,8 @@ class WorkoutScore < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def record_attempt(attempt)
+    self.has_attempted = true
+    self.save!
     self.with_lock do
       scored_for_this = self.scored_attempts.
         joins(exercise_version: :exercise).
@@ -292,6 +297,8 @@ class WorkoutScore < ActiveRecord::Base
 
   # ------------------------------------------------------------
   def recalculate_score!(options = {})
+    self.has_attempted = true
+    self.save!
     self.with_lock do
       attempt = options[:attempt]
       self.score = 0.0
@@ -315,6 +322,8 @@ class WorkoutScore < ActiveRecord::Base
   # ------------------------------------------------------------
   # Completely recalculate the current score from scratch
   def retotal
+    self.has_attempted = true
+    self.save!
     self.transaction do
 
       # Clear all active scores

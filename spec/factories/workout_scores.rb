@@ -7,6 +7,7 @@
 #  completed_at            :datetime
 #  exercises_completed     :integer
 #  exercises_remaining     :integer
+#  has_attempted           :boolean
 #  last_attempted_at       :datetime
 #  lis_outcome_service_url :string(255)
 #  lis_result_sourcedid    :string(255)

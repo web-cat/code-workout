@@ -139,10 +139,13 @@
         %tbody
           %tr         
             %td Start at least one attempt: 
-            %td= "#{(finish_one_attempt / all_students.count.to_f) * 100}%"
+            %td="#{format('%.2f', (finish_one_attempt / all_students.count.to_f) * 100)}%"
           %tr             
             %td Average score:
-            %td= "#{format('%.2f', (total_score / finish_one_attempt) / full_points * 100)}%"
+            -if finish_one_attempt == 0
+              %td= "#{format('%.2f', 0)}%" 
+            -else
+              %td= "#{format('%.2f', (total_score / finish_one_attempt) / full_points * 100)}%"
           %tr             
             %td Full score students:
             %td= full_score_students

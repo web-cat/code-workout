@@ -111,29 +111,25 @@
       = teaser(workout.description)
   -if params[:review_user_id].nil? && !workout_offering.nil? && workout_offering.course_offering.is_staff?(current_user)
     -workout_scores = workout.workout_scores
-    -#full_points = workout.exercise_workouts.find_by(exercise: exercise).andand.points.to_f
+    -start_workout = workout_scores.where(has_attempted: true)
     -all_students = workout_offering.course_offering.students
     -total_workout_score = 0.0
-    -start_at_least_one_ex = 0.0
     -full_score_students = 0
     -full_score = 0.0
     -workout.exercise_workouts.each do |ex_workout|
       -full_score = full_score + ex_workout.points.to_f
-    -all_students.each do |student|
-      -one_workout_score = workout_scores.where(user_id:student.id)[0]
-      -unless one_workout_score.andand.score.nil?
-        -start_at_least_one_ex += 1
-        -total_workout_score = total_workout_score + one_workout_score.andand.score
-        -if full_score == one_workout_score.andand.score
-          -full_score_students += 1
+    -start_workout.each do |one_workout_score|
+      -total_workout_score = total_workout_score + one_workout_score.andand.score
+      -if full_score == one_workout_score.andand.score
+        -full_score_students += 1
     %table#tablelist
       %tbody
         %tr         
           %td Start at least one exercise: 
-          %td= "#{format('%.2f', (start_at_least_one_ex / all_students.count.to_f) * 100)}%" 
+          %td= "#{format('%.2f', (start_workout.count / all_students.count.to_f) * 100)}%" 
         %tr             
           %td Average workout score:
-          %td= "#{format('%.2f', (total_workout_score / start_at_least_one_ex))}"
+          %td= "#{format('%.2f', (total_workout_score / start_workout.count))}"
         %tr             
           %td Full score students:
           %td= "#{format('%.2f', (full_score_students / all_students.count.to_f) * 100)}%" 
