@@ -128,8 +128,6 @@
                   label: '&nbsp;'
             - attempts = @all_attempts.andand.where(exercise_version_id: @exercise_version.id)
             -unless @all_attempts.nil?
-              -p "hhhhhhhhh"
-              -p @select_row
               = hidden_field_tag 'select_row',  @select_row
               - show_attempt_date = false;
               - if (l user_time(@review_user, attempts.first.submit_time)).to_s.split(" ")[0] != (l user_time(@review_user, attempts.last.submit_time)).to_s.split(" ")[0]
@@ -193,7 +191,6 @@
           %div.btn.btn-default{ data: { toggle: 'modal', target: '#confirm-reset' } } Reset
           -unless @all_attempts.nil?
             - attempts = @all_attempts.where(exercise_version_id: @exercise_version.id)
-            -p @select_row
             = hidden_field_tag 'select_row',  @select_row
             - show_attempt_date = false;
             - if (l user_time(@review_user, attempts.first.submit_time)).to_s.split(" ")[0] != (l user_time(@review_user, attempts.last.submit_time)).to_s.split(" ")[0]
