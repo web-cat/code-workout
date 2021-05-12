@@ -119,7 +119,7 @@
     .body
       .text
         = teaser(exercise.current_version.andand.prompts.andand.first.andand.question)
-    -if params[:review_user_id].nil? && !workout_offering.nil?
+    -if params[:review_user_id].nil? && !workout_offering.nil? && workout_offering.course_offering.is_staff?(current_user)
       -workout = workout_offering.workout
       -workout_scores = workout.workout_scores
       -full_points = workout.exercise_workouts.find_by(exercise: exercise).andand.points.to_f
@@ -132,13 +132,13 @@
         -unless workout_score.andand.attempts.andand.count.nil?
           -finish_one_attempt = finish_one_attempt + 1
           -attempt = workout_score.andand.attempts.where(exercise_version_id: exercise.id).where.not(active_score_id: nil).first
-          -total_score = total_score + attempt.score.to_f
-          -if attempt.score.to_f == full_points
+          -total_score = total_score + attempt.andand.score.to_f
+          -if attempt.andand.score.to_f == full_points
             -full_score_students = full_score_students + 1
       %table#tablelist
         %tbody
           %tr         
-            %td Finish at least one attempt: 
+            %td Start at least one attempt: 
             %td= "#{(finish_one_attempt / all_students.count.to_f) * 100}%"
           %tr             
             %td Average score:
