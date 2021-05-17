@@ -20,6 +20,19 @@
 - if score_pct == 100 && workout_score.score < workout.total_points
   - score_pct = 99
 - closed = (workout_offering.andand.hard_deadline && workout_offering.andand.hard_deadline < Time.zone.now)
+-if workout && params[:review_user_id].nil? && !workout_offering.nil? && workout_offering.course_offering.is_staff?(current_user)
+  -workout_scores = workout.workout_scores
+  -start_workout = workout_scores.where(has_attempted: true)
+  -all_students = workout_offering.course_offering.students
+  -total_workout_score = 0.0
+  -full_score_students = 0
+  -full_score = 0.0
+  -workout.exercise_workouts.each do |ex_workout|
+    -full_score = full_score + ex_workout.points.to_f
+  -start_workout.each do |one_workout_score|
+    -total_workout_score = total_workout_score + one_workout_score.andand.score
+    -if full_score == one_workout_score.andand.score
+      -full_score_students += 1
 %article.workout.thumbnail{ class: (closed ? (size + " closed") : size) }
   .title
     - if workout_offering && workout_offering.current_deadline_distance == 4
@@ -47,16 +60,26 @@
       %i.fa.fa-folder-open
       .due.late
         = 'Due in a few minutes'
-
     - if new_or_existing
       = workout.name
     - else
       - if workout_offering
-        = link_to workout.name,
-            organization_workout_offering_path(id: workout_offering.id,
-            course_id: workout_offering.course_offering.course.slug,
-            term_id: workout_offering.course_offering.term.slug,
-            organization_id: workout_offering.course_offering.course.organization.slug)
+        -unless params[:review_user_id].nil? && !workout_offering.nil? && workout_offering.course_offering.is_staff?(current_user)
+          = link_to workout.name,
+          organization_workout_offering_path(id: workout_offering.id,
+          course_id: workout_offering.course_offering.course.slug,
+          term_id: workout_offering.course_offering.term.slug,
+          organization_id: workout_offering.course_offering.course.organization.slug)  
+        -else
+          = link_to workout.name,
+              organization_workout_offering_path(id: workout_offering.id,
+              course_id: workout_offering.course_offering.course.slug,
+              term_id: workout_offering.course_offering.term.slug,
+              organization_id: workout_offering.course_offering.course.organization.slug,
+              start_workout: start_workout.count,
+              student_number: all_students.count.to_f,
+              total_workout_score: total_workout_score,
+              full_score_students: full_score_students)        
       - else
         = link_to workout.name, workout_path(id: workout[:id])
     %span.badge.badge-info= workout.exercises.count.to_s
@@ -110,18 +133,6 @@
     .text
       = teaser(workout.description)
   -if params[:review_user_id].nil? && !workout_offering.nil? && workout_offering.course_offering.is_staff?(current_user)
-    -workout_scores = workout.workout_scores
-    -start_workout = workout_scores.where(has_attempted: true)
-    -all_students = workout_offering.course_offering.students
-    -total_workout_score = 0.0
-    -full_score_students = 0
-    -full_score = 0.0
-    -workout.exercise_workouts.each do |ex_workout|
-      -full_score = full_score + ex_workout.points.to_f
-    -start_workout.each do |one_workout_score|
-      -total_workout_score = total_workout_score + one_workout_score.andand.score
-      -if full_score == one_workout_score.andand.score
-        -full_score_students += 1
     %table#tablelist
       %tbody
         %tr         
@@ -129,7 +140,10 @@
           %td= "#{format('%.2f', (start_workout.count / all_students.count.to_f) * 100)}%" 
         %tr             
           %td Average workout score:
-          %td= "#{format('%.2f', (total_workout_score / start_workout.count))}"
+          -if total_workout_score == 0
+            %td 0
+          -else
+            %td= "#{format('%.2f', (total_workout_score / start_workout.count))}"
         %tr             
           %td Full score students:
           %td= "#{format('%.2f', (full_score_students / all_students.count.to_f) * 100)}%" 
