@@ -75,18 +75,18 @@
                       %br
                       .out= tcr.execution_feedback
             - if has_hidden
-              %tr
-                - if hidden_pass
-                  %td.pass
-                    %i.fa.fa-check-square
-                - else
-                  %td.fail
-                    %i.fa.fa-minus-square
-                %td hidden test(s)
+              -# %tr
+                -# - if hidden_pass
+                -#   %td.pass
+                -#     %i.fa.fa-check-square
+                -# - else
+                -#   %td.fail
+                -#     %i.fa.fa-minus-square
+                -# %td hidden test(s)
               %tr
                 %td{ style: 'text-align: center; font-weight: bold;' } Instructor
               - answer.test_case_results(true).each do |tcr|
-                -if tcr.display_description == "hidden"
+                -if tcr.test_case.hidden?
                   %tr
                     - if tcr.pass
                       %td.pass

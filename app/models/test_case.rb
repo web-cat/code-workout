@@ -193,8 +193,9 @@ class TestCase < ActiveRecord::Base
   # -------------------------------------------------------------
   def display_description(pass = true)
     result = self.description
+    hidden = ""
     if self.hidden?
-      result = 'hidden'
+      hidden = 'Hidden Test -> '
     end
     # if result == 'example'
       # result = ''
@@ -219,7 +220,8 @@ class TestCase < ActiveRecord::Base
         result += ' -> ' + outp
       end
     end
-    result
+    result = hidden + result
+    return result
   end
 
 
