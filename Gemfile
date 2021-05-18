@@ -67,7 +67,7 @@ group :test do
 end
 
 group :production, :staging, :deploy  do
-  gem 'puma', '~> 4.3.5'
+  gem 'puma', '~> 4.3.8'
 end
 
 group :doc do
