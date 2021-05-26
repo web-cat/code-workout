@@ -55,7 +55,8 @@ class WorkoutOffering < ActiveRecord::Base
   has_many :student_extensions
   has_many :users, through: :student_extensions
   has_many :lti_workouts
-
+  has_one :workout_offering_score_summary
+  
   scope :visible_to_students, -> { joins{workout_policy.outer}.where{
     (published == true) &
     ((workout_policy_id == nil) | (workout_policy.invisible_before_review == false)) &
@@ -133,6 +134,41 @@ class WorkoutOffering < ActiveRecord::Base
     end
     return (soft_deadline.to_i - current_time)/ 3600
 
+  end
+
+
+
+  def score_summary(workout)
+        workout_scores = workout.workout_scores
+        start_workout = workout_scores.where(has_attempted: true)
+        all_students = self.course_offering.students
+        total_workout_score = 0.0
+        full_score_students = 0
+        full_score = 0.0
+        workout.exercise_workouts.each do |ex_workout|
+          full_score = full_score + ex_workout.points.to_f
+        end
+        start_workout.each do |one_workout_score|
+          total_workout_score = total_workout_score + one_workout_score.andand.score
+          if full_score == one_workout_score.andand.score
+            full_score_students += 1
+          end 
+        end 
+        
+        if self.workout_offering_score_summary.nil?
+          self.build_workout_offering_score_summary(       
+            all_students: all_students.count, 
+            full_score_students: full_score_students,
+            start_students: start_workout.count,
+            total_workout_score: total_workout_score)
+        else
+            self.workout_offering_score_summary.update(
+              all_students: all_students.count, 
+              full_score_students: full_score_students,
+              start_students: start_workout.count,
+              total_workout_score: total_workout_score)  
+        end
+        self.workout_offering_score_summary.save!
   end
 
   # -------------------------------------------------------------

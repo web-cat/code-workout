@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20210512032109) do
+ActiveRecord::Schema.define(version: 20210519041624) do
 
   create_table "active_admin_comments", force: :cascade do |t|
     t.string   "namespace",     limit: 255
@@ -630,6 +630,18 @@ ActiveRecord::Schema.define(version: 20210512032109) do
   add_index "visualization_loggings", ["workout_id"], name: "index_visualization_loggings_on_workout_id", using: :btree
   add_index "visualization_loggings", ["workout_offering_id"], name: "index_visualization_loggings_on_workout_offering_id", using: :btree
 
+  create_table "workout_offering_score_summaries", force: :cascade do |t|
+    t.integer  "start_students",      limit: 4
+    t.integer  "all_students",        limit: 4
+    t.float    "total_workout_score", limit: 24
+    t.integer  "full_score_students", limit: 4
+    t.integer  "workout_offering_id", limit: 4
+    t.datetime "created_at",                     null: false
+    t.datetime "updated_at",                     null: false
+  end
+
+  add_index "workout_offering_score_summaries", ["workout_offering_id"], name: "index_workout_offering_score_summaries_on_workout_offering_id", using: :btree
+
   create_table "workout_offerings", force: :cascade do |t|
     t.integer  "course_offering_id",       limit: 4,                  null: false
     t.integer  "workout_id",               limit: 4,                  null: false
@@ -768,6 +780,7 @@ ActiveRecord::Schema.define(version: 20210512032109) do
   add_foreign_key "users", "global_roles", name: "users_global_role_id_fk"
   add_foreign_key "users", "time_zones", name: "users_time_zone_id_fk"
   add_foreign_key "users", "workout_scores", column: "current_workout_score_id", name: "users_current_workout_score_id_fk"
+  add_foreign_key "workout_offering_score_summaries", "workout_offerings"
   add_foreign_key "workout_offerings", "course_offerings", name: "workout_offerings_course_offering_id_fk"
   add_foreign_key "workout_offerings", "workout_offerings", column: "continue_from_workout_id", name: "workout_offerings_continue_from_workout_id_fk"
   add_foreign_key "workout_offerings", "workout_policies", name: "workout_offerings_workout_policy_id_fk"

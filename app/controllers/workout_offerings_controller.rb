@@ -1,4 +1,5 @@
 class WorkoutOfferingsController < ApplicationController
+  require 'date'
   skip_before_filter :authenticate_user!, :only => :practice
 
   load_and_authorize_resource
@@ -21,6 +22,14 @@ class WorkoutOfferingsController < ApplicationController
       @course_offering = CourseOffering.find_by course: @course, term: @term
       @exs = @workout.exercises
     end
+
+    if @workout_offering.course_offering.is_staff?(current_user)
+      summary_table = @workout_offering.workout_offering_score_summary
+      if summary_table.nil? || (Time.now.utc.localtime - summary_table.updated_at.localtime) > 600
+        @workout_offering.score_summary(@workout)
+      end
+    end
+
     render 'workouts/show'
   end
 
@@ -35,6 +44,7 @@ class WorkoutOfferingsController < ApplicationController
   # Controller action to add an extension for a workout offering
   # to a student.
   def add_extension
+    
     if params[:user_id] && student = User.find(params[:user_id]) &&
         workoutoffering = WorkoutOffering.find(params[:workout_offering_id])
       if params[:soft_deadline] && params[:hard_deadline]
@@ -57,6 +67,7 @@ class WorkoutOfferingsController < ApplicationController
 
   # -------------------------------------------------------------
   def practice
+    
     # must include the oauth proxy object
     require 'oauth/request_proxy/rack_request'
     @lti_launch = params[:lti_launch]
