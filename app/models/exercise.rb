@@ -68,7 +68,7 @@ class Exercise < ActiveRecord::Base
   belongs_to :current_version, class_name: 'ExerciseVersion'
   belongs_to :irt_data, dependent: :destroy
   belongs_to :exercise_collection
-
+  has_many :exercise_score_summaries
   accepts_nested_attributes_for :exercise_versions, allow_destroy: true
 
   #~ Hooks ....................................................................

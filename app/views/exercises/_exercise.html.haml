@@ -1,3 +1,4 @@
+- require 'date'
 - size ||= 'lg'
 - start_workout ||= nil
 - new_workout ||= nil
@@ -120,35 +121,21 @@
       .text
         = teaser(exercise.current_version.andand.prompts.andand.first.andand.question)
     -if params[:review_user_id].nil? && !workout_offering.nil? && workout_offering.course_offering.is_staff?(current_user)
-      -workout = workout_offering.workout
-      -workout_scores = workout.workout_scores
-      -full_points = workout.exercise_workouts.find_by(exercise: exercise).andand.points.to_f
-      -all_students = workout_offering.course_offering.students
-      -total_score = 0.0
-      -finish_one_attempt = 0.0
-      -full_score_students = 0
-      -all_students.each do |student|
-        -workout_score = workout_scores.where(user_id:student.id)[0]
-        -unless workout_score.andand.attempts.andand.count.nil?
-          -finish_one_attempt = finish_one_attempt + 1
-          -attempt = workout_score.andand.attempts.where(exercise_version_id: exercise.id).where.not(active_score_id: nil).first
-          -total_score = total_score + attempt.andand.score.to_f
-          -if attempt.andand.score.to_f == full_points
-            -full_score_students = full_score_students + 1
+      -exercise_summary_table = workout_offering.exercise_score_summaries.all.where(exercise: exercise)
+      -if exercise_summary_table.count==0 || (Time.now.utc.localtime - exercise_summary_table.last.updated_at.localtime) > 1800
+        -workout_offering.exercise_score_summary(exercise)
+      -one = workout_offering.exercise_score_summaries.all.where(exercise: exercise).last
       %table#tablelist
         %tbody
           %tr         
             %td Start at least one attempt: 
-            %td="#{format('%.2f', (finish_one_attempt / all_students.count.to_f) * 100)}%"
+            %td="#{one.start_students}%"
           %tr             
             %td Average score:
-            -if finish_one_attempt == 0
-              %td= "#{format('%.2f', 0)}%" 
-            -else
-              %td= "#{format('%.2f', (total_score / finish_one_attempt) / full_points * 100)}%"
+            %td="#{one.average_exercise_score}%"
           %tr             
             %td Full score students:
-            %td= full_score_students
+            %td="#{one.full_score_students}%"
     .info
       = difficulty_image(exercise.experience.to_i)
       .taglist

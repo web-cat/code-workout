@@ -65,28 +65,22 @@
   %p= markdown(@workout.description)
 
 - manages_course = current_user ? (current_user.global_role.is_admin? || course_offering.andand.is_manager?(current_user)) : false
--# -if params[:review_user_id].nil? && !@workout_offering.nil? && @workout_offering.course_offering.is_staff?(current_user)
--#   -summary = @workout_offering.workout_offering_score_summary
--#   WorkOut Summary: 
--#   %br
--#     Start at least one exercise
--#     .progress{:style => "width: 50%;"}
--#       -start_exercise = format('%.2f', (summary.start_students.to_f / summary.all_students.to_f) * 100)
--#       .progress-bar{:role => "progressbar", :style => "width: #{start_exercise}%;"} #{start_exercise}%
--#   %br
--#     Average workout score
--#     -average_score = 0
--#     -if summary.total_workout_score != 0.0
--#       -average_score = format('%.2f', (summary.total_workout_score / summary.start_students.to_f))
--#     .progress{:style => "width: 50%;"} 
--#       .progress-bar{:role => "progressbar", :style => "width: #{average_score}%;"} #{average_score}%  
--#   %br
--#     Full score students
--#     -full_score_students = 0
--#     -if summary.full_score_students != 0
--#       -full_score_students = format('%.2f', (summary.full_score_students.to_f / summary.all_students.to_f) * 100)
--#     .progress{:style => "width: 50%;"} 
--#       .progress-bar{:role => "progressbar", :style => "width: #{full_score_students}%;"} #{full_score_students}%  
+-if params[:review_user_id].nil? && !@workout_offering.nil? && @workout_offering.course_offering.is_staff?(current_user)
+  -one = @workout_offering.workout_offering_score_summaries.all.last
+  WorkOut Summary: 
+  %br
+    Start at least one exercise
+    .progress{:style => "width: 50%;"}
+      .progress-bar{:role => "progressbar", :style => "width: #{one.start_students}%;"} #{one.start_students}%
+  %br
+    Average workout score
+    .progress{:style => "width: 50%;"} 
+      .progress-bar{:role => "progressbar", :style => "width: #{one.average_workout_score}%;"} #{one.average_workout_score}%  
+  %br
+    Full score students
+    .progress{:style => "width: 50%;"} 
+      .progress-bar{:role => "progressbar", :style => "width: #{one.full_score_students}%;"} #{one.full_score_students}%  
+
 %br
 .col-md-4
   .btn-group

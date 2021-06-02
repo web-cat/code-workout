@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20210602003533) do
+ActiveRecord::Schema.define(version: 20210602014454) do
 
   create_table "active_admin_comments", force: :cascade do |t|
     t.string   "namespace",     limit: 255
@@ -203,6 +203,19 @@ ActiveRecord::Schema.define(version: 20210602003533) do
 
   add_index "exercise_owners", ["exercise_id", "owner_id"], name: "index_exercise_owners_on_exercise_id_and_owner_id", unique: true, using: :btree
   add_index "exercise_owners", ["owner_id"], name: "exercise_owners_owner_id_fk", using: :btree
+
+  create_table "exercise_score_summaries", force: :cascade do |t|
+    t.float    "start_students",         limit: 24
+    t.float    "average_exercise_score", limit: 24
+    t.float    "full_score_students",    limit: 24
+    t.integer  "workout_offering_id",    limit: 4
+    t.integer  "exercise_id",            limit: 4
+    t.datetime "created_at",                        null: false
+    t.datetime "updated_at",                        null: false
+  end
+
+  add_index "exercise_score_summaries", ["exercise_id"], name: "index_exercise_score_summaries_on_exercise_id", using: :btree
+  add_index "exercise_score_summaries", ["workout_offering_id"], name: "index_exercise_score_summaries_on_workout_offering_id", using: :btree
 
   create_table "exercise_versions", force: :cascade do |t|
     t.integer  "stem_id",             limit: 4
