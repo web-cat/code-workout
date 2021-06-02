@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20210512032109) do
+ActiveRecord::Schema.define(version: 20210602003533) do
 
   create_table "active_admin_comments", force: :cascade do |t|
     t.string   "namespace",     limit: 255
@@ -629,6 +629,17 @@ ActiveRecord::Schema.define(version: 20210512032109) do
   add_index "visualization_loggings", ["user_id"], name: "index_visualization_loggings_on_user_id", using: :btree
   add_index "visualization_loggings", ["workout_id"], name: "index_visualization_loggings_on_workout_id", using: :btree
   add_index "visualization_loggings", ["workout_offering_id"], name: "index_visualization_loggings_on_workout_offering_id", using: :btree
+
+  create_table "workout_offering_score_summaries", force: :cascade do |t|
+    t.float    "start_students",        limit: 24
+    t.float    "average_workout_score", limit: 24
+    t.float    "full_score_students",   limit: 24
+    t.integer  "workout_offering_id",   limit: 4
+    t.datetime "created_at",                       null: false
+    t.datetime "updated_at",                       null: false
+  end
+
+  add_index "workout_offering_score_summaries", ["workout_offering_id"], name: "index_workout_offering_score_summaries_on_workout_offering_id", using: :btree
 
   create_table "workout_offerings", force: :cascade do |t|
     t.integer  "course_offering_id",       limit: 4,                  null: false

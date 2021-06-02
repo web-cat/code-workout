@@ -1,4 +1,5 @@
 class WorkoutOfferingsController < ApplicationController
+  require 'date'
   skip_before_filter :authenticate_user!, :only => :practice
 
   load_and_authorize_resource
@@ -21,6 +22,14 @@ class WorkoutOfferingsController < ApplicationController
       @course_offering = CourseOffering.find_by course: @course, term: @term
       @exs = @workout.exercises
     end
+
+    if @workout_offering.course_offering.is_staff?(current_user)
+      summary_table = @workout_offering.workout_offering_score_summaries.all
+      if summary_table.count==0 || (Time.now.utc.localtime - summary_table.last.updated_at.localtime) > 1800
+        @workout_offering.score_summary(@workout)
+      end
+    end
+
     render 'workouts/show'
   end
 

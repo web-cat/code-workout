@@ -55,7 +55,7 @@ class WorkoutOffering < ActiveRecord::Base
   has_many :student_extensions
   has_many :users, through: :student_extensions
   has_many :lti_workouts
-
+  has_many :workout_offering_score_summaries
   scope :visible_to_students, -> { joins{workout_policy.outer}.where{
     (published == true) &
     ((workout_policy_id == nil) | (workout_policy.invisible_before_review == false)) &
@@ -150,6 +150,42 @@ class WorkoutOffering < ActiveRecord::Base
       !workout_policy.andand.no_review_before_close ||
       now >= hard_deadline_for(user)))
   end
+
+  def score_summary(workout)
+    workout_scores = workout.workout_scores
+    start_workout = workout_scores.where(has_attempted: true)
+    all_students = self.course_offering.students
+    total_workout_score = 0.0
+    full_score_students = 0
+    full_score = 0.0
+    workout.exercise_workouts.each do |ex_workout|
+      full_score = full_score + ex_workout.points.to_f
+    end
+    start_workout.each do |one_workout_score|
+      total_workout_score = total_workout_score + one_workout_score.andand.score
+      if full_score == one_workout_score.andand.score
+        full_score_students += 1
+      end 
+    end 
+
+    #cal start_students
+    start_students_rep = format('%.2f', (start_workout.count.to_f / all_students.count.to_f) * 100)
+    #cal average_workout_score
+    total_workout_score != 0.0 ? average_workout_score_rep = format('%.2f', (total_workout_score / start_workout.count.to_f)) : average_workout_score_rep = 0
+    #cal full_score_students
+    full_score_students != 0 ? full_score_students_rep = format('%.2f', (full_score_students.to_f / all_students.count.to_f) * 100) : full_score_students_rep = 0
+    
+    self.workout_offering_score_summaries.all.count != 0 ? last = self.workout_offering_score_summaries.all.last : last = nil
+    if last.nil? || last.average_workout_score != average_workout_score_rep || last.full_score_students != full_score_students_rep || last.start_students != start_students_rep
+      tmp = WorkoutOfferingScoreSummary.create(workout_offering: self, 
+        average_workout_score: average_workout_score_rep,
+        full_score_students: full_score_students_rep,
+        start_students: start_students_rep
+      )
+      tmp.save!
+    end
+end
+
 
   # ------------------------------------------------------------------
   # A method to determine the latest deadline for a workout,
