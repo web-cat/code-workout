@@ -38,7 +38,7 @@ FactoryBot.define do
     transient do
       num { generate :exercise_no }
     end
-    external_id { 'E' + num.to_s }
+    external_id { 'E' +  ('a'..'z').to_a.shuffle[0,8].join } # use a random string
     name { 'Factorial ' + num.to_s }
     question_type { Exercise::Q_CODING }
     is_public { true }
