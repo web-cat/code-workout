@@ -125,6 +125,16 @@
       -if exercise_summary_table.count==0 || (Time.now.utc.localtime - exercise_summary_table.last.updated_at.localtime) > 1800
         -workout_offering.exercise_score_summary(exercise)
       -one = workout_offering.exercise_score_summaries.all.where(exercise: exercise).last
+      -all = workout_offering.exercise_score_summaries.all.where(exercise: exercise)
+
+      = bar_chart(a:3, b:9, c:4)
+
+      -# -chart_data = markets.map{ |m| [name: m['runner'], data: m['histories'].map{|h| [h['created_at'], 1/h['price']]}]}.flatten
+      -# -line_chart chart_data.each do |m| 
+      -#   -[{name: [:name], data: [:data]}]
+      -# -end
+      -# = line_chart all.group_by_day(:created_at).count
+
       %table#tablelist
         %tbody
           %tr         

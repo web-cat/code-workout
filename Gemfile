@@ -135,3 +135,7 @@ gem 'carrierwave', '1.3.2'
 
 gem 'ed25519'
 gem 'bcrypt_pbkdf'
+
+# Gems for chart
+gem 'chartkick', '~> 1.4', '>= 1.4.1'
+gem 'groupdate'

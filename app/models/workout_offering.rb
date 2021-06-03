@@ -156,9 +156,9 @@ class WorkoutOffering < ActiveRecord::Base
     workout_scores = workout.workout_scores
     start_workout = workout_scores.where(has_attempted: true)
     all_students = self.course_offering.students
-    total_workout_score = 0.0
-    full_score_students = 0
-    full_score = 0.0
+    total_workout_score = 0.00
+    full_score_students = 0.00
+    full_score = 0.00
     workout.exercise_workouts.each do |ex_workout|
       full_score = full_score + ex_workout.points.to_f
     end
@@ -170,15 +170,14 @@ class WorkoutOffering < ActiveRecord::Base
     end 
 
     #cal start_students
-    start_students_rep = format('%.2f', (start_workout.count.to_f / all_students.count.to_f) * 100)
+    start_students_rep = format('%.2f', ((start_workout.count.to_f / all_students.count.to_f) * 100))
     #cal average_workout_score
-    total_workout_score != 0.0 ? average_workout_score_rep = format('%.2f', (total_workout_score / start_workout.count.to_f)) : average_workout_score_rep = 0
+    total_workout_score != 0.00 ? average_workout_score_rep = format('%.2f', ((total_workout_score / start_workout.count.to_f))) : average_workout_score_rep = 0.00
     #cal full_score_students
-    full_score_students != 0 ? full_score_students_rep = format('%.2f', (full_score_students.to_f / all_students.count.to_f) * 100) : full_score_students_rep = 0
-    
+    full_score_students != 0.00 ? full_score_students_rep = format('%.2f', ((full_score_students.to_f / all_students.count.to_f) * 100)) : full_score_students_rep = 0.00
     all_workout_offering_score_summaries = self.workout_offering_score_summaries.all
     all_workout_offering_score_summaries.count != 0 ? last = all_workout_offering_score_summaries.last : last = nil
-    if last.nil? || last.average_workout_score != average_workout_score_rep || last.full_score_students != full_score_students_rep || last.start_students != start_students_rep
+    if last.nil? || format('%.2f',last.average_workout_score.to_s) != format('%.2f',average_workout_score_rep.to_s) || last.full_score_students.to_s != full_score_students_rep.to_s || last.start_students.to_s != start_students_rep.to_s
       tmp = WorkoutOfferingScoreSummary.create(workout_offering: self, 
         average_workout_score: average_workout_score_rep,
         full_score_students: full_score_students_rep,
@@ -209,15 +208,14 @@ def exercise_score_summary(exercise)
   end
 
     #cal start_students
-    start_students_rep = format('%.2f', (finish_one_attempt / all_students.count.to_f) * 100)
+    finish_one_attempt == 0.0 ? start_students_rep = 0.00 : start_students_rep = format('%.2f', ((finish_one_attempt / all_students.count.to_f) * 100))
     #cal average_exercise_score
-    finish_one_attempt == 0.0 ? average_exercise_score_rep = format('%.2f', 0) : average_exercise_score_rep = format('%.2f', (total_score / finish_one_attempt) / full_points * 100)
+    finish_one_attempt == 0.0 ? average_exercise_score_rep = 0.00 : average_exercise_score_rep = format('%.2f', ((total_score / finish_one_attempt) / full_points * 100))
     #cal full_score_students
-    full_score_students != 0 ? full_score_students_rep = format('%.2f', (full_score_students.to_f / all_students.count.to_f) * 100) : full_score_students_rep = 0
-
+    full_score_students != 0 ? full_score_students_rep = format('%.2f', ((full_score_students.to_f / all_students.count.to_f) * 100)) : full_score_students_rep = 0.00
     all_exercise_score_summaries = self.exercise_score_summaries.all.where(exercise: exercise).all
     all_exercise_score_summaries.andand.count != 0 ? last = all_exercise_score_summaries.last : last = nil
-    if last.nil? || last.average_exercise_score != average_exercise_score_rep || last.full_score_students != full_score_students_rep || last.start_students != start_students_rep
+    if last.nil? || format('%.2f',last.average_exercise_score.to_s) != format('%.2f',average_exercise_score_rep.to_s) || last.full_score_students.to_s  != full_score_students_rep.to_s  || last.start_students.to_s  != start_students_rep.to_s 
       tmp = ExerciseScoreSummary.create(workout_offering: self, 
         average_exercise_score: average_exercise_score_rep,
         full_score_students: full_score_students_rep,

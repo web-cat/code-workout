@@ -33,28 +33,31 @@
 //= require student_search
 //= require workout_form
 //= require flatpickr
+//= require jsapi
+//= require chartkick
+
 
 // Add the route helpers directly into the window object for easy access.
 $.extend(window, Routes);
 
 //use wysihtml5 rich text editor
-$(document).ready(function(){
+$(document).ready(function () {
 
-    $('.richtexteditor').each(function(i, elem) {
-      $(elem).wysihtml5({
-      		"font-styles": false,
-      		"emphasis": true,
-      		"lists": true,
-      		"link": false,
-      		"html": true,
-      		"image": false
-      	});
+  $('.richtexteditor').each(function (i, elem) {
+    $(elem).wysihtml5({
+      "font-styles": false,
+      "emphasis": true,
+      "lists": true,
+      "link": false,
+      "html": true,
+      "image": false
     });
+  });
 });
 
 function progress(percent, $element) {
-    var progressBarWidth = percent * $element.width() / 100;
-    $element.find('div').animate({ width: progressBarWidth }, 200).html(percent + "%&nbsp;");
+  var progressBarWidth = percent * $element.width() / 100;
+  $element.find('div').animate({ width: progressBarWidth }, 200).html(percent + "%&nbsp;");
 }
 
 function percentBar(filled, capacity, id) {
@@ -64,27 +67,27 @@ function percentBar(filled, capacity, id) {
   var textSize = 10;
   var w = myCanvas.width;
   var h = myCanvas.height;
-  var fillW = filled*w;
-  var capW = capacity*w;
+  var fillW = filled * w;
+  var capW = capacity * w;
   var per = parseInt(filled * 100);
-  var gradient = back.createLinearGradient(100,100,0,100,100,50);
-  gradient.addColorStop(0,"#3da2b4");
-  gradient.addColorStop(1,"white");
+  var gradient = back.createLinearGradient(100, 100, 0, 100, 100, 50);
+  gradient.addColorStop(0, "#3da2b4");
+  gradient.addColorStop(1, "white");
 
-  text.textBaseline="middle";
-  text.fillText("Text is here to stay",0,myCanvas.height/2);
+  text.textBaseline = "middle";
+  text.fillText("Text is here to stay", 0, myCanvas.height / 2);
 
-  back.fillStyle="#000000";
-  back.fillRect(0,0,w,h);
-  back.fillStyle="#276874";
-  back.fillRect(0,0,capW,h);
-  back.fillStyle=gradient;
-  back.fillRect(0,0,fillW,h);
+  back.fillStyle = "#000000";
+  back.fillRect(0, 0, w, h);
+  back.fillStyle = "#276874";
+  back.fillRect(0, 0, capW, h);
+  back.fillStyle = gradient;
+  back.fillRect(0, 0, fillW, h);
 
 }
 $.fn.editable.defaults.mode = 'inline';
 
-$(document).ready(function() {
+$(document).ready(function () {
   $('.xeditable').editable();
 });
 
