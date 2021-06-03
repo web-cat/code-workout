@@ -200,13 +200,13 @@ remove_extensions_if_any = (course_offering_id) ->
 init_templates = ->
   $.get window.codeworkout.exercise_template_path, (template, textStatus, jqXHr) ->
     window.codeworkout.exercise_template = template
-    if $('body').is('.workouts.edit.js.coffee') || $('body').is('.workouts.clone')
+    if $('body').is('.workouts.edit') || $('body').is('.workouts.clone')
       init_exercises()
   course = window.codeworkout.course_id
   if course
     $.get window.codeworkout.extension_template_path, (template, textStatus, jqXHr) ->
       window.codeworkout.student_extension_template = template
-      if $('body').is '.workouts.edit.js.coffee'
+      if $('body').is '.workouts.edit'
         init_student_extensions()
 
 # Display any existing student extensions belonging to workout offerings
@@ -248,7 +248,7 @@ init_exercises = ->
         # Only keep track of the exercise_workout_id if we're editing a workout
         # If we're creating or cloning a workout, this information is not
         # required.
-        if $('body').is('.workouts.edit.js.coffee')
+        if $('body').is('.workouts.edit')
           exercise_workout_id = exercise.exercise_workout_id
         else
           exercise_workout_id = ''
@@ -318,7 +318,7 @@ init_row_datepickers = (row) ->
           hard_input.data 'date', date
 
   # Set existing values, if applicable
-  if $('body').is '.workouts.edit.js.coffee'
+  if $('body').is '.workouts.edit'
     if opening_input.data('date')? && opening_input.data('date') != ''
       date = parseInt(opening_input.data('date'))
       opening_datepicker.setDate(date, false)
@@ -496,7 +496,7 @@ handle_submit = ->
   if $('body').is '.workouts.new'
     url = '/gym/workouts'
     type = 'post'
-  else if $('body').is '.workouts.edit.js.coffee'
+  else if $('body').is '.workouts.edit'
     url = '/gym/workouts/' + $('h1').data('id')
     type = 'patch'
   else if $('body').is '.workouts.clone'
