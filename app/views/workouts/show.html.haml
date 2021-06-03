@@ -66,20 +66,25 @@
 
 - manages_course = current_user ? (current_user.global_role.is_admin? || course_offering.andand.is_manager?(current_user)) : false
 -if params[:review_user_id].nil? && !@workout_offering.nil? && @workout_offering.course_offering.is_staff?(current_user)
-  -one = @workout_offering.workout_offering_score_summaries.all.last
+  -all = @workout_offering.workout_offering_score_summaries.all
+  -one = all.last
   WorkOut Summary: 
-  %br
-    Start at least one exercise
-    .progress{:style => "width: 50%;"}
-      .progress-bar{:role => "progressbar", :style => "width: #{one.start_students}%;"} #{one.start_students}%
-  %br
-    Average workout score
-    .progress{:style => "width: 50%;"} 
-      .progress-bar{:role => "progressbar", :style => "width: #{one.average_workout_score}%;"} #{one.average_workout_score}%  
-  %br
-    Full score students
-    .progress{:style => "width: 50%;"} 
-      .progress-bar{:role => "progressbar", :style => "width: #{one.full_score_students}%;"} #{one.full_score_students}%  
+  %div{:style => "width: 900px"}
+    = bar_chart("Start Students": one.start_students, "Average Workout Score": one.average_workout_score, "Full Score Students": one.full_score_students)
+
+ 
+  -# %br
+  -#   Start at least one exercise
+  -#   .progress{:style => "width: 50%;"}
+  -#     .progress-bar{:role => "progressbar", :style => "width: #{one.start_students}%;"} #{one.start_students}%
+  -# %br
+  -#   Average workout score
+  -#   .progress{:style => "width: 50%;"} 
+  -#     .progress-bar{:role => "progressbar", :style => "width: #{one.average_workout_score}%;"} #{one.average_workout_score}%  
+  -# %br
+  -#   Full score students
+  -#   .progress{:style => "width: 50%;"} 
+  -#     .progress-bar{:role => "progressbar", :style => "width: #{one.full_score_students}%;"} #{one.full_score_students}%  
 
 %br
 .col-md-4

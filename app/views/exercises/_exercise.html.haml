@@ -124,17 +124,15 @@
       -exercise_summary_table = workout_offering.exercise_score_summaries.all.where(exercise: exercise)
       -if exercise_summary_table.count==0 || (Time.now.utc.localtime - exercise_summary_table.last.updated_at.localtime) > 1800
         -workout_offering.exercise_score_summary(exercise)
-      -one = workout_offering.exercise_score_summaries.all.where(exercise: exercise).last
       -all = workout_offering.exercise_score_summaries.all.where(exercise: exercise)
-
-      = bar_chart(a:3, b:9, c:4)
-
-      -# -chart_data = markets.map{ |m| [name: m['runner'], data: m['histories'].map{|h| [h['created_at'], 1/h['price']]}]}.flatten
-      -# -line_chart chart_data.each do |m| 
-      -#   -[{name: [:name], data: [:data]}]
-      -# -end
-      -# = line_chart all.group_by_day(:created_at).count
-
+      -one = all.last
+      -# chart data
+      -hash = all.map {|m| {name: "Start students", data: {m.updated_at.localtime => m.start_students}}}
+      -all.map {|m| hash << {name: "Average Exercise Score", data: {m.updated_at.localtime => m.average_exercise_score}}}
+      -all.map {|m| hash << {name: "Full Score Students", data: {m.updated_at.localtime => m.full_score_students}}}
+      -hash = hash.group_by { |h| h[:name] }.map { |k,v| { name: k, data: v.reduce({}) { |h,g| h.merge(g[:data]) } } }
+      
+      =line_chart hash , legend: "bottom", suffix: "%" , width: "700px", height: "300px",xtitle: "Time", ytitle: "Score"
       %table#tablelist
         %tbody
           %tr         
@@ -153,7 +151,7 @@
           = link_to lang.name, exercises_search_path(search: lang.name), class: 'tag lang'
         - exercise.tags.each do |tag|
           = link_to tag.name, exercises_search_path(search: tag.name), class: 'tag'
-  
+
 
       -# -@all_attempts = @workout_offering.workout.workout_scores.where(user_id:params[:review_user_id])[0].attempts
       -# - attempts = @all_attempts.where(exercise_version_id: @exercise_version.id)
