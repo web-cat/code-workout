@@ -168,7 +168,6 @@ class WorkoutOffering < ActiveRecord::Base
         full_score_students += 1
       end 
     end 
-
     #cal start_students
     start_students_rep = format('%.2f', ((start_workout.count.to_f / all_students.count.to_f) * 100))
     #cal average_workout_score
@@ -181,14 +180,31 @@ class WorkoutOffering < ActiveRecord::Base
       tmp = WorkoutOfferingScoreSummary.create(workout_offering: self, 
         average_workout_score: average_workout_score_rep,
         full_score_students: full_score_students_rep,
-        start_students: start_students_rep
+        start_students: start_students_rep,
+        total_students: all_students.count,
+        mark: false
       )
       tmp.save!
+    else
+      if last.mark == false
+        tmp = WorkoutOfferingScoreSummary.create(workout_offering: self, 
+          average_workout_score: average_workout_score_rep,
+          full_score_students: full_score_students_rep,
+          start_students: start_students_rep,
+          total_students: all_students.count,
+          mark: true
+        )
+        tmp.save!
+      else
+        # update timestamp if summry score does not change and mark is true
+        last.update_attribute(:updated_at, Time.now.utc)
+        last.save!
+      end
     end
 end
 
-
-
+# finish_one_attempt
+# 
 def exercise_score_summary(exercise)
   workout = self.workout
   workout_scores = workout.workout_scores
@@ -206,7 +222,6 @@ def exercise_score_summary(exercise)
       attempt.andand.score.to_f == full_points ? full_score_students = full_score_students + 1 : ""
     end
   end
-
     #cal start_students
     finish_one_attempt == 0.0 ? start_students_rep = 0.00 : start_students_rep = format('%.2f', ((finish_one_attempt / all_students.count.to_f) * 100))
     #cal average_exercise_score
@@ -220,11 +235,28 @@ def exercise_score_summary(exercise)
         average_exercise_score: average_exercise_score_rep,
         full_score_students: full_score_students_rep,
         start_students: start_students_rep,
-        exercise: exercise
+        exercise: exercise,
+        total_students: all_students.count,
+        mark: false
       )
       tmp.save!
+    else
+      if last.mark == false
+        tmp = ExerciseScoreSummary.create(workout_offering: self, 
+          average_exercise_score: average_exercise_score_rep,
+          full_score_students: full_score_students_rep,
+          start_students: start_students_rep,
+          exercise: exercise,
+          total_students: all_students.count,
+          mark: true
+        )
+        tmp.save!
+      else
+        # update timestamp if summry score does not change and mark is true
+        last.update_attribute(:updated_at, Time.now.utc)
+        last.save!
+      end
     end
-
 end
 
   # ------------------------------------------------------------------

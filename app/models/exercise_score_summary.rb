@@ -5,7 +5,9 @@
 #  id                     :integer          not null, primary key
 #  average_exercise_score :float(24)
 #  full_score_students    :float(24)
+#  mark                   :boolean
 #  start_students         :float(24)
+#  total_students         :integer
 #  created_at             :datetime         not null
 #  updated_at             :datetime         not null
 #  exercise_id            :integer
