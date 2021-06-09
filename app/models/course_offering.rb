@@ -112,6 +112,14 @@ class CourseOffering < ActiveRecord::Base
 
 
   # -------------------------------------------------------------
+  # Public: Gets a relation representing all Users who are students in
+  # this CourseOffering. Students needs to be created after a specific timestamp
+  #
+  def new_students_after_timestamp(timestamp)
+    course_enrollments.where(course_role: CourseRole.student).map(&:user).find_all { |u| u.created_at > timestamp }
+  end
+
+  # -------------------------------------------------------------
   # Public: Gets a relation representing all Users who are instructors in
   # this CourseOffering.
   #

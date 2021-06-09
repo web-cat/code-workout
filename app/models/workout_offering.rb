@@ -152,36 +152,54 @@ class WorkoutOffering < ActiveRecord::Base
       now >= hard_deadline_for(user)))
   end
 
+
+
+  # -------------------------------------------------------------
+  # Calculate ahd update/create workout offering score summary 
   def score_summary(workout)
-    workout_scores = workout.workout_scores
-    start_workout = workout_scores.where(has_attempted: true)
-    all_students = self.course_offering.students
+    start_students = 0
+    all_students = 0
+    workout_full_score = 0.00
     total_workout_score = 0.00
     full_score_students = 0.00
-    full_score = 0.00
-    workout.exercise_workouts.each do |ex_workout|
-      full_score = full_score + ex_workout.points.to_f
+    all_score_summaries = self.workout_offering_score_summaries.all
+    all_score_summaries.count != 0 ? last = all_score_summaries.last : last = nil
+    start_workout = workout.workout_scores.where(has_attempted: true)
+    # update some data for the past half hour (if score summary not nil)
+    if last.nil?
+      all_students = self.course_offering.students.count
+      start_students = start_workout.count
+      workout.exercise_workouts.each do |ex_workout|
+        workout_full_score = workout_full_score + ex_workout.points.to_f
+      end
+    else
+      workout_full_score = last.workout_full_score
+      all_students =  last.total_students + self.course_offering.new_students_after_timestamp(last.updated_at).count
+      start_students =  last.start_students_int + start_workout.where("created_at > ?", last.updated_at).count
     end
+
+    # Data needs to be recalculate every time
     start_workout.each do |one_workout_score|
       total_workout_score = total_workout_score + one_workout_score.andand.score
-      if full_score == one_workout_score.andand.score
+      if workout_full_score == one_workout_score.andand.score
         full_score_students += 1
       end 
     end 
-    #cal start_students
-    start_students_rep = format('%.2f', ((start_workout.count.to_f / all_students.count.to_f) * 100))
-    #cal average_workout_score
-    total_workout_score != 0.00 ? average_workout_score_rep = format('%.2f', ((total_workout_score / start_workout.count.to_f))) : average_workout_score_rep = 0.00
-    #cal full_score_students
-    full_score_students != 0.00 ? full_score_students_rep = format('%.2f', ((full_score_students.to_f / all_students.count.to_f) * 100)) : full_score_students_rep = 0.00
-    all_workout_offering_score_summaries = self.workout_offering_score_summaries.all
-    all_workout_offering_score_summaries.count != 0 ? last = all_workout_offering_score_summaries.last : last = nil
+    
+    #Get all score summary number
+    start_students_rep = format('%.2f', ((start_students.to_f / all_students.to_f) * 100))
+    total_workout_score != 0.00 ? average_workout_score_rep = format('%.2f', ((total_workout_score.to_f / start_students.to_f))) : average_workout_score_rep = 0.00
+    full_score_students != 0.00 ? full_score_students_rep = format('%.2f', ((full_score_students.to_f / all_students.to_f) * 100)) : full_score_students_rep = 0.00
+
+    #Create/ReMark/Update workout offering score summary object.
     if last.nil? || format('%.2f',last.average_workout_score.to_s) != format('%.2f',average_workout_score_rep.to_s) || last.full_score_students.to_s != full_score_students_rep.to_s || last.start_students.to_s != start_students_rep.to_s
       tmp = WorkoutOfferingScoreSummary.create(workout_offering: self, 
         average_workout_score: average_workout_score_rep,
         full_score_students: full_score_students_rep,
         start_students: start_students_rep,
-        total_students: all_students.count,
+        total_students: all_students,
+        start_students_int: start_students,
+        workout_full_score: workout_full_score,
         mark: false
       )
       tmp.save!
@@ -191,52 +209,61 @@ class WorkoutOffering < ActiveRecord::Base
           average_workout_score: average_workout_score_rep,
           full_score_students: full_score_students_rep,
           start_students: start_students_rep,
-          total_students: all_students.count,
+          total_students: all_students,
+          start_students_int: start_students,
+          workout_full_score: workout_full_score,
           mark: true
         )
         tmp.save!
       else
-        # update timestamp if summry score does not change and mark is true
         last.update_attribute(:updated_at, Time.now.utc)
-        last.save!
       end
-    end
-end
-
-# finish_one_attempt
-# 
-def exercise_score_summary(exercise)
-  workout = self.workout
-  workout_scores = workout.workout_scores
-  full_points = workout.exercise_workouts.find_by(exercise: exercise).andand.points.to_f
-  all_students = self.course_offering.students
-  total_score = 0.0
-  finish_one_attempt = 0.0
-  full_score_students = 0
-  all_students.each do |student|
-    workout_score = workout_scores.where(user_id:student.id)[0]
-    unless workout_score.andand.attempts.andand.count.nil?
-      finish_one_attempt = finish_one_attempt + 1
-      attempt = workout_score.andand.attempts.where(exercise_version_id: exercise.id).where.not(active_score_id: nil).first
-      total_score = total_score + attempt.andand.score.to_f
-      attempt.andand.score.to_f == full_points ? full_score_students = full_score_students + 1 : ""
+      last.save!
     end
   end
-    #cal start_students
-    finish_one_attempt == 0.0 ? start_students_rep = 0.00 : start_students_rep = format('%.2f', ((finish_one_attempt / all_students.count.to_f) * 100))
-    #cal average_exercise_score
+
+
+  # -------------------------------------------------------------
+  # Calculate ahd update/create exercise score summary 
+  def exercise_score_summary(exercise)
+    all_students = 0
+    total_score = 0.0
+    full_score_students = 0
+    finish_one_attempt = 0
+    all_score_summaries = self.exercise_score_summaries.all.where(exercise: exercise).all
+    all_score_summaries.andand.count != 0 ? last = all_score_summaries.last : last = nil
+    workout_scores = self.workout.workout_scores.where(has_attempted: true)
+    full_points = self.workout.exercise_workouts.find_by(exercise: exercise).andand.points.to_f
+    # update some data for the past half hour (if score summary not nil)
+    if last.nil?
+      all_students = self.course_offering.students.count
+    else
+      all_students =  last.total_students + self.course_offering.new_students_after_timestamp(last.updated_at).count
+      # start_students =  last.start_students_int + workout_scores.where("created_at > ?", last.updated_at).count
+      # p workout_scores.first.attempts.where(exercise_version_id: 2).first(2)
+    end
+
+    self.course_offering.students.each do |student|
+      workout_score = workout_scores.where(user_id:student.id)[0]
+      unless workout_score.andand.attempts.andand.count.nil?
+        finish_one_attempt = finish_one_attempt + 1
+        attempt = workout_score.andand.attempts.where(exercise_version_id: exercise.id).where.not(active_score_id: nil).first
+        total_score = total_score + attempt.andand.score.to_f
+        attempt.andand.score.to_f == full_points ? full_score_students = full_score_students + 1 : ""
+      end
+    end
+    #Get all score summary number
+    finish_one_attempt == 0.0 ? start_students_rep = 0.00 : start_students_rep = format('%.2f', ((finish_one_attempt / all_students.to_f) * 100))
     finish_one_attempt == 0.0 ? average_exercise_score_rep = 0.00 : average_exercise_score_rep = format('%.2f', ((total_score / finish_one_attempt) / full_points * 100))
-    #cal full_score_students
-    full_score_students != 0 ? full_score_students_rep = format('%.2f', ((full_score_students.to_f / all_students.count.to_f) * 100)) : full_score_students_rep = 0.00
-    all_exercise_score_summaries = self.exercise_score_summaries.all.where(exercise: exercise).all
-    all_exercise_score_summaries.andand.count != 0 ? last = all_exercise_score_summaries.last : last = nil
+    full_score_students != 0 ? full_score_students_rep = format('%.2f', ((full_score_students.to_f / all_students.to_f) * 100)) : full_score_students_rep = 0.00
     if last.nil? || format('%.2f',last.average_exercise_score.to_s) != format('%.2f',average_exercise_score_rep.to_s) || last.full_score_students.to_s  != full_score_students_rep.to_s  || last.start_students.to_s  != start_students_rep.to_s 
       tmp = ExerciseScoreSummary.create(workout_offering: self, 
         average_exercise_score: average_exercise_score_rep,
         full_score_students: full_score_students_rep,
         start_students: start_students_rep,
         exercise: exercise,
-        total_students: all_students.count,
+        total_students: all_students,
+        start_students_int: finish_one_attempt,
         mark: false
       )
       tmp.save!
@@ -247,7 +274,8 @@ def exercise_score_summary(exercise)
           full_score_students: full_score_students_rep,
           start_students: start_students_rep,
           exercise: exercise,
-          total_students: all_students.count,
+          total_students: all_students,
+          start_students_int: finish_one_attempt,
           mark: true
         )
         tmp.save!
@@ -257,7 +285,9 @@ def exercise_score_summary(exercise)
         last.save!
       end
     end
-end
+  end
+
+
 
   # ------------------------------------------------------------------
   # A method to determine the latest deadline for a workout,

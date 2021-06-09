@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20210605013702) do
+ActiveRecord::Schema.define(version: 20210605035141) do
 
   create_table "active_admin_comments", force: :cascade do |t|
     t.string   "namespace",     limit: 255
@@ -214,6 +214,7 @@ ActiveRecord::Schema.define(version: 20210605013702) do
     t.datetime "updated_at",                        null: false
     t.boolean  "mark"
     t.integer  "total_students",         limit: 4
+    t.integer  "start_students_int",     limit: 4
   end
 
   add_index "exercise_score_summaries", ["exercise_id"], name: "index_exercise_score_summaries_on_exercise_id", using: :btree
@@ -654,6 +655,8 @@ ActiveRecord::Schema.define(version: 20210605013702) do
     t.datetime "updated_at",                       null: false
     t.boolean  "mark"
     t.integer  "total_students",        limit: 4
+    t.integer  "start_students_int",    limit: 4
+    t.float    "workout_full_score",    limit: 24
   end
 
   add_index "workout_offering_score_summaries", ["workout_offering_id"], name: "index_workout_offering_score_summaries_on_workout_offering_id", using: :btree

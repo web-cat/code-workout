@@ -7,7 +7,9 @@
 #  full_score_students   :float(24)
 #  mark                  :boolean
 #  start_students        :float(24)
+#  start_students_int    :integer
 #  total_students        :integer
+#  workout_full_score    :float(24)
 #  created_at            :datetime         not null
 #  updated_at            :datetime         not null
 #  workout_offering_id   :integer
@@ -21,7 +23,4 @@ class WorkoutOfferingScoreSummary < ActiveRecord::Base
   belongs_to :workout_offering
 end
 
-
-# all_students int
-# flag boolean
 

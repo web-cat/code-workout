@@ -7,6 +7,7 @@
 #  full_score_students    :float(24)
 #  mark                   :boolean
 #  start_students         :float(24)
+#  start_students_int     :integer
 #  total_students         :integer
 #  created_at             :datetime         not null
 #  updated_at             :datetime         not null

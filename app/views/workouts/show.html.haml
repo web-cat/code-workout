@@ -3,6 +3,8 @@
 = render partial: 'layouts/breadcrumb'
 - time_limit = (@workout_offering ? @workout_offering.time_limit_for(current_user) : nil)
 
+=    "https://www.gstatic.com/charts/loader.js"
+
 = render partial: 'workout_scores/time_remaining',
   locals: { workout_score: workout_score }
 %h1= @workout.name
@@ -66,11 +68,11 @@
 
 - manages_course = current_user ? (current_user.global_role.is_admin? || course_offering.andand.is_manager?(current_user)) : false
 -if params[:review_user_id].nil? && !@workout_offering.nil? && @workout_offering.course_offering.is_staff?(current_user)
-  -all = @workout_offering.workout_offering_score_summaries.all
-  -one = all.last
+  -one = @workout_offering.workout_offering_score_summaries.all.last
   WorkOut Summary: 
+  -@data = [['Start Students', one.start_students],['Average Workout Score', one.average_workout_score],['Full Score Students', one.full_score_students]]
   %div{:style => "width: 900px"}
-    = bar_chart("Start Students": one.start_students, "Average Workout Score": one.average_workout_score, "Full Score Students": one.full_score_students)
+    = bar_chart @data, min: 0, max: 100, visibleInLegend: true
 
  
   %br

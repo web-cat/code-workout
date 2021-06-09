@@ -1,3 +1,5 @@
+= javascript_include_tag "https://www.gstatic.com/charts/loader.js"
+
 - require 'date'
 - size ||= 'lg'
 - start_workout ||= nil
@@ -122,7 +124,7 @@
         = teaser(exercise.current_version.andand.prompts.andand.first.andand.question)
     -if params[:review_user_id].nil? && !workout_offering.nil? && workout_offering.course_offering.is_staff?(current_user)
       -exercise_summary_table = workout_offering.exercise_score_summaries.all.where(exercise: exercise)
-      -if exercise_summary_table.count==0 || (Time.now.utc.localtime - exercise_summary_table.last.updated_at.localtime) > 1800
+      -if exercise_summary_table.count==0 || (Time.now.utc.localtime - exercise_summary_table.last.updated_at.localtime) > 2
         -workout_offering.exercise_score_summary(exercise)
       -all = workout_offering.exercise_score_summaries.all.where(exercise: exercise)
       -one = all.last
@@ -131,8 +133,9 @@
       -all.map {|m| hash << {name: "Average Exercise Score", data: {m.updated_at.localtime => m.average_exercise_score}}}
       -all.map {|m| hash << {name: "Full Score Students", data: {m.updated_at.localtime => m.full_score_students}}}
       -hash = hash.group_by { |h| h[:name] }.map { |k,v| { name: k, data: v.reduce({}) { |h,g| h.merge(g[:data]) } } }
-      
-      =line_chart hash , legend: "bottom", suffix: "%" , width: "700px", height: "300px",xtitle: "Time", ytitle: "Score"
+      =line_chart hash ,  width: "700px", height: "300px",xtitle: "Time", ytitle: "Score", label: "Value",library:{fontSize: "20" }
+
+
       %table#tablelist
         %tbody
           %tr         

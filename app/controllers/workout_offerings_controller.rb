@@ -25,7 +25,7 @@ class WorkoutOfferingsController < ApplicationController
 
     if @workout_offering.course_offering.is_staff?(current_user)
       summary_table = @workout_offering.workout_offering_score_summaries.all
-      if summary_table.count==0 || (Time.now.utc.localtime - summary_table.last.updated_at.localtime) > 2
+      if summary_table.count==0 || (Time.now.utc.localtime - summary_table.last.updated_at.localtime) > 1800
         @workout_offering.score_summary(@workout)
       end
     end
