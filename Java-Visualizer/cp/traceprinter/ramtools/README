@@ -1,0 +1,21 @@
+traceprinter.ramtools: compiling Java in-memory
+
+Based on "Dynamic in-memory compilation," a blog post
+from August 20, 2009 by Miro Sadziak.
+http://www.javablogging.com/dynamic-in-memory-compilation/
+
+Author of this version: David Pritchard (daveagp@gmail.com),
+created June 2013.
+
+The contents of this directory are released under the GNU Affero 
+General Public License, versions 3 or later. See ../LICENSE or visit:
+http://www.gnu.org/licenses/agpl.html
+
+Try the visualizer this was built for: 
+      http://cscircles.cemc.uwaterloo.ca/java_visualize/
+
+== traceprinter.ramtools ==
+CompileToBytes : the main class
+RAMJavaFile : simulates a java source code file (.java)
+RAMClassFile : simulates a compiled java class file (.class)
+RAMClassFileManager : collection of RAMClassFiles

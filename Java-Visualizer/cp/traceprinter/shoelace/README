@@ -1,0 +1,18 @@
+traceprinter.shoelace: a mini-bootstrap for a Java visualizer
+David Pritchard (daveagp@gmail.com), created May 2013
+
+The contents of this directory are released under the GNU Affero 
+General Public License, versions 3 or later. See LICENSE or visit:
+http://www.gnu.org/licenses/agpl.html
+
+Try the visualizer this was built for: 
+      http://cscircles.cemc.uwaterloo.ca/java-visualize/
+
+== About this subpackage ==
+These are the classes from traceprinter that are loaded by the target 
+(debugee) VM being stepped through. 
+
+== traceprinter.shoelace ==
+NoopMain: just an empty main method. We use JDI to open a JVM on this class.
+ByteClassLoader: allows loading class files from memory (byte[] bytecode)
+VMCommandee: receives commands from VMCommander

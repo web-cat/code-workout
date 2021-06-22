@@ -35,7 +35,7 @@ class AnswersController < ApplicationController
   def visualize
     # puts params.inspect
     @exercise = Popexercise.find(params[:exercise_id])
-
+    
     @answer = @exercise.answers.find(params[:id])
     # puts @answer.trace
     if @answer.trace.nil?
@@ -80,7 +80,7 @@ class AnswersController < ApplicationController
   def oldsolve
     id = params[:exerciseByID]
     solution = params[:solution]
-    @exercise = Exercise.find_by_exercise_id(id)
+    @exercise = Popexercise.find_by_exercise_id(id)
     @answer = Answer.create(StudentCode: solution)
     #puts @exercise.code
     @answer = @exercise.answers.create(StudentCode: solution)

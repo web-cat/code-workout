@@ -22,6 +22,13 @@
     <%= form.submit %>
   </p>
 <% end %> 
+<style>
+  /* add padding below the table, so that the last 
+     element doesn't get blocked by the footer */
+  .below-nav {
 
+    padding-bottom: 51px;
+  }
+</style>
 <%= link_to 'Edit', edit_pop_exercise_path(@exercise) %> |
 <%= link_to 'Back', pop_exercises_path %>
