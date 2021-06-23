@@ -18,7 +18,7 @@ html, body { height: 100%; }
   padding-left: 0px;
   padding-right: 0px;
 }
-.content .inner, .maincol {
+.content .inner, .maincol, .content#main {
   padding-bottom: 60px;
 }
 .content {
@@ -28,7 +28,7 @@ html, body { height: 100%; }
 }
 .below-nav > .alert { margin: 10px 15px 20px; }
 
-#main, .sidebar { margin: 0 0 44px; }
+#main, .sidebar { margin: 0 0 60px; }
 
 .navbar .nav > li > a, .navbar-inverse .navbar-link { padding: 2px 6px; }
 .navbar .nav > li { padding: 8px 9px; }
@@ -562,4 +562,10 @@ ul.ui-autocomplete {
     background-color: inherit;
     color: inherit;
   }
+}
+
+.img-for-ex {
+  max-width: 5em;
+  max-height: 5em;
+  height: auto;
 }

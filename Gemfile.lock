@@ -92,10 +92,11 @@ GEM
       activesupport (>= 3.0.0, < 6.2)
       ruby2_keywords (>= 0.0.2, < 1.0)
     arel (6.0.4)
-    autoprefixer-rails (10.2.5.1)
-      execjs (> 0)
-    awesome_print (1.9.2)
-    bcrypt (3.1.16)
+    autoprefixer-rails (9.6.0)
+      execjs
+    awesome_print (1.8.0)
+    bcrypt (3.1.13)
+    bcrypt_pbkdf (1.1.0)
     bootstrap-editable-rails (0.0.9)
       railties (>= 3.1)
       sass-rails
@@ -129,6 +130,11 @@ GEM
       rack-test (>= 0.6.3)
       regexp_parser (>= 1.5, < 3.0)
       xpath (~> 3.2)
+    carrierwave (1.3.2)
+      activemodel (>= 4.0.0)
+      activesupport (>= 4.0.0)
+      mime-types (>= 1.16)
+      ssrf_filter (~> 1.0)
     celluloid (0.17.4)
       celluloid-essentials
       celluloid-extras
@@ -175,6 +181,8 @@ GEM
     diff-lcs (1.4.4)
     domain_name (0.5.20190701)
       unf (>= 0.0.5, < 1.0.0)
+    ed25519 (1.2.4)
+    equatable (0.6.1)
     erubis (2.7.0)
     eventmachine (1.2.7)
     exception_handler (0.3.45)
@@ -235,6 +243,8 @@ GEM
       domain_name (~> 0.5)
     i18n (0.9.5)
       concurrent-ruby (~> 1.0)
+    image_hash (1.0.0)
+      mini_magick
     immigrant (0.3.6)
       activerecord (>= 3.0)
     ims-lti (1.1.13)
@@ -275,8 +285,9 @@ GEM
     method_source (1.0.0)
     mime-types (3.3.1)
       mime-types-data (~> 3.2015)
-    mime-types-data (3.2021.0225)
-    mini_mime (1.1.0)
+    mime-types-data (3.2019.0331)
+    mini_magick (4.11.0)
+    mini_mime (1.0.2)
     mini_portile2 (2.4.0)
     minitest (5.14.4)
     modernizr-rails (2.7.1)
@@ -443,6 +454,12 @@ GEM
     sshkit (1.21.2)
       net-scp (>= 1.1.2)
       net-ssh (>= 2.8.0)
+    ssrf_filter (1.0.7)
+    strings (0.1.5)
+      strings-ansi (~> 0.1)
+      unicode-display_width (~> 1.5)
+      unicode_utils (~> 1.4)
+    strings-ansi (0.1.0)
     sucker_punch (1.6.0)
       celluloid (~> 0.17.2)
     temple (0.8.2)
@@ -464,7 +481,9 @@ GEM
       execjs (>= 0.3.0, < 3)
     unf (0.1.4)
       unf_ext
-    unf_ext (0.0.7.7)
+    unf_ext (0.0.7.6)
+    unicode-display_width (1.6.0)
+    unicode_utils (1.4.0)
     user_agent_parser (2.7.0)
     wannabe_bool (0.7.1)
     warden (1.2.7)
@@ -486,6 +505,7 @@ DEPENDENCIES
   annotate
   autoprefixer-rails
   awesome_print
+  bcrypt_pbkdf
   bootstrap-editable-rails
   bootstrap-sass-backport (~> 3.2.0)
   bootstrap-wysihtml5-rails
@@ -498,6 +518,7 @@ DEPENDENCIES
   capistrano-rvm
   capistrano3-puma!
   capybara
+  carrierwave (= 1.3.2)
   cocoon
   codemirror-rails
   coffee-rails (~> 4.0.0)
@@ -505,6 +526,7 @@ DEPENDENCIES
   css3-progress-bar-rails
   csv_shaper
   devise
+  ed25519
   exception_handler (= 0.3.45)
   factory_bot_rails
   faker
@@ -515,6 +537,7 @@ DEPENDENCIES
   gravtastic
   haml (>= 3.1.4)
   haml-rails
+  image_hash
   immigrant
   ims-lti (~> 1.1.8)
   jquery-rails
@@ -558,7 +581,7 @@ DEPENDENCIES
   truncate_html
   tzinfo
   uglifier (>= 1.3.0)
-  user_agent_parser
+  user_agent_parser (~> 2.7.0)
   wannabe_bool
   yajl-ruby
 

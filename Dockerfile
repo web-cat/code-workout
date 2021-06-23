@@ -42,6 +42,9 @@ RUN apt-get update -qq \
       ant \
     && pip install --upgrade pip
 
+## JAVA INSTALLATION
+RUN apt-get install -y default-jre default-jdk
+
 # install rubygems
 ENV GEM_HOME /usr/local/bundle
 ENV PATH $GEM_HOME/bin:$PATH
@@ -56,8 +59,7 @@ RUN gem install bundler -v $BUNDLER_VERSION \
 COPY Gemfile Gemfile
 COPY Gemfile.lock Gemfile.lock
 
-RUN bundle update
-RUN bundle check || bundle install
+RUN bundle install
 
 VOLUME ${BASEDIR}
 WORKDIR ${BASEDIR}
@@ -69,8 +71,5 @@ RUN find /code-workout -type f -exec chmod 0644 {} \;
 RUN find ./runservers.sh -type f -exec chmod +x {} \;
 
 EXPOSE 80
-
-## JAVA INSTALLATION
-RUN apt-get install -y default-jre default-jdk
 
 CMD ["bash", "./runservers.sh"]
