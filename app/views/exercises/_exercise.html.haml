@@ -132,9 +132,13 @@
       -hash = all.map {|m| {name: "Start students", data: {m.updated_at.localtime => m.start_students}}}
       -all.map {|m| hash << {name: "Average Exercise Score", data: {m.updated_at.localtime => m.average_exercise_score}}}
       -all.map {|m| hash << {name: "Full Score Students", data: {m.updated_at.localtime => m.full_score_students}}}
+      -unless workout_offering.soft_deadline.nil?
+        -hash << {data: {workout_offering.soft_deadline.localtime => nil}}
       -hash = hash.group_by { |h| h[:name] }.map { |k,v| { name: k, data: v.reduce({}) { |h,g| h.merge(g[:data]) } } }
-      =line_chart hash ,  width: "700px", height: "300px",xtitle: "Time", ytitle: "Score", label: "Value",library:{fontSize: "20" }
 
+      -# =line_chart hash , label: "Value", xmin: "2020-01-01", xmax: "2023-01-01" , width: "700px", height: "300px", xtitle: "Time", ytitle: "Score"
+      =line_chart hash , width: "700px", height: "300px", xmin: "2020-01-01", xmax: "2023-01-01",library: {:min => "2020-01-01".to_datetime.to_i * 1000,:max => "2022-01-09".to_datetime.to_i * 1000 }
+      -# =line_chart hash , library={width: "600px", height: "300px" legend: {labelFormat: '{name} : {y} ({percentage}%)'}} 
 
       %table#tablelist
         %tbody

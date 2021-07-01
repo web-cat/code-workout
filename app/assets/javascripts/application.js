@@ -10,6 +10,8 @@
 // Read Sprockets README (https://github.com/sstephenson/sprockets#sprockets-directives) for details
 // about supported directives.
 //
+//= require highcharts.js
+//= require chartkick
 //= require modernizr
 //= require jquery
 //= require jquery-ui
@@ -33,8 +35,7 @@
 //= require student_search
 //= require workout_form
 //= require flatpickr
-//= require jsapi
-//= require chartkick
+
 
 
 // Add the route helpers directly into the window object for easy access.
