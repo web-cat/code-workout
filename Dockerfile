@@ -4,7 +4,7 @@ MAINTAINER Jihane Najdi <jnajdi@vt.edu>
 
 # Default environment
 ARG RAILS_ENV='development'
-# Ruby changed the way optional params are done, but Rails hasn't caught up 
+# Ruby changed the way optional params are done, but Rails hasn't caught up
 ARG RUBYOPT='-W:no-deprecated'
 ARG BASEDIR='/code-workout/'
 
@@ -47,15 +47,13 @@ RUN apt-get update -qq \
     && pip install --upgrade pip
 
 # install rubygems
-ENV GEM_HOME /usr/local/bundle
-ENV PATH $GEM_HOME/bin:$PATH
 ENV BUNDLER_VERSION 2.1.4
 ENV RAILS_ENV=$RAILS_ENV
 
-RUN gem install bundler -v $BUNDLER_VERSION \
-	&& bundle config --global path "$GEM_HOME" \
-	&& bundle config --global bin "$GEM_HOME/bin" \
-	&& bundle config git.allow_insecure true
+RUN gem install bundler -v $BUNDLER_VERSION #\
+#	&& bundle config --global path "$GEM_HOME" \
+#	&& bundle config --global bin "$GEM_HOME/bin" \
+#	&& bundle config git.allow_insecure true
 
 VOLUME ${BASEDIR}
 WORKDIR ${BASEDIR}
@@ -63,8 +61,9 @@ WORKDIR ${BASEDIR}
 COPY Gemfile Gemfile
 COPY Gemfile.lock Gemfile.lock
 
-RUN bundle update
-RUN bundle check || bundle install
+#RUN bundle update
+#RUN bundle check || bundle install
+RUN bundle install
 
 COPY runservers.sh runservers.sh
 
