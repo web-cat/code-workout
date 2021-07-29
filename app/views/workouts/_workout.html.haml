@@ -113,8 +113,7 @@
     = difficulty_image(workout.highest_difficulty.to_i)
     .taglist
       - workout.tags.each do |t|
-        = link_to t.name, exercises_search_path(search: t.name),
-          method: :post, class: 'tag'
+        = link_to t.name, exercises_search_path(search: t.name), class: 'tag'
 
 -#.well.well-sm.col-md-5
   .row

@@ -2,6 +2,8 @@ class ExercisesController < ApplicationController
   require 'ims/lti'
   require 'oauth/request_proxy/rack_request'
   require 'zip'
+  require 'tempfile'
+
 
   load_and_authorize_resource
   skip_authorize_resource only: [:practice, :call_open_pop]
@@ -10,7 +12,7 @@ class ExercisesController < ApplicationController
   after_action :allow_iframe, only: [:practice, :embed]
   # -------------------------------------------------------------
 
-  HTTP_URL = 'https://opendsax.cs.vt.edu:9292/answers/solve'
+  HTTP_URL = 'https://opendsa-server.cs.vt.edu:9292/answers/solve'
 
   # GET /exercises
   def index
@@ -19,6 +21,8 @@ class ExercisesController < ApplicationController
     else
       @exercises = Exercise.publicly_visible
     end
+
+    @exercises = @exercises.page params[:page]
   end
 
 
@@ -54,10 +58,14 @@ class ExercisesController < ApplicationController
 
   # -------------------------------------------------------------
   def download_attempt_data
-    @exercise = Exercise.find params[:id]
+    exercise_id = params[:id] # may be zero, one, or more ids (see Exercise.denormalized_attempt_data)
+    course_id = params[:course_id]
+    term_id = params[:term_id]
+
+    time = Time.now.utc.strftime("%Y%m%d%H%M%S")
 
     if params[:progsnap].to_b
-      main_events, code_states = @exercise.progsnap2_attempt_csv
+      main_events, code_states = Exercise.progsnap2_attempt_csv(exercise_id, course_id, term_id)
       compressed_filestream = Zip::OutputStream.write_buffer do |zos|
         main_events_file = "MainTable.csv"
         zos.put_next_entry main_events_file
@@ -65,21 +73,21 @@ class ExercisesController < ApplicationController
 
         code_states_file = "CodeStates.csv"
         zos.put_next_entry code_states_file
-        zos.write code_states 
+        zos.write code_states
       end
 
       compressed_filestream.rewind
       respond_to do |format|
         format.zip do
-          send_data compressed_filestream.read, filename: "X#{params[:id]}-progsnap.zip", type: 'application/zip'
+          send_data compressed_filestream.read, filename: "CW-progsnap-#{time}.zip", type: 'application/zip'
         end
       end
     else
-      result = @exercise.denormalized_attempt_csv
+      result = Exercise.denormalized_attempt_csv(exercise_id)
 
       respond_to do |format|
         format.csv do
-          send_data result, filename: "X#{params[:id]}-submissions.csv"
+          send_data result, filename: "CW-#{time}-submissions.csv"
         end
       end
     end
@@ -94,13 +102,8 @@ class ExercisesController < ApplicationController
     @exs = Exercise.search(@terms, current_user)
     @msg = ''
     if @exs.blank?
-      @msg = 'No exercises were found for your search request. ' \
-        'Try these instead...'
-      @exs = Exercise.publicly_visible.shuffle.first(16)
-    end
-    if @exs.blank?
-      @msg = 'No public exercises are available to search right now. ' \
-        'Wait for contributors to add more.'
+      @msg = "No exercises were found for the search terms: #{@terms}"
+      redirect_to(exercises_path, alert: @msg) and return
     end
 
     respond_to do |format|
@@ -130,6 +133,15 @@ class ExercisesController < ApplicationController
   # GET /exercises/1/edit
   def edit
     @exercise_version = @exercise.current_version
+    @ownerships_all = []
+    @ownerships_res_name = []
+    @exercise_version.ownerships.each do |e|
+      @ownerships_all.push(e.filename)
+      uniqueFile = ResourceFile.all.where(id: e.resource_file_id)[0]
+      uniqueFilename = uniqueFile.token+uniqueFile.filename.file.file.match(/\.\w*/)[0]
+      @ownerships_res_name.push(uniqueFilename)
+    end
+
     @text_representation = @exercise_version.text_representation ||
       ExerciseRepresenter.new(@exercise).to_hash.to_yaml
     @user_groups = current_user.user_groups
@@ -301,6 +313,15 @@ class ExercisesController < ApplicationController
   end
 
 
+  def cleanFile(files,fileList)
+    files.each_with_index  do |t,index|
+      if !fileList.include? t.original_filename
+        files = files.dup.tap{|i| i.delete_at(index)}
+      end
+    end
+    return files
+  end
+
   # -------------------------------------------------------------
   # POST /exercises/upload_create
   def upload_create
@@ -315,7 +336,11 @@ class ExercisesController < ApplicationController
       hash = YAML.load(text_representation)
       edit_rights = 0 # Personal exercise
     end
-
+    files = exercise_params[:files]
+    fileList = exercise_params[:fileList] 
+    if fileList != "" && !files.nil?
+      files = cleanFile(files,fileList)
+    end
     if !hash.kind_of?(Array)
       hash = [hash]
     end
@@ -360,6 +385,33 @@ class ExercisesController < ApplicationController
         end
         error_msgs << "</ul>"
       else # successfully created the exercise
+        ex_ver = e.exercise_versions.first
+        # inherit ownertable
+        if !e.exercise_versions.offset(1).first.nil?
+          oldversion = e.exercise_versions.offset(1).first
+          oldversion.ownerships.each do |ownerentry|
+            if fileList != "" 
+              if fileList.include? ownerentry.filename
+                ownertable = ex_ver.ownerships.create(filename: ownerentry.filename, resource_file_id: ownerentry.resource_file_id)
+              end
+            end
+          end
+        end
+        unless files.nil? 
+          files.each do |file|
+            file.original_filename = file.original_filename.gsub(/ /, '_')
+            tempfile = Tempfile.create{file}
+            hashval = Digest::MD5.hexdigest File.read "#{tempfile.path}"
+            if ResourceFile.all.where(hashval: hashval).exists?
+              ownertable = ex_ver.ownerships.create(filename: file.original_filename,resource_file_id: ResourceFile.all.where(hashval: hashval).first.id)
+            else       
+              res = ex_ver.resource_files.create!(user_id: current_user.id,filename:file, hashval:hashval)
+              ownertable = res.ownerships.last
+              ownertable.filename = file.original_filename
+              ownertable.save
+            end
+          end
+        end
         exercise_collection.andand.add(e, override: true)
         e.current_version.update(text_representation: text_representation)
         success_msgs <<
@@ -428,7 +480,7 @@ class ExercisesController < ApplicationController
       # Re-check workout-offering permission in case the URL was entered directly.
       authorize! :practice, @workout_offering
       authorize! :practice, @exercise
-    elsif !@workout 
+    elsif !@workout
       # are they trying to practice the exercise in the gym?
       authorize! :gym_practice, @exercise
     end
@@ -511,7 +563,7 @@ class ExercisesController < ApplicationController
           'longer accepting submissions.'
         student_review = true
       else
-        @user_deadline = @workout_score.created_at + @user_time_limit.minutes
+        @user_deadline = @workout_score.started_at + @user_time_limit.minutes
         if @workout_score.workout_offering.hard_deadline_for(current_user)
           @user_deadline = [@user_deadline,
             @workout_score.workout_offering.hard_deadline_for(current_user)].min
@@ -540,6 +592,8 @@ class ExercisesController < ApplicationController
     end
 
 
+  
+
     @responses = ['There are no responses yet!']
     @explain = ['There are no explanations yet!']
     if session[:leaf_exercises]
@@ -561,13 +615,18 @@ class ExercisesController < ApplicationController
 		# hide it if this workout (if present) has less than two exercises
 		@workout ||= @workout_score.andand.workout || @workout_offering.andand.workout
 		ex_count = @workout.andand.exercises.andand.count
-		@hide_sidebar = (!@workout && @lti_launch) || (ex_count && ex_count < 2)
-
+    @hide_sidebar = (!@workout && @lti_launch) || (ex_count && ex_count < 2)
+    # Updata image tags in the exercise question
+    @exercise_version.image_processing(true)
+    # Display all files to students
+    @file_res = @exercise_version.file_processing
     render layout: 'two_columns'
 
   end
 
+  
 
+  
   # -------------------------------------------------------------
   def create_choice
     @ans = Choice.create
@@ -627,8 +686,12 @@ class ExercisesController < ApplicationController
       end
     end
 
-    if @workout_offering && @workout.nil?
-      @workout = @workout_offering.workout
+    if @workout.nil?
+      if @workout_offering
+        @workout = @workout_offering.workout
+      elsif params[:workout_id]
+        @workout = Workout.find_by(id: params[:workout_id])
+      end
     end
 
     if @workout.nil? && session[:current_workout]
@@ -643,7 +706,7 @@ class ExercisesController < ApplicationController
     if @workout_offering
       @workout_score = @workout_offering.score_for(@student_drift_user)
     elsif @workout
-      @workout_score = @workout.score_for(@student_drift_user, nil, 
+      @workout_score = @workout.score_for(@student_drift_user, nil,
                                           params[:lis_outcome_service_url],
                                           params[:lis_result_sourcedid])
     end
@@ -829,8 +892,8 @@ class ExercisesController < ApplicationController
   def call_open_pop
     require 'rest-client'
     require 'json'
-    payload = {'exercise_id' => params[:exercise_id],
-            'code' => params[:code]
+    payload = {'exercise_id' => params[:exercise_id].strip,
+               'code' => params[:code].strip
     }
 
     request = RestClient::Request.execute(:method => :post,
@@ -922,7 +985,7 @@ class ExercisesController < ApplicationController
         :experience, :id, :is_public, :priority, :question_type,
         :exercise_version, :exercise_version_id, :commit,
         :mcq_allow_multiple, :mcq_is_scrambled, :languages, :styles,
-        :tag_ids)
+        :tag_ids, {files: []})
     end
 
 

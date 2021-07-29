@@ -11,6 +11,7 @@
 #  lis_outcome_service_url :string(255)
 #  lis_result_sourcedid    :string(255)
 #  score                   :float(24)
+#  started_at              :datetime
 #  created_at              :datetime
 #  updated_at              :datetime
 #  lti_workout_id          :integer
@@ -110,13 +111,28 @@ class WorkoutScore < ApplicationRecord
     end
 
     now = Time.zone.now
-    minutes_open = (now - self.created_at)/60.0
+    minutes_open = (now - self.started_at)/60.0
     time_limit = workout_offering.time_limit_for(user)
     hard_deadline = workout_offering.hard_deadline_for(user)
 
-    (time_limit && self.created_at && minutes_open >= time_limit) ||
+    (time_limit && self.started_at && minutes_open >= time_limit) ||
         (hard_deadline && now > hard_deadline)
   end
+
+
+  # -------------------------------------------------------------
+  def started_at
+    val = self.read_attribute(:started_at)
+    if !val
+      # If started_at is null, set it to current time on first access
+      # and save to database
+      val = Time.zone.now
+      write_attribute(:started_at, val)
+      save
+    end
+    val
+  end
+
 
   # -------------------------------------------------------------
   # Increase the score of a workout by a specified amount
@@ -127,6 +143,7 @@ class WorkoutScore < ApplicationRecord
     self.save!
   end
 
+
   # -------------------------------------------------------------
   def time_remaining
     if !workout_offering
@@ -136,7 +153,7 @@ class WorkoutScore < ApplicationRecord
 
     if time_limit
       now = Time.zone.now
-      remaining = time_limit - (now - self.created_at)/60.0
+      remaining = time_limit - (now - self.started_at)/60.0
       hard_deadline = workout_offering.hard_deadline_for(user)
 
       if hard_deadline
@@ -165,14 +182,18 @@ class WorkoutScore < ApplicationRecord
       if workout_offering.shutdown?
         # FIXME: ???
         # true
-        !workout_offering.andand.workout_policy.andand.hide_feedback_in_review_before_close
+        !workout_offering.andand.workout_policy.andand.
+          hide_feedback_in_review_before_close
       else
-        !workout_offering.andand.workout_policy.andand.hide_feedback_in_review_before_close
+        !workout_offering.andand.workout_policy.andand.
+          hide_feedback_in_review_before_close
       end
     else
-      !workout_offering.andand.workout_policy.andand.hide_feedback_before_finish
+      !workout_offering.andand.workout_policy.andand.
+        hide_feedback_before_finish
     end
   end
+
 
   # -------------------------------------------------------------
   def attempts_left_for_exercise_version(exercise_version)
@@ -186,6 +207,7 @@ class WorkoutScore < ApplicationRecord
 
     return nil
   end
+
 
   # -------------------------------------------------------------
   def scoring_attempt_for(exercise)
@@ -220,6 +242,7 @@ class WorkoutScore < ApplicationRecord
       end
     end
   end
+
 
   # -------------------------------------------------------------
   def record_attempt(attempt)
@@ -269,6 +292,8 @@ class WorkoutScore < ApplicationRecord
     end
   end
 
+
+  # ------------------------------------------------------------
   def recalculate_score!(options = {})
     self.with_lock do
       attempt = options[:attempt]
@@ -322,7 +347,7 @@ class WorkoutScore < ApplicationRecord
     WorkoutScore.joins(:workout_offering)
       .joins('inner join student_extensions on student_extensions.workout_offering_id = workout_offerings.id
              and student_extensions.user_id = workout_scores.user_id')
-      .where('workout_scores.last_attempted_at > 
+      .where('workout_scores.last_attempted_at >
         coalesce(student_extensions.hard_deadline, workout_offerings.hard_deadline, "2030-12-31")')
   end
 
@@ -405,6 +430,7 @@ class WorkoutScore < ApplicationRecord
     end
   end
 
+
   # Sends scores to the appropriate LTI consumer
   # -------------------------------------------------------------
   def update_lti
@@ -425,6 +451,15 @@ class WorkoutScore < ApplicationRecord
         "lis_result_sourcedid" => "#{self.lis_result_sourcedid}"
       })
       tp.post_replace_result!(result)
+    end
+  end
+
+
+  # -------------------------------------------------------------
+  # Initialize the started_at field for new objects only
+  after_initialize do |ws|
+    if ws.new_record? && ws.has_attribute?(:started_at) && !ws.started_at
+      ws.started_at = Time.zone.now
     end
   end
 end

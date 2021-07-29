@@ -1,3 +1,7 @@
+const courseId = '<%= @course.slug %>'
+const organizationId = '<%= @organization.slug %>'
+const termId = '<%= @term.slug %>'
+
 // Append the course enrollments dialog to the page body.
 $('body').append(
   '<%= escape_javascript(render partial: "course_enrollments/new_enrollment_modal", locals: { course_offerings: @course_offerings }) %>');
@@ -95,8 +99,9 @@ $('#course-offering').change(() => {
 $('#btn-enroll').on('click', () => {
   form_result = checkCompleteness();
   if (form_result.complete) {
+  const enrollUsersUrl = `/courses/${organizationId}/${courseId}/${termId}/course_enrollments/${form_result.course_offering}/enroll_users`
     $.ajax({
-      url: `/course_offerings/${form_result.course_offering}/enroll_users`,
+      url: enrollUsersUrl,
       data: { course_role_id: form_result.course_role, emails: form_result.users },
       type: 'post',
       dataType: 'json',

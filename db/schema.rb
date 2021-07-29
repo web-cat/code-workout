@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_09_29_144816) do
+ActiveRecord::Schema.define(version: 20210410232421) do
 
   create_table "active_admin_comments", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
     t.string "namespace"
@@ -334,6 +334,10 @@ ActiveRecord::Schema.define(version: 2020_09_29_144816) do
     t.index ["url"], name: "index_lms_instances_on_url", unique: true
   end
 
+  add_index "lms_instances", ["lms_type_id"], name: "lms_instances_lms_type_id_fk", using: :btree
+  add_index "lms_instances", ["organization_id"], name: "index_lms_instances_on_organization_id", using: :btree
+  add_index "lms_instances", ["url"], name: "index_lms_instances_on_url", unique: true, using: :btree
+
   create_table "lms_types", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
     t.string "name", default: "", null: false
     t.datetime "created_at"
@@ -350,6 +354,9 @@ ActiveRecord::Schema.define(version: 2020_09_29_144816) do
     t.index ["lms_instance_id"], name: "index_lti_identities_on_lms_instance_id"
     t.index ["user_id"], name: "index_lti_identities_on_user_id"
   end
+
+  add_index "lti_identities", ["lms_instance_id"], name: "index_lti_identities_on_lms_instance_id", using: :btree
+  add_index "lti_identities", ["user_id"], name: "index_lti_identities_on_user_id", using: :btree
 
   create_table "lti_workouts", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
     t.integer "workout_id"
@@ -386,6 +393,20 @@ ActiveRecord::Schema.define(version: 2020_09_29_144816) do
     t.index ["slug"], name: "index_organizations_on_slug", unique: true
   end
 
+  add_index "organizations", ["slug"], name: "index_organizations_on_slug", unique: true, using: :btree
+
+  create_table "ownerships", force: :cascade do |t|
+    t.string   "filename",            limit: 255
+    t.integer  "resource_file_id",    limit: 4
+    t.integer  "exercise_version_id", limit: 4
+    t.datetime "created_at",                      null: false
+    t.datetime "updated_at",                      null: false
+  end
+
+  add_index "ownerships", ["exercise_version_id"], name: "index_ownerships_on_exercise_version_id", using: :btree
+  add_index "ownerships", ["filename"], name: "index_ownerships_on_filename", using: :btree
+  add_index "ownerships", ["resource_file_id"], name: "index_ownerships_on_resource_file_id", using: :btree
+
   create_table "prompt_answers", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
     t.integer "attempt_id"
     t.integer "prompt_id"
@@ -419,9 +440,14 @@ ActiveRecord::Schema.define(version: 2020_09_29_144816) do
     t.boolean "public", default: true
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.string   "hashval",    limit: 255
     t.index ["token"], name: "index_resource_files_on_token"
     t.index ["user_id"], name: "index_resource_files_on_user_id"
   end
+
+  add_index "resource_files", ["hashval"], name: "index_resource_files_on_hashval", using: :btree
+  add_index "resource_files", ["token"], name: "index_resource_files_on_token", using: :btree
+  add_index "resource_files", ["user_id"], name: "index_resource_files_on_user_id", using: :btree
 
   create_table "signups", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
     t.string "first_name"
@@ -647,6 +673,7 @@ ActiveRecord::Schema.define(version: 2020_09_29_144816) do
     t.string "lis_outcome_service_url"
     t.string "lis_result_sourcedid"
     t.integer "lti_workout_id"
+    t.datetime "started_at"
     t.index ["lti_workout_id"], name: "index_workout_scores_on_lti_workout_id"
     t.index ["user_id"], name: "index_workout_scores_on_user_id"
     t.index ["workout_id"], name: "index_workout_scores_on_workout_id"
@@ -701,6 +728,8 @@ ActiveRecord::Schema.define(version: 2020_09_29_144816) do
   add_foreign_key "identities", "users", name: "identities_user_id_fk"
   add_foreign_key "lms_instances", "lms_types", name: "lms_instances_lms_type_id_fk"
   add_foreign_key "lti_workouts", "lms_instances", name: "lti_workouts_lms_instance_id_fk"
+  add_foreign_key "ownerships", "exercise_versions"
+  add_foreign_key "ownerships", "resource_files"
   add_foreign_key "prompt_answers", "attempts", name: "prompt_answers_attempt_id_fk"
   add_foreign_key "prompt_answers", "prompts", name: "prompt_answers_prompt_id_fk"
   add_foreign_key "prompts", "exercise_versions", name: "prompts_exercise_version_id_fk"

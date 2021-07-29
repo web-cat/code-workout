@@ -9,7 +9,7 @@
   %p
     Tags:
     - @workout.tags.each do |t|
-      =link_to t.name, exercises_search_path(search: t.name), method: :post, class: 'tag'
+      =link_to t.name, exercises_search_path(search: t.name), class: 'tag'
 
 - if course_offering && course_offering.is_staff?(review_user)
   %table.table.table-striped{ style: 'width: auto' }

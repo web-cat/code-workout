@@ -3,9 +3,9 @@
     = dropdown_button_tag 'Enroll Users', class: 'btn btn-primary'
     %ul.dropdown-menu
       %li
-        = link_to 'Manually...', new_course_enrollment_path(course_id: @course, term_id: @term), remote: true
+        = link_to 'Manually...', organization_new_course_enrollment_path(organization_id: @organization.slug, course_id: @course.slug, term_id: @term), remote: true
       %li
-        = link_to 'Upload a roster...', choose_roster_course_enrollments_path(course_id: @course, term_id: @term), remote: true
+        = link_to 'Upload a roster...', organization_course_choose_roster_path(organization_id: @organization.slug, course_id: @course.slug, term_id: @term), remote: true
 
 = stylesheet_link_tag('pagination')
 

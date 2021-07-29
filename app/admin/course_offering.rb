@@ -8,7 +8,7 @@ ActiveAdmin.register CourseOffering do
   index do
     id_column
     column :course, sortable: 'courses.number' do |c|
-      link_to c.course.number_and_org, admin_course_path(c.course)
+      link_to c.course.number_and_org, admin_course_path(c.course.id)
     end
     column :term, sortable: 'term.ends_on' do |c|
       link_to c.term.display_name, admin_term_path(c.term)

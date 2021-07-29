@@ -52,7 +52,8 @@ class ExerciseVersion < ApplicationRecord
     inverse_of: :exercise_version, dependent: :destroy
   accepts_nested_attributes_for :prompts, allow_destroy: true  
   has_many :attempts, dependent: :destroy
-  has_and_belongs_to_many :resource_files
+  has_many :ownerships 
+  has_many :resource_files, through: :ownerships
   belongs_to :creator, class_name: 'User'
   belongs_to :irt_data, dependent: :destroy
 
@@ -187,6 +188,72 @@ class ExerciseVersion < ApplicationRecord
     exercise.is_mcq?
   end
 
+
+  def check_relative_url(url) 
+    url.scan(/^https?:\/\//i).length
+  end
+
+  def image_processing(tag)
+    ownerships = ExerciseVersion.where(id:self.id)[0].ownerships
+    check_HTML_tag = self.prompts[0].question.scan(/(\<img .*?src=\"(.*?)\".*?>)/)
+    if check_HTML_tag.length()>0
+      check_HTML_tag.each do |block| 
+        if check_relative_url(block[1]) == 0
+          enter_name = File.basename(block[1]).strip.gsub("\"", "")
+          if !ownerships.find_by(filename: enter_name).nil?
+            unique_file = ResourceFile.where(id: ownerships.find_by(filename: enter_name).resource_file_id)[0].filename
+            unique_file_name = unique_file.model.token+unique_file.file.file.match(/\.\w*/)[0]
+            if tag
+              fb = block[0].gsub("#{block[1]}", "/uploads/resource_file/#{unique_file_name}")
+            else
+              fb = block[0].gsub("#{block[0]}", "<img src=\"/uploads/resource_file/#{unique_file_name}\" class=\"img-for-ex\">")
+            end
+            self.prompts[0].question = self.prompts[0].question.gsub("#{block[0]}", "#{fb}")
+          end
+        end
+      end
+    end
+    check_markdown = self.prompts[0].question.scan(/(\!\[.*?\]\((.*?)\))/)
+    if check_markdown.length()>0
+      check_markdown.each do |block| 
+          arr = block[1].strip.split(" ")
+          arr.each do |name|
+            if check_relative_url(name) != 0
+              break
+            end
+            enter_name = File.basename(name)
+            if !ownerships.find_by(filename: enter_name).nil?
+              unique_file = ResourceFile.where(id: ownerships.find_by(filename: enter_name).resource_file_id)[0].filename
+              unique_file_name = unique_file.model.token+unique_file.file.file.match(/\.\w*/)[0]
+              if tag
+                fb = block[0].gsub("#{block[1]}", "/uploads/resource_file/#{unique_file_name}")
+                self.prompts[0].question = self.prompts[0].question.gsub("#{block[0]}", "#{fb}")
+              else
+                self.prompts[0].question = self.prompts[0].question.gsub("#{block[0]}", "<img src=\"/uploads/resource_file/#{unique_file_name}\" class=\"img-for-ex\">")
+              end
+            end
+          end
+      end
+    end
+    return nil
+  end
+
+
+  def file_processing
+    @all_files= []
+    @files_regular_name= []
+    ownerships = ExerciseVersion.where(id:self.id)[0].ownerships
+    ownerships.each do |res|
+      if ![".jpg",".jpeg",".png",".gif"].include?(File.extname(res.filename))
+        @files_regular_name.push(res.filename)
+        unique_file = ResourceFile.where(id: res.resource_file_id)[0].filename
+        unique_file_name = unique_file.model.token+unique_file.file.file.match(/\.\w*/)[0]
+        @all_files.push(unique_file_name)
+      end
+    end
+    @file_res = @all_files.zip @files_regular_name
+
+  end
 
   # -------------------------------------------------------------
   def is_coding?

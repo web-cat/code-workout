@@ -102,6 +102,7 @@ GEM
       execjs
     awesome_print (1.8.0)
     bcrypt (3.1.16)
+    bcrypt_pbkdf (1.1.0)
     bootsnap (1.5.1)
       msgpack (~> 1.0)
     bootstrap-editable-rails (0.0.9)
@@ -137,6 +138,11 @@ GEM
       rack-test (>= 0.6.3)
       regexp_parser (~> 1.2)
       xpath (~> 3.2)
+    carrierwave (1.3.2)
+      activemodel (>= 4.0.0)
+      activesupport (>= 4.0.0)
+      mime-types (>= 1.16)
+      ssrf_filter (~> 1.0)
     celluloid (0.17.4)
       celluloid-essentials
       celluloid-extras
@@ -183,6 +189,8 @@ GEM
     diff-lcs (1.4.4)
     domain_name (0.5.20190701)
       unf (>= 0.0.5, < 1.0.0)
+    ed25519 (1.2.4)
+    equatable (0.6.1)
     erubi (1.9.0)
     erubis (2.7.0)
     eventmachine (1.2.7)
@@ -237,6 +245,8 @@ GEM
       domain_name (~> 0.5)
     i18n (1.8.5)
       concurrent-ruby (~> 1.0)
+    image_hash (1.0.0)
+      mini_magick
     immigrant (0.3.6)
       activerecord (>= 3.0)
     ims-lti (1.1.13)
@@ -450,6 +460,12 @@ GEM
     sshkit (1.21.0)
       net-scp (>= 1.1.2)
       net-ssh (>= 2.8.0)
+    ssrf_filter (1.0.7)
+    strings (0.1.5)
+      strings-ansi (~> 0.1)
+      unicode-display_width (~> 1.5)
+      unicode_utils (~> 1.4)
+    strings-ansi (0.1.0)
     sucker_punch (1.6.0)
       celluloid (~> 0.17.2)
     temple (0.8.2)
@@ -473,6 +489,8 @@ GEM
       unf_ext
     unf_ext (0.0.7.7)
     user_agent_parser (2.7.0)
+    unicode-display_width (1.6.0)
+    unicode_utils (1.4.0)
     wannabe_bool (0.7.1)
     warden (1.2.9)
       rack (>= 2.0.9)
@@ -495,6 +513,7 @@ DEPENDENCIES
   annotate
   autoprefixer-rails
   awesome_print
+  bcrypt_pbkdf
   bootsnap
   bootstrap-editable-rails
   bootstrap-sass (~> 3.2.0)
@@ -508,6 +527,7 @@ DEPENDENCIES
   capistrano-rvm
   capistrano3-puma!
   capybara (~> 3.12.0)
+  carrierwave (= 1.3.2)
   cocoon
   codemirror-rails
   coffee-rails (~> 4.2)
@@ -516,6 +536,7 @@ DEPENDENCIES
   csv_shaper
   devise
   exception_handler (~> 0.8.0.0)
+  ed25519
   factory_bot_rails
   faker
   font-awesome-rails
@@ -525,6 +546,7 @@ DEPENDENCIES
   gravtastic
   haml (>= 3.1.4)
   haml-rails
+  image_hash
   immigrant
   ims-lti (~> 1.1.8)
   jquery-rails
@@ -568,7 +590,7 @@ DEPENDENCIES
   truncate_html
   tzinfo
   uglifier (>= 1.3.0)
-  user_agent_parser
+  user_agent_parser (~> 2.7.0)
   wannabe_bool
 
 BUNDLED WITH

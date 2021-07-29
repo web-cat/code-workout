@@ -25,5 +25,11 @@ module CodeWorkout
     # This is an initial value on application startup, but it might change
     config.feedback_timeout = 1700
     config.feedback_timeout_padding = 300
+
+    config.active_record.raise_in_transactional_callbacks = true
+
+    # Allow iframe embedding?
+    config.action_dispatch.default_headers.merge!(
+      {'X-Frame-Options' => 'ALLOWALL'})
   end
 end

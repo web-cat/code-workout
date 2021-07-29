@@ -4,6 +4,7 @@
 #
 #  id         :integer          not null, primary key
 #  filename   :string(255)
+#  hashval    :string(255)
 #  public     :boolean          default(TRUE)
 #  token      :string(255)      default(""), not null
 #  created_at :datetime
@@ -12,6 +13,7 @@
 #
 # Indexes
 #
+#  index_resource_files_on_hashval  (hashval)
 #  index_resource_files_on_token    (token)
 #  index_resource_files_on_user_id  (user_id)
 #
@@ -30,15 +32,18 @@ class ResourceFile < ApplicationRecord
 
   #~ Relationships ............................................................
 
-  has_and_belongs_to_many :exercise_versions
+  has_many :ownerships
+  has_many :exercise_versions, through: :ownerships
   belongs_to :user
 
 
   #~ Validation ...............................................................
 
   validates :user, presence: true
-  validates :token, presence: true
+  # validates :token, presence: true
 
+  #~ Validation ...............................................................
+  mount_uploader :filename, FileUploader
 
   #~ Hooks ....................................................................
 

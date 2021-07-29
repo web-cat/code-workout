@@ -80,7 +80,7 @@
           = exercise.display_name
       - elsif workout
         = link_to(exercise.display_name,
-          exercise_practice_path(exercise, 
+          exercise_practice_path(exercise,
           workout_score_id: workout_score.andand.id,
           workout_id: workout.id, lti_launch: @lti_launch))
       - else
@@ -115,6 +115,7 @@
       .summary
         .btn.btn-primary.add-ex{data: { ex_id: exercise.id, ex_name: exercise.name } }
           %i.fa.fa-arrow-right
+    = exercise.current_version.image_processing(false)
     .body
       .text
         = teaser(exercise.current_version.andand.prompts.andand.first.andand.question)
@@ -122,11 +123,9 @@
       = difficulty_image(exercise.experience.to_i)
       .taglist
         - exercise.languages.each do |lang|
-          = link_to lang.name, exercises_search_path(search: lang.name),
-            method: :post, class: 'tag lang'
+          = link_to lang.name, exercises_search_path(search: lang.name), class: 'tag lang'
         - exercise.tags.each do |tag|
-          = link_to tag.name, exercises_search_path(search: tag.name),
-            method: :post, class: 'tag'
+          = link_to tag.name, exercises_search_path(search: tag.name), class: 'tag'
       -#
         - attempt = nil
         - uid = 0

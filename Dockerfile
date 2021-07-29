@@ -46,6 +46,9 @@ RUN apt-get update -qq \
       default-jdk \
     && pip install --upgrade pip
 
+## JAVA INSTALLATION
+RUN apt-get install -y default-jre default-jdk
+
 # install rubygems
 ENV BUNDLER_VERSION 2.1.4
 ENV RAILS_ENV=$RAILS_ENV
@@ -55,15 +58,15 @@ RUN gem install bundler -v $BUNDLER_VERSION #\
 #	&& bundle config --global bin "$GEM_HOME/bin" \
 #	&& bundle config git.allow_insecure true
 
-VOLUME ${BASEDIR}
-WORKDIR ${BASEDIR}
-
 COPY Gemfile Gemfile
 COPY Gemfile.lock Gemfile.lock
 
 #RUN bundle update
 #RUN bundle check || bundle install
 RUN bundle install
+
+VOLUME ${BASEDIR}
+WORKDIR ${BASEDIR}
 
 COPY runservers.sh runservers.sh
 
