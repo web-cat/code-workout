@@ -6,7 +6,7 @@ MAINTAINER Jihane Najdi <jnajdi@vt.edu>
 ARG RAILS_ENV='development'
 # Ruby changed the way optional params are done, but Rails hasn't caught up
 ARG RUBYOPT='-W:no-deprecated'
-ARG BASEDIR='/code-workout/'
+ARG BASEDIR='/code-workout'
 
 ENV TZ=America/New_York
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
@@ -53,10 +53,7 @@ RUN apt-get install -y default-jre default-jdk
 ENV BUNDLER_VERSION 2.1.4
 ENV RAILS_ENV=$RAILS_ENV
 
-RUN gem install bundler -v $BUNDLER_VERSION #\
-#	&& bundle config --global path "$GEM_HOME" \
-#	&& bundle config --global bin "$GEM_HOME/bin" \
-#	&& bundle config git.allow_insecure true
+RUN gem install bundler -v $BUNDLER_VERSION
 
 COPY Gemfile Gemfile
 COPY Gemfile.lock Gemfile.lock
@@ -65,7 +62,7 @@ COPY Gemfile.lock Gemfile.lock
 #RUN bundle check || bundle install
 RUN bundle install
 
-VOLUME ${BASEDIR}
+#VOLUME ${BASEDIR}
 WORKDIR ${BASEDIR}
 
 COPY runservers.sh runservers.sh

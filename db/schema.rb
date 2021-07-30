@@ -334,10 +334,6 @@ ActiveRecord::Schema.define(version: 20210410232421) do
     t.index ["url"], name: "index_lms_instances_on_url", unique: true
   end
 
-  add_index "lms_instances", ["lms_type_id"], name: "lms_instances_lms_type_id_fk", using: :btree
-  add_index "lms_instances", ["organization_id"], name: "index_lms_instances_on_organization_id", using: :btree
-  add_index "lms_instances", ["url"], name: "index_lms_instances_on_url", unique: true, using: :btree
-
   create_table "lms_types", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
     t.string "name", default: "", null: false
     t.datetime "created_at"
@@ -354,9 +350,6 @@ ActiveRecord::Schema.define(version: 20210410232421) do
     t.index ["lms_instance_id"], name: "index_lti_identities_on_lms_instance_id"
     t.index ["user_id"], name: "index_lti_identities_on_user_id"
   end
-
-  add_index "lti_identities", ["lms_instance_id"], name: "index_lti_identities_on_lms_instance_id", using: :btree
-  add_index "lti_identities", ["user_id"], name: "index_lti_identities_on_user_id", using: :btree
 
   create_table "lti_workouts", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
     t.integer "workout_id"
@@ -392,8 +385,6 @@ ActiveRecord::Schema.define(version: 20210410232421) do
     t.boolean "is_hidden", default: false
     t.index ["slug"], name: "index_organizations_on_slug", unique: true
   end
-
-  add_index "organizations", ["slug"], name: "index_organizations_on_slug", unique: true, using: :btree
 
   create_table "ownerships", force: :cascade do |t|
     t.string   "filename",            limit: 255
@@ -443,11 +434,8 @@ ActiveRecord::Schema.define(version: 20210410232421) do
     t.string   "hashval",    limit: 255
     t.index ["token"], name: "index_resource_files_on_token"
     t.index ["user_id"], name: "index_resource_files_on_user_id"
+    t.index ["hashval"], name: "index_resource_files_on_hashval"
   end
-
-  add_index "resource_files", ["hashval"], name: "index_resource_files_on_hashval", using: :btree
-  add_index "resource_files", ["token"], name: "index_resource_files_on_token", using: :btree
-  add_index "resource_files", ["user_id"], name: "index_resource_files_on_user_id", using: :btree
 
   create_table "signups", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
     t.string "first_name"

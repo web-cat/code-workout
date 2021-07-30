@@ -190,7 +190,6 @@ GEM
     domain_name (0.5.20190701)
       unf (>= 0.0.5, < 1.0.0)
     ed25519 (1.2.4)
-    equatable (0.6.1)
     erubi (1.9.0)
     erubis (2.7.0)
     eventmachine (1.2.7)
@@ -297,6 +296,7 @@ GEM
     mimemagic (0.3.10)
       nokogiri (~> 1)
       rake
+    mini_magick (4.11.0)
     mini_mime (1.0.2)
     mini_portile2 (2.4.0)
     minitest (5.14.2)
@@ -461,11 +461,6 @@ GEM
       net-scp (>= 1.1.2)
       net-ssh (>= 2.8.0)
     ssrf_filter (1.0.7)
-    strings (0.1.5)
-      strings-ansi (~> 0.1)
-      unicode-display_width (~> 1.5)
-      unicode_utils (~> 1.4)
-    strings-ansi (0.1.0)
     sucker_punch (1.6.0)
       celluloid (~> 0.17.2)
     temple (0.8.2)
@@ -489,8 +484,6 @@ GEM
       unf_ext
     unf_ext (0.0.7.7)
     user_agent_parser (2.7.0)
-    unicode-display_width (1.6.0)
-    unicode_utils (1.4.0)
     wannabe_bool (0.7.1)
     warden (1.2.9)
       rack (>= 2.0.9)
@@ -535,8 +528,8 @@ DEPENDENCIES
   css3-progress-bar-rails
   csv_shaper
   devise
-  exception_handler (~> 0.8.0.0)
   ed25519
+  exception_handler (~> 0.8.0.0)
   factory_bot_rails
   faker
   font-awesome-rails
