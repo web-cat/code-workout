@@ -50,7 +50,7 @@
       %tbody
         - has_hidden = false
         - hidden_pass = true
-        - answer.test_case_results(true).each do |tcr|
+        - answer.test_case_results().each do |tcr|
           - if tcr.test_case.hidden?
             - has_hidden = true
             - hidden_pass = hidden_pass && tcr.pass
@@ -85,7 +85,7 @@
           %th.text-center Result
       %tbody
         - if examples.any?
-          - answer.test_case_results(true).each do |tcr|
+          - answer.test_case_results().each do |tcr|
             - if tcr.test_case.is_example?
               %tr
                 %td

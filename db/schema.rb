@@ -75,6 +75,7 @@ ActiveRecord::Schema.define(version: 20210410232421) do
   create_table "coding_prompt_answers", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
     t.text "answer"
     t.text "error"
+    t.integer "error_line_no"
   end
 
   create_table "coding_prompts", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
@@ -516,6 +517,7 @@ ActiveRecord::Schema.define(version: 20210410232421) do
     t.integer "test_case_id", null: false
     t.integer "user_id", null: false
     t.text "execution_feedback"
+    t.integer  "feedback_line_no"
     t.datetime "created_at"
     t.datetime "updated_at"
     t.boolean "pass", null: false
