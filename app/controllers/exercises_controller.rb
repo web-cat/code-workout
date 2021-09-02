@@ -104,13 +104,8 @@ class ExercisesController < ApplicationController
     @exs = Exercise.search(@terms, current_user)
     @msg = ''
     if @exs.blank?
-      @msg = 'No exercises were found for your search request. ' \
-        'Try these instead...'
-      @exs = Exercise.publicly_visible.shuffle.first(16)
-    end
-    if @exs.blank?
-      @msg = 'No public exercises are available to search right now. ' \
-        'Wait for contributors to add more.'
+      @msg = "No exercises were found for the search terms: #{@terms}"
+      redirect_to(exercises_path, alert: @msg) and return
     end
 
     respond_to do |format|
@@ -597,10 +592,11 @@ class ExercisesController < ApplicationController
           'longer accepting submissions.'
         student_review = true
       else
-        @user_deadline = @workout_score.started_at + @user_time_limit.minutes
-        if @workout_score.workout_offering.hard_deadline_for(current_user)
+        start_time = @workout_score ? @workout_score.started_at : Time.zone.now
+        @user_deadline = start_time + @user_time_limit.minutes
+        if @workout_offering.hard_deadline_for(current_user)
           @user_deadline = [@user_deadline,
-            @workout_score.workout_offering.hard_deadline_for(current_user)].min
+            @workout_offering.hard_deadline_for(current_user)].min
         end
         @user_deadline = @user_deadline.to_s
         @user_deadline = @user_deadline.split(" ")[0] + "T" + @user_deadline.split(" ")[1]
