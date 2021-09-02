@@ -106,7 +106,7 @@
           - coding_questions = true
           - prior_answer = @attempt && @attempt.prompt_answers.where(prompt: prompt.acting_as).first
           - if !prior_answer && @workout_offering.andand.continue_from_workout
-            - prior_score = @workout_offering.continue_from_workout.score_for(@student_user)
+            - prior_score = @workout_offering.continue_from_workout.score_for(@student_user, @workout_offering)
             - prior_attempt = prior_score.previous_attempt_for(@exercise_version.exercise)
             - prior_answer = prior_attempt && prior_attempt.prompt_answers.where(prompt: prompt.acting_as).first
             // Getting this user's latest attempt on the exercise in the gym
