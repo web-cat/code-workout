@@ -74,7 +74,7 @@ namespace :db do
         course_offering: co)
     end
 
-    # Create a workout with one exercise, and a second exercise
+    # Create a workout with three exercises
     w = FactoryBot.create :workout_with_exercises
 
     50.times do |i|
