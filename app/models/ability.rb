@@ -233,13 +233,15 @@ class Ability
              }.any?
       end
       # can :create, Exercise if user.global_role.is_instructor?
-      # can :edit, Exercise do |e|
-      #   created = user == e.current_version.andand.creator
-      #   user_in_group = user.is_a_member_of?(e.exercise_collection.andand.user_group)
-      #   owns_collection = user == e.exercise_collection.andand.user
 
-      #   created || user_in_group || owns_collection
-      # end
+      # A user can edit an exercise if they created the current_version, or if they
+      # are one of the exercise_owners
+      can :edit, Exercise do |e|
+        creator = user == e.current_version.andand.creator
+        owner = e.owned_by?(user)
+
+        creator || owner
+      end
 
       can :read, Attempt, workout_score:
         { workout_offering:
