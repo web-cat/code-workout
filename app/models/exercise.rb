@@ -282,12 +282,25 @@ class Exercise < ActiveRecord::Base
     self.attempts.where(user: u, workout_score: nil).order('updated_at DESC').first
   end
 
-  # Does the user own this exercise or its collection?
-  # Through themselves or through a user group?
-  def owned_by?(u)
-    return self.owners.include?(u) ||
+  # Does the user have privileged access to this exercise, either
+  # by owning the exercise or having access to its 
+  # exercise_collection?
+  def can_be_assigned_by?(u)
+    return self.owned_by?(u) ||
       self.exercise_collection.andand.owned_by?(u) ||
       u.is_a_member_of?(self.exercise_collection.andand.user_group)
+  end
+
+  # Is the user one of this exercise's owners
+  def owned_by?(u)
+    return self.owners.include?(u)
+  end
+
+  # Make the user an exercise owner if they aren't already
+  def add_owner!(u)
+    unless self.owned_by?(u)
+      ExerciseOwner.create(owner: u, exercise: self)
+    end
   end
 
   # -------------------------------------------------------------
@@ -425,7 +438,7 @@ class Exercise < ActiveRecord::Base
     return result
   end
 
-  #~ Private instance methods .................................................
+  #~ Private methods .................................................
   private
 
   def set_defaults

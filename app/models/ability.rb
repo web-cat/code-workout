@@ -251,7 +251,7 @@ class Ability
 
       can :query_data, Exercise
       can :download_attempt_data, Exercise do |e|
-        e.owned_by?(user)
+        e.can_be_assigned_by?(user)
       end
     end
   end

@@ -149,7 +149,7 @@ class ExercisesController < ApplicationController
     @text_representation = @exercise_version.text_representation ||
       ExerciseRepresenter.new(@exercise).to_hash.to_yaml
     @user_groups = current_user.user_groups
-    # figure out the edit rights to this exercise
+    # figure out the use/assign rights to this exercise
     if ec = @exercise.exercise_collection
       if ec.owned_by?(current_user)
         @exercise_collection = 0 # Only Me
@@ -334,13 +334,13 @@ class ExercisesController < ApplicationController
     if params[:exercise]
       exercise_params = params[:exercise]
       exercise_version_params = exercise_params[:exercise_version]
-      edit_rights = exercise_params[:exercise_collection_id].to_i
+      use_rights = exercise_params[:exercise_collection_id].to_i
       text_representation = exercise_version_params['text_representation']
       hash = YAML.load(text_representation)
     else
       text_representation = File.read(params[:form][:file].path)
       hash = YAML.load(text_representation)
-      edit_rights = 0 # Personal exercise
+      use_rights = 0 # Personal exercise
     end
     if !hash.kind_of?(Array)
       hash = [hash]
@@ -356,7 +356,7 @@ class ExercisesController < ApplicationController
 
     # figure out if we need to add this to an exercise collection
     exercise_collection = nil
-    if edit_rights == 0
+    if use_rights == 0
       exercise_collection = current_user.exercise_collection
       if exercise_collection.nil?
         exercise_collection = ExerciseCollection.new(
@@ -365,8 +365,8 @@ class ExercisesController < ApplicationController
         )
         exercise_collection.save!
       end
-    elsif edit_rights != -1 # then it must be a user group
-      user_group = UserGroup.find(edit_rights)
+    elsif use_rights != -1 # then it must be a user group
+      user_group = UserGroup.find(use_rights)
       exercise_collection = user_group.exercise_collection
       if exercise_collection.nil?
         exercise_collection = ExerciseCollection.new(
@@ -395,6 +395,9 @@ class ExercisesController < ApplicationController
         error_msgs << "</ul>"
       else # successfully created the exercise
         ex_ver = e.current_version
+
+        # make the current user an exercise owner if they aren't already
+        e.add_owner!(current_user)
 
         # copy all retained resource files, skipping any to be removed
         prev_version = e.exercise_versions.offset(1).first
