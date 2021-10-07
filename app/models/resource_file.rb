@@ -49,7 +49,8 @@ class ResourceFile < ActiveRecord::Base
 
   before_validation :token
 
-  STORAGE_DIR = 'usr/resources/resource_files'
+  # STORAGE_DIR = 'usr/resources/resource_files'
+  UPLOAD_PATH = '/uploads/' + ResourceFile.to_s.underscore
 
 
   #~ Public instance methods ..................................................
@@ -62,15 +63,55 @@ class ResourceFile < ActiveRecord::Base
 
 
   # -------------------------------------------------------------
-  def url
-   STORAGE_DIR + '/' + self.filename.to_s
+  # Return the ResourceFile object associated with a specified hash code
+  def self.for_hash(hash)
+    ResourceFile.find_by(hashval: hash)
   end
 
 
   # -------------------------------------------------------------
+  # Return the ResourceFile object associated with a specified file upload,
+  # creating one if necessary
+  def self.for_upload(upload, user)
+    tempfile = Tempfile.create { upload }
+    hashcode = Digest::MD5.hexdigest(File.read(tempfile.path))
+    # FIXME: need to close the tempfile and delete it
+    existing = for_hash(hashcode)
+    if !existing
+      existing = ResourceFile.create!(
+        filename: upload,
+        hashval: hashcode,
+        user: user
+      )
+    end
+    existing
+  end
+
+
+  # -------------------------------------------------------------
+  # FIXME: This is the actual file name using the token value, but this
+  # method is bogus. The value /should/ be stored in the filename attribute,
+  # but the filename attribute is only the file extension, not the full file
+  # name(!) This method can be fixed when the filename attribute gets fixed
+  def tokenized_file_name
+    self.token + self.read_attribute(:filename)
+  end
+
+
+  # -------------------------------------------------------------
+  def url
+   UPLOAD_PATH + '/' + self.tokenized_file_name
+  end
+
+
+  # -------------------------------------------------------------
+  # FIXME: This is old, defunct code from before the use of carrier wave.
+  # It may be useful again once we move file storage out of the /public
+  # assets folder.
   def save_file(upload)
     ext = File.extname(upload.original_filename) || ""
   	renamed = self.token + ext
+    # FIXME: this "path" reproduces what is in the url() method. Why?
   	path = File.join(STORAGE_DIR, renamed)
   	self.filename = renamed
   	File.open(path, 'wb') { |f| f.write(upload.tempfile.read) }

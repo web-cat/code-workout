@@ -74,7 +74,10 @@
       (workout_score.nil? || !workout_score.closed?) || manages_course)           |
       - button_text = nil
       - if @workout_offering.can_be_practiced_by? current_user
-        - button_text = 'Start Workout'
+        - if workout_score
+          - button_text = 'Continue Workout'
+        - else
+          - button_text = 'Start Workout'
       - elsif !manages_course && @workout_offering.andand.workout_policy.andand.no_review_before_close
         %p
           You can review your work on this workout once everyone has
