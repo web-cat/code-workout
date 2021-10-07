@@ -630,10 +630,24 @@ class ExercisesController < ApplicationController
 
     @responses = ['There are no responses yet!']
     @explain = ['There are no explanations yet!']
-    if session[:leaf_exercises]
-      session[:leaf_exercises] << @exercise.id
-    else
-      session[:leaf_exercises] = [@exercise.id]
+
+    # safety code to prune long session data
+    if session[:leaf_exercises] && session[:leaf_exercises].length > 5
+      session[:leaf_exercises].shift(session[:leaf_exercises].length - 5)
+    end
+
+    # Only add exercise to leaf list if this isn't part of a workout
+    @workout ||= @workout_score.andand.workout ||
+      @workout_offering.andand.workout
+    if !@workout
+      if session[:leaf_exercises]
+        if session[:leaf_exercises] && session[:leaf_exercises].length >= 5
+          session[:leaf_exercises].shift(1)
+        end
+        session[:leaf_exercises] << @exercise.id
+      else
+        session[:leaf_exercises] = [@exercise.id]
+      end
     end
     # EOL stands for end of line
     # @wexs is the variable to hold the list of exercises of this workout
@@ -647,8 +661,6 @@ class ExercisesController < ApplicationController
 
 		# decide whether or not to hide the sidebar
 		# hide it if this workout (if present) has less than two exercises
-		@workout ||= @workout_score.andand.workout ||
-      @workout_offering.andand.workout
 		ex_count = @workout.andand.exercises.andand.count
     @hide_sidebar = (!@workout && @lti_launch) || (ex_count && ex_count < 2)
     # Updata image tags in the exercise question
