@@ -33,6 +33,11 @@
 //= require student_search
 //= require workout_form
 //= require flatpickr
+//
+//-----------------OpenPOP----------------------------
+// require rails-ujs
+// require turbolinks
+//= require_tree ./OpenPOP
 
 // Add the route helpers directly into the window object for easy access.
 $.extend(window, Routes);

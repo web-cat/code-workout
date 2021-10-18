@@ -1,0 +1,29 @@
+<h1>Listing exercises</h1>
+
+<table>
+  <tr>
+    <th>Exercise_id</th>
+    <th>code</th>
+  </tr>
+
+  <% @exercise.each do |exercise| %>
+    <tr>
+      <td><%= exercise.exercise_id %></td>
+      <td><%= exercise.code %></td>
+      <td><%= link_to 'Show', pop_exercise_path(exercise) %></td>
+      <td><%= link_to 'Edit', edit_pop_exercise_path(exercise) %></td>
+      <td><%= link_to 'Destroy', pop_exercise_path(exercise),
+                      method: :delete,
+                      data: { confirm: 'Are you sure?' } %></td>
+    </tr>
+  <% end %>
+</table>
+<style>
+  /* add padding below the table, so that the last 
+     element doesn't get blocked by the footer */
+  .below-nav {
+
+    padding-bottom: 51px;
+  }
+</style>
+<%= link_to 'New exercise', new_pop_exercise_path %>

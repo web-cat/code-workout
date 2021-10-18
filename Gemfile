@@ -33,6 +33,13 @@ gem 'mysql2', '~> 0.4.0'
 gem 'modernizr-rails'
 gem 'rubyzip', '>= 1.3.0'
 
+
+# Copied from OpenPOP
+# Turbolinks makes navigating your web application faster. Read more: https://github.com/turbolinks/turbolinks
+#gem 'turbolinks', '~> 5.2.0'
+gem 'yajl-ruby', require: 'yajl'
+
+
 # For JSON support
 gem 'rabl'
 gem 'oj', '~> 2.16'

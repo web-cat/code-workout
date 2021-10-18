@@ -189,7 +189,22 @@ CodeWorkout::Application.routes.draw do
   match 'help/:action', to: 'help', via: [:get]
   match 'static_pages/:action', controller: 'static_pages', via: [:get]
 
+  #copied from OpenPOP 
+  #get 'answers/visualize' => 'answers#visualize'
+  get 'answers/visualize/pop_exercises/:exercise_id/answers/:id' => 'answers#visualize', as: 'visualize'
+  post 'answers/solve/' => 'answers#solve', as: 'solve'
+  #get 'answers/solve/:exercise_id' => 'answers#solve', as: 'solve'
+
+  resources :pop_exercises do
+    resources :answers do
+      resource :trace
+    end
+  end
 end
+
+
+#---------------------------------------------------
+
 
 #== Route Map
 =begin

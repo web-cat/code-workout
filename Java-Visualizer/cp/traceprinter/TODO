@@ -1,0 +1,5 @@
+progressive Python labels: "Frames" only if more than one, "Objects" only if any, "Global" in variables only if function calls
+custom visualizations of Integer, Stack<>, ... ?
+options for visualizing synthetics?
+allow to reflow visualizer parts (already partly done?)
+caching executions

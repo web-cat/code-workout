@@ -1,0 +1,34 @@
+<p>
+  <strong>ID:</strong>
+  <%= @exercise.exercise_id %>
+</p>
+
+<p>
+  <strong>Code:</strong>
+  <%= @exercise.code %>
+</p>
+
+<h2>Answers</h2>
+<%= render @exercise.answers%>
+
+<h2>Add an answer:</h2>
+
+ <%= form_for [ @exercise, @exercise.answers.build], url: pop_exercise_answers_path(@exercise) do |form| %>
+  <p>
+    <%= form.label :StudentCode %><br>
+    <%= form.text_area :StudentCode %>
+  </p>
+  <p>
+    <%= form.submit %>
+  </p>
+<% end %> 
+<style>
+  /* add padding below the table, so that the last 
+     element doesn't get blocked by the footer */
+  .below-nav {
+
+    padding-bottom: 51px;
+  }
+</style>
+<%= link_to 'Edit', edit_pop_exercise_path(@exercise) %> |
+<%= link_to 'Back', pop_exercises_path %>
