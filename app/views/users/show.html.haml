@@ -29,7 +29,7 @@
         %tr
           %td= user_score.workout.name
           - score = user_score.andand.score
-          - if score && user_score.show_feedback?
+          - if score && user_score.show_score?
             %td= score
           - else
             %td.textblur -/-

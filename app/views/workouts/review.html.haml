@@ -42,7 +42,7 @@
       = l user_time(current_user, @workout_offering.hard_deadline)
     &nbsp;&nbsp;&nbsp;Score:
     - if workout_score
-      - if workout_score.show_feedback?
+      - if workout_score.show_score? || (review_user && course_offering.andand.is_staff?(review_user))
         = workout_score.score
       - else
         hidden

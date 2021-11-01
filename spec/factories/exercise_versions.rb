@@ -14,15 +14,13 @@
 #
 # Indexes
 #
-#  exercise_versions_creator_id_fk         (creator_id)
-#  exercise_versions_irt_data_id_fk        (irt_data_id)
-#  index_exercise_versions_on_exercise_id  (exercise_id)
-#  index_exercise_versions_on_stem_id      (stem_id)
+#  exercise_versions_creator_id_fk     (creator_id)
+#  exercise_versions_irt_data_id_fk    (irt_data_id)
+#  index_exercise_versions_on_stem_id  (stem_id)
 #
 # Foreign Keys
 #
 #  exercise_versions_creator_id_fk   (creator_id => users.id)
-#  exercise_versions_exercise_id_fk  (exercise_id => exercises.id)
 #  exercise_versions_irt_data_id_fk  (irt_data_id => irt_data.id)
 #  exercise_versions_stem_id_fk      (stem_id => stems.id)
 #
