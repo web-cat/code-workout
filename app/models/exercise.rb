@@ -335,6 +335,7 @@ class Exercise < ActiveRecord::Base
     exercise_attributes = %w{ exercise_id exercise_name }
     attempt_attributes = %w{
       user_id
+      exercise_id
       exercise_version_id
       version_no
       answer_id
@@ -412,6 +413,7 @@ class Exercise < ActiveRecord::Base
 
       result = result
         .select('attempts.user_id,
+        exercises.id as exercise_id,
         exercise_versions.id as exercise_version_id,
         exercise_versions.version as version_no,
         coding_prompt_answers.id as answer_id,
@@ -466,6 +468,8 @@ class Exercise < ActiveRecord::Base
       TermID
       AssignmentID
       ProblemID
+      X-WorkoutOfferingID
+      X-ExerciseID
       Attempt
       CodeStateID
       IsEventOrderingConsistent
@@ -497,6 +501,8 @@ class Exercise < ActiveRecord::Base
           attrs['course_offering_id'],
           attrs['term'],
           attrs['workout_id'],
+          attrs['exercise_id'],
+          attrs['workout_offering_id'],
           attrs['exercise_version_id'],
           attrs['submit_num'],
           attrs['answer_id'],
