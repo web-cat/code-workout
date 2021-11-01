@@ -19,7 +19,6 @@
 # Indexes
 #
 #  exercises_irt_data_id_fk                   (irt_data_id)
-#  index_exercises_on_current_version_id      (current_version_id)
 #  index_exercises_on_exercise_collection_id  (exercise_collection_id)
 #  index_exercises_on_exercise_family_id      (exercise_family_id)
 #  index_exercises_on_external_id             (external_id) UNIQUE
@@ -27,7 +26,6 @@
 #
 # Foreign Keys
 #
-#  exercises_current_version_id_fk  (current_version_id => exercise_versions.id)
 #  exercises_exercise_family_id_fk  (exercise_family_id => exercise_families.id)
 #  exercises_irt_data_id_fk         (irt_data_id => irt_data.id)
 #
@@ -335,6 +333,7 @@ class Exercise < ActiveRecord::Base
     exercise_attributes = %w{ exercise_id exercise_name }
     attempt_attributes = %w{
       user_id
+      exercise_id
       exercise_version_id
       version_no
       answer_id
@@ -412,6 +411,7 @@ class Exercise < ActiveRecord::Base
 
       result = result
         .select('attempts.user_id,
+        exercises.id as exercise_id,
         exercise_versions.id as exercise_version_id,
         exercise_versions.version as version_no,
         coding_prompt_answers.id as answer_id,
@@ -466,6 +466,8 @@ class Exercise < ActiveRecord::Base
       TermID
       AssignmentID
       ProblemID
+      X-WorkoutOfferingID
+      X-ExerciseID
       Attempt
       CodeStateID
       IsEventOrderingConsistent
@@ -497,6 +499,8 @@ class Exercise < ActiveRecord::Base
           attrs['course_offering_id'],
           attrs['term'],
           attrs['workout_id'],
+          attrs['exercise_id'],
+          attrs['workout_offering_id'],
           attrs['exercise_version_id'],
           attrs['submit_num'],
           attrs['answer_id'],

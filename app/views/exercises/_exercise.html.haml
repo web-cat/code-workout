@@ -91,7 +91,7 @@
 
     - if !new_workout
       .summary
-        - if !attempt || !workout_score || workout_score.show_feedback?
+        - if !attempt || !workout_score || workout_score.show_score?
           .radial-progress{ 'data-progress' => score_pct }
             .circle
               .mask.full

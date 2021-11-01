@@ -18,6 +18,7 @@
 test-*.txt
 lib/assets/
 public/assets/
+public/uploads/**
 **/.DS_Store
 usr/attempts/
 usr/resources/*/tests

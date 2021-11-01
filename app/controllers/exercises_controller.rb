@@ -349,6 +349,9 @@ class ExercisesController < ApplicationController
     files = exercise_params[:files]
     puts "files = #{files.inspect}"
     @attached_files = exercise_params[:attached_files]
+    if @attached_files == "null"
+      @attached_files = nil
+    end
     if @attached_files
       @attached_files = JSON.parse(@attached_files)
     end

@@ -196,6 +196,29 @@ class WorkoutScore < ActiveRecord::Base
 
 
   # -------------------------------------------------------------
+  def show_score?
+    if !self.workout_offering
+      return true
+    end
+
+    if self.closed?
+      if workout_offering.shutdown?
+        # FIXME: ???
+        # true
+        !workout_offering.andand.workout_policy.andand.
+          hide_score_in_review_before_close
+      else
+        !workout_offering.andand.workout_policy.andand.
+          hide_score_in_review_before_close
+      end
+    else
+      !workout_offering.andand.workout_policy.andand.
+        hide_score_before_finish
+    end
+  end
+
+
+  # -------------------------------------------------------------
   def attempts_left_for_exercise_version(exercise_version)
     if self.workout_offering.andand.attempt_limit
       attempts_made = self
