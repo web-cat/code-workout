@@ -41,8 +41,7 @@ class CodingPrompt < ActiveRecord::Base
   #~ Hooks ....................................................................
 
   before_validation :set_defaults
-  after_save :parse_tests, if: :test_script_changed?
-
+  after_commit :parse_tests, on: [ :create, :update ], if: :test_script_changed?
 
   #~ Instance methods .........................................................
 
