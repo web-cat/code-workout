@@ -628,9 +628,6 @@ class ExercisesController < ApplicationController
         where(exercise: @exercise).first.points
     end
 
-
-
-
     @responses = ['There are no responses yet!']
     @explain = ['There are no explanations yet!']
 
