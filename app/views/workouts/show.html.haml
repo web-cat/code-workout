@@ -95,13 +95,18 @@
     - elsif @workout_offering.nil?
       = link_to 'Start Workout', practice_workout_path(params[:id]), |
         class: 'btn btn-primary'
-    - if course_offering.andand.is_manager? (current_user)
-      = link_to 'Edit Workout',
-        organization_edit_workout_path(organization_id: @organization.slug,
-          course_id: @course.slug,
-          term_id: @term.slug,
-          workout_offering_id: @workout_offering.id),
-        class: 'btn btn-default'
+    - if manages_course || current_user == @workout.creator || @workout.owners.exists?(current_user)
+      - if @workout_offering
+        = link_to 'Edit Workout',
+          organization_edit_workout_path(organization_id: @organization.slug,
+            course_id: @course.slug,
+            term_id: @term.slug,
+            workout_offering_id: @workout_offering.id),
+          class: 'btn btn-default'
+      - else
+        = link_to 'Edit Workout',
+          edit_workout_path(id: @workout.id),
+          class: 'btn btn-default'
 %br
 
 %h2 Exercises
