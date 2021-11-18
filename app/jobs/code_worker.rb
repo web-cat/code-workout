@@ -15,11 +15,45 @@ class CodeWorker
   # workers.
   workers 2 # 10
 
+  def self.parse_java(string)
+    testList = []
+    flag = false
+    sourceList = (string.split("/"))[1].split("*")
+    sourceList.each do |elem|
+      if elem.include? "@"
+        if elem.include? "@test"
+          flag = true
+        else
+          flag = false
+        end
+      elsif flag && elem.include?("->")
+        temp = elem.split("->")
+        #check elements here
+        testList.append([temp[0][/\(([^()]*)\)/, 1], temp[1].strip])
+      end
+    end
+    return testList
+  end
+
+  # -------------------------------------------------------------
+  def self.parse_attempt(answer_text, language)
+    case language
+    when 'Java'
+      return parse_java(answer_text)
+    when 'Ruby'
+      return nil
+    when 'Python'
+      return nil
+    when 'C++'
+      return nil
+    end
+  end
+
+
   # -------------------------------------------------------------
   def perform(attempt_id)
     ActiveRecord::Base.connection_pool.with_connection do
       start_time = Time.now
-
       attempt = Attempt.find(attempt_id)
       exv = attempt.exercise_version
       prompt = exv.prompts.first.specific
@@ -66,6 +100,10 @@ class CodeWorker
       end
       FileUtils.cp(prompt.test_file_name, attempt_dir)
       File.write(attempt_dir + '/' + prompt.class_name + '.' + lang, code_body)
+      
+      # compile and load student tests into DB
+      
+      answer.create_student_tests!(answer_text, language, current_attempt)
 
       # Run static checks
       result = nil

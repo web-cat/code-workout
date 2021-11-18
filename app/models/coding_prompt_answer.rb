@@ -19,6 +19,7 @@ class CodingPromptAnswer < ActiveRecord::Base
   #~ Relationships ............................................................
 
   acts_as :prompt_answer
+  has_many :student_test_cases
   has_many :test_case_results,
     #-> { includes :test_case },
     -> { order('test_case_id ASC').includes(:test_case) },
@@ -34,6 +35,21 @@ class CodingPromptAnswer < ActiveRecord::Base
 
 
   #~ Instance methods .........................................................
+
+  # -------------------------------------------------------------
+  def create_student_tests!(answer_text, language, id)
+    testList = CodeWorker.parse_attempt(answer_text, language)
+    testList.each do |test|
+      tc = StudentTestCase.new(
+        input: test[0],
+        expected_output: test[1],
+        coding_prompt_answer_id: self.id
+      )
+      unless tc.save
+        puts "error saving test case: #{tc.errors.full_messages.to_s}"
+      end
+    end
+  end
 
   # -------------------------------------------------------------
   def execute_static_tests

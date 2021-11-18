@@ -127,7 +127,7 @@ class CodingPrompt < ActiveRecord::Base
 
 
   #~ Private instance methods .................................................
-  private
+  private 
 
   # -------------------------------------------------------------
   def set_defaults

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20201216191207) do
+ActiveRecord::Schema.define(version: 20211112005057) do
 
   create_table "active_admin_comments", force: :cascade do |t|
     t.string   "namespace",     limit: 255
@@ -471,6 +471,12 @@ ActiveRecord::Schema.define(version: 20201216191207) do
 
   add_index "student_extensions", ["user_id"], name: "index_student_extensions_on_user_id", using: :btree
   add_index "student_extensions", ["workout_offering_id"], name: "index_student_extensions_on_workout_offering_id", using: :btree
+
+  create_table "student_test_cases", force: :cascade do |t|
+    t.string  "input",                   limit: 255
+    t.string  "expected_output",         limit: 255
+    t.integer "coding_prompt_answer_id", limit: 4
+  end
 
   create_table "tag_user_scores", force: :cascade do |t|
     t.integer  "user_id",             limit: 4,             null: false
