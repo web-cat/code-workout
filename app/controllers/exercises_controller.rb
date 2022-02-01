@@ -447,7 +447,7 @@ class ExercisesController < ApplicationController
 
         # Notify user of success
         success_msgs <<
-          "<li>X#{e.id}: #{e.name} saved, try it #{view_context.link_to 'here', exercise_practice_path(e)}.</li>"
+          "<li>X#{e.id}: #{e.name} saved</li>"
       end
     end
 
