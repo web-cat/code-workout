@@ -12,7 +12,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 #install 'development tools' build-essential  dkms curl libxslt-dev libpq-dev python-dev python-pip python-feedvalidator python-software-properties python-sphinx libmariadbclient-dev libcurl4-gnutls-dev libevent-dev libffi-dev libssl-dev stunnel4 libsqlite3-dev
 #    libmariadbclient-dev
 RUN apt-get update -qq \
-    && apt-get install -y \
+    && apt-get install -y --fix-missing \
       apt-utils \
       build-essential \
       libpq-dev \
@@ -56,13 +56,13 @@ RUN gem install bundler -v $BUNDLER_VERSION \
 	&& bundle config --global bin "$GEM_HOME/bin" \
 	&& bundle config git.allow_insecure true
 
-COPY Gemfile Gemfile
-COPY Gemfile.lock Gemfile.lock
-
-RUN bundle install
-
 VOLUME ${BASEDIR}
 WORKDIR ${BASEDIR}
+
+COPY Gemfile ${BASEDIR}/Gemfile
+COPY Gemfile.lock ${BASEDIR}/Gemfile.lock
+
+RUN bundle install
 
 COPY runservers.sh runservers.sh
 
