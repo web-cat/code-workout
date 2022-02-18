@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20211112005057) do
+ActiveRecord::Schema.define(version: 20220120180629) do
 
   create_table "active_admin_comments", force: :cascade do |t|
     t.string   "namespace",     limit: 255
@@ -87,12 +87,13 @@ ActiveRecord::Schema.define(version: 20211112005057) do
   create_table "coding_prompts", force: :cascade do |t|
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.string   "class_name",    limit: 255
-    t.text     "wrapper_code",  limit: 65535,                 null: false
-    t.text     "test_script",   limit: 65535,                 null: false
-    t.string   "method_name",   limit: 255
-    t.text     "starter_code",  limit: 65535
-    t.boolean  "hide_examples",               default: false, null: false
+    t.string   "class_name",         limit: 255
+    t.text     "wrapper_code",       limit: 65535,                 null: false
+    t.text     "test_script",        limit: 65535,                 null: false
+    t.string   "method_name",        limit: 255
+    t.text     "starter_code",       limit: 65535
+    t.boolean  "hide_examples",                    default: false, null: false
+    t.text     "reference_solution", limit: 65535
   end
 
   create_table "course_enrollments", force: :cascade do |t|
@@ -471,6 +472,13 @@ ActiveRecord::Schema.define(version: 20211112005057) do
 
   add_index "student_extensions", ["user_id"], name: "index_student_extensions_on_user_id", using: :btree
   add_index "student_extensions", ["workout_offering_id"], name: "index_student_extensions_on_workout_offering_id", using: :btree
+
+  create_table "student_test_case_results", force: :cascade do |t|
+    t.integer "test_case_id",            limit: 4
+    t.string  "feedback",                limit: 255
+    t.boolean "pass"
+    t.integer "coding_prompt_answer_id", limit: 4
+  end
 
   create_table "student_test_cases", force: :cascade do |t|
     t.string  "input",                   limit: 255

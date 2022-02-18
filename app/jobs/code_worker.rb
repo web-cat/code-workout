@@ -63,7 +63,7 @@ class CodeWorker
       answer_text = answer.answer
       answer_lines = answer_text ? answer_text.count("\n") : 0
       if !prompt.wrapper_code.blank?
-        code_body = prompt.wrapper_code.sub(/\b___\b/, answer_text)
+        code_body = prompt.wrapper_code.sub(/\b___\b/, answer_text) # student's answer
         if $`
           # Want pre_lines to be a count of the number of lines preceding
           # the one the match is on, so use count() instead of lines() here
@@ -85,7 +85,8 @@ class CodeWorker
       term_name = term ? term.slug : 'no-term'
 
       # compile and evaluate the attempt in a temporary location
-      attempt_dir = "usr/attempts/active/#{current_attempt}"
+      working_dir = "usr/attempts/active/#{current_attempt}" ######## replicate this code but with inst soln
+      attempt_dir = "#{working_dir}/attempt"
       # puts "DIRECTORY",attempt_dir,"DIRECTORY"
       FileUtils.mkdir_p(attempt_dir)
       if !Dir[attempt_dir].empty?
@@ -99,11 +100,36 @@ class CodeWorker
         prompt.regenerate_tests
       end
       FileUtils.cp(prompt.test_file_name, attempt_dir)
-      File.write(attempt_dir + '/' + prompt.class_name + '.' + lang, code_body)
+      File.write(attempt_dir + '/' + prompt.class_name + '.' + lang, code_body) ###
       
       # compile and load student tests into DB
       
-      answer.create_student_tests!(answer_text, language, current_attempt)
+      answer.parse_student_tests!(answer_text, language, current_attempt) #rename
+
+      #run against inst soln
+      
+      ref_dir = "#{working_dir}/reference"
+      ref_body = prompt.wrapper_code.sub(/\b___\b/, prompt.reference_solution)
+
+      FileUtils.mkdir_p(ref_dir)
+      if !Dir[ref_dir].empty?
+        puts 'WARNING, OVERWRITING EXISTING DIRECTORY = ' + ref_dir
+        FileUtils.remove_dir(ref_dir, true)
+        FileUtils.mkdir_p(ref_dir)
+      end
+      if !File.exist?(prompt.test_file_name)
+        # Workaround for bug in correctly pre-generating test file
+        # on exercise creation. If it doesn't exist, force regeneration
+        answer.regenerate_tests
+      end
+      FileUtils.cp(prompt.test_file_name, ref_dir)
+      puts prompt.test_file_name
+      File.write(ref_dir + '/' + prompt.class_name + '.' + lang, ref_body) ###
+
+      ref_lines = ref_body.count("\n")
+      execute_javatest(
+        prompt.class_name, ref_dir, pre_lines, ref_lines)
+      
 
       # Run static checks
       result = nil
@@ -176,8 +202,9 @@ class CodeWorker
       attempt.feedback_ready = true
 
       # clean up log and class files that were generated during testing
+
       cleanup_files = Dir.glob([
-        "#{attempt_dir}/*.class",
+        "#{working_dir}/**/*.class",
         "#{attempt_dir}/*.log",
         "#{attempt_dir}/reports/TEST-*.csv",
         "#{attempt_dir}/__pycache__/*.pyc",
@@ -198,7 +225,7 @@ class CodeWorker
       # move the attempt to permanent storage
       term_dir = "usr/attempts/#{term_name}/"
       FileUtils.mkdir_p(term_dir) # create the term_dir if it doesn't exist
-      FileUtils.mv(attempt_dir, term_dir)
+      FileUtils.mv(working_dir, term_dir)
 
       # calculate various time values. all times are in ms
       time_taken = (Time.now - attempt.submit_time) * 1000
