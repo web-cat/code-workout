@@ -56,22 +56,6 @@ class CodingPromptAnswer < ActiveRecord::Base
         puts "error saving test case: #{tc.errors.full_messages.to_s}"
       end
     end
-    #generate_CSV_tests(test_file_name)
-  end
-
-  def generate_CSV_tests(file_name) #refactor
-    lang = self.language
-    tests = ''
-    self.test_cases.only_dynamic.each do |test_case|
-      tests << test_case.to_code(lang)
-    end
-    body = File.read('usr/resources/' + lang + '/' + lang +
-      'BaseTestFile.' + Exercise.extension_of(lang))
-    File.write(file_name, body % {
-      tests: tests,
-      method_name: self.method_name,
-      class_name: self.class_name
-      })
   end
 
   # -------------------------------------------------------------

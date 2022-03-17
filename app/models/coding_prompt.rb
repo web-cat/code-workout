@@ -23,6 +23,7 @@ require 'csv'
 # gem).
 #
 class CodingPrompt < ActiveRecord::Base
+  include TestcaseHelper
 
   #~ Relationships ............................................................
 
@@ -121,7 +122,7 @@ class CodingPrompt < ActiveRecord::Base
         end
       end
       # Default, if none of above cases return
-      generate_CSV_tests(test_file_name)
+      generate_CSV_tests(test_file_name, self, nil)
       puts 'regentests' + test_file_name
     end
   end
@@ -174,7 +175,7 @@ class CodingPrompt < ActiveRecord::Base
       end
       # Default, if none of above cases return
       parse_CSV_tests(self.test_script)
-      generate_CSV_tests(test_file_name)
+      generate_CSV_tests(test_file_name, self, nil)
     end
   end
 
@@ -220,24 +221,7 @@ class CodingPrompt < ActiveRecord::Base
       end
     end
   end
-
-
-  # -------------------------------------------------------------
-  def generate_CSV_tests(file_name)
-    lang = self.language
-    tests = ''
-    self.test_cases.only_dynamic.each do |test_case|
-      tests << test_case.to_code(lang)
-    end
-    body = File.read('usr/resources/' + lang + '/' + lang +
-      'BaseTestFile.' + Exercise.extension_of(lang))
-    File.write(file_name, body % {
-      tests: tests,
-      method_name: self.method_name,
-      class_name: self.class_name
-      })
-  end
-
+  
 
   # -------------------------------------------------------------
   def parse_JUnit_tests

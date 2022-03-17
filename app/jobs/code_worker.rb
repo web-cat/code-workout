@@ -8,7 +8,7 @@ require "#{Rails.root}/usr/resources/config"
 
 class CodeWorker
   include SuckerPunch::Job
-
+  include TestcaseHelper
   # Reducing to 2 workers, since it seems that each puma process will
   # have its own job queue and its own set of sucker punch worker threads.
   # We'll get parallelism through puma processes instead of sucker punch
@@ -117,13 +117,10 @@ class CodeWorker
         FileUtils.remove_dir(ref_dir, true)
         FileUtils.mkdir_p(ref_dir)
       end
-      if !File.exist?(prompt.test_file_name)
-        # Workaround for bug in correctly pre-generating test file
-        # on exercise creation. If it doesn't exist, force regeneration
-        answer.regenerate_tests
-      end
-      FileUtils.cp(prompt.test_file_name, ref_dir)
-      puts prompt.test_file_name
+
+      generate_CSV_tests(ref_dir + '/' + prompt.class_name + 'Test.' + Exercise.extension_of(prompt.language), prompt, answer)
+
+
       File.write(ref_dir + '/' + prompt.class_name + '.' + lang, ref_body) ###
 
       ref_lines = ref_body.count("\n")
