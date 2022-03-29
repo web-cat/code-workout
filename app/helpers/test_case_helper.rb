@@ -1,7 +1,7 @@
-module TestcaseHelper
+module TestCaseHelper
 
     # if called from coding_prompt.rb, cp_answer is nil
-    def generate_CSV_tests(file_name, coding_prompt, cp_answer)
+    def generate_CSV_tests(file_name, coding_prompt, cp_answer = nil)
         lang = coding_prompt.language
         tests = ''
         if cp_answer.nil?

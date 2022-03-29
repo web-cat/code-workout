@@ -23,7 +23,7 @@ require 'csv'
 # gem).
 #
 class CodingPrompt < ActiveRecord::Base
-  include TestcaseHelper
+  include TestCaseHelper
 
   #~ Relationships ............................................................
 
@@ -122,7 +122,7 @@ class CodingPrompt < ActiveRecord::Base
         end
       end
       # Default, if none of above cases return
-      generate_CSV_tests(test_file_name, self, nil)
+      generate_CSV_tests(test_file_name, self)
       puts 'regentests' + test_file_name
     end
   end
@@ -175,7 +175,7 @@ class CodingPrompt < ActiveRecord::Base
       end
       # Default, if none of above cases return
       parse_CSV_tests(self.test_script)
-      generate_CSV_tests(test_file_name, self, nil)
+      generate_CSV_tests(test_file_name, self)
     end
   end
 
