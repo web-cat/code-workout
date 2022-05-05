@@ -20,6 +20,7 @@ class CodingPromptAnswer < ActiveRecord::Base
 
   acts_as :prompt_answer
   has_many :student_test_cases
+  has_many :student_test_case_results
   has_many :test_case_results,
     #-> { includes :test_case },
     -> { order('test_case_id ASC').includes(:test_case) },

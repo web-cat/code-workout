@@ -127,6 +127,12 @@ class CodeWorker
       execute_javatest(
         prompt.class_name, ref_dir, pre_lines, ref_lines)
       
+      CSV.foreach(ref_dir + '/results.csv') do |line|
+        # find test id
+        test_id = line[2][/\d+$/].to_i
+        test_case = answer.student_test_cases.where(id: test_id).first
+        tc_score = test_case.record_result(answer, line)
+      end
 
       # Run static checks
       result = nil
