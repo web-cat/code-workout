@@ -295,6 +295,7 @@ class CodingPrompt < ActiveRecord::Base
           end
         end
         tc.parse_description_specifier(desc)
+        puts(tc.description)
 
         # look for "example" tag in comments or attribute
         if comment =~ /example\s*:\s*true\s*(?:\*\/\s*)?$/i || attrs =~ /@Example\b/

@@ -27,9 +27,10 @@ class CodeWorker
           flag = false
         end
       elsif flag && elem.include?("->")
+
         temp = elem.split("->")
         #check elements here
-        testList.append([temp[0][/\(([^()]*)\)/, 1], temp[1].strip])
+        testList.append([temp[0][/\(([^()]*)\)/, 1], temp[1].strip, elem])
       end
     end
     return testList

@@ -51,7 +51,7 @@
         - has_hidden = false
         - hidden_pass = true
         %tr
-          %td Your test cases
+          %td{colspan: 2} Your test cases
         - answer.student_test_case_results(true).each do |tcr|
           %tr
             - if tcr.pass
@@ -61,11 +61,9 @@
               %td.fail
                 %i.fa.fa-minus-square
             %td
-              -# = tcr.display_description
-              - if !tcr.pass
-                .out= tcr.feedback
+              = tcr.display_description
         %tr
-          %td Instructor test cases
+          %td{colspan: 2} Instructor test cases
         - answer.test_case_results(true).each do |tcr|
           - if tcr.test_case.hidden?
             - has_hidden = true

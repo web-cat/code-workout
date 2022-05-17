@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20220120180629) do
+ActiveRecord::Schema.define(version: 20220506035419) do
 
   create_table "active_admin_comments", force: :cascade do |t|
     t.string   "namespace",     limit: 255
@@ -484,6 +484,7 @@ ActiveRecord::Schema.define(version: 20220120180629) do
     t.string  "input",                   limit: 255
     t.string  "expected_output",         limit: 255
     t.integer "coding_prompt_answer_id", limit: 4
+    t.text    "description",             limit: 65535
   end
 
   create_table "tag_user_scores", force: :cascade do |t|

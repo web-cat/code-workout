@@ -51,6 +51,7 @@ class CodingPromptAnswer < ActiveRecord::Base
       tc = StudentTestCase.new(
         input: test[0],
         expected_output: test[1],
+        description: test[2],
         coding_prompt_answer_id: self.id
       )
       unless tc.save
