@@ -1,0 +1,27 @@
+img {
+
+  max-width: 58%;
+  height: auto;
+}
+
+.image-upload > input
+{
+   display: none;
+}
+
+.image-upload > label{
+  cursor:pointer;
+  padding-left: 1em;
+
+}
+
+.hidden
+{
+    display: none;
+}
+
+.iconpadding
+{
+  padding-left: 1em;
+
+}

@@ -3,7 +3,7 @@
 - new_workout ||= nil
 - user ||= current_user || User.find_by(id: session[:student_drift_user_id])
 - review ||= false
-
+= stylesheet_link_tag "custom.scss"
 - if params[:review_user_id]
   - user = User.find(params[:review_user_id])
 - workout_offering ||= nil
@@ -115,6 +115,7 @@
       .summary
         .btn.btn-primary.add-ex{data: { ex_id: exercise.id, ex_name: exercise.name } }
           %i.fa.fa-arrow-right
+    = exercise.current_version.image_processing(false)
     .body
       .text
         = teaser(exercise.current_version.andand.prompts.andand.first.andand.question)

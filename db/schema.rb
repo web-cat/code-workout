@@ -403,6 +403,17 @@ ActiveRecord::Schema.define(version: 20220506035419) do
 
   add_index "organizations", ["slug"], name: "index_organizations_on_slug", unique: true, using: :btree
 
+  create_table "ownerships", force: :cascade do |t|
+    t.string   "filename",            limit: 255
+    t.integer  "resource_file_id",    limit: 4
+    t.integer  "exercise_version_id", limit: 4
+    t.datetime "created_at",                      null: false
+    t.datetime "updated_at",                      null: false
+  end
+
+  add_index "ownerships", ["exercise_version_id"], name: "index_ownerships_on_exercise_version_id", using: :btree
+  add_index "ownerships", ["resource_file_id"], name: "index_ownerships_on_resource_file_id", using: :btree
+
   create_table "prompt_answers", force: :cascade do |t|
     t.integer "attempt_id",   limit: 4
     t.integer "prompt_id",    limit: 4
@@ -438,6 +449,7 @@ ActiveRecord::Schema.define(version: 20220506035419) do
     t.boolean  "public",                 default: true
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.string   "hashval",    limit: 255
   end
 
   add_index "resource_files", ["token"], name: "index_resource_files_on_token", using: :btree
@@ -751,6 +763,8 @@ ActiveRecord::Schema.define(version: 20220506035419) do
   add_foreign_key "identities", "users", name: "identities_user_id_fk"
   add_foreign_key "lms_instances", "lms_types", name: "lms_instances_lms_type_id_fk"
   add_foreign_key "lti_workouts", "lms_instances"
+  add_foreign_key "ownerships", "exercise_versions"
+  add_foreign_key "ownerships", "resource_files"
   add_foreign_key "prompt_answers", "attempts", name: "prompt_answers_attempt_id_fk"
   add_foreign_key "prompt_answers", "prompts", name: "prompt_answers_prompt_id_fk"
   add_foreign_key "prompts", "exercise_versions", name: "prompts_exercise_version_id_fk"

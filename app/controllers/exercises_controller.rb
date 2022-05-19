@@ -2,9 +2,12 @@ class ExercisesController < ApplicationController
   require 'ims/lti'
   require 'oauth/request_proxy/rack_request'
   require 'zip'
+  require 'tempfile'
+
 
   load_and_authorize_resource
   skip_authorize_resource only: [:practice, :call_open_pop]
+  #skip_before_action :verify_authenticity_token, :only [:call_open_pop]
 
   #~ Action methods ...........................................................
   after_action :allow_iframe, only: [:practice, :embed]
@@ -131,6 +134,15 @@ class ExercisesController < ApplicationController
   # GET /exercises/1/edit
   def edit
     @exercise_version = @exercise.current_version
+    @ownerships_all = []
+    @ownerships_res_name = []
+    @exercise_version.ownerships.each do |e|
+      @ownerships_all.push(e.filename)
+      uniqueFile = ResourceFile.all.where(id: e.resource_file_id)[0]
+      uniqueFilename = uniqueFile.token+uniqueFile.filename.file.file.match(/\.\w*/)[0]
+      @ownerships_res_name.push(uniqueFilename)
+    end
+
     @text_representation = @exercise_version.text_representation ||
       ExerciseRepresenter.new(@exercise).to_hash.to_yaml
     @user_groups = current_user.user_groups
@@ -302,6 +314,15 @@ class ExercisesController < ApplicationController
   end
 
 
+  def cleanFile(files,fileList)
+    files.each_with_index  do |t,index|
+      if !fileList.include? t.original_filename
+        files = files.dup.tap{|i| i.delete_at(index)}
+      end
+    end
+    return files
+  end
+
   # -------------------------------------------------------------
   # POST /exercises/upload_create
   def upload_create
@@ -316,7 +337,11 @@ class ExercisesController < ApplicationController
       hash = YAML.load(text_representation)
       edit_rights = 0 # Personal exercise
     end
-
+    files = exercise_params[:files]
+    fileList = exercise_params[:fileList] 
+    if fileList != "" && !files.nil?
+      files = cleanFile(files,fileList)
+    end
     if !hash.kind_of?(Array)
       hash = [hash]
     end
@@ -361,6 +386,33 @@ class ExercisesController < ApplicationController
         end
         error_msgs << "</ul>"
       else # successfully created the exercise
+        ex_ver = e.exercise_versions.first
+        # inherit ownertable
+        if !e.exercise_versions.offset(1).first.nil?
+          oldversion = e.exercise_versions.offset(1).first
+          oldversion.ownerships.each do |ownerentry|
+            if fileList != "" 
+              if fileList.include? ownerentry.filename
+                ownertable = ex_ver.ownerships.create(filename: ownerentry.filename, resource_file_id: ownerentry.resource_file_id)
+              end
+            end
+          end
+        end
+        unless files.nil? 
+          files.each do |file|
+            file.original_filename = file.original_filename.gsub(/ /, '_')
+            tempfile = Tempfile.create{file}
+            hashval = Digest::MD5.hexdigest File.read "#{tempfile.path}"
+            if ResourceFile.all.where(hashval: hashval).exists?
+              ownertable = ex_ver.ownerships.create(filename: file.original_filename,resource_file_id: ResourceFile.all.where(hashval: hashval).first.id)
+            else       
+              res = ex_ver.resource_files.create!(user_id: current_user.id,filename:file, hashval:hashval)
+              ownertable = res.ownerships.last
+              ownertable.filename = file.original_filename
+              ownertable.save
+            end
+          end
+        end
         exercise_collection.andand.add(e, override: true)
         e.current_version.update(text_representation: text_representation)
         success_msgs <<
@@ -541,6 +593,8 @@ class ExercisesController < ApplicationController
     end
 
 
+  
+
     @responses = ['There are no responses yet!']
     @explain = ['There are no explanations yet!']
     if session[:leaf_exercises]
@@ -562,13 +616,18 @@ class ExercisesController < ApplicationController
 		# hide it if this workout (if present) has less than two exercises
 		@workout ||= @workout_score.andand.workout || @workout_offering.andand.workout
 		ex_count = @workout.andand.exercises.andand.count
-		@hide_sidebar = (!@workout && @lti_launch) || (ex_count && ex_count < 2)
-
+    @hide_sidebar = (!@workout && @lti_launch) || (ex_count && ex_count < 2)
+    # Updata image tags in the exercise question
+    @exercise_version.image_processing(true)
+    # Display all files to students
+    @file_res = @exercise_version.file_processing
     render layout: 'two_columns'
 
   end
 
+  
 
+  
   # -------------------------------------------------------------
   def create_choice
     @ans = Choice.create
@@ -927,7 +986,7 @@ class ExercisesController < ApplicationController
         :experience, :id, :is_public, :priority, :question_type,
         :exercise_version, :exercise_version_id, :commit,
         :mcq_allow_multiple, :mcq_is_scrambled, :languages, :styles,
-        :tag_ids)
+        :tag_ids, {files: []})
     end
 
 
