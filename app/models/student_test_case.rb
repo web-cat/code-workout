@@ -10,8 +10,7 @@ class StudentTestCase < ActiveRecord::Base
           coding_prompt_answer: answer,
           pass: (test_results_array.length == 8 && test_results_array[7].to_i == 1)
           )
-          # This logic is somewhat Java-specific, and needs to be refactored
-          # to better support other languages.
+          
         if !test_results_array[5].blank?
             exception_name = test_results_array[6] #.sub(/^.*\./, '')
             if !(['AssertionFailedError',

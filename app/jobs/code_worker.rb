@@ -104,11 +104,10 @@ class CodeWorker
       File.write(attempt_dir + '/' + prompt.class_name + '.' + lang, code_body) ###
       
       # compile and load student tests into DB
-      
       answer.parse_student_tests!(answer_text, language, current_attempt) #rename
 
-      #run against inst soln
-      
+      # run against inst soln
+      # creating reference directory
       ref_dir = "#{working_dir}/reference"
       ref_body = prompt.wrapper_code.sub(/\b___\b/, prompt.reference_solution)
 
