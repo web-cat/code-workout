@@ -1,8 +1,8 @@
 ActiveAdmin.register Exercise do
-  includes :current_version
+  includes :current_version, :owners
 
   menu parent: 'Gym-oriented', priority: 10
-  permit_params :name, :current_version
+  permit_params :name, :current_version, owner_ids: []
 
   index do
     id_column
@@ -27,7 +27,12 @@ ActiveAdmin.register Exercise do
       f.input :current_version, as: :select, collection: (f.object.exercise_versions.map { |v| [v.version, v.id] })
       f.input :exercise_collection
       f.input :question_type
+      f.input :owners, as: :select, multiple: true,
+        hint: "Hold down Cmd/Ctrl while selecting or unselecting owners<br>
+        Current owners: #{f.object.owners.map(&:display_name).join(', ')}".html_safe,
+        collection: User.all.sort_by(&:display_name)
     end
+    f.actions
   end
 
   show do
@@ -38,6 +43,9 @@ ActiveAdmin.register Exercise do
       row :is_public
       row :created_at
       row :updated_at
+      row(:owners) { |e|
+        e.owners.map { |o| link_to("#{o.display_name}", admin_user_path(o)) }
+      }
     end
   end
 end

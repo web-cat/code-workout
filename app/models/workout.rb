@@ -153,6 +153,12 @@ class Workout < ActiveRecord::Base
   end
 
   # ------------------------------------------------------------
+  # Given a current exercise, get the next exercise in the 
+  # workout. Return the first exercise if the current exercise
+  # is `nil`. Return the first exercise if the current exercise
+  # does not belong to this workout.
+  #
+  # @param ex   The current exercise in the workout.
   def next_exercise(ex)
     ew = nil
     if ex
@@ -218,6 +224,10 @@ class Workout < ActiveRecord::Base
     return [earned, remaining, gap, earned_per, remaining_per, gap_per]
   end
   
+  # -------------------------------------------------------------
+  # Save this workout with the specified params. Remove any
+  # exercises that have been marked for removal.
+  # @param params   A hash of workout params for this workout
   def update_or_create(params)
       self.name = params[:name]
       self.description = params[:description]
@@ -350,7 +360,7 @@ class Workout < ActiveRecord::Base
         workout_offering: workout_offering 
       ).order('updated_at DESC').first
     else # only user is specified
-      workout_scores.where(user: user).first
+      workout_scores.where(user: user, workout_offering: nil).first
     end
   end
 

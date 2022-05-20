@@ -196,6 +196,29 @@ class WorkoutScore < ActiveRecord::Base
 
 
   # -------------------------------------------------------------
+  def show_score?
+    if !self.workout_offering
+      return true
+    end
+
+    if self.closed?
+      if workout_offering.shutdown?
+        # FIXME: ???
+        # true
+        !workout_offering.andand.workout_policy.andand.
+          hide_score_in_review_before_close
+      else
+        !workout_offering.andand.workout_policy.andand.
+          hide_score_in_review_before_close
+      end
+    else
+      !workout_offering.andand.workout_policy.andand.
+        hide_score_before_finish
+    end
+  end
+
+
+  # -------------------------------------------------------------
   def attempts_left_for_exercise_version(exercise_version)
     if self.workout_offering.andand.attempt_limit
       attempts_made = self
@@ -243,6 +266,7 @@ class WorkoutScore < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def record_attempt(attempt)
+    needs_repost = false
     self.with_lock do
       scored_for_this = self.scored_attempts.
         joins(exercise_version: :exercise).
@@ -284,8 +308,13 @@ class WorkoutScore < ActiveRecord::Base
 
         self.scored_attempts << attempt
         self.save!
-        recalculate_score!(attempt: attempt)
+        needs_repost = true
+        recalculate_score!(attempt: attempt, post_lti: false)
       end
+    end
+
+    if needs_repost && self.lis_outcome_service_url && self.lis_result_sourcedid
+      update_lti
     end
   end
 
@@ -304,10 +333,10 @@ class WorkoutScore < ActiveRecord::Base
         self.last_attempted_at = attempt.submit_time
       end
       self.save!
-
-      if self.lis_outcome_service_url && self.lis_result_sourcedid
-        update_lti
-      end
+    end
+    needs_repost = !options.key?(:post_lti) || options[:post_lti]
+    if needs_repost && self.lis_outcome_service_url && self.lis_result_sourcedid
+      update_lti
     end
   end
 
@@ -442,12 +471,17 @@ class WorkoutScore < ActiveRecord::Base
       key = lms_instance.consumer_key
       secret = lms_instance.consumer_secret
 
-      result = total_points > 0 ? self.score / total_points : 0
-      tp = IMS::LTI::ToolProvider.new(key, secret, {
-        "lis_outcome_service_url" => "#{self.lis_outcome_service_url}",
-        "lis_result_sourcedid" => "#{self.lis_result_sourcedid}"
-      })
-      tp.post_replace_result!(result)
+      begin
+        result = total_points > 0 ? self.score / total_points : 0
+        tp = IMS::LTI::ToolProvider.new(key, secret, {
+          "lis_outcome_service_url" => "#{self.lis_outcome_service_url}",
+          "lis_result_sourcedid" => "#{self.lis_result_sourcedid}"
+        })
+        tp.post_replace_result!(result)
+      rescue => e
+        logger.error e.message
+        logger.error e.backtrace.join("\n")
+      end
     end
   end
 

@@ -67,7 +67,7 @@
 
     - if new_or_existing
       - message = 'A clone of this workout will be created, which you can use and modify. Is this okay?'
-      
+
       - if course_id
         = link_to 'Clone', organization_clone_workout_path(course_id: course_id,
           term_id: @term || Term.current_term.slug,
@@ -89,7 +89,7 @@
             lms_assignment_id: lms_assignment_id,
             lms_instance_id: session[:lms_instance_id],
             lti_launch: @lti_launch), class: 'btn btn-sm btn-primary'
-    - elsif !workout_score || workout_score.show_feedback?
+    - elsif !workout_score || workout_score.show_score?
       .radial-progress{ 'data-progress' => score_pct }
         .circle
           .mask.full

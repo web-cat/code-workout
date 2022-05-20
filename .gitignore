@@ -18,6 +18,7 @@
 test-*.txt
 lib/assets/
 public/assets/
+public/uploads/**
 **/.DS_Store
 usr/attempts/
 usr/resources/*/tests
@@ -56,3 +57,6 @@ tasks.todo
 server.csr
 server.key
 server.crt
+
+# OpenDSA-DevStack repo management
+devstackPlaceholder.md

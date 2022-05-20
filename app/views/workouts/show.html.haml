@@ -51,7 +51,7 @@
       = l user_time(current_user, @workout_offering.hard_deadline)
     &nbsp;&nbsp;&nbsp;Score:
     - if workout_score
-      - if workout_score.show_feedback?
+      - if workout_score.show_score?
         = workout_score.score
       - else
         hidden
@@ -74,7 +74,10 @@
       (workout_score.nil? || !workout_score.closed?) || manages_course)           |
       - button_text = nil
       - if @workout_offering.can_be_practiced_by? current_user
-        - button_text = 'Start Workout'
+        - if workout_score
+          - button_text = 'Continue Workout'
+        - else
+          - button_text = 'Start Workout'
       - elsif !manages_course && @workout_offering.andand.workout_policy.andand.no_review_before_close
         %p
           You can review your work on this workout once everyone has
@@ -92,13 +95,18 @@
     - elsif @workout_offering.nil?
       = link_to 'Start Workout', practice_workout_path(params[:id]), |
         class: 'btn btn-primary'
-    - if course_offering.andand.is_manager? (current_user)
-      = link_to 'Edit Workout',
-        organization_edit_workout_path(organization_id: @organization.slug,
-          course_id: @course.slug,
-          term_id: @term.slug,
-          workout_offering_id: @workout_offering.id),
-        class: 'btn btn-default'
+    - if manages_course || current_user == @workout.creator || @workout.owners.exists?(current_user)
+      - if @workout_offering
+        = link_to 'Edit Workout',
+          organization_edit_workout_path(organization_id: @organization.slug,
+            course_id: @course.slug,
+            term_id: @term.slug,
+            workout_offering_id: @workout_offering.id),
+          class: 'btn btn-default'
+      - else
+        = link_to 'Edit Workout',
+          edit_workout_path(id: @workout.id),
+          class: 'btn btn-default'
 %br
 
 %h2 Exercises

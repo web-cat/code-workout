@@ -40,7 +40,9 @@ services:
       DB_PORT: 3306
       DB_HOST: db
       RAILS_ENV: development
+      SPROCKETS_CACHE: /cache # added to support windows
     volumes:
       - .:/code-workout
 volumes:
   dbdata:
+  cache: # added to support windows

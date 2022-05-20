@@ -56,7 +56,7 @@
             %td= wkto.workout.name
             - workout_score = wkto.score_for(current_user)
             - score = workout_score.andand.score
-            - if score && workout_score.show_feedback?
+            - if score && workout_score.show_score?
               %td= score
             - else
               %td.textblur -/-

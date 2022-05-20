@@ -1,6 +1,7 @@
 - show_feedback = !@attempt.workout_score || @attempt.workout_score.show_feedback?
+- show_score = !@attempt.workout_score || @attempt.workout_score.show_score?
 - @workout ||= @attempt.workout_score.andand.workout
-- if @workout && show_feedback
+- if @workout && show_score
   - pts = @workout.exercise_workouts.find_by(exercise: @exercise).andand.points
   - score = @attempt.score
   - score_pct = pts > 0 ? score * 100.0 / pts : 0

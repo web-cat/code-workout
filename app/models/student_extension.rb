@@ -48,7 +48,7 @@ class StudentExtension < ActiveRecord::Base
       student_extension.soft_deadline =
         DateTime.strptime(opts['soft_deadline'].to_s, '%Q')
     end
-    if opts['hard_deadline']
+    if opts['hard_deadline'].present?
       student_extension.hard_deadline =
         DateTime.strptime(opts['hard_deadline'].to_s, '%Q')
     end
