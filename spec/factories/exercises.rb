@@ -58,6 +58,13 @@ FactoryBot.define do
           "{\n"\
           "    ___\n"\
           "}\n" }
+        reference_solution { "public int factorial(int n)\n"\
+          "{\n"\
+          "    if (n <= 1)\n"\
+          "        return 1;\n"\
+          "    else\n"\
+          "        return n * factorial(n - 1);\n"\
+          "}\n" }
         wrapper_code { "public class Factorial\n"\
           "{\n"\
           "    ___\n"\
@@ -88,6 +95,7 @@ FactoryBot.define do
           class_name: v.class_name,
           method_name: v.method_name,
           starter_code: v.starter_code,
+          reference_solution: v.reference_solution,
           wrapper_code: v.wrapper_code,
           test_script: v.test_script
         e.save!

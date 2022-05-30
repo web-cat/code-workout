@@ -10,6 +10,7 @@ class CodingPromptRepresenter < Representable::Decorator
   property :class_name
   property :method_name
   property :starter_code
+  property :reference_solution
   property :wrapper_code
   property :test_script, as: :tests
 

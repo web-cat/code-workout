@@ -8,18 +8,57 @@ require "#{Rails.root}/usr/resources/config"
 
 class CodeWorker
   include SuckerPunch::Job
-
+  include TestCaseHelper
   # Reducing to 2 workers, since it seems that each puma process will
   # have its own job queue and its own set of sucker punch worker threads.
   # We'll get parallelism through puma processes instead of sucker punch
   # workers.
   workers 2 # 10
 
+  # grabs student-written tests from answer text
+  # String -> List[[]]
+  def self.get_tests_from_javadoc(answer_text)
+    test_list = []
+    flag = false
+    source_list = (answer_text.split("/"))[1].split("*")
+    source_list.each do |elem|
+      if elem.include? "@"
+        if elem.include? "@test"
+          flag = true
+        else
+          flag = false
+        end
+      elsif flag && elem.include?("->")
+
+        temp = elem.split("->")
+        #check elements here
+        test_list.append([temp[0][/\(([^()]*)\)/, 1], temp[1].strip, elem])
+      end
+    end
+    return test_list
+  end
+
+  # -------------------------------------------------------------
+  # directs parsing to appropriate method
+  # String, String -> List[[]]
+  def self.get_tests_from_answer_text(answer_text, language)
+    case language
+    when 'Java'
+      return get_tests_from_javadoc(answer_text)
+    when 'Ruby'
+      return nil
+    when 'Python'
+      return nil
+    when 'C++'
+      return nil
+    end
+  end
+
+
   # -------------------------------------------------------------
   def perform(attempt_id)
     ActiveRecord::Base.connection_pool.with_connection do
       start_time = Time.now
-
       attempt = Attempt.find(attempt_id)
       exv = attempt.exercise_version
       prompt = exv.prompts.first.specific
@@ -29,7 +68,7 @@ class CodeWorker
       answer_text = answer.answer
       answer_lines = answer_text ? answer_text.count("\n") : 0
       if !prompt.wrapper_code.blank?
-        code_body = prompt.wrapper_code.sub(/\b___\b/, answer_text)
+        code_body = prompt.wrapper_code.sub(/\b___\b/, answer_text) # student's answer
         if $`
           # Want pre_lines to be a count of the number of lines preceding
           # the one the match is on, so use count() instead of lines() here
@@ -51,7 +90,8 @@ class CodeWorker
       term_name = term ? term.slug : 'no-term'
 
       # compile and evaluate the attempt in a temporary location
-      attempt_dir = "usr/attempts/active/#{current_attempt}"
+      working_dir = "usr/attempts/active/#{current_attempt}" ######## replicate this code but with inst soln
+      attempt_dir = "#{working_dir}/attempt"
       # puts "DIRECTORY",attempt_dir,"DIRECTORY"
       FileUtils.mkdir_p(attempt_dir)
       if !Dir[attempt_dir].empty?
@@ -65,7 +105,38 @@ class CodeWorker
         prompt.regenerate_tests
       end
       FileUtils.cp(prompt.test_file_name, attempt_dir)
-      File.write(attempt_dir + '/' + prompt.class_name + '.' + lang, code_body)
+      File.write(attempt_dir + '/' + prompt.class_name + '.' + lang, code_body) ###
+      
+      # compile and load student tests into DB
+      answer.parse_student_tests!(answer_text, language, current_attempt) #rename
+
+      # run against inst soln
+      # creating reference directory
+      ref_dir = "#{working_dir}/reference"
+      ref_body = prompt.wrapper_code.sub(/\b___\b/, prompt.reference_solution)
+
+      FileUtils.mkdir_p(ref_dir)
+      if !Dir[ref_dir].empty?
+        puts 'WARNING, OVERWRITING EXISTING DIRECTORY = ' + ref_dir
+        FileUtils.remove_dir(ref_dir, true)
+        FileUtils.mkdir_p(ref_dir)
+      end
+
+      generate_CSV_tests(ref_dir + '/' + prompt.class_name + 'Test.' + Exercise.extension_of(prompt.language), prompt, answer)
+
+
+      File.write(ref_dir + '/' + prompt.class_name + '.' + lang, ref_body) ###
+
+      ref_lines = ref_body.count("\n")
+      execute_javatest(
+        prompt.class_name, ref_dir, pre_lines, ref_lines)
+      
+      CSV.foreach(ref_dir + '/results.csv') do |line|
+        # find test id
+        test_id = line[2][/\d+$/].to_i
+        test_case = answer.student_test_cases.where(id: test_id).first
+        tc_score = test_case.record_result(answer, line)
+      end
 
       # Run static checks
       result = nil
@@ -138,8 +209,9 @@ class CodeWorker
       attempt.feedback_ready = true
 
       # clean up log and class files that were generated during testing
+
       cleanup_files = Dir.glob([
-        "#{attempt_dir}/*.class",
+        "#{working_dir}/**/*.class",
         "#{attempt_dir}/*.log",
         "#{attempt_dir}/reports/TEST-*.csv",
         "#{attempt_dir}/__pycache__/*.pyc",
@@ -160,7 +232,7 @@ class CodeWorker
       # move the attempt to permanent storage
       term_dir = "usr/attempts/#{term_name}/"
       FileUtils.mkdir_p(term_dir) # create the term_dir if it doesn't exist
-      FileUtils.mv(attempt_dir, term_dir)
+      FileUtils.mv(working_dir, term_dir)
 
       # calculate various time values. all times are in ms
       time_taken = (Time.now - attempt.submit_time) * 1000

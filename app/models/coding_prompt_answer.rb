@@ -19,6 +19,8 @@ class CodingPromptAnswer < ActiveRecord::Base
   #~ Relationships ............................................................
 
   acts_as :prompt_answer
+  has_many :student_test_cases
+  has_many :student_test_case_results
   has_many :test_case_results,
     #-> { includes :test_case },
     -> { order('test_case_id ASC').includes(:test_case) },
@@ -32,8 +34,31 @@ class CodingPromptAnswer < ActiveRecord::Base
   # answer all prompts, and that would constitute an empty answer. We
   # want to allow that, so do not add validations preventing it.
 
+  def prompt_dir
+    'usr/resources/' + self.language + '/tests/' + self.id.to_s
+  end
 
+  def test_file_name
+    prompt_dir + '/' + self.class_name + 'Test.' +
+      Exercise.extension_of(self.language)
+  end
   #~ Instance methods .........................................................
+
+  # -------------------------------------------------------------
+  def parse_student_tests!(answer_text, language, id)
+    testList = CodeWorker.get_tests_from_answer_text(answer_text, language)
+    testList.each do |test|
+      tc = StudentTestCase.new(
+        input: test[0],
+        expected_output: test[1],
+        description: test[2],
+        coding_prompt_answer_id: self.id
+      )
+      unless tc.save
+        puts "error saving test case: #{tc.errors.full_messages.to_s}"
+      end
+    end
+  end
 
   # -------------------------------------------------------------
   def execute_static_tests

@@ -73,6 +73,7 @@
           {
               ___
           }
+        #reference_solution
         wrapper_code: |
           public class Month
           {

@@ -263,36 +263,6 @@ class TestCase < ActiveRecord::Base
     tcr.pass? ? self.weight : 0.0
   end
 
-
-  # -------------------------------------------------------------
-  def to_code(language)
-    inp = self.input
-    if !inp.blank?
-      # TODO: need to fix this to handle nested parens appropriately
-      inp.gsub!(/map\([^()]*\)/) do |map_expr|
-        map_expr.split(/"/).map.with_index{ |x, i|
-          if i % 2 == 0
-            x.gsub(/\s*=(>?)\s*/, ', ')
-          else
-            x
-          end
-        }.join('"')
-      end
-    end
-    TEST_METHOD_TEMPLATES[language] % {
-      id: self.id.to_s,
-      method_name: coding_prompt.method_name,
-      class_name: coding_prompt.class_name,
-      input: inp,
-      expected_output: self.expected_output,
-      negative_feedback: self.negative_feedback,
-      array: ((self.expected_output.start_with?('new ') &&
-        self.expected_output.include?('[]')) ||
-        self.expected_output.start_with?('array(')) ? 'Array' : ''
-    }
-  end
-
-
   # -------------------------------------------------------------
   def parse_description_specifier(desc)
     desc.strip! if !desc.blank?
@@ -349,39 +319,5 @@ class TestCase < ActiveRecord::Base
   def to_choices(str, regex)
     str.sub(regex, '').tr(',', ' ').strip.split(/\s+/).uniq.join('|')
   end
-
-
-    TEST_METHOD_TEMPLATES = {
-      'Ruby' => <<RUBY_TEST,
-  def test%{id}
-    assert_equal(%{expected_output}, @@subject.%{method_name}(%{input}), "%{negative_feedback}")
-  end
-
-RUBY_TEST
-      'Python' => <<PYTHON_TEST,
-    def test%{id}(self):
-        self.assertEqual(%{expected_output}, self.__%{method_name}(%{input}))
-
-PYTHON_TEST
-      'Java' => <<JAVA_TEST,
-    @Test
-    public void test_%{id}()
-    {
-        assertEquals(
-          "%{negative_feedback}",
-          %{expected_output},
-          subject.%{method_name}(%{input}));
-    }
-JAVA_TEST
-      'C++' => <<CPP_TEST
-    void test%{id}()
-    {
-        TSM_ASSERT_EQUALS(
-          "%{negative_feedback}",
-          %{expected_output},
-          subject.%{method_name}(%{input}));
-    }
-CPP_TEST
-    }
 
 end

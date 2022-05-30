@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20211101005101) do
+ActiveRecord::Schema.define(version: 20220506035419) do
 
   create_table "active_admin_comments", force: :cascade do |t|
     t.string   "namespace",     limit: 255
@@ -87,12 +87,13 @@ ActiveRecord::Schema.define(version: 20211101005101) do
   create_table "coding_prompts", force: :cascade do |t|
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.string   "class_name",    limit: 255
-    t.text     "wrapper_code",  limit: 65535,                 null: false
-    t.text     "test_script",   limit: 65535,                 null: false
-    t.string   "method_name",   limit: 255
-    t.text     "starter_code",  limit: 65535
-    t.boolean  "hide_examples",               default: false, null: false
+    t.string   "class_name",         limit: 255
+    t.text     "wrapper_code",       limit: 65535,                 null: false
+    t.text     "test_script",        limit: 65535,                 null: false
+    t.string   "method_name",        limit: 255
+    t.text     "starter_code",       limit: 65535
+    t.boolean  "hide_examples",                    default: false, null: false
+    t.text     "reference_solution", limit: 65535
   end
 
   create_table "course_enrollments", force: :cascade do |t|
@@ -216,6 +217,7 @@ ActiveRecord::Schema.define(version: 20211101005101) do
   end
 
   add_index "exercise_versions", ["creator_id"], name: "exercise_versions_creator_id_fk", using: :btree
+  add_index "exercise_versions", ["exercise_id"], name: "index_exercise_versions_on_exercise_id", using: :btree
   add_index "exercise_versions", ["irt_data_id"], name: "exercise_versions_irt_data_id_fk", using: :btree
   add_index "exercise_versions", ["stem_id"], name: "index_exercise_versions_on_stem_id", using: :btree
 
@@ -254,6 +256,7 @@ ActiveRecord::Schema.define(version: 20211101005101) do
     t.integer  "exercise_collection_id", limit: 4
   end
 
+  add_index "exercises", ["current_version_id"], name: "index_exercises_on_current_version_id", using: :btree
   add_index "exercises", ["exercise_collection_id"], name: "index_exercises_on_exercise_collection_id", using: :btree
   add_index "exercises", ["exercise_family_id"], name: "index_exercises_on_exercise_family_id", using: :btree
   add_index "exercises", ["external_id"], name: "index_exercises_on_external_id", unique: true, using: :btree
@@ -345,7 +348,7 @@ ActiveRecord::Schema.define(version: 20211101005101) do
   add_index "lms_instances", ["url"], name: "index_lms_instances_on_url", unique: true, using: :btree
 
   create_table "lms_types", force: :cascade do |t|
-    t.string   "name",       limit: 255, null: false
+    t.string   "name",       limit: 255, default: "", null: false
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -365,7 +368,7 @@ ActiveRecord::Schema.define(version: 20211101005101) do
 
   create_table "lti_workouts", force: :cascade do |t|
     t.integer  "workout_id",        limit: 4
-    t.string   "lms_assignment_id", limit: 255, null: false
+    t.string   "lms_assignment_id", limit: 255, default: "", null: false
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "lms_instance_id",   limit: 4
@@ -410,6 +413,7 @@ ActiveRecord::Schema.define(version: 20211101005101) do
 
   add_index "ownerships", ["exercise_version_id"], name: "index_ownerships_on_exercise_version_id", using: :btree
   add_index "ownerships", ["filename"], name: "index_ownerships_on_filename", using: :btree
+  add_index "ownerships", ["resource_file_id"], name: "index_ownerships_on_resource_file_id", using: :btree
 
   create_table "prompt_answers", force: :cascade do |t|
     t.integer "attempt_id",   limit: 4
@@ -436,6 +440,7 @@ ActiveRecord::Schema.define(version: 20211101005101) do
   end
 
   add_index "prompts", ["actable_id"], name: "index_prompts_on_actable_id", using: :btree
+  add_index "prompts", ["exercise_version_id"], name: "index_prompts_on_exercise_version_id", using: :btree
   add_index "prompts", ["irt_data_id"], name: "prompts_irt_data_id_fk", using: :btree
 
   create_table "resource_files", force: :cascade do |t|
@@ -481,6 +486,20 @@ ActiveRecord::Schema.define(version: 20211101005101) do
 
   add_index "student_extensions", ["user_id"], name: "index_student_extensions_on_user_id", using: :btree
   add_index "student_extensions", ["workout_offering_id"], name: "index_student_extensions_on_workout_offering_id", using: :btree
+
+  create_table "student_test_case_results", force: :cascade do |t|
+    t.integer "test_case_id",            limit: 4
+    t.string  "feedback",                limit: 255
+    t.boolean "pass"
+    t.integer "coding_prompt_answer_id", limit: 4
+  end
+
+  create_table "student_test_cases", force: :cascade do |t|
+    t.string  "input",                   limit: 255
+    t.string  "expected_output",         limit: 255
+    t.integer "coding_prompt_answer_id", limit: 4
+    t.text    "description",             limit: 65535
+  end
 
   create_table "tag_user_scores", force: :cascade do |t|
     t.integer  "user_id",             limit: 4,             null: false
@@ -561,6 +580,8 @@ ActiveRecord::Schema.define(version: 20211101005101) do
     t.boolean  "example",                         default: false, null: false
     t.boolean  "hidden",                          default: false, null: false
   end
+
+  add_index "test_cases", ["coding_prompt_id"], name: "index_test_cases_on_coding_prompt_id", using: :btree
 
   create_table "time_zones", force: :cascade do |t|
     t.string   "name",       limit: 255
@@ -732,6 +753,7 @@ ActiveRecord::Schema.define(version: 20211101005101) do
   add_foreign_key "courses", "organizations", name: "courses_organization_id_fk"
   add_foreign_key "exercise_owners", "exercises", name: "exercise_owners_exercise_id_fk"
   add_foreign_key "exercise_owners", "users", column: "owner_id", name: "exercise_owners_owner_id_fk"
+  add_foreign_key "exercise_versions", "exercises", name: "exercise_versions_exercise_id_fk"
   add_foreign_key "exercise_versions", "irt_data", column: "irt_data_id", name: "exercise_versions_irt_data_id_fk"
   add_foreign_key "exercise_versions", "stems", name: "exercise_versions_stem_id_fk"
   add_foreign_key "exercise_versions", "users", column: "creator_id", name: "exercise_versions_creator_id_fk"
@@ -740,13 +762,16 @@ ActiveRecord::Schema.define(version: 20211101005101) do
   add_foreign_key "exercise_workouts", "exercises", name: "exercise_workouts_exercise_id_fk"
   add_foreign_key "exercise_workouts", "workouts", name: "exercise_workouts_workout_id_fk"
   add_foreign_key "exercises", "exercise_families", name: "exercises_exercise_family_id_fk"
+  add_foreign_key "exercises", "exercise_versions", column: "current_version_id", name: "exercises_current_version_id_fk"
   add_foreign_key "exercises", "irt_data", column: "irt_data_id", name: "exercises_irt_data_id_fk"
   add_foreign_key "identities", "users", name: "identities_user_id_fk"
   add_foreign_key "lms_instances", "lms_types", name: "lms_instances_lms_type_id_fk"
   add_foreign_key "lti_workouts", "lms_instances"
   add_foreign_key "ownerships", "exercise_versions"
+  add_foreign_key "ownerships", "resource_files"
   add_foreign_key "prompt_answers", "attempts", name: "prompt_answers_attempt_id_fk"
   add_foreign_key "prompt_answers", "prompts", name: "prompt_answers_prompt_id_fk"
+  add_foreign_key "prompts", "exercise_versions", name: "prompts_exercise_version_id_fk"
   add_foreign_key "prompts", "irt_data", column: "irt_data_id", name: "prompts_irt_data_id_fk"
   add_foreign_key "resource_files", "users", name: "resource_files_user_id_fk"
   add_foreign_key "student_extensions", "users", name: "student_extensions_user_id_fk"
@@ -755,6 +780,7 @@ ActiveRecord::Schema.define(version: 20211101005101) do
   add_foreign_key "test_case_results", "coding_prompt_answers", name: "test_case_results_coding_prompt_answer_id_fk"
   add_foreign_key "test_case_results", "test_cases", name: "test_case_results_test_case_id_fk"
   add_foreign_key "test_case_results", "users", name: "test_case_results_user_id_fk"
+  add_foreign_key "test_cases", "coding_prompts", name: "test_cases_coding_prompt_id_fk"
   add_foreign_key "users", "global_roles", name: "users_global_role_id_fk"
   add_foreign_key "users", "time_zones", name: "users_time_zone_id_fk"
   add_foreign_key "users", "workout_scores", column: "current_workout_score_id", name: "users_current_workout_score_id_fk"
