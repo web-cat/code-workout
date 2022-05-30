@@ -46,7 +46,7 @@ class CodingPromptAnswer < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def parse_student_tests!(answer_text, language, id)
-    testList = CodeWorker.parse_attempt(answer_text, language)
+    testList = CodeWorker.get_tests_from_answer_text(answer_text, language)
     testList.each do |test|
       tc = StudentTestCase.new(
         input: test[0],

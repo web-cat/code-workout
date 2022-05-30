@@ -15,11 +15,13 @@ class CodeWorker
   # workers.
   workers 2 # 10
 
-  def self.parse_java(string)
-    testList = []
+  # grabs student-written tests from answer text
+  # String -> List[[]]
+  def self.get_tests_from_javadoc(answer_text)
+    test_list = []
     flag = false
-    sourceList = (string.split("/"))[1].split("*")
-    sourceList.each do |elem|
+    source_list = (answer_text.split("/"))[1].split("*")
+    source_list.each do |elem|
       if elem.include? "@"
         if elem.include? "@test"
           flag = true
@@ -30,17 +32,19 @@ class CodeWorker
 
         temp = elem.split("->")
         #check elements here
-        testList.append([temp[0][/\(([^()]*)\)/, 1], temp[1].strip, elem])
+        test_list.append([temp[0][/\(([^()]*)\)/, 1], temp[1].strip, elem])
       end
     end
-    return testList
+    return test_list
   end
 
   # -------------------------------------------------------------
-  def self.parse_attempt(answer_text, language)
+  # directs parsing to appropriate method
+  # String, String -> List[[]]
+  def self.get_tests_from_answer_text(answer_text, language)
     case language
     when 'Java'
-      return parse_java(answer_text)
+      return get_tests_from_javadoc(answer_text)
     when 'Ruby'
       return nil
     when 'Python'

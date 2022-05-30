@@ -126,7 +126,6 @@ class CodingPrompt < ActiveRecord::Base
       end
       # Default, if none of above cases return
       generate_CSV_tests(test_file_name, self)
-      puts 'regentests' + test_file_name
     end
   end
 
