@@ -1,23 +1,23 @@
 GIT
-  remote: git://github.com/raganwald/andand.git
+  remote: https://github.com/raganwald/andand.git
   revision: d6c4545b6649c70495c26e2038206c5fdb2d14d6
   specs:
     andand (1.3.3)
 
 GIT
-  remote: git://github.com/seuros/capistrano-puma.git
-  revision: 6112323390cff15539d947882d72d937622cfdf4
+  remote: https://github.com/seuros/capistrano-puma.git
+  revision: e5d870fcc943abab62670f4a8efd2922e8333adf
   specs:
-    capistrano3-puma (4.0.0)
+    capistrano3-puma (5.2.0)
       capistrano (~> 3.7)
       capistrano-bundler
-      puma (~> 4.0)
+      puma (>= 4.0, < 6.0)
 
 GIT
-  remote: git://github.com/voormedia/rails-erd.git
-  revision: 0fbb1cdf2c84b06afd12974baace8d512bb798da
+  remote: https://github.com/voormedia/rails-erd.git
+  revision: 52cb2ceff7e6ac79839dc617d23e462903881a29
   specs:
-    rails-erd (1.6.0)
+    rails-erd (1.7.2)
       activerecord (>= 4.2)
       activesupport (>= 4.2)
       choice (~> 0.2.0)
@@ -225,7 +225,7 @@ GEM
     has_scope (0.7.2)
       actionpack (>= 4.1)
       activesupport (>= 4.1)
-    hashie (3.6.0)
+    hashie (5.0.0)
     html2haml (2.2.0)
       erubis (~> 2.7.0)
       haml (>= 4.0, < 6)
@@ -306,8 +306,8 @@ GEM
       rack (>= 1.2, < 3)
     oj (2.18.5)
     oj_mimic_json (1.0.1)
-    omniauth (1.9.0)
-      hashie (>= 3.4.6, < 3.7.0)
+    omniauth (1.9.2)
+      hashie (>= 3.4.6)
       rack (>= 1.6.2, < 3)
     omniauth-cas (1.1.1)
       addressable (~> 2.3)
@@ -391,6 +391,7 @@ GEM
       http-cookie (>= 1.0.2, < 2.0)
       mime-types (>= 1.16, < 4.0)
       netrc (~> 0.8)
+    rexml (3.2.5)
     rspec-core (3.8.2)
       rspec-support (~> 3.8.0)
     rspec-expectations (3.8.4)
@@ -408,7 +409,8 @@ GEM
       rspec-mocks (~> 3.8.0)
       rspec-support (~> 3.8.0)
     rspec-support (3.8.2)
-    ruby-graphviz (1.2.4)
+    ruby-graphviz (1.2.5)
+      rexml
     ruby_parser (3.13.1)
       sexp_processor (~> 4.9)
     rubyzip (1.3.0)
