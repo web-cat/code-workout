@@ -3,6 +3,7 @@ class ExercisesController < ApplicationController
   require 'oauth/request_proxy/rack_request'
   require 'zip'
   require 'tempfile'
+  require 'peml'
 
 
   load_and_authorize_resource
@@ -326,11 +327,17 @@ class ExercisesController < ApplicationController
   # POST /exercises/upload_create
   def upload_create
     if params[:exercise]
+      peml=false
       exercise_params = params[:exercise]
       exercise_version_params = exercise_params[:exercise_version]
       edit_rights = exercise_params[:exercise_collection_id].to_i
       text_representation = exercise_version_params['text_representation']
-      hash = YAML.load(text_representation)
+      if text_representation.to_s.include? ('exercise_id')
+        hash = Peml::Loader.new.load(text_representation)
+        peml=true
+      else
+        hash = YAML.load(text_representation)
+      end
     else
       text_representation = File.read(params[:form][:file].path)
       hash = YAML.load(text_representation)
@@ -341,10 +348,14 @@ class ExercisesController < ApplicationController
     if fileList != "" && !files.nil?
       files = cleanFile(files,fileList)
     end
+    if(peml)
+      hash = convert_peml(hash)
+    end
     if !hash.kind_of?(Array)
       hash = [hash]
     end
-
+    
+    puts(hash)
     # figure out if we need to add this to an exercise collection
     exercise_collection = nil
     if edit_rights == 0
@@ -975,6 +986,42 @@ class ExercisesController < ApplicationController
       newexercise.difficulty = 5
       newexercise.discrimination = @exercise.discrimination
       return newexercise
+    end
+
+    # --------------------------------------------------------------
+    # Convert the parsed peml hash into a 
+    # hash corresponding to exercise data model
+    def convert_peml(hash)
+      #starting with three compulsory peml keys
+      new_hash = {"external_id" => hash["exercise_id"], "name", hash["title"]}
+      new_hash["current_version"] = {}
+      new_hash["current_version"]["version"] = 1
+      if(hash["author"].is_a? String)
+        new_hash["current_version"]["creator"] = hash["author"]
+      else 
+        new_hash["current_version"]["creator"] = hash["author"].key?("name") ? hash["author"].key?("name") : hash["author"].key?("email")
+      end
+      new_hash["experience"] = hash["difficulty"]
+      new_hash["tag_list"] = hash["tag"]
+      new_hash["style_list"] = "code writing" #dynamically handle which coding style it is
+      new_hash["language_list"] = ""
+      hash["systems"].each do |system|
+        new_hash["language_list"]+=system["language"]
+      end
+      new_hash["is_public"] = hash["is_public"]
+      new_hash["current_version"]["prompts"] = []
+      prompt = {"position" => 1, "question" => hash["instructions"], "class_name" => "", "methos_name" => ""}
+
+      #-------------------------------------------------------------------------------------------
+      # This part also needs to be dynamically handled to check if these files are in src instead
+      prompt["starter_code"] = hash["assets"]["code"]["starter"]["files"][0]["content"]
+      prompt["wrapper_code"] = hash["assets"]["code"]["wrapper"]["files"][0]["content"]
+      prompt["tests"] =  hash["assets"]["test"]["files"][0]["content"]
+      #-------------------------------------------------------------------------------------------
+
+      #dynamically handle which type of prompt it is
+      new_hash["current_version"]["prompts"]<<{"coding_prompt" => prompt}
+      new_hash
     end
 
 

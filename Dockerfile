@@ -57,11 +57,11 @@ RUN gem install bundler -v $BUNDLER_VERSION
 
 COPY Gemfile Gemfile
 COPY Gemfile.lock Gemfile.lock
-
+RUN echo Gemfile.lock
 #RUN bundle update
 #RUN bundle check || bundle install
 RUN bundle install
-
+RUN bundle exec peml
 #VOLUME ${BASEDIR}
 WORKDIR ${BASEDIR}
 
