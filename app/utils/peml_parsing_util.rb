@@ -37,11 +37,11 @@ class PemlParsingUtil
         # We try to fetch content from the files.
         prompt["starter_code"] = get_content(hash["assets.code.starter"]) 
         prompt["wrapper_code"] =  get_content(hash["assets.code.wrapper"])
-        prompt["tests"] =  get_content(hash["assets.tests"])
+        prompt["tests"] =  get_content(hash["assets.test"])
         #-------------------------------------------------------------------------------------------
   
         #Again, PEML is designed for coding problems and thus, 'coding_prompt'
-        new_hash["current_version"]["prompts"]<<{"coding_prompt" => prompt}
+        new_hash["current_version.prompts"]<<{"coding_prompt" => prompt}
         new_hash
       end
 
@@ -71,11 +71,18 @@ class PemlParsingUtil
 
       def get_content(asset_child)
         asset_collection = []
-        if asset_child.is_a? String && asset_child =~ URI::regexp
-            asset_collection << Net::HTTP.get(URI.parse(asset_child))
-        else
+        if asset_child.is_a? String
+            begin
+                uri = URI.parse(asset_child)
+                if uri.is_a?(URI::HTTP) && !uri.host.nil?
+                    asset_collection << Net::HTTP.get(uri)
+                end
+            rescue URI::InvalidURIError
+                asset_collection << ""
+            end
+        elsif asset_child.is_a? Array
             asset_child.each do |asset_file|
-                asset_collection << asset_file["files.content"]
+                asset_collection << asset_file["files"]["content"]
             end
         end
         asset_collection.join(',')

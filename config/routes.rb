@@ -188,6 +188,7 @@ Rails.application.routes.draw do
   get 'help' => 'help#index'
   get 'help/exercise_format' => 'help#exercise_format'
   get 'help/lti_configuration' => 'help/lti_configuration'
+  get 'help/exercise_peml_format' => 'help#exercise_peml_format'
 
   get 'static_pages/mockup1' => 'static_pages#mockup1'
   get 'static_pages/mockup2' => 'static_pages#mockup2'
