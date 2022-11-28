@@ -557,6 +557,7 @@ DEPENDENCIES
   css3-progress-bar-rails
   csv_shaper
   devise
+  dottie (~> 0.0.1)
   ed25519
   exception_handler (~> 0.8.0.0)
   factory_bot_rails

@@ -31,6 +31,7 @@ gem 'peml', github: 'CSSPLICE/peml'
 gem 'truncate_html'
 gem 'tzinfo' # For timezone support
 gem 'active_record_union'
+gem 'dottie', '~> 0.0.1'
 gem 'mysql2', '~> 0.4.0'
 gem 'modernizr-rails'
 gem 'rubyzip', '>= 1.3.0'
