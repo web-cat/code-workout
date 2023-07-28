@@ -141,6 +141,7 @@ class WorkoutOffering < ActiveRecord::Base
     now = Time.zone.now
     uscore = score_for(user)
     opens = opening_date_for(user)
+    hard_deadline = hard_deadline_for(user)
     course_offering.is_staff?(user) ||
       (((opens == nil) || (opens <= now)) &&
       course_offering.is_enrolled?(user) &&
@@ -148,7 +149,7 @@ class WorkoutOffering < ActiveRecord::Base
       (uscore == nil ||
       !uscore.closed? ||
       !workout_policy.andand.no_review_before_close ||
-      now >= hard_deadline_for(user)))
+        (hard_deadline && now >= hard_deadline)))
   end
 
   # ------------------------------------------------------------------
