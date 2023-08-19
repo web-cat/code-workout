@@ -135,11 +135,18 @@ class CodingPrompt < ActiveRecord::Base
   # -------------------------------------------------------------
   def set_defaults
     # Should the default class name be the same across all languages?
+    # TODO: auto-guess method name from starter code
+    # TODO: auto-guess class name from wrapper code or starter code
     case self.language
     when 'Java'
       self.class_name ||= 'Answer'
       self.wrapper_code ||= "public class Answer\n{\n    ___\n}\n"
-      # TODO: auto-guess method name from starter code
+    when 'Python'
+      self.class_name ||= 'Answer'
+      self.wrapper_code ||= "___\n"
+    when 'C++'
+      self.class_name ||= 'Answer'
+      self.wrapper_code ||= "class Answer\n{\n    ___\n}\n"
     end
   end
 
