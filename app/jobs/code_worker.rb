@@ -198,8 +198,42 @@ class CodeWorker
   def execute_javatest(class_name, attempt_dir, pre_lines, answer_lines)
     if CodeWorkout::Config::CMD[:java].key? :daemon_url
       url = CodeWorkout::Config::CMD[:java][:daemon_url] % {attempt_dir: attempt_dir}
-      response = Net::HTTP.get_response(URI.parse(url))
+      uri = URI.parse(url)
+
+      # response = Net::HTTP.get_response(URI.parse(url))
       # puts "%{url} => response %{response.code}"
+
+      response = nil
+
+      max_retries = 3
+      for a in 1..max_retries do
+        begin
+          Net::HTTP.new(uri.hostname, uri.port).start do |http|
+            http.open_timeout = 3
+            response = http.request_get(uri.request_uri)
+
+            if response.nil?
+              puts "GET %{url} => try %{a} no response"
+            elsif response.code == 200
+              break
+            else
+              puts "GET %{url} => try %{a} bad response: %{response.code}"
+            end
+            # puts "%{url} => response %{response.code}"
+          end
+        rescue => e
+          puts "GET %{url} => try %{a} error: %{e.message}"
+        end
+      end
+      if response.nil? then
+        puts "Server backend error [no response] for %{attempt_dir}"
+        return "Server backend error [no response]"
+      elsif response.code != 200
+        puts "Server backend error %{response.code} for %{attempt_dir}:"
+        puts response.body
+        return "Server backend error %{response.code}"
+      end
+
     else
       cmd = CodeWorkout::Config::CMD[:java][:cmd] % {attempt_dir: attempt_dir}
       # puts(cmd + '>> err.log 2>> err.log')
