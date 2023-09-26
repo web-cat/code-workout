@@ -70,8 +70,45 @@ class CodingPromptAnswer < ActiveRecord::Base
   #~ Private instance methods .................................................
   private
 
+  # This approach doesn't really work, since comment characters can
+  # be embedded inside string literals. We can probably come up with
+  # slightly better way of handling majority of string literal situations
+  # without doing a full parse, but that'll wait for a while.
     REMOVE_COMMENTS_REGEX = {
-      'Java' => /(\/\*([^*]|(\*+[^*\/]))*\*+\/)|(\/\/[^\r\n]*)/
+      'Java' => /(\/\*([^*]|(\*+[^*\/]))*\*+\/)|(\/\/[^\r\n]*)/,
+      'C++' =>  /(\/\*([^*]|(\*+[^*\/]))*\*+\/)|(\/\/[^\r\n]*)/,
+      'Python' =>  /(#[^\r\n]*)/
     }
 
+
+  # A Python example of handling string literals for this problem, from:
+  # https://stackoverflow.com/questions/2319019/using-regex-to-remove-comments-from-source-files
+  #
+  # def remove_comments(string):
+  #   pattern = r"(\".*?\"|\'.*?\')|(/\*.*?\*/|//[^\r\n]*$)"
+  # # first group captures quoted strings (double or single)
+  # # second group captures comments (//single-line or /* multi-line */)
+  # regex = re.compile(pattern, re.MULTILINE|re.DOTALL)
+  # def _replacer(match):
+  #   # if the 2nd group (capturing comments) is not None,
+  #   # it means we have captured a non-quoted (real) comment string.
+  #   if match.group(2) is not None:
+  #     return "" # so we will return empty to remove the comment
+  #   else: # otherwise, we will return the 1st group
+  #     return match.group(1) # captured quoted-string
+  #   return regex.sub(_replacer, string)
+
+  # Another regex (doesn't handle string literals) from:
+  # https://stackoverflow.com/questions/5522733/removing-comments-in-javascript-using-ruby
+  #
+  # regexp_long = / # Match she-bang style C-comment
+  #     \/\*!       # Opening delimiter.
+  #     [^*]*\*+    # {normal*} Zero or more non-*, one or more *
+  #     (?:         # Begin {(special normal*)*} construct.
+  #       [^*\/]    # {special} a non-*, non-\/ following star.
+  #       [^*]*\*+  # More {normal*}
+  #     )*          # Finish "Unrolling-the-Loop"
+  #     \/          # Closing delimiter.
+  #     /x
+  # result = subject.gsub(regexp_long, '')
 end

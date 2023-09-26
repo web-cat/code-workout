@@ -17,7 +17,7 @@ gem 'coffee-script-source'
 gem 'test-unit', '~> 3.0.9'
 gem 'nokogiri', '~> 1.10.4'
 gem 'csv_shaper'
-gem 'andand', github: 'raganwald/andand'
+gem 'andand', git: 'https://github.com/raganwald/andand'
 gem 'responders' # Can't move above 1.1 until migrating to rails 4.2+
 gem 'friendly_id', '~> 5'
 gem 'active_record-acts_as'
@@ -50,7 +50,7 @@ group :development, :test do
   gem 'sqlite3', '~> 1.3.0'
   gem 'rspec-rails'
   gem 'annotate'
-  gem 'rails-erd', github: 'voormedia/rails-erd'
+  gem 'rails-erd', git: 'https://github.com/voormedia/rails-erd'
   gem 'faker'
   # Needed for debugging support in Aptana Studio.  Disabled, since these
   # two gems do not support Ruby 2.0 yet :-(.
@@ -113,7 +113,8 @@ group :deploy do
   gem 'capistrano-bundler'
   gem 'capistrano-rails'
   gem 'capistrano-rvm'
-  gem 'capistrano3-puma', github: 'seuros/capistrano-puma'
+  gem 'capistrano3-puma', '~> 4.0.0',
+      git: 'https://github.com/seuros/capistrano-puma', branch: 'v4.x'
 end
 
 #for multi-color progress bar
