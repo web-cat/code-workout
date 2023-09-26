@@ -1,12 +1,13 @@
 GIT
-  remote: git://github.com/raganwald/andand.git
+  remote: https://github.com/raganwald/andand
   revision: d6c4545b6649c70495c26e2038206c5fdb2d14d6
   specs:
     andand (1.3.3)
 
 GIT
-  remote: git://github.com/seuros/capistrano-puma.git
-  revision: 6112323390cff15539d947882d72d937622cfdf4
+  remote: https://github.com/seuros/capistrano-puma
+  revision: b148515f78476b68ab8e09bcc494e82ceb53eba0
+  branch: v4.x
   specs:
     capistrano3-puma (4.0.0)
       capistrano (~> 3.7)
@@ -14,10 +15,10 @@ GIT
       puma (~> 4.0)
 
 GIT
-  remote: git://github.com/voormedia/rails-erd.git
-  revision: 0fbb1cdf2c84b06afd12974baace8d512bb798da
+  remote: https://github.com/voormedia/rails-erd
+  revision: 7c66258b6818c47b4d878c2ad7ff6decebdf834a
   specs:
-    rails-erd (1.6.0)
+    rails-erd (1.7.2)
       activerecord (>= 4.2)
       activesupport (>= 4.2)
       choice (~> 0.2.0)
@@ -391,6 +392,7 @@ GEM
       http-cookie (>= 1.0.2, < 2.0)
       mime-types (>= 1.16, < 4.0)
       netrc (~> 0.8)
+    rexml (3.2.6)
     rspec-core (3.8.2)
       rspec-support (~> 3.8.0)
     rspec-expectations (3.8.4)
@@ -408,7 +410,8 @@ GEM
       rspec-mocks (~> 3.8.0)
       rspec-support (~> 3.8.0)
     rspec-support (3.8.2)
-    ruby-graphviz (1.2.4)
+    ruby-graphviz (1.2.5)
+      rexml
     ruby_parser (3.13.1)
       sexp_processor (~> 4.9)
     rubyzip (1.3.0)
@@ -510,7 +513,7 @@ DEPENDENCIES
   capistrano-bundler
   capistrano-rails
   capistrano-rvm
-  capistrano3-puma!
+  capistrano3-puma (~> 4.0.0)!
   capybara
   carrierwave (= 1.3.2)
   cocoon

@@ -53,12 +53,11 @@ class CodeWorker
       # compile and evaluate the attempt in a temporary location
       attempt_dir = "usr/attempts/active/#{current_attempt}"
       # puts "DIRECTORY",attempt_dir,"DIRECTORY"
-      FileUtils.mkdir_p(attempt_dir)
       if !Dir[attempt_dir].empty?
         puts 'WARNING, OVERWRITING EXISTING DIRECTORY = ' + attempt_dir
         FileUtils.remove_dir(attempt_dir, true)
-        FileUtils.mkdir_p(attempt_dir)
       end
+      FileUtils.mkdir_p(attempt_dir)
       if !File.exist?(prompt.test_file_name)
         # Workaround for bug in correctly pre-generating test file
         # on exercise creation. If it doesn't exist, force regeneration
@@ -209,29 +208,32 @@ class CodeWorker
       for a in 1..max_retries do
         begin
           Net::HTTP.new(uri.hostname, uri.port).start do |http|
-            http.open_timeout = 3
+            http.open_timeout = 4
             response = http.request_get(uri.request_uri)
 
             if response.nil?
-              puts "GET %{url} => try %{a} no response"
-            elsif response.code == 200
+              puts "GET #{url} => try #{a} no response"
+            elsif response.kind_of? Net::HTTPSuccess # response.code == 200
               break
             else
-              puts "GET %{url} => try %{a} bad response: %{response.code}"
+              puts "GET #{url} => try #{a} bad response: #{response.code}"
             end
             # puts "%{url} => response %{response.code}"
+
+            # pause before retrying
+            sleep(4)
           end
         rescue => e
-          puts "GET %{url} => try %{a} error: %{e.message}"
+          puts "GET #{url} => try #{a} error: #{e.message}"
         end
       end
       if response.nil? then
-        puts "Server backend error [no response] for %{attempt_dir}"
-        return "Server backend error [no response]"
-      elsif response.code != 200
-        puts "Server backend error %{response.code} for %{attempt_dir}:"
+        puts "Server backend error [no response] for #{attempt_dir}"
+        return "Server backend error [no response]. Please resubmit your answer."
+      elsif !(response.kind_of? Net::HTTPSuccess) # response.code != 200
+        puts "Server backend error #{response.code} for #{attempt_dir}:"
         puts response.body
-        return "Server backend error %{response.code}"
+        return "Server backend error #{response.code}. Please resubmit your answer."
       end
 
     else
