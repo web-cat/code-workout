@@ -43,7 +43,7 @@ CodeWorkout::Application.routes.draw do
   scope :gym do
     # The top-level gym route
     get '/' => 'workouts#gym', as: :gym
-
+    get 'exercises/embed_collection' => 'exercises#embed_collection', as: :exercises_embed_collection # route to view all exercise metadata (iframe url and launch url) for SPLICE
     # /gym/exercises ...
     get 'exercises/call_open_pop' => 'exercises#call_open_pop'
     get  'exercises_import' => 'exercises#upload_yaml'
@@ -67,6 +67,7 @@ CodeWorkout::Application.routes.draw do
     get 'exercises/download_attempt_data' =>
       'exercises#download_attempt_data', as: :download_exercise_attempt_data
     # At the bottom, so the routes above take precedence over existing ids
+    get 'exercises/export' => 'exercises#export', as: :exercises_export #route to export exercises with SPLICE model
     resources :exercises
 
     # /gym/workouts ...
