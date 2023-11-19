@@ -17,7 +17,7 @@ gem 'coffee-script-source'
 gem 'test-unit', '~> 3.0.9'
 gem 'nokogiri', '~> 1.10.4'
 gem 'csv_shaper'
-gem 'andand', git: 'https://github.com/raganwald/andand.git'
+gem 'andand', git: 'https://github.com/raganwald/andand'
 gem 'responders' # Can't move above 1.1 until migrating to rails 4.2+
 gem 'friendly_id', '~> 5'
 gem 'active_record-acts_as'
@@ -113,7 +113,8 @@ group :deploy do
   gem 'capistrano-bundler'
   gem 'capistrano-rails'
   gem 'capistrano-rvm'
-  gem 'capistrano3-puma', git: 'https://github.com/seuros/capistrano-puma'
+  gem 'capistrano3-puma', '~> 4.0.0',
+      git: 'https://github.com/seuros/capistrano-puma', branch: 'v4.x'
 end
 
 #for multi-color progress bar

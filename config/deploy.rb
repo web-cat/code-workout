@@ -1,5 +1,5 @@
 set :application, 'code-workout'
-set :repo_url, 'git://github.com/web-cat/code-workout.git'
+set :repo_url, 'git@github.com:web-cat/code-workout.git'
 
 # ask :branch, proc { `git rev-parse --abbrev-ref HEAD`.chomp }
 
