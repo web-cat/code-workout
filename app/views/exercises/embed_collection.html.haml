@@ -1,0 +1,63 @@
+.container
+  %ol.breadcrumb.mb-4
+    %li= link_to 'Home', root_path
+    %li= link_to 'Gym', gym_url
+    %li.active Exercises
+
+  %h1.mb-3 Exercises
+
+  - if can? :create, Exercise
+    %p.mb-4= link_to 'Create New', new_exercise_path, class: 'btn btn-primary'
+  
+  - if @exercises.size > 0
+    .row
+      - @exercises.in_groups_of(2, false) do |group|
+        - group.each do |exercise|
+          .col-md-6.mb-4
+            .exercise-container.card
+              .card-body
+                = render partial: 'exercise', locals: { exercise: exercise, user: current_user }
+
+                - if exercise.iframe_url.present?
+                  .exercise-details.mt-3
+                    .iframe-label-container
+                      %label.mb-1 IFrame Embed Code:
+                      %input.form-control.mb-2{ id: "iframe-code-#{exercise.id}", type: 'text', value: exercise.iframe_embed_code, readonly: true }
+                    .buttons.mt-2
+                      %button.btn.btn-primary.mr-2{ 'data-toggle' => 'modal', 'data-target' => "#infoModal-#{exercise.id}" }
+                        Generate LTI Launch Info
+                      %button.btn.btn-primary{ 'data-toggle' => 'modal', 'data-target' => "#previewModal-#{exercise.id}" }
+                        Preview
+              .modal.fade{ id: "infoModal-#{exercise.id}", tabindex: '-1', role: 'dialog', 'aria-labelledby' => "infoModalLabel-#{exercise.id}", 'aria-hidden' => 'true' }
+                .modal-dialog{ role: 'document' }
+                  .modal-content
+                    .modal-header
+                      %h5.modal-title
+                        Iframe and LTI Launch Information
+                      %button.close{ type: 'button', 'data-dismiss' => 'modal', 'aria-label' => 'Close' }
+                        %span{ 'aria-hidden' => 'true' } &times;
+                    .modal-body
+                      %p
+                        %strong IFrame URL: 
+                        %input.form-control{ type: 'text', value: exercise.iframe_url, readonly: true }
+                      %p
+                        %strong LTI Launch URL: 
+                        %input.form-control{ type: 'text', value: exercise.lti_launch_url, readonly: true, disabled: true }
+              .modal.fade{ id: "previewModal-#{exercise.id}", tabindex: '-1', role: 'dialog', 'aria-labelledby' => "previewModalLabel-#{exercise.id}", 'aria-hidden' => 'true' }
+                .modal-dialog{ role: 'document' }
+                  .modal-content
+                    .modal-header
+                      %h5.modal-title Preview
+                      %button.close{ type: 'button', 'data-dismiss' => 'modal', 'aria-label' => 'Close' }
+                        %span{ 'aria-hidden' => 'true' } &times;
+                    .modal-body
+                      %iframe{ src: exercise.iframe_url, width: '100%', height: '500', frameborder: '0', allowfullscreen: true }
+      .clearfix
+    = paginate @exercises
+  - else
+    %p.mt-4
+      No public exercises are available to view right now. Please wait for contributors to add more.
+
+-# this page is to display the catalog of code workout's exercises for SPLICE
+
+
