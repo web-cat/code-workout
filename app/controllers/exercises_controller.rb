@@ -6,7 +6,7 @@ class ExercisesController < ApplicationController
 
 
   load_and_authorize_resource
-  skip_authorize_resource only: [:practice, :call_open_pop, :embed_collection, :export]
+  skip_authorize_resource only: [:practice, :call_open_pop, :export]
 
   #~ Action methods ...........................................................
   after_action :allow_iframe, only: [:practice, :embed]
@@ -27,16 +27,6 @@ class ExercisesController < ApplicationController
   end
 
 
-  # This embed_collection fetches all exercises for the embed_collections page and provides a simplified iframe urls of exercises for SPLICE
-  def embed_collection
-    if current_user
-      @exercises = Exercise.visible_to_user(current_user)
-    else
-      @exercises = Exercise.publicly_visible
-    end
-    @exercises = @exercises.page(params[:page])
-  end
-
   # -------------------------------------------------------------
   # The export function gets all exercises metadata for SPLICE
   # GET /gym/exercises/export
@@ -45,7 +35,7 @@ class ExercisesController < ApplicationController
     export_data = @exercises.map do |exercise|
       workout_names = exercise.exercise_workouts.map { |ew| ew.workout.name }.uniq
       {
-        "Platform_name": "Code-Workout",
+        "Platform_name": "CodeWorkout",
         "URL": "https://codeworkout.cs.vt.edu",
         "LTI_Instructions_URL": " https://opendsa-server.cs.vt.edu/guides/opendsa-canvas",
         "Exercise_type": Exercise::TYPE_NAMES[exercise.question_type],

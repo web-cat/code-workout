@@ -569,33 +569,3 @@ ul.ui-autocomplete {
   max-height: 5em;
   height: auto;
 }
-
-// syling for embed collection page for SPLICE
-.exercise-container.card {
-  width: 200%; // Adjust width as needed
-  // padding-left: 0 // 
-}
-
-.iframe-label-container {
-  clear: both; // Clear floats to ensure this container stays below preceding content
-  margin-top: 8px; // Add margin at the top to create space between this container and the preceding content
-  margin-bottom: 8px; // Adjust spacing below the label
-  // padding-left: 0
-}
-
-.iframe-label-container label {
-  display: block;
-  font-size: 11px;
-  margin-bottom: 5px;
-
-}
-
-.exercise-details {
-  margin-bottom: 10px; // Adds space before the button
-  padding-left: 20px;
-
-  input.form-control {
-    width: 40%; // text field the same width as the thumbnail
-    font-size: 9px;
-  }
-}
