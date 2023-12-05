@@ -197,7 +197,7 @@ class Exercise < ActiveRecord::Base
 
   # the iframeurl, iframe-embedcode and ltilaunch is to display and export each exercises information for SPLICE
   def iframe_url
-    base_url = "https://code-workout.cs.vt.edu" # to be dynamically fetched maybe from a config file
+    base_url = "https://codeworkoutdev.cs.vt.edu" # to be dynamically fetched maybe from a config file
     "#{base_url}/gym/exercises/#{self.id}/practice"
   end
 
@@ -206,7 +206,7 @@ class Exercise < ActiveRecord::Base
   end
 
   def lti_launch_url
-    base_url = "https://code-workout.cs.vt.edu" # to be fetched dynamically 
+    base_url = "https://codeworkoutdev.cs.vt.edu" # to be fetched dynamically 
     "#{base_url}/lti/launch/gym/exercises/#{self.id}/practice"
   end
 
