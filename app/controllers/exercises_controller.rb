@@ -45,7 +45,7 @@ class ExercisesController < ApplicationController
         "author": "Stephen Edwards",  
         "institution": "Virginia Tech",
         "keywords": workout_names.join(', '),
-        "exercise_Name": exercise.name,  
+        "exercise_name": exercise.name,
         "iframe_url": exercise.iframe_url,
         "lti_url": exercise.lti_launch_url
       }
