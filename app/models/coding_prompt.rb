@@ -187,7 +187,7 @@ class CodingPrompt < ActiveRecord::Base
         end
       when 'Python'
         if self.test_script =~ /\s*(import|def|assert|from)\s/
-          parse_PythonTest_tests
+          parse_Python_tests
           return
         end
       end
@@ -525,7 +525,7 @@ class CodingPrompt < ActiveRecord::Base
 
     # Now, extract metadata about and rename each test method
     pyunit.gsub!(
-      /((?:\p{Blank}*#.*\n))*(\s*def\s+)([a-zA-Z0-9_]+)(\s*\(\s*\)\s*:)/
+      /((?:\p{Blank}*#.*\n))*(\s*def\s+)([a-zA-Z0-9_]+)(\s*\(\s*self\s*\)\s*:)/
     ) do |match|
       comment = Regexp.last_match(1)
       attrs = "" # Can support this later

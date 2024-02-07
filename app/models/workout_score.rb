@@ -21,10 +21,11 @@
 #
 # Indexes
 #
-#  index_workout_scores_on_lti_workout_id  (lti_workout_id)
-#  index_workout_scores_on_user_id         (user_id)
-#  index_workout_scores_on_workout_id      (workout_id)
-#  workout_scores_workout_offering_id_fk   (workout_offering_id)
+#  idx_ws_on_user_workout_workout_offering  (user_id,workout_id,workout_offering_id)
+#  index_workout_scores_on_lti_workout_id   (lti_workout_id)
+#  index_workout_scores_on_user_id          (user_id)
+#  index_workout_scores_on_workout_id       (workout_id)
+#  workout_scores_workout_offering_id_fk    (workout_offering_id)
 #
 # Foreign Keys
 #
@@ -235,16 +236,26 @@ class WorkoutScore < ActiveRecord::Base
   # -------------------------------------------------------------
   def scoring_attempt_for(exercise)
     workout_score = self
-    Attempt.joins{exercise_version}.
-      where{(active_score_id == workout_score.id) &
-      (exercise_version.exercise_id == exercise.id)}.first
+
+    # First, check for current version only, which is faster
+    Attempt.where(
+      active_score_id: workout_score.id,
+      exercise_version_id: exercise.current_version_id).first ||
+
+      # Or, if that is nil, try search over all versions
+      Attempt.joins{exercise_version}.
+        where{(active_score_id == workout_score.id) &
+          (exercise_version.exercise_id == exercise.id)}.first
   end
 
 
   # -------------------------------------------------------------
   def previous_attempt_for(exercise)
-    attempts.joins{exercise_version}.
-      where{exercise_version.exercise_id == exercise.id}.first
+    # First, check for current version only, which is faster
+    attempts.where(exercise_version_id: exercise.current_version_id).first ||
+      # Or, if that is nil, try search over all versions
+      attempts.joins{exercise_version}.
+        where{exercise_version.exercise_id == exercise.id}.first
   end
 
 
@@ -269,10 +280,7 @@ class WorkoutScore < ActiveRecord::Base
     needs_repost = false
     self.with_lock do
       scored_for_this = self.scored_attempts.
-        joins(exercise_version: :exercise).
-        where(exercise_version: {
-          exercise: attempt.exercise_version.exercise
-        })
+        where(exercise_version_id: attempt.exercise_version_id)
 
       last_attempt = scored_for_this.first
 
@@ -390,9 +398,12 @@ class WorkoutScore < ActiveRecord::Base
         end
       end
       ws.workout.exercises.each do |e|
-        a = ws.attempts.joins{exercise_version}.
+        a = ws.attempts.where(exercise_version_id: e.current_version_id).
+          order('submit_time DESC').first ||
+          ws.attempts.joins{exercise_version}.
           where{(exercise_version.exercise_id == e.id)}.
           order('submit_time DESC').first
+
         if a
           a.active_score = ws
           if !a.save

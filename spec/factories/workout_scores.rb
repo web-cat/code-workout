@@ -21,10 +21,11 @@
 #
 # Indexes
 #
-#  index_workout_scores_on_lti_workout_id  (lti_workout_id)
-#  index_workout_scores_on_user_id         (user_id)
-#  index_workout_scores_on_workout_id      (workout_id)
-#  workout_scores_workout_offering_id_fk   (workout_offering_id)
+#  idx_ws_on_user_workout_workout_offering  (user_id,workout_id,workout_offering_id)
+#  index_workout_scores_on_lti_workout_id   (lti_workout_id)
+#  index_workout_scores_on_user_id          (user_id)
+#  index_workout_scores_on_workout_id       (workout_id)
+#  workout_scores_workout_offering_id_fk    (workout_offering_id)
 #
 # Foreign Keys
 #

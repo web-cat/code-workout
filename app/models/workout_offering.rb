@@ -75,7 +75,10 @@ class WorkoutOffering < ActiveRecord::Base
     if user.nil?
       return nil
     else
-      workout_scores.where(user: user).order('updated_at DESC').first
+      # Explicitly include workout id in search for faster search using
+      # the compound index
+      workout_scores.where(user: user, workout: workout).
+        order('updated_at DESC').first
     end
   end
 
