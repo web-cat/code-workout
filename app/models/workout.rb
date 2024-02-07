@@ -343,12 +343,12 @@ class Workout < ActiveRecord::Base
     scores = workout_scores.where(
       user: user, workout_offering: workout_offering).order('updated_at DESC')
     if lis_outcome_service_url || lis_result_sourcedid
-      workout_scores.to_ary.detect do |s|
+      scores.to_ary.detect do |s|
         s.lis_outcome_service_url == lis_outcome_service_url and
           s.lis_result_sourcedid == lis_result_sourcedid
       end
     else
-      workout_scores.first
+      scores.first
     end
   end
 

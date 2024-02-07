@@ -526,18 +526,18 @@ class ExercisesController < ApplicationController
           @workout ? @workout.score_for(@student_user, @workout_offering) : nil
     ))
 
-    if @student_user
-      @student_user.current_workout_score = @workout_score ? @workout_score : nil
-      @student_user.save!
-    end
-
     if @workout_offering && @workout_score &&
       @workout_score.workout_offering != @workout_offering
       @workout_score = nil
     end
 
-    if @workout_offering && !@workout_score
+    if !@workout_score && @student_user && @workout_offering
       @workout_score = @workout_offering.score_for(@student_user)
+    end
+
+    if @student_user
+      @student_user.current_workout_score = @workout_score
+      @student_user.save!
     end
 
     if @workout_score
