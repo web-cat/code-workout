@@ -296,13 +296,8 @@ class Exercise < ActiveRecord::Base
   # Get the latest attempt on the parsons exercise by the given user
   def latest_parsons_attempt_for(external_id, current_user)
     exercise_id = Exercise.find_by_external_id(external_id).id
-    puts "练习中找到的exercise_id: #{exercise_id}"
-    puts "练习中找到的current_userid: #{current_user.id}"
     # get the latest attempt for the exercise
     attempt = Attempt.find_by(exercise_version_id: exercise_id, user_id: current_user.id)
-    # print the attempt
-
-    puts "练习中找到的Attempt: #{attempt.inspect}"
     return attempt
   end
 
