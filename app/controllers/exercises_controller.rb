@@ -70,6 +70,7 @@ class ExercisesController < ApplicationController
 
     # if the attempt exists, update the score
     if attempt.update(score: params[:experience], experience_earned: exercise.experience, updated_at: Time.now)
+      flash.notice = "Your previous question's answer choice has been saved and scored"
       render json: { status: 'success', message: 'Score update succrss' } and return
     else
       render json: { status: 'error', message: 'Can not create new attempt' }, status: :internal_server_error
