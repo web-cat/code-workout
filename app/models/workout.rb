@@ -417,8 +417,18 @@ class Workout < ActiveRecord::Base
       available_workouts.tagged_with(terms, any: true, wild: true, on: :styles) +
       available_workouts.where('name regexp (?)', split_terms).uniq
   end
+  # -------------------------------------------------------------
+  # get workout id from external_id
+  def self.get_workout_id(external_id)
+    workout = Workout.find_by(external_id: external_id)
+    if workout
+      return workout.id
+    else
+      return nil
+    end
+  end
 
-
+  
   #~ Private instance methods .................................................
   private
 

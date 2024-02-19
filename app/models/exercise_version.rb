@@ -379,4 +379,10 @@ class ExerciseVersion < ActiveRecord::Base
     end
   end
 
+  # -------------------------------------------------------------
+  # get exercise version throught the exercise id 
+  def self.get_exercise_version(exercise_id)
+    ExerciseVersion.where(exercise_id: exercise_id).first
+  end
+
 end

@@ -28,6 +28,55 @@ class ExercisesController < ApplicationController
 
 
   # -------------------------------------------------------------
+  # replace s0.html root under 'views'
+  def s0
+    render file: 'exercises/Jsparson/exercise/simple/s0', locals: { external_id: 'Efpzbymjw' }
+  end
+  
+  protect_from_forgery with: :null_session  # if API CSRF protection is not needed，use null_session instead
+
+  def update_score
+    # chcek to make sure score and exercise_id are provided
+    unless params[:experience].present? && params[:external_id].present?
+      render json: { status: 'error', message: 'Miss experience or exercise id' }, status: :bad_request
+      return
+    end
+  
+    # find the specific exercise instance
+    exercise = Exercise.find_by_external_id(params[:external_id])
+  
+    # make sure the exercise exists
+    unless exercise
+      render json: { status: 'error', message: 'Can not find the specific exercise' }, status: :not_found
+      return
+    end
+    
+    # find the specific exercise version
+    exercise_id = Exercise.get_exercise_id(params[:external_id])
+
+    exercise_version = ExerciseVersion.get_exercise_version(exercise_id)
+
+
+    attempt = Attempt.where(user_id: current_user.id, exercise_version_id: exercise_version.id).last
+    # if the attempt does not exist, create a new one
+    unless attempt
+      attempt = Attempt.new(user_id: current_user.id, exercise_version_id: exercise_version.id,submit_time: Time.now, submit_num: 1, score: params[:experience],experience_earned: exercise.experience, created_at: Time.now, updated_at: Time.now, workout_score_id: nil, active_score_id: nil, feedback_ready: true, feedback_timeout: nil, worker_time: nil)
+      if attempt.save
+        render json: { status: 'success', message: 'Score update success' } and return
+      else
+        render json: { status: 'error', message: 'Can not create new attempt' }, status: :internal_server_error
+      end
+    end
+
+    # if the attempt exists, update the score
+    if attempt.update(score: params[:experience], experience_earned: exercise.experience, updated_at: Time.now)
+      render json: { status: 'success', message: 'Score update succrss' } and return
+    else
+      render json: { status: 'error', message: 'Can not create new attempt' }, status: :internal_server_error
+    end
+      
+  end
+  # -------------------------------------------------------------
   # GET /exercises/download.csv
   def download
     @exercises = Exercise.accessible_by(current_ability)

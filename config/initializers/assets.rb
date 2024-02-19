@@ -38,3 +38,4 @@ Rails.application.config.assets.precompile += [
 #Rails.application.config.request_body_formatter = Proc.new { |params| params }
 
 Rails.application.config.assets.precompile += %w( favicon.ico )
+Rails.application.config.assets.precompile += %w( parsons.css prettify.css odsaAV-min.css JSAV.css prettify.js jquery.js jquery-ui.js jquery.ui.touch-punch.js JSAV-min.js underscore-min.js lis.js parsons.js simple.js odsaUtils-min.js odsaAV-min.js )

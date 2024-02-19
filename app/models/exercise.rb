@@ -193,6 +193,19 @@ class Exercise < ActiveRecord::Base
     return public_exercise.union(public_license)
   end
 
+  # -------------------------------------------------------------
+  # Find specific exercises by their external_id
+  def self.find_by_external_id(external_id)
+    where(external_id: external_id).first
+  end
+
+  # -------------------------------------------------------------
+  # get the exercise id by external_id
+  def self.get_exercise_id(external_id)
+    exercise = Exercise.find_by_external_id(external_id)
+    exercise_id = exercise.id
+    return exercise_id
+  end
 
   # -------------------------------------------------------------
   def self.visible_through_user_group(user)
@@ -278,6 +291,25 @@ class Exercise < ActiveRecord::Base
   # the `score_for` methods on workouts and workout_offerings.
   def latest_attempt_for(u)
     self.attempts.where(user: u, workout_score: nil).order('updated_at DESC').first
+  end
+
+  # Get the latest attempt on the parsons exercise by the given user
+  def latest_parsons_attempt_for(external_id, current_user)
+    exercise_id = Exercise.find_by_external_id(external_id).id
+    puts "练习中找到的exercise_id: #{exercise_id}"
+    puts "练习中找到的current_userid: #{current_user.id}"
+    # get the latest attempt for the exercise
+    attempt = Attempt.find_by(exercise_version_id: exercise_id, user_id: current_user.id)
+    # print the attempt
+
+    puts "练习中找到的Attempt: #{attempt.inspect}"
+    return attempt
+  end
+
+  # Get exercise version id by external_id
+  def find_parsons_exercise_version_id(external_id)
+    exercise = Exercise.find_by_external_id(external_id)
+    exercise_version_id = exercise.current_version.id
   end
 
   # Does the user have privileged access to this exercise, either

@@ -19,8 +19,13 @@
   - workout_score ||= workout && user && workout.score_for(user, nil)
 
 - pts = workout ? workout.exercise_workouts.where(exercise: exercise).first.andand.points : nil
-- attempt = workout_score ? workout_score.scoring_attempt_for(exercise) : exercise.latest_attempt_for(user)
-- score = attempt ? attempt.score : 0
+- is_parsons = exercise.name.downcase.include?('parsons')
+- if is_parsons
+  - attempt = exercise.latest_parsons_attempt_for(exercise.external_id,user)
+  - score = attempt ? attempt.score : 0
+- else
+  - attempt = workout_score ? workout_score.scoring_attempt_for(exercise) : exercise.latest_attempt_for(user)
+  - score = attempt ? attempt.score : 0
 - if !pts
   - pts = exercise.experience
   - score = score * pts # exercise scores are automatically 0--1 weighted
@@ -84,7 +89,10 @@
           workout_score_id: workout_score.andand.id,
           workout_id: workout.id, lti_launch: @lti_launch))
       - else
-        = link_to exercise.display_name, exercise_practice_path(exercise)
+        - if exercise.display_name.downcase.include?('parsons')
+          = link_to exercise.display_name, s0_exercise_path
+        - else
+          = link_to exercise.display_name, exercise_practice_path(exercise)
 
       - if [ 'show', 'index', 'search' ].include?(action_name) && (current_user.andand.can? :edit, exercise)
         .right= button_link 'Edit', edit_exercise_path(exercise), class: 'btn btn-primary btn-sm'

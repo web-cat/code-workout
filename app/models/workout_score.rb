@@ -451,6 +451,13 @@ class WorkoutScore < ActiveRecord::Base
     end
   end
 
+  # ------------------------------------------------------------
+  # get workout score by workout score id
+  def self.get_workout_score_by_id(workout_score_id)
+    workout_score = WorkoutScore.find(workout_score_id)
+    return workout_score
+  end
+
 
   # ------------------------------------------------------------
   def self.grade_unprocessed_attempts(exercise_version_id)
