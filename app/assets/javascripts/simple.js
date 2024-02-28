@@ -63,7 +63,6 @@ $(document).ready(function () {
         parson.shuffleLines();
         parsedTrace = parson.parseTrace(trace)
     });
-
     $("#newInstanceLink").click(function (event) {
         event.preventDefault()
         parson.shuffleLines()

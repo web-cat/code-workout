@@ -213,6 +213,8 @@
     //Return executable code in one string
     VariableCheckGrader.prototype._codelinesAsString = function () {
         var student_code = this.parson.getModifiedCode("#ul-" + this.parson.options.sortableId);
+        // 打印当前的 student_code 作为一个字符串
+        console.log(student_code)
         var executableCode = "";
         $.each(student_code, function (index, item) {
             // split codeblocks on br elements

@@ -1,0 +1,95 @@
+{
+    "s3":{
+        "initial": "IF $$toggle::a::b$$ $$toggle::<::>::<>$$ b THEN\n  min := a\nELSE\n  min := b\nENDIF",
+        "parsonsConfig": {
+            "max_wrong_lines": 1,
+            "vartests": [
+                {
+                    "initcode": "min = None\na = 0\nb = 2",
+                    "code": "",
+                    "message": "Testing with a = 0 ja b = 2",
+                    "variables": {
+                        "min": 0
+                    }
+                },
+                {
+                    "initcode": "min = None\na = 7\nb = 4\n",
+                    "code": "",
+                    "message": "Testing with a = 7 ja b = 4",
+                    "variables": {
+                        "min": 4
+                    }
+                }
+            ],
+            "executable_code": "if $$toggle$$ $$toggle::<::>::!=$$ b:\nmin = a\nelse:\nmin = b\npass",
+            "programmingLang": "pseudo"
+        },
+        "title": "Find minimum",
+        "instructions": "Construct a function by drag&amp dropping and reordering lines from the left to the right.The constructed function should set the value of variable min to be the smaller of variables a and b.",
+        "order": 0
+    },
+    "s4":{
+        "initial": "$$toggle::x::y::tmp$$ = $$toggle::x::y::tmp$$\n$$toggle::x::y::tmp$$ = $$toggle::x::y::tmp$$\n$$toggle::x::y::tmp$$ = $$toggle::x::y::tmp$$",
+        "parsonsConfig": {
+            "max_wrong_lines": 1,
+            "vartests": [
+                {
+                    "initcode": "x = 0\ny=2",
+                    "code": "",
+                    "message": "Testing with initial variable values x = 0 and y = 2",
+                    "variables": {
+                        "x": 2
+                    }
+                },
+                {
+                    "initcode": "x = 3\ny=4\n",
+                    "code": "",
+                    "message": "Testing with initial variable values x = 3 and y = 4",
+                    "variables": {
+                        "x": 4,
+                        "y": 3
+                    }
+                }
+            ],
+            "executable_code": "tmp = x\nx = y\ny = tmp\npass" ,
+            "programmingLang": "pseudo"
+        },
+        "title": "Variable Swap",
+        "instructions": "Construct a program that swaps the values of variables <code>x</code> and <code>y</code> using the helper variable <code>tmp</code>. You can change the names of the variables",
+        "order": 1
+    },
+    "s5":{
+        "initial": "for (int i=0;i<3;i++) {\nSystem.out.print(\"I \");\nSystem.out.print(\"am \");\nSystem.out.print(\"a Java program \");\n}",
+        "parsonsConfig": {
+            "max_wrong_lines": 1,
+            "vartests": [
+                {
+                    "initcode": "output = ''",
+                    "code": "",
+                    "message": "Testing...",
+                    "variables": {
+                        "output": "I am a Java program I am a Java program I am a Java program "
+                    }
+                }
+            ],
+            "executable_code": "for x in range(3):\noutput += 'I '\noutput += 'am '\noutput += 'a Java program '\npass\n",
+            "programmingLang": "java"
+        },
+        "title": "Print message with loop", 
+        "instructions": "Construct code by reordering and indenting the lines.",
+        "order": 2
+    },
+    "s6":{
+        "initial": "REPEAT 3 TIMES\nforward(100)\nleft(120)\nENDREPEAT",
+        "parsonsConfig": {
+            "max_wrong_lines": 1,
+            "turtleModelCode":"modelTurtle.forward(100)\nmodelTurtle.left(120)\nmodelTurtle.forward(100)\nmodelTurtle.left(120)\nmodelTurtle.forward(100)\nmodelTurtle.left(120)",
+            "executable_code": "for i in range(0,3):\nmyTurtle.forward(100)\nmyTurtle.left(120)\npass",
+            "programmingLang": "pseudo"
+        },
+        "title": "draw triangle",
+        "instructions": "Construct a program by drag&amp;dropping and reordering lines from the left to the right.The constructed program should draw a triangle like shown below.",
+        "order": 3
+    }
+
+}

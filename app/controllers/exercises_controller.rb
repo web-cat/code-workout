@@ -27,10 +27,31 @@ class ExercisesController < ApplicationController
   end
 
 
-  # -------------------------------------------------------------
-  # replace s0.html root under 'views'
-  def s0
-    render file: 'exercises/Jsparson/exercise/simple/s0', locals: { external_id: 'Efpzbymjw' }
+  def show_exercise
+    step = params[:step]
+    render file: "exercises/Jsparson/exercise/simple/#{step}", locals: { external_id: get_external_id(step) }
+  end
+  
+  
+  def get_external_id(step)
+    case step
+    when 's0'
+      'Efpzbymjw'
+    when 's1'
+      'Eofijhegv'
+    when 's2'
+      'Eyprnjgub' 
+    when 's3'
+      'Eqvrwfkcl'
+    when 's4'
+      'Epvtmlkzf'
+    when 's5'
+      'Eiesgmxhy'
+    when 's6'
+      'Ebezfkxvm'
+    else
+      nil
+    end
   end
   
   protect_from_forgery with: :null_session  # if API CSRF protection is not needed，use null_session instead

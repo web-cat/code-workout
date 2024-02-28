@@ -90,7 +90,9 @@
           workout_id: workout.id, lti_launch: @lti_launch))
       - else
         - if exercise.display_name.downcase.include?('parsons')
-          = link_to exercise.display_name, s0_exercise_path
+          - step = exercise.display_name.downcase.match(/parsons_s(\d+)/)[1]
+          - if step
+            = link_to exercise.display_name, show_exercise_path(step: "s#{step}")
         - else
           = link_to exercise.display_name, exercise_practice_path(exercise)
 

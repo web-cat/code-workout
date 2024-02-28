@@ -17,8 +17,18 @@
                     "\tprint(\"Hello functions!\")",
                     "func()"],
         "type": "SIMPLE",
-        "title": "",
         "concepts": ["Call", "Str", "FunctionDef"],
         "order": 1
+    },
+    "s2": {
+        "title": "Creating a function that distinguishes if true or false",
+        "instructions": "Construct a function by drag&amp;dropping and reordering lines from the left to the right.The constructed function should return True if the parameter is True and return False otherwise.",
+        "initial": ["def is_true(boolean_value):",
+                    "\tif boolean_value:",
+                    "\t\treturn True",
+                    "\treturn False"],
+        "type": "SIMPLE",
+        "concepts": ["Call", "Str", "FunctionDef"],
+        "order": 2
     }
 }

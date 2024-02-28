@@ -66,7 +66,7 @@ CodeWorkout::Application.routes.draw do
       as: :exercises_query_data
     get 'exercises/download_attempt_data' =>
       'exercises#download_attempt_data', as: :download_exercise_attempt_data
-    get '/gym/exercises/Jsparson/exercise/simple/s0', to: 'exercises#s0', as: 's0_exercise'
+    get '/gym/exercises/Jsparson/exercise/simple/:step', to: 'exercises#show_exercise', as: 'show_exercise'
     # At the bottom, so the routes above take precedence over existing ids
     resources :exercises
 
