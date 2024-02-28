@@ -135,7 +135,7 @@ class Exercise < ActiveRecord::Base
     result = visible.tagged_with(terms, any: true, wild: true, on: :tags)
       .union(visible.tagged_with(terms, any: true, wild: true, on: :languages))
       .union(visible.tagged_with(terms, any: true, wild: true, on: :styles)) 
-      .union(visible.where('(name regexp (?)) or (exercises.id in (?))', r, ids))
+      .union(visible.where('(name REGEXP ?) or (exercises.id in (?)) or (external_id REGEXP ?)', r, ids, r))
       .distinct
     return result
   end
