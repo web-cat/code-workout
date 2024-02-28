@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+<head>
+  <title>Simple js-parsons example assignment</title>
+  <%= stylesheet_link_tag 'parsons' %>
+  <%= stylesheet_link_tag 'prettify' %>
+  <%= stylesheet_link_tag 'odsaAV-min' %>
+  <%= stylesheet_link_tag 'JSAV' %>
+  <%= javascript_include_tag 'prettify' %>
+  <style>
+    #container {
+    width: 800px;
+    height: 800px;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <h2 id="title"></h2>
+    <p id="instructions"></p>
+    <div id="exercise-data" data-external-id="<%= external_id %>"></div>
+    <p><strong>Note:</strong> The correct solution is obviously a dumb way to do
+    it. This exercise is merely trying to give an example of a Parson's
+    puzzle with js-parsons, not teach you Python :)</p>
+    <div id="sortableTrash" class="sortable-code"></div>
+    <div id="sortable" class="sortable-code">
+    </div>
+    <div style="clear:both;"></div>
+    <p>
+        <a href="#" id="newInstanceLink">New instance</a>
+        <a href="#" id="feedbackLink">Get feedback</a>
+        <a href="#" id="saveProgressLink">Save progess</a>
+    </p>
+    <h2>Feedback</h2>
+    <div id="feedback">Your feedback will appear here when you check your answer.</div>
+  </div>
+  <%= javascript_include_tag 'jquery' %>
+  <%= javascript_include_tag 'jquery-ui' %>
+  <%= javascript_include_tag 'jquery.ui.touch-punch' %>
+  <%= javascript_include_tag 'JSAV-min' %>
+  <%= javascript_include_tag 'underscore-min' %>
+  <%= javascript_include_tag 'lis' %>
+  <%= javascript_include_tag 'parsons' %>
+  <%= javascript_include_tag 'simple' %>
+  <%= javascript_include_tag 'odsaUtils-min' %>
+  <%= javascript_include_tag 'odsaAV-min' %>
+</body>
+</html>

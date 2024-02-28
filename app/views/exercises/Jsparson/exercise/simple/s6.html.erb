@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+<head>
+  <title>Simple js-parsons example assignment</title>
+  <%= stylesheet_link_tag 'parsons' %>
+  <%= stylesheet_link_tag 'prettify' %>
+  <%= javascript_include_tag 'prettify' %>
+  <style>
+  #container {
+    width: 800px;
+    height: 800px;
+    }
+</style>
+</head>
+<body>
+<div id="container">
+    <h2 id="title"></h2>
+    <p id="instructions"></p>
+    <style>
+        canvas {
+            border: 1px solid black;
+        }
+        .turtleFeedback {
+            height: 350px;
+        }
+        .turtle {
+            float: left;
+            left: 0; top: 0;
+            -webkit-transform: scale(0.5);
+            -webkit-transform-origin: 0 0;
+            height: 300px;
+            width: 350px;
+        }
+    </style>
+    <div class="turtleFeedback">
+        <div class="model turtle">
+        <h3>Model Drawing</h3>
+        <canvas id="modelCanvas" width="600" height="600"></canvas>
+        </div>
+        <div class="student turtle">
+        <h3>Your Drawing</h3>
+        <canvas id="studentCanvas" width="600" height="600"></canvas>
+        </div>
+    </div>
+    <div style="clear:both;"></div>
+    <p>
+        <a href="#" id="newInstanceLink">New instance</a>
+        <a href="#" id="feedbackLink">Get feedback</a>
+    </p>
+    <div style="clear:both;"></div>
+    <div id="exercise-data" data-external-id="<%= external_id %>"></div>
+    <div id="sortableTrash" class="sortable-code"></div>
+    <div id="sortable" class="sortable-code"></div>
+    
+  </div>
+  <h2>Feedback</h2>
+    <div id="feedback">Your feedback will appear here when you check your answer.</div>
+  <div id="unittest"></div>
+  <%= javascript_include_tag 'jquery' %>
+  <%= javascript_include_tag 'jquery-ui' %>
+  <%= javascript_include_tag 'jquery.ui.touch-punch.min' %>
+  <%= javascript_include_tag 'underscore-min' %>
+  <%= javascript_include_tag 'lis' %>
+  <%= javascript_include_tag 'parsons' %>
+  <%= javascript_include_tag 'skulpt' %>
+  <%= javascript_include_tag 'skulpt-stdlib' %>
+  <%= javascript_include_tag 'simple_code' %>
+</body>
