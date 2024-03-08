@@ -38,17 +38,17 @@ class ExercisesController < ApplicationController
     when 's0'
       'Eygxtorec'
     when 's1'
-      'Eqclxspzh'
+      'Eofijhegv'
     when 's2'
-      'Ewyihefqg' 
+      'Eyprnjgub' 
     when 's3'
-      'Enhizrwuv'
+      'Eqvrwfkcl'
     when 's4'
-      'Epuroyhte'
+      'Epvtmlkzf'
     when 's5'
-      'Euazmhnfy'
+      'Eiesgmxhy'
     when 's6'
-      'Epmqoalcv'
+      'Ebezfkxvm'
     else
       nil
     end
@@ -79,9 +79,12 @@ class ExercisesController < ApplicationController
 
 
     attempt = Attempt.where(user_id: current_user.id, exercise_version_id: exercise_version.id).last
+    puts "About to create attempt"
+    puts attempt.inspect
     # if the attempt does not exist, create a new one
     unless attempt
       attempt = Attempt.new(user_id: current_user.id, exercise_version_id: exercise_version.id,submit_time: Time.now, submit_num: 1, score: params[:experience],experience_earned: exercise.experience, created_at: Time.now, updated_at: Time.now, workout_score_id: nil, active_score_id: nil, feedback_ready: true, feedback_timeout: nil, worker_time: nil)
+      puts attempt.inspect # 使用 puts 打印 attempt
       if attempt.save
         render json: { status: 'success', message: 'Score update success' } and return
       else

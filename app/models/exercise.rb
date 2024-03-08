@@ -297,6 +297,14 @@ class Exercise < ActiveRecord::Base
   def latest_parsons_attempt_for(external_id, current_user)
     exercise_id = Exercise.find_by_external_id(external_id).id
     # get the latest attempt for the exercise
+    if exercise_id.nil?
+      # if the exercise id does not exist,return an error message
+      return "Exercise does not exist"
+    end
+    if current_user.nil?
+      # if the user does not exist, return an error message
+      return "User does not exist"
+    end
     attempt = Attempt.find_by(exercise_version_id: exercise_id, user_id: current_user.id)
     return attempt
   end
