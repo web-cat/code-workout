@@ -36,19 +36,19 @@ class ExercisesController < ApplicationController
   def get_external_id(step)
     case step
     when 's0'
-      'Eoixhdpqs'
+      'Eygxtorec'
     when 's1'
-      'Eofijhegv'
+      'Eqclxspzh'
     when 's2'
-      'Eyprnjgub' 
+      'Ewyihefqg' 
     when 's3'
-      'Eqvrwfkcl'
+      'Enhizrwuv'
     when 's4'
-      'Epvtmlkzf'
+      'Epuroyhte'
     when 's5'
-      'Eiesgmxhy'
+      'Euazmhnfy'
     when 's6'
-      'Ebezfkxvm'
+      'Epmqoalcv'
     else
       nil
     end
