@@ -71,7 +71,9 @@ $(document).ready(function(){
                 console.log('Score updated successfully');
             },
             error: function(xhr) {
-                console.log('Failed to update score: ' + xhr.responseText);
+                console.log('Failed to update score: ' + xhr.responseText  
+                // external_id
+                + 'externalId is' + externalId);
             }
         });
     }
