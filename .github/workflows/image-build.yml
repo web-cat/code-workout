@@ -6,7 +6,7 @@ on:
 jobs:
   build:
     name: code-workout-image
-    runs-on: ubuntu
+    runs-on: self-hosted
     steps:
       -
         name: Checkout
