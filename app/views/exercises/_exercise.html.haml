@@ -20,13 +20,8 @@
 
 - pts = workout ? workout.exercise_workouts.where(exercise: exercise).first.andand.points : nil
 - is_parsons = exercise.name.downcase.include?('parsons')
-- if is_parsons && user
-  - puts "Exercise external_id: #{exercise.external_id}, User: #{user.inspect}"
+- if is_parsons
   - attempt = exercise.latest_parsons_attempt_for(exercise.external_id,user)
-  - score = attempt ? attempt.score : 0
-  - puts "Attempt: #{attempt.inspect}, Score: #{score}"
-- elsif !is_parsons
-  - attempt = workout_score ? workout_score.scoring_attempt_for(exercise) : exercise.latest_attempt_for(user)
   - score = attempt ? attempt.score : 0
 - else
   - attempt = workout_score ? workout_score.scoring_attempt_for(exercise) : exercise.latest_attempt_for(user)
