@@ -84,8 +84,8 @@ class ExercisesController < ApplicationController
     # if the attempt does not exist, create a new one
     unless attempt
       attempt = Attempt.new(user_id: current_user.id, exercise_version_id: exercise_version.id,submit_time: Time.now, submit_num: 1, score: params[:experience],experience_earned: exercise.experience, created_at: Time.now, updated_at: Time.now, workout_score_id: nil, active_score_id: nil, feedback_ready: true, feedback_timeout: nil, worker_time: nil)
-      puts attempt.inspect # 使用 puts 打印 attempt
       if attempt.save
+        attempt.reload
         render json: { status: 'success', message: 'Score update success' } and return
       else
         render json: { status: 'error', message: 'Can not create new attempt' }, status: :internal_server_error

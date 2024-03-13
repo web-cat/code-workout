@@ -295,9 +295,10 @@ class Exercise < ActiveRecord::Base
 
   # Get the latest attempt on the parsons exercise by the given user
   def latest_parsons_attempt_for(external_id, current_user)
-    exercise_id = Exercise.find_by_external_id(external_id).id
+    exercise = Exercise.find_by_external_id(external_id)
     # get the latest attempt for the exercise
-    attempt = Attempt.find_by(exercise_version_id: exercise_id, user_id: current_user.id)
+    attempts = exercise.exercise_versions.map(&:attempts).flatten.uniq
+    attempt = Attempt.where(id: attempts.map(&:id), user: current_user).order('updated_at DESC').first
     return attempt
   end
 
