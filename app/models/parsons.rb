@@ -12,6 +12,7 @@
 
 class Parsons < ActiveRecord::Base
 #~ Relationships ............................................................
+    has_many :parsons_prompts, dependent: :destroy
 
     serialize :concepts, Array
     serialize :parsonsConfig, Hash

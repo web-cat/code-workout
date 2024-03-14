@@ -7,7 +7,7 @@ $(document).ready(function () {
     //         console.log(data)
     //     });
     // })
-
+    
     var index = window.location.pathname.split('/').pop().split('.')[0];
     var parson = new ParsonsWidget({
         'sortableId': 'sortable',
@@ -62,6 +62,8 @@ $(document).ready(function () {
         //parson.loadProgress()
         parson.shuffleLines();
         parsedTrace = parson.parseTrace(trace)
+        var externalId = $('#exercise-data').data('external-id');
+        console.log(externalId);
     });
     $("#newInstanceLink").click(function (event) {
         event.preventDefault()

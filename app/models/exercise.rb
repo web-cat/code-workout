@@ -95,7 +95,7 @@ class Exercise < ActiveRecord::Base
   TYPE_NAMES = {
     Q_MC     => 'Multiple Choice Question',
     Q_CODING => 'Coding Question',
-    Q_BLANKS => 'Fill in the blanks'
+    Q_BLANKS => 'Fill in the blanks',
     Q_PARSONS => 'Parsons Problem'
   }
 

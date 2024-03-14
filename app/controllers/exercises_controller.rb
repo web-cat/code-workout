@@ -34,24 +34,10 @@ class ExercisesController < ApplicationController
   
   
   def get_external_id(step)
-    case step
-    when 's0'
-      'Eoixhdpqs'
-    when 's1'
-      'Eofijhegv'
-    when 's2'
-      'Eyprnjgub' 
-    when 's3'
-      'Eqvrwfkcl'
-    when 's4'
-      'Epvtmlkzf'
-    when 's5'
-      'Eiesgmxhy'
-    when 's6'
-      'Ebezfkxvm'
-    else
-      nil
-    end
+    full_name = "parsons_#{step}"
+    exercise = Exercise.where('name LIKE ?', "%#{full_name}%").first
+    puts "exercise = #{exercise.inspect}"
+    exercise ? exercise.external_id : nil
   end
   
   protect_from_forgery with: :null_session  # if API CSRF protection is not needed，use null_session instead
