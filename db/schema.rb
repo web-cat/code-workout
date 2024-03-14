@@ -80,6 +80,18 @@ ActiveRecord::Schema.define(version: 20240207040304) do
   add_index "choices_multiple_choice_prompt_answers", ["choice_id", "multiple_choice_prompt_answer_id"], name: "choices_multiple_choice_prompt_answers_idx", unique: true, using: :btree
   add_index "choices_multiple_choice_prompt_answers", ["multiple_choice_prompt_answer_id"], name: "choices_MC_prompt_answers_MC_prompt_answer_id_fk", using: :btree
 
+  create_table "parsons", force: :cascade do |t|
+    t.string   "title"
+    t.text     "instructions"
+    t.text     "initial"
+    t.text     "unittest", default: ""
+    t.string   "type"
+    t.text     "concepts" 
+    t.integer  "order"
+    t.text     "parsonsConfig" 
+    t.timestamps null: false
+  end
+
   create_table "coding_prompt_answers", force: :cascade do |t|
     t.text    "answer",        limit: 65535
     t.text    "error",         limit: 65535
