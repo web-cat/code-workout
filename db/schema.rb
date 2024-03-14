@@ -92,6 +92,13 @@ ActiveRecord::Schema.define(version: 20240207040304) do
     t.timestamps null: false
   end
 
+  create_table :parsons_prompts do |t|
+    t.references :parsons, null: false, foreign_key: true
+    t.text :prompt_text
+    t.integer :position
+    t.timestamps null: false
+  end
+
   create_table "coding_prompt_answers", force: :cascade do |t|
     t.text    "answer",        limit: 65535
     t.text    "error",         limit: 65535
