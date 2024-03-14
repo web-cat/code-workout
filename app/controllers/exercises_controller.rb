@@ -273,6 +273,12 @@ class ExercisesController < ApplicationController
       multiplechoiceprompt = {"multiple_choice_prompt" => msg[:multiple_choice_prompt].clone()}
       form_hash["current_version"]["prompts"] << multiplechoiceprompt
       form_hash.delete("multiple_choice_prompt")
+    elsif msg[:question_type].to_i == 4
+      msg[:parsons_prompt].merge!(msg[:prompt])
+      form_hash["current_version"]["prompts"] = Array.new
+      parsonsprompt = {"parsons_prompt" => msg[:parsons_prompt].clone()}
+      form_hash["current_version"]["prompts"] << parsonsprompt
+      form_hash.delete("parsons_prompt")
     end
     form_hash.delete("prompt")
     form_hash.delete("exercise_version")
