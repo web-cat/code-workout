@@ -92,7 +92,7 @@ ActiveRecord::Schema.define(version: 20240207040304) do
     t.timestamps null: false
   end
 
-  create_table :parsons_prompts do |t|
+  create_table :parsons_prompt do |t|
     t.references :parsons, null: false, foreign_key: true
     t.text :prompt_text
     t.integer :position
