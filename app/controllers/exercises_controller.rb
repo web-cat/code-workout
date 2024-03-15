@@ -32,7 +32,7 @@ class ExercisesController < ApplicationController
     render file: "exercises/Jsparson/exercise/simple/#{step}", locals: { external_id: get_external_id(step) }
   end
   
-  
+  #
   def get_external_id(step)
     full_name = "parsons_#{step}"
     exercise = Exercise.where('name LIKE ?', "%#{full_name}%").first.reload
