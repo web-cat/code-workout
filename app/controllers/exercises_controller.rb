@@ -35,7 +35,7 @@ class ExercisesController < ApplicationController
   
   def get_external_id(step)
     full_name = "parsons_#{step}"
-    exercise = Exercise.where('name LIKE ?', "%#{full_name}%").first
+    exercise = Exercise.where('name LIKE ?', "%#{full_name}%").first.reload
     puts "exercise = #{exercise.inspect}"
     exercise ? exercise.external_id : nil
   end
