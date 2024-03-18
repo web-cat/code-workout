@@ -13,7 +13,9 @@ $(document).ready(function(){
         document.getElementById("instructions").innerHTML = data[index].instructions;
         config.sortableId = 'sortable';
         config.trashId = 'sortableTrash';
-        console.log(data[index]['parsonsConfig']['turtleModelCode']);
+        console.log(data[index]['parsonsConfig']
+        ['turtleModelCode']);
+        console.log(externalId)
         // 如果config中有turtleModelCode，就把grader改成TurtleGrader
         if (data[index]['parsonsConfig']['turtleModelCode']) {
             config.grader = ParsonsWidget._graders.TurtleGrader;
