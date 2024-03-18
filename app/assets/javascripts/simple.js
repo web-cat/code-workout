@@ -119,7 +119,8 @@ $(document).ready(function () {
                 'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')  // CSRF token
             },
             success: function(response) {
-                console.log('Score updated successfully');
+                console.log('Score updated successfully' + // external_id
+                 'externalId is' + externalId);
             },
             error: function(xhr) {
                 console.log('Failed to update score: ' + xhr.responseText
