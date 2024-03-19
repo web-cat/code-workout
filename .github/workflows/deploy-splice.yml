@@ -21,7 +21,7 @@ jobs:
             cd /home/deploy/code-workout/
             docker compose pull
             docker-compose down
-            docker-compose run web rake db:migrate  # Run database migrations
-            docker-compose run web rake db:seed  # Seed the database with new data
-            docker-compose run web rake assets:precompile  # Precompile updated JS/CSS
+            docker-compose run web rake db:migrate
+            docker-compose run web rake db:seed 
+            docker-compose run web rake assets:precompile 
             docker-compose up -d
