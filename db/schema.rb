@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20211101005101) do
+ActiveRecord::Schema.define(version: 20240207040304) do
 
   create_table "active_admin_comments", force: :cascade do |t|
     t.string   "namespace",     limit: 255
@@ -47,7 +47,9 @@ ActiveRecord::Schema.define(version: 20211101005101) do
 
   add_index "attempts", ["active_score_id"], name: "index_attempts_on_active_score_id", using: :btree
   add_index "attempts", ["exercise_version_id"], name: "index_attempts_on_exercise_version_id", using: :btree
+  add_index "attempts", ["user_id", "exercise_version_id"], name: "idx_attempts_on_user_exercise_version", using: :btree
   add_index "attempts", ["user_id"], name: "index_attempts_on_user_id", using: :btree
+  add_index "attempts", ["workout_score_id", "exercise_version_id"], name: "idx_attempts_on_workout_score_exercise_version", using: :btree
   add_index "attempts", ["workout_score_id"], name: "index_attempts_on_workout_score_id", using: :btree
 
   create_table "attempts_tag_user_scores", id: false, force: :cascade do |t|
@@ -693,6 +695,7 @@ ActiveRecord::Schema.define(version: 20211101005101) do
   end
 
   add_index "workout_scores", ["lti_workout_id"], name: "index_workout_scores_on_lti_workout_id", using: :btree
+  add_index "workout_scores", ["user_id", "workout_id", "workout_offering_id"], name: "idx_ws_on_user_workout_workout_offering", using: :btree
   add_index "workout_scores", ["user_id"], name: "index_workout_scores_on_user_id", using: :btree
   add_index "workout_scores", ["workout_id"], name: "index_workout_scores_on_workout_id", using: :btree
   add_index "workout_scores", ["workout_offering_id"], name: "workout_scores_workout_offering_id_fk", using: :btree
@@ -730,7 +733,6 @@ ActiveRecord::Schema.define(version: 20211101005101) do
   add_foreign_key "course_offerings", "courses", name: "course_offerings_course_id_fk"
   add_foreign_key "course_offerings", "terms", name: "course_offerings_term_id_fk"
   add_foreign_key "courses", "organizations", name: "courses_organization_id_fk"
-  add_foreign_key "exercise_owners", "exercises", name: "exercise_owners_exercise_id_fk"
   add_foreign_key "exercise_owners", "users", column: "owner_id", name: "exercise_owners_owner_id_fk"
   add_foreign_key "exercise_versions", "irt_data", column: "irt_data_id", name: "exercise_versions_irt_data_id_fk"
   add_foreign_key "exercise_versions", "stems", name: "exercise_versions_stem_id_fk"

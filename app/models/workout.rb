@@ -153,7 +153,7 @@ class Workout < ActiveRecord::Base
   end
 
   # ------------------------------------------------------------
-  # Given a current exercise, get the next exercise in the 
+  # Given a current exercise, get the next exercise in the
   # workout. Return the first exercise if the current exercise
   # is `nil`. Return the first exercise if the current exercise
   # does not belong to this workout.
@@ -223,7 +223,7 @@ class Workout < ActiveRecord::Base
     gap_per = 100 - earned_per - remaining_per
     return [earned, remaining, gap, earned_per, remaining_per, gap_per]
   end
-  
+
   # -------------------------------------------------------------
   # Save this workout with the specified params. Remove any
   # exercises that have been marked for removal.
@@ -263,7 +263,7 @@ class Workout < ActiveRecord::Base
         exercise_workout.save!
       end
 
-      return self.save ? self : false 
+      return self.save ? self : false
   end
 
   # ----------------------------------------------------------------------------
@@ -273,7 +273,7 @@ class Workout < ActiveRecord::Base
     workout_offerings = [] # Workout offerings added from this submission.
     course_offerings.each do |id, offering|
       course_offering = CourseOffering.find(id)
-      workout_offering = WorkoutOffering.find_by(workout: self, 
+      workout_offering = WorkoutOffering.find_by(workout: self,
                                                  course_offering: course_offering)
       if workout_offering.blank?
         workout_offering = WorkoutOffering.new
@@ -340,27 +340,15 @@ class Workout < ActiveRecord::Base
   # -------------------------------------------------------------
   def score_for(user, workout_offering = nil,
                 lis_outcome_service_url = nil, lis_result_sourcedid = nil)
-    if workout_offering && (lis_outcome_service_url || lis_result_sourcedid)
-      workout_scores.where(
-        user: user,
-        workout_offering: workout_offering,
-        lis_outcome_service_url: lis_outcome_service_url,
-        lis_result_sourcedid: lis_result_sourcedid
-      ).order('updated_at DESC').first
-    elsif lis_outcome_service_url || lis_result_sourcedid
-      workout_scores.where(
-        user: user, 
-        workout_offering: nil,
-        lis_outcome_service_url: lis_outcome_service_url,
-        lis_result_sourcedid: lis_result_sourcedid
-      ).order('updated_at DESC').first
-    elsif workout_offering # can assume that the first one is what we want
-      workout_scores.where(
-        user: user,
-        workout_offering: workout_offering 
-      ).order('updated_at DESC').first
-    else # only user is specified
-      workout_scores.where(user: user, workout_offering: nil).first
+    scores = workout_scores.where(
+      user: user, workout_offering: workout_offering).order('updated_at DESC')
+    if lis_outcome_service_url || lis_result_sourcedid
+      workout_scores.to_ary.detect do |s|
+        s.lis_outcome_service_url == lis_outcome_service_url and
+          s.lis_result_sourcedid == lis_result_sourcedid
+      end
+    else
+      workout_scores.first
     end
   end
 
