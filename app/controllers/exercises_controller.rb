@@ -31,11 +31,16 @@ class ExercisesController < ApplicationController
   # The export function gets all exercises metadata for SPLICE
   # GET /gym/exercises/export
   def export
+    # filter out stop/connector words for keywords from workout phrases or names
+    stop_words = ['the', 'and', 'a', 'to', 'of', 'in', 'for', 'on', 'with', 'as', 'by', 'at', 'from', 'is', 'that', 'which', 'it', 'an', 'be', 'this', 'are', 'we', 'can', 'if', 'has', 'but']
     @exercises = Exercise.all
     export_data = @exercises.map do |exercise|
-      workout_names = exercise.exercise_workouts.map { |ew| ew.workout.name }.uniq
+      workout_names = exercise.exercise_workouts.map { |ew| ew.workout.name }.uniq.push(exercise.name)
+      # split phrases and remove any stop/connector words
+      keywords_array = workout_names.map { |phrase| phrase.downcase.split(/\W+/) }.flatten.uniq.reject { |word| stop_words.include?(word) || word.empty? }
+  
       {
-	"catalog_type": "SLCItemCatalog",
+        "catalog_type": "SLCItemCatalog",  
         "platform_name": "CodeWorkout",
         "url": "https://codeworkout.cs.vt.edu",
         "lti_instructions_url": "https://opendsa-server.cs.vt.edu/guides/opendsa-canvas",
@@ -44,7 +49,7 @@ class ExercisesController < ApplicationController
         "description": exercise.exercise_collection&.description, # Safely fetching description
         "author": "Stephen Edwards",  
         "institution": "Virginia Tech",
-        "keywords": workout_names.join(', '),
+        "keywords": keywords_array, 
         "exercise_name": exercise.name,
         "iframe_url": exercise.iframe_url,
         "lti_url": exercise.lti_launch_url
