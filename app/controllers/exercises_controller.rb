@@ -39,20 +39,26 @@ class ExercisesController < ApplicationController
 
   # The export function gets all exercises metadata for SPLICE
   def export
+    #  filter out stop/connector words for keywords from workout phrases or names
+    stop_words = ['the', 'and', 'a', 'to', 'of', 'in', 'for', 'on', 'with', 'as', 'by', 'at', 'from', 'is', 'that', 'which', 'it', 'an', 'be', 'this', 'are', 'we', 'can', 'if', 'has', 'but']
+  
     @exercises = Exercise.all
     export_data = @exercises.map do |exercise|
-      workout_names = exercise.exercise_workouts.map { |ew| ew.workout.name }.uniq
+      workout_names = exercise.exercise_workouts.map { |ew| ew.workout.name }.uniq.push(exercise.name)
+      # split phrases into words, remove stop/connector words
+      keywords_array = workout_names.map { |phrase| phrase.downcase.split(/\W+/) }.flatten.uniq.reject { |word| stop_words.include?(word) || word.empty? }
+  
       {
         "Platform_name": "Code-Workout",
-        "URL": "https://codeworkout.cs.vt.edu",
-        "LTI_Instructions_URL": " https://opendsa-server.cs.vt.edu/guides/opendsa-canvas",
+        "URL": "https://codeworkout.cs.vt.edu", # hardcoded URL for now
+        "LTI_Instructions_URL": "https://opendsa-server.cs.vt.edu/guides/opendsa-canvas",
         "Exercise_type": Exercise::TYPE_NAMES[exercise.question_type],
-        "license": "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)",
-        "Description": exercise.exercise_collection&.description, # Safely fetching description
-        "Author": "Edwards",  
+        "License": "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)",
+        "Description": exercise.exercise_collection&.description, 
+        "Author": "Edwards",
         "Institution": "VT",
-        "Keywords": workout_names.join(', '),
-        "Exercise_Name": exercise.name,  
+        "Keywords": keywords_array, 
+        "Exercise_Name": exercise.name,
         "Iframe_URL": exercise.iframe_url,
         "LTI_URL": exercise.lti_launch_url
       }
