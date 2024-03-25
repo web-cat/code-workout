@@ -95,9 +95,14 @@
             = link_to exercise.display_name, show_exercise_path(step: "s#{step}")
         - else
           = link_to exercise.display_name, exercise_practice_path(exercise)
-
+      - is_parsons = exercise.name.downcase.include?('parsons')
       - if [ 'show', 'index', 'search' ].include?(action_name) && (current_user.andand.can? :edit, exercise)
-        .right= button_link 'Edit', edit_exercise_path(exercise), class: 'btn btn-primary btn-sm'
+        .right
+          - if is_parsons
+            - step = exercise.name.downcase.match(/parsons_s(\d+)/)[1]
+            = button_link 'Edit', edit_parsons_exercise_path(step: step), class: 'btn btn-primary btn-sm'
+          - else
+            = button_link 'Edit', edit_exercise_path(exercise), class: 'btn btn-primary btn-sm'
 
     - if !new_workout
       .summary

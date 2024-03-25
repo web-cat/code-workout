@@ -1,0 +1,29 @@
+- if !@lti_launch
+  = render partial: 'layouts/breadcrumb'
+  
+%h1
+  Edit Parsons:
+  - if @exercise
+    = link_to @exercise.display_name, exercise_practice_path(@exercise)
+  - else
+    %span Error: Exercise not found.
+
+
+%h2
+  Edit JSON Data for Step: #{params[:step]}
+= form_tag update_parsons_exercise_path(step: params[:step]), method: :post do
+  %fieldset
+    .field
+      = label_tag :step_json_data, "Step JSON Data"
+      = text_area_tag :step_json_data, JSON.pretty_generate(@step_data), class: 'json-editor', rows: 20, cols: 80
+    .actions
+      = submit_tag "Save JSON Changes", class: 'btn btn-primary'
+
+:css
+  .json-editor {
+    font-family: monospace;
+    background-color: #f9f9f9;
+    border: 1px solid #ccc;
+    width: 100%;
+    margin-top: 5px;
+  }

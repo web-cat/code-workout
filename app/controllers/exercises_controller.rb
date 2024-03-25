@@ -3,6 +3,7 @@ class ExercisesController < ApplicationController
   require 'oauth/request_proxy/rack_request'
   require 'zip'
   require 'tempfile'
+  require 'json'
 
 
   load_and_authorize_resource
@@ -225,7 +226,50 @@ class ExercisesController < ApplicationController
     end
     session[:return_to] = @return_to
   end
+  # -------------------------------------------------------------
+  def edit_parsons
+    step = params[:step]
+    full_name = "parsons_s#{step}"
+    puts "full_name = #{full_name}"
+    @exercise = Exercise.where('name LIKE ?', "%#{full_name}%").first
+    json_file_path = Rails.root.join('public', 'data', 'simple_code.json')
+    if File.exist?(json_file_path)
+      file_content = File.read(json_file_path)
+      json_content = JSON.parse(file_content)
+      @step_data = json_content["s#{step}"]
+    else
+      @step_data = {}
+    end 
+  end
 
+  # -------------------------------------------------------------
+  def update_parsons
+    step = params[:step]
+    json_data = params[:step_json_data] # Ensure this matches the name attribute from the form
+    Rails.logger.debug "Received JSON data: #{json_data}"
+  
+    json_file_path = Rails.root.join('public', 'data', 'simple_code.json')
+    
+    unless File.exist?(json_file_path)
+      redirect_to edit_parsons_exercise_path(step: step), alert: 'JSON file not found.'
+      return
+    end
+  
+    begin
+      content = JSON.parse(File.read(json_file_path))
+      updated_data = JSON.parse(json_data)
+      if content["s#{step}"].present?
+        content["s#{step}"] = updated_data
+        File.write(json_file_path, JSON.pretty_generate(content))
+        redirect_to edit_parsons_exercise_path(step: step), notice: 'Parsons updated successfully.'
+      else
+        redirect_to edit_parsons_exercise_path(step: step), alert: "Step not found in JSON."
+      end
+    rescue JSON::ParserError => e
+      Rails.logger.debug e.inspect # Log the error for inspection
+      redirect_to edit_parsons_exercise_path(step: step), alert: "Failed to parse JSON: #{e.message}"
+    end
+  end
 
   # -------------------------------------------------------------
   # POST /exercises

@@ -6,6 +6,8 @@ $(document).ready(function(){
     Sk.canvas = "studentCanvas";
     $.getJSON('/data/simple_code.json', function(response) {
         data = response;
+        var externalIdElement = document.getElementById("exercise-data");
+        var externalId = externalIdElement.getAttribute("data-external-id");
         var initial = data[index]['initial'];
         var initialArray = initial.split('\n');
         var config = data[index]['parsonsConfig'];
