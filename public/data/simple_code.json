@@ -5,11 +5,11 @@
       "max_wrong_lines": 1,
       "vartests": [
         {
-          "initcode": "min = None\na = 1\nb = 2",
+          "initcode": "min = None\na = 0\nb = 2",
           "code": "",
-          "message": "Testing with a = 1 ja b = 2",
+          "message": "Testing with a = 0 ja b = 2",
           "variables": {
-            "min": 1
+            "min": 0
           }
         },
         {
@@ -80,11 +80,11 @@
     "order": 2
   },
   "s6": {
-    "initial": "REPEAT 3 TIMES\nforward(100)\nleft(120)\nENDREPEAT",
+    "initial": "REPEAT 3 TIMES\nforward(200)\nleft(120)\nENDREPEAT",
     "parsonsConfig": {
       "max_wrong_lines": 1,
-      "turtleModelCode": "modelTurtle.forward(100)\nmodelTurtle.left(120)\nmodelTurtle.forward(100)\nmodelTurtle.left(120)\nmodelTurtle.forward(100)\nmodelTurtle.left(120)",
-      "executable_code": "for i in range(0,3):\nmyTurtle.forward(100)\nmyTurtle.left(120)\npass",
+      "turtleModelCode": "modelTurtle.forward(200)\nmodelTurtle.left(120)\nmodelTurtle.forward(200)\nmodelTurtle.left(120)\nmodelTurtle.forward(200)\nmodelTurtle.left(120)",
+      "executable_code": "for i in range(0,3):\nmyTurtle.forward(200)\nmyTurtle.left(120)\npass",
       "programmingLang": "pseudo"
     },
     "title": "draw triangle",

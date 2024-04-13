@@ -189,6 +189,53 @@ class CodeWorker
     end
   end
 
+  def perform_peml(attempt_id, expected_output)
+    ActiveRecord::Base.connection_pool.with_connection do
+      puts "Database connection established"
+      attempt = Attempt.find(attempt_id)
+      puts "Attempt found: #{attempt.inspect}"
+      language = attempt.exercise_version.exercise.language
+
+      if language == 'Python'
+        # 获取用户提交的代码
+        expected_output = expected_output.gsub("\\\\", "\\")
+        user_solution = attempt.prompt_answers.first.specific.answer
+        puts "User solution:"
+        puts user_solution
+        puts "Expected output:"
+        puts expected_output
+
+        # 创建临时目录
+        attempt_dir = "usr/attempts/active/#{attempt.id}"
+        FileUtils.mkdir_p(attempt_dir)
+
+        # 将用户代码写入文件
+        File.write(attempt_dir + '/solution.py', user_solution)
+
+        # 执行用户代码
+        result = execute_pythontest(
+          'solution', attempt_dir, 0, user_solution.count("\n")
+        )
+        puts "Execution result:"
+        puts result.inspect
+
+        if result.nil?
+          # 没有错误,比较输出结果
+          actual_output = File.read(attempt_dir + '/output.txt').strip
+          success = (actual_output == expected_output)
+        else
+          # 有错误,设置 success 为 false
+          success = false
+        end
+
+        # 保存 attempt
+        attempt.error = result
+        attempt.correct = success
+        attempt.save!
+      end
+    end
+  end
+
 
   #~ Private instance methods .................................................
   private

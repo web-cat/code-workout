@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20240207040304) do
+ActiveRecord::Schema.define(version: 20240207035240) do
 
   create_table "active_admin_comments", force: :cascade do |t|
     t.string   "namespace",     limit: 255
@@ -47,9 +47,7 @@ ActiveRecord::Schema.define(version: 20240207040304) do
 
   add_index "attempts", ["active_score_id"], name: "index_attempts_on_active_score_id", using: :btree
   add_index "attempts", ["exercise_version_id"], name: "index_attempts_on_exercise_version_id", using: :btree
-  add_index "attempts", ["user_id", "exercise_version_id"], name: "idx_attempts_on_user_exercise_version", using: :btree
   add_index "attempts", ["user_id"], name: "index_attempts_on_user_id", using: :btree
-  add_index "attempts", ["workout_score_id", "exercise_version_id"], name: "idx_attempts_on_workout_score_exercise_version", using: :btree
   add_index "attempts", ["workout_score_id"], name: "index_attempts_on_workout_score_id", using: :btree
 
   create_table "attempts_tag_user_scores", id: false, force: :cascade do |t|
@@ -79,25 +77,6 @@ ActiveRecord::Schema.define(version: 20240207040304) do
 
   add_index "choices_multiple_choice_prompt_answers", ["choice_id", "multiple_choice_prompt_answer_id"], name: "choices_multiple_choice_prompt_answers_idx", unique: true, using: :btree
   add_index "choices_multiple_choice_prompt_answers", ["multiple_choice_prompt_answer_id"], name: "choices_MC_prompt_answers_MC_prompt_answer_id_fk", using: :btree
-
-  create_table "parsons", force: :cascade do |t|
-    t.string   "title"
-    t.text     "instructions"
-    t.text     "initial"
-    t.text     "unittest", default: ""
-    t.string   "type"
-    t.text     "concepts" 
-    t.integer  "order"
-    t.text     "parsonsConfig" 
-    t.timestamps null: false
-  end
-
-  create_table :parsons_prompt do |t|
-    t.references :parsons, null: false, foreign_key: true
-    t.text :prompt_text
-    t.integer :position
-    t.timestamps null: false
-  end
 
   create_table "coding_prompt_answers", force: :cascade do |t|
     t.text    "answer",        limit: 65535

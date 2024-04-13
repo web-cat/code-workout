@@ -1,0 +1,152 @@
+<!doctype html>
+<html>
+<head>
+  <title>Simple js-parsons example assignment</title>
+  <%= stylesheet_link_tag 'parsons' %>
+  <%= stylesheet_link_tag 'prettify' %>
+  <%= stylesheet_link_tag 'odsaAV-min' %>
+  <%= stylesheet_link_tag 'JSAV' %>
+  <%= javascript_include_tag 'prettify' %>
+  <style>
+    #container {
+      width: 800px;
+      height: 800px;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <h2 id="title"></h2>
+    <p id="instructions"></p>
+    <div id="exercise-data" data-external-id="<%= external_id %>"></div>
+    <div id="sortableTrash" class="sortable-code"></div>
+    <div id="sortable" class="sortable-code">
+    </div>
+    <div style="clear:both;"></div>
+    <p>
+      <a href="#" id="feedbackLink">Get feedback</a>
+      <h2>Feedback</h2>
+      <div id="feedback">Your feedback will appear here when you check your answer.</div>
+    </p>
+  </div>
+  <div id="unittest"></div>
+  <%= javascript_include_tag 'jquery' %>
+  <%= javascript_include_tag 'jquery-ui' %>
+  <%= javascript_include_tag 'jquery.ui.touch-punch.min' %>
+  <%= javascript_include_tag 'underscore-min' %>
+  <%= javascript_include_tag 'lis' %>
+  <%= javascript_include_tag 'parsons' %>
+  <%= javascript_include_tag 'skulpt' %>
+  <%= javascript_include_tag 'skulpt-stdlib' %>
+
+  <script>
+    const pemlContent = `
+      title: Your First Parsons Problem -- Execute
+      author: Cliff Shaffer (from js-Parsons, converted to PEML)
+      tags.topics: Intro Parsons Problem
+      tags.style: parsons, execute
+      instructions:----------
+      **Your task**: Construct a Python program that prints strings "Hello", "Parsons", and "Problems" on their own lines. You can get feedback on your current solution with the feedback button. You should construct your program by dragging and dropping the lines to the solution area on the right.
+      ----------
+      [systems]
+      language: Python
+      [assets.code.wrapper.files]
+      content:----------
+      ___
+      ----------
+      [assets.code.starter.files]
+      [.content]
+      tag: one
+      code: print('Hello')
+      tag: two
+      code: print('Parsons')
+      tag: three
+      code: print('Problems!')
+      []
+      [assets.test.files]
+      format: text/csv-unquoted
+      content:----------
+      expected,description
+      Hello\\nParsons\\nProblems!
+      ----------
+    `;
+
+    
+    const title = pemlContent.match(/title:\s*(.*)/)[1].split("--")[0].trim();
+    const instructions = pemlContent.match(/instructions:----------\s*([\s\S]*?)\s*----------/)[1].trim();
+    const codeLines = pemlContent.match(/\[\.\s*content\s*\]([\s\S]*?)\[\s*\]/)[1].trim().split(/\s*tag:\s*\w+\s*\n\s*code:\s*/);
+    codeLines.shift();
+    const expectedOutput = pemlContent.match(/expected,description\s*(\S+)/)[1];
+    const language = pemlContent.match(/\[systems\]\s*language:\s*(\w+)/)[1];
+
+    var parson = new ParsonsWidget({
+      'sortableId': 'sortable',
+      'trashId': 'sortableTrash',
+      'max_wrong_lines': 1,
+      'vartests': [{
+        'initcode': '',
+        'code': '',
+        'message': 'Well done!',
+        'variables': {}
+      }],
+      'grader': ParsonsWidget._graders.LineBasedGrader
+    });
+    
+    
+    document.getElementById("title").innerHTML = title;
+    document.getElementById("instructions").innerHTML = instructions;
+    var externalIdElement = document.getElementById("exercise-data");
+    var externalId = externalIdElement.getAttribute("data-external-id");
+    console.log(externalId)
+
+    parson.init(codeLines);
+    parson.shuffleLines();
+
+    $("#newInstanceLink").click(function(event) {
+      event.preventDefault();
+      parson.shuffleLines();
+    });
+
+    $("#feedbackLink").click(function(event) {
+        event.preventDefault();
+        var userSolution = [];
+        $("#sortable li").each(function() {
+            userSolution.push($(this).text());
+        });
+
+        if (userSolution.length === 0) {
+            $("#feedback").html("Please construct a solution before submitting.");
+            return;
+        }
+        console.log(userSolution);
+
+    $.ajax({
+        url: '/execute_peml',
+        type: 'POST',
+        data: JSON.stringify({
+            user_solution: userSolution,
+            expected_output: expectedOutput,
+            language: language,
+            external_id: externalId
+        }),
+        contentType: 'application/json',
+        headers: {
+            'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function(response) {
+            if (response.success) {
+                $("#feedback").html(response.message);
+                score = 50;
+            } else {
+                $("#feedback").html("Error: " + response.errors.join(', '));
+                score = 0;
+            }
+        },
+        error: function(xhr) {
+            console.log('Failed to evaluate solution: ' + xhr.responseText);
+        }
+    });
+});
+  </script>
+</body>
+</html>

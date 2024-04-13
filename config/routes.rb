@@ -5,6 +5,7 @@ CodeWorkout::Application.routes.draw do
   post 'lti/launch', as: :lti_launch # => 'workout_offerings#practice', as: :lti_workout_offering_practice
 
   post 'lti/assessment'
+  post '/execute_peml', to: 'exercises#execute_peml'
 
   get 'home' => 'home#index'
   get 'main' => 'home#index'

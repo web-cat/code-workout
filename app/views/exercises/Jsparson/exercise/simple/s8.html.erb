@@ -1,0 +1,190 @@
+<!doctype html>
+<html>
+<head>
+  <title>Simple js-parsons example assignment</title>
+  <%= stylesheet_link_tag 'parsons' %>
+  <%= stylesheet_link_tag 'prettify' %>
+  <%= stylesheet_link_tag 'odsaAV-min' %>
+  <%= stylesheet_link_tag 'JSAV' %>
+  <%= javascript_include_tag 'prettify' %>
+  <style>
+    #container {
+      width: 800px;
+      height: 800px;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <h2 id="title"></h2>
+    <p id="instructions"></p>
+    <div id="exercise-data" data-external-id="<%= external_id %>"></div>
+    <div id="sortableTrash" class="sortable-code"></div>
+    <div id="sortable" class="sortable-code">
+    </div>
+    <div style="clear:both;"></div>
+    <p>
+      <a href="#" id="feedbackLink">Get feedback</a>
+      <h2>Feedback</h2>
+      <div id="feedback">Your feedback will appear here when you check your answer.</div>
+    </p>
+  </div>
+  <div id="unittest"></div>
+  <%= javascript_include_tag 'jquery' %>
+  <%= javascript_include_tag 'jquery-ui' %>
+  <%= javascript_include_tag 'jquery.ui.touch-punch.min' %>
+  <%= javascript_include_tag 'dag' %>
+  <%= javascript_include_tag 'underscore-min' %>
+  <%= javascript_include_tag 'lis' %>
+  <%= javascript_include_tag 'parsons' %>
+  <%= javascript_include_tag 'skulpt' %>
+  <%= javascript_include_tag 'skulpt-stdlib' %>
+
+  <script>
+    const pemlContent = `
+      # Simple example of a problem that is assessed by the order of the
+      # blocks.
+      # Derived from jsParsons hello-parson.html.
+
+      exercise_id: https://github.com/CSSPLICE/peml-feasibility-examples/blob/main/parsons/hello-parson-noindent-order.peml
+      title: Your First Parsons Problem -- Ordered
+      author: Cliff Shaffer (from js-Parsons, converted to PEML)
+      license.id: MIT
+      license.owner: Cliff Shaffer
+      tags.topics: PEML Demo Parsons Problem
+      tags.style: parsons, order
+
+      instructions:----------
+      **Your task**: Construct a Python program that prints strings "Hello", "Parsons", and "Problems" on their own lines. You can get feedback on your current solution with the feedback button. You should construct your program by dragging and dropping the lines to the solution area on the right.
+      ----------
+
+      [assets.code.starter.files]
+      [.content]
+      tag: one
+      display: print('Hello')
+      tag: two
+      display: print('Parsons')
+      tag: three
+      display: print('Problems!')
+      []
+
+      # A (simple) DAG -- there is only one acceptable order
+      [assets.test.files]
+      content:----------
+      one:
+      two: one
+      three: two
+      ----------
+    `;
+
+    const title = pemlContent.match(/title:\s*(.*)/)[1].trim();
+    const instructions = pemlContent.match(/instructions:----------\s*([\s\S]*?)\s*----------/)[1].trim();
+    const codeLines = pemlContent.match(/\[\.\s*content\s*\]([\s\S]*?)\[\s*\]/)[1].trim().split(/\s*tag:\s*\w+\s*\n\s*display:\s*/);
+    codeLines.shift();
+    const nodeValueToLabel = extractNodeValueToLabel(pemlContent);
+    console.log(nodeValueToLabel);
+    
+
+    var parson = new ParsonsWidget({
+      'sortableId': 'sortable',
+      'trashId': 'sortableTrash',
+      'max_wrong_lines': 1,
+      'vartests': [{
+        'initcode': '',
+        'code': '',
+        'message': 'Well done!',
+        'variables': {}
+      }],
+      'grader': ParsonsWidget._graders.LineBasedGrader
+    });
+
+    var score = 0;
+    document.getElementById("title").innerHTML = title;
+    document.getElementById("instructions").innerHTML = instructions;
+    var externalIdElement = document.getElementById("exercise-data");
+    var externalId = externalIdElement.getAttribute("data-external-id");
+    console.log(externalId)
+
+    parson.init(codeLines);
+    parson.shuffleLines();
+
+    $("#newInstanceLink").click(function(event) {
+      event.preventDefault();
+      parson.shuffleLines();
+    });
+
+    $("#feedbackLink").click(function(event) {
+        event.preventDefault();
+        var userSolution = [];
+        $("#sortable li").each(function() {
+        userSolution.push($(this).text());
+        });
+
+        if (userSolution.length === 0) {
+        $("#feedback").html("Please construct a solution before submitting.");
+        return;
+        }
+        console.log(userSolution);
+
+        const dag = pemlContent.match(/\[assets\.test\.files\]\s*content:----------\s*([\s\S]*?)\s*----------/)[1].trim();
+        console.log(dag);
+        const isCorrect = processDAG(dag, userSolution, nodeValueToLabel);
+
+        if (isCorrect) {
+        $("#feedback").html("Answer is correct!");
+        } else {
+        $("#feedback").html("Answer is incorrect. Please try again.");
+        }
+        if (isCorrect) {
+            score = 50;
+        } else {
+            score = 0;
+        }
+        updateScore(score);
+    
+    });
+    function extractNodeValueToLabel(pemlContent) {
+        const nodeValueToLabel = {};
+        const regex = /tag:\s*(\w+)\s*display:\s*(['"])(.*?)\2/g;
+        let match;
+
+        while ((match = regex.exec(pemlContent)) !== null) {
+            const tag = match[1];
+            const display = match[3];
+            nodeValueToLabel[tag] = display;
+        }
+
+        return nodeValueToLabel;
+    }
+
+        
+    function updateScore(score) {
+        
+        var externalId = $('#exercise-data').data('external-id');
+        
+        $.ajax({
+            url: '/update_score',
+            type: 'POST',
+            data: JSON.stringify({ 
+                experience: score,
+                external_id: externalId  
+            }),
+            contentType: 'application/json',
+            headers: {
+                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')  // CSRF token
+            },
+            success: function(response) {
+                console.log('Score updated successfully' + 
+                 'externalId is' + externalId);
+            },
+            error: function(xhr) {
+                console.log('Failed to update score: ' + xhr.responseText  
+                + 'externalId is' + externalId);
+            }
+        });
+    }
+
+
+</script>
+</body>
+</html>

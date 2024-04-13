@@ -39,7 +39,6 @@ $(document).ready(function(){
         var fb = parson.getFeedback();
         if (data[index]['parsonsConfig']['turtleModelCode']){
             if (fb.success) {
-                //把$("#feedback").html(fb.feedback)改成“Great job, you solved the exercise!”
                 $("#feedback").html("Great job, you solved the exercise!");
             } else {
                 $("#feedback").html("Sorry, your solution does not match the model image");

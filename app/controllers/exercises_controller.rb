@@ -4,8 +4,9 @@ class ExercisesController < ApplicationController
   require 'zip'
   require 'tempfile'
   require 'json'
+  require 'parsons_prompt_representer'
 
-
+  skip_before_action :verify_authenticity_token, only: [:execute_peml]
   load_and_authorize_resource
   skip_authorize_resource only: [:practice, :call_open_pop]
 
@@ -87,6 +88,60 @@ class ExercisesController < ApplicationController
       render json: { status: 'error', message: 'Can not create new attempt' }, status: :internal_server_error
     end
       
+  end
+  # -------------------------------------------------------------
+  def execute_peml
+    payload = JSON.parse(request.body.read)
+    user_solution = payload['user_solution'].join("\n")
+    expected_output = payload['expected_output']
+    language = payload['language']
+    external_id = payload['external_id']
+  
+    # find the specific exercise instance
+    exercise = Exercise.find_by_external_id(external_id)
+  
+    # make sure the exercise exists
+    unless exercise
+      render json: { status: 'error', message: 'Can not find the specific exercise' }, status: :not_found
+      return
+    end
+  
+    # find the specific exercise version
+    exercise_id = Exercise.get_exercise_id(external_id)
+    exercise_version = ExerciseVersion.get_exercise_version(exercise_id)
+  
+    # create a new attempt
+    @attempt = Attempt.new(
+      user: current_user,
+      exercise_version: exercise_version,
+      submit_time: Time.current,
+      submit_num: 1
+    )
+  
+    if @attempt.save
+      # create a temporary directory for the attempt
+      attempt_dir = "usr/attempts/active/#{@attempt.id}"
+      FileUtils.mkdir_p(attempt_dir)
+  
+      # write the user's code to a file
+      File.write(attempt_dir + '/solution.py', user_solution)
+      
+      
+      # execute the code using CodeWorker
+      CodeWorker.new.perform_peml(@attempt.id, expected_output)
+  
+      # reload the attempt to get the updated status
+      @attempt.reload
+  
+      # render the response based on the error status
+      if @attempt.errors.empty?
+        render json: { message: "Your answer is correct!", success: true }
+      else
+        render json: { message: "Your answer is incorrect.", errors: @attempt.errors.full_messages, success: false }
+      end
+    else
+      render json: { error: "Unable to create attempt: #{@attempt.errors.full_messages.join(', ')}", success: false }
+    end
   end
   # -------------------------------------------------------------
   # GET /exercises/download.csv
@@ -303,12 +358,25 @@ class ExercisesController < ApplicationController
       multiplechoiceprompt = {"multiple_choice_prompt" => msg[:multiple_choice_prompt].clone()}
       form_hash["current_version"]["prompts"] << multiplechoiceprompt
       form_hash.delete("multiple_choice_prompt")
-    elsif msg[:question_type].to_i == 4
-      msg[:parsons_prompt].merge!(msg[:prompt])
-      form_hash["current_version"]["prompts"] = Array.new
-      parsonsprompt = {"parsons_prompt" => msg[:parsons_prompt].clone()}
-      form_hash["current_version"]["prompts"] << parsonsprompt
-      form_hash.delete("parsons_prompt")
+    elsif msg[:instructions].present? && msg[:assets].present?
+      parsons_prompt = {}
+      parsons_prompt["exercise_id"] = msg[:exercise_id]
+      parsons_prompt["title"] = msg[:title]
+      parsons_prompt["author"] = msg[:author]
+      parsons_prompt["license"] = msg[:license]
+      parsons_prompt["tags"] = msg[:tags]
+      parsons_prompt["instructions"] = msg[:instructions]
+      parsons_prompt["assets"] = msg[:assets]
+      
+      form_hash["current_version"]["prompts"] = [{ "parsons_prompt" => parsons_prompt }]
+
+    form_hash.delete("exercise_id")
+    form_hash.delete("title")
+    form_hash.delete("author")
+    form_hash.delete("license")
+    form_hash.delete("tags") 
+    form_hash.delete("instructions")
+    form_hash.delete("assets")
     end
     form_hash.delete("prompt")
     form_hash.delete("exercise_version")
@@ -446,11 +514,51 @@ class ExercisesController < ApplicationController
       exercise_version_params = exercise_params[:exercise_version]
       use_rights = exercise_params[:exercise_collection_id].to_i
       text_representation = exercise_version_params['text_representation']
-      hash = YAML.load(text_representation)
     else
       text_representation = File.read(params[:form][:file].path)
-      hash = YAML.load(text_representation)
       use_rights = 0 # Personal exercise
+    end
+    
+    # 检查 text_representation 中的 tags.style 字段是否包含 "parsons"
+    if text_representation.include?("tags.style") && text_representation.include?("parsons")
+      # 使用自定义解析器解析 text_representation
+      parsed_data = parse_text_representation(text_representation)
+      
+      # 使用 ParsonsPromptRepresenter 创建 ParsonsPrompt 对象
+      parsons_prompt = ParsonsPromptRepresenter.new(ParsonsPrompt.new).from_hash(parsed_data)
+      exercises = [parsons_prompt.to_hash]
+    else
+      # 使用 ExerciseRepresenter 解析 text_representation
+      exercises = ExerciseRepresenter.for_collection.new([]).from_hash(YAML.load(text_representation))
+    end
+    
+    # 后续的处理逻辑保持不变
+    exercises.each do |e|
+      if e[:instructions].present? && e[:assets].present?
+        # 处理 Parsons 问题
+        parsons_prompt = {}
+        
+        # 从 e 中获取相应字段的值,并赋值给 parsons_prompt
+        parsons_prompt["exercise_id"] = e[:exercise_id]
+        parsons_prompt["title"] = e[:title]
+        parsons_prompt["author"] = e[:author]
+        parsons_prompt["license"] = e[:license]
+        parsons_prompt["tags"] = e[:tags]
+        parsons_prompt["instructions"] = e[:instructions]
+        parsons_prompt["assets"] = e[:assets]
+        
+        # 更新 prompt
+        e[:prompt] = [{ "parsons_prompt" => parsons_prompt }]
+        
+        # 删除 e 中已经复制到 parsons_prompt 的字段
+        e.delete(:exercise_id)
+        e.delete(:title)
+        e.delete(:author)
+        e.delete(:license)
+        e.delete(:tags)
+        e.delete(:instructions)
+        e.delete(:assets)
+      end
     end
     if !hash.kind_of?(Array)
       hash = [hash]
@@ -1169,6 +1277,35 @@ class ExercisesController < ApplicationController
       else
         session[:submit_num] +=  1
       end
+    end
+    # -------------------------------------------------------------
+    def parse_text_representation(text_representation)
+      parsed_data = {}
+      
+      lines = text_representation.split("\r\n")
+      lines.each do |line|
+        if line.include?(":") && !line.start_with?("#")
+          key, value = line.split(":", 2).map(&:strip)
+          
+          if key.include?(".")
+            nested_keys = key.split(".")
+            current_level = parsed_data
+            
+            nested_keys.each_with_index do |nested_key, index|
+              if index == nested_keys.length - 1
+                current_level[nested_key] = value
+              else
+                current_level[nested_key] ||= {}
+                current_level = current_level[nested_key]
+              end
+            end
+          else
+            parsed_data[key] = value
+          end
+        end
+      end
+      
+      parsed_data
     end
 
 end

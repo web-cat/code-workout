@@ -1,0 +1,36 @@
+title: Your First Parsons Problem -- Execute
+author: Cliff Shaffer (from js-Parsons, converted to PEML)
+
+tags.topics: Intro Parsons Problem
+tags.style: parsons, execute
+
+instructions:----------
+**Your task**: Construct a Python program that prints strings "Hello", "Parsons", and "Problems" on their own lines. You can get feedback on your current solution with the feedback button. You should construct your program by dragging and dropping the lines to the solution area on the right.
+----------
+
+[systems]
+language: Python
+
+[assets.code.wrapper.files]
+content:----------
+    ___
+----------
+
+[assets.code.starter.files]
+[.content]
+tag: one
+code: print('Hello')
+
+tag: two
+code: print('Parsons')
+
+tag: three
+code: print('Problems!')
+[]
+
+[assets.test.files]
+format: text/csv-unquoted
+content:----------
+expected,description
+Hello\nParsons\nProblems!
+----------
