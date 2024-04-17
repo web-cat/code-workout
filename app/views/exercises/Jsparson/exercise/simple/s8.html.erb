@@ -41,8 +41,7 @@
   <%= javascript_include_tag 'skulpt-stdlib' %>
 
   <script>
-    const pemlContent = `
-      # Simple example of a problem that is assessed by the order of the
+    const pemlContent = `# Simple example of a problem that is assessed by the order of the
       # blocks.
       # Derived from jsParsons hello-parson.html.
 
@@ -74,8 +73,7 @@
       one:
       two: one
       three: two
-      ----------
-    `;
+      ----------`;
 
     const title = pemlContent.match(/title:\s*(.*)/)[1].trim();
     const instructions = pemlContent.match(/instructions:----------\s*([\s\S]*?)\s*----------/)[1].trim();

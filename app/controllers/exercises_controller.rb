@@ -283,46 +283,87 @@ class ExercisesController < ApplicationController
   end
   # -------------------------------------------------------------
   def edit_parsons
-    step = params[:step]
+    step = params[:step].to_i
     full_name = "parsons_s#{step}"
     puts "full_name = #{full_name}"
     @exercise = Exercise.where('name LIKE ?', "%#{full_name}%").first
-    json_file_path = Rails.root.join('public', 'data', 'simple_code.json')
-    if File.exist?(json_file_path)
-      file_content = File.read(json_file_path)
-      json_content = JSON.parse(file_content)
-      @step_data = json_content["s#{step}"]
+  
+    if step >= 8
+      html_file_path = Rails.root.join('app', 'views', 'exercises', 'Jsparson', 'exercise', 'simple', "s#{step}.html.erb")
+      if File.exist?(html_file_path)
+        file_content = File.read(html_file_path)
+        peml_content_match = file_content.match(/pemlContent\s*=\s*`(.*?)`/m)
+        if peml_content_match
+          @peml_content = peml_content_match[1].strip
+        else
+          @peml_content = ''
+        end
+      else
+        @peml_content = ''
+      end
     else
-      @step_data = {}
-    end 
+      json_file_path = Rails.root.join('public', 'data', 'simple_code.json')
+      if File.exist?(json_file_path)
+        file_content = File.read(json_file_path)
+        json_content = JSON.parse(file_content)
+        @step_data = json_content["s#{step}"]
+      else
+        @step_data = {}
+      end
+    end
   end
 
   # -------------------------------------------------------------
   def update_parsons
-    step = params[:step]
-    json_data = params[:step_json_data] # Ensure this matches the name attribute from the form
-    Rails.logger.debug "Received JSON data: #{json_data}"
+    step = params[:step].to_i
   
-    json_file_path = Rails.root.join('public', 'data', 'simple_code.json')
-    
-    unless File.exist?(json_file_path)
-      redirect_to edit_parsons_exercise_path(step: step), alert: 'JSON file not found.'
-      return
-    end
+    if step >= 8
+      peml_content = params[:peml_content]
+      if peml_content.present?
+        html_file_path = Rails.root.join('app', 'views', 'exercises', 'Jsparson', 'exercise', 'simple', "s#{step}.html.erb")
+        unless File.exist?(html_file_path)
+          redirect_to edit_parsons_exercise_path(step: step), alert: 'HTML file not found.'
+          return
+        end
   
-    begin
-      content = JSON.parse(File.read(json_file_path))
-      updated_data = JSON.parse(json_data)
-      if content["s#{step}"].present?
-        content["s#{step}"] = updated_data
-        File.write(json_file_path, JSON.pretty_generate(content))
-        redirect_to edit_parsons_exercise_path(step: step), notice: 'Parsons updated successfully.'
+        begin
+          file_content = File.read(html_file_path)
+          updated_content = file_content.gsub(/pemlContent\s*=\s*`.*?`/m, "pemlContent = `#{peml_content}`")
+          File.write(html_file_path, updated_content)
+          redirect_to edit_parsons_exercise_path(step: step), notice: 'Parsons updated successfully.'
+        rescue => e
+          Rails.logger.debug e.inspect # Log the error for inspection
+          redirect_to edit_parsons_exercise_path(step: step), alert: "Failed to update Parsons: #{e.message}"
+        end
       else
-        redirect_to edit_parsons_exercise_path(step: step), alert: "Step not found in JSON."
+        redirect_to edit_parsons_exercise_path(step: step), alert: 'PEML content is missing.'
       end
-    rescue JSON::ParserError => e
-      Rails.logger.debug e.inspect # Log the error for inspection
-      redirect_to edit_parsons_exercise_path(step: step), alert: "Failed to parse JSON: #{e.message}"
+    else
+      updated_content = params[:step_content]
+      if updated_content.present?
+        json_file_path = Rails.root.join('public', 'data', 'simple_code.json')
+        unless File.exist?(json_file_path)
+          redirect_to edit_parsons_exercise_path(step: step), alert: 'JSON file not found.'
+          return
+        end
+  
+        begin
+          content = JSON.parse(File.read(json_file_path))
+          updated_data = JSON.parse(updated_content)
+          if content["s#{step}"].present?
+            content["s#{step}"] = updated_data
+            File.write(json_file_path, JSON.pretty_generate(content))
+            redirect_to edit_parsons_exercise_path(step: step), notice: 'Parsons updated successfully.'
+          else
+            redirect_to edit_parsons_exercise_path(step: step), alert: "Step not found in JSON."
+          end
+        rescue JSON::ParserError => e
+          Rails.logger.debug e.inspect # Log the error for inspection
+          redirect_to edit_parsons_exercise_path(step: step), alert: "Failed to parse JSON: #{e.message}"
+        end
+      else
+        redirect_to edit_parsons_exercise_path(step: step), alert: 'Step content is missing.'
+      end
     end
   end
 
