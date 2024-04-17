@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20240207035240) do
+ActiveRecord::Schema.define(version: 20240413031046) do
 
   create_table "active_admin_comments", force: :cascade do |t|
     t.string   "namespace",     limit: 255
@@ -47,7 +47,9 @@ ActiveRecord::Schema.define(version: 20240207035240) do
 
   add_index "attempts", ["active_score_id"], name: "index_attempts_on_active_score_id", using: :btree
   add_index "attempts", ["exercise_version_id"], name: "index_attempts_on_exercise_version_id", using: :btree
+  add_index "attempts", ["user_id", "exercise_version_id"], name: "idx_attempts_on_user_exercise_version", using: :btree
   add_index "attempts", ["user_id"], name: "index_attempts_on_user_id", using: :btree
+  add_index "attempts", ["workout_score_id", "exercise_version_id"], name: "idx_attempts_on_workout_score_exercise_version", using: :btree
   add_index "attempts", ["workout_score_id"], name: "index_attempts_on_workout_score_id", using: :btree
 
   create_table "attempts_tag_user_scores", id: false, force: :cascade do |t|
@@ -411,6 +413,18 @@ ActiveRecord::Schema.define(version: 20240207035240) do
   add_index "ownerships", ["exercise_version_id"], name: "index_ownerships_on_exercise_version_id", using: :btree
   add_index "ownerships", ["filename"], name: "index_ownerships_on_filename", using: :btree
 
+  create_table "parsons_prompts", force: :cascade do |t|
+    t.text     "title",               limit: 65535
+    t.text     "instructions",        limit: 65535
+    t.string   "exercise_id",         limit: 255
+    t.text     "assets",              limit: 65535
+    t.integer  "exercise_version_id", limit: 4,     null: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "parsons_prompts", ["exercise_version_id"], name: "fk_rails_40d6ef5b4f", using: :btree
+
   create_table "prompt_answers", force: :cascade do |t|
     t.integer "attempt_id",   limit: 4
     t.integer "prompt_id",    limit: 4
@@ -745,6 +759,7 @@ ActiveRecord::Schema.define(version: 20240207035240) do
   add_foreign_key "lms_instances", "lms_types", name: "lms_instances_lms_type_id_fk"
   add_foreign_key "lti_workouts", "lms_instances"
   add_foreign_key "ownerships", "exercise_versions"
+  add_foreign_key "parsons_prompts", "exercise_versions"
   add_foreign_key "prompt_answers", "attempts", name: "prompt_answers_attempt_id_fk"
   add_foreign_key "prompt_answers", "prompts", name: "prompt_answers_prompt_id_fk"
   add_foreign_key "prompts", "irt_data", column: "irt_data_id", name: "prompts_irt_data_id_fk"

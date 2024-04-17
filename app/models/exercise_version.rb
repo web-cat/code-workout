@@ -54,6 +54,7 @@ class ExerciseVersion < ActiveRecord::Base
   has_many :resource_files, through: :ownerships
   belongs_to :creator, class_name: 'User'
   belongs_to :irt_data, dependent: :destroy
+  has_one :parsons_prompt
 
 
   #~ Hooks ....................................................................

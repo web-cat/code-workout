@@ -42,39 +42,48 @@
 
   <script>
     const pemlContent = `
-      # Simple example of a problem that is assessed by the order of the
-      # blocks.
-      # Derived from jsParsons hello-parson.html.
-
-      exercise_id: https://github.com/CSSPLICE/peml-feasibility-examples/blob/main/parsons/hello-parson-noindent-order.peml
-      title: Your First Parsons Problem -- Ordered
-      author: Cliff Shaffer (from js-Parsons, converted to PEML)
-      license.id: MIT
-      license.owner: Cliff Shaffer
-      tags.topics: PEML Demo Parsons Problem
-      tags.style: parsons, order
-
-      instructions:----------
-      **Your task**: Construct a Python program that prints strings "Hello", "Parsons", and "Problems" on their own lines. You can get feedback on your current solution with the feedback button. You should construct your program by dragging and dropping the lines to the solution area on the right.
-      ----------
-
-      [assets.code.starter.files]
-      [.content]
-      tag: one
-      display: print('Hello')
-      tag: two
-      display: print('Parsons')
-      tag: three
-      display: print('Problems!')
-      []
-
-      # A (simple) DAG -- there is only one acceptable order
-      [assets.test.files]
-      content:----------
-      one:
-      two: one
-      three: two
-      ----------
+    # Simple ProofBlocks demo proof problem:
+    # See https://github.com/PrairieLearn/PrairieLearn/blob/master/exampleCourse/questions/element/orderBlocks/question.html
+    # Primarily, this illustrates a (slightly) non-trivial DAG
+    # It could also be an example of math formatting, but not this version!
+    
+    exercise_id: https://github.com/CSSPLICE/peml-feasibility-examples/blob/main/parsons/pb-simpledemo.peml
+    
+    title: ProofBlocks Simple Proof Demo
+    author: Cliff Shaffer (from ProofBlocks demo problem)
+    license.id: MIT
+    license.owner: Cliff Shaffer
+    
+    tags.topics: PEML Demo Parsons Problem
+    tags.style: parsons, noindent, order
+    
+    instructions:----------
+    Prove that (A AND B AND C) implies (A AND C).
+    ----------
+    
+    [assets.code.starter.files]
+    [.content]
+    
+    tag: one
+    display: Assume A AND B AND C.
+    
+    tag: two
+    display: Then A is TRUE.
+    
+    tag: three
+    display: Then C is TRUE.
+    
+    tag: four
+    display: Since A and C are TRUE, we know (A AND C) is TRUE.
+    []
+    
+    [assets.test.files]
+    content:----------
+    one:
+    two: one
+    three: one
+    four: two, three
+    ----------
     `;
 
     const title = pemlContent.match(/title:\s*(.*)/)[1].trim();
@@ -127,7 +136,7 @@
         console.log(userSolution);
 
         const dag = pemlContent.match(/\[assets\.test\.files\]\s*content:----------\s*([\s\S]*?)\s*----------/)[1].trim();
-        console.log(dag);
+        console.log("dag:" + dag);
         const isCorrect = processDAG(dag, userSolution, nodeValueToLabel);
 
         if (isCorrect) {
@@ -144,15 +153,16 @@
     
     });
     function extractNodeValueToLabel(pemlContent) {
-      const nodeValueToLabel = {};
-      const regex = /tag:\s*(\w+)\s*\n\s*display:\s*(.+)/g;
-      let match;
-      while ((match = regex.exec(pemlContent)) !== null) {
-        const tag = match[1];
-        const display = match[2].trim();
-        nodeValueToLabel[tag] = display;
-      }
-      return nodeValueToLabel;
+        const nodeValueToLabel = {};
+        const regex = /tag:\s*(\w+)\s*\n\s*display:\s*(.+)/g;
+        let match;
+        while ((match = regex.exec(pemlContent)) !== null) {
+            const tag = match[1];
+            const display = match[2].trim();
+            nodeValueToLabel[tag] = display;
+        }
+        console.log("nodeValueToLabel:", nodeValueToLabel);
+        return nodeValueToLabel;
     }
 
         

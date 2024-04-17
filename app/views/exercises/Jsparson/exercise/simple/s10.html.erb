@@ -1,0 +1,294 @@
+<!doctype html>
+<html>
+<head>
+  <title>Simple js-parsons example assignment</title>
+  <%= stylesheet_link_tag 'parsons' %>
+  <%= stylesheet_link_tag 'prettify' %>
+  <%= stylesheet_link_tag 'odsaAV-min' %>
+  <%= stylesheet_link_tag 'JSAV' %>
+  <%= javascript_include_tag 'prettify' %>
+  <style>
+    #container {
+      width: 800px;
+      height: 800px;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <h2 id="title"></h2>
+    <p id="instructions"></p>
+    <div id="exercise-data" data-external-id="<%= external_id %>"></div>
+    <div id="sortableTrash" class="sortable-code"></div>
+    <div id="sortable" class="sortable-code">
+    </div>
+    <div style="clear:both;"></div>
+    <p>
+      <a href="#" id="feedbackLink">Get feedback</a>
+      <h2>Feedback</h2>
+      <div id="feedback">Your feedback will appear here when you check your answer.</div>
+    </p>
+  </div>
+  <div id="unittest"></div>
+  <%= javascript_include_tag 'jquery' %>
+  <%= javascript_include_tag 'jquery-ui' %>
+  <%= javascript_include_tag 'jquery.ui.touch-punch.min' %>
+  <%= javascript_include_tag 'dag' %>
+  <%= javascript_include_tag 'underscore-min' %>
+  <%= javascript_include_tag 'lis' %>
+  <%= javascript_include_tag 'parsons' %>
+  <%= javascript_include_tag 'skulpt' %>
+  <%= javascript_include_tag 'skulpt-stdlib' %>
+
+  <script>
+    const pemlContent = `
+    # Simple swap function assessed by the order of the blocks.
+    # Technically this is a Java exercise, but this is a moot point
+    # because the assessment is by block order.
+    # No indentation is required.
+    # Illustrates fixed code shown to students
+    # Illustrates a multi-line block
+    # Illustrates a distractor
+
+    exercise_id: https://github.com/CSSPLICE/peml-feasibility-examples/blob/main/parsons/swap1-order.peml
+
+    title: Swap1 - order
+    author: Cliff Shaffer
+    license.id: MIT
+    license.owner: Cliff Shaffer
+
+    tags.topics: PEML Demo Parsons Problem
+    tags.style: parsons, noindent, order
+
+    instructions:----------
+    Write a function to swap two array elements by reordering the lines.
+    ----------
+
+    [assets.code.starter.files]
+    [.content]
+    tag: fixed
+    display:----------
+    public static void Swap(int[] arr, int i, int j)
+    {
+    ----------
+
+    tag: one
+    display: int temp = arr[i];
+
+    tag: two
+    display: arr[i] = arr[j];
+
+    tag: three
+    display: arr[j] = temp;
+
+    tag: four
+    display: int temp = arr[j];
+
+    tag: fixed
+    display: }
+    []
+
+
+    # The parent dependency for block "four" is -1, meaning that it is a
+    # distrctor and should not appear in the solution.
+    [assets.test.files]
+    content:----------
+    one:
+    two: one
+    three: two
+    four: -1
+    ----------
+    `;
+
+    const title = pemlContent.match(/title:\s*(.*)/)[1].trim();
+    const instructions = pemlContent.match(/instructions:----------\s*([\s\S]*?)\s*----------/)[1].trim();
+    const codeLines = pemlContent.match(/\[\.content\](?:\r?\n)*([\s\S]*?)(?:\r?\n)*\[\]\r?\n/)[1].trim().split(/(?:\r?\n){2}/);
+    const fixedLines = [];
+    const shuffleLines = [];
+
+    for (const line of codeLines) {
+        if (line.includes('tag: fixed')) {
+            let codeBlock = line.split('display:')[1].trim();
+            codeBlock = codeBlock.replace(/^----------\n|----------$/g, '');
+            codeBlock = codeBlock.replace(/\\n/g, '');
+            fixedLines.push(codeBlock.trim());
+        } else if (line.trim() !== '') {
+            const codeLine = line.split('display:')[1].trim().replace(/\\n/g, '');
+            shuffleLines.push(codeLine);
+        }
+    }
+    console.log("fixedlines:" + fixedLines);
+    shuffle(shuffleLines);
+    const codeline = [fixedLines[0], ...shuffleLines, fixedLines[1]];
+    console.log("Codeline:", codeline);
+    const nodeValueToLabel = extractNodeValueToLabel(pemlContent);
+    console.log(nodeValueToLabel);
+    
+
+    var parson = new ParsonsWidget({
+      'sortableId': 'sortable',
+      'trashId': 'sortableTrash',
+      'max_wrong_lines': 1,
+      'vartests': [{
+        'initcode': '',
+        'code': '',
+        'message': 'Well done!',
+        'variables': {}
+      }],
+      'grader': ParsonsWidget._graders.LineBasedGrader
+    });
+
+    var score = 0;
+    document.getElementById("title").innerHTML = title;
+    document.getElementById("instructions").innerHTML = instructions;
+    var externalIdElement = document.getElementById("exercise-data");
+    var externalId = externalIdElement.getAttribute("data-external-id");
+    console.log(externalId)
+
+    parson.init(codeline);
+    parson.shuffleLines();
+
+    $("#sortable li").each(function() {
+      if (fixedLines.includes($(this).text().trim())) {
+        $(this).addClass("fixed-item");
+      }
+    });
+
+    $("#feedbackLink").click(function(event) {
+      event.preventDefault();
+      var userSolution = [];
+      $("#sortable li").each(function() {
+        userSolution.push($(this).text().trim().replace(/\s+/g, ' '));
+      });
+
+      console.log("User Solution (before filtering):", userSolution);
+
+      var normalizedFixedLines = fixedLines.map(line => line.trim().replace(/\s+/g, ' '));
+
+      
+      userSolution = userSolution.filter(line => !normalizedFixedLines.includes(line));
+
+      console.log("User Solution (after filtering):", userSolution);
+
+      if (userSolution.length === 0) {
+        $("#feedback").html("Please construct a solution before submitting.");
+        return;
+      }
+      console.log("User Solution:", userSolution);
+      var fixedDisplays = [];
+      var fixedRegex = /tag:\s*fixed\s*\n\s*display:----------\s*([\s\S]*?)\s*----------/g;
+      var fixedMatch;
+      while ((fixedMatch = fixedRegex.exec(pemlContent)) !== null) {
+        var fixedDisplay = fixedMatch[1].trim();
+        fixedDisplays.push(fixedDisplay);
+      }
+      userSolution = userSolution.filter(function(line) {
+        return !fixedDisplays.some(function(fixedLine) {
+          return line.includes(fixedLine);
+        });
+      });
+
+      if (userSolution.length === 0) {
+        $("#feedback").html("Please construct a solution before submitting.");
+        return;
+      }
+      console.log("User Solution:", userSolution);
+      var dagMatch = pemlContent.match(/\[assets\.test\.files\]\s*content:----------\s*([\s\S]*?)\s*----------/);
+      if (dagMatch) {
+        var dag = dagMatch[1].trim();
+        console.log("DAG:", dag);
+        console.log("Node value to label mapping:", nodeValueToLabel);
+        var isCorrect = processDAG(dag, userSolution, nodeValueToLabel);
+        if (isCorrect) {
+          $("#feedback").html("Answer is correct!");
+        } else {
+          $("#feedback").html("Answer is incorrect. Please try again.");
+        }
+        if (isCorrect) {
+          score = 50;
+        } else {
+          score = 0;
+        }
+        updateScore(score);
+      } else {
+        console.error("Failed to extract DAG from pemlContent.");
+        // Handle the error, e.g., display an error message to the user
+      }
+    });
+    function extractNodeValueToLabel(pemlContent) {
+      const nodeValueToLabel = {};
+      const dependencies = {};
+      const dependencyRegex = /(\w+):\s*([\w-]+)/g;
+      const dependencyMatch = pemlContent.match(/\[assets\.test\.files\]\s*content:----------\s*([\s\S]*?)\s*----------/);
+      if (dependencyMatch) {
+        const dependencyContent = dependencyMatch[1];
+        let match;
+        while ((match = dependencyRegex.exec(dependencyContent)) !== null) {
+          const node = match[1];
+          const dependency = match[2];
+          dependencies[node] = dependency;
+        }
+      }
+
+      const regex = /tag:\s*(\w+)\s*\n\s*display:\s*(.+)/g;
+      let match;
+      while ((match = regex.exec(pemlContent)) !== null) {
+        const tag = match[1];
+        const display = match[2].trim();
+        console.log(`Processing tag: ${tag} with display: ${display}`);
+
+        if (tag !== 'fixed' && dependencies[tag] !== '-1') {
+          nodeValueToLabel[tag] = display;
+        }
+      }
+
+      console.log("Filtered nodeValueToLabel:", nodeValueToLabel);
+      return nodeValueToLabel;
+    }
+
+
+
+    function shuffle(array) {
+        let currentIndex = array.length, temporaryValue, randomIndex;
+        while (0 !== currentIndex) {
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex -= 1;
+            temporaryValue = array[currentIndex];
+            array[currentIndex] = array[randomIndex];
+            array[randomIndex] = temporaryValue;
+        }
+
+        return array;
+    }
+
+        
+    function updateScore(score) {
+        
+        var externalId = $('#exercise-data').data('external-id');
+        
+        $.ajax({
+            url: '/update_score',
+            type: 'POST',
+            data: JSON.stringify({ 
+                experience: score,
+                external_id: externalId  
+            }),
+            contentType: 'application/json',
+            headers: {
+                'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')  // CSRF token
+            },
+            success: function(response) {
+                console.log('Score updated successfully' + 
+                 'externalId is' + externalId);
+            },
+            error: function(xhr) {
+                console.log('Failed to update score: ' + xhr.responseText  
+                + 'externalId is' + externalId);
+            }
+        });
+    }
+
+
+</script>
+</body>
+</html>

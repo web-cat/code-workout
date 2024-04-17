@@ -518,50 +518,37 @@ class ExercisesController < ApplicationController
       text_representation = File.read(params[:form][:file].path)
       use_rights = 0 # Personal exercise
     end
-    
-    # 检查 text_representation 中的 tags.style 字段是否包含 "parsons"
-    if text_representation.include?("tags.style") && text_representation.include?("parsons")
-      # 使用自定义解析器解析 text_representation
-      parsed_data = parse_text_representation(text_representation)
-      
-      # 使用 ParsonsPromptRepresenter 创建 ParsonsPrompt 对象
-      parsons_prompt = ParsonsPromptRepresenter.new(ParsonsPrompt.new).from_hash(parsed_data)
-      exercises = [parsons_prompt.to_hash]
-    else
-      # 使用 ExerciseRepresenter 解析 text_representation
-      exercises = ExerciseRepresenter.for_collection.new([]).from_hash(YAML.load(text_representation))
-    end
-    
-    # 后续的处理逻辑保持不变
-    exercises.each do |e|
-      if e[:instructions].present? && e[:assets].present?
-        # 处理 Parsons 问题
-        parsons_prompt = {}
-        
-        # 从 e 中获取相应字段的值,并赋值给 parsons_prompt
-        parsons_prompt["exercise_id"] = e[:exercise_id]
-        parsons_prompt["title"] = e[:title]
-        parsons_prompt["author"] = e[:author]
-        parsons_prompt["license"] = e[:license]
-        parsons_prompt["tags"] = e[:tags]
-        parsons_prompt["instructions"] = e[:instructions]
-        parsons_prompt["assets"] = e[:assets]
-        
-        # 更新 prompt
-        e[:prompt] = [{ "parsons_prompt" => parsons_prompt }]
-        
-        # 删除 e 中已经复制到 parsons_prompt 的字段
-        e.delete(:exercise_id)
-        e.delete(:title)
-        e.delete(:author)
-        e.delete(:license)
-        e.delete(:tags)
-        e.delete(:instructions)
-        e.delete(:assets)
+  
+    begin
+      hash = YAML.load(text_representation)
+      if !hash.kind_of?(Array)
+        hash = [hash]
+        is_parsons = false
       end
-    end
-    if !hash.kind_of?(Array)
-      hash = [hash]
+    rescue Psych::SyntaxError
+      attributes = {}
+      text_representation.scan(/^(\w+(?:\.\w+)*):(.*)$/) do |key, value|
+        keys = key.split('.')
+        target = attributes
+        keys[0..-2].each do |k|
+          target[k] ||= {}
+          target = target[k]
+        end
+        target[keys.last] = value.strip
+      end
+
+      title = attributes['title']
+      assets_code = attributes.dig('assets', 'code', 'starter', 'files')
+      if assets_code
+        assets_code_content = assets_code['content']
+        hash = assets_code_content.scan(/^tag:\s*(\w+)\s*\n^display:\s*(.+)$/m).map do |tag, display|
+          { 'tag' => tag, 'display' => display }
+        end
+        is_parsons = true
+      else
+        hash = []
+        is_parsons = false
+      end
     end
 
     files = exercise_params[:files]
@@ -601,11 +588,16 @@ class ExercisesController < ApplicationController
     @return_to = session.delete(:return_to) || exercises_path
 
     # parse the text_representation
-    exercises = ExerciseRepresenter.for_collection.new([]).from_hash(hash)
+    if is_parsons
+      exercises = ParsonsExerciseRepresenter.for_collection.new([]).from_hash(hash)
+    else
+      exercises = ExerciseRepresenter.for_collection.new([]).from_hash(hash)
+    end
     success_all = true
     error_msgs = []
     success_msgs = []
     exercises.each do |e|
+      e.name = title if title.present?
       if !e.save
         success_all = false
         # put together an error message
@@ -665,7 +657,7 @@ class ExercisesController < ApplicationController
 
         # Notify user of success
         success_msgs <<
-          "<li>X#{e.id}: #{e.name} saved, try it #{view_context.link_to 'here', exercise_practice_path(e)}.</li>"
+        "<li>X#{e.id}: #{e.name || 'Parsons problem'} saved, try it #{view_context.link_to 'here', exercise_practice_path(e)}.</li>"
       end
     end
 
