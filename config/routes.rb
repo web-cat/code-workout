@@ -67,6 +67,7 @@ CodeWorkout::Application.routes.draw do
       as: :exercises_query_data
     get 'exercises/download_attempt_data' =>
       'exercises#download_attempt_data', as: :download_exercise_attempt_data
+    # add the address of the parsons exercise to the route
     get '/gym/exercises/Jsparson/exercise/simple/:step', to: 'exercises#show_exercise', as: 'show_exercise'
     get '/exercises/Jsparson/exercise/simple/:step/parsons_edit', to: 'exercises#edit_parsons', as: 'edit_parsons_exercise'
     post '/exercises/Jsparson/exercise/simple/:step/update_parsons', to: 'exercises#update_parsons', as: 'update_parsons_exercise'

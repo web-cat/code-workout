@@ -6,6 +6,7 @@ $(document).ready(function(){
     Sk.canvas = "studentCanvas";
     $.getJSON('/data/simple_code.json', function(response) {
         data = response;
+        // get the specific exercise data
         var externalIdElement = document.getElementById("exercise-data");
         var externalId = externalIdElement.getAttribute("data-external-id");
         var initial = data[index]['initial'];
@@ -15,14 +16,9 @@ $(document).ready(function(){
         document.getElementById("instructions").innerHTML = data[index].instructions;
         config.sortableId = 'sortable';
         config.trashId = 'sortableTrash';
-        console.log(data[index]['parsonsConfig']
-        ['turtleModelCode']);
-        console.log(externalId)
-        // 如果config中有turtleModelCode，就把grader改成TurtleGrader
+        // if there is a turtle model code, use the turtle grader
         if (data[index]['parsonsConfig']['turtleModelCode']) {
             config.grader = ParsonsWidget._graders.TurtleGrader;
-            console.log("有乌龟")
-            
         } else {
             config.grader = ParsonsWidget._graders.LanguageTranslationGrader;
         }

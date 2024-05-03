@@ -12,6 +12,26 @@
       width: 800px;
       height: 800px;
     }
+    .fixed {
+    pointer-events: none; /* 禁用鼠标事件 */
+    background-color: #f5f5f5; /* 与屏幕截图中的灰色相匹配 */
+    color: #333; /* 文字颜色 */
+    border: 1px solid #ddd; /* 边框颜色和样式 */
+    margin: 0; /* 移除外边距 */
+    padding: 10px; /* 内边距 */
+    box-sizing: border-box; /* 确保宽度包含内边距和边框 */
+    }
+    
+    /* 可拖动行的样式 */
+    .sortable-code li {
+      list-style-type: none; /* 移除列表项前的标记 */
+      margin: 5px 0; /* 添加一点外边距 */
+      padding: 10px; /* 内边距 */
+      border: 1px solid #ddd; /* 边框颜色和样式 */
+      background-color: #fff; /* 背景颜色 */
+      cursor: move; /* 鼠标样式表示可以移动 */
+    }
+    
   </style>
 </head>
 <body>
@@ -22,6 +42,7 @@
     <div id="sortableTrash" class="sortable-code"></div>
     <div id="sortable" class="sortable-code">
     </div>
+    
     <div style="clear:both;"></div>
     <p>
       <a href="#" id="feedbackLink">Get feedback</a>
@@ -68,8 +89,7 @@
     [.content]
     tag: fixed
     display:----------
-    public static void Swap(int[] arr, int i, int j)
-    {
+    public static void Swap(int[] arr, int i, int j){
     ----------
 
     tag: one
@@ -119,7 +139,7 @@
     }
     console.log("fixedlines:" + fixedLines);
     shuffle(shuffleLines);
-    const codeline = [fixedLines[0], ...shuffleLines, fixedLines[1]];
+    const codeline = fixedLines.concat(shuffleLines);
     console.log("Codeline:", codeline);
     const nodeValueToLabel = extractNodeValueToLabel(pemlContent);
     console.log(nodeValueToLabel);
@@ -144,15 +164,12 @@
     var externalIdElement = document.getElementById("exercise-data");
     var externalId = externalIdElement.getAttribute("data-external-id");
     console.log(externalId)
+    
+    
 
     parson.init(codeline);
     parson.shuffleLines();
 
-    $("#sortable li").each(function() {
-      if (fixedLines.includes($(this).text().trim())) {
-        $(this).addClass("fixed-item");
-      }
-    });
 
     $("#feedbackLink").click(function(event) {
       event.preventDefault();

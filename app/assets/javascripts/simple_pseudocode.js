@@ -1,3 +1,4 @@
+// This file is used to create a Parsons problem for the simple pseudocode exercise
 var initial = 'IF $$toggle::a::b$$ $$toggle::<::>::<>$$ b THEN\n  min := a\nELSE\n  min := b\nENDIF';
 var parson;
 $(document).ready(function(){

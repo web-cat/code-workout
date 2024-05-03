@@ -189,52 +189,62 @@ class CodeWorker
     end
   end
 
+  # Defines a method to execute a PEML (Programming Exercise Markup Language) script based on a given attempt and expected output.
   def perform_peml(attempt_id, expected_output)
+    # Manages database connections to ensure thread safety and connection pooling.
     ActiveRecord::Base.connection_pool.with_connection do
       puts "Database connection established"
+
+      # Retrieves the attempt record from the database using the provided attempt_id.
       attempt = Attempt.find(attempt_id)
       puts "Attempt found: #{attempt.inspect}"
+
+      # Determines the programming language of the exercise associated with the attempt.
       language = attempt.exercise_version.exercise.language
 
+      # Specific handling for Python language exercises.
       if language == 'Python'
-        # 获取用户提交的代码
+        # Cleans up the expected output to handle escaped characters properly.
         expected_output = expected_output.gsub("\\\\", "\\")
+        # Retrieves the user's solution from the first prompt's answer.
         user_solution = attempt.prompt_answers.first.specific.answer
         puts "User solution:"
         puts user_solution
         puts "Expected output:"
         puts expected_output
 
-        # 创建临时目录
+        # Creates a temporary directory specific to the attempt to isolate execution.
         attempt_dir = "usr/attempts/active/#{attempt.id}"
         FileUtils.mkdir_p(attempt_dir)
 
-        # 将用户代码写入文件
-        File.write(attempt_dir + '/solution.py', user_solution)
+        # Writes the user's solution into a Python script file within the temporary directory.
+        File.write("#{attempt_dir}/solution.py", user_solution)
 
-        # 执行用户代码
+        # Executes the user's Python script and captures the result.
         result = execute_pythontest(
           'solution', attempt_dir, 0, user_solution.count("\n")
         )
         puts "Execution result:"
         puts result.inspect
 
+        # Evaluates the execution result to determine success or failure.
         if result.nil?
-          # 没有错误,比较输出结果
-          actual_output = File.read(attempt_dir + '/output.txt').strip
+          # If no error, compare the actual output with the expected output.
+          actual_output = File.read("#{attempt_dir}/output.txt").strip
           success = (actual_output == expected_output)
         else
-          # 有错误,设置 success 为 false
+          # If an error occurred during execution, mark the attempt as unsuccessful.
           success = false
         end
 
-        # 保存 attempt
+        # Update the attempt record with the outcome of the execution.
         attempt.error = result
         attempt.correct = success
         attempt.save!
       end
     end
   end
+
 
 
   #~ Private instance methods .................................................

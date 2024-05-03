@@ -36,9 +36,12 @@ class ExercisesController < ApplicationController
   
   #
   def get_external_id(step)
+    # set the full name of the exercise
     full_name = "parsons_#{step}"
+    # find the exercise instance
     exercise = Exercise.where('name LIKE ?', "%#{full_name}%").first.reload
     puts "exercise = #{exercise.inspect}"
+    # return the external id of the exercise
     exercise ? exercise.external_id : nil
   end
   
@@ -282,90 +285,138 @@ class ExercisesController < ApplicationController
     session[:return_to] = @return_to
   end
   # -------------------------------------------------------------
-  def edit_parsons
-    step = params[:step].to_i
-    full_name = "parsons_s#{step}"
-    puts "full_name = #{full_name}"
-    @exercise = Exercise.where('name LIKE ?', "%#{full_name}%").first
-  
-    if step >= 8
-      html_file_path = Rails.root.join('app', 'views', 'exercises', 'Jsparson', 'exercise', 'simple', "s#{step}.html.erb")
-      if File.exist?(html_file_path)
-        file_content = File.read(html_file_path)
-        peml_content_match = file_content.match(/pemlContent\s*=\s*`(.*?)`/m)
-        if peml_content_match
-          @peml_content = peml_content_match[1].strip
-        else
-          @peml_content = ''
-        end
+# Defines a method to edit Parsons exercises based on a step number.
+def edit_parsons
+  # Converts the step parameter from the request into an integer.
+  step = params[:step].to_i
+
+  # Constructs a string that represents the exercise name based on the step number.
+  full_name = "parsons_s#{step}"
+  puts "full_name = #{full_name}"
+
+  # Fetches the first exercise from the database that matches the constructed name.
+  @exercise = Exercise.where('name LIKE ?', "%#{full_name}%").first
+
+  # Checks if the step number is 8 or greater, indicating handling for HTML-based exercises.
+  if step >= 8
+    # Builds the file path to the corresponding HTML exercise file.
+    html_file_path = Rails.root.join('app', 'views', 'exercises', 'Jsparson', 'exercise', 'simple', "s#{step}.html.erb")
+    
+    # Checks if the HTML file exists.
+    if File.exist?(html_file_path)
+      # Reads the content of the HTML file.
+      file_content = File.read(html_file_path)
+      
+      # Uses a regular expression to extract PEMl content enclosed within backticks.
+      peml_content_match = file_content.match(/pemlContent\s*=\s*`(.*?)`/m)
+      
+      # Assigns the extracted PEMl content to an instance variable, or an empty string if no content was found.
+      if peml_content_match
+        @peml_content = peml_content_match[1].strip
       else
         @peml_content = ''
       end
     else
-      json_file_path = Rails.root.join('public', 'data', 'simple_code.json')
-      if File.exist?(json_file_path)
-        file_content = File.read(json_file_path)
-        json_content = JSON.parse(file_content)
-        @step_data = json_content["s#{step}"]
-      else
-        @step_data = {}
-      end
+      # Sets the PEMl content to an empty string if the HTML file does not exist.
+      @peml_content = ''
+    end
+  else
+    # For steps below 8, handles JSON-based exercise data.
+    json_file_path = Rails.root.join('public', 'data', 'simple_code.json')
+    
+    # Checks if the JSON file exists.
+    if File.exist?(json_file_path)
+      # Reads and parses the JSON file content.
+      file_content = File.read(json_file_path)
+      json_content = JSON.parse(file_content)
+      
+      # Retrieves data for the current step and assigns it to an instance variable.
+      @step_data = json_content["s#{step}"]
+    else
+      # Initializes @step_data as an empty hash if the JSON file does not exist.
+      @step_data = {}
     end
   end
+end
+
 
   # -------------------------------------------------------------
+  # Updates the Parsons exercises based on the step number and content provided via params.
   def update_parsons
+    # Converts the step parameter to an integer.
     step = params[:step].to_i
-  
+
+    # Checks if the step number is greater than or equal to 8, indicating a different handling logic.
     if step >= 8
+      # Retrieves the PEMl content from parameters.
       peml_content = params[:peml_content]
       if peml_content.present?
+        # Constructs the file path for the HTML exercise file based on the step number.
         html_file_path = Rails.root.join('app', 'views', 'exercises', 'Jsparson', 'exercise', 'simple', "s#{step}.html.erb")
+        # Checks if the specified HTML file exists.
         unless File.exist?(html_file_path)
+          # Redirects to the editing path with an alert if the file does not exist.
           redirect_to edit_parsons_exercise_path(step: step), alert: 'HTML file not found.'
           return
         end
-  
+
         begin
+          # Reads the content of the HTML file.
           file_content = File.read(html_file_path)
+          # Updates the content by replacing the old PEMl content with the new one.
           updated_content = file_content.gsub(/pemlContent\s*=\s*`.*?`/m, "pemlContent = `#{peml_content}`")
+          # Writes the updated content back to the file.
           File.write(html_file_path, updated_content)
+          # Redirects back to the exercise page with a success notice.
           redirect_to edit_parsons_exercise_path(step: step), notice: 'Parsons updated successfully.'
         rescue => e
-          Rails.logger.debug e.inspect # Log the error for inspection
+          # Logs the exception and redirects with an error message if an error occurs during the file update.
+          Rails.logger.debug e.inspect 
           redirect_to edit_parsons_exercise_path(step: step), alert: "Failed to update Parsons: #{e.message}"
         end
       else
+        # Redirects with an alert if the PEMl content is missing.
         redirect_to edit_parsons_exercise_path(step: step), alert: 'PEML content is missing.'
       end
     else
+      # Handles steps less than 8, expecting updated JSON content.
       updated_content = params[:step_content]
       if updated_content.present?
+        # Defines the path to the JSON file holding exercise data.
         json_file_path = Rails.root.join('public', 'data', 'simple_code.json')
         unless File.exist?(json_file_path)
           redirect_to edit_parsons_exercise_path(step: step), alert: 'JSON file not found.'
           return
         end
-  
+
         begin
+          # Parses the existing content from the JSON file.
           content = JSON.parse(File.read(json_file_path))
+          # Parses the updated JSON content provided via parameters.
           updated_data = JSON.parse(updated_content)
           if content["s#{step}"].present?
+            # Updates the specific step data with the new content.
             content["s#{step}"] = updated_data
+            # Writes the updated JSON back to the file.
             File.write(json_file_path, JSON.pretty_generate(content))
+            # Redirects with a success notice.
             redirect_to edit_parsons_exercise_path(step: step), notice: 'Parsons updated successfully.'
           else
+            # Redirects with an alert if the specific step is not found in the JSON file.
             redirect_to edit_parsons_exercise_path(step: step), alert: "Step not found in JSON."
           end
         rescue JSON::ParserError => e
-          Rails.logger.debug e.inspect # Log the error for inspection
+          # Logs and handles JSON parsing errors.
+          Rails.logger.debug e.inspect
           redirect_to edit_parsons_exercise_path(step: step), alert: "Failed to parse JSON: #{e.message}"
         end
       else
+        # Redirects with an alert if the content for the step is missing.
         redirect_to edit_parsons_exercise_path(step: step), alert: 'Step content is missing.'
       end
     end
   end
+
 
   # -------------------------------------------------------------
   # POST /exercises
