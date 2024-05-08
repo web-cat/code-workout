@@ -13,24 +13,25 @@
       height: 800px;
     }
     .fixed {
-    pointer-events: none; /* 禁用鼠标事件 */
-    background-color: #f5f5f5; /* 与屏幕截图中的灰色相匹配 */
-    color: #333; /* 文字颜色 */
-    border: 1px solid #ddd; /* 边框颜色和样式 */
-    margin: 0; /* 移除外边距 */
-    padding: 10px; /* 内边距 */
-    box-sizing: border-box; /* 确保宽度包含内边距和边框 */
+    pointer-events: none;
+    background-color: #f5f5f5; 
+    color: #333; 
+    border: 1px solid 
+    margin: 0; 
+    padding: 10px; 
+    box-sizing: border-box; 
+    }
+    #fixedArea {
+      background-color: #f5f5f5;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    #fixedFooterArea {
+      background-color: 
+      padding: 10px;
+      margin-top: 10px;
     }
     
-    /* 可拖动行的样式 */
-    .sortable-code li {
-      list-style-type: none; /* 移除列表项前的标记 */
-      margin: 5px 0; /* 添加一点外边距 */
-      padding: 10px; /* 内边距 */
-      border: 1px solid #ddd; /* 边框颜色和样式 */
-      background-color: #fff; /* 背景颜色 */
-      cursor: move; /* 鼠标样式表示可以移动 */
-    }
     
   </style>
 </head>
@@ -39,11 +40,14 @@
     <h2 id="title"></h2>
     <p id="instructions"></p>
     <div id="exercise-data" data-external-id="<%= external_id %>"></div>
+    <div id="fixedArea" class="fixed"></div>
     <div id="sortableTrash" class="sortable-code"></div>
     <div id="sortable" class="sortable-code">
     </div>
     
+    
     <div style="clear:both;"></div>
+    <div id="fixedFooterArea" class="fixed"></div>
     <p>
       <a href="#" id="feedbackLink">Get feedback</a>
       <h2>Feedback</h2>
@@ -165,9 +169,18 @@
     var externalId = externalIdElement.getAttribute("data-external-id");
     console.log(externalId)
     
-    
+    const fixedArea = document.getElementById('fixedArea');
+    const firstFixedLine = fixedLines[0];
+    const codeBlock = document.createElement('div');
+    codeBlock.textContent = firstFixedLine;
+    fixedArea.appendChild(codeBlock);
 
-    parson.init(codeline);
+    const fixedFooterArea = document.getElementById('fixedFooterArea');
+    const lastFixedLine = fixedLines[fixedLines.length - 1];
+    const codeBlock2 = document.createElement('div');
+    codeBlock2.textContent = lastFixedLine;
+    fixedFooterArea.appendChild(codeBlock2);
+    parson.init(shuffleLines);
     parson.shuffleLines();
 
 
