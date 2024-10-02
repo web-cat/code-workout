@@ -124,6 +124,19 @@ class Attempt < ActiveRecord::Base
   end
 
   # -------------------------------------------------------------
+  # Regrade this attempt and rescore the corresponding workout score.
+  def regrade()
+    self.active_score = nil
+    self.
+    self.save!
+    CodeWorker.new.perform(self.id)
+    puts "regrading #{self.id} => #{self.score}"
+    if self.workout_score
+      self.workout_score.retotal
+    end
+  end
+
+  # -------------------------------------------------------------
   def earned_full_points?
     if self.workout_score
       self.score >= self.workout_score.workout.exercise_workouts.where(

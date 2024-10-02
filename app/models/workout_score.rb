@@ -279,27 +279,38 @@ class WorkoutScore < ActiveRecord::Base
   def record_attempt(attempt)
     needs_repost = false
     self.with_lock do
-      scored_for_this = self.scored_attempts.
-        where(exercise_version_id: attempt.exercise_version_id)
+      this_workout_score = self
+      scored_for_this =
+        #self.scored_attemptzs.
+        #  where(exercise_version_id: attempt.exercise_version_id)
+        Attempt.joins{exercise_version}.
+          where{(active_score_id == this_workout_score.id) &
+            (exercise_version.exercise_id ==
+              attempt.exercise_version.exercise.id)}
 
-      last_attempt = scored_for_this.first
+      scoring_attempt = scored_for_this.first
 
-      record_score = last_attempt ? (
-        (self.workout_offering.andand.most_recent) ?
-          (attempt.submit_time > last_attempt.submit_time) :
-          (attempt.score > last_attempt.score ||
-          (attempt.score == last_attempt.score &&
-          attempt.submit_time > last_attempt.submit_time))) :
-        true
+      record_score = true
+      if scoring_attempt
+        if self.workout_offering.andand.most_recent
+          #if  last_attempt
+          record_score = (attempt.submit_time > scoring_attempt.submit_time)
+        else
+          record_score = (attempt.score > scoring_attempt.score ||
+            (attempt.score == scoring_attempt.score &&
+            attempt.submit_time > scoring_attempt.submit_time))
+        end
+      end
 
       # Only update if this attempt is included in score
       if record_score
-        if last_attempt
+        if scoring_attempt
           # clear previous active score
           scored_for_this.each do |a|
             self.scored_attempts.delete(a)
           end
-        else
+          self.scored_attempts.delete(scoring_attempt)
+        elsif !scored_for_this.any?
           # update number of exercises completed
           if self.exercises_completed &&
               self.exercises_completed < self.workout.exercises.length

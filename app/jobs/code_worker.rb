@@ -66,6 +66,16 @@ class CodeWorker
       FileUtils.cp(prompt.test_file_name, attempt_dir)
       File.write(attempt_dir + '/' + prompt.class_name + '.' + lang, code_body)
 
+      # clear any previous test case results, if regrading
+      if answer.test_case_results.any?
+        answer.test_case_results.destroy_all
+      end
+      if !answer.error.nil?
+        answer.error = nil
+        answer.error_line_no = nil
+        answer.save!
+      end
+
       # Run static checks
       result = nil
       static_screening_failed = false
@@ -118,7 +128,7 @@ class CodeWorker
           test_case = prompt.test_cases.where(id: test_id).first
           tc_score = test_case.record_result(answer, line)
           if test_case.screening?
-            tcr = TestCaseResult.find(attempt: attempt, test_case: test_case).first
+            tcr = TestCaseResult.find(coding_prompt_answer: answer, test_case: test_case).first
             if !tcr.pass?
               screening_failed = true
               correct = 0.0
@@ -157,8 +167,13 @@ class CodeWorker
       end
 
       # move the attempt to permanent storage
-      term_dir = "usr/attempts/#{term_name}/"
+      term_dir = "usr/attempts/#{term_name}"
       FileUtils.mkdir_p(term_dir) # create the term_dir if it doesn't exist
+      term_attempt_dir = "#{term_dir}/#{current_attempt}"
+      if !Dir[term_attempt_dir].empty?
+        puts 'WARNING, OVERWRITING EXISTING DIRECTORY = ' + term_attempt_dir
+        FileUtils.remove_dir(term_attempt_dir, true)
+      end
       FileUtils.mv(attempt_dir, term_dir)
 
       # calculate various time values. all times are in ms
@@ -184,8 +199,9 @@ class CodeWorker
 
       Rails.logger.info "[pid:#{Process.pid}/thread:#{Thread.current.object_id}] " \
         "processed attempt #{attempt_id}; #{worker_time}ms; " \
-        "time taken: #{attempt.time_taken}; new feedback timeout: " \
-        "#{attempt.feedback_timeout}"
+        "time taken: #{attempt.time_taken}; new attempt timeout: " \
+        "#{attempt.feedback_timeout}; new feedback timeout: " \
+        "#{Rails.application.config.feedback_timeout}"
     end
   end
 
@@ -207,32 +223,41 @@ class CodeWorker
       max_retries = 3
       for a in 1..max_retries do
         begin
-          Net::HTTP.new(uri.hostname, uri.port).start do |http|
-            http.open_timeout = 4
+          time1 = Time.now
+          net = Net::HTTP.new(uri.hostname, uri.port)
+          net.open_timeout = 30
+          net.start do |http|
             response = http.request_get(uri.request_uri)
 
             if response.nil?
-              puts "GET #{url} => try #{a} no response"
+              Rails.logger.error "GET #{url} => try #{a} no response"
             elsif response.kind_of? Net::HTTPSuccess # response.code == 200
               break
             else
-              puts "GET #{url} => try #{a} bad response: #{response.code}"
+              Rails.logger.error "GET #{url} => try #{a} bad response: #{response.code}"
             end
             # puts "%{url} => response %{response.code}"
-
-            # pause before retrying
-            sleep(4)
           end
+
+          # break out of loop, after first break escaped the block above
+          if !response.nil? && (response.kind_of? Net::HTTPSuccess)
+            break
+          end
+
+          time1 = Time.now.to_f - time1.to_f
+          Rails.logger.warn "GET #{url} => try #{a} response timed out after #{time1}s"
+          # pause before retrying
+          sleep(10)
         rescue => e
-          puts "GET #{url} => try #{a} error: #{e.message}"
+          Rails.logger.error "GET #{url} => try #{a} error: #{e.message}"
         end
       end
       if response.nil? then
-        puts "Server backend error [no response] for #{attempt_dir}"
+        Rails.logger.error "Server backend error [no response] for #{attempt_dir}"
         return "Server backend error [no response]. Please resubmit your answer."
       elsif !(response.kind_of? Net::HTTPSuccess) # response.code != 200
-        puts "Server backend error #{response.code} for #{attempt_dir}:"
-        puts response.body
+        Rails.logger.error "Server backend error #{response.code} for #{attempt_dir}:"
+        Rails.logger.error response.body
         return "Server backend error #{response.code}. Please resubmit your answer."
       end
 
