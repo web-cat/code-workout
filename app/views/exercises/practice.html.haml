@@ -149,7 +149,7 @@
 
         - if @workout_offering && params[:review_user_id].nil? && @workout_offering.workout.exercise_workouts.size > 1
           = button_link 'Next exercise',
-            organization_workout_offering_practice_path(exercise_id: @workout.next_exercise(@exercise),
+            organization_workout_offering_practice_path(exercise_id: @workout_offering.workout.next_exercise(@exercise),
             organization_id: @workout_offering.course_offering.course.organization.slug,
             course_id: @workout_offering.course_offering.course.slug,
             term_id: @workout_offering.course_offering.term.slug,

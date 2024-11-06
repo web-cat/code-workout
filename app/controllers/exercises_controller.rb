@@ -667,6 +667,9 @@ class ExercisesController < ApplicationController
     @exercise_version.image_processing(true)
     # Display all files to students
     @file_res = @exercise_version.file_processing
+    if @workout && @workout_offering && (@workout_offering.workout != @workout)
+      Rails.logger.error "workout conflict: practice() with workout_offering #{@workout_offering.id} conflicting with workout #{@workout.id}"
+    end
     render layout: 'two_columns'
 
   end

@@ -167,10 +167,7 @@ class Workout < ActiveRecord::Base
     if ew
       ew = ew.lower_item
     end
-    if !ew
-      ew = exercise_workouts.first
-    end
-    return ew.andand.exercise
+    return ew.andand.exercise || first_exercise
   end
 
 
