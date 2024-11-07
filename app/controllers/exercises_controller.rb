@@ -6,7 +6,7 @@ class ExercisesController < ApplicationController
 
 
   load_and_authorize_resource
-  skip_authorize_resource only: [:practice, :call_open_pop]
+  skip_authorize_resource only: [:practice, :call_open_pop, :export]
 
   #~ Action methods ...........................................................
   after_action :allow_iframe, only: [:practice, :embed]
@@ -24,6 +24,38 @@ class ExercisesController < ApplicationController
     end
 
     @exercises = @exercises.page params[:page]
+  end
+
+
+  # -------------------------------------------------------------
+  # The export function gets all exercises metadata for SPLICE
+  # GET /gym/exercises/export
+  def export
+    # filter out stop/connector words for keywords from workout phrases or names
+    stop_words = ['the', 'and', 'a', 'to', 'of', 'in', 'for', 'on', 'with', 'as', 'by', 'at', 'from', 'is', 'that', 'which', 'it', 'an', 'be', 'this', 'are', 'we', 'can', 'if', 'has', 'but']
+    @exercises = Exercise.all
+    export_data = @exercises.map do |exercise|
+      workout_names = exercise.exercise_workouts.map { |ew| ew.workout.name }.uniq.push(exercise.name)
+      # split phrases and remove any stop/connector words
+      keywords_array = workout_names.map { |phrase| phrase.downcase.split(/\W+/) }.flatten.uniq.reject { |word| stop_words.include?(word) || word.empty? }
+  
+      {
+        "catalog_type": "SLCItemCatalog",  
+        "platform_name": "CodeWorkout",
+        "url": "https://codeworkout.cs.vt.edu",
+        "lti_instructions_url": "https://opendsa-server.cs.vt.edu/guides/opendsa-canvas",
+        "exercise_type": Exercise::TYPE_NAMES[exercise.question_type],
+        "license": "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)",
+        "description": exercise.exercise_collection&.description, # Safely fetching description
+        "author": "Stephen Edwards",  
+        "institution": "Virginia Tech",
+        "keywords": keywords_array, 
+        "exercise_name": exercise.name,
+        "iframe_url": exercise.iframe_url,
+        "lti_url": exercise.lti_launch_url
+      }
+    end
+    render json: export_data
   end
 
 
@@ -447,7 +479,7 @@ class ExercisesController < ApplicationController
 
         # Notify user of success
         success_msgs <<
-          "<li>X#{e.id}: #{e.name} saved, try it #{view_context.link_to 'here', exercise_practice_path(e)}.</li>"
+          "<li>X#{e.id}: #{e.name} saved</li>"
       end
     end
 

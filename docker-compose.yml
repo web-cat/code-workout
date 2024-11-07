@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   db_dev:
-    image: mysql:5.7
+    image: mariadb:10.2
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_USER: codeworkout
@@ -12,7 +12,7 @@ services:
     volumes:
       - dbdata:/var/lib/mysql:delegated
   db_test:
-    image: mysql:5.7
+    image: mariadb:10.2
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_USER: codeworkout

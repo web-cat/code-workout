@@ -66,6 +66,7 @@ CodeWorkout::Application.routes.draw do
       as: :exercises_query_data
     get 'exercises/download_attempt_data' =>
       'exercises#download_attempt_data', as: :download_exercise_attempt_data
+    get 'exercises/export' => 'exercises#export', as: :exercises_export
     # At the bottom, so the routes above take precedence over existing ids
     resources :exercises
 
