@@ -1,0 +1,8 @@
+.bundle
+.circleci
+.git
+vendor/bundle
+log/*
+!/log/.keep
+tmp/*
+!/tmp/.keep

@@ -23,7 +23,7 @@
 #  student_extensions_workout_offering_id_fk  (workout_offering_id => workout_offerings.id)
 #
 
-class StudentExtension < ActiveRecord::Base
+class StudentExtension < ApplicationRecord
 
   belongs_to :user
   belongs_to :workout_offering

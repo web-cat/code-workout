@@ -20,6 +20,6 @@
 #  updated_at                              :datetime
 #
 
-class WorkoutPolicy < ActiveRecord::Base
+class WorkoutPolicy < ApplicationRecord
   has_many :workout_offerings, inverse_of: :workout_policy, dependent: :nullify
 end

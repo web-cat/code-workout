@@ -8,7 +8,7 @@ development:
    database: codeworkout
    username: codeworkout
    password: codeworkout
-   host: db_dev
+   host: db_dev 
 
 # development:
 #   adapter: sqlite3

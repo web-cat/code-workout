@@ -1,4 +1,4 @@
-class AddColumnsToCodingQuestions < ActiveRecord::Migration
+class AddColumnsToCodingQuestions < ActiveRecord::Migration[5.1]
   def change
     add_column :coding_questions, :base_class, :string
     add_column :coding_questions, :wrapper_code, :text

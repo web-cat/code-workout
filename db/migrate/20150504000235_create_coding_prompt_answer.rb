@@ -1,4 +1,4 @@
-class CreateCodingPromptAnswer < ActiveRecord::Migration
+class CreateCodingPromptAnswer < ActiveRecord::Migration[5.1]
   def change
     remove_column :attempts, :answer, :text
     remove_column :attempts, :workout_offering_id, :integer

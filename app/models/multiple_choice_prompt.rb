@@ -18,7 +18,7 @@
 # One multiple-choice prompt includes one or more choices, which are
 # represented at different objects.
 #
-class MultipleChoicePrompt < ActiveRecord::Base
+class MultipleChoicePrompt < ApplicationRecord
 
   #~ Relationships ............................................................
 

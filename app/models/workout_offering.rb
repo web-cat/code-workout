@@ -42,7 +42,7 @@
 # due dates that control when the students in the corresponding course
 # offering can take the workout (and thus, when they must complete it).
 #
-class WorkoutOffering < ActiveRecord::Base
+class WorkoutOffering < ApplicationRecord
 
   #~ Relationships ............................................................
 

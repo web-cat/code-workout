@@ -1,4 +1,4 @@
-class CreateLicensePolicies < ActiveRecord::Migration
+class CreateLicensePolicies < ActiveRecord::Migration[5.1]
   def change
     create_table :license_policies do |t|
       t.string :name

@@ -45,7 +45,7 @@
 #
 # Prompts are ordered by "position", which starts at 1.
 #
-class Prompt < ActiveRecord::Base
+class Prompt < ApplicationRecord
 
   #~ Relationships ............................................................
 

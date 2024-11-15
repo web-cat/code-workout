@@ -46,7 +46,7 @@
 # =============================================================================
 # Represents a single user account on the system.
 #
-class User < ActiveRecord::Base
+class User < ApplicationRecord
   include Gravtastic
   gravtastic secure: true, default: 'monsterid'
 
@@ -113,7 +113,7 @@ class User < ActiveRecord::Base
   }
 
   scope :alphabetical, -> { order('last_name asc, first_name asc, email asc') }
-  scope :visible_to_user, -> (u) { joins{course_enrollments.outer}.
+  scope :visible_to_user, -> (u) { left_outer_joins(:course_enrollments)
     where{ (id == u.id) |
     (course_enrollments.course_role_id != CourseRole::STUDENT_ID) } }
 
@@ -230,23 +230,21 @@ class User < ActiveRecord::Base
       course_enrollments.where(course_roles: { can_manage_course: true }).
         map(&:course_offering)
     elsif course.nil?
-      course_enrollments.joins(:course_offering).
-        where(course_roles:
-          { can_manage_course: true }, course_offering:
-            { term: term }
-        ).map(&:course_offering)
+      course_enrollments.joins(:course_offering)
+        .where('course_roles.can_manage_course = true and
+          course_offerings.term_id = ?', term.id)
+        .map(&:course_offering)
     elsif term.nil?
-      course_enrollments.joins(:course_offering).
-        where(course_roles:
-          { can_manage_course: true }, course_offering:
-            { course: course }
-        ).map(&:course_offering)
+      course_enrollments.joins(:course_offering)
+        .where('course_roles.can_manage_course = true and
+          course_offerings.course_id = ?', course.id)
+        .map(&:course_offering)
     else
-      course_enrollments.joins(:course_offering).
-        where(course_roles:
-          { can_manage_course: true }, course_offering:
-            { course: course, term: term }
-        ).map(&:course_offering)
+      course_enrollments.joins(:course_offering)
+        .where('course_roles.can_manage_course = true and
+          course_offerings.course_id = ? and course_offerings.term_id = ?',
+          course.id, term.id)
+        .map(&:course_offering)
     end
   end
 
@@ -295,8 +293,7 @@ class User < ActiveRecord::Base
       enrollments.map { |e|
         if workout.kind_of?(String)
           workouts_with_name = Workout.where('lower(name) = ?', workout)
-          e.course_offering.workout_offerings.where{
-            workout_id.in(workouts_with_name.select{id}) }
+          e.course_offering.workout_offerings.where('workout_id in ?', workouts_with_name.select(:id))
         else
           e.course_offering.workout_offerings.where(workout: workout)
         end

@@ -26,6 +26,6 @@
 # This model class is here purely so that run-time errors can be tracked
 # in the database for development/debugging purposes.
 #
-class Error < ActiveRecord::Base
+class Error < ApplicationRecord
 #  belongs_to :usable, polymorphic: true
 end

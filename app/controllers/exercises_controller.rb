@@ -4,7 +4,6 @@ class ExercisesController < ApplicationController
   require 'zip'
   require 'tempfile'
 
-
   load_and_authorize_resource
   skip_authorize_resource only: [:practice, :call_open_pop, :export]
 
@@ -38,18 +37,18 @@ class ExercisesController < ApplicationController
       workout_names = exercise.exercise_workouts.map { |ew| ew.workout.name }.uniq.push(exercise.name)
       # split phrases and remove any stop/connector words
       keywords_array = workout_names.map { |phrase| phrase.downcase.split(/\W+/) }.flatten.uniq.reject { |word| stop_words.include?(word) || word.empty? }
-  
+
       {
-        "catalog_type": "SLCItemCatalog",  
+        "catalog_type": "SLCItemCatalog",
         "platform_name": "CodeWorkout",
         "url": "https://codeworkout.cs.vt.edu",
         "lti_instructions_url": "https://opendsa-server.cs.vt.edu/guides/opendsa-canvas",
         "exercise_type": Exercise::TYPE_NAMES[exercise.question_type],
         "license": "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)",
         "description": exercise.exercise_collection&.description, # Safely fetching description
-        "author": "Stephen Edwards",  
+        "author": "Stephen Edwards",
         "institution": "Virginia Tech",
-        "keywords": keywords_array, 
+        "keywords": keywords_array,
         "exercise_name": exercise.name,
         "iframe_url": exercise.iframe_url,
         "lti_url": exercise.lti_launch_url
@@ -368,11 +367,19 @@ class ExercisesController < ApplicationController
       exercise_version_params = exercise_params[:exercise_version]
       use_rights = exercise_params[:exercise_collection_id].to_i
       text_representation = exercise_version_params['text_representation']
-      hash = YAML.load(text_representation)
     else
       text_representation = File.read(params[:form][:file].path)
+      edit_rights = 0 # Personal exercise
+    end
+    if text_representation.to_s.include? ('exercise_id')
+      hash = PemlParsingUtil.new.parse(text_representation)
+    else
       hash = YAML.load(text_representation)
-      use_rights = 0 # Personal exercise
+    end
+    files = exercise_params[:files]
+    fileList = exercise_params[:fileList]
+    if fileList != "" && !files.nil?
+      files = cleanFile(files,fileList)
     end
     if !hash.kind_of?(Array)
       hash = [hash]
@@ -1060,7 +1067,6 @@ class ExercisesController < ApplicationController
       newexercise.discrimination = @exercise.discrimination
       return newexercise
     end
-
 
     # -------------------------------------------------------------
     # Only allow a trusted parameter "white list" through.

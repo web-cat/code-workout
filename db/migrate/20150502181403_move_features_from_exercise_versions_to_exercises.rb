@@ -1,4 +1,4 @@
-class MoveFeaturesFromExerciseVersionsToExercises < ActiveRecord::Migration
+class MoveFeaturesFromExerciseVersionsToExercises < ActiveRecord::Migration[5.1]
   def up
     add_column :exercises, :name, :string
     add_column :exercises, :is_public, :boolean, null: false, default: false

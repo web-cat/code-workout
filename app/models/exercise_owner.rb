@@ -23,7 +23,7 @@
 # purpose of managing editing access to exercises, particularly "private"
 # exercises that are not publicly available in the gym.
 #
-class ExerciseOwner < ActiveRecord::Base
+class ExerciseOwner < ApplicationRecord
 
   #~ Relationships ............................................................
 

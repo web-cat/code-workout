@@ -11,7 +11,7 @@
 # PromptAnswer via acts_as (see the documentation on-line for the
 # activerecord-acts_as gem).
 #
-class MultipleChoicePromptAnswer < ActiveRecord::Base
+class MultipleChoicePromptAnswer < ApplicationRecord
 
   #~ Relationships ............................................................
 

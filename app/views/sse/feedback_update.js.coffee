@@ -27,7 +27,7 @@ if attempt_error_line_no
   addLineWidget(editor, '<%= @attempt.prompt_answers.first.specific.error %>',
     attempt_error_line_no, 'error')
 
-tcrs = <%= raw @attempt.prompt_answers.first.specific.test_case_results(true).
+tcrs = <%= raw @attempt.prompt_answers.first.specific.test_case_results().
           where.not(execution_feedback: :null).
           select("test_case_id, execution_feedback, feedback_line_no").to_json %>;
 for tcr in tcrs

@@ -31,7 +31,7 @@ require "cgi"
 # Represents one version of an exercise--a single snapshot in the exercise's
 # entire edit history.
 #
-class ExerciseVersion < ActiveRecord::Base
+class ExerciseVersion < ApplicationRecord
 
   #~ Accessor
   attr_accessor :answer_code

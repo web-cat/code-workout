@@ -1,4 +1,4 @@
-class RemoveLmsAssignmentIdIndexFromWorkoutOfferings < ActiveRecord::Migration
+class RemoveLmsAssignmentIdIndexFromWorkoutOfferings < ActiveRecord::Migration[5.1]
   def change
     remove_index :workout_offerings, :lms_assignment_id # remove it to get rid of unique requirement
 

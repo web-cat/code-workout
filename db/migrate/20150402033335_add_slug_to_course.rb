@@ -1,4 +1,4 @@
-class AddSlugToCourse < ActiveRecord::Migration
+class AddSlugToCourse < ActiveRecord::Migration[5.1]
 
   def up
     remove_index :courses, :url_part

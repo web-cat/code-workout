@@ -1,4 +1,4 @@
-class CreateMultipleChoicePromptAnswer < ActiveRecord::Migration
+class CreateMultipleChoicePromptAnswer < ActiveRecord::Migration[5.1]
   def change
     create_table :multiple_choice_prompt_answers do |t|
     end

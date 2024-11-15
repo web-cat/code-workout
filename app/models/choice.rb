@@ -38,7 +38,7 @@
 # have a non-zero value indicating the partial credit awarded for that single
 # choice.
 #
-class Choice < ActiveRecord::Base
+class Choice < ApplicationRecord
 
   #~ Relationships ............................................................
 

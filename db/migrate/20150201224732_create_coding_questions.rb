@@ -1,4 +1,4 @@
-class CreateCodingQuestions < ActiveRecord::Migration
+class CreateCodingQuestions < ActiveRecord::Migration[5.1]
   def change
     create_table :coding_questions do |t|
       t.string :base_class

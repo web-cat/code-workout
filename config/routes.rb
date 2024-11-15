@@ -1,4 +1,4 @@
-CodeWorkout::Application.routes.draw do
+Rails.application.routes.draw do
 
   root 'home#index'
 
@@ -190,6 +190,13 @@ CodeWorkout::Application.routes.draw do
   match 'help/:action', controller: 'help', via: [:get]
   match 'static_pages/:action', controller: 'static_pages', via: [:get]
 
+  get 'static_pages/mockup1' => 'static_pages#mockup1'
+  get 'static_pages/mockup2' => 'static_pages#mockup2'
+  get 'static_pages/mockup3' => 'static_pages#mockup3'
+  get 'static_pages/thumbnails' => 'static_pages#thumbnails'
+
+  # match 'help/:action', to: 'help', via: [:get]
+  # match 'static_pages/:action', to: 'static_pages', via: [:get]
 end
 
 #== Route Map

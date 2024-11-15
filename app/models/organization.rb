@@ -19,7 +19,7 @@
 # Represents a university, college, school, or other organization that
 # has courses.
 #
-class Organization < ActiveRecord::Base
+class Organization < ApplicationRecord
   extend FriendlyId
   friendly_id :abbreviation, use: :history
 

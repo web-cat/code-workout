@@ -1,4 +1,4 @@
-class AddKeys < ActiveRecord::Migration
+class AddKeys < ActiveRecord::Migration[5.1]
   def change
     add_foreign_key "attempts", "workout_scores", name: "attempts_active_score_id_fk", column: "active_score_id"
     add_foreign_key "attempts", "exercise_versions", name: "attempts_exercise_version_id_fk"

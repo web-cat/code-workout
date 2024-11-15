@@ -1,4 +1,4 @@
-class CreateIRTData < ActiveRecord::Migration
+class CreateIRTData < ActiveRecord::Migration[5.1]
   def change
     create_table :irt_data do |t|
       t.integer  :attempt_count,  null: false

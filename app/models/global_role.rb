@@ -13,7 +13,7 @@
 # Represents a user's global permissions on the system.  This has now
 # degenerated into what ammounts to a global "administrator" flag.
 #
-class GlobalRole < ActiveRecord::Base
+class GlobalRole < ApplicationRecord
 
   #~ Validation ...............................................................
 

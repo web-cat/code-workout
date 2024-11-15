@@ -1,4 +1,4 @@
-class CreateLtiIdentities < ActiveRecord::Migration
+class CreateLtiIdentities < ActiveRecord::Migration[5.1]
   def change
     create_table :lti_identities do |t|
       t.string :lti_user_id

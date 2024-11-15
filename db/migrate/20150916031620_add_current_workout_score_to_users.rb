@@ -1,4 +1,4 @@
-class AddCurrentWorkoutScoreToUsers < ActiveRecord::Migration
+class AddCurrentWorkoutScoreToUsers < ActiveRecord::Migration[5.1]
   def change
     change_table :users do |t|
       t.integer :current_workout_score_id

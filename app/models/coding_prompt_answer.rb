@@ -14,7 +14,7 @@
 # PromptAnswer via acts_as (see the documentation on-line for the
 # activerecord-acts_as gem).
 #
-class CodingPromptAnswer < ActiveRecord::Base
+class CodingPromptAnswer < ApplicationRecord
 
   #~ Relationships ............................................................
 

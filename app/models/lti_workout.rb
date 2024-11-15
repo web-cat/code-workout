@@ -19,7 +19,7 @@
 #  fk_rails_...  (lms_instance_id => lms_instances.id)
 #
 
-class LtiWorkout < ActiveRecord::Base
+class LtiWorkout < ApplicationRecord
   belongs_to :workout
   belongs_to :lms_instance
   has_many :workout_scores

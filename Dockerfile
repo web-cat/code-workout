@@ -1,10 +1,12 @@
-FROM ruby:2.6.3
+FROM ruby:2.7.1
 
-LABEL MAINTAINER Jihane Najdi <jnajdi@vt.edu>
+MAINTAINER Jihane Najdi <jnajdi@vt.edu>
 
 # Default environment
 ARG RAILS_ENV='development'
-ARG BASEDIR='/code-workout/'
+# Ruby changed the way optional params are done, but Rails hasn't caught up
+ARG RUBYOPT='-W:no-deprecated'
+ARG BASEDIR='/code-workout'
 
 ENV TZ=America/New_York
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
@@ -40,21 +42,18 @@ RUN apt-get update -qq \
       python-feedvalidator \
       python-sphinx \
       ant \
+      default-jre \
+      default-jdk \
     && pip install --upgrade pip
 
 ## JAVA INSTALLATION
 RUN apt-get install -y default-jre default-jdk
 
 # install rubygems
-ENV GEM_HOME /usr/local/bundle
-ENV PATH $GEM_HOME/bin:$PATH
-ENV BUNDLER_VERSION 1.17.3 
+ENV BUNDLER_VERSION 2.1.4
 ENV RAILS_ENV=$RAILS_ENV
 
-RUN gem install bundler -v $BUNDLER_VERSION \
-	&& bundle config --global path "$GEM_HOME" \
-	&& bundle config --global bin "$GEM_HOME/bin" \
-	&& bundle config git.allow_insecure true
+RUN gem install bundler -v $BUNDLER_VERSION
 
 VOLUME ${BASEDIR}
 WORKDIR ${BASEDIR}

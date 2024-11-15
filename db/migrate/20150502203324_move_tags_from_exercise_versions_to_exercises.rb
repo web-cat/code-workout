@@ -1,4 +1,4 @@
-class MoveTagsFromExerciseVersionsToExercises < ActiveRecord::Migration
+class MoveTagsFromExerciseVersionsToExercises < ActiveRecord::Migration[5.1]
   def up
     drop_table :exercise_versions_tags
     create_table :exercises_tags, id: false do |t|

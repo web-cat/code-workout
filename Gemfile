@@ -1,7 +1,8 @@
 source 'https://rubygems.org'
 
-gem 'rails', '~> 4.2'
-gem 'bootstrap-sass-backport', '~> 3.2.0'
+gem 'rails', '~> 5.1'
+gem 'sprockets', '< 4.0.0'
+gem 'bootstrap-sass', '~> 3.2.0'
 gem 'jquery-rails'
 gem 'jquery-ui-rails'
 gem 'bootstrap-editable-rails'
@@ -12,7 +13,7 @@ gem 'formtastic-bootstrap'
 gem 'sucker_punch', '~> 1.0'
 gem 'haml', '>= 3.1.4'
 gem 'haml-rails'
-gem 'coffee-rails', '~> 4.0.0'
+gem 'coffee-rails', '~> 4.2'
 gem 'coffee-script-source'
 gem 'test-unit', '~> 3.0.9'
 gem 'nokogiri', '~> 1.10.4'
@@ -26,12 +27,15 @@ gem 'acts-as-taggable-on'
 gem 'representable', '~> 2.1'
 gem 'redcarpet'
 gem 'loofah', '>= 2.3.1'
+gem 'peml', github: 'CSSPLICE/peml'
 gem 'truncate_html'
 gem 'tzinfo' # For timezone support
 gem 'active_record_union'
+gem 'dottie', '~> 0.0.1'
 gem 'mysql2', '~> 0.4.0'
 gem 'modernizr-rails'
 gem 'rubyzip', '>= 1.3.0'
+gem 'bootsnap' # Added during Rails 5.2 upgrade
 
 # For JSON support
 gem 'rabl'
@@ -48,22 +52,19 @@ group :development, :test do
   gem 'thin'
   gem 'byebug'
   gem 'sqlite3', '~> 1.3.0'
+  gem 'listen'
   gem 'rspec-rails'
   gem 'annotate'
   gem 'rails-erd', git: 'https://github.com/voormedia/rails-erd'
   gem 'faker'
-  # Needed for debugging support in Aptana Studio.  Disabled, since these
-  # two gems do not support Ruby 2.0 yet :-(.
-  # gem 'ruby-debug-base'
-  # gem 'ruby-debug-ide'
   gem 'pry'
   gem 'request-log-analyzer'
+  gem 'capybara', '~> 3.12.0'
 end
 gem 'factory_bot_rails'
 gem 'log_file'
 
 group :test do
-  gem 'capybara'
 end
 
 group :production, :staging, :deploy  do
@@ -83,7 +84,7 @@ gem 'omniauth-google-oauth2'
 gem 'omniauth-cas'
 gem 'cancancan'
 gem 'activeadmin'
-gem 'exception_handler', '= 0.3.45'
+gem 'exception_handler', '~> 0.8.0.0'
 
 gem 'kaminari', '~> 1.2.1'        # Auto-paginated views
 gem 'remotipart'      # Adds support for remote mulitpart forms (file uploads)
@@ -97,9 +98,6 @@ gem 'bootstrap-wysihtml5-rails'
 #gems for datepicker
 gem 'momentjs-rails', '>= 2.9.0'
 gem 'bootstrap3-datetimepicker-rails', '~> 4.17.37'
-
-#gem for improved WHERE querying
-gem 'squeel', '~> 1.2'
 
 #for nested forms
 gem 'cocoon'
