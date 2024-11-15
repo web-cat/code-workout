@@ -1,5 +1,5 @@
 class WorkoutOfferingsController < ApplicationController
-  skip_before_filter :authenticate_user!, :only => :practice
+  skip_before_action :authenticate_user!, :only => :practice
 
   load_and_authorize_resource
 
