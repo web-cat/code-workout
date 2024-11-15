@@ -1,8 +1,8 @@
 class WorkoutOfferingsController < ApplicationController
-  skip_before_action :authenticate_user!, :only => :practice
+  # Isn't this handled by authorize_resource already?
+  # skip_before_action :authenticate_user!, :only => :practice
 
   load_and_authorize_resource
-
   skip_authorize_resource :only => :practice
 
   #~ Action methods ...........................................................

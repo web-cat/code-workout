@@ -1,5 +1,6 @@
 set :stage, :staging
-set :branch, 'rails-5-upgrade' 
+# set :branch, 'rails-5-upgrade'
+set :branch, 'staging'
 set :rails_env, 'staging'
 
 # Simple Role Syntax
