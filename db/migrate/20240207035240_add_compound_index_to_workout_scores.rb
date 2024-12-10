@@ -1,4 +1,4 @@
-class AddCompoundIndexToWorkoutScores < ActiveRecord::Migration
+class AddCompoundIndexToWorkoutScores < ActiveRecord::Migration[4.2]
   def change
     add_index :workout_scores, [:user_id, :workout_id, :workout_offering_id],
               name: 'idx_ws_on_user_workout_workout_offering'

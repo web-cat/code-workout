@@ -1,4 +1,4 @@
-class AddCompoundIndexToAttempts < ActiveRecord::Migration
+class AddCompoundIndexToAttempts < ActiveRecord::Migration[4.2]
   def change
     add_index :attempts, [:user_id, :exercise_version_id],
               name: 'idx_attempts_on_user_exercise_version'
