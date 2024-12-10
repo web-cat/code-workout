@@ -20,10 +20,12 @@
 #
 # Indexes
 #
-#  index_attempts_on_active_score_id      (active_score_id)
-#  index_attempts_on_exercise_version_id  (exercise_version_id)
-#  index_attempts_on_user_id              (user_id)
-#  index_attempts_on_workout_score_id     (workout_score_id)
+#  idx_attempts_on_user_exercise_version           (user_id,exercise_version_id)
+#  idx_attempts_on_workout_score_exercise_version  (workout_score_id,exercise_version_id)
+#  index_attempts_on_active_score_id               (active_score_id)
+#  index_attempts_on_exercise_version_id           (exercise_version_id)
+#  index_attempts_on_user_id                       (user_id)
+#  index_attempts_on_workout_score_id              (workout_score_id)
 #
 # Foreign Keys
 #
@@ -119,6 +121,19 @@ class Attempt < ApplicationRecord
   def rescore(delta)
     self.score += delta
     self.save!
+  end
+
+  # -------------------------------------------------------------
+  # Regrade this attempt and rescore the corresponding workout score.
+  def regrade()
+    self.active_score = nil
+    self.
+    self.save!
+    CodeWorker.new.perform(self.id)
+    puts "regrading #{self.id} => #{self.score}"
+    if self.workout_score
+      self.workout_score.retotal
+    end
   end
 
   # -------------------------------------------------------------

@@ -13,8 +13,7 @@
 #
 # Foreign Keys
 #
-#  exercise_owners_exercise_id_fk  (exercise_id => exercises.id)
-#  exercise_owners_owner_id_fk     (owner_id => users.id)
+#  exercise_owners_owner_id_fk  (owner_id => users.id)
 #
 
 # =============================================================================

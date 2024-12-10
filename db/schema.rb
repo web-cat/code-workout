@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_11_01_005101) do
+ActiveRecord::Schema.define(version: 20240207161742) do
 
   create_table "active_admin_comments", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci", force: :cascade do |t|
     t.string "namespace"
@@ -46,6 +46,9 @@ ActiveRecord::Schema.define(version: 2021_11_01_005101) do
     t.index ["user_id"], name: "index_attempts_on_user_id"
     t.index ["workout_score_id"], name: "index_attempts_on_workout_score_id"
   end
+
+  add_index "attempts", ["user_id", "exercise_version_id"], name: "idx_attempts_on_user_exercise_version", using: :btree
+  add_index "attempts", ["workout_score_id", "exercise_version_id"], name: "idx_attempts_on_workout_score_exercise_version", using: :btree
 
   create_table "attempts_tag_user_scores", id: false, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci", force: :cascade do |t|
     t.integer "attempt_id"
@@ -340,6 +343,8 @@ ActiveRecord::Schema.define(version: 2021_11_01_005101) do
     t.index ["lms_instance_id"], name: "index_lti_identities_on_lms_instance_id"
     t.index ["user_id"], name: "index_lti_identities_on_user_id"
   end
+
+  add_index "lti_identities", ["lti_user_id"], name: "index_lti_identities_on_lti_user_id", using: :btree
 
   create_table "lti_workouts", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci", force: :cascade do |t|
     t.integer "workout_id"
@@ -661,6 +666,8 @@ ActiveRecord::Schema.define(version: 2021_11_01_005101) do
     t.index ["workout_offering_id"], name: "workout_scores_workout_offering_id_fk"
   end
 
+  add_index "workout_scores", ["user_id", "workout_id", "workout_offering_id"], name: "idx_ws_on_user_workout_workout_offering", using: :btree
+
   create_table "workouts", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci", force: :cascade do |t|
     t.string "name", default: "", null: false
     t.boolean "scrambled", default: false
@@ -693,7 +700,6 @@ ActiveRecord::Schema.define(version: 2021_11_01_005101) do
   add_foreign_key "course_offerings", "courses", name: "course_offerings_course_id_fk"
   add_foreign_key "course_offerings", "terms", name: "course_offerings_term_id_fk"
   add_foreign_key "courses", "organizations", name: "courses_organization_id_fk"
-  add_foreign_key "exercise_owners", "exercises", name: "exercise_owners_exercise_id_fk"
   add_foreign_key "exercise_owners", "users", column: "owner_id", name: "exercise_owners_owner_id_fk"
   add_foreign_key "exercise_versions", "exercises", name: "exercise_versions_exercise_id_fk"
   add_foreign_key "exercise_versions", "irt_data", column: "irt_data_id", name: "exercise_versions_irt_data_id_fk"
