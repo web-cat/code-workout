@@ -187,16 +187,16 @@ class Exercise < ApplicationRecord
   def self.publicly_visible
     public_license = Exercise.joins(
       exercise_collection: [ license: :license_policy ])
-      .where(is_public: nil, exercise_collection:
-        { license:
-          { license_policy:
-            { is_public: true } } }
-      )
+      .where('exercises.is_public is null and license_policies.is_public = true')
+      # .where(is_public: nil, exercise_collection:
+      #   { license:
+      #     { license_policy:
+      #       { is_public: true } } }
+      # )
 
-    public_exercise = Exercise.where(is_public: true)
+    public_exercises = Exercise.where(is_public: true)
 
-    return Exercise.joins(exercise_collection: [ license: :license_policy ])
-      .where('(exercises.is_public is null and license_policies.is_public = true) or exercises.is_public = true')
+    return public_exercises.union(public_license)
   end
 
 
