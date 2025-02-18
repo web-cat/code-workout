@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2024_02_07_161742) do
+ActiveRecord::Schema.define(version: 2025_02_18_154318) do
 
   create_table "active_admin_comments", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci", force: :cascade do |t|
     t.string "namespace"
@@ -152,16 +152,17 @@ ActiveRecord::Schema.define(version: 2024_02_07_161742) do
   create_table "errors", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_unicode_ci", force: :cascade do |t|
     t.string "usable_type"
     t.integer "usable_id"
-    t.string "class_name"
+    t.text "class_name"
     t.text "message"
     t.text "trace"
-    t.text "target_url"
-    t.text "referer_url"
+    t.text "target"
+    t.text "referrer"
     t.text "params"
     t.text "user_agent"
     t.datetime "created_at"
     t.datetime "updated_at"
-    t.index ["class_name"], name: "index_errors_on_class_name"
+    t.text "status"
+    t.index ["class_name"], name: "index_errors_on_class_name", length: 1024
     t.index ["created_at"], name: "index_errors_on_created_at"
   end
 
