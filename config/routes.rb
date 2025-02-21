@@ -46,14 +46,14 @@ Rails.application.routes.draw do
 
     # /gym/exercises ...
     get 'exercises/call_open_pop' => 'exercises#call_open_pop'
-    get  'exercises_import' => 'exercises#upload_yaml'
-    post  'exercises_yaml_create' => 'exercises#yaml_create'
+    get  'exercises_import' => 'exercises#upload_yaml'  # REMOVE
+    post  'exercises_yaml_create' => 'exercises#yaml_create' # REMOVE
     get  'exercises/upload' => 'exercises#upload', as: :exercises_upload
     get  'exercises/download' => 'exercises#download', as: :exercises_download
     post 'exercises/upload_create' => 'exercises#upload_create'
     get  'exercises/upload_mcqs' => 'exercises#upload_mcqs',
-      as: :exercises_upload_mcqs
-    post 'exercises/create_mcqs' => 'exercises#create_mcqs'
+      as: :exercises_upload_mcqs  # REMOVE
+    post 'exercises/create_mcqs' => 'exercises#create_mcqs' # REMOVE
     get  '/exercises/any' => 'exercises#random_exercise',
       as: :random_exercise
     get 'exercises/:id/practice' => 'exercises#practice',
@@ -87,8 +87,8 @@ Rails.application.routes.draw do
       as: :practice_workout
     get  'workouts/:id/evaluate' => 'workouts#evaluate', as: :workout_evaluate
     get  'workouts_dummy' => 'workouts#dummy'
-    get  'workouts_import' => 'workouts#upload_yaml'
-    post  'workouts_yaml_create' => 'workouts#yaml_create'
+    get  'workouts_import' => 'workouts#upload_yaml' # REMOVE?
+    post  'workouts_yaml_create' => 'workouts#yaml_create' # REMOVE?
     post 'workouts/search' => 'workouts#search', as: :workouts_search
     get 'workouts/:id/download_attempt_data' =>
       'workouts#download_attempt_data', as: :download_workout_attempt_data

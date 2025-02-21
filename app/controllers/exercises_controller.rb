@@ -165,7 +165,7 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # GET /exercises/1/edit
   def edit
-    puts "ResourceFile.UPLOAD_PATH = #{ResourceFile::UPLOAD_PATH}"
+    logger.debug "ResourceFile.UPLOAD_PATH = #{ResourceFile::UPLOAD_PATH}"
     @exercise_version = @exercise.current_version
     @attached_files = []
     @exercise_version.ownerships.each do |e|
@@ -201,6 +201,7 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # POST /exercises
   def create
+    # REMOVE?
     ex = Exercise.new
     exercise_version = ExerciseVersion.new(exercise: ex)
     msg = params[:exercise] || params[:coding_question]
@@ -275,6 +276,7 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # POST exercises/create_mcqs
   def create_mcqs
+    # REMOVE
     CSV.foreach(params[:form].fetch(:mcqfile).path, {headers: true}) do |row|
       if row['Question'].include?('Python')
         next
@@ -289,22 +291,26 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # GET exercises/upload_mcqs
   def upload_mcqs
+    # REMOVE
   end
 
 
   # -------------------------------------------------------------
   # GET exercises/upload_exercises
   def upload
+    # REMOVE
   end
 
 
   # -------------------------------------------------------------
   def upload_yaml
+    # REMOVE
   end
 
 
   # -------------------------------------------------------------
   def yaml_create
+    # REMOVE
     @yaml_exers = YAML.load_file(params[:form].fetch(:yamlfile).path)
     @yaml_exers.each do |exercise|
       @ex = Exercise.new
@@ -371,22 +377,30 @@ class ExercisesController < ApplicationController
       text_representation = File.read(params[:form][:file].path)
       edit_rights = 0 # Personal exercise
     end
-    if text_representation.to_s.include? ('exercise_id')
-      hash = PemlParsingUtil.new.parse(text_representation)
-    else
+    if text_representation.start_with?('---')
       hash = YAML.load(text_representation)
-    end
-    files = exercise_params[:files]
-    fileList = exercise_params[:fileList]
-    if fileList != "" && !files.nil?
-      files = cleanFile(files,fileList)
+    else
+      logger.debug '=========='
+      logger.debug 'PEML Input'
+      logger.debug '=========='
+      logger.debug text_representation
+      hash = PemlParsingUtil.new.parse(text_representation)
+      logger.debug '=========='
+      logger.debug 'PEML Hash'
+      logger.debug '=========='
+      logger.debug hash.to_yaml
+      logger.debug '=========='
     end
     if !hash.kind_of?(Array)
       hash = [hash]
     end
 
     files = exercise_params[:files]
-    puts "files = #{files.inspect}"
+    fileList = exercise_params[:fileList]
+    if fileList != "" && !files.nil?
+      files = cleanFile(files,fileList)
+    end
+    logger.debug "files = #{files.inspect}"
     @attached_files = exercise_params[:attached_files]
     if @attached_files == "null"
       @attached_files = nil
@@ -394,7 +408,7 @@ class ExercisesController < ApplicationController
     if @attached_files
       @attached_files = JSON.parse(@attached_files)
     end
-    puts "attached files = #{@attached_files.inspect}"
+    logger.debug "attached files = #{@attached_files.inspect}"
 
     # figure out if we need to add this to an exercise collection
     exercise_collection = nil
@@ -430,7 +444,7 @@ class ExercisesController < ApplicationController
       if !e.save
         success_all = false
         # put together an error message
-        error_msgs <<  "Errors while saving exercise #{e.andand.name}:<ul>"
+        error_msgs <<  "<p>Errors while saving exercise #{e.andand.name}:</p><ul>"
         e.errors.full_messages.each do |msg|
           error_msgs << "<li>#{msg}</li>"
         end
@@ -444,16 +458,16 @@ class ExercisesController < ApplicationController
         # copy all retained resource files, skipping any to be removed
         prev_version = e.exercise_versions.offset(1).first
         if prev_version
-          puts "processing ownerships from prev version #{prev_version.id}"
+          logger.debug "processing ownerships from prev version #{prev_version.id}"
           prev_version.ownerships.each do |o|
-            puts "checking ownership #{o.inspect}"
+            logger.debug "checking ownership #{o.inspect}"
             # Double-loop isn't the greatest design, but both lists are short
             @attached_files.each do |a|
-              puts "checking against attachment #{a.inspect}"
+              logger.debug "checking against attachment #{a.inspect}"
               # uploaded flag is true if it was previously uploaded
               # deleted flag is true if it is to be pruned/removed from exercise
               if a['name'] == o.filename && a['uploaded'] && !a['deleted']
-                puts "adding ownership record"
+                logger.debug "adding ownership record"
                 ownertable = ex_ver.ownerships.create!(
                   filename: o.filename,
                   resource_file: o.resource_file)
@@ -464,9 +478,9 @@ class ExercisesController < ApplicationController
         # Now add all newly uploaded attached files
         if files
           files.each do |file|
-            puts "processing new upload #{file.inspect}"
+            logger.debug "processing new upload #{file.inspect}"
             @attached_files.each do |a|
-              puts "checking against attachment #{a.inspect}"
+              logger.debug "checking against attachment #{a.inspect}"
               if a['name'] == file.original_filename && !a['uploaded'] && !a['deleted']
                 Ownership.create!(
                   filename: file.original_filename,
@@ -495,10 +509,10 @@ class ExercisesController < ApplicationController
       redirect_to @return_to, flash: { success: success_msgs.html_safe } and return
     else
       if !success_msgs.blank?
-        error_msgs << 'Some exercises were successfully saved.'
+        error_msgs << '<p>Some exercises were successfully saved.</p>'
         error_msgs << '<ul>' + success_msgs.join('') + '</ul>'
       end
-      redirect_to @return_to, flash: { error: error_msgs.join("").html_safe } and return
+      redirect_back fallback_location: @return_to, flash: { error: error_msgs.join("").html_safe } and return
     end
   end
 
@@ -934,7 +948,7 @@ class ExercisesController < ApplicationController
         if exercise_prompt_answer.save
           CodeWorker.new.async.perform(@attempt.id)
         else
-          puts 'IMPROPER PROMPT',
+          logger.error 'IMPROPER PROMPT',
             'unable to save prompt_answer: ' \
             "#{prompt_answer.errors.full_messages.to_s}",
             'IMPROPER PROMPT'
