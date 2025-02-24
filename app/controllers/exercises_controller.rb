@@ -377,6 +377,8 @@ class ExercisesController < ApplicationController
       text_representation = File.read(params[:form][:file].path)
       edit_rights = 0 # Personal exercise
     end
+    error_msgs = []
+    # FIXME: add support for JSON here as well
     if text_representation.start_with?('---')
       hash = YAML.load(text_representation)
     else
@@ -384,12 +386,23 @@ class ExercisesController < ApplicationController
       logger.debug 'PEML Input'
       logger.debug '=========='
       logger.debug text_representation
-      hash = PemlParsingUtil.new.parse(text_representation)
+      hash = PemlParsingUtil.new.parse(text_representation, error_msgs)
       logger.debug '=========='
       logger.debug 'PEML Hash'
       logger.debug '=========='
       logger.debug hash.to_yaml
       logger.debug '=========='
+
+      if !error_msgs.empty?
+        raw_msgs = error_msgs
+        error_msgs = []
+        error_msgs <<  "<span>Errors while parsing PEML for exercise #{hash['name']}:</span><ul>"
+        raw_msgs.each do |msg|
+          error_msgs << "<li>#{msg}</li>"
+        end
+        error_msgs << "</ul>"
+      end
+
     end
     if !hash.kind_of?(Array)
       hash = [hash]
@@ -437,79 +450,82 @@ class ExercisesController < ApplicationController
 
     # parse the text_representation
     exercises = ExerciseRepresenter.for_collection.new([]).from_hash(hash)
-    success_all = true
-    error_msgs = []
+    success_all = error_msgs.empty?
     success_msgs = []
-    exercises.each do |e|
-      if !e.save
-        success_all = false
-        # put together an error message
-        error_msgs <<  "<p>Errors while saving exercise #{e.andand.name}:</p><ul>"
-        e.errors.full_messages.each do |msg|
-          error_msgs << "<li>#{msg}</li>"
-        end
-        error_msgs << "</ul>"
-      else # successfully created the exercise
-        ex_ver = e.current_version
+    successful_exercise = nil
+    if success_all
+      exercises.each do |e|
+        if !e.save
+          success_all = false
+          # put together an error message
+          error_msgs <<  "<span>Errors while saving exercise #{e.andand.name}:</span><ul>"
+          e.errors.full_messages.each do |msg|
+            error_msgs << "<li>#{msg}</li>"
+          end
+          error_msgs << "</ul>"
+        else # successfully created the exercise
+          successful_exercise ||= e
+          ex_ver = e.current_version
 
-        # make the current user an exercise owner if they aren't already
-        e.add_owner!(current_user)
+          # make the current user an exercise owner if they aren't already
+          e.add_owner!(current_user)
 
-        # copy all retained resource files, skipping any to be removed
-        prev_version = e.exercise_versions.offset(1).first
-        if prev_version
-          logger.debug "processing ownerships from prev version #{prev_version.id}"
-          prev_version.ownerships.each do |o|
-            logger.debug "checking ownership #{o.inspect}"
-            # Double-loop isn't the greatest design, but both lists are short
-            @attached_files.each do |a|
-              logger.debug "checking against attachment #{a.inspect}"
-              # uploaded flag is true if it was previously uploaded
-              # deleted flag is true if it is to be pruned/removed from exercise
-              if a['name'] == o.filename && a['uploaded'] && !a['deleted']
-                logger.debug "adding ownership record"
-                ownertable = ex_ver.ownerships.create!(
-                  filename: o.filename,
-                  resource_file: o.resource_file)
+          # copy all retained resource files, skipping any to be removed
+          prev_version = e.exercise_versions.offset(1).first
+          if prev_version
+            logger.debug "processing ownerships from prev version #{prev_version.id}"
+            prev_version.ownerships.each do |o|
+              logger.debug "checking ownership #{o.inspect}"
+              # Double-loop isn't the greatest design, but both lists are short
+              @attached_files.each do |a|
+                logger.debug "checking against attachment #{a.inspect}"
+                # uploaded flag is true if it was previously uploaded
+                # deleted flag is true if it is to be pruned/removed from exercise
+                if a['name'] == o.filename && a['uploaded'] && !a['deleted']
+                  logger.debug "adding ownership record"
+                  ownertable = ex_ver.ownerships.create!(
+                    filename: o.filename,
+                    resource_file: o.resource_file)
+                end
               end
             end
           end
-        end
-        # Now add all newly uploaded attached files
-        if files
-          files.each do |file|
-            logger.debug "processing new upload #{file.inspect}"
-            @attached_files.each do |a|
-              logger.debug "checking against attachment #{a.inspect}"
-              if a['name'] == file.original_filename && !a['uploaded'] && !a['deleted']
-                Ownership.create!(
-                  filename: file.original_filename,
-                  exercise_version: ex_ver,
-                  resource_file: ResourceFile.for_upload(file, current_user)
-                )
+          # Now add all newly uploaded attached files
+          if files
+            files.each do |file|
+              logger.debug "processing new upload #{file.inspect}"
+              @attached_files.each do |a|
+                logger.debug "checking against attachment #{a.inspect}"
+                if a['name'] == file.original_filename && !a['uploaded'] && !a['deleted']
+                  Ownership.create!(
+                    filename: file.original_filename,
+                    exercise_version: ex_ver,
+                    resource_file: ResourceFile.for_upload(file, current_user)
+                  )
+                end
               end
             end
           end
+
+          # Add exercise to collection
+          exercise_collection.andand.add(e, override: true)
+
+          # Update the text representation
+          e.current_version.update(text_representation: text_representation)
+
+          # Notify user of success
+          success_msgs <<
+            "<li>X#{e.id}: #{e.name} saved</li>"
         end
-
-        # Add exercise to collection
-        exercise_collection.andand.add(e, override: true)
-
-        # Update the text representation
-        e.current_version.update(text_representation: text_representation)
-
-        # Notify user of success
-        success_msgs <<
-          "<li>X#{e.id}: #{e.name} saved</li>"
       end
     end
 
     if success_all
       success_msgs = '<ul>' + success_msgs.join("") + '</ul>'
-      redirect_to @return_to, flash: { success: success_msgs.html_safe } and return
+      redirect_to exercise_practice_path(successful_exercise), flash: { success: success_msgs.html_safe } and return
     else
       if !success_msgs.blank?
-        error_msgs << '<p>Some exercises were successfully saved.</p>'
+        error_msgs << '<span>Some exercises were successfully saved.</span>'
         error_msgs << '<ul>' + success_msgs.join('') + '</ul>'
       end
       redirect_back fallback_location: @return_to, flash: { error: error_msgs.join("").html_safe } and return
