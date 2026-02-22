@@ -114,14 +114,14 @@ class PemlParsingUtil
     Rails.logger.debug 'get_test_file_content(prompt, files), files:'
     Rails.logger.debug '=========='
     Rails.logger.debug files.to_yaml
-    Rails.logger.debug files.inspect
+    Rails.logger.debug files.pretty_inspect
     if files and !prompt['tests']
       file = files['files'][0]
       Rails.logger.debug '=========='
       Rails.logger.debug 'get_test_file_content(prompt, files), file:'
       Rails.logger.debug '=========='
       Rails.logger.debug file.to_yaml
-      Rails.logger.debug file.inspect
+      Rails.logger.debug file.pretty_inspect
       file.dottie!
 
       # copy class and method names from file pattern properties, if present
@@ -183,7 +183,7 @@ class PemlParsingUtil
     Rails.logger.debug 'get_file_content(files), files:'
     Rails.logger.debug '=========='
     Rails.logger.debug files.to_yaml
-    Rails.logger.debug files.inspect
+    Rails.logger.debug files.pretty_inspect
     file = files
     if file and files['files']
       file = files['files'][0]
@@ -192,7 +192,7 @@ class PemlParsingUtil
     Rails.logger.debug 'get_file_content(files), file:'
     Rails.logger.debug '=========='
     Rails.logger.debug file.to_yaml
-    Rails.logger.debug file.inspect
+    Rails.logger.debug file.pretty_inspect
     if file.is_a? String
       file.strip!
       if file.sub!(/^url\((.*)\)$/, '\1')

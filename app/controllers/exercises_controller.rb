@@ -1,8 +1,10 @@
+require 'ims/lti'
+require 'oauth/request_proxy/rack_request'
+require 'zip'
+require 'tempfile'
+
 class ExercisesController < ApplicationController
-  require 'ims/lti'
-  require 'oauth/request_proxy/rack_request'
-  require 'zip'
-  require 'tempfile'
+
 
   load_and_authorize_resource
   skip_authorize_resource only: [:practice, :call_open_pop, :export]
