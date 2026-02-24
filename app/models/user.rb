@@ -354,6 +354,16 @@ class User < ApplicationRecord
 
 
   # -------------------------------------------------------------
+  # Gets the user's "display name", which is their full name if it is in the
+  # database, otherwise it is their e-mail address.
+  def display_name_with_email
+    last_name.blank? ?
+      (first_name.blank? ? email : first_name + ' <' + email + '>') :
+      (first_name.blank? ? last_name + ' <' + email + '>' : (first_name + ' ' + last_name + ' <' + email + '>'))
+  end
+
+
+  # -------------------------------------------------------------
   # Gets the user's "label name", which is their last name, first name, or
   # email_without_domain, in decreasing order of preference. For use in
   # auto-generated course_offering labels
