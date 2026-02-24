@@ -8,33 +8,33 @@ class CreateIRTData < ActiveRecord::Migration[5.1]
     end
 
     change_table :exercises do |t|
-      t.remove :attempt_count, :integer
-      t.remove :correct_count, :float
-      t.remove :difficulty, :float
-      t.remove :discrimination, :float
+      t.remove :attempt_count
+      t.remove :correct_count
+      t.remove :difficulty
+      t.remove :discrimination
 
       t.belongs_to :irt_data
-      t.foreign_key :irt_datas
+      t.foreign_key :irt_data, column: :irt_data_id
     end
 
     change_table :exercise_versions do |t|
-      t.remove :attempt_count, :integer
-      t.remove :correct_count, :float
-      t.remove :difficulty, :float
-      t.remove :discrimination, :float
+      t.remove :attempt_count
+      t.remove :correct_count
+      t.remove :difficulty
+      t.remove :discrimination
 
       t.belongs_to :irt_data
-      t.foreign_key :irt_datas
+      t.foreign_key :irt_data, column: :irt_data_id
     end
 
     change_table :prompts do |t|
-      t.remove :attempt_count, :integer
-      t.remove :correct_count, :float
-      t.remove :difficulty, :float
-      t.remove :discrimination, :float
+      t.remove :attempt_count
+      t.remove :correct_count
+      t.remove :difficulty
+      t.remove :discrimination
 
       t.belongs_to :irt_data
-      t.foreign_key :irt_datas
+      t.foreign_key :irt_data, column: :irt_data_id
     end
   end
 end

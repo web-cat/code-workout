@@ -2,9 +2,9 @@ class AddToAttempt < ActiveRecord::Migration[5.1]
   def change
     change_table :attempts do |t|
       t.belongs_to :workout_score
-      t.integer :active_score_id
+      t.bigint :active_score_id
 
-      t.index :workout_score_id
+      #t.index :workout_score_id
       t.index :active_score_id
     end
     change_column :attempts, :score, :float

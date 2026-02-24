@@ -38,6 +38,32 @@ describe Exercise do
     @user = FactoryBot.build :confirmed_user
   end
 
+  context 'SLC items catalog generation' do
+    it 'generates a valid JSON catalog for public exercises' do
+      # Create a public exercise using the factory which sets tags automatically
+      ex = FactoryBot.create :coding_exercise, is_public: true, name: 'Test Exercise', external_id: 'test-123'
+      
+      filename = Rails.root.join('tmp', 'slc_catalog.json')
+      Exercise.generate_slc_catalog(filename)
+      
+      expect(File.exist?(filename)).to be_truthy
+      catalog = JSON.parse(File.read(filename))
+      expect(catalog).to be_an(Array)
+      
+      item = catalog.find { |i| i['persistentID'] == 'test-123' }
+      expect(item).not_to be_nil
+      expect(item['catalog_type']).to eq('SLCItem')
+      expect(item['title']).to eq('Test Exercise')
+      expect(item['description']).to eq('Coding question')
+      # The coding_exercise factory provides these tags: factorial, function, multiplication
+      expect(item['keywords']).to include('factorial', 'function', 'multiplication')
+      expect(item['iframe_url']).to eq("https://codeworkout.cs.vt.edu/gym/exercises/#{ex.id}/practice")
+      expect(item['institution']).to eq(["Virginia Tech"])
+      
+      File.delete(filename) if File.exist?(filename)
+    end
+  end
+
   context 'creator edit permissions' do
     it 'should not be editable by the exercise creator' do
       ex = FactoryBot.build :mc_exercise

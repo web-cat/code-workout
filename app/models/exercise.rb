@@ -343,6 +343,44 @@ class Exercise < ApplicationRecord
     end
   end
 
+  def self.generate_slc_catalog(filename)
+    exercises = Exercise.publicly_visible
+
+    catalog = exercises.map do |exercise|
+      description = case exercise.question_type
+                    when Q_MC
+                      "Multiple-choice question"
+                    when Q_CODING
+                      "Coding question"
+                    when Q_BLANKS
+                      "Fill in the blanks question"
+                    else
+                      exercise.type_name
+                    end
+
+      item = {
+        catalog_type: "SLCItem",
+        persistentID: exercise.external_id.to_s,
+        platform_name: "CodeWorkout",
+        iframe_url: "https://codeworkout.cs.vt.edu/gym/exercises/#{exercise.id}/practice",
+        title: exercise.name.to_s,
+        description: description,
+        author: exercise.owners.map(&:display_name),
+        institution: ["Virginia Tech"],
+        keywords: exercise.tags.map(&:name),
+        programming_language: [exercise.language].compact,
+        natural_language: ["English"]
+      }
+
+      license = exercise.exercise_collection.andand.license.andand.name
+      item[:license] = license if license
+
+      item
+    end
+
+    File.write(filename, JSON.pretty_generate(catalog))
+  end
+
   def self.progsnap2_attempt_csv(exercise_id, course_id=nil, term_id=nil)
     denormalized = Exercise.denormalized_attempt_data(exercise_id, course_id, term_id)
     main_events = Exercise.progsnap2_main_events_csv(denormalized)
