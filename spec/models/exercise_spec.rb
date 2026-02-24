@@ -57,7 +57,7 @@ describe Exercise do
       expect(item['description']).to eq('Coding question')
       # The coding_exercise factory provides these tags: factorial, function, multiplication
       expect(item['keywords']).to include('factorial', 'function', 'multiplication')
-      expect(item['iframe_url']).to eq("https://codeworkout.cs.vt.edu/gym/exercises/#{ex.id}/practice")
+      expect(item['iframe_url']).to eq("https://codeworkout.cs.vt.edu/gym/exercises/#{ex.id}/practice?lti_launch=true")
       expect(item['institution']).to eq(["Virginia Tech"])
       
       File.delete(filename) if File.exist?(filename)

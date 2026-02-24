@@ -343,7 +343,7 @@ class Exercise < ApplicationRecord
     end
   end
 
-  def self.generate_slc_catalog(filename)
+  def self.generate_slc_catalog(filename, base_url="https://codeworkout.cs.vt.edu")
     exercises = Exercise.publicly_visible
 
     catalog = exercises.map do |exercise|
@@ -362,7 +362,9 @@ class Exercise < ApplicationRecord
         catalog_type: "SLCItem",
         persistentID: exercise.external_id.to_s,
         platform_name: "CodeWorkout",
-        iframe_url: "https://codeworkout.cs.vt.edu/gym/exercises/#{exercise.id}/practice",
+        iframe_url: base_url +
+          Rails.application.routes.url_helpers.exercise_practice_path(exercise) +
+          "?lti_launch=true",
         title: exercise.name.to_s,
         description: description,
         author: exercise.owners.map(&:display_name),
