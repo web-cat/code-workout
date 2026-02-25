@@ -24,7 +24,7 @@
           %tr
             %td
               = image_tag student.avatar_url(size: 28),
-                width: 28, height: 28
+                width: 28, height: 28 , alt: ""
             %td
               = student.display_name
               - if !student.last_name.blank? || !student.first_name.blank?
