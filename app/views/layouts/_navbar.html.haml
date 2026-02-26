@@ -45,10 +45,10 @@
         %li.search= render :partial => 'exercises/search'
         - if user_signed_in?
           - if current_user.global_role.can_edit_system_configuration?
-            %li= link_to icon_tag_for('wrench'), admin_dashboard_path
+            %li= link_to icon_tag_for('wrench'), admin_dashboard_path, aria: { label: "Admin Menu Access" }
           %li= link_to current_user.email, current_user
           %li
-            = link_to destroy_user_session_path, method: :delete do
+            = link_to destroy_user_session_path, method: :delete, aria: { label: "Logout" } do 
               %i.fa.fa-sign-out
         - else
           %li.dropdown

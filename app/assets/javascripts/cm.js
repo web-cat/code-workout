@@ -52,7 +52,8 @@ function prepareEditor()
       autofocus: false,
       lineNumbers: true,
       viewportMargin: 150,
-      lineWrapping: true
+      lineWrapping: true,
+      screenReaderLabel: 'answer area'
   	});
   	/* For some reason, CodeMirror's focus() doesn't seem to work
   	 * correctly, so need to leave it turned off until we can fix it.
