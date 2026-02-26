@@ -91,6 +91,36 @@ class WorkoutsController < ApplicationController
 
 
   # -------------------------------------------------------------
+  # The export function gets all workouts metadata for SPLICE
+  # GET /gym/workouts/export
+  def export
+    workouts = Workout.where(is_public: true)
+
+    catalog = workouts.map do |workout|
+      item = {
+        catalog_type: "SLCItem",
+        persistentID: workout.external_id.to_s,
+        platform_name: "CodeWorkout",
+        iframe_url: practice_workout_url(workout) + "?lti_launch=true",
+        title: workout.name.to_s,
+        description: workout.description,
+        author: workout.owners.empty? ? [workout.creator&.display_name_with_email].compact : workout.owners.map(&:display_name_with_email),
+        features: (["Workout", "Problem Set"] + workout.exercises.flat_map { |ex| ex.styles.map(&:name) }).uniq,
+        institution: ["Virginia Tech"],
+        keywords: (workout.tags.map(&:name) +
+          workout.exercises.flat_map { |ex| ex.tags.map(&:name) + ex.styles.map(&:name) }).uniq,
+        programming_language: workout.exercises.flat_map { |ex| ex.languages.map(&:name) }.uniq,
+        natural_language: ["English"],
+        protocols: ['LTI'],
+        protocol_urls: [lti_launch_url + "?gym_workout_id=" + workout.id.to_s]
+      }
+    end
+
+    render json: catalog
+  end
+
+
+  # -------------------------------------------------------------
   # GET /workouts/1
   def show
     if cannot? :read, @workout
