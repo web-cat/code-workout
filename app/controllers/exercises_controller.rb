@@ -32,31 +32,32 @@ class ExercisesController < ApplicationController
   # The export function gets all exercises metadata for SPLICE
   # GET /gym/exercises/export
   def export
-    # filter out stop/connector words for keywords from workout phrases or names
-    stop_words = ['the', 'and', 'a', 'to', 'of', 'in', 'for', 'on', 'with', 'as', 'by', 'at', 'from', 'is', 'that', 'which', 'it', 'an', 'be', 'this', 'are', 'we', 'can', 'if', 'has', 'but']
-    @exercises = Exercise.all
-    export_data = @exercises.map do |exercise|
-      workout_names = exercise.exercise_workouts.map { |ew| ew.workout.name }.uniq.push(exercise.name)
-      # split phrases and remove any stop/connector words
-      keywords_array = workout_names.map { |phrase| phrase.downcase.split(/\W+/) }.flatten.uniq.reject { |word| stop_words.include?(word) || word.empty? }
+    exercises = Exercise.publicly_visible
 
-      {
-        "catalog_type": "SLCItemCatalog",
-        "platform_name": "CodeWorkout",
-        "url": "https://codeworkout.cs.vt.edu",
-        "lti_instructions_url": "https://opendsa-server.cs.vt.edu/guides/opendsa-canvas",
-        "exercise_type": Exercise::TYPE_NAMES[exercise.question_type],
-        "license": "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)",
-        "description": exercise.exercise_collection&.description, # Safely fetching description
-        "author": "Stephen Edwards",
-        "institution": "Virginia Tech",
-        "keywords": keywords_array,
-        "exercise_name": exercise.name,
-        "iframe_url": exercise.iframe_url,
-        "lti_url": exercise.lti_launch_url
+    catalog = exercises.map do |exercise|
+      item = {
+        catalog_type: "SLCItem",
+        persistentID: exercise.external_id.to_s,
+        platform_name: "CodeWorkout",
+        iframe_url: exercise_practice_url(exercise) + "?lti_launch=true",
+        title: exercise.name.to_s,
+        description: Exercise::TYPE_NAMES[exercise.question_type],
+        author: exercise.owners.empty? ? [exercise.current_version&.creator&.display_name_with_email].compact : exercise.owners.map(&:display_name_with_email),
+        features: (exercise.question_type == Exercise::Q_CODING ?
+          ["Free Coding Problem"] : ["Question"]) + exercise.styles.map(&:name),
+        institution: ["Virginia Tech"],
+        keywords: (exercise.tags.map(&:name) + exercise.styles.map(&:name)).uniq,
+        programming_language: exercise.languages.map(&:name),
+        natural_language: ["English"]
       }
+
+      license = exercise.exercise_collection.andand.license.andand.name
+      item[:license] = license if license
+
+      item
     end
-    render json: export_data
+
+    render json: catalog
   end
 
 

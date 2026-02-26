@@ -5,8 +5,9 @@ require 'uri'
 
 class PemlParsingUtil
   def parse (text_representation, error_msgs)
-    peml = Peml::Loader.new.load(text_representation).dottie!
-    error_msgs.concat(Peml::validate(peml))
+    parse_result = Peml.parse(peml: text_representation, render_tests: true)
+    peml = parse_result[:value]
+    error_msgs.concat(parse_result[:diagnostics])
     convert_peml(peml, error_msgs)
   end
 

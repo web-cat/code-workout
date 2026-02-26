@@ -108,9 +108,8 @@ class Exercise < ApplicationRecord
   scope :visible_through_user, -> (u) { joins{exercise_owners.outer}.joins{exercise_collection.outer}.
     where{ (exercise_owners.owner == u) | (exercise_collection.user == u) } }
 
-  attr_accessor :iframe_url # to get values to define in iframe url function for SPLICE
 
-  #~ Class methods ............................................................
+    #~ Class methods ............................................................
 
   # -------------------------------------------------------------
   def self.search(terms, user = nil)
@@ -197,22 +196,6 @@ class Exercise < ApplicationRecord
     public_exercises = Exercise.where(is_public: true)
 
     return public_exercises.union(public_license)
-  end
-
-
-  # the iframeurl, iframe-embedcode and ltilaunch is to display and export each exercises information for SPLICE
-  def iframe_url
-    base_url = "https://codeworkoutdev.cs.vt.edu" # to be dynamically fetched maybe from a config file
-    "#{base_url}/gym/exercises/#{self.id}/practice"
-  end
-
-  def iframe_embed_code
-    "<iframe src='#{self.iframe_url}' height='600' width='150%'></iframe>"
-  end
-
-  def lti_launch_url
-    base_url = "https://codeworkoutdev.cs.vt.edu" # to be fetched dynamically
-    "#{base_url}/lti/launch/gym/exercises/#{self.id}/practice"
   end
 
 
