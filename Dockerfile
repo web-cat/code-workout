@@ -1,6 +1,6 @@
 FROM ruby:2.7.1
 
-MAINTAINER Jihane Najdi <jnajdi@vt.edu>
+#MAINTAINER Jihane Najdi <jnajdi@vt.edu>
 
 # Default environment
 ARG RAILS_ENV='development'
