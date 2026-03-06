@@ -9,7 +9,7 @@
     = link_to 'Best Workout', '#'
     %span.badge.badge-info 10
   .summary
-    .radial-progress{ 'data-progress' => '72' }
+    .radial-progress{ 'data-progress' => '72', role: 'progressbar', 'aria-valuenow' => '72', 'aria-valuemin' => '0', 'aria-valuemax' => '100', 'aria-label' => 'Workout progress: 72 percent' }
       .circle
         .mask.full
           .fill
@@ -41,7 +41,7 @@
       %i.fa.fa-terminal.fa-stack-1x.fa-inverse
     = link_to 'smallestInArray', '#'
   .summary
-    .radial-progress{ 'data-progress' => '80' }
+    .radial-progress{ 'data-progress' => '80', role: 'progressbar', 'aria-valuenow' => '80', 'aria-valuemin' => '0', 'aria-valuemax' => '100', 'aria-label' => 'Exercise progress: 80 percent' }
       .circle
         .mask.full
           .fill
@@ -77,7 +77,7 @@
     = link_to 'Best Workout', '#'
     %span.badge.badge-info 10
   .summary
-    .radial-progress
+    .radial-progress{ role: 'progressbar', 'aria-valuenow' => '0', 'aria-valuemin' => '0', 'aria-valuemax' => '100', 'aria-label' => 'Workout unattempted' }
       .circle
         .mask.full
           .fill
@@ -108,7 +108,7 @@
       %i.fa.fa-terminal.fa-stack-1x.fa-inverse
     = link_to 'smallestInArray', '#'
   .summary
-    .radial-progress
+    .radial-progress{ role: 'progressbar', 'aria-valuenow' => '0', 'aria-valuemin' => '0', 'aria-valuemax' => '100', 'aria-label' => 'Exercise unattempted' }
       .circle
         .mask.full
           .fill
@@ -144,7 +144,7 @@
     = link_to 'Best Workout', '#'
     %span.badge.badge-info 10
   .summary
-    .radial-progress{ 'data-progress' => '0' }
+    .radial-progress{ 'data-progress' => '0', role: 'progressbar', 'aria-valuenow' => '0', 'aria-valuemin' => '0', 'aria-valuemax' => '100', 'aria-label' => 'Workout progress: 0 percent' }
       .circle
         .mask.full
           .fill
@@ -174,7 +174,7 @@
       %i.fa.fa-terminal.fa-stack-1x.fa-inverse
     = link_to 'smallestInArray', '#'
   .summary
-    .radial-progress{ 'data-progress' => '0' }
+    .radial-progress{ 'data-progress' => '0', role: 'progressbar', 'aria-valuenow' => '0', 'aria-valuemin' => '0', 'aria-valuemax' => '100', 'aria-label' => 'Exercise progress: 0 percent' }
       .circle
         .mask.full
           .fill
@@ -206,7 +206,7 @@
     = link_to 'Best Workout', '#'
     %span.badge.badge-info 10
   .summary
-    .radial-progress{ 'data-progress' => '72' }
+    .radial-progress{ 'data-progress' => '72', role: 'progressbar', 'aria-valuenow' => '72', 'aria-valuemin' => '0', 'aria-valuemax' => '100', 'aria-label' => 'Workout progress: 72 percent' }
       .circle
         .mask.full
           .fill
@@ -236,7 +236,7 @@
       %i.fa.fa-terminal.fa-stack-1x.fa-inverse
     = link_to 'smallestInArray', '#'
   .summary
-    .radial-progress{ 'data-progress' => '80' }
+    .radial-progress{ 'data-progress' => '80', role: 'progressbar', 'aria-valuenow' => '80', 'aria-valuemin' => '0', 'aria-valuemax' => '100', 'aria-label' => 'Exercise progress: 80 percent' }
       .circle
         .mask.full
           .fill
@@ -272,11 +272,11 @@
     = link_to 'Best Workout', '#'
     %span.badge.badge-info 10
   .summary
-    .radial-progress.masked
+    .radial-progress.masked{ role: 'progressbar', 'aria-valuenow' => '0', 'aria-valuemin' => '0', 'aria-valuemax' => '100', 'aria-label' => 'Workout progress: feedback hidden' }
       .circle
         .shadow
       .inset
-        .score= image_tag 'pct-blur.png'
+        .score= image_tag 'pct-blur.png', alt: ''
   .body
     .text
       Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
@@ -297,12 +297,12 @@
       %i.fa.fa-terminal.fa-stack-1x.fa-inverse
     = link_to 'smallestInArray', '#'
   .summary
-    .radial-progress.masked
+    .radial-progress.masked{ role: 'progressbar', 'aria-valuenow' => '0', 'aria-valuemin' => '0', 'aria-valuemax' => '100', 'aria-label' => 'Exercise progress: feedback hidden' }
       .circle
         .shadow
       .inset
         .score
-          = image_tag 'score-blur.png'
+          = image_tag 'score-blur.png', alt: ''
           %span.outof> /5
   .body
     .text
@@ -328,7 +328,7 @@
     = link_to 'Best Workout', '#'
     %span.badge.badge-info 10
   .summary
-    .radial-progress{ 'data-progress' => '72' }
+    .radial-progress{ 'data-progress' => '72', role: 'progressbar', 'aria-valuenow' => '72', 'aria-valuemin' => '0', 'aria-valuemax' => '100', 'aria-label' => 'Workout progress: 72 percent' }
       .circle
         .mask.full
           .fill
@@ -358,7 +358,7 @@
     = link_to 'Best Workout', '#'
     %span.badge.badge-info 10
   .summary
-    .radial-progress{ 'data-progress' => '72' }
+    .radial-progress{ 'data-progress' => '72', role: 'progressbar', 'aria-valuenow' => '72', 'aria-valuemin' => '0', 'aria-valuemax' => '100', 'aria-label' => 'Workout progress: 72 percent' }
       .circle
         .mask.full
           .fill
@@ -392,7 +392,7 @@
     = link_to 'Best Workout', '#'
     %span.badge.badge-info 10
   .summary
-    .radial-progress
+    .radial-progress{ role: 'progressbar', 'aria-valuenow' => '0', 'aria-valuemin' => '0', 'aria-valuemax' => '100', 'aria-label' => 'Workout unscored and unattempted' }
       .circle
         .mask.full
           .fill
@@ -423,7 +423,7 @@
       %i.fa.fa-terminal.fa-stack-1x.fa-inverse
     = link_to 'smallestInArray', '#'
   .summary
-    .radial-progress
+    .radial-progress{ role: 'progressbar', 'aria-valuenow' => '0', 'aria-valuemin' => '0', 'aria-valuemax' => '100', 'aria-label' => 'Exercise unscored and unattempted' }
       .circle
         .mask.full
           .fill
@@ -459,7 +459,7 @@
     = link_to 'Best Workout', '#'
     %span.badge.badge-info 10
   .summary
-    .radial-progress{ 'data-progress' => '84' }
+    .radial-progress{ 'data-progress' => '84', role: 'progressbar', 'aria-valuenow' => '84', 'aria-valuemin' => '0', 'aria-valuemax' => '100', 'aria-label' => 'Workout progress: 84 percent' }
       .circle
         .mask.full
           .fill
@@ -489,7 +489,7 @@
       %i.fa.fa-terminal.fa-stack-1x.fa-inverse
     = link_to 'smallestInArray', '#'
   .summary
-    .radial-progress{ 'data-progress' => '80' }
+    .radial-progress{ 'data-progress' => '80', role: 'progressbar', 'aria-valuenow' => '80', 'aria-valuemin' => '0', 'aria-valuemax' => '100', 'aria-label' => 'Exercise progress: 80 percent' }
       .circle
         .mask.full
           .fill

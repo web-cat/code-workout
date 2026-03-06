@@ -44,7 +44,7 @@
     };
 
     function doModal2(heading, studentCode, exercise_trace) {
-        var html = "<html>\n" + "\<script>\
+        var html = "<html lang=\"en\">\n" + "\<script>\
         var testvisualizerTrace ={\"code\":\"" + studentCode + "\",\"trace\":[" + exercise_trace + "\
         ],\"userlog\":\"Debugger VM maxMemory: 807M \\n \"}\n\
         \n\
