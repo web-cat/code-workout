@@ -3,7 +3,7 @@
     .input-group
       = text_field_tag :search, params[:search], id: "search_field",
           class: "input input-medium form-control search-query",
-          placeholder: "Search exercises..."
+          placeholder: "Search exercises...", aria: { label: "Search exercises" }
       %span.input-group-btn
         = content_tag :button, type: :submit, class: "btn btn-default" do
           %i.fa.fa-search
