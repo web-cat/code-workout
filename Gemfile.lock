@@ -1,9 +1,9 @@
 GIT
   remote: https://github.com/CSSPLICE/peml.git
-  revision: 91e6bcb3a6923dcb05c669eb6409383058bf1a7c
+  revision: 23305251167510a3337c6f83f36dd7a235205436
   specs:
-    peml (0.1.1)
-      dottie (~> 0.0.1)
+    peml (0.1.2)
+      dottie (~> 0.0.3)
       json_schemer (>= 0.2)
       kramdown (~> 2.3.1)
       kramdown-parser-gfm (~> 1.1.0)
@@ -203,7 +203,7 @@ GEM
     diff-lcs (1.4.4)
     domain_name (0.5.20190701)
       unf (>= 0.0.5, < 1.0.0)
-    dottie (0.0.2)
+    dottie (0.0.3)
     ecma-re-validator (0.2.1)
       regexp_parser (~> 1.2)
     ed25519 (1.2.4)
@@ -305,7 +305,7 @@ GEM
       rexml
     kramdown-parser-gfm (1.1.0)
       kramdown (~> 2.0)
-    liquid (5.4.0)
+    liquid (5.5.1)
     listen (3.3.0)
       rb-fsevent (~> 0.10, >= 0.10.3)
       rb-inotify (~> 0.9, >= 0.9.10)
@@ -421,7 +421,7 @@ GEM
     rb-inotify (0.10.1)
       ffi (~> 1.0)
     rdoc (6.2.1)
-    redcarpet (3.5.0)
+    redcarpet (3.6.1)
     regexp_parser (1.8.2)
     remotipart (1.4.4)
     representable (2.4.1)
@@ -436,7 +436,7 @@ GEM
       http-cookie (>= 1.0.2, < 2.0)
       mime-types (>= 1.16, < 4.0)
       netrc (~> 0.8)
-    rexml (3.2.6)
+    rexml (3.4.4)
     rspec-core (3.8.2)
       rspec-support (~> 3.8.0)
     rspec-expectations (3.8.4)
