@@ -147,3 +147,37 @@ Note that this does not set up the port forwarding, so if you do this and manual
 ## Making an Exercise
 
 For instructions on how to make an exercise, see [making_an_exercise.md](making_an_exercise.md). Note that this functionality is not directly available through the web interface for most users. Please get in touch if you want to add exercises to CodeWorkout. 
+
+## Systemd Unit Files
+
+There are two systemd unit files in this directory:
+
+* [codeworkout.service](codeworkout.service): This is the main service file for the Rails application.
+* [java-daemon.service](java-daemon.service): This is a service file for the Java daemon.
+
+These files are used to start, stop, and restart the Rails application and Java daemon on a systemd-based system.
+
+### Installation Instructions
+
+To install this service on your production server:
+
+Copy the file to the systemd directory:
+```bash
+sudo cp codeworkout.service /etc/systemd/system/
+```
+Reload systemd to recognize the new service:
+```bash
+sudo systemctl daemon-reload
+```
+Enable the service to start on boot:
+```bash
+sudo systemctl enable codeworkout
+```
+Start the service:
+```bash
+sudo systemctl start codeworkout
+```
+Check the status:
+```bash
+sudo systemctl status codeworkout
+```
