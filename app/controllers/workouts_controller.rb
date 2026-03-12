@@ -821,7 +821,7 @@ class WorkoutsController < ApplicationController
 
   # -------------------------------------------------------------
   def yaml_create
-    @yaml_wkts = YAML.load_file(params[:form].fetch(:yamlfile).path)
+    @yaml_wkts = YAML.safe_load(File.read(params[:form].fetch(:yamlfile).path))
     @yaml_wkts.each do |workout|
       wkt = workout['workout']
       @wkt = Workout.new

@@ -264,6 +264,7 @@ class PemlParsingUtil
 
     # language-specific template overrides
     render_tests_params: {
+      'parse_descriptions' => true,
       'java' => {
         'description_annotation' => <<~DESCRIPTION_ANNOTATION
         @Description({% description %})

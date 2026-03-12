@@ -314,7 +314,7 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   def yaml_create
     # REMOVE
-    @yaml_exers = YAML.load_file(params[:form].fetch(:yamlfile).path)
+    @yaml_exers = YAML.safe_load(File.read(params[:form].fetch(:yamlfile).path))
     @yaml_exers.each do |exercise|
       @ex = Exercise.new
       @ex.name = exercise['name']
@@ -383,7 +383,7 @@ class ExercisesController < ApplicationController
     error_msgs = []
     # FIXME: add support for JSON here as well
     if text_representation.start_with?('---')
-      hash = YAML.load(text_representation)
+      hash = YAML.safe_load(text_representation)
     else
       logger.debug '=========='
       logger.debug 'PEML Input'
