@@ -255,20 +255,22 @@ class PemlParsingUtil
     render_tests: true,
 
     # global template overrides
-    pattern: {
-      'description' => '{% method_invocation} -> {% expected_template %}',
-      'description_annotation' => <<~DESCRIPTION_ANNOTATION
-      Description: {% description %}
-      DESCRIPTION_ANNOTATION
-    },
-
     # language-specific template overrides
     render_tests_params: {
       'parse_descriptions' => true,
-      'java' => {
+      pattern: {
+        'description' => '{% include "method_call" %} -> {% include "expected_template" %}',
         'description_annotation' => <<~DESCRIPTION_ANNOTATION
-        @Description({% description %})
+        Description: {% show_yaml %}{% include 'description' %}{% endshow_yaml %}
         DESCRIPTION_ANNOTATION
+      },
+
+      'java' => {
+        'pattern' => {
+          'description_annotation' => <<~JAVA_DESCRIPTION_ANNOTATION
+          {% show_yaml %}@Description({% capture desc_out %}{% include 'description' %}{% endcapture %}{{ desc_out | string_literal }}){% endshow_yaml %}
+          JAVA_DESCRIPTION_ANNOTATION
+        }
       },
       'python' => {
       },
