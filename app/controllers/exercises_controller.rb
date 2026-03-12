@@ -314,7 +314,7 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   def yaml_create
     # REMOVE
-    @yaml_exers = YAML.safe_load_file(params[:form].fetch(:yamlfile).path)
+    @yaml_exers = YAML.safe_load(File.read(params[:form].fetch(:yamlfile).path))
     @yaml_exers.each do |exercise|
       @ex = Exercise.new
       @ex.name = exercise['name']
