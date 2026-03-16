@@ -90,7 +90,7 @@
             lms_instance_id: session[:lms_instance_id],
             lti_launch: @lti_launch), class: 'btn btn-sm btn-primary'
     - elsif !workout_score || workout_score.show_score?
-      .radial-progress{ 'data-progress' => score_pct, role: 'progressbar', 'aria-valuenow' => score_pct, 'aria-valuemin' => '0', 'aria-valuemax' => '100', 'aria-label' => "Workout score: #{score.to_s} out of #{pts.to_s}" }        
+      .radial-progress{ 'data-progress' => score_pct }
         .circle
           .mask.full
             .fill

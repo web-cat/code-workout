@@ -447,7 +447,7 @@ input {
   .numInput {
     cursor: text;
     &:hover {
-      background: #fff;
+      background: #000000;
     }
   }
 }
@@ -556,7 +556,7 @@ ul.ui-autocomplete {
 
 // overriding bootstrap for the sign-in form
 .btn-social.list-group-item {
-  color: white;
+  color: black;
 
   a:hover :focus {
     background-color: inherit;

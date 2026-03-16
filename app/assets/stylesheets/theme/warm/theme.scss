@@ -110,7 +110,7 @@ a:hover, a:focus { color: #247184; }
   /* Darken IE7 buttons by default so they stand out more given they won't have borders */
   filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
   &:hover, &:focus, &:active, &.active, &.disabled, &[disabled] {
-    color: white;
+    color: black;
     background-color: #f89406;
     *background-color: #df8505; }
   &:active, &.active { background-color: #c67605; }
