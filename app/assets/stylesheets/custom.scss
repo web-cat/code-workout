@@ -13,6 +13,7 @@ html, body { height: 100%; }
 .below-nav { padding: 56px 10px 0; }
 .embedded .below-nav { padding-top: 0; }
 .breadcrumb { margin-bottom: 15px; }
+.breadcrumb .active{ color: #4a4949; }
 
 .sidebar, .content, .maincol {
   padding-left: 0px;
@@ -66,6 +67,7 @@ html, body { height: 100%; }
 .form-group .CodeMirror-gutters { min-height: 18px * 12; }
 /* .practice .CodeMirror { min-height: 18px * 15; } */
 
+.CodeMirror-linenumber {color: #CCCCCC}
 .CodeMirror .widget {
   display: inline-block;
   padding: 4px 6px;
@@ -271,6 +273,13 @@ ul.wysihtml5-toolbar li {
       @extend .one-line;
       min-height: 17px;
       text-overflow: ellipsis;
+      .tag {
+        color: black !important;
+        &:hover, &:focus {
+          color: black;
+          text-decoration: none; // Optional: keeps it looking like a tag on hover
+        }
+      }
       .lang {
         background-color: #ffc107;
       }
@@ -556,7 +565,7 @@ ul.ui-autocomplete {
 
 // overriding bootstrap for the sign-in form
 .btn-social.list-group-item {
-  color: black;
+  color: white;
 
   a:hover :focus {
     background-color: inherit;

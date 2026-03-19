@@ -94,7 +94,7 @@ a:hover, a:focus { color: #247184; }
 .navbar a { font-weight: inherit; }
 
 .btn-primary {
-  color: white;
+  color: white !important;
   text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
   background-color: #f9a732;
   background-image: -moz-linear-gradient(top, #fbb450, #f89406);
