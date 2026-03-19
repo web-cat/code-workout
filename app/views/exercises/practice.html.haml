@@ -11,7 +11,7 @@
       = @exercise.display_name
       - if current_user.andand.can? :edit, @exercise
         %small
-          = link_to "", edit_exercise_path(@exercise), class: 'glyphicon glyphicon-pencil'
+          = link_to "", edit_exercise_path(@exercise), class: 'glyphicon glyphicon-pencil' , "aria-label": "Edit this exercise"
     - if @exercise_version.stem && !@exercise_version.stem.preamble.blank?
       - cache @exercise_version.stem do
         = markdown @exercise_version.stem.preamble
