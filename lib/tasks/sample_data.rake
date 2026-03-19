@@ -75,11 +75,11 @@ namespace :db do
     end
 
     # Create a workout with three exercises
-    w = FactoryBot.create :workout_with_exercises
+    w = FactoryBot.create :workout_with_exercises, creator: instructor
 
     50.times do |i|
-      FactoryBot.create :coding_exercise, name: "Factorial #{i}"
-      FactoryBot.create :mc_exercise, name: "MCQ #{i}"
+      FactoryBot.create :coding_exercise, name: "Factorial #{i}", creator: instructor
+      FactoryBot.create :mc_exercise, name: "MCQ #{i}", creator: instructor
     end
 
     user_group = FactoryBot.create :user_group
@@ -91,10 +91,10 @@ namespace :db do
     single_user_collection = FactoryBot.create :user_owned_collection
     instructor.exercise_collection = single_user_collection
 
-    FactoryBot.create :mc_exercise, name: 'Pick One 3', exercise_collection: group_owned_collection
-    FactoryBot.create :mc_exercise, name: 'Pick One 4', exercise_collection: group_owned_collection
-    FactoryBot.create :coding_exercise, name: 'User Owned Coding', exercise_collection: single_user_collection
-    FactoryBot.create :mc_exercise, name: 'User Owned MCQ', exercise_collection: single_user_collection
+    FactoryBot.create :mc_exercise, name: 'Pick One 3', exercise_collection: group_owned_collection, creator: instructor
+    FactoryBot.create :mc_exercise, name: 'Pick One 4', exercise_collection: group_owned_collection,creator: instructor
+    FactoryBot.create :coding_exercise, name: 'User Owned Coding', exercise_collection: single_user_collection,creator: instructor
+    FactoryBot.create :mc_exercise, name: 'User Owned MCQ', exercise_collection: single_user_collection,creator: instructor
 
     # Create a workout_offering
     FactoryBot.create :workout_offering
