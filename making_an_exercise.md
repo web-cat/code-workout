@@ -1,3 +1,4 @@
+# Making an Exercise
 ## YAML Exercise Format Explanations
 
 Coding exercises are added using a YAML file. See [http://www.yaml.org/refcard.html](http://www.yaml.org/refcard.html) for a cheatsheet on YAML syntax. An exercise file must include the following fields:

@@ -15,13 +15,15 @@ You can play around without signing up if you like.
   - [Clone this repository](#clone-this-repository)
   - [Install Docker and build the containers](#install-docker-and-build-the-containers)
   - [Set up some development data](#set-up-some-development-data)
-  - [Run servers](#run-servers)
+    - [Accessing the database directly](#accessing-the-databases-directly)
+  - [Running the application](#running-the-application)
   - [Other notes](#other-notes)
 * [Making an exercise](#making-an-exercise)
+* [Systemd Unit Files](#systemd-unit-files)
 
 ## Setting up a Development Environment Using Docker
 
-> Note: If you are comfortable setting up a Rails application, i.e., installing Ruby (2.7.0), Rails (5.1), and MariaDB (10.2) on your own machine, you can just do that instead of using Docker. You'll need to change the `host` keys in [config/database.yml](config/database.yml) to `localhost`.
+> **Note**: If you are comfortable setting up a Rails application, i.e., installing Ruby (2.7.0), Rails (5.1), and MariaDB (10.2) on your own machine, you can just do that instead of using Docker. You'll need to change the `host` keys in [config/database.yml](config/database.yml) to `localhost`.
 
 The following steps will help set up a development environment for CodeWorkout using Docker and Docker Compose.
 You can do your editing on your own machine using an editor of your choice; changes will be reflected in the Docker container.
@@ -33,7 +35,8 @@ $ git clone git@github.com:web-cat/code-workout.git
 $ cd code-workout
 ```
 
-Check out the `staging` branch. Most new changes won't be accepted directly into the `master` branch.
+Check out the `staging` branch. New changes won't be accepted directly into 
+the `master` branch.
 ```bash
 $ git checkout staging
 ```
@@ -52,17 +55,14 @@ Inside the `code-workout` directory, do the following:
 $ docker compose up # build and start containers for the web application and the databases
 ```
 
-This step builds the `web` container using the provided [Dockerfile](Dockerfile) to install Ruby, Rails, and required dependencies. It also builds the `db_dev` and `db_test` containers, each of which pull a ready-to-use MariaDB image from DockerHub. Two databases are set up:
+This step builds the `code-workout-web` container using the provided [Dockerfile](Dockerfile) to install Ruby, Rails, and required dependencies. It also builds the `db_dev` and `db_test` containers, each of which pull a ready-to-use MariaDB image from DockerHub. Two databases are set up:
 * `codeworkout`, running on port 3306 on the `db_dev` container and port 3307 on the host
 * `codeworkout_test`, running on port 3306 on the `db_test` container and port 3308 on the host
 
-Credentials for both databases:
-* username: `codeworkout`
-* pwd: `codeworkout`
 
-The first time you do this, it will take a bit of time to build all the containers. Subsequent runs of this command will just start the existing containers.
+The first time you do this, it will take a bit of time to build all the containers. Subsequent runs of this command will just start the existing containers.  
 
-Output from the containers will appear in your console. Do `Ctrl-C` to exit and stop the containers.
+Output from the containers will appear in your console. Do `Ctrl-C` to exit and stop the containers. The first time you run `docker compose up`, you will see an error that the `code-workout-web` container with error code 1. Not to worry, this is because the databases haven't been setup yet. 
 
 Do the following if you want to run the containers in the background and get your terminal back:
 ```bash
@@ -72,8 +72,8 @@ $ docker compose up -d
 You can `docker compose down` to stop and remove the containers (or just `docker compose stop` to stop without removing).
 
 ### Set up some development data 
+The first time CodeWorkout is run in Docker, the databases are created, but no tables, relationships or records are created. This next step sets up the database and populates it with fake data for development.
 
-This next step sets up the database and populates it with fake data for development.
 Do the following in the `code-workout` directory on your machine.
 
 ```bash
@@ -93,11 +93,8 @@ $ rake db:populate    # load sample data; this is a custom rake task
 
 > Run `rake -T` in your project root to see a list of available rake tasks. [What's rake?](https://github.com/ruby/rake)
 
-The initial database population is defined by [lib/tasks/sample_data.rake](lib/tasks/sample_data.rake).
-It uses the factories defined in [spec/factories](spec/factories) to generate entities.
-If you add new model classes and want to generate test data in the database, please add to the `sample_data.rake` file so that this population will happen automatically for everyone. 
-The `sample_data.rake` contains only "sample/try out" data for use during development, and it won't
-appear on the production server. 
+The initial database population is defined by [lib/tasks/sample_data.rake](lib/tasks/sample_data.rake). It uses the factories defined in [spec/factories](spec/factories) to generate entities. If you add new model classes and want to generate test data in the database, please add to the `sample_data.rake` file so that this population will happen automatically for everyone. The `sample_data.rake` contains only "sample/try out" data for use during development, and it won't appear on the production server. 
+
 Initial database contents provided for all new installs, including the production server, is described in db/seeds.rb instead.
 
 - The initial database includes the following accounts:
@@ -113,15 +110,32 @@ Initial database contents provided for all new installs, including the productio
     - one course offering is set up with the admin and instructor
       as instructors, and all other sample accounts as students
 
-- To reset the database to the initial state do the following:
-  - `$ cd code-workout`
-  - `$ docker compose run web rake db:populate`
+  - To reset the database to the initial state do the following:
+    ```angular2html
+        $ cd code-workout
+        $ docker compose run web rake db:populate
+    ```
+
+#### Accessing the Databases directly
+> The databases can be accessed directly from inside their own containers.
+>
+> To log in to the database directly, open a terminal in Docker into the
+database container and use the following command:
+>
+> ```bash
+> $ mysql -u codeworkout -p
+> ```
+>
+> Credentials for both databases:
+> * **username**: `codeworkout`
+> * **pwd**: `codeworkout`
+
 
 **A note on setting up a development database.**
 
 We load the schema directly from [db/schema.rb](db/schema.rb), because database migrations tend to go stale over time&mdash;running over 100 migrations, many of which are years old, is likely to run into errors. Migrations are useful for making *new* changes or reversing *recent* changes to the schema.
 
-### Run servers
+### Running the application
 To run the development server, do the following in the `code-workout` directory:
 
 ```bash
