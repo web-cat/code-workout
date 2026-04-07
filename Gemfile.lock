@@ -1,11 +1,13 @@
 GIT
   remote: https://github.com/CSSPLICE/peml.git
-  revision: 91e6bcb3a6923dcb05c669eb6409383058bf1a7c
+  revision: 44fd9864f8001ee6aa54a7f1b68cf69cbb0f697c
+  branch: pif
   specs:
     peml (0.1.1)
-      dottie (~> 0.0.1)
+      dottie (~> 0.0.3)
       json_schemer (>= 0.2)
       kramdown (~> 2.3.1)
+      kramdown-math-katex (~> 1.0.1)
       kramdown-parser-gfm (~> 1.1.0)
       liquid (>= 3.0.6)
       parslet (>= 1.8)
@@ -203,7 +205,7 @@ GEM
     diff-lcs (1.4.4)
     domain_name (0.5.20190701)
       unf (>= 0.0.5, < 1.0.0)
-    dottie (0.0.2)
+    dottie (0.0.3)
     ecma-re-validator (0.2.1)
       regexp_parser (~> 1.2)
     ed25519 (1.2.4)
@@ -301,11 +303,16 @@ GEM
       activerecord
       kaminari-core (= 1.2.1)
     kaminari-core (1.2.1)
+    katex (0.9.0)
+      execjs (~> 2.7)
     kramdown (2.3.2)
       rexml
+    kramdown-math-katex (1.0.1)
+      katex (~> 0.4)
+      kramdown (~> 2.0)
     kramdown-parser-gfm (1.1.0)
       kramdown (~> 2.0)
-    liquid (5.4.0)
+    liquid (5.5.1)
     listen (3.3.0)
       rb-fsevent (~> 0.10, >= 0.10.3)
       rb-inotify (~> 0.9, >= 0.9.10)
@@ -558,7 +565,7 @@ DEPENDENCIES
   css3-progress-bar-rails
   csv_shaper
   devise
-  dottie (~> 0.0.1)
+  dottie (~> 0.0.3)
   ed25519
   exception_handler (~> 0.8.0.0)
   factory_bot_rails

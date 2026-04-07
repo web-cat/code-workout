@@ -22,7 +22,7 @@ require 'csv'
 # acts_as (see the documentation on-line for the activerecord-acts_as
 # gem).
 #
-class CodingPrompt < ApplicationRecord
+class ParsonsPrompt < ApplicationRecord
 
   #~ Relationships ............................................................
 
@@ -59,13 +59,13 @@ class CodingPrompt < ApplicationRecord
 
   # -------------------------------------------------------------
   def is_coding?
-    true
+    false
   end
 
 
   # -------------------------------------------------------------
   def is_parsons?
-    false
+    true
   end
 
 
@@ -95,121 +95,19 @@ class CodingPrompt < ApplicationRecord
 
 
   # -------------------------------------------------------------
-  def prepare_starter_code
-    result = self.starter_code
-    if result.nil?
-      result = ''
-    end
-    return result.gsub(/\b___\b/, '')
-  end
+  # def prepare_starter_code
+  #   result = self.starter_code
+  #   if result.nil?
+  #     result = ''
+  #   end
+  #   return result.gsub(/\b___\b/, '')
+  # end
 
+
+  # -------------------------------------------------------------
   def get_pif_json
-    {
-  "value": {
-    "question_text": "<p>Put the blocks <strong>in</strong> the proper order.</p>\n",
-    "options": {
-      "grader": {
-        "type": "dag",
-        "showFeedback": true
-      },
-      "maxdist": 0,
-      "order": "",
-      "indent": false,
-      "adaptive": true,
-      "numbered": false,
-      "language": "math",
-      "runnable": true
-    },
-    "blocks": [
-      {
-        "text": "Fixed Start",
-        "type": "",
-        "tag": "fixed",
-        "depends": "",
-        "indent": "",
-        "displaymath": true,
-        "feedback": ""
-      },
-      {
-        "text": "Random Group 1 Block 1",
-        "type": "",
-        "tag": "randomg1b1",
-        "depends": "",
-        "indent": "",
-        "displaymath": true,
-        "feedback": ""
-      },
-      {
-        "text": "Random Group 1 Block 2",
-        "type": "",
-        "tag": "randomg1b2",
-        "depends": "randomg1b1",
-        "indent": "",
-        "displaymath": true,
-        "feedback": ""
-      },
-      {
-        "text": "Random Group 1 $\\textbf{Block}$ 3",
-        "type": "",
-        "tag": "randomg1b3",
-        "depends": "randomg1b2",
-        "indent": "",
-        "displaymath": true,
-        "feedback": ""
-      },
-      {
-        "text": "Fixed $\\textbf{Middle}$",
-        "type": "",
-        "tag": "fixed",
-        "depends": "",
-        "indent": "",
-        "displaymath": true,
-        "feedback": ""
-      },
-      {
-        "text": "Random Group 2 Block 1",
-        "type": "",
-        "tag": "randomg2b1",
-        "depends": "randomg1b3",
-        "indent": "",
-        "displaymath": true,
-        "feedback": ""
-      },
-      {
-        "text": "Random Group 2 Block 2",
-        "type": "",
-        "tag": "randomg2b2",
-        "depends": "randomg2b1",
-        "indent": "",
-        "displaymath": true,
-        "feedback": ""
-      },
-      {
-        "text": "Random Group 2 Block 3",
-        "type": "",
-        "tag": "randomg2b3",
-        "depends": "randomg2b2",
-        "indent": "",
-        "displaymath": true,
-        "feedback": ""
-      },
-      {
-        "text": "Fixed End",
-        "type": "",
-        "tag": "fixed",
-        "depends": "",
-        "indent": "",
-        "displaymath": true,
-        "feedback": ""
-      }
-    ]
-  },
-  "diags": [
-
-  ]
-}
+    CodingPrompt.allocate.get_pif_json
   end
-
 
   # -------------------------------------------------------------
   # Duplicates some code in parse_tests, but too lazy to refactor ATM

@@ -55,6 +55,11 @@ class MultipleChoicePrompt < ApplicationRecord
     false
   end
 
+  # -------------------------------------------------------------
+  def is_parsons?
+    false
+  end
+
 
   # -------------------------------------------------------------
   def new_answer(args)

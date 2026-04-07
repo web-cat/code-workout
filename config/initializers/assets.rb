@@ -38,4 +38,4 @@ Rails.application.config.assets.precompile += [
 # Can be :json, :xml, or a proc that will be passed the params
 #Rails.application.config.request_body_formatter = Proc.new { |params| params }
 
-Rails.application.config.assets.precompile += %w( favicon.ico )
+Rails.application.config.assets.precompile += %w( favicon.ico parsons.js )

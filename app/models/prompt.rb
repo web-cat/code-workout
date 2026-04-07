@@ -97,6 +97,12 @@ class Prompt < ApplicationRecord
 
 
   # -------------------------------------------------------------
+  def is_parsons?
+    specific.is_parsons?
+  end
+
+
+  # -------------------------------------------------------------
   def new_answer(args)
     answer = specific.new_answer(args)
     answer.attempt = args[:attempt]
