@@ -971,6 +971,8 @@ class ExercisesController < ApplicationController
         end
       end
       @workout ||= @workout_score.andand.workout
+    elsif @exercise_version.is_parsons?
+      #TODO: Implement Parsons problem evaluation
     end
   end
 

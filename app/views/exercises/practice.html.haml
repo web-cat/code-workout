@@ -61,7 +61,7 @@
       - parsons_scripts_loaded = false
       - @exercise_version.prompts.each do |question_prompt|
         - prompt = question_prompt.specific
-        -# - if prompt.is_mcq?
+        - if prompt.is_mcq?
           - answers = @exercise_version.serve_choice_array(question_prompt)
           - answers.each do |a|
             - a[:answer] = markdown(a[:answer])
@@ -104,7 +104,7 @@
                   member_value: :id,
                   member_label: Proc.new{ |p| "#{p[:answer]}".html_safe },
                   label: '&nbsp;'
-        -# - elsif prompt.is_coding?
+        - elsif prompt.is_coding?
           - coding_questions = true
           - prior_answer = @attempt && @attempt.prompt_answers.where(prompt: prompt.acting_as).first
           - if !prior_answer && @workout_offering.andand.continue_from_workout
@@ -127,7 +127,7 @@
           - else
             %pre{ data: { lang: 'text/x-java' } }
               = prior_answer ? prior_answer.specific.answer : prompt.prepare_starter_code
-        - if true #prompt.is_parsons?
+        - elsif prompt.is_parsons?
           - parsons_questions = true
           - pif_json = prompt.get_pif_json
           - prior_answer = @attempt && @attempt.prompt_answers.where(prompt: prompt.acting_as).first

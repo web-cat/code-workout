@@ -264,6 +264,11 @@ class Exercise < ApplicationRecord
     self.question_type == Q_BLANKS
   end
 
+  # -------------------------------------------------------------
+  def is_parsons?
+    self.question_type == Q_PARSONS
+  end
+
 
   # -------------------------------------------------------------
   # getter override for name

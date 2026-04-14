@@ -379,4 +379,9 @@ class ExerciseVersion < ApplicationRecord
     end
   end
 
+  # -------------------------------------------------------------
+  def is_parsons?
+    exercise.is_parsons?
+  end
+
 end

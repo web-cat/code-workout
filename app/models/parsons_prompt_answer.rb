@@ -1,6 +1,6 @@
 # == Schema Information
 #
-# Table name: coding_prompt_answers
+# Table name: parsons_prompt_answers
 #
 #  id            :integer          not null, primary key
 #  answer        :text(65535)
