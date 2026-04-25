@@ -8,9 +8,6 @@ class WorkoutOfferingsController < ApplicationController
   #~ Action methods ...........................................................
   after_action :allow_iframe, only: :practice
 
-  # the consumer keys/secrets
-  $oauth_creds = {"test" => "secret"}
-
   # /courses/:organization_id/:course_id/:term_id/:id
   def show
     if @workout_offering
@@ -182,43 +179,6 @@ class WorkoutOfferingsController < ApplicationController
     def was_nonce_used_in_last_x_minutes?(nonce, minutes=60)
       # some kind of caching solution or something to keep a short-term memory of used nonces
       false
-    end
-
-    def lti_authorize!
-      if key = params['oauth_consumer_key']
-        if secret = $oauth_creds[key]
-          @tp = IMS::LTI::ToolProvider.new(key, secret, params.to_unsafe_h)
-        else
-          @tp = IMS::LTI::ToolProvider.new(nil, nil, params.to_unsafe_h)
-          @tp.lti_msg = "Your consumer didn't use a recognized key."
-          @tp.lti_errorlog = "You did it wrong!"
-          @message = "Consumer key wasn't recognized"
-          return false
-        end
-      else
-        @message = "No consumer key"
-        return false
-      end
-
-      if !@tp.valid_request?(request)
-        @message = "The OAuth signature was invalid"
-        return false
-      end
-
-      if Time.now.utc.to_i - @tp.request_oauth_timestamp.to_i > 60*60
-        @message = "Your request is too old."
-        return false
-      end
-
-      # this isn't actually checking anything like it should, just want people
-      # implementing real tools to be aware they need to check the nonce
-      if was_nonce_used_in_last_x_minutes?(@tp.request_oauth_nonce, 60)
-        @message = "Why are you reusing the nonce?"
-        return false
-      end
-
-      # @username = @tp.username("Dude")
-      return true
     end
 
 end
