@@ -162,8 +162,8 @@ class Exercise < ApplicationRecord
 
     visible_through_course_offering = Exercise.joins(
       exercise_collection: [ course_offering: :course_enrollments ])
-      .where(exercise_collection:
-        { course_offering:
+      .where(exercise_collections:
+        { course_offerings:
           { course_enrollments:
             { user: user } } }
       )
@@ -202,8 +202,8 @@ class Exercise < ApplicationRecord
   # -------------------------------------------------------------
   def self.visible_through_user_group(user)
     Exercise.joins(exercise_collection: [ user_group: :memberships ])
-      .where(exercise_collection:
-        { user_group:
+      .where(exercise_collections:
+        { user_groups:
           { memberships:
             { user: user } } }
       )

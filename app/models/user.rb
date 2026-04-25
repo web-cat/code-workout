@@ -124,7 +124,7 @@ class User < ApplicationRecord
 
   # -------------------------------------------------------------
   def self.all_emails(prefix = '')
-    self.uniq.where(self.arel_table[:email].matches(
+    self.distinct.where(self.arel_table[:email].matches(
       "#{prefix}%")).reorder('email asc').pluck(:email)
   end
 
@@ -227,15 +227,15 @@ class User < ApplicationRecord
     course = options[:course]
     term = options[:term]
     if course.nil? && term.nil?
-      course_enrollments.where(course_roles: { can_manage_course: true }).
+      course_enrollments.joins(:course_role).where(course_roles: { can_manage_course: true }).
         map(&:course_offering)
     elsif course.nil?
-      course_enrollments.joins(:course_offering)
+      course_enrollments.joins(:course_role, :course_offering)
         .where('course_roles.can_manage_course = true and
           course_offerings.term_id = ?', term.id)
         .map(&:course_offering)
     elsif term.nil?
-      course_enrollments.joins(:course_offering)
+      course_enrollments.joins(:course_role, :course_offering)
         .where('course_roles.can_manage_course = true and
           course_offerings.course_id = ?', course.id)
         .map(&:course_offering)
@@ -278,14 +278,14 @@ class User < ApplicationRecord
       enrollments = course_enrollments.
         joins(course_offering: :workout_offerings).
         where(course_roles:
-          { can_manage_course: true }, course_offering:
+          { can_manage_course: true }, course_offerings:
             { course: course, term: term }
         )
       else
         enrollments = course_enrollments.
           joins(course_offering: :workout_offerings).
           where(course_roles:
-            { can_manage_course: true }, course_offering:
+            { can_manage_course: true }, course_offerings:
               { course: course }
             )
       end
@@ -310,9 +310,9 @@ class User < ApplicationRecord
   # to get access to course materials
   def managed_workouts
     course_enrollments.
-      joins(course_offering: { course: { user_group: :memberships } }).
+      joins(:course_role, course_offering: { course: { user_group: :memberships } }).
       where(course_roles:
-        { can_manage_course: true }, course_offering:
+        { can_manage_course: true }, course_offerings:
           { course:
             { user_group:
               { memberships:
@@ -849,8 +849,8 @@ class User < ApplicationRecord
 
     # Move workout scores
     wos = from.workout_offerings
-    self.workout_scores.joins(:workout_offering).where(workout_offering:
-      { course_offering: from }).each do |workout_score|
+    self.workout_scores.joins(workout_offering: :course_offering).where(workout_offerings:
+      { course_offerings: from }).each do |workout_score|
       wo = workout_score.workout_offering
       sister_wo = to.workout_offerings.where(workout: wo.workout).first
       if sister_wo

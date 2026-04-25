@@ -78,7 +78,7 @@ class Course < ApplicationRecord
     kwargs = args[0]
 
     # Check if slug is included
-    if kwargs.is_a?(Hash) # Args were specified as keywords
+    if kwargs.respond_to?(:key?) # Args were specified as keywords
       has_slug = kwargs.key?(:slug)
     else # Args were specified as strings and interpolated values
       has_slug = args.any? { |arg| 
@@ -87,7 +87,7 @@ class Course < ApplicationRecord
     end
 
     # Check if organization is included
-    if kwargs.is_a?(Hash) # Args were specified as keywords
+    if kwargs.respond_to?(:key?) # Args were specified as keywords
       has_org = kwargs.key?(:organization) || kwargs.key?(:organization_id)
     else # Args were specified as strings and interpolated values
       has_org = args.any? { |arg| 

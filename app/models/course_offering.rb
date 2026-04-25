@@ -97,7 +97,7 @@ class CourseOffering < ApplicationRecord
   # manage this CourseOffering.
   #
   def managers
-    course_enrollments.where(course_roles: { can_manage_course: true }).
+    course_enrollments.joins(:course_role).where(course_roles: { can_manage_course: true }).
       map(&:user)
   end
 
@@ -107,7 +107,7 @@ class CourseOffering < ApplicationRecord
   # this CourseOffering.
   #
   def students
-    course_enrollments.where(course_role: CourseRole.student).map(&:user)
+    course_enrollments.where(course_role_id: CourseRole.student).map(&:user)
   end
 
 
@@ -116,7 +116,7 @@ class CourseOffering < ApplicationRecord
   # this CourseOffering.
   #
   def instructors
-    course_enrollments.where(course_role: CourseRole.instructor).map(&:user)
+    course_enrollments.where(course_role_id: CourseRole.instructor).map(&:user)
   end
 
 

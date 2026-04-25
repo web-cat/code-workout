@@ -263,6 +263,6 @@ class WorkoutOffering < ApplicationRecord
     end
 
     @exercises = self.workout.exercises.where(is_public: false)
-    @exercise_collection.add(@exercises.flatten)
+    @exercise_collection.add(@exercises.to_a.flatten)
   end
 end

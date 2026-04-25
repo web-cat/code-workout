@@ -221,9 +221,9 @@ class LtiController < ApplicationController
     def lti_authorize!
       if key = params['oauth_consumer_key']
         if secret = LmsInstance.find_by(consumer_key: key).andand.consumer_secret
-          @tp = IMS::LTI::ToolProvider.new(key, secret, params)
+          @tp = IMS::LTI::ToolProvider.new(key, secret, params.to_unsafe_h)
         else
-          @tp = IMS::LTI::ToolProvider.new(nil, nil, params)
+          @tp = IMS::LTI::ToolProvider.new(nil, nil, params.to_unsafe_h)
           @tp.lti_msg = "Your consumer didn't use a recognized key."
           @tp.lti_errorlog = "You did it wrong!"
           @message = "Consumer key wasn't recognized"
@@ -234,7 +234,7 @@ class LtiController < ApplicationController
         return false
       end
 
-      if !@tp.valid_request?(request)
+      if !@tp.valid_request?
         @message = "The OAuth signature was invalid"
         return false
       end

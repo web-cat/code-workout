@@ -413,7 +413,7 @@ class Workout < ApplicationRecord
     return available_workouts.tagged_with(terms, any: true, wild: true, on: :tags) +
       available_workouts.tagged_with(terms, any: true, wild: true, on: :languages) +
       available_workouts.tagged_with(terms, any: true, wild: true, on: :styles) +
-      available_workouts.where('name regexp (?)', split_terms).uniq
+      available_workouts.where('name regexp (?)', split_terms).distinct
   end
 
 

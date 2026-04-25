@@ -87,7 +87,7 @@ class ExercisesController < ApplicationController
     else
       @available_exercises = Exercise.visible_through_user(current_user)
         .union(Exercise.visible_through_user_group(current_user))
-        .uniq.select(&:is_coding?)
+        .distinct.select(&:is_coding?)
     end
   end
 

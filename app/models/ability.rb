@@ -147,7 +147,7 @@ class Ability
       # end
       can :create, [CourseOffering, Course, Organization]
       can :manage, CourseOffering, course_enrollments:
-        { user_id: user.id, course_role:
+        { user_id: user.id, course_roles:
           { can_manage_assignments: true} }
 
       # A user can grade a CourseOffering if they are enrolled in that
@@ -243,11 +243,11 @@ class Ability
         creator || owner
       end
 
-      can :read, Attempt, workout_score:
-        { workout_offering:
-          { course_offering:
+      can :read, Attempt, workout_scores:
+        { workout_offerings:
+          { course_offerings:
             { course_enrollments:
-              { user_id: user.id, course_role:
+              { user_id: user.id, course_roles:
                 { can_manage_assignments: true } } } } }
       can [:create, :read], Attempt, user_id: user.id
 
@@ -282,9 +282,9 @@ class Ability
       o.can_be_seen_by? user
     end
 
-    can :manage, WorkoutOffering, course_offering:
+    can :manage, WorkoutOffering, course_offerings:
       { course_enrollments:
-        { user_id: user.id, course_role:
+        { user_id: user.id, course_roles:
           { can_manage_assignments: true } } }
   end
 

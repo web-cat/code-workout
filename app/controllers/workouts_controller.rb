@@ -347,7 +347,7 @@ class WorkoutsController < ApplicationController
       @policy = @workout_offering.andand.workout_policy
 
       @workout_offerings = current_user.managed_workout_offerings_in_term(
-        @workout, @course, @term).flatten
+        @workout, @course, @term).to_a.flatten
 
       course_offerings = current_user.managed_course_offerings(
         course: @course, term: @term)
@@ -556,7 +556,7 @@ class WorkoutsController < ApplicationController
           params[:workout_name].downcase, @course, @term)
       end
 
-      @workout_offering = workout_offerings.flatten.first
+      @workout_offering = workout_offerings.to_a.flatten.first
 
       if workout_offerings.blank?
         # check past terms
@@ -564,7 +564,7 @@ class WorkoutsController < ApplicationController
           params[:workout_name].downcase, @course, nil)
       end
 
-      workout_offerings = workout_offerings.andand.flatten.uniq
+      workout_offerings = workout_offerings.andand.to_a.flatten.uniq
       found_workout ||= workout_offerings.andand
         .uniq{ |wo| wo.workout }.andand
         .sort_by{ |wo| wo.course_offering.term.starts_on }.andand
@@ -720,7 +720,7 @@ class WorkoutsController < ApplicationController
 
       if !@workout_offering
         # don't have a workout_offering, but may have narrowed it down
-        workout_offerings = workout_offerings.flatten.uniq
+        workout_offerings = workout_offerings.to_a.flatten.uniq
         enrolled_workout_offerings = workout_offerings.andand
           .select { |wo| @user.is_enrolled?(wo.course_offering) }
 
