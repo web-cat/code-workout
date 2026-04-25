@@ -200,7 +200,7 @@ class WorkoutOfferingsController < ApplicationController
         return false
       end
 
-      if !@tp.valid_request?
+      if !@tp.valid_request?(request)
         @message = "The OAuth signature was invalid"
         return false
       end
