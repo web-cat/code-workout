@@ -1,7 +1,7 @@
 class SseController < ApplicationController
   include ActionController::Live
   require 'ims/lti'
-  require 'oauth/request_proxy/rack_request'
+  require 'oauth/request_proxy/action_controller_request'
 
   # -------------------------------------------------------------
   def feedback_wait
@@ -30,7 +30,7 @@ class SseController < ApplicationController
     while flag
       sleep(1)
     end
-    render nothing: true
+    head :ok
   end
 
 

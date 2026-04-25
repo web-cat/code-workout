@@ -46,11 +46,11 @@ class WorkoutsController < ApplicationController
     @workouts = Workout.accessible_by(current_ability)
     respond_to do |format|
       format.json do
-        render text:
+        render plain:
           WorkoutRepresenter.for_collection.new(@workouts).to_hash.to_json
       end
       format.yml do
-        render text:
+        render plain:
           WorkoutRepresenter.for_collection.new(@workouts).to_hash.to_yaml
       end
     end

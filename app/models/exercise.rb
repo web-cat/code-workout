@@ -105,8 +105,8 @@ class Exercise < ApplicationRecord
     'C++' => 'cpp'
   }
 
-  scope :visible_through_user, -> (u) { joins{exercise_owners.outer}.joins{exercise_collection.outer}.
-    where{ (exercise_owners.owner == u) | (exercise_collection.user == u) } }
+  # NOTE: visible_through_user is defined as a class method below (line ~142)
+  # using standard ActiveRecord syntax (left_outer_joins + where).
 
 
     #~ Class methods ............................................................

@@ -52,10 +52,10 @@ class CourseOffering < ApplicationRecord
     -> { includes(:term).order('terms.starts_on DESC', 'label ASC') }
 
   # FIXME: This scope seems to be broken. Use user.managed_course_offerings instead
-  scope :managed_by_user, -> (u) { joins{course_enrollments}.
-   where{ course_enrollments.user == u &&
-    course_enrollments.course_role_id == CourseRole::INSTRUCTOR_ID } }
-  scope :for_course_in_term, -> (c, t) { where { (course == c && term == t) } }
+  scope :managed_by_user, -> (u) { joins(:course_enrollments).
+    where(course_enrollments: { user_id: u.id,
+      course_role_id: CourseRole::INSTRUCTOR_ID }) }
+  scope :for_course_in_term, -> (c, t) { where(course: c, term: t) }
 
 
   #~ Validation ...............................................................

@@ -243,9 +243,9 @@ class WorkoutScore < ApplicationRecord
       exercise_version_id: exercise.current_version_id).first ||
 
       # Or, if that is nil, try search over all versions
-      Attempt.joins{exercise_version}.
-        where{(active_score_id == workout_score.id) &
-          (exercise_version.exercise_id == exercise.id)}.first
+      Attempt.joins(:exercise_version).
+        where(active_score_id: workout_score.id,
+          exercise_versions: { exercise_id: exercise.id }).first
   end
 
 
@@ -254,8 +254,8 @@ class WorkoutScore < ApplicationRecord
     # First, check for current version only, which is faster
     attempts.where(exercise_version_id: exercise.current_version_id).first ||
       # Or, if that is nil, try search over all versions
-      attempts.joins{exercise_version}.
-        where{exercise_version.exercise_id == exercise.id}.first
+      attempts.joins(:exercise_version).
+        where(exercise_versions: { exercise_id: exercise.id }).first
   end
 
 
@@ -283,10 +283,10 @@ class WorkoutScore < ApplicationRecord
       scored_for_this =
         #self.scored_attemptzs.
         #  where(exercise_version_id: attempt.exercise_version_id)
-        Attempt.joins{exercise_version}.
-          where{(active_score_id == this_workout_score.id) &
-            (exercise_version.exercise_id ==
-              attempt.exercise_version.exercise.id)}
+        Attempt.joins(:exercise_version).
+          where(active_score_id: this_workout_score.id,
+            exercise_versions: { exercise_id:
+              attempt.exercise_version.exercise.id })
 
       scoring_attempt = scored_for_this.first
 
@@ -411,8 +411,8 @@ class WorkoutScore < ApplicationRecord
       ws.workout.exercises.each do |e|
         a = ws.attempts.where(exercise_version_id: e.current_version_id).
           order('submit_time DESC').first ||
-          ws.attempts.joins{exercise_version}.
-          where{(exercise_version.exercise_id == e.id)}.
+          ws.attempts.joins(:exercise_version).
+          where(exercise_versions: { exercise_id: e.id }).
           order('submit_time DESC').first
         if a
           a.active_score = ws

@@ -1,5 +1,5 @@
 require 'ims/lti'
-require 'oauth/request_proxy/rack_request'
+require 'oauth/request_proxy/action_controller_request'
 require 'zip'
 require 'tempfile'
 
@@ -69,11 +69,11 @@ class ExercisesController < ApplicationController
     respond_to do |format|
       format.csv
       format.json do
-        render text:
+        render plain:
           ExerciseRepresenter.for_collection.new(@exercises).to_hash.to_json
       end
       format.yml do
-        render text:
+        render plain:
           ExerciseRepresenter.for_collection.new(@exercises).to_hash.to_yaml
       end
     end

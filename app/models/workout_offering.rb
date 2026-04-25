@@ -56,10 +56,11 @@ class WorkoutOffering < ApplicationRecord
   has_many :users, through: :student_extensions
   has_many :lti_workouts
 
-  scope :visible_to_students, -> { joins{workout_policy.outer}.where{
-    (published == true) &
-    ((workout_policy_id == nil) | (workout_policy.invisible_before_review == false)) &
-    ((opening_date == nil) | (opening_date <= Time.zone.now)) } }
+  scope :visible_to_students, -> {
+    left_outer_joins(:workout_policy).where(published: true)
+    .where('workout_policy_id IS NULL OR workout_policies.invisible_before_review = ?', false)
+    .where('opening_date IS NULL OR opening_date <= ?', Time.zone.now)
+  }
 
 
   #~ Validation ...............................................................

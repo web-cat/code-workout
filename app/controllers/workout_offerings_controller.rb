@@ -58,7 +58,7 @@ class WorkoutOfferingsController < ApplicationController
   # -------------------------------------------------------------
   def practice
     # must include the oauth proxy object
-    require 'oauth/request_proxy/rack_request'
+    require 'oauth/request_proxy/action_controller_request'
     @lti_launch = params[:lti_launch]
     if @lti_launch
       lti_enroll

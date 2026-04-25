@@ -19,7 +19,7 @@
 #  fk_rails_...  (exercise_version_id => exercise_versions.id)
 #
 
-class Ownership < ActiveRecord::Base
+class Ownership < ApplicationRecord
   belongs_to :resource_file
   belongs_to :exercise_version
 end
