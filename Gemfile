@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-gem 'rails', '~> 5.1'
+gem 'rails', '~> 5.2.8'
 gem 'sprockets', '< 4.0.0'
 gem 'bootstrap-sass', '~> 3.2.0'
 gem 'jquery-rails'
@@ -16,7 +16,7 @@ gem 'haml-rails'
 gem 'coffee-rails', '~> 4.2'
 gem 'coffee-script-source'
 gem 'test-unit', '~> 3.0.9'
-gem 'nokogiri', '~> 1.10.4'
+gem 'nokogiri', '~> 1.13', '>= 1.13.10'
 gem 'csv_shaper'
 gem 'andand', git: 'https://github.com/raganwald/andand'
 gem 'responders' # Can't move above 1.1 until migrating to rails 4.2+
@@ -68,7 +68,7 @@ group :test do
 end
 
 group :production, :staging, :deploy  do
-  gem 'puma', '~> 4.3.5'
+  gem 'puma', '~> 4.3.12'
 end
 
 group :doc do
@@ -79,6 +79,7 @@ end
 # Gems for authentication and authorization.
 gem 'devise'
 gem 'omniauth'
+gem 'omniauth-rails_csrf_protection'
 gem 'omniauth-facebook'
 gem 'omniauth-google-oauth2'
 gem 'omniauth-cas'
@@ -129,7 +130,7 @@ gem 'rails_same_site_cookie'
 gem 'image_hash'
 
 # Gems for resource uploder
-gem 'carrierwave', '1.3.2'
+gem 'carrierwave', '~> 1.3.3'
 
 gem 'ed25519'
 gem 'bcrypt_pbkdf'
