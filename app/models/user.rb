@@ -293,7 +293,7 @@ class User < ApplicationRecord
       enrollments.map { |e|
         if workout.kind_of?(String)
           workouts_with_name = Workout.where('lower(name) = ?', workout)
-          e.course_offering.workout_offerings.where('workout_id in ?', workouts_with_name.select(:id))
+          e.course_offering.workout_offerings.where(workout_id: workouts_with_name.select(:id))
         else
           e.course_offering.workout_offerings.where(workout: workout)
         end
@@ -311,8 +311,8 @@ class User < ApplicationRecord
   def managed_workouts
     course_enrollments.
       joins(:course_role, course_offering: { course: { user_group: :memberships } }).
-      where(course_roles:
-        { can_manage_course: true }, course_offerings:
+      where(course_role:
+        { can_manage_course: true }, course_offering:
           { course:
             { user_group:
               { memberships:
