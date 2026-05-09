@@ -721,15 +721,6 @@ class ExercisesController < ApplicationController
         session[:leaf_exercises] = [@exercise.id]
       end
     end
-    # EOL stands for end of line
-    # @wexs is the variable to hold the list of exercises of this workout
-    # yet to be attempted by the user apart from the current exercise
-
-    if params[:wexes] != 'EOL'
-      @wexs = params[:wexes] || session[:remaining_wexes]
-    else
-      @wexs = nil
-    end
 
 		# decide whether or not to hide the sidebar
 		# hide it if this workout (if present) has less than two exercises

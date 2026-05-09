@@ -26,6 +26,7 @@
 //= require bootstrap-wysihtml5
 //= require cocoon
 //= require cm
+//= require clipboard_protection
 //= require jquery-readyselector
 //= require moment
 //= require bootstrap-datetimepicker

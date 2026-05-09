@@ -881,8 +881,6 @@ class WorkoutsController < ApplicationController
     @max_workout_score = @current_workout.returnTotalWorkoutPoints
     session[:current_workout] = nil
     session[:workout_feedback] = nil
-    session[:wexes] = nil
-    session[:remaining_wexes] = nil
     render layout: 'two_columns'
   end
 
