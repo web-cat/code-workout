@@ -78,7 +78,6 @@ class User < ApplicationRecord
   has_many    :student_extensions
   has_many    :workout_offerings, through: :student_extensions
 
-  belongs_to  :current_workout_score, class_name: 'WorkoutScore'
   has_many    :test_case_results, inverse_of: :user, dependent: :destroy
   has_many    :lti_identities
 
@@ -542,8 +541,6 @@ class User < ApplicationRecord
         "remember_created_at <= #{user.created_at}"
       self.remember_created_at = user.created_at
     end
-    puts "update user #{user.id}: current_workout_score_id <= nil"
-    user.current_workout_score = nil
     user.save!
     self.save!
 

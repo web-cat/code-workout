@@ -607,10 +607,6 @@ class ExercisesController < ApplicationController
       @workout_score = @workout_offering.score_for(@student_user)
     end
 
-    if @student_user
-      @student_user.current_workout_score = @workout_score
-      @student_user.save!
-    end
 
     if @workout_score
       if @workout_score.lis_result_sourcedid.nil? && @workout_score.lis_outcome_service_url.nil?
@@ -790,15 +786,6 @@ class ExercisesController < ApplicationController
     else
       @workout_offering = nil
     end
-    if @workout_offering.nil? &&
-      @student_drift_user.andand.current_workout_score &&
-      @student_drift_user.current_workout_score.workout.contains?(
-        @exercise_version.exercise)
-      @workout_offering = @student_drift_user.current_workout_score.workout_offering
-      if @workout_offering.nil?
-        @workout = @student_drift_user.current_workout_score.workout
-      end
-    end
 
     if @workout.nil?
       if @workout_offering
@@ -808,12 +795,6 @@ class ExercisesController < ApplicationController
       end
     end
 
-    if @workout.nil? && session[:current_workout]
-      @workout = Workout.find_by(id: session[:current_workout])
-      if !@workout.contains?(@exercise_version.exercise)
-        @workout = nil
-      end
-    end
 
     @workout_score = nil
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2025_02_18_154318) do
+ActiveRecord::Schema.define(version: 2026_05_09_182340) do
 
   create_table "active_admin_comments", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci", force: :cascade do |t|
     t.string "namespace"
@@ -588,9 +588,7 @@ ActiveRecord::Schema.define(version: 2025_02_18_154318) do
     t.string "avatar"
     t.string "slug", null: false
     t.bigint "time_zone_id"
-    t.bigint "current_workout_score_id"
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
-    t.index ["current_workout_score_id"], name: "index_users_on_current_workout_score_id", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["global_role_id"], name: "index_users_on_global_role_id"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
@@ -788,8 +786,6 @@ ActiveRecord::Schema.define(version: 2025_02_18_154318) do
   add_foreign_key "users", "global_roles"
   add_foreign_key "users", "global_roles", name: "users_global_role_id_fk"
   add_foreign_key "users", "time_zones", name: "users_time_zone_id_fk"
-  add_foreign_key "users", "workout_scores", column: "current_workout_score_id"
-  add_foreign_key "users", "workout_scores", column: "current_workout_score_id", name: "users_current_workout_score_id_fk"
   add_foreign_key "workout_offerings", "course_offerings"
   add_foreign_key "workout_offerings", "course_offerings", name: "workout_offerings_course_offering_id_fk"
   add_foreign_key "workout_offerings", "workout_offerings", column: "continue_from_workout_id"

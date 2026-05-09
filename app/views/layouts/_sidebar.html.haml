@@ -1,6 +1,6 @@
 - user ||= current_user
-- workout_score = (@workout_score || user.andand.current_workout_score) || nil
-- workout_offering = (@workout_offering || workout_score.andand.workout_offering) || nil
+- workout_score = @workout_score || nil
+- workout_offering = @workout_offering || workout_score.andand.workout_offering || nil
 - if controller_name.eql?('workouts') && ['new', 'edit', 'clone'].include?(action_name)
   = render partial: 'exercises/find_exercises_to_add'
 - elsif user_signed_in? && (workout_score || workout_offering)

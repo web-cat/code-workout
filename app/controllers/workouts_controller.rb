@@ -871,15 +871,11 @@ class WorkoutsController < ApplicationController
 
   # -------------------------------------------------------------
   def evaluate
-    if session[:current_workout].nil?
-      redirect_to root_path, notice: 'Invalid action' and return
-    end
-    @workout_feedback = session[:workout_feedback].values
-    @current_workout = Workout.find(session[:current_workout])
+    @workout_feedback = session[:workout_feedback].andand.values || []
+    @current_workout = Workout.find(params[:id])
     @user_workout_score = WorkoutScore.find_by!(
-      user_id: current_user.id, workout_id: session[:current_workout]).score
+      user_id: current_user.id, workout_id: @current_workout.id).score
     @max_workout_score = @current_workout.returnTotalWorkoutPoints
-    session[:current_workout] = nil
     session[:workout_feedback] = nil
     render layout: 'two_columns'
   end
@@ -950,7 +946,6 @@ class WorkoutsController < ApplicationController
       authorize! :practice, @workout
     end
     if @workout
-      session[:current_workout] = @workout.id
       if current_user
         @workout_score = @workout.score_for(current_user, nil,
                                             params[:lis_outcome_service_url],
@@ -968,8 +963,6 @@ class WorkoutsController < ApplicationController
             workout: @workout)
           @workout_score.save!
         end
-        current_user.current_workout_score = @workout_score
-        current_user.save!
         if @workout_score.andand.closed? &&
           @workout_score.andand.workout_offering.andand.workout_policy.
           andand.no_review_before_close &&

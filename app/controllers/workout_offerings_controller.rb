@@ -83,7 +83,6 @@ class WorkoutOfferingsController < ApplicationController
         ex1 = Exercise.find_by(id: params[:exercise_id])
         # FIXME: need to check that ex1 is actually in this workout
       end
-      session[:current_workout] = @workout_offering.workout.id
       session[:workout_feedback] = Hash.new
       session[:workout_feedback]['workout'] =
         "You have attempted Workout #{@workout_offering.workout.name}"
@@ -118,8 +117,6 @@ class WorkoutOfferingsController < ApplicationController
           @workout_score.lis_result_sourcedid = lis_result_sourcedid
           @workout_score.save!
         end
-        current_user.current_workout_score = @workout_score
-        current_user.save!
         if @workout_score.andand.closed? &&
           @workout_score.andand.workout_offering.andand.workout_policy.
           andand.no_review_before_close &&
