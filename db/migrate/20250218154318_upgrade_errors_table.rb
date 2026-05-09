@@ -11,11 +11,17 @@ class UpgradeErrorsTable < ActiveRecord::Migration[5.2]
   # The old structure: (class_name message trace target_url referer_url params user_agent)
 
   def change
-    change_table :errors do |t|
-      t.rename :target_url, :target
-      t.rename :referer_url, :referrer
-      t.change :class_name, :text
-      t.text :status
+    if table_exists?(:errors)
+      change_table :errors do |t|
+        if column_exists?(:errors, :target_url) && !column_exists?(:errors, :target)
+          t.rename :target_url, :target
+        end
+        if column_exists?(:errors, :referer_url) && !column_exists?(:errors, :referrer)
+          t.rename :referer_url, :referrer
+        end
+        t.change :class_name, :text if column_exists?(:errors, :class_name)
+        t.text :status unless column_exists?(:errors, :status)
+      end
     end
   end
 end
