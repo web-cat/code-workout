@@ -203,6 +203,7 @@ class WorkoutsController < ApplicationController
     @lms_assignment_id = params[:lms_assignment_id]
     @lms_instance_id = params[:lms_instance_id]
     @suggested_name = params[:suggested_name]
+    @policy = WorkoutPolicy.new
 
     if params[:notice]
       flash.now[:notice] = params[:notice]
@@ -344,7 +345,7 @@ class WorkoutsController < ApplicationController
       @attempt_limit = @workout_offering.andand.attempt_limit
       @published = @workout_offering.andand.published
       @most_recent = @workout_offering.andand.most_recent
-      @policy = @workout_offering.andand.workout_policy
+      @policy = @workout_offering.andand.workout_policy || @workout.workout_policy || WorkoutPolicy.new
 
       @workout_offerings = current_user.managed_workout_offerings_in_term(
         @workout, @course, @term).to_a.flatten
@@ -378,6 +379,8 @@ class WorkoutsController < ApplicationController
         course_id: @course,
         term_id: @term,
       )
+    else
+      @policy = @workout.workout_policy || WorkoutPolicy.new
     end
 
     @can_update = can? :edit, @workout
@@ -1006,7 +1009,12 @@ class WorkoutsController < ApplicationController
 
     def create_or_update_offerings(workout)
       common = {}  # params that are common among all offerings of this workout
-      common[:workout_policy] = WorkoutPolicy.find_by id: params[:policy_id]
+      policy_params = params[:policy].present? ? JSON.parse(params[:policy]) : {}
+      policy = workout.workout_policy || WorkoutPolicy.create!
+      policy.update(policy_params)
+      # Ensure all existing offerings use this policy
+      workout.workout_offerings.update_all(workout_policy_id: policy.id)
+      common[:workout_policy] = policy
       common[:time_limit] = params[:time_limit]
       common[:attempt_limit] = params[:attempt_limit]
       common[:published] = params[:published]

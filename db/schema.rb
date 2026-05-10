@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_09_182340) do
+ActiveRecord::Schema.define(version: 2026_05_10_132100) do
 
   create_table "active_admin_comments", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci", force: :cascade do |t|
     t.string "namespace"
@@ -649,11 +649,9 @@ ActiveRecord::Schema.define(version: 2026_05_09_182340) do
     t.boolean "hide_thumbnails_in_review_before_close"
     t.boolean "no_hints"
     t.boolean "no_faq"
-    t.string "name"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.boolean "invisible_before_review"
-    t.string "description"
     t.boolean "hide_score_before_finish"
     t.boolean "hide_score_in_review_before_close"
   end

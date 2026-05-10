@@ -61,6 +61,13 @@ class Workout < ApplicationRecord
   accepts_nested_attributes_for :exercise_workouts
   accepts_nested_attributes_for :workout_offerings
 
+  # -------------------------------------------------------------
+  # Returns the workout policy shared by all offerings of this workout.
+  # If offerings point to different policies, it returns the first one found.
+  def workout_policy
+    workout_offerings.where.not(workout_policy_id: nil).first.andand.workout_policy
+  end
+
 
   #~ Validation ...............................................................
 

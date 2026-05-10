@@ -62,6 +62,8 @@ class WorkoutOffering < ApplicationRecord
     .where('opening_date IS NULL OR opening_date <= ?', Time.zone.now)
   }
 
+  before_validation :ensure_workout_policy
+
 
   #~ Validation ...............................................................
 
@@ -264,5 +266,15 @@ class WorkoutOffering < ApplicationRecord
 
     @exercises = self.workout.exercises.where(is_public: false)
     @exercise_collection.add(@exercises.to_a.flatten)
+  end
+
+
+  #~ Private instance methods .................................................
+  private
+
+  def ensure_workout_policy
+    if self.workout && self.workout_policy.nil?
+      self.workout_policy = self.workout.workout_policy || WorkoutPolicy.create!
+    end
   end
 end

@@ -461,7 +461,9 @@ handle_submit = ->
   description = $('#description').val()
   time_limit = $('#time-limit').val()
   attempt_limit = $('#attempt-limit').val()
-  policy_id = $('#policy-select').val()
+  policy = {}
+  $('.policy-checkbox').each ->
+    policy[$(this).data('attribute')] = $(this).is(':checked')
   is_public = $('#is-public').is ':checked'
   published = $('#published').is ':checked'
   most_recent = $('#most_recent').is ':checked'
@@ -475,7 +477,7 @@ handle_submit = ->
   fd.append 'description', description
   fd.append 'time_limit', time_limit
   fd.append 'attempt_limit', attempt_limit
-  fd.append 'policy_id', policy_id
+  fd.append 'policy', JSON.stringify policy
   fd.append 'exercises', JSON.stringify exercises
   fd.append 'course_offerings', JSON.stringify course_offerings
   fd.append 'removed_exercises', JSON.stringify window.codeworkout.removed_exercises
