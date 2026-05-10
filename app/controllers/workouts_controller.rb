@@ -726,6 +726,15 @@ class WorkoutsController < ApplicationController
 
         if enrolled_workout_offerings.any?
           @workout_offering = enrolled_workout_offerings.andand.first
+        elsif workout_offerings.count == 1
+          # Exactly one match, use it even if not enrolled
+          @workout_offering = workout_offerings.first
+        elsif workout_offerings.count > 1
+          # Multiple matches, let the user choose
+          @existing_workout_offerings = workout_offerings
+            .uniq { |wo| wo.course_offering }
+          @available_offerings = @existing_workout_offerings.map(&:course_offering)
+          render layout: 'one_column' and return
         elsif @course_offering
           # found an enrolled course_offering, so we don't need to ask the student anything
           # but the course offering does not include the workout offering, so add it
@@ -796,7 +805,7 @@ class WorkoutsController < ApplicationController
     end
 
     if !@user.is_enrolled?(@course_offering) &&
-        (@course_offering.can_enroll? || role.is_instructor?)
+        (@course_offering.can_enroll? || role.is_instructor? || matching_lms_assignment_id)
       CourseEnrollment.create(course_offering: @course_offering, user: @user, course_role: role)
     end
 
