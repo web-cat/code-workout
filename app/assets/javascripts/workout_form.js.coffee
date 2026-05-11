@@ -463,7 +463,11 @@ handle_submit = ->
   attempt_limit = $('#attempt-limit').val()
   policy = {}
   $('.policy-checkbox').each ->
-    policy[$(this).data('attribute')] = $(this).is(':checked')
+    $cb = $(this)
+    attr = $cb.attr('data-attribute')
+    val = $cb.is(':checked')
+    if attr
+      policy[attr] = val
   is_public = $('#is-public').is ':checked'
   published = $('#published').is ':checked'
   most_recent = $('#most_recent').is ':checked'

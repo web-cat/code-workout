@@ -21,7 +21,7 @@
             = "/ "  + pts.to_s
 
 - if @exercise_version.is_mcq?
-  - if show_feedback
+  - if show_score
     - if @attempt.earned_full_points?
       %p Your choice is correct!
     - elsif @attempt.score > 0
@@ -70,25 +70,36 @@
                   .out= tcr.execution_feedback
         - if has_hidden
           %tr
-            - if hidden_pass
-              %td.pass
-                %i.fa.fa-check-square
+            - if show_score
+              - if hidden_pass
+                %td.pass
+                  %i.fa.fa-check-square
+              - else
+                %td.fail
+                  %i.fa.fa-minus-square
+              %td hidden test(s)
             - else
-              %td.fail
-                %i.fa.fa-minus-square
-            %td hidden test(s)
+              %td.unknown
+                %i.fa.fa-question-circle
+              %td hidden test(s) (results not shown)
   - else
     - examples = @exercise_version.prompts.first.specific.examples
     %table.table.table-striped.feedback
       %thead
         %tr
-          %th Example
-          %th.text-center Result
+          %th{ style: 'text-align: center;' } Result
+          %th Behavior
       %tbody
         - if examples.any?
           - answer.test_case_results().each do |tcr|
             - if tcr.test_case.is_example?
               %tr
+                - if tcr.pass
+                  %td.pass
+                    %i.fa.fa-check-square
+                - else
+                  %td.fail
+                    %i.fa.fa-minus-square
                 %td
                   - description = tcr.display_description
                   = description
@@ -96,16 +107,10 @@
                     - if !tcr.test_case.hidden?
                       %br
                       .out= tcr.execution_feedback
-                - if tcr.pass
-                  %td.pass
-                    %i.fa.fa-check-square
-                - else
-                  %td.fail
-                    %i.fa.fa-minus-square
         %tr
-          %td Other hidden tests
           %td.unknown
             %i.fa.fa-question-circle
+          %td hidden test(s) (results not shown)
 
 -#= render partial: 'workout_scores/time_remaining',
   locals: { workout_score: @attempt.workout_score }

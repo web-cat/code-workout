@@ -1010,8 +1010,10 @@ class WorkoutsController < ApplicationController
     def create_or_update_offerings(workout)
       common = {}  # params that are common among all offerings of this workout
       policy_params = params[:policy].present? ? JSON.parse(params[:policy]) : {}
+      
       policy = workout.workout_policy || WorkoutPolicy.create!
       policy.update(policy_params)
+
       # Ensure all existing offerings use this policy
       workout.workout_offerings.update_all(workout_policy_id: policy.id)
       common[:workout_policy] = policy
