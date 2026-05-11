@@ -552,7 +552,12 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   def practice
     # lti launch
-    @lti_launch = params[:lti_launch]
+    token = params[:lti_launch]
+    if lti_context_for_token(token)
+      @lti_launch = token
+    else
+      @lti_launch = nil
+    end
 
     if params[:exercise_version_id] || params[:id]
       set_exercise_from_params
@@ -731,13 +736,16 @@ class ExercisesController < ApplicationController
       Rails.logger.error "workout conflict: practice() with workout_offering #{@workout_offering.id} conflicting with workout #{@workout.id}"
     end
 
+    lti_context = lti_context_for_token(params[:lti_launch])
     ActivityLog.create(
       user: @student_user,
       exercise: @exercise,
       workout: @workout,
       workout_offering: @workout_offering,
       activity: 'practice_view',
-      ip_address: request.remote_ip
+      ip_address: request.remote_ip,
+      lms_instance_id: lti_context.andand[:lms_instance_id],
+      lti_launch: lti_context.present?
     )
 
     render layout: 'two_columns'
@@ -839,9 +847,13 @@ class ExercisesController < ApplicationController
     # in the partial
     @attempts_left = (@attempts_left && @attempts_left > 0) ?
       @attempts_left - 1 : @attempts_left
+    lti_context = lti_context_for_token(params[:lti_launch])
     @attempt = @exercise_version.new_attempt(
-      user: @student_drift_user, workout_score: @workout_score,
-      ip_address: request.remote_ip)
+      user: @student_drift_user, 
+      workout_score: @workout_score,
+      ip_address: request.remote_ip,
+      lms_instance_id: lti_context.andand[:lms_instance_id],
+      lti_launch: lti_context.present?)
 
     @attempt.save!
 
@@ -1026,11 +1038,14 @@ class ExercisesController < ApplicationController
     if(params[:workoutOfferingID] != '')
       workout_offering_id = WorkoutOffering.find(params[:workoutOfferingID])
     end
+    lti_context = lti_context_for_token(params[:lti_launch])
     @visualization_logging = VisualizationLogging.new(
       user: curr_user,
       exercise: Exercise.find_by_name(params[:exercise_id]),
       workout: workout_id,
-      workout_offering: workout_offering_id
+      workout_offering: workout_offering_id,
+      lms_instance_id: lti_context.andand[:lms_instance_id],
+      lti_launch: lti_context.present?
     )
     @visualization_logging.save
     respond_to do |format|

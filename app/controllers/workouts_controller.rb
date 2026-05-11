@@ -959,6 +959,13 @@ class WorkoutsController < ApplicationController
     if !@lti_workout
       authorize! :practice, @workout
     end
+    token = params[:lti_launch]
+    if lti_context_for_token(token)
+      @lti_launch = token
+    else
+      @lti_launch = nil
+    end
+
     if @workout
       if current_user
         @workout_score = @workout.score_for(current_user, nil,
@@ -990,7 +997,7 @@ class WorkoutsController < ApplicationController
       redirect_to exercise_practice_path(
         @workout.first_exercise,
         workout_id: @workout.id,
-        lti_launch: params[:lti_launch],
+        lti_launch: @lti_launch,
         workout_score_id: @workout_score.andand.id
       )
     else

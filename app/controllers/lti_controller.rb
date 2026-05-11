@@ -61,6 +61,8 @@ class LtiController < ApplicationController
     session[:lms_instance_id] = @lms_instance.id
     session[:is_instructor] = @tp.context_instructor?
 
+    @lti_token = generate_lti_launch_token(@lms_instance.id)
+
     gym_workout_id = params[:custom_gym_workout_id] || params[:gym_workout_id]
     if !lti_workout && gym_workout_id
       # First time this workout is being accessed from the
@@ -70,8 +72,7 @@ class LtiController < ApplicationController
         # no workout found. different paths forward based on LTI role
         if @tp.context_instructor?
           redirect_to new_or_existing_workout_path(
-            lti_launch: ("iframe" ==
-              params[:launch_presentation_document_target]),
+            lti_launch: @lti_token,
             lms_assignment_id: ext_lti_assignment_id
           ) and return
         else
@@ -92,13 +93,9 @@ class LtiController < ApplicationController
     end
 
     if lti_workout
-      # Serving a public workout over LTI
-      session.delete(:lis_outcome_service_url)
-      session.delete(:lis_result_sourcedid)
-      session.delete(:lms_instance_id)
       redirect_to practice_workout_path(
         id: lti_workout.workout_id,
-        lti_launch: ("iframe" == params[:launch_presentation_document_target]),
+        lti_launch: @lti_token,
         lti_workout_id: lti_workout.id,
         lis_outcome_service_url: params[:lis_outcome_service_url],
         lis_result_sourcedid: params[:lis_result_sourcedid]
@@ -178,7 +175,7 @@ class LtiController < ApplicationController
       label: params[:custom_label], # can be nil
       lis_outcome_service_url: params[:lis_outcome_service_url],
       lis_result_sourcedid: params[:lis_result_sourcedid],
-      lti_launch: ("iframe" == params[:launch_presentation_document_target]),
+      lti_launch: @lti_token,
       from_collection: workout_from_collection
     )
   end

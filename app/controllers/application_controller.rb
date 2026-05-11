@@ -63,4 +63,30 @@ class ApplicationController < ActionController::Base
     response.headers.except! 'X-Frame-Options'
   end
 
+
+  # -------------------------------------------------------------
+  def generate_lti_launch_token(lms_instance_id)
+    token = (rand(90000000) + 10000000).to_s
+    session[:lti_contexts] ||= {}
+    session[:lti_contexts][token] = {
+      lms_instance_id: lms_instance_id,
+      timestamp: Time.now.to_i
+    }
+    
+    # Keep only the last 2 launches to minimize cookie size
+    if session[:lti_contexts].size > 2
+      oldest_token = session[:lti_contexts].keys.sort_by { |t| session[:lti_contexts][t][:timestamp] }.first
+      session[:lti_contexts].delete(oldest_token)
+    end
+    
+    token
+  end
+
+
+  # -------------------------------------------------------------
+  def lti_context_for_token(token)
+    return nil if token.blank?
+    session[:lti_contexts].andand[token.to_s]
+  end
+
 end

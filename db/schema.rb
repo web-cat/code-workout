@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_11_192509) do
+ActiveRecord::Schema.define(version: 2026_05_11_203606) do
 
   create_table "active_admin_comments", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci", force: :cascade do |t|
     t.string "namespace"
@@ -35,7 +35,10 @@ ActiveRecord::Schema.define(version: 2026_05_11_192509) do
     t.string "ip_address"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "lms_instance_id"
+    t.boolean "lti_launch", default: false
     t.index ["exercise_id"], name: "index_activity_logs_on_exercise_id"
+    t.index ["lms_instance_id"], name: "index_activity_logs_on_lms_instance_id"
     t.index ["user_id"], name: "index_activity_logs_on_user_id"
     t.index ["workout_id"], name: "index_activity_logs_on_workout_id"
     t.index ["workout_offering_id"], name: "index_activity_logs_on_workout_offering_id"
@@ -57,8 +60,11 @@ ActiveRecord::Schema.define(version: 2026_05_11_192509) do
     t.decimal "feedback_timeout", precision: 10
     t.decimal "worker_time", precision: 10
     t.string "ip_address"
+    t.bigint "lms_instance_id"
+    t.boolean "lti_launch", default: false
     t.index ["active_score_id"], name: "index_attempts_on_active_score_id"
     t.index ["exercise_version_id"], name: "index_attempts_on_exercise_version_id"
+    t.index ["lms_instance_id"], name: "index_attempts_on_lms_instance_id"
     t.index ["user_id", "exercise_version_id"], name: "idx_attempts_on_user_exercise_version"
     t.index ["user_id"], name: "index_attempts_on_user_id"
     t.index ["workout_score_id", "exercise_version_id"], name: "idx_attempts_on_workout_score_exercise_version"
@@ -619,7 +625,10 @@ ActiveRecord::Schema.define(version: 2026_05_11_192509) do
     t.bigint "workout_offering_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "lms_instance_id"
+    t.boolean "lti_launch"
     t.index ["exercise_id"], name: "index_visualization_loggings_on_exercise_id"
+    t.index ["lms_instance_id"], name: "index_visualization_loggings_on_lms_instance_id"
     t.index ["user_id"], name: "index_visualization_loggings_on_user_id"
     t.index ["workout_id"], name: "index_visualization_loggings_on_workout_id"
     t.index ["workout_offering_id"], name: "index_visualization_loggings_on_workout_offering_id"
