@@ -43,18 +43,17 @@
     .col-xs-10
       - [ ['Before starting the workout:', [[:invisible_before_review, 'Hide workout on course page?'], [:hide_thumbnails_before_start, 'Hide exercise thumbnails on workout page?']] ],
           ['While doing the workout:', [[:hide_score_before_finish, 'Hide scores?'], [:hide_feedback_before_finish, 'Hide test results?'], [:hide_compilation_feedback_before_finish, 'Hide compilation feedback?']] ],
-          ['During review (after finishing, but before everyone finishes):', [[:no_review_before_close, 'No review until everyone finishes?'], [:hide_score_in_review_before_close, 'Hide scores in review?'], [:hide_feedback_in_review_before_close, 'Hide test results in review?'], [:hide_thumbnails_in_review_before_close, 'Hide thumbnails on workout page?']] ] ].each do |header, items|
+          ['After finishing the workout:', [[:see_answers, 'Let students see their answers?'], [:no_review_before_close, 'Hide student answers until everyone finishes?'], [:hide_score_in_review_before_close, 'Hide scores?'], [:hide_feedback_in_review_before_close, 'Hide test results?']] ] ].each do |header, items|
         .row
           .col-xs-10
             %strong{ style: 'border-bottom: 2px solid #dfcdb2;' }= header
         .row
-          .col-xs-10
-            - items.each do |attr, label|
-              .col-md-4.col-sm-6
-                .checkbox
-                  %label
-                    = check_box_tag "policy[#{attr}]", '1', @policy.andand.send(attr), class: 'policy-checkbox', data: { attribute: attr }
-                    = label
+          - items.each do |attr, label|
+            .col-xs-10
+              .checkbox
+                %label
+                  = check_box_tag "policy[#{attr}]", '1', @policy.andand.send(attr), class: 'policy-checkbox', data: { attribute: attr }
+                  = label
         %br
   
   - if @course

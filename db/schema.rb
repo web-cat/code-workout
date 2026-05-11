@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_11_011728) do
+ActiveRecord::Schema.define(version: 2026_05_11_192509) do
 
   create_table "active_admin_comments", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci", force: :cascade do |t|
     t.string "namespace"
@@ -657,19 +657,20 @@ ActiveRecord::Schema.define(version: 2026_05_11_011728) do
   end
 
   create_table "workout_policies", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci", force: :cascade do |t|
-    t.boolean "hide_thumbnails_before_start"
-    t.boolean "hide_feedback_before_finish"
-    t.boolean "hide_compilation_feedback_before_finish"
-    t.boolean "no_review_before_close"
-    t.boolean "hide_feedback_in_review_before_close"
-    t.boolean "hide_thumbnails_in_review_before_close"
-    t.boolean "no_hints"
-    t.boolean "no_faq"
+    t.boolean "hide_thumbnails_before_start", default: false, null: false
+    t.boolean "hide_feedback_before_finish", default: false, null: false
+    t.boolean "hide_compilation_feedback_before_finish", default: false, null: false
+    t.boolean "no_review_before_close", default: false, null: false
+    t.boolean "hide_feedback_in_review_before_close", default: false, null: false
+    t.boolean "hide_thumbnails_in_review_before_close", default: false, null: false
+    t.boolean "no_hints", default: false, null: false
+    t.boolean "no_faq", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.boolean "invisible_before_review"
-    t.boolean "hide_score_before_finish"
-    t.boolean "hide_score_in_review_before_close"
+    t.boolean "invisible_before_review", default: false, null: false
+    t.boolean "hide_score_before_finish", default: false, null: false
+    t.boolean "hide_score_in_review_before_close", default: false, null: false
+    t.boolean "see_answers", default: true, null: false
   end
 
   create_table "workout_scores", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci", force: :cascade do |t|

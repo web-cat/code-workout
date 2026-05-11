@@ -977,10 +977,12 @@ class WorkoutsController < ApplicationController
             workout: @workout)
           @workout_score.save!
         end
-        if @workout_score.andand.closed? &&
-          @workout_score.andand.workout_offering.andand.workout_policy.
-          andand.no_review_before_close &&
-          !@workout_score.andand.workout_offering.andand.shutdown?
+        manages_course = current_user.andand.global_role.andand.is_admin? ||
+          @workout_score.andand.workout_offering.andand.course_offering.andand.is_manager?(current_user)
+        policy = @workout_score.andand.workout_offering.andand.workout_policy
+        if !manages_course && @workout_score.andand.closed? &&
+          (policy.andand.see_answers == false ||
+           (policy.andand.no_review_before_close && !@workout_score.andand.workout_offering.andand.shutdown?))
           redirect_to workout_path(@workout),
             notice: "The time limit has passed for this workout." and return
         end

@@ -639,9 +639,10 @@ class ExercisesController < ApplicationController
     manages_course = current_user.andand.global_role.andand.is_admin? ||
       @workout_offering.andand.course_offering.andand.is_manager?(current_user)
 
+    policy = @workout_offering.andand.workout_policy
     if !manages_course && @workout_score.andand.closed? &&
-      @workout_offering.andand.workout_policy.andand.no_review_before_close &&
-      !@workout_offering.andand.shutdown?
+      (policy.andand.see_answers == false ||
+       (policy.andand.no_review_before_close && !@workout_offering.andand.shutdown?))
       path = root_path
       if @workout_offering
         path = organization_workout_offering_path(

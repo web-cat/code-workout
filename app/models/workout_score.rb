@@ -220,6 +220,16 @@ class WorkoutScore < ApplicationRecord
 
 
   # -------------------------------------------------------------
+  def show_answers?
+    if !self.workout_offering
+      return true
+    end
+
+    workout_offering.andand.workout_policy.andand.see_answers != false
+  end
+
+
+  # -------------------------------------------------------------
   def attempts_left_for_exercise_version(exercise_version)
     if self.workout_offering.andand.attempt_limit
       attempts_made = self
