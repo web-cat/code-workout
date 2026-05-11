@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_10_132100) do
+ActiveRecord::Schema.define(version: 2026_05_11_011728) do
 
   create_table "active_admin_comments", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci", force: :cascade do |t|
     t.string "namespace"
@@ -24,6 +24,21 @@ ActiveRecord::Schema.define(version: 2026_05_10_132100) do
     t.index ["author_type", "author_id"], name: "index_active_admin_comments_on_author_type_and_author_id"
     t.index ["namespace"], name: "index_active_admin_comments_on_namespace"
     t.index ["resource_type", "resource_id"], name: "index_active_admin_comments_on_resource_type_and_resource_id"
+  end
+
+  create_table "activity_logs", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci", force: :cascade do |t|
+    t.bigint "user_id"
+    t.bigint "exercise_id"
+    t.bigint "workout_id"
+    t.bigint "workout_offering_id"
+    t.string "activity"
+    t.string "ip_address"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["exercise_id"], name: "index_activity_logs_on_exercise_id"
+    t.index ["user_id"], name: "index_activity_logs_on_user_id"
+    t.index ["workout_id"], name: "index_activity_logs_on_workout_id"
+    t.index ["workout_offering_id"], name: "index_activity_logs_on_workout_offering_id"
   end
 
   create_table "attempts", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci", force: :cascade do |t|
@@ -41,6 +56,7 @@ ActiveRecord::Schema.define(version: 2026_05_10_132100) do
     t.decimal "time_taken", precision: 10
     t.decimal "feedback_timeout", precision: 10
     t.decimal "worker_time", precision: 10
+    t.string "ip_address"
     t.index ["active_score_id"], name: "index_attempts_on_active_score_id"
     t.index ["exercise_version_id"], name: "index_attempts_on_exercise_version_id"
     t.index ["user_id", "exercise_version_id"], name: "idx_attempts_on_user_exercise_version"
@@ -694,6 +710,10 @@ ActiveRecord::Schema.define(version: 2026_05_10_132100) do
     t.index ["is_public"], name: "index_workouts_on_is_public"
   end
 
+  add_foreign_key "activity_logs", "exercises"
+  add_foreign_key "activity_logs", "users"
+  add_foreign_key "activity_logs", "workout_offerings"
+  add_foreign_key "activity_logs", "workouts"
   add_foreign_key "attempts", "exercise_versions"
   add_foreign_key "attempts", "exercise_versions", name: "attempts_exercise_version_id_fk"
   add_foreign_key "attempts", "users"

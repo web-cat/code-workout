@@ -270,7 +270,8 @@ class ExerciseVersion < ApplicationRecord
       user: user,
       exercise_version: self,
       submit_time: Time.zone.now,
-      submit_num: num
+      submit_num: num,
+      ip_address: args[:ip_address]
       )
     if args[:workout_score]
       attempt.workout_score = args[:workout_score]

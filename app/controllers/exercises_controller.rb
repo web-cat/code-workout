@@ -729,6 +729,16 @@ class ExercisesController < ApplicationController
     if @workout && @workout_offering && (@workout_offering.workout != @workout)
       Rails.logger.error "workout conflict: practice() with workout_offering #{@workout_offering.id} conflicting with workout #{@workout.id}"
     end
+
+    ActivityLog.create(
+      user: @student_user,
+      exercise: @exercise,
+      workout: @workout,
+      workout_offering: @workout_offering,
+      activity: 'practice_view',
+      ip_address: request.remote_ip
+    )
+
     render layout: 'two_columns'
 
   end
@@ -829,7 +839,8 @@ class ExercisesController < ApplicationController
     @attempts_left = (@attempts_left && @attempts_left > 0) ?
       @attempts_left - 1 : @attempts_left
     @attempt = @exercise_version.new_attempt(
-      user: @student_drift_user, workout_score: @workout_score)
+      user: @student_drift_user, workout_score: @workout_score,
+      ip_address: request.remote_ip)
 
     @attempt.save!
 

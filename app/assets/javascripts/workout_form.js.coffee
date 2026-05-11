@@ -4,8 +4,13 @@ searchable = null
 $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
   window.codeworkout ?= {}
   window.codeworkout.removed_exercises = []
-  window.codeworkout.removed_offerings = []
-  window.codeworkout.removed_extensions = []
+  
+  # Store initial state for removal confirmation
+  $('#date-yaml').data('initial-sections', ($('#date-yaml').val().match(/section:/g) || []).length)
+  
+  # Track last cursor position in textarea
+  $('#date-yaml').on 'blur focus click input', ->
+    $(this).data('last-cursor', this.selectionStart)
 
   init()
 
@@ -42,95 +47,74 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
         exercise.removeClass 'shake'
       , 1000
 
-  # If we change the point value on an exercise, set the new default
-  # to that value, so the user doesn't need to change it each time
-  $('#ex-list').on 'change', '.points', ->
-    default_point_value = $(this).val()
-
   # From the modal showing available course offerings, add the
-  # selected one to this workout
+  # selected one to the YAML text area before extensions:
   $('#course-offerings').on 'click', 'a', ->
-    course_offering_id = $(this).data 'course-offering-id'
-    course_offering_display = $(this).text().trim()
-    row = $($('#add-offering-form tbody').html())
-    row_fields = row.find('td')
-    $(row_fields[0]).data 'course-offering-id', course_offering_id
-    $(row_fields[0]).find('.display').html course_offering_display
-    init_row_datepickers row
+    label = $(this).text().trim()
+    new_section = "  - section: #{label}\n    due: \n    from: \n    until: \n"
+    
+    textarea = $('#date-yaml')
+    content = textarea.val()
+    ext_pos = content.indexOf('extensions:')
+    
+    if ext_pos == -1
+      new_content = content.trim() + "\n" + new_section
+    else
+      new_content = content.substring(0, ext_pos) + new_section + content.substring(ext_pos)
+    
+    textarea.val(new_content)
     $(this).remove()
     $('#offerings-modal').modal 'hide'
-    $('#workout-offering-fields tbody').append row
-
-  # Remove the course offering from this workout
-  # If removable, it will again show up as 'available'
-  $('#workout-offering-fields').on 'click', '.delete-offering', ->
-    row = $(this).closest 'tr'
-    workout_offering_id = row.data 'id'
-    course_offering_id = row.find('.course-offering').data 'course-offering-id'
-    course_offering_display = row.find('.course-offering .display').text()
-    removable = $(this).data 'removable'
-    if removable
-      delete_confirmed = false
-      if course_offering_id != ''
-        course_offering_id = parseInt(course_offering_id)
-        delete_confirmed = remove_extensions_if_any course_offering_id
-
-      if delete_confirmed
-        if workout_offering_id? && workout_offering_id != ''
-          window.codeworkout.removed_offerings.push workout_offering_id
-        row.remove()
-        $('#offerings-modal .msg').empty()
-        unused_row =
-          "<a class='list-group-item action' data-course-offering-id='" +
-            course_offering_id + "'>" +
-            course_offering_display +
-          "</a>"
-        $('#offerings-modal #course-offerings').append unused_row
-    else
-      alert 'Cannot delete this workout. Some students have already attempted it.'
+    textarea.focus()
+    textarea.trigger('change')
 
   # Show the StudentSearch modal
-  $('#workout-offering-fields').on 'click', '.add-extension', ->
-    course_offering = $(this).closest('tr').find('.course-offering')
-    course_offering_display = $(course_offering).text()
-    course_offering_id = $(course_offering).data 'course-offering-id'
+  $('#add-student-btn').on 'click', ->
+    textarea = $('#date-yaml')
+    cursor = textarea.data('last-cursor')
+    if typeof cursor == 'undefined'
+      show_toolbar_tooltip($(this), "Select an insertion point first")
+      return
+
+    # Lock the cursor position
+    textarea.data('locked-cursor', cursor)
+    
     $('#student-search-modal').modal('show')
+    search_url = "/gym/workouts/search_students?organization_id=#{window.codeworkout.organization_id}&course_id=#{window.codeworkout.course_id}&term_id=#{window.codeworkout.term_id}"
     searchable = $('.searchable').StudentSearch
-      course_offering_display: course_offering_display
-      course_offering_id: course_offering_id
+      course_offering_display: 'any section'
+      course_offering_id: 0
+      search_url: search_url
 
-  # When a student is selected, use the mustache template to add an extension
-  # for that student
+  # When a student is selected, insert them at the locked cursor position
   $('.searchable').on 'studentSelect', (e) ->
-    if (searchable)
-      $('#student-search-modal').modal('hide')
-      name = if e.student_name.length > 1 then e.student_name else e.student_display
-      data =
-        course_offering_id: searchable.course_offering.id
-        course_offering_display: searchable.course_offering.display
-        student_display: e.student_display
-        student_id: e.student_id
+    insert_at_cursor(e.student_display, true)
+    $('#student-search-modal').modal('hide')
 
-      template = $(Mustache.render(
-        $(window.codeworkout.student_extension_template)
-          .filter('#extension-template').html(),
-        data))
-      $('#student-extension-fields tbody').append(template)
-      $('#student-search-modal').modal('hide')
-      $('#extensions').css 'display', 'block'
-      init_row_datepickers template
-
-  # Remove student extension
-  $(document).on 'click', '.delete-extension', ->
-    row = $(this).closest('tr')
-    extension_id = row.data 'id'
-    if extension_id? && extension_id != ''
-      window.codeworkout.removed_extensions.push extension_id
-
-    row.remove()
-    extensions = $('#student-extension-fields tbody').find 'tr'
-    if extensions.length == 0
-      $('#extensions').css 'display', 'none'
+  # Initialize flatpickr on the "Select Date" button
+  $('#select-date-btn').flatpickr
+    enableTime: true
+    noCalendar: false
+    dateFormat: "Y-m-d h:i K"
+    time_24hr: false
+    disableMobile: "true"
+    onOpen: (selectedDates, dateStr, instance) ->
+      textarea = $('#date-yaml')
+      cursor = textarea.data('last-cursor')
+      if typeof cursor == 'undefined'
+        instance.close()
+        show_toolbar_tooltip($('#select-date-btn'), "Select an insertion point first")
+        return
+      # Lock the cursor position
+      textarea.data('locked-cursor', cursor)
+    onReady: (selectedDates, dateStr, instance) ->
+      # Add an "Insert" button to the picker
+      $btn = $('<div class="flatpickr-insert-btn" style="text-align: center; padding: 5px; border-top: 1px solid #eee; cursor: pointer; font-weight: bold; color: #3da2b4;">Insert</div>')
+      $btn.on 'click', -> instance.close()
+      $(instance.calendarContainer).append($btn)
+    onClose: (selectedDates, dateStr, instance) ->
+      if selectedDates.length
+        insert_at_cursor(dateStr, true)
 
   # Remove exercise from list
   $('#ex-list').on 'click', '.delete-ex', ->
@@ -154,88 +138,17 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
 # End event handlers, begin helper methods #
 ############################################
 
-# Initialises the form, including mustache templates and datepickers
 init = ->
   description = $('textarea#description').data 'value'
   $('textarea#description').val description
   init_templates()
-  course = window.codeworkout.course_id
-  if course
-    init_datepickers()
 
-# Removes all extensions associated with a workout offering in the form.
-# Used when the workout offering itself is being deleted.
-# Keeps track of which extensions were removed, so we can tell the backend.
-# Asks to confirm first. Returns true if extensions were removed, false
-# otherwise.
-remove_extensions_if_any = (course_offering_id) ->
-  extensions = $('#student-extension-fields tbody').find 'tr'
-  to_remove = []
-  for extension in extensions
-    do (extension) ->
-      offering = $(extension).data 'course-offering-id'
-      if offering == course_offering_id
-        to_remove.push $(extension).index()
-
-  if to_remove.length > 0
-    confirmation = confirm 'Removing this workout offering will also remove ' +
-      to_remove.length + ' student extension(s).'
-    if confirmation
-      for index in to_remove
-        do (index) ->
-          id = $($(extensions)[index]).data 'id'
-          if id? && id != ''
-            window.codeworkout.removed_extensions.push id
-          $(extensions)[index].remove()
-
-      if extensions.length == 0
-        $('#extensions').css 'display', 'none'
-      return true
-    else
-      return false
-  else
-    return true
-
-# Initialise mustache templates for student extensions and exercises.
 init_templates = ->
   $.get window.codeworkout.exercise_template_path, (template, textStatus, jqXHr) ->
     window.codeworkout.exercise_template = template
     if $('body').is('.workouts.edit') || $('body').is('.workouts.clone')
       init_exercises()
-  course = window.codeworkout.course_id
-  if course
-    $.get window.codeworkout.extension_template_path, (template, textStatus, jqXHr) ->
-      window.codeworkout.student_extension_template = template
-      if $('body').is '.workouts.edit'
-        init_student_extensions()
 
-# Display any existing student extensions belonging to workout offerings
-# of this workout.
-init_student_extensions = ->
-  student_extensions = $('#extensions').data 'student-extensions'
-  if student_extensions
-    $('#extensions').css 'display', 'block' if student_extensions.length > 0
-    for extension in student_extensions
-      do (extension) ->
-        data =
-          id: extension.id
-          course_offering_id: extension.course_offering_id
-          course_offering_display: extension.course_offering_display
-          student_id: extension.student_id
-          student_display: extension.student_display
-          time_limit: extension.time_limit
-          opening_date: extension.opening_date * 1000
-          soft_deadline: extension.soft_deadline * 1000
-          hard_deadline: extension.hard_deadline * 1000
-        template =
-            $(Mustache.render(
-              $(window.codeworkout.student_extension_template)
-                .filter('#extension-template').html(),
-              data))
-        $('#student-extension-fields tbody').append template
-        init_row_datepickers template
-
-# Display any existing exercises in this workout.
 init_exercises = ->
   exercises = $('#ex-list').data 'exercises'
   if exercises
@@ -245,9 +158,6 @@ init_exercises = ->
         if exercise.name
           name = name + ": #{exercise.name}"
 
-        # Only keep track of the exercise_workout_id if we're editing a workout
-        # If we're creating or cloning a workout, this information is not
-        # required.
         if $('body').is('.workouts.edit')
           exercise_workout_id = exercise.exercise_workout_id
         else
@@ -263,87 +173,45 @@ init_exercises = ->
           data))
     $('#ex-list').removeData 'exercises'
 
-# Initialise the datepickers for each existing workout offering and
-# student extension
-init_datepickers = ->
-  offerings = $('tr', '#workout-offering-fields tbody')
-  for offering in offerings
-    do (offering) ->
-      init_row_datepickers offering
+insert_at_cursor = (val, use_locked = false) ->
+  textarea = $('#date-yaml')
+  if use_locked
+    pos = textarea.data('locked-cursor')
+  else
+    pos = textarea.data('last-cursor')
+    
+  if typeof pos == 'undefined'
+    pos = textarea.val().length
+  
+  content = textarea.val()
+  new_content = content.substring(0, pos) + val + content.substring(pos)
+  textarea.val(new_content)
+  
+  # Update cursor position and focus
+  new_pos = pos + val.length
+  textarea[0].selectionStart = textarea[0].selectionEnd = new_pos
+  textarea.data('last-cursor', new_pos)
+  textarea.focus()
+  textarea.trigger('change')
 
-  extensions = $('tr', '#student-extension-fields tbody')
-  for extension in extensions
-    do (extension) ->
-      init_row_datepickers extension
+show_toolbar_tooltip = (element, message) ->
+  element.popover({
+    content: message,
+    placement: 'top',
+    trigger: 'manual',
+    container: 'body',
+    template: '<div class="popover" role="tooltip" style="z-index: 10000;"><div class="arrow"></div><div class="popover-content" style="padding: 5px 10px; font-size: 12px; color: #fff; background: #d9534f; border-radius: 4px;"></div></div>'
+  }).popover('show')
+  
+  # Hide after 2 seconds
+  setTimeout (-> element.popover('destroy')), 2000
 
-# Initialise datepickers for a single workout offering or student extension
-init_row_datepickers = (row) ->
-  opening_input = $('.opening-datepicker', $(row))
-  soft_input = $('.soft-datepicker', $(row))
-  hard_input = $('.hard-datepicker', $(row))
-
-  opening_datepicker = null
-  soft_datepicker = null
-  hard_datepicker = null
-  alt_format = 'M j, h:i K'
-  if opening_input.val() == ''
-    opening_datepicker = opening_input.flatpickr
-      enableTime: true
-      altInput: true
-      altFormat: alt_format
-      minuteIncrement: 1
-      onChange: (selectedDates, dateStr, instance) ->
-        if selectedDates.length
-          date = selectedDates[0].getTime()
-          opening_input.data 'date', date
-  if soft_input.val() == ''
-    soft_datepicker = soft_input.flatpickr
-      enableTime: true
-      altInput: true
-      altFormat: alt_format
-      minuteIncrement: 1
-      onChange: (selectedDates, dateStr, instance) ->
-        if selectedDates.length
-          date = selectedDates[0].getTime()
-          soft_input.data 'date', date
-  if hard_input.val() == ''
-    hard_datepicker = hard_input.flatpickr
-      enableTime: true
-      altInput: true
-      altFormat: alt_format
-      minuteIncrement: 1
-      onChange: (selectedDates, dateStr, instance) ->
-        if selectedDates.length
-          date = selectedDates[0].getTime()
-          hard_input.data 'date', date
-
-  # Set existing values, if applicable
-  if $('body').is '.workouts.edit'
-    if opening_input.data('date')? && opening_input.data('date') != ''
-      date = parseInt(opening_input.data('date'))
-      opening_datepicker.setDate(date, false)
-
-    if soft_input.data('date')? && soft_input.data('date') != ''
-      date = parseInt(soft_input.data('date'))
-      soft_datepicker.setDate(date, false)
-
-    if hard_input.data('date')? && hard_input.data('date') != ''
-      date = parseInt(hard_input.data('date'))
-      hard_datepicker.setDate(date, false)
-
-# Close the sidebar housing the exercise search bar. Appears on smaller
-# desktop screens.
 close_slider = ->
   if $('.sidebar').hasClass('slider') && $('.toggle-slider').attr('data-is-open')
     $('.toggle-slider').click()
     $('#search-terms').val('')
     $('.search-results').empty()
 
-#############################################################
-# Collect information from all over the form for submission #
-#############################################################
-
-# Get an object array containing all selected exercises.
 get_exercises = ->
   exs = $('#ex-list li')
   exercises = []
@@ -353,82 +221,24 @@ get_exercises = ->
     ex_points = $(exs[i]).find('.points').val()
     ex_points = '0' if ex_points == ''
     ex_obj = { id: ex_id, points: ex_points }
-    position = i + 1
     exercises.push(ex_obj)
     i++
   return exercises
 
-# Checks if an exercise with the specified ID
-# has already been added to the workout.
-#
-# ex_id -- An integer
 exercise_is_in_workout = (ex_id) ->
   for exercise in get_exercises() when exercise['id'] is ex_id
     return true
-
   return false
 
-# Get an object array of offerings of this workout
-get_offerings = ->
-  offerings = {}
-  offering_rows = $('tr', '#workout-offering-fields tbody')
-  for offering_row in offering_rows
-    do (offering_row) ->
-      offering_fields = $('td', $(offering_row))
-      offering_id = $(offering_fields[0]).data 'course-offering-id'
-      lms_assignment_url = $('input', offering_fields[1])[0].value
-      if offering_id != ''
-        opening_date = $('.opening-datepicker', $(offering_fields[2])).data('date')
-        soft_deadline = $('.soft-datepicker', $(offering_fields[3])).data('date')
-        hard_deadline = $('.hard-datepicker', $(offering_fields[4])).data('date')
-
-        offering =
-          lms_assignment_url: lms_assignment_url
-          opening_date: opening_date
-          soft_deadline: soft_deadline
-          hard_deadline: hard_deadline
-          published: published
-          extensions: []
-
-        offerings[offering_id.toString()] = offering
-  return offerings
-
-# Get all configured workout_offerings along with their student extensions
-get_offerings_with_extensions = ->
-  offerings = get_offerings()
-  extension_rows = $('tr', '#student-extension-fields tbody')
-  for extension_row in extension_rows
-    do (extension_row) ->
-      extension_fields = $('td', $(extension_row))
-      student_id = $(extension_row).data 'student-id'
-      course_offering_id = $(extension_row).data 'course-offering-id'
-      time_limit = $('.time-limit', $(extension_fields[5])).val()
-      opening_date = $('.opening-datepicker', $(extension_fields[2])).data('date')
-      soft_deadline = $('.soft-datepicker', $(extension_fields[3])).data('date')
-      hard_deadline = $('.hard-datepicker', $(extension_fields[4])).data('date')
-      extension =
-        student_id: student_id
-        time_limit: time_limit
-        opening_date: opening_date
-        soft_deadline: soft_deadline
-        hard_deadline: hard_deadline
-
-      offerings[course_offering_id.toString()]['extensions'].push extension
-
-  return offerings
-
-# Helper method to alert the user of form errors
 form_alert = (messages) ->
   reset_alert_area()
-
   alert_list = $('#alerts').find '.alert ul'
   for message in messages
-    do (message) ->
-      alert_list.append '<li>' + message + '</li>'
-
+    alert_list.append '<li>' + message + '</li>'
   $('#alerts').css 'display', 'block'
+  # Scroll to alerts
+  $('html, body').animate({ scrollTop: $('#alerts').offset().top - 20 }, 300)
 
-# Helper method to reset the alert area
 reset_alert_area = ->
   $('#alerts').find('.alert').alert 'close'
   alert_box =
@@ -439,63 +249,51 @@ reset_alert_area = ->
     "</div>"
   $('#alerts').append alert_box
 
-# Are there any form errors?
 check_completeness = ->
   messages = []
   messages.push 'Workout Name cannot be empty.' if $('#wo-name').val() == ''
   messages.push 'Workout must have at least 1 exercise.' if $('#ex-list li').length == 0
-
   return messages
 
-# Handle final submission of the form. Collect info from all over the form
-# and make a request to the appropriate endpoint, depending on whether we're
-# creating, editing, or cloning a workout.
 handle_submit = ->
   messages = check_completeness()
   if messages.length != 0
     form_alert messages
     return
 
+  # Confirmation for removal
+  initial_sections = $('#date-yaml').data('initial-sections') || 0
+  current_sections = ($('#date-yaml').val().match(/section:/g) || []).length
+  if current_sections < initial_sections
+    if !confirm("You have removed one or more course offerings. This will delete all student scores for those offerings. Are you sure?")
+      return
+
   # Collect info
-  name = $('#wo-name').val()
-  description = $('#description').val()
-  time_limit = $('#time-limit').val()
-  attempt_limit = $('#attempt-limit').val()
+  fd = new FormData
+  fd.append 'name', $('#wo-name').val()
+  fd.append 'description', $('#description').val()
+  fd.append 'time_limit', $('#time-limit').val()
+  fd.append 'attempt_limit', $('#attempt-limit').val()
+  
   policy = {}
   $('.policy-checkbox').each ->
-    $cb = $(this)
-    attr = $cb.attr('data-attribute')
-    val = $cb.is(':checked')
-    if attr
-      policy[attr] = val
-  is_public = $('#is-public').is ':checked'
-  published = $('#published').is ':checked'
-  most_recent = $('#most_recent').is ':checked'
-  removed_exercises = $('#ex-list').data 'removed-exercises'
-  exercises = get_exercises()
-  course_offerings = get_offerings_with_extensions()
-
-  # Put together form data
-  fd = new FormData
-  fd.append 'name', name
-  fd.append 'description', description
-  fd.append 'time_limit', time_limit
-  fd.append 'attempt_limit', attempt_limit
+    attr = $(this).attr('data-attribute')
+    policy[attr] = $(this).is(':checked') if attr
   fd.append 'policy', JSON.stringify policy
-  fd.append 'exercises', JSON.stringify exercises
-  fd.append 'course_offerings', JSON.stringify course_offerings
+  
+  fd.append 'exercises', JSON.stringify get_exercises()
+  fd.append 'date_yaml', $('#date-yaml').val()
   fd.append 'removed_exercises', JSON.stringify window.codeworkout.removed_exercises
-  fd.append 'removed_offerings', JSON.stringify window.codeworkout.removed_offerings
-  fd.append 'removed_extensions', JSON.stringify window.codeworkout.removed_extensions
-  fd.append 'is_public', is_public
-  fd.append 'published', published
-  fd.append 'most_recent', most_recent
+  
+  fd.append 'is_public', $('#is-public').is ':checked'
+  fd.append 'published', $('#published').is ':checked'
+  fd.append 'most_recent', $('#most_recent').is ':checked'
+  
   fd.append 'term_id', window.codeworkout.term_id
   fd.append 'organization_id', window.codeworkout.organization_id
   fd.append 'course_id', window.codeworkout.course_id
   fd.append 'lms_assignment_id', window.codeworkout.lms_assignment_id
-  # Tells the server whether this form is being submitted through LTI or not.
-  # The window.codeworkout namespace was declared in the workouts/_form partial.
+  
   if window.codeworkout.lti_launch != ''
     fd.append 'lti_launch', window.codeworkout.lti_launch
 
@@ -517,3 +315,5 @@ handle_submit = ->
     contentType: false
     success: (data) ->
       window.location.href = data['url']
+    error: (xhr) ->
+      form_alert ["Error: #{xhr.responseText}"]

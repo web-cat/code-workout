@@ -93,6 +93,7 @@ Rails.application.routes.draw do
     get 'workouts/:id/download_attempt_data' =>
       'workouts#download_attempt_data', as: :download_workout_attempt_data
     get 'workouts/export' => 'workouts#export', as: :workouts_export
+    get 'workouts/search_students' => 'workouts#search_students', as: :workouts_student_search
     # At the bottom, so the routes above take precedence over existing ids
     resources :workouts, except: [ :new, :edit ]
   end
