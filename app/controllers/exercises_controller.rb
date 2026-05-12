@@ -691,9 +691,19 @@ class ExercisesController < ApplicationController
 
     # display the scored attempt if in review mode (for students or instructors)
     if @workout_score
-      @attempt = (params[:review_user_id] || student_review) ?
-        @workout_score.scoring_attempt_for(@exercise_version.exercise) :
-        @workout_score.previous_attempt_for(@exercise_version.exercise)
+      if params[:attempt_id]
+        @attempt = Attempt.find_by(id: params[:attempt_id])
+        if @attempt && (@attempt.user != @student_user ||
+          (@workout_offering && @attempt.workout_score != @workout_score))
+          @attempt = nil
+        end
+      end
+
+      if @attempt.nil?
+        @attempt = (params[:review_user_id] || student_review) ?
+          @workout_score.scoring_attempt_for(@exercise_version.exercise) :
+          @workout_score.previous_attempt_for(@exercise_version.exercise)
+      end
     end
 
     if @workout.andand.exercise_workouts.andand.where(
@@ -742,6 +752,7 @@ class ExercisesController < ApplicationController
       exercise: @exercise,
       workout: @workout,
       workout_offering: @workout_offering,
+      workout_score: @workout_score,
       activity: 'practice_view',
       ip_address: request.remote_ip,
       lms_instance_id: lti_context.andand[:lms_instance_id],
@@ -1038,12 +1049,17 @@ class ExercisesController < ApplicationController
     if(params[:workoutOfferingID] != '')
       workout_offering_id = WorkoutOffering.find(params[:workoutOfferingID])
     end
+    workout_score = workout_offering_id ? workout_offering_id.score_for(curr_user) : (
+      workout_id ? workout_id.score_for(curr_user, workout_offering_id) : nil
+    )
     lti_context = lti_context_for_token(params[:lti_launch])
     @visualization_logging = VisualizationLogging.new(
       user: curr_user,
       exercise: Exercise.find_by_name(params[:exercise_id]),
       workout: workout_id,
       workout_offering: workout_offering_id,
+      workout_score: workout_score,
+      ip_address: request.remote_ip,
       lms_instance_id: lti_context.andand[:lms_instance_id],
       lti_launch: lti_context.present?
     )

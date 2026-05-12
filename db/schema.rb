@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_11_203606) do
+ActiveRecord::Schema.define(version: 2026_05_12_131613) do
 
   create_table "active_admin_comments", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci", force: :cascade do |t|
     t.string "namespace"
@@ -37,11 +37,13 @@ ActiveRecord::Schema.define(version: 2026_05_11_203606) do
     t.datetime "updated_at", null: false
     t.bigint "lms_instance_id"
     t.boolean "lti_launch", default: false
+    t.bigint "workout_score_id"
     t.index ["exercise_id"], name: "index_activity_logs_on_exercise_id"
     t.index ["lms_instance_id"], name: "index_activity_logs_on_lms_instance_id"
     t.index ["user_id"], name: "index_activity_logs_on_user_id"
     t.index ["workout_id"], name: "index_activity_logs_on_workout_id"
     t.index ["workout_offering_id"], name: "index_activity_logs_on_workout_offering_id"
+    t.index ["workout_score_id"], name: "index_activity_logs_on_workout_score_id"
   end
 
   create_table "attempts", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci", force: :cascade do |t|
@@ -627,11 +629,14 @@ ActiveRecord::Schema.define(version: 2026_05_11_203606) do
     t.datetime "updated_at", null: false
     t.bigint "lms_instance_id"
     t.boolean "lti_launch"
+    t.bigint "workout_score_id"
+    t.string "ip_address"
     t.index ["exercise_id"], name: "index_visualization_loggings_on_exercise_id"
     t.index ["lms_instance_id"], name: "index_visualization_loggings_on_lms_instance_id"
     t.index ["user_id"], name: "index_visualization_loggings_on_user_id"
     t.index ["workout_id"], name: "index_visualization_loggings_on_workout_id"
     t.index ["workout_offering_id"], name: "index_visualization_loggings_on_workout_offering_id"
+    t.index ["workout_score_id"], name: "index_visualization_loggings_on_workout_score_id"
   end
 
   create_table "workout_offerings", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci", force: :cascade do |t|

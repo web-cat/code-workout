@@ -23,4 +23,5 @@ class VisualizationLogging < ApplicationRecord
   belongs_to :exercise
   belongs_to :workout
   belongs_to :workout_offering
+  belongs_to :workout_score, optional: true
 end

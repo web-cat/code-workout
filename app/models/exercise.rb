@@ -139,6 +139,8 @@ class Exercise < ApplicationRecord
     return result
   end
 
+
+  # -------------------------------------------------------------
   def self.visible_through_user(user)
     return Exercise.left_outer_joins(:exercise_owners)
       .left_outer_joins(:exercise_collection)
@@ -146,6 +148,8 @@ class Exercise < ApplicationRecord
         user.id, user.id)
   end
 
+
+  # -------------------------------------------------------------
   # Get a list of Exercises that are visible to the specified user.
   #
   # It is the union of exercises that are publicly visible, created or owned by the user,

@@ -8,6 +8,8 @@ class WorkoutOfferingsController < ApplicationController
   #~ Action methods ...........................................................
   after_action :allow_iframe, only: :practice
 
+
+  # --------------------------------------------------------------
   # /courses/:organization_id/:course_id/:term_id/:id
   def show
     if @workout_offering
@@ -21,6 +23,8 @@ class WorkoutOfferingsController < ApplicationController
     render 'workouts/show'
   end
 
+
+  # --------------------------------------------------------------
   def review
     if @workout_offering
       @workout = @workout_offering.workout
@@ -28,6 +32,8 @@ class WorkoutOfferingsController < ApplicationController
     end
     render 'workouts/review'
   end
+
+
   # --------------------------------------------------------------
   # Controller action to add an extension for a workout offering
   # to a student.
@@ -51,6 +57,7 @@ class WorkoutOfferingsController < ApplicationController
       redirect_to root_path, notice: 'User not found' and return
     end
   end
+
 
   # -------------------------------------------------------------
   def practice
@@ -156,6 +163,75 @@ class WorkoutOfferingsController < ApplicationController
     end
   end
 
+
+  # --------------------------------------------------------------
+  def activity_log
+    @workout_offering = WorkoutOffering.find(params[:id])
+    @course_offering = @workout_offering.course_offering
+
+    # Access control
+    unless current_user.global_role.is_admin? || @course_offering.is_staff?(current_user)
+      redirect_to root_path, notice: 'You are not authorized to view this page.' and return
+    end
+
+    @workout_score = WorkoutScore.find(params[:workout_score_id])
+    @student = @workout_score.user
+    @exercise_id = params[:exercise_id]
+    @exercise = Exercise.find_by(id: @exercise_id) if @exercise_id.present?
+
+    # Fetch events
+    @activity_logs = ActivityLog.where(workout_score: @workout_score)
+    @attempts = Attempt.where(workout_score: @workout_score)
+    @visualization_loggings = VisualizationLogging.where(workout_score: @workout_score)
+
+    if @exercise_id.present?
+      @activity_logs = @activity_logs.where(exercise_id: @exercise_id)
+      @attempts = @attempts.joins(:exercise_version).where(exercise_versions: { exercise_id: @exercise_id })
+      @visualization_loggings = @visualization_loggings.where(exercise_id: @exercise_id)
+    end
+
+    # Combine and sort events
+    @events = []
+
+    @activity_logs.each do |log|
+      @events << {
+        type: 'activity',
+        time: log.created_at,
+        activity: log.activity,
+        ip: log.ip_address,
+        lti: log.lti_launch,
+        details: log
+      }
+    end
+
+    @attempts.each do |attempt|
+      @events << {
+        type: 'attempt',
+        time: attempt.submit_time,
+        activity: 'evaluated',
+        score: attempt.score,
+        ip: attempt.ip_address,
+        lti: attempt.lti_launch,
+        details: attempt
+      }
+    end
+
+    @visualization_loggings.each do |log|
+      @events << {
+        type: 'visualization',
+        time: log.created_at,
+        activity: 'visualized',
+        ip: log.ip_address,
+        lti: log.lti_launch,
+        details: log
+      }
+    end
+
+    @events.sort_by! { |e| e[:time] }.reverse!
+  end
+
+
+  # --------------------------------------------------------------
   private
 
     def lti_enroll
