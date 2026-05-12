@@ -2,11 +2,11 @@
 #
 # Table name: irt_data
 #
-#  id             :integer          not null, primary key
+#  id             :bigint           not null, primary key
 #  attempt_count  :integer          not null
-#  sum_of_scores  :float(24)        not null
 #  difficulty     :float(24)        not null
 #  discrimination :float(24)        not null
+#  sum_of_scores  :float(24)        not null
 #
 
 # =============================================================================

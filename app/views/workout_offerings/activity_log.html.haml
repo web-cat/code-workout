@@ -34,6 +34,9 @@
             %td
               - if event[:type] == 'attempt'
                 Score: #{event[:score]}
+                - if @exercise
+                  &nbsp;
+                  = link_to 'View', organization_workout_offering_exercise_review_path(workout_offering_id: @workout_offering.id, review_user_id: @student.id, id: @exercise.id, attempt_id: event[:details].id, organization_id: @course_offering.course.organization.slug, course_id: @course_offering.course.slug, term_id: @course_offering.term.slug), class: 'btn btn-default btn-xs'
               - elsif event[:type] == 'activity' && event[:activity] == 'practice_view'
                 Viewed practice page
               - elsif event[:type] == 'visualization'

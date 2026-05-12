@@ -2,7 +2,7 @@
 #
 # Table name: workout_offerings
 #
-#  id                       :integer          not null, primary key
+#  id                       :bigint           not null, primary key
 #  attempt_limit            :integer
 #  hard_deadline            :datetime
 #  lms_assignment_url       :string(255)
@@ -11,13 +11,13 @@
 #  published                :boolean          default(TRUE), not null
 #  soft_deadline            :datetime
 #  time_limit               :integer
-#  created_at               :datetime
-#  updated_at               :datetime
-#  continue_from_workout_id :integer
-#  course_offering_id       :integer          not null
+#  created_at               :datetime         not null
+#  updated_at               :datetime         not null
+#  continue_from_workout_id :bigint
+#  course_offering_id       :bigint           not null
 #  lms_assignment_id        :string(255)
-#  workout_id               :integer          not null
-#  workout_policy_id        :integer
+#  workout_id               :bigint           not null
+#  workout_policy_id        :bigint
 #
 # Indexes
 #
@@ -29,6 +29,9 @@
 #
 # Foreign Keys
 #
+#  fk_rails_...                                   (continue_from_workout_id => workout_offerings.id)
+#  fk_rails_...                                   (course_offering_id => course_offerings.id)
+#  fk_rails_...                                   (workout_id => workouts.id)
 #  workout_offerings_continue_from_workout_id_fk  (continue_from_workout_id => workout_offerings.id)
 #  workout_offerings_course_offering_id_fk        (course_offering_id => course_offerings.id)
 #  workout_offerings_workout_id_fk                (workout_id => workouts.id)

@@ -2,10 +2,10 @@
 #
 # Table name: course_enrollments
 #
-#  id                 :integer          not null, primary key
-#  course_offering_id :integer          not null
-#  course_role_id     :integer          not null
-#  user_id            :integer          not null
+#  id                 :bigint           not null, primary key
+#  course_offering_id :bigint           not null
+#  course_role_id     :bigint           not null
+#  user_id            :bigint           not null
 #
 # Indexes
 #
@@ -19,6 +19,9 @@
 #  course_enrollments_course_offering_id_fk  (course_offering_id => course_offerings.id)
 #  course_enrollments_course_role_id_fk      (course_role_id => course_roles.id)
 #  course_enrollments_user_id_fk             (user_id => users.id)
+#  fk_rails_...                              (course_offering_id => course_offerings.id)
+#  fk_rails_...                              (course_role_id => course_roles.id)
+#  fk_rails_...                              (user_id => users.id)
 #
 
 # Read about factories at https://github.com/thoughtbot/factory_bot

@@ -2,12 +2,12 @@
 #
 # Table name: lti_identities
 #
-#  id              :integer          not null, primary key
-#  created_at      :datetime
-#  updated_at      :datetime
-#  lms_instance_id :integer
+#  id              :bigint           not null, primary key
+#  created_at      :datetime         not null
+#  updated_at      :datetime         not null
+#  lms_instance_id :bigint
 #  lti_user_id     :string(255)
-#  user_id         :integer
+#  user_id         :bigint
 #
 # Indexes
 #

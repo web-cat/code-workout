@@ -2,45 +2,43 @@
 #
 # Table name: users
 #
-#  id                       :integer          not null, primary key
-#  avatar                   :string(255)
-#  confirmation_sent_at     :datetime
-#  confirmation_token       :string(255)
-#  confirmed_at             :datetime
-#  current_sign_in_at       :datetime
-#  current_sign_in_ip       :string(255)
-#  email                    :string(255)      default(""), not null
-#  encrypted_password       :string(255)      default(""), not null
-#  first_name               :string(255)
-#  last_name                :string(255)
-#  last_sign_in_at          :datetime
-#  last_sign_in_ip          :string(255)
-#  remember_created_at      :datetime
-#  reset_password_sent_at   :datetime
-#  reset_password_token     :string(255)
-#  sign_in_count            :integer          default(0), not null
-#  slug                     :string(255)      default(""), not null
-#  created_at               :datetime
-#  updated_at               :datetime
-#  current_workout_score_id :integer
-#  global_role_id           :integer          not null
-#  time_zone_id             :integer
+#  id                     :bigint           not null, primary key
+#  avatar                 :string(255)
+#  confirmation_sent_at   :datetime
+#  confirmation_token     :string(255)
+#  confirmed_at           :datetime
+#  current_sign_in_at     :datetime
+#  current_sign_in_ip     :string(255)
+#  email                  :string(255)      default(""), not null
+#  encrypted_password     :string(255)      default(""), not null
+#  first_name             :string(255)
+#  last_name              :string(255)
+#  last_sign_in_at        :datetime
+#  last_sign_in_ip        :string(255)
+#  remember_created_at    :datetime
+#  reset_password_sent_at :datetime
+#  reset_password_token   :string(255)
+#  sign_in_count          :integer          default(0), not null
+#  slug                   :string(255)      not null
+#  created_at             :datetime         not null
+#  updated_at             :datetime         not null
+#  global_role_id         :bigint           not null
+#  time_zone_id           :bigint
 #
 # Indexes
 #
-#  index_users_on_confirmation_token        (confirmation_token) UNIQUE
-#  index_users_on_current_workout_score_id  (current_workout_score_id) UNIQUE
-#  index_users_on_email                     (email) UNIQUE
-#  index_users_on_global_role_id            (global_role_id)
-#  index_users_on_reset_password_token      (reset_password_token) UNIQUE
-#  index_users_on_slug                      (slug) UNIQUE
-#  index_users_on_time_zone_id              (time_zone_id)
+#  index_users_on_confirmation_token    (confirmation_token) UNIQUE
+#  index_users_on_email                 (email) UNIQUE
+#  index_users_on_global_role_id        (global_role_id)
+#  index_users_on_reset_password_token  (reset_password_token) UNIQUE
+#  index_users_on_slug                  (slug) UNIQUE
+#  index_users_on_time_zone_id          (time_zone_id)
 #
 # Foreign Keys
 #
-#  users_current_workout_score_id_fk  (current_workout_score_id => workout_scores.id)
-#  users_global_role_id_fk            (global_role_id => global_roles.id)
-#  users_time_zone_id_fk              (time_zone_id => time_zones.id)
+#  fk_rails_...             (global_role_id => global_roles.id)
+#  users_global_role_id_fk  (global_role_id => global_roles.id)
+#  users_time_zone_id_fk    (time_zone_id => time_zones.id)
 #
 
 # =============================================================================

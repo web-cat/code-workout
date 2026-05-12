@@ -2,16 +2,16 @@
 #
 # Table name: courses
 #
-#  id              :integer          not null, primary key
+#  id              :bigint           not null, primary key
 #  is_hidden       :boolean          default(FALSE)
-#  name            :string(255)      default(""), not null
-#  number          :string(255)      default(""), not null
-#  slug            :string(255)      default(""), not null
-#  created_at      :datetime
-#  updated_at      :datetime
+#  name            :string(255)      not null
+#  number          :string(255)      not null
+#  slug            :string(255)      not null
+#  created_at      :datetime         not null
+#  updated_at      :datetime         not null
 #  creator_id      :integer
-#  organization_id :integer          not null
-#  user_group_id   :integer
+#  organization_id :bigint           not null
+#  user_group_id   :bigint
 #
 # Indexes
 #
@@ -22,6 +22,8 @@
 # Foreign Keys
 #
 #  courses_organization_id_fk  (organization_id => organizations.id)
+#  fk_rails_...                (organization_id => organizations.id)
+#  fk_rails_...                (user_group_id => user_groups.id)
 #
 
 # =============================================================================

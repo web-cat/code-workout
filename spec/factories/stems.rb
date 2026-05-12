@@ -2,10 +2,10 @@
 #
 # Table name: stems
 #
-#  id         :integer          not null, primary key
+#  id         :bigint           not null, primary key
 #  preamble   :text(65535)
-#  created_at :datetime
-#  updated_at :datetime
+#  created_at :datetime         not null
+#  updated_at :datetime         not null
 #
 
 # Read about factories at https://github.com/thoughtbot/factory_bot

@@ -2,22 +2,21 @@
 #
 # Table name: workout_policies
 #
-#  id                                      :integer          not null, primary key
-#  description                             :string(255)
-#  hide_compilation_feedback_before_finish :boolean
-#  hide_feedback_before_finish             :boolean
-#  hide_feedback_in_review_before_close    :boolean
-#  hide_score_before_finish                :boolean
-#  hide_score_in_review_before_close       :boolean
-#  hide_thumbnails_before_start            :boolean
-#  hide_thumbnails_in_review_before_close  :boolean
-#  invisible_before_review                 :boolean
-#  name                                    :string(255)
-#  no_faq                                  :boolean
-#  no_hints                                :boolean
-#  no_review_before_close                  :boolean
-#  created_at                              :datetime
-#  updated_at                              :datetime
+#  id                                      :bigint           not null, primary key
+#  hide_compilation_feedback_before_finish :boolean          default(FALSE), not null
+#  hide_feedback_before_finish             :boolean          default(FALSE), not null
+#  hide_feedback_in_review_before_close    :boolean          default(FALSE), not null
+#  hide_score_before_finish                :boolean          default(FALSE), not null
+#  hide_score_in_review_before_close       :boolean          default(FALSE), not null
+#  hide_thumbnails_before_start            :boolean          default(FALSE), not null
+#  hide_thumbnails_in_review_before_close  :boolean          default(FALSE), not null
+#  invisible_before_review                 :boolean          default(FALSE), not null
+#  no_faq                                  :boolean          default(FALSE), not null
+#  no_hints                                :boolean          default(FALSE), not null
+#  no_review_before_close                  :boolean          default(FALSE), not null
+#  see_answers                             :boolean          default(TRUE), not null
+#  created_at                              :datetime         not null
+#  updated_at                              :datetime         not null
 #
 
 class WorkoutPolicy < ApplicationRecord

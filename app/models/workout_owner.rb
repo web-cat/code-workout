@@ -2,17 +2,20 @@
 #
 # Table name: workout_owners
 #
-#  id         :integer          not null, primary key
-#  owner_id   :integer          not null
-#  workout_id :integer          not null
+#  id         :bigint           not null, primary key
+#  owner_id   :bigint           not null
+#  workout_id :bigint           not null
 #
 # Indexes
 #
+#  index_workout_owners_on_workout_id               (workout_id)
 #  index_workout_owners_on_workout_id_and_owner_id  (workout_id,owner_id) UNIQUE
 #  workout_owners_owner_id_fk                       (owner_id)
 #
 # Foreign Keys
 #
+#  fk_rails_...                  (owner_id => users.id)
+#  fk_rails_...                  (workout_id => workouts.id)
 #  workout_owners_owner_id_fk    (owner_id => users.id)
 #  workout_owners_workout_id_fk  (workout_id => workouts.id)
 #

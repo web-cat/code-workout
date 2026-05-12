@@ -2,7 +2,7 @@
 #
 # Table name: multiple_choice_prompt_answers
 #
-#  id :integer          not null, primary key
+#  id :bigint           not null, primary key
 #
 
 # =============================================================================

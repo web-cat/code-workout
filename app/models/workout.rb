@@ -2,15 +2,15 @@
 #
 # Table name: workouts
 #
-#  id                :integer          not null, primary key
+#  id                :bigint           not null, primary key
 #  description       :text(65535)
 #  is_public         :boolean
-#  name              :string(255)      default(""), not null
+#  name              :string(255)      not null
 #  points_multiplier :integer
 #  scrambled         :boolean          default(FALSE)
-#  created_at        :datetime
-#  updated_at        :datetime
-#  creator_id        :integer
+#  created_at        :datetime         not null
+#  updated_at        :datetime         not null
+#  creator_id        :bigint
 #  external_id       :string(255)
 #
 # Indexes

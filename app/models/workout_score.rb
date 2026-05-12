@@ -2,7 +2,7 @@
 #
 # Table name: workout_scores
 #
-#  id                      :integer          not null, primary key
+#  id                      :bigint           not null, primary key
 #  completed               :boolean
 #  completed_at            :datetime
 #  exercises_completed     :integer
@@ -12,24 +12,27 @@
 #  lis_result_sourcedid    :string(255)
 #  score                   :float(24)
 #  started_at              :datetime
-#  created_at              :datetime
-#  updated_at              :datetime
-#  lti_workout_id          :integer
-#  user_id                 :integer          not null
-#  workout_id              :integer          not null
-#  workout_offering_id     :integer
+#  created_at              :datetime         not null
+#  updated_at              :datetime         not null
+#  lti_workout_id          :bigint
+#  user_id                 :bigint           not null
+#  workout_id              :bigint           not null
+#  workout_offering_id     :bigint
 #
 # Indexes
 #
-#  idx_ws_on_user_workout_workout_offering  (user_id,workout_id,workout_offering_id)
-#  index_workout_scores_on_lti_workout_id   (lti_workout_id)
-#  index_workout_scores_on_user_id          (user_id)
-#  index_workout_scores_on_workout_id       (workout_id)
-#  workout_scores_workout_offering_id_fk    (workout_offering_id)
+#  idx_ws_on_user_workout_workout_offering      (user_id,workout_id,workout_offering_id)
+#  index_workout_scores_on_lti_workout_id       (lti_workout_id)
+#  index_workout_scores_on_user_id              (user_id)
+#  index_workout_scores_on_workout_id           (workout_id)
+#  index_workout_scores_on_workout_offering_id  (workout_offering_id)
 #
 # Foreign Keys
 #
 #  fk_rails_...                           (lti_workout_id => lti_workouts.id)
+#  fk_rails_...                           (user_id => users.id)
+#  fk_rails_...                           (workout_id => workouts.id)
+#  fk_rails_...                           (workout_offering_id => workout_offerings.id)
 #  workout_scores_user_id_fk              (user_id => users.id)
 #  workout_scores_workout_id_fk           (workout_id => workouts.id)
 #  workout_scores_workout_offering_id_fk  (workout_offering_id => workout_offerings.id)
