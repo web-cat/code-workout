@@ -4,10 +4,52 @@ require 'net/http'
 require 'uri'
 
 class PemlParsingUtil
-  def parse (text_representation, error_msgs)
+  def parse(text_representation, error_msgs)
     peml = Peml::Loader.new.load(text_representation).dottie!
     error_msgs.concat(Peml::validate(peml))
     convert_peml(peml, error_msgs)
+  end
+
+  # Check if PEML file is a Parsons/PIF Exercise
+  # def is_pif(text_representation)
+  #   Rails.logger.debug 'IS PIF'
+  #   Peml.is_pif(text_representation)
+  # end
+
+  def parse_pif(text_representation, error_msgs)
+    parsed = Peml.pif_parse(pif: text_representation)
+
+    diags = parsed[:diagnostics] || []
+    error_msgs.concat(diags)
+
+    value = parsed[:value].dottie!
+    renderable = Peml.pif_to_renderable_json(parsed)
+
+    pif_value = (renderable.is_a?(Hash) && !renderable[:diagnostics]) ? renderable : nil
+    pif_json  = pif_value ? pif_value.to_json : '{}'
+
+    new_hash = {
+      'external_id' => value['exercise_id'],
+      'name'        => value['title'],
+    }.dottie!
+    content = value['difficulty']
+    new_hash['experience'] = content if content
+    content = value['tags.topics']
+    new_hash['tag_list'] = content.to_s if content
+    new_hash['style_list'] = 'parsons'
+    new_hash['language_list'] = value['systems[0].language'].to_s
+
+    prompt = {
+      'position' => 1,
+      'question'  => value['instructions'],
+      'pif_json'  => pif_json,
+    }
+
+    new_hash['current_version'] = {}
+    new_hash['current_version.creator'] = get_author_email(value)
+    new_hash['current_version.prompts'] = [{ 'parsons_prompt' => prompt }]
+
+    new_hash
   end
 
     # Convert the parsed peml hash into a hash corresponding to exercise data model

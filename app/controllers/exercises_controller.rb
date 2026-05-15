@@ -381,6 +381,29 @@ class ExercisesController < ApplicationController
     # FIXME: add support for JSON here as well
     if text_representation.start_with?('---')
       hash = YAML.load(text_representation)
+    # elsif PemlParsingUtil.new.is_pif(text_representation)
+    elsif true
+      logger.debug '=========='
+      logger.debug 'PIF Input'
+      logger.debug '=========='
+      logger.debug text_representation
+      hash = PemlParsingUtil.new.parse_pif(text_representation, error_msgs)
+      logger.debug '=========='
+      logger.debug 'PIF Hash'
+      logger.debug '=========='
+      logger.debug hash.to_yaml
+      logger.debug '=========='
+
+      if !error_msgs.empty?
+        raw_msgs = error_msgs
+        error_msgs = []
+        error_msgs << "<span>Errors while parsing PIF for exercise #{hash['name']}:</span><ul>"
+        raw_msgs.each do |msg|
+          error_msgs << "<li>#{msg}</li>"
+        end
+        error_msgs << "</ul>"
+      end
+
     else
       logger.debug '=========='
       logger.debug 'PEML Input'

@@ -1,9 +1,9 @@
 GIT
   remote: https://github.com/CSSPLICE/peml.git
-  revision: 44fd9864f8001ee6aa54a7f1b68cf69cbb0f697c
-  branch: pif
+  revision: bf2d685ca6df37c5a7769bf8bb70ca18259e73b5
+  ref: bf2d685
   specs:
-    peml (0.1.1)
+    peml (0.1.2)
       dottie (~> 0.0.3)
       json_schemer (>= 0.2)
       kramdown (~> 2.3.1)
