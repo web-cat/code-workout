@@ -239,6 +239,7 @@ class WorkoutsController < ApplicationController
     @suggested_name = params[:suggested_name]
 
     @lms_assignment_id = params[:lms_assignment_id]
+    @lti_assignment_id = params[:lti_assignment_id]
 
     # if course is specified, we want to highlight existing workouts that have
     # been used in the given course before
@@ -251,6 +252,7 @@ class WorkoutsController < ApplicationController
         organization_id: @organization.slug,
         term_id: @term.slug,
         lms_assignment_id: @lms_assignment_id,
+        lti_assignment_id: @lti_assignment_id,
         suggested_name: @suggested_name
       )
 
@@ -414,12 +416,13 @@ class WorkoutsController < ApplicationController
 
     @lti_launch = params[:lti_launch]
     @lms_assignment_id = params[:lms_assignment_id]
+    @lti_assignment_id = params[:lti_assignment_id]
 
     authorize! :clone, @workout, message: message
 
     if params[:lms_instance_id].present?
       lti_workout = LtiWorkout.create(
-        lms_assignment_id: @lms_assignment_id,
+        lms_assignment_id: @lti_assignment_id || @lms_assignment_id,
         workout: @workout,
         lms_instance: LmsInstance.find(params[:lms_instance_id])
       )
@@ -437,6 +440,7 @@ class WorkoutsController < ApplicationController
     end
 
     @suggested_name = params[:suggested_name]
+    @policy = (@workout.workout_policy || WorkoutPolicy.new).dup
     @exercises = []
     @workout.exercise_workouts.each do |ex|
       ex_data = {}
@@ -454,7 +458,10 @@ class WorkoutsController < ApplicationController
       )
       @term = Term.find params[:term_id]
       @can_update = can? :edit, @workout
-      @time_limit = @workout.workout_offerings.first.andand.time_limit
+      @workout_offering = @workout.workout_offerings.first
+      @time_limit = @workout_offering.andand.time_limit
+      @attempt_limit = @workout_offering.andand.attempt_limit
+      @policy = (@workout_offering.andand.workout_policy || @policy).dup
       @organization = Organization.find params[:organization_id]
       @course_offerings =
         current_user.andand.managed_course_offerings(course: @course, term: @term)
@@ -488,6 +495,7 @@ class WorkoutsController < ApplicationController
     if course.blank?
       # no course, so this workout needs to manage its own LTI ties
       workout_params[:lms_assignment_id] = params[:lms_assignment_id]
+      workout_params[:lti_assignment_id] = params[:lti_assignment_id]
       workout_params[:lms_instance_id] = session[:lms_instance_id]
     end
     @workout = @workout.update_or_create(workout_params)
@@ -537,9 +545,15 @@ class WorkoutsController < ApplicationController
     ext_lti_assignment_id = params[:ext_lti_assignment_id]
     custom_canvas_assignment_id = params[:custom_canvas_assignment_id]
     lms_instance_id = params[:lms_instance_id]
-    @custom_canvas_lms_assignment_id =
-      "#{lms_instance_id}-#{custom_canvas_assignment_id}"
-    @lms_assignment_id = "#{lms_instance_id}-#{ext_lti_assignment_id}"
+    lti_context_id = params[:lti_context_id]
+    canvas_course_id = params[:canvas_course_id]
+
+    @custom_canvas_lms_assignment_id = custom_canvas_assignment_id
+    @lms_assignment_id = ext_lti_assignment_id
+
+    # Priority 1 & 2: Search for existing CourseOffering using new identifiers
+    @course_offering = CourseOffering.find_by(lti_context_id: lti_context_id) if lti_context_id.present?
+    @course_offering ||= CourseOffering.find_by(canvas_course_id: canvas_course_id) if canvas_course_id.present?
 
     if params[:from_collection].to_b
       workouts = Workout.where('lower(name) = ?',
@@ -549,9 +563,11 @@ class WorkoutsController < ApplicationController
 
     if session[:is_instructor].to_b
       workout_offerings = WorkoutOffering.where(
-        lms_assignment_id: @lms_assignment_id)
+        lms_instance_id: lms_instance_id,
+        lti_assignment_id: @lms_assignment_id)
       if workout_offerings.blank?
         workout_offerings = WorkoutOffering.where(
+          lms_instance_id: lms_instance_id,
           lms_assignment_id: @custom_canvas_lms_assignment_id)
       end
 
@@ -585,7 +601,9 @@ class WorkoutsController < ApplicationController
             label: params[:label] ||
               "#{@user.label_name} - #{@term.display_name}",
             self_enrollment_allowed: true,
-            lms_instance: LmsInstance.find(lms_instance_id)
+            lms_instance: LmsInstance.find(lms_instance_id),
+            lti_context_id: lti_context_id,
+            canvas_course_id: canvas_course_id
           )
 
           @course_enrollment = CourseEnrollment.create(
@@ -609,9 +627,10 @@ class WorkoutsController < ApplicationController
               opening_date: DateTime.now,
               soft_deadline: nil,
               hard_deadline: nil,
-              lms_assignment_id: @lms_assignment_id
-            )
-            @workout_offering.save
+            lms_assignment_id: @custom_canvas_lms_assignment_id,
+            lti_assignment_id: @lms_assignment_id
+          )
+          @workout_offering.save
           end
         elsif found_workout
           redirect_to(organization_clone_workout_path(
@@ -636,9 +655,13 @@ class WorkoutsController < ApplicationController
       end
     else
       # first search by lms_assignment_id
-      workout_offerings = WorkoutOffering.where(lms_assignment_id: @lms_assignment_id)
+      workout_offerings = WorkoutOffering.where(
+        lms_instance_id: lms_instance_id,
+        lti_assignment_id: @lms_assignment_id)
       if workout_offerings.blank?
-        workout_offerings = WorkoutOffering.where(lms_assignment_id: @custom_canvas_lms_assignment_id)
+        workout_offerings = WorkoutOffering.where(
+          lms_instance_id: lms_instance_id,
+          lms_assignment_id: @custom_canvas_lms_assignment_id)
       end
       if workout_offerings.blank?
         if params[:label] # label is specified, we can narrow down to a single course offering
@@ -657,9 +680,10 @@ class WorkoutsController < ApplicationController
         anchor_offering = workout_offerings.first
         sister_offerings = WorkoutOffering.joins(:course_offering)
           .where("(lms_assignment_id = '' OR lms_assignment_id is NULL)
-                 AND course_id=#{anchor_offering.course_offering.course.id}
-                 AND term_id=#{anchor_offering.course_offering.term.id}
-                 AND workout_id=#{anchor_offering.workout.id}")
+                  AND (lti_assignment_id = '' OR lti_assignment_id is NULL)
+                  AND course_id=#{anchor_offering.course_offering.course.id}
+                  AND term_id=#{anchor_offering.course_offering.term.id}
+                  AND workout_id=#{anchor_offering.workout.id}")
         workout_offerings = workout_offerings + sister_offerings
       end
 
@@ -714,7 +738,8 @@ class WorkoutsController < ApplicationController
                   opening_date: DateTime.now,
                   soft_deadline: nil,
                   hard_deadline: nil,
-                  lms_assignment_id: @lms_assignment_id
+                  lms_assignment_id: @custom_canvas_lms_assignment_id,
+                  lti_assignment_id: @lms_assignment_id
                 )
                 @workout_offering.save
               end
@@ -744,7 +769,8 @@ class WorkoutsController < ApplicationController
           # found an enrolled course_offering, so we don't need to ask the student anything
           # but the course offering does not include the workout offering, so add it
           workout_offering_options = {
-            lms_assignment_id: @lms_assignment_id,
+            lms_assignment_id: @custom_canvas_lms_assignment_id,
+            lti_assignment_id: @lms_assignment_id,
             from_collection: params[:from_collection]
           }
           @workout_offering = @course_offering.add_workout(
@@ -771,7 +797,8 @@ class WorkoutsController < ApplicationController
             @workout_offering ||= @course_offering.add_workout(
                 params[:workout_name],
                 {
-                  lms_assignment_id: @lms_assignment_id,
+                  lms_assignment_id: @custom_canvas_lms_assignment_id,
+                  lti_assignment_id: @lms_assignment_id,
                   from_collection: params[:from_collection]
                 }
               )
@@ -796,16 +823,25 @@ class WorkoutsController < ApplicationController
       @course_offering.save
     end
 
-    matching_lms_assignment_id = [@lms_assignment_id, @custom_canvas_lms_assignment_id].include?(@workout_offering.lms_assignment_id)
-
+    matching_lms_assignment_id =
+      (@workout_offering.lti_assignment_id == @lms_assignment_id) ||
+      (@workout_offering.lms_assignment_id == @custom_canvas_lms_assignment_id)
     should_reset_lms_assignment_id = !matching_lms_assignment_id && dynamic_lms_assignment
 
-    if @workout_offering.lms_assignment_id.blank? || should_reset_lms_assignment_id
-      @workout_offering.lms_assignment_id = @lms_assignment_id
+    if @workout_offering.lti_assignment_id.blank? || should_reset_lms_assignment_id
+      @workout_offering.lti_assignment_id = @lms_assignment_id
+    end
+    if @workout_offering.lms_assignment_id.blank? ||
+        (@workout_offering.lms_assignment_id != @custom_canvas_lms_assignment_id && dynamic_lms_assignment)
+      @workout_offering.lms_assignment_id = @custom_canvas_lms_assignment_id
+    end
+
+    if @workout_offering.changed?
       @workout_offering.save
     elsif !matching_lms_assignment_id
       raise RuntimeError, %(Expected lms-assignment-id to be "#{@lms_assignment_id}" or
-        "#{@custom_canvas_lms_assignment_id}", but got "#{@workout_offering.lms_assignment_id}" instead.
+        "#{@custom_canvas_lms_assignment_id}", but got "#{@workout_offering.lms_assignment_id}" (LMS)
+        and "#{@workout_offering.lti_assignment_id}" (LTI) instead.
         Some manual changing in the database may have occured without proper cleanup.)
     end
 
@@ -1033,6 +1069,7 @@ class WorkoutsController < ApplicationController
       common[:published] = params[:published]
       common[:most_recent] = params[:most_recent]
       common[:lms_assignment_id] = params[:lms_assignment_id]
+      common[:lti_assignment_id] = params[:lti_assignment_id]
 
       if params[:date_yaml].present?
         begin

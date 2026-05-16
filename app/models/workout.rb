@@ -316,6 +316,9 @@ class Workout < ApplicationRecord
       if common[:lms_assignment_id].present?
         workout_offering.lms_assignment_id = common[:lms_assignment_id]
       end
+      if common[:lti_assignment_id].present?
+        workout_offering.lti_assignment_id = common[:lti_assignment_id]
+      end
       workout_offering.save!
       workout_offerings << workout_offering.id
       extensions = offering['extensions']

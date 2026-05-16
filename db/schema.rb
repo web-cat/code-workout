@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_12_131613) do
+ActiveRecord::Schema.define(version: 2026_05_16_004500) do
 
   create_table "active_admin_comments", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci", force: :cascade do |t|
     t.string "namespace"
@@ -146,8 +146,12 @@ ActiveRecord::Schema.define(version: 2026_05_12_131613) do
     t.datetime "updated_at", null: false
     t.date "cutoff_date"
     t.bigint "lms_instance_id"
+    t.string "canvas_course_id"
+    t.string "lti_context_id"
+    t.index ["canvas_course_id"], name: "index_course_offerings_on_canvas_course_id"
     t.index ["course_id"], name: "index_course_offerings_on_course_id"
     t.index ["lms_instance_id"], name: "index_course_offerings_on_lms_instance_id"
+    t.index ["lti_context_id"], name: "index_course_offerings_on_lti_context_id"
     t.index ["term_id"], name: "index_course_offerings_on_term_id"
   end
 
@@ -289,6 +293,17 @@ ActiveRecord::Schema.define(version: 2026_05_12_131613) do
     t.datetime "updated_at", null: false
     t.index ["exercise_id"], name: "index_exercises_workouts_on_exercise_id"
     t.index ["workout_id"], name: "index_exercises_workouts_on_workout_id"
+  end
+
+  create_table "extension_managers", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "broker_base_url", null: false
+    t.string "client_id", null: false
+    t.string "client_secret", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["broker_base_url"], name: "index_extension_managers_on_broker_base_url", unique: true
+    t.index ["client_id"], name: "index_extension_managers_on_client_id", unique: true
   end
 
   create_table "friendly_id_slugs", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci", force: :cascade do |t|
@@ -655,9 +670,14 @@ ActiveRecord::Schema.define(version: 2026_05_12_131613) do
     t.boolean "most_recent", default: true
     t.string "lms_assignment_url"
     t.integer "attempt_limit"
+    t.string "lti_assignment_id"
+    t.bigint "lms_instance_id"
     t.index ["continue_from_workout_id"], name: "workout_offerings_continue_from_workout_id_fk"
     t.index ["course_offering_id"], name: "index_workout_offerings_on_course_offering_id"
     t.index ["lms_assignment_id"], name: "index_workout_offerings_on_lms_assignment_id"
+    t.index ["lms_instance_id", "lti_assignment_id"], name: "idx_workout_offerings_on_lms_and_lti_assignment", unique: true
+    t.index ["lms_instance_id"], name: "index_workout_offerings_on_lms_instance_id"
+    t.index ["lti_assignment_id"], name: "index_workout_offerings_on_lti_assignment_id"
     t.index ["workout_id"], name: "index_workout_offerings_on_workout_id"
     t.index ["workout_policy_id"], name: "index_workout_offerings_on_workout_policy_id"
   end
@@ -821,6 +841,7 @@ ActiveRecord::Schema.define(version: 2026_05_12_131613) do
   add_foreign_key "users", "time_zones", name: "users_time_zone_id_fk"
   add_foreign_key "workout_offerings", "course_offerings"
   add_foreign_key "workout_offerings", "course_offerings", name: "workout_offerings_course_offering_id_fk"
+  add_foreign_key "workout_offerings", "lms_instances"
   add_foreign_key "workout_offerings", "workout_offerings", column: "continue_from_workout_id"
   add_foreign_key "workout_offerings", "workout_offerings", column: "continue_from_workout_id", name: "workout_offerings_continue_from_workout_id_fk"
   add_foreign_key "workout_offerings", "workout_policies", name: "workout_offerings_workout_policy_id_fk"

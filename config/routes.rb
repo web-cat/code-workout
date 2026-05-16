@@ -2,6 +2,9 @@
 #
 #                                          Prefix Verb     URI Pattern                                                                                                 Controller#Action
 #                                            root GET      /                                                                                                           home#index
+#                        api_passport_v1_register POST     /api/passport/v1/register(.:format)                                                                         api/passport/v1/registration#register
+#                       api_passport_v1_extension POST     /api/passport/v1/extension(.:format)                                                                        api/passport/v1/extension#create
+#                                                 DELETE   /api/passport/v1/extension(.:format)                                                                        api/passport/v1/extension#destroy
 #                                      lti_launch POST     /lti/launch(.:format)                                                                                       lti#launch
 #                                  lti_assessment POST     /lti/assessment(.:format)                                                                                   lti#assessment
 #                                            home GET      /home(.:format)                                                                                             home#index
@@ -344,6 +347,16 @@
 Rails.application.routes.draw do
 
   root 'home#index'
+
+  namespace :api do
+    namespace :passport do
+      namespace :v1 do
+        post 'register' => 'registration#register'
+        post 'extension' => 'extension#create'
+        delete 'extension' => 'extension#destroy'
+      end
+    end
+  end
 
   post 'lti/launch', as: :lti_launch # => 'workout_offerings#practice', as: :lti_workout_offering_practice
 

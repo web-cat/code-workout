@@ -71,8 +71,25 @@
 
   // 2. Global Protection for the rest of the page
   $(document).ready(function() {
-    // Skip protection for ActiveAdmin pages
-    if ($('body').hasClass('active_admin') || window.location.pathname.startsWith('/admin')) {
+    // Skip protection for ActiveAdmin, staff-only pages, edit pages, forms, and roster pages
+    var exemptClasses = [
+      'active_admin',
+      'staff',
+      'edit',
+      'new',
+      'create',
+      'update',
+      'course_enrollments',
+      'choose_roster',
+      'roster_upload',
+      'upload_roster',
+      'generate_gradebook'
+    ];
+    var isExempt = exemptClasses.some(function(cls) {
+      return $('body').hasClass(cls);
+    }) || window.location.pathname.startsWith('/admin');
+
+    if (isExempt) {
       return;
     }
 

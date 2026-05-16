@@ -53,8 +53,14 @@ class LtiController < ApplicationController
 
     # Serving a public workout?
     lti_workout =
-      LtiWorkout.find_by(lms_assignment_id: ext_lti_assignment_id) ||
-      LtiWorkout.find_by(lms_assignment_id: custom_canvas_assignment_id)
+      LtiWorkout.find_by(
+        lms_instance: @lms_instance,
+        lms_assignment_id: ext_lti_assignment_id
+      ) ||
+      LtiWorkout.find_by(
+        lms_instance: @lms_instance,
+        lms_assignment_id: custom_canvas_assignment_id
+      )
 
     session[:lis_outcome_service_url] = params[:lis_outcome_service_url]
     session[:lis_result_sourcedid] = params[:lis_result_sourcedid]
@@ -73,7 +79,8 @@ class LtiController < ApplicationController
         if @tp.context_instructor?
           redirect_to new_or_existing_workout_path(
             lti_launch: @lti_token,
-            lms_assignment_id: ext_lti_assignment_id
+            lms_instance_id: @lms_instance.id,
+            lti_assignment_id: ext_lti_assignment_id
           ) and return
         else
           @message = 'The requested workout does not exist, and your role does
@@ -172,6 +179,8 @@ class LtiController < ApplicationController
       custom_canvas_assignment_id: custom_canvas_assignment_id,
       dynamic_lms_assignment: dynamic_lms_assignment,
       lms_instance_id: @lms_instance.id,
+      lti_context_id: params[:context_id],
+      canvas_course_id: params[:custom_canvas_course_id],
       label: params[:custom_label], # can be nil
       lis_outcome_service_url: params[:lis_outcome_service_url],
       lis_result_sourcedid: params[:lis_result_sourcedid],

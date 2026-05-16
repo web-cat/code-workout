@@ -97,7 +97,8 @@ class WorkoutOfferingsController < ApplicationController
       @workout_score = @workout_offering.score_for(current_user)
 
       should_force_lti = !@lti_launch &&
-        @workout_offering.lms_assignment_id.present? &&
+        (@workout_offering.lms_assignment_id.present? ||
+         @workout_offering.lti_assignment_id.present?) &&
         (@workout_score.nil? ||
         @workout_score.lis_result_sourcedid.nil? ||
         @workout_score.lis_outcome_service_url.nil?)

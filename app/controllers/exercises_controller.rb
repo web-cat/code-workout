@@ -625,7 +625,8 @@ class ExercisesController < ApplicationController
       end
 
       should_force_lti = !@lti_launch &&
-        @workout_offering.andand.lms_assignment_id.present? &&
+        (@workout_offering.andand.lms_assignment_id.present? ||
+         @workout_offering.andand.lti_assignment_id.present?) &&
         (@workout_score.andand.lis_result_sourcedid.nil? ||
           @workout_score.andand.lis_outcome_service_url.nil?)
 

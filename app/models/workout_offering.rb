@@ -16,21 +16,27 @@
 #  continue_from_workout_id :bigint
 #  course_offering_id       :bigint           not null
 #  lms_assignment_id        :string(255)
+#  lms_instance_id          :bigint
+#  lti_assignment_id        :string(255)
 #  workout_id               :bigint           not null
 #  workout_policy_id        :bigint
 #
 # Indexes
 #
-#  index_workout_offerings_on_course_offering_id  (course_offering_id)
-#  index_workout_offerings_on_lms_assignment_id   (lms_assignment_id)
-#  index_workout_offerings_on_workout_id          (workout_id)
-#  index_workout_offerings_on_workout_policy_id   (workout_policy_id)
-#  workout_offerings_continue_from_workout_id_fk  (continue_from_workout_id)
+#  idx_workout_offerings_on_lms_and_lti_assignment  (lms_instance_id,lti_assignment_id) UNIQUE
+#  index_workout_offerings_on_course_offering_id    (course_offering_id)
+#  index_workout_offerings_on_lms_assignment_id     (lms_assignment_id)
+#  index_workout_offerings_on_lms_instance_id       (lms_instance_id)
+#  index_workout_offerings_on_lti_assignment_id     (lti_assignment_id)
+#  index_workout_offerings_on_workout_id            (workout_id)
+#  index_workout_offerings_on_workout_policy_id     (workout_policy_id)
+#  workout_offerings_continue_from_workout_id_fk    (continue_from_workout_id)
 #
 # Foreign Keys
 #
 #  fk_rails_...                                   (continue_from_workout_id => workout_offerings.id)
 #  fk_rails_...                                   (course_offering_id => course_offerings.id)
+#  fk_rails_...                                   (lms_instance_id => lms_instances.id)
 #  fk_rails_...                                   (workout_id => workouts.id)
 #  workout_offerings_continue_from_workout_id_fk  (continue_from_workout_id => workout_offerings.id)
 #  workout_offerings_course_offering_id_fk        (course_offering_id => course_offerings.id)
@@ -54,6 +60,7 @@ class WorkoutOffering < ApplicationRecord
   belongs_to :continue_from_workout, foreign_key: 'continue_from_workout_id',
     class_name: 'WorkoutOffering'
   belongs_to :course_offering, inverse_of: :workout_offerings
+  belongs_to :lms_instance
   has_many :workout_scores, inverse_of: :workout_offering, dependent: :nullify
   has_many :student_extensions
   has_many :users, through: :student_extensions
