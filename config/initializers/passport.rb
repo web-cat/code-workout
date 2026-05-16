@@ -3,8 +3,9 @@
 # List of allowed domain patterns for external extension managers.
 # Supports simple string matches or regex patterns.
 PASSPORT_WHITELIST = [
-  /\Ahttps:\/\/([a-z0-9-]+)\.cs\.vt\.edu\z/i,
-  /\Ahttps:\/\/([a-z0-9-]+)\.vt\.edu\z/i
+  /\A([a-z0-9-]+)\.cs\.vt\.edu\z/i,
+  /\A([a-z0-9-]+)\.vt\.edu\z/i,
+  'localhost'
 ]
 
 # Properties requested from the external extension manager.

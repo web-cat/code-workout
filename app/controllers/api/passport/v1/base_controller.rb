@@ -49,15 +49,53 @@ module Api
         end
 
         # -------------------------------------------------------------
+        # Validate Phase 1 registration parameters.
+        def validate_registration!(broker_base_url, callback_url)
+          # 1. Whitelist Check
+          unless whitelisted?(broker_base_url)
+            render json: { error: 'Domain not whitelisted' }, status: :forbidden
+            return false
+          end
+
+          # 2. HTTPS Enforcement (except localhost)
+          unless (broker_base_url.start_with?('https://') || broker_base_url.include?('localhost')) &&
+                 (callback_url.start_with?('https://') || callback_url.include?('localhost'))
+            render json: { error: 'HTTPS required for registration' }, status: :bad_request
+            return false
+          end
+
+          # 3. Domain Matching
+          unless domain_match?(broker_base_url, callback_url)
+            render json: { error: 'Callback URL domain mismatch' }, status: :bad_request
+            return false
+          end
+
+          true
+        end
+
+        # -------------------------------------------------------------
+        # Check if two URLs have the same protocol, host, and port.
+        def domain_match?(url1, url2)
+          u1 = URI.parse(url1)
+          u2 = URI.parse(url2)
+          u1.scheme == u2.scheme && u1.host == u2.host && u1.port == u2.port
+        rescue URI::InvalidURIError
+          false
+        end
+
+        # -------------------------------------------------------------
         # Verify that the broker_base_url is whitelisted.
         def whitelisted?(broker_base_url)
+          host = URI.parse(broker_base_url).host
           PASSPORT_WHITELIST.any? do |pattern|
             if pattern.is_a?(Regexp)
-              pattern.match?(broker_base_url)
+              pattern.match?(host)
             else
-              pattern == broker_base_url
+              pattern == host
             end
           end
+        rescue URI::InvalidURIError
+          false
         end
       end
     end
