@@ -129,7 +129,7 @@ class WorkoutsController < ApplicationController
           Have a look at these popular workouts instead.'
       } and return
     end
-    @exs = @workout.exercises
+    @exs = @workout.exercises.includes(:languages, :tags, :current_version)
   end
 
 
@@ -163,8 +163,8 @@ class WorkoutsController < ApplicationController
   # -------------------------------------------------------------
   # GET /gym
   def gym
-    @gym = Workout.where(is_public: true).order('created_at DESC').
-      limit(12)
+    @gym = Workout.includes(:tags, :exercise_workouts, :workout_scores, exercises: :irt_data).
+      where(is_public: true).order('created_at DESC').limit(12)
     # render layout: 'two_columns'
   end
 
@@ -947,7 +947,7 @@ class WorkoutsController < ApplicationController
     # -------------------------------------------------------------
     # Use callbacks to share common setup or constraints between actions.
     def set_workout
-      @workout = Workout.find(params[:id])
+      @workout = Workout.includes(:tags, :exercise_workouts, :workout_offerings).find(params[:id])
       @xp = 30
       @xptogo = 60
       @remain = 10

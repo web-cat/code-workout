@@ -142,6 +142,7 @@ class Exercise < ApplicationRecord
       .union(visible.tagged_with(terms, any: true, wild: true, on: :styles))
       .union(visible.where('(name regexp (?)) or (exercises.id in (?))', r, ids))
       .distinct
+      .includes(:languages, :tags, :current_version, :attempts)
     return result
   end
 
@@ -292,7 +293,13 @@ class Exercise < ApplicationRecord
   # If what one wants is a scoring attempt (without workouts, etc.), use
   # the `score_for` methods on workouts and workout_offerings.
   def latest_attempt_for(u)
-    self.attempts.where(user: u, workout_score: nil).order('updated_at DESC').first
+    if attempts.loaded?
+      attempts.select { |a| a.user_id == u.andand.id && a.workout_score_id.nil? }
+        .sort_by { |a| a.updated_at || Time.at(0) }
+        .last
+    else
+      self.attempts.where(user: u, workout_score: nil).order('updated_at DESC').first
+    end
   end
 
   # Does the user have privileged access to this exercise, either

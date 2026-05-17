@@ -250,25 +250,35 @@ class WorkoutScore < ApplicationRecord
   def scoring_attempt_for(exercise)
     workout_score = self
 
-    # First, check for current version only, which is faster
-    Attempt.where(
-      active_score_id: workout_score.id,
-      exercise_version_id: exercise.current_version_id).first ||
+    if scored_attempts.loaded?
+      scored_attempts.find { |a| a.exercise_version_id == exercise.current_version_id } ||
+      scored_attempts.find { |a| a.exercise_version.exercise_id == exercise.id }
+    else
+      # First, check for current version only, which is faster
+      Attempt.where(
+        active_score_id: workout_score.id,
+        exercise_version_id: exercise.current_version_id).first ||
 
-      # Or, if that is nil, try search over all versions
-      Attempt.joins(:exercise_version).
-        where(active_score_id: workout_score.id,
-          exercise_versions: { exercise_id: exercise.id }).first
+        # Or, if that is nil, try search over all versions
+        Attempt.joins(:exercise_version).
+          where(active_score_id: workout_score.id,
+            exercise_versions: { exercise_id: exercise.id }).first
+    end
   end
 
 
   # -------------------------------------------------------------
   def previous_attempt_for(exercise)
-    # First, check for current version only, which is faster
-    attempts.where(exercise_version_id: exercise.current_version_id).first ||
-      # Or, if that is nil, try search over all versions
-      attempts.joins(:exercise_version).
-        where(exercise_versions: { exercise_id: exercise.id }).first
+    if attempts.loaded?
+      attempts.find { |a| a.exercise_version_id == exercise.current_version_id } ||
+      attempts.find { |a| a.exercise_version.exercise_id == exercise.id }
+    else
+      # First, check for current version only, which is faster
+      attempts.where(exercise_version_id: exercise.current_version_id).first ||
+        # Or, if that is nil, try search over all versions
+        attempts.joins(:exercise_version).
+          where(exercise_versions: { exercise_id: exercise.id }).first
+    end
   end
 
 

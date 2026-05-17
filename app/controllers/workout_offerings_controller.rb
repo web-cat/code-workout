@@ -13,12 +13,12 @@ class WorkoutOfferingsController < ApplicationController
   # /courses/:organization_id/:course_id/:term_id/:id
   def show
     if @workout_offering
-      @workout = @workout_offering.workout
+      @workout = Workout.includes(:tags, :exercise_workouts, :workout_offerings).find(@workout_offering.workout_id)
       @organization = Organization.find params[:organization_id]
       @course = Course.find_with_id_or_slug(params[:course_id], params[:organization_id])
       @term = Term.find params[:term_id]
       @course_offering = CourseOffering.find_by course: @course, term: @term
-      @exs = @workout.exercises
+      @exs = @workout.exercises.includes(:languages, :tags, :current_version)
     end
     render 'workouts/show'
   end
@@ -27,8 +27,8 @@ class WorkoutOfferingsController < ApplicationController
   # --------------------------------------------------------------
   def review
     if @workout_offering
-      @workout = @workout_offering.workout
-      @exs = @workout.exercises
+      @workout = Workout.includes(:tags, :exercise_workouts, :workout_offerings).find(@workout_offering.workout_id)
+      @exs = @workout.exercises.includes(:languages, :tags, :current_version)
     end
     render 'workouts/review'
   end

@@ -88,10 +88,14 @@ class WorkoutOffering < ApplicationRecord
     if user.nil?
       return nil
     else
-      # Explicitly include workout id in search for faster search using
-      # the compound index
-      workout_scores.where(user: user, workout: workout).
-        order('updated_at DESC').first
+      if workout_scores.loaded?
+        workout_scores.find { |ws| ws.user_id == user.id && ws.workout_id == workout_id }
+      else
+        # Explicitly include workout id in search for faster search using
+        # the compound index
+        workout_scores.where(user: user, workout: workout).
+          order('updated_at DESC').first
+      end
     end
   end
 

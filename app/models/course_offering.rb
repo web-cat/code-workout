@@ -113,7 +113,11 @@ class CourseOffering < ApplicationRecord
   # this CourseOffering.
   #
   def students
-    course_enrollments.where(course_role_id: CourseRole.student).map(&:user)
+    if course_enrollments.loaded?
+      course_enrollments.select { |ce| ce.course_role_id == CourseRole::STUDENT_ID }.map(&:user)
+    else
+      course_enrollments.where(course_role_id: CourseRole.student).map(&:user)
+    end
   end
 
 
@@ -122,7 +126,11 @@ class CourseOffering < ApplicationRecord
   # this CourseOffering.
   #
   def instructors
-    course_enrollments.where(course_role_id: CourseRole.instructor).map(&:user)
+    if course_enrollments.loaded?
+      course_enrollments.select { |ce| ce.course_role_id == CourseRole::INSTRUCTOR_ID }.map(&:user)
+    else
+      course_enrollments.where(course_role_id: CourseRole.instructor).map(&:user)
+    end
   end
 
 
@@ -145,7 +153,11 @@ class CourseOffering < ApplicationRecord
   # this CourseOffering.
   #
   def graders
-    course_enrollments.where(course_role: CourseRole.grader).map(&:user)
+    if course_enrollments.loaded?
+      course_enrollments.select { |ce| ce.course_role_id == CourseRole::GRADER_ID }.map(&:user)
+    else
+      course_enrollments.where(course_role: CourseRole.grader).map(&:user)
+    end
   end
 
 
@@ -157,7 +169,15 @@ class CourseOffering < ApplicationRecord
 
   # -------------------------------------------------------------
   def is_enrolled?(user)
-    user && users.include?(user)
+    if user
+      if course_enrollments.loaded?
+        course_enrollments.any? { |ce| ce.user_id == user.id }
+      else
+        users.include?(user)
+      end
+    else
+      false
+    end
   end
 
 
@@ -191,7 +211,13 @@ class CourseOffering < ApplicationRecord
 
   # -------------------------------------------------------------
   def role_for_user(user)
-    user && course_enrollments.where(user: user).first.andand.course_role
+    if user
+      if course_enrollments.loaded?
+        course_enrollments.find { |ce| ce.user_id == user.id }.andand.course_role
+      else
+        course_enrollments.where(user: user).first.andand.course_role
+      end
+    end
   end
 
   def add_workout(workout, workout_offering_options={})

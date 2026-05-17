@@ -14,13 +14,13 @@ include AbbrHelper
     
     if params[:enrolled_only].to_b
       @organizations = Organization.accessible_by(current_ability).
-        includes(courses: { course_offerings: :course_enrollments } ).
+        includes(courses: { course_offerings: [:term, { course_enrollments: [:user, :course_role] }] } ).
         joins(courses: { course_offerings: :course_enrollments } ).
         where('course_offerings.term_id' => @term, 'course_enrollments.user_id' => current_user.id).
         distinct
     else
       @organizations = Organization.accessible_by(current_ability).
-        includes(courses: :course_offerings).
+        includes(courses: { course_offerings: [:term, { course_enrollments: [:user, :course_role] }] } ).
         joins(courses: :course_offerings).
         where('course_offerings.term_id' => @term).
         distinct
@@ -92,7 +92,7 @@ include AbbrHelper
     # The authorize is handled with accessible_by, then the load is
     # performed with a custom query
     @organization = Organization.accessible_by(current_ability).
-      includes(courses: :course_offerings).
+      includes(courses: { course_offerings: [:term, { course_enrollments: [:user, :course_role] }] } ).
       joins(courses: :course_offerings).
       where('course_offerings.term_id' => @term).
       find(params[:id])
