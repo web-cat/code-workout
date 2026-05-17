@@ -110,7 +110,7 @@ class WorkoutOffering < ApplicationRecord
 
   # -----------------------------------------------------------------
   def hard_deadline_for(user)
-    user_ext = student_extensions.where(user: user).first
+    user_ext = student_extensions.loaded? ? student_extensions.find { |e| e.user_id == user.andand.id } : student_extensions.where(user: user).first
     # (1) student extension hard deadline
     return user_ext.hard_deadline if user_ext.andand.hard_deadline
     
@@ -216,12 +216,12 @@ class WorkoutOffering < ApplicationRecord
   def can_be_practiced_by?(user)
     return false unless course_offering.is_enrolled?(user)
 
-    workout_score = workout_scores.where(user: user).last
+    workout_score = workout_scores.loaded? ? workout_scores.select { |s| s.user_id == user.andand.id }.sort_by { |s| s.updated_at || Time.at(0) }.last : workout_scores.where(user: user).last
     return false if workout_score && workout_score.closed?
  
     now = Time.zone.now
-    user_ext = student_extensions.where(user: user).first
-    opens = user_extension.andand.opening_date || self.opening_date
+    user_ext = student_extensions.loaded? ? student_extensions.find { |e| e.user_id == user.andand.id } : student_extensions.where(user: user).first
+    opens = user_ext.andand.opening_date || self.opening_date
     deadline = hard_deadline_for(user)
 
     course_offering.is_staff?(user) ||
