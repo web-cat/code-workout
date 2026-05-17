@@ -500,8 +500,8 @@ Rails.application.routes.draw do
   resources :course_offerings, only: [ :edit, :update, :index, :show ] do
     post 'enroll' => :enroll, as: :enroll
     delete 'unenroll' => :unenroll, as: :unenroll
-    match 'upload_roster/:action', controller: 'upload_roster',
-      as: :upload_roster, via: [:get, :post]
+    get 'upload_roster' => 'upload_roster#index', as: :upload_roster
+    post 'upload_roster/upload' => 'upload_roster#upload', as: :upload_roster_upload
     post 'generate_gradebook' => :generate_gradebook, as: :gradebook
     post 'add_workout/:workout_name' => 'course_offerings#add_workout', as: :add_workout
     post 'store_workout/:id' => :store_workout, as: :store_workout
@@ -547,9 +547,15 @@ Rails.application.routes.draw do
   end
 
   get 'help' => 'help#index'
-  match 'help/:action', controller: 'help', via: [:get]
-  match 'static_pages/:action', controller: 'static_pages', via: [:get]
+  get 'help/exercise_format' => 'help#exercise_format'
+  get 'help/exercise_peml_format' => 'help#exercise_peml_format'
+  get 'help/lti_configuration' => 'help#lti_configuration'
+  get 'help/specifying_due_dates' => 'help#specifying_due_dates'
 
+  get 'static_pages/home' => 'static_pages#home'
+  get 'static_pages/info' => 'static_pages#info'
+  get 'static_pages/splash' => 'static_pages#splash'
+  get 'static_pages/typography' => 'static_pages#typography'
   get 'static_pages/mockup1' => 'static_pages#mockup1'
   get 'static_pages/mockup2' => 'static_pages#mockup2'
   get 'static_pages/mockup3' => 'static_pages#mockup3'

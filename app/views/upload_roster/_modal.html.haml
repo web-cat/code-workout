@@ -2,7 +2,7 @@
   .modal-header
     %h3 Upload Roster
 
-  = form_tag upload_roster_path(@course_offering, action: :upload),
+  = form_tag course_offering_upload_roster_upload_path(@course_offering),
     remote: true, multipart: true, class: 'form-horizontal modal-form' do
 
     .modal-body.has-typeahead
