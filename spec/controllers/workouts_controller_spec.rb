@@ -33,7 +33,7 @@ describe WorkoutsController do
   describe "GET index" do
     it "assigns all workouts as @workouts" do
       workout = Workout.create! valid_attributes
-      get :index, {}, valid_session
+      get :index, params: {}, session: valid_session
       assigns(:workouts).should eq([workout])
     end
   end
@@ -41,14 +41,14 @@ describe WorkoutsController do
   describe "GET show" do
     it "assigns the requested workout as @workout" do
       workout = Workout.create! valid_attributes
-      get :show, {:id => workout.to_param}, valid_session
+      get :show, params: {:id => workout.to_param}, session: valid_session
       assigns(:workout).should eq(workout)
     end
   end
 
   describe "GET new" do
     it "assigns a new workout as @workout" do
-      get :new, {}, valid_session
+      get :new, params: {}, session: valid_session
       assigns(:workout).should be_a_new(Workout)
     end
   end
@@ -56,7 +56,7 @@ describe WorkoutsController do
   describe "GET edit" do
     it "assigns the requested workout as @workout" do
       workout = Workout.create! valid_attributes
-      get :edit, {:id => workout.to_param}, valid_session
+      get :edit, params: {:id => workout.to_param}, session: valid_session
       assigns(:workout).should eq(workout)
     end
   end
@@ -65,18 +65,18 @@ describe WorkoutsController do
     describe "with valid params" do
       it "creates a new Workout" do
         expect {
-          post :create, {:workout => valid_attributes}, valid_session
+          post :create, params: {:workout => valid_attributes}, session: valid_session
         }.to change(Workout, :count).by(1)
       end
 
       it "assigns a newly created workout as @workout" do
-        post :create, {:workout => valid_attributes}, valid_session
+        post :create, params: {:workout => valid_attributes}, session: valid_session
         assigns(:workout).should be_a(Workout)
         assigns(:workout).should be_persisted
       end
 
       it "redirects to the created workout" do
-        post :create, {:workout => valid_attributes}, valid_session
+        post :create, params: {:workout => valid_attributes}, session: valid_session
         response.should redirect_to(Workout.last)
       end
     end
@@ -85,14 +85,14 @@ describe WorkoutsController do
       it "assigns a newly created but unsaved workout as @workout" do
         # Trigger the behavior that occurs when invalid params are submitted
         Workout.any_instance.stub(:save).and_return(false)
-        post :create, {:workout => {  }}, valid_session
+        post :create, params: {:workout => {  }}, session: valid_session
         assigns(:workout).should be_a_new(Workout)
       end
 
       it "re-renders the 'new' template" do
         # Trigger the behavior that occurs when invalid params are submitted
         Workout.any_instance.stub(:save).and_return(false)
-        post :create, {:workout => {  }}, valid_session
+        post :create, params: {:workout => {  }}, session: valid_session
         response.should render_template("new")
       end
     end
@@ -107,18 +107,18 @@ describe WorkoutsController do
         # receives the :update_attributes message with whatever params are
         # submitted in the request.
         Workout.any_instance.should_receive(:update).with({ "these" => "params" })
-        put :update, {:id => workout.to_param, :workout => { "these" => "params" }}, valid_session
+        put :update, params: {:id => workout.to_param, :workout => { "these" => "params" }}, session: valid_session
       end
 
       it "assigns the requested workout as @workout" do
         workout = Workout.create! valid_attributes
-        put :update, {:id => workout.to_param, :workout => valid_attributes}, valid_session
+        put :update, params: {:id => workout.to_param, :workout => valid_attributes}, session: valid_session
         assigns(:workout).should eq(workout)
       end
 
       it "redirects to the workout" do
         workout = Workout.create! valid_attributes
-        put :update, {:id => workout.to_param, :workout => valid_attributes}, valid_session
+        put :update, params: {:id => workout.to_param, :workout => valid_attributes}, session: valid_session
         response.should redirect_to(workout)
       end
     end
@@ -128,7 +128,7 @@ describe WorkoutsController do
         workout = Workout.create! valid_attributes
         # Trigger the behavior that occurs when invalid params are submitted
         Workout.any_instance.stub(:save).and_return(false)
-        put :update, {:id => workout.to_param, :workout => {  }}, valid_session
+        put :update, params: {:id => workout.to_param, :workout => {  }}, session: valid_session
         assigns(:workout).should eq(workout)
       end
 
@@ -136,7 +136,7 @@ describe WorkoutsController do
         workout = Workout.create! valid_attributes
         # Trigger the behavior that occurs when invalid params are submitted
         Workout.any_instance.stub(:save).and_return(false)
-        put :update, {:id => workout.to_param, :workout => {  }}, valid_session
+        put :update, params: {:id => workout.to_param, :workout => {  }}, session: valid_session
         response.should render_template("edit")
       end
     end
@@ -146,13 +146,13 @@ describe WorkoutsController do
     it "destroys the requested workout" do
       workout = Workout.create! valid_attributes
       expect {
-        delete :destroy, {:id => workout.to_param}, valid_session
+        delete :destroy, params: {:id => workout.to_param}, session: valid_session
       }.to change(Workout, :count).by(-1)
     end
 
     it "redirects to the workouts list" do
       workout = Workout.create! valid_attributes
-      delete :destroy, {:id => workout.to_param}, valid_session
+      delete :destroy, params: {:id => workout.to_param}, session: valid_session
       response.should redirect_to(workouts_url)
     end
   end

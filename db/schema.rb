@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_17_001924) do
+ActiveRecord::Schema.define(version: 2026_05_17_023800) do
 
   create_table "active_admin_comments", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci", force: :cascade do |t|
     t.string "namespace"
@@ -186,9 +186,10 @@ ActiveRecord::Schema.define(version: 2026_05_17_001924) do
     t.index ["user_group_id"], name: "index_courses_on_user_group_id"
   end
 
-  create_table "errors", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci", force: :cascade do |t|
+  create_table "errors", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci", force: :cascade do |t|
+    t.string "usable_type"
+    t.integer "usable_id"
     t.text "class_name"
-    t.text "status"
     t.text "message"
     t.text "trace"
     t.text "target"
@@ -197,6 +198,9 @@ ActiveRecord::Schema.define(version: 2026_05_17_001924) do
     t.text "user_agent"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.text "status"
+    t.index ["class_name"], name: "index_errors_on_class_name", length: 768
+    t.index ["created_at"], name: "index_errors_on_created_at"
   end
 
   create_table "exercise_collections", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci", force: :cascade do |t|
@@ -797,7 +801,6 @@ ActiveRecord::Schema.define(version: 2026_05_17_001924) do
   add_foreign_key "exercise_versions_resource_files", "exercise_versions", name: "exercise_versions_resource_files_exercise_version_id_fk"
   add_foreign_key "exercise_versions_resource_files", "resource_files"
   add_foreign_key "exercise_versions_resource_files", "resource_files", name: "exercise_versions_resource_files_resource_file_id_fk"
-  add_foreign_key "exercise_workouts", "exercise_versions", column: "exercise_id"
   add_foreign_key "exercise_workouts", "exercises", name: "exercise_workouts_exercise_id_fk"
   add_foreign_key "exercise_workouts", "workouts"
   add_foreign_key "exercise_workouts", "workouts", name: "exercise_workouts_workout_id_fk"

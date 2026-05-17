@@ -33,7 +33,7 @@ describe TermsController do
   describe "GET index" do
     it "assigns all terms as @terms" do
       term = Term.create! valid_attributes
-      get :index, {}, valid_session
+      get :index, params: {}, session: valid_session
       assigns(:terms).should eq([term])
     end
   end
@@ -41,7 +41,7 @@ describe TermsController do
   describe "GET show" do
     it "assigns the requested term as @term" do
       term = Term.create! valid_attributes
-      get :show, {:id => term.to_param}, valid_session
+      get :show, params: {:id => term.to_param}, session: valid_session
       assigns(:term).should eq(term)
     end
   end
