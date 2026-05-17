@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_16_004500) do
+ActiveRecord::Schema.define(version: 2026_05_17_001924) do
 
   create_table "active_admin_comments", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci", force: :cascade do |t|
     t.string "namespace"
@@ -148,8 +148,10 @@ ActiveRecord::Schema.define(version: 2026_05_16_004500) do
     t.bigint "lms_instance_id"
     t.string "canvas_course_id"
     t.string "lti_context_id"
+    t.string "lms_section_id"
     t.index ["canvas_course_id"], name: "index_course_offerings_on_canvas_course_id"
     t.index ["course_id"], name: "index_course_offerings_on_course_id"
+    t.index ["lms_instance_id", "lti_context_id", "lms_section_id"], name: "idx_course_offerings_on_lms_context_section", unique: true
     t.index ["lms_instance_id"], name: "index_course_offerings_on_lms_instance_id"
     t.index ["lti_context_id"], name: "index_course_offerings_on_lti_context_id"
     t.index ["term_id"], name: "index_course_offerings_on_term_id"
@@ -184,10 +186,9 @@ ActiveRecord::Schema.define(version: 2026_05_16_004500) do
     t.index ["user_group_id"], name: "index_courses_on_user_group_id"
   end
 
-  create_table "errors", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci", force: :cascade do |t|
-    t.string "usable_type"
-    t.integer "usable_id"
+  create_table "errors", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci", force: :cascade do |t|
     t.text "class_name"
+    t.text "status"
     t.text "message"
     t.text "trace"
     t.text "target"
@@ -196,9 +197,6 @@ ActiveRecord::Schema.define(version: 2026_05_16_004500) do
     t.text "user_agent"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.text "status"
-    t.index ["class_name"], name: "index_errors_on_class_name", length: 768
-    t.index ["created_at"], name: "index_errors_on_created_at"
   end
 
   create_table "exercise_collections", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci", force: :cascade do |t|
@@ -672,10 +670,12 @@ ActiveRecord::Schema.define(version: 2026_05_16_004500) do
     t.integer "attempt_limit"
     t.string "lti_assignment_id"
     t.bigint "lms_instance_id"
+    t.string "resource_link_id"
     t.index ["continue_from_workout_id"], name: "workout_offerings_continue_from_workout_id_fk"
     t.index ["course_offering_id"], name: "index_workout_offerings_on_course_offering_id"
     t.index ["lms_assignment_id"], name: "index_workout_offerings_on_lms_assignment_id"
     t.index ["lms_instance_id", "lti_assignment_id"], name: "idx_workout_offerings_on_lms_and_lti_assignment", unique: true
+    t.index ["lms_instance_id", "resource_link_id"], name: "idx_workout_offerings_on_lms_and_resource_link", unique: true
     t.index ["lms_instance_id"], name: "index_workout_offerings_on_lms_instance_id"
     t.index ["lti_assignment_id"], name: "index_workout_offerings_on_lti_assignment_id"
     t.index ["workout_id"], name: "index_workout_offerings_on_workout_id"

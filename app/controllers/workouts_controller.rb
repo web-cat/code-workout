@@ -537,101 +537,154 @@ class WorkoutsController < ApplicationController
   def find_offering
     @user = User.find params[:user_id]
     @term = Term.find params[:term_id]
-    @course = Course.find_with_id_or_slug(
-      params[:course_id], params[:organization_id]
-    )
+    @course = Course.find_with_id_or_slug(params[:course_id], params[:organization_id])
     @lti_launch = params[:lti_launch]
-    dynamic_lms_assignment = params[:dynamic_lms_assignment]
+    dynamic_lms_assignment = params[:dynamic_lms_assignment].to_b
     ext_lti_assignment_id = params[:ext_lti_assignment_id]
     custom_canvas_assignment_id = params[:custom_canvas_assignment_id]
-    lms_instance_id = params[:lms_instance_id]
-    lti_context_id = params[:lti_context_id]
-    canvas_course_id = params[:canvas_course_id]
-
+    
+    # Restore from session if not present in params
+    payload = session[:lti_payload] || {}
+    lms_instance_id = params[:lms_instance_id] || payload['lms_instance_id']
+    lti_context_id = params[:lti_context_id] || payload['lti_context_id']
+    canvas_course_id = params[:canvas_course_id] || payload['canvas_course_id']
+    custom_section_ids = params[:custom_section_ids] || payload['custom_section_ids']
+    custom_section_names = params[:custom_section_names] || payload['custom_section_names']
+    context_label = params[:context_label] || payload['context_label']
+    context_title = params[:context_title] || payload['context_title']
+    
+    resource_link_id = params[:resource_link_id]
+    lms_section_ids = custom_section_ids.to_s.split(',')
+    
     @custom_canvas_lms_assignment_id = custom_canvas_assignment_id
     @lms_assignment_id = ext_lti_assignment_id
+    
+    role = session[:is_instructor].to_b ? CourseRole.instructor : CourseRole.student
 
-    # Priority 1 & 2: Search for existing CourseOffering using new identifiers
-    @course_offering = CourseOffering.find_by(lti_context_id: lti_context_id) if lti_context_id.present?
-    @course_offering ||= CourseOffering.find_by(canvas_course_id: canvas_course_id) if canvas_course_id.present?
+    session[:lti_payload] = {
+      lms_instance_id: lms_instance_id,
+      lti_context_id: lti_context_id,
+      canvas_course_id: canvas_course_id,
+      custom_section_ids: custom_section_ids,
+      custom_section_names: custom_section_names,
+      context_label: context_label,
+      context_title: context_title
+    }
 
-    if params[:from_collection].to_b
-      workouts = Workout.where('lower(name) = ?',
-        params[:workout_name].downcase)
-      found_workout = workouts.andand.first
+    # Phase 1: CourseOffering Resolution
+    candidate_course_offerings = []
+
+    if params[:course_offering_id].present?
+      candidate_course_offerings = [CourseOffering.find(params[:course_offering_id])]
+    else
+      if lms_instance_id.present? && lti_context_id.present?
+        query = { lms_instance_id: lms_instance_id, lti_context_id: lti_context_id }
+        query[:lms_section_id] = lms_section_ids if lms_section_ids.any?
+        candidate_course_offerings = CourseOffering.where(query).to_a
+      end
+
+      if candidate_course_offerings.empty? && lms_instance_id.present? && canvas_course_id.present?
+        query = { lms_instance_id: lms_instance_id, canvas_course_id: canvas_course_id }
+        query[:lms_section_id] = lms_section_ids if lms_section_ids.any?
+        candidate_course_offerings = CourseOffering.where(query).to_a
+      end
     end
 
-    if session[:is_instructor].to_b
-      workout_offerings = WorkoutOffering.where(
-        lms_instance_id: lms_instance_id,
-        lti_assignment_id: @lms_assignment_id)
-      if workout_offerings.blank?
-        workout_offerings = WorkoutOffering.where(
-          lms_instance_id: lms_instance_id,
-          lms_assignment_id: @custom_canvas_lms_assignment_id)
+    if candidate_course_offerings.empty?
+      if role.is_instructor?
+        candidate_course_offerings = @user.managed_course_offerings(course: @course, term: @term).to_a
+      else
+        candidate_course_offerings = @user.course_offerings_for_term(@term, @course).to_a
       end
+    end
 
-      if workout_offerings.blank?
-        # check current term
-        workout_offerings = @user.managed_workout_offerings_in_term(
-          params[:workout_name].downcase, @course, @term)
+    @course_offering = nil
+    if role.is_instructor?
+      if candidate_course_offerings.count == 1
+        @course_offering = candidate_course_offerings.first
+      elsif candidate_course_offerings.count > 1
+        session[:candidate_course_offering_ids] = candidate_course_offerings.map(&:id)
+        redirect_to organization_course_select_offering_path(
+          organization_id: @course.organization.slug,
+          course_id: @course.slug,
+          term_id: @term.slug,
+          workout_name: params[:workout_name],
+          ext_lti_assignment_id: ext_lti_assignment_id,
+          custom_canvas_assignment_id: custom_canvas_assignment_id,
+          resource_link_id: resource_link_id,
+          from_collection: params[:from_collection]
+        ) and return
+      else
+        redirect_to new_organization_course_offering_path(
+          organization_id: @course.organization.slug,
+          course_id: @course.slug,
+          term_id: @term.slug,
+          workout_name: params[:workout_name],
+          ext_lti_assignment_id: ext_lti_assignment_id,
+          custom_canvas_assignment_id: custom_canvas_assignment_id,
+          resource_link_id: resource_link_id,
+          from_collection: params[:from_collection]
+        ) and return
       end
-
-      @workout_offering = workout_offerings.to_a.flatten.first
-
-      if workout_offerings.blank?
-        # check past terms
-        workout_offerings = @user.managed_workout_offerings_in_term(
-          params[:workout_name].downcase, @course, nil)
-      end
-
-      workout_offerings = workout_offerings.andand.to_a.flatten.uniq
-      found_workout ||= workout_offerings.andand
-        .uniq{ |wo| wo.workout }.andand
-        .sort_by{ |wo| wo.course_offering.term.starts_on }.andand
-        .last.andand.workout
-
-      if !@workout_offering
-        @course_offerings =
-          @user.managed_course_offerings course: @course, term: @term
-        if @course_offerings.blank?
-          course_offering = CourseOffering.create(
-            course: @course,
-            term: @term,
-            label: params[:label] ||
-              "#{@user.label_name} - #{@term.display_name}",
-            self_enrollment_allowed: true,
-            lms_instance: LmsInstance.find(lms_instance_id),
-            lti_context_id: lti_context_id,
-            canvas_course_id: canvas_course_id
-          )
-
-          @course_enrollment = CourseEnrollment.create(
-            user: @user,
-            course_offering: course_offering,
-            course_role: CourseRole.instructor
-          )
-
-          @course_offerings << course_offering
+    else
+      if candidate_course_offerings.any?
+        if lms_section_ids.any? && candidate_course_offerings.any? { |co| lms_section_ids.include?(co.lms_section_id) }
+          first_matching_id = lms_section_ids.find { |id| candidate_course_offerings.any? { |co| co.lms_section_id == id } }
+          @course_offering = candidate_course_offerings.find { |co| co.lms_section_id == first_matching_id }
+        else
+          @course_offering = candidate_course_offerings.first
         end
-        if params[:from_collection].to_b && found_workout
-          @course_offerings.each do |co|
-            if co.lms_instance.nil?
-              co.lms_instance_id = lms_instance_id
-              co.save
-            end
+      else
+        @message = "Your course offering is not yet available. Please contact your instructor."
+        render 'lti/error' and return
+      end
+    end
 
-            @workout_offering = WorkoutOffering.new(
-              course_offering: co,
-              workout: found_workout,
-              opening_date: DateTime.now,
-              soft_deadline: nil,
-              hard_deadline: nil,
+    # Phase 2: WorkoutOffering Resolution
+    @workout_offering = nil
+    
+    if resource_link_id.present?
+      @workout_offering = WorkoutOffering.find_by(lms_instance_id: lms_instance_id, resource_link_id: resource_link_id)
+    end
+    if !@workout_offering && @lms_assignment_id.present?
+      @workout_offering = WorkoutOffering.find_by(lms_instance_id: lms_instance_id, lti_assignment_id: @lms_assignment_id)
+    end
+    if !@workout_offering && @custom_canvas_lms_assignment_id.present?
+      @workout_offering = WorkoutOffering.find_by(lms_instance_id: lms_instance_id, lms_assignment_id: @custom_canvas_lms_assignment_id)
+    end
+
+    found_workout = nil
+    if params[:from_collection].to_b
+      workouts = Workout.where('lower(name) = ?', params[:workout_name].downcase)
+      found_workout = workouts.first
+    end
+
+    if !@workout_offering
+      if found_workout
+        @workout_offering = @course_offering.workout_offerings.find_by(workout_id: found_workout.id)
+      else
+        @workout_offering = @course_offering.workout_offerings.joins(:workout).find_by('lower(workouts.name) = ?', params[:workout_name].downcase)
+      end
+    end
+
+    # Phase 3: WorkoutOffering Fallback / Creation
+    if !@workout_offering
+      if role.is_instructor?
+        if !found_workout
+           old_workout_offerings = @user.managed_workout_offerings_in_term(params[:workout_name].downcase, @course, nil).to_a.flatten
+           found_workout = old_workout_offerings.uniq{ |wo| wo.workout }.sort_by{ |wo| wo.course_offering.term.starts_on }.last.andand.workout
+        end
+        
+        if params[:from_collection].to_b && found_workout
+          @workout_offering = WorkoutOffering.create(
+            course_offering: @course_offering,
+            workout: found_workout,
+            opening_date: DateTime.now,
             lms_assignment_id: @custom_canvas_lms_assignment_id,
-            lti_assignment_id: @lms_assignment_id
+            lti_assignment_id: @lms_assignment_id,
+            resource_link_id: resource_link_id,
+            lms_instance_id: lms_instance_id
           )
-          @workout_offering.save
-          end
         elsif found_workout
           redirect_to(organization_clone_workout_path(
             course_id: @course.slug,
@@ -640,6 +693,7 @@ class WorkoutsController < ApplicationController
             workout_id: found_workout.id,
             lti_launch: true,
             lms_assignment_id: @lms_assignment_id,
+            lti_assignment_id: @lms_assignment_id,
             suggested_name: params[:workout_name]
           )) and return
         else
@@ -649,208 +703,53 @@ class WorkoutsController < ApplicationController
               course_id: @course.slug,
               term_id: @term.slug,
               lms_assignment_id: @lms_assignment_id,
+              lti_assignment_id: @lms_assignment_id,
               suggested_name: params[:workout_name]
           ) and return
         end
-      end
-    else
-      # first search by lms_assignment_id
-      workout_offerings = WorkoutOffering.where(
-        lms_instance_id: lms_instance_id,
-        lti_assignment_id: @lms_assignment_id)
-      if workout_offerings.blank?
-        workout_offerings = WorkoutOffering.where(
-          lms_instance_id: lms_instance_id,
-          lms_assignment_id: @custom_canvas_lms_assignment_id)
-      end
-      if workout_offerings.blank?
-        if params[:label] # label is specified, we can narrow down to a single course offering
-          @course_offering = CourseOffering.find_by(course: @course, term: @term, label: params[:label])
-          if @course_offering
-            if params[:from_collection].to_b && found_workout
-              workout_offerings = @course_offering.workout_offerings.where(workout: found_workout)
-              @workout_offering = workout_offerings.first
-            end
-          else
-            @message = 'Your course offering is not yet defined. Please contact your instructor.'
-            render 'lti/error' and return
-          end
-        end
       else
-        anchor_offering = workout_offerings.first
-        sister_offerings = WorkoutOffering.joins(:course_offering)
-          .where("(lms_assignment_id = '' OR lms_assignment_id is NULL)
-                  AND (lti_assignment_id = '' OR lti_assignment_id is NULL)
-                  AND course_id=#{anchor_offering.course_offering.course.id}
-                  AND term_id=#{anchor_offering.course_offering.term.id}
-                  AND workout_id=#{anchor_offering.workout.id}")
-        workout_offerings = workout_offerings + sister_offerings
-      end
-
-      enrolled_course_offerings = @user.course_offerings_for_term(@term, @course)
-      @course_offering ||= enrolled_course_offerings.first
-
-      if workout_offerings.blank?
-        # is the user enrolled in an offering of the course?
-
-        if !@course_offering
-          # Let the user choose to enroll in a course_offering.
-          @available_offerings = []
-          @available_course_offerings = CourseOffering
-            .where(course: @course, term: @term)
-            .select{ |co| co.self_enrollment_allowed? }
-
-          if @available_course_offerings.count == 1
-            # There is only one possible course offering. Continue on with it.
-            @course_offering = @available_course_offerings.first
-          else
-            # There are multiple or no possible course offerings. Render the selection page.
-            render layout: 'one_column' and return
-          end
-        end
-
-        if @course_offering
-          # We have a course offering. Use the instructor to find appropriate
-          # workout_offerings by workout name.
-          instructor = @course_offering.instructors.first
-          workout_offerings = instructor.managed_workout_offerings_in_term(
-            params[:workout_name].downcase, @course, @term)
-          if workout_offerings.blank?
-            # no current workout_offerings, check all semesters
-            old_workout_offerings = instructor
-              .managed_workout_offerings_in_term(
-              params[:workout_name].downcase, @course, nil)
-            found_workout ||= old_workout_offerings.andand
-              .uniq{ |wo| wo.workout }.andand
-              .sort_by{ |wo| wo.course_offering.term.starts_on }.andand
-              .last.andand.workout
-            if !found_workout
-              @message = "The workout named #{params[:workout_name]} does not exist or is not linked with this LMS assignment. Please contact your instructor."
-              render 'lti/error' and return
-            else
-              # we have a course offering and a workout -- just find or create the workout and redirect
-              @workout_offering = WorkoutOffering.find_by(
-                course_offering: @course_offering, workout: found_workout)
-              if !@workout_offering
-                @workout_offering = WorkoutOffering.new(
-                  course_offering: @course_offering,
-                  workout: found_workout,
-                  opening_date: DateTime.now,
-                  soft_deadline: nil,
-                  hard_deadline: nil,
-                  lms_assignment_id: @custom_canvas_lms_assignment_id,
-                  lti_assignment_id: @lms_assignment_id
-                )
-                @workout_offering.save
-              end
-            end
-          end
-        end
-      end
-
-      if !@workout_offering
-        # don't have a workout_offering, but may have narrowed it down
-        workout_offerings = workout_offerings.to_a.flatten.uniq
-        enrolled_workout_offerings = workout_offerings.andand
-          .select { |wo| @user.is_enrolled?(wo.course_offering) }
-
-        if enrolled_workout_offerings.any?
-          @workout_offering = enrolled_workout_offerings.andand.first
-        elsif workout_offerings.count == 1
-          # Exactly one match, use it even if not enrolled
-          @workout_offering = workout_offerings.first
-        elsif workout_offerings.count > 1
-          # Multiple matches, let the user choose
-          @existing_workout_offerings = workout_offerings
-            .uniq { |wo| wo.course_offering }
-          @available_offerings = @existing_workout_offerings.map(&:course_offering)
-          render layout: 'one_column' and return
-        elsif @course_offering
-          # found an enrolled course_offering, so we don't need to ask the student anything
-          # but the course offering does not include the workout offering, so add it
-          workout_offering_options = {
-            lms_assignment_id: @custom_canvas_lms_assignment_id,
-            lti_assignment_id: @lms_assignment_id,
-            from_collection: params[:from_collection]
-          }
-          @workout_offering = @course_offering.add_workout(
-            params[:workout_name], workout_offering_options)
-          if !@workout_offering
-            @message = "The workout named '#{params[:workout_name]}' does not exist or is not linked with this LMS assignment. Please contact your instructor."
-            render 'lti/error' and return
-          end
-        else
-          # let the user choose to enroll in a course_offering
-          @existing_workout_offerings = workout_offerings
-            .uniq { |wo| wo.course_offering }
-            .select { |wo| wo.course_offering.self_enrollment_allowed? }
-          @available_offerings = CourseOffering
-            .where(course: @course, term: @term)
-            .select{ |co| co.self_enrollment_allowed? }
-
-          if @available_offerings.count == 1
-            @course_offering = @available_offerings.first
-            @workout_offering = @course_offering.workout_offerings
-              .find{ |wo| @existing_workout_offerings.include?(wo) }
-
-            # If we still don't have a workout offering, try to create it.
-            @workout_offering ||= @course_offering.add_workout(
-                params[:workout_name],
-                {
-                  lms_assignment_id: @custom_canvas_lms_assignment_id,
-                  lti_assignment_id: @lms_assignment_id,
-                  from_collection: params[:from_collection]
-                }
-              )
-
-            if !@workout_offering
-              @message = "The workout named '#{params[:workout_name]} does not exist or is not linked with this LMS assignment. Please contact your instructor."
-              render 'lti/error' and return
-            end
-          else
-            render layout: 'one_column' and return
-          end
-        end
+        @message = "The workout named '#{params[:workout_name]}' does not exist or is not linked with this LMS assignment. Please contact your instructor."
+        render 'lti/error' and return
       end
     end
 
-    # check enrollment and ties to LTI before proceeding
-    role = session[:is_instructor].to_b ? CourseRole.instructor : CourseRole.student
-    @course_offering = @workout_offering.course_offering
-
-    if @course_offering.lms_instance.nil?
+    # Phase 4: Validation / Backfill
+    if @course_offering.lms_instance_id.blank?
       @course_offering.lms_instance_id = lms_instance_id
+    end
+    if @course_offering.lti_context_id.blank?
+      @course_offering.lti_context_id = lti_context_id
+    end
+    if @course_offering.lms_section_id.blank? && lms_section_ids.length == 1
+      @course_offering.lms_section_id = lms_section_ids.first
+    end
+    if @course_offering.canvas_course_id.blank?
+      @course_offering.canvas_course_id = canvas_course_id
+    end
+    if @course_offering.changed?
       @course_offering.save
     end
 
-    matching_lms_assignment_id =
-      (@workout_offering.lti_assignment_id == @lms_assignment_id) ||
-      (@workout_offering.lms_assignment_id == @custom_canvas_lms_assignment_id)
-    should_reset_lms_assignment_id = !matching_lms_assignment_id && dynamic_lms_assignment
-
-    if @workout_offering.lti_assignment_id.blank? || should_reset_lms_assignment_id
+    if @workout_offering.resource_link_id.blank?
+      @workout_offering.resource_link_id = resource_link_id
+    end
+    if @workout_offering.lti_assignment_id.blank? || (dynamic_lms_assignment && @workout_offering.lti_assignment_id != @lms_assignment_id)
       @workout_offering.lti_assignment_id = @lms_assignment_id
     end
-    if @workout_offering.lms_assignment_id.blank? ||
-        (@workout_offering.lms_assignment_id != @custom_canvas_lms_assignment_id && dynamic_lms_assignment)
+    if @workout_offering.lms_assignment_id.blank? || (dynamic_lms_assignment && @workout_offering.lms_assignment_id != @custom_canvas_lms_assignment_id)
       @workout_offering.lms_assignment_id = @custom_canvas_lms_assignment_id
     end
-
+    if @workout_offering.lms_instance_id.blank?
+      @workout_offering.lms_instance_id = lms_instance_id
+    end
     if @workout_offering.changed?
       @workout_offering.save
-    elsif !matching_lms_assignment_id
-      raise RuntimeError, %(Expected lms-assignment-id to be "#{@lms_assignment_id}" or
-        "#{@custom_canvas_lms_assignment_id}", but got "#{@workout_offering.lms_assignment_id}" (LMS)
-        and "#{@workout_offering.lti_assignment_id}" (LTI) instead.
-        Some manual changing in the database may have occured without proper cleanup.)
     end
 
-    if !@user.is_enrolled?(@course_offering) &&
-        (@course_offering.can_enroll? || role.is_instructor? || matching_lms_assignment_id)
+    if !@user.is_enrolled?(@course_offering)
       CourseEnrollment.create(course_offering: @course_offering, user: @user, course_role: role)
     end
 
-    # Reach here only if we have a @workout_offering
     redirect_to organization_workout_offering_practice_path(
       lis_outcome_service_url: params[:lis_outcome_service_url],
       lis_result_sourcedid: params[:lis_result_sourcedid],

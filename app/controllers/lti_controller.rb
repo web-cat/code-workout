@@ -185,7 +185,12 @@ class LtiController < ApplicationController
       lis_outcome_service_url: params[:lis_outcome_service_url],
       lis_result_sourcedid: params[:lis_result_sourcedid],
       lti_launch: @lti_token,
-      from_collection: workout_from_collection
+      from_collection: workout_from_collection,
+      resource_link_id: params[:resource_link_id],
+      context_label: params[:context_label],
+      context_title: params[:context_title],
+      custom_section_ids: params[:custom_section_ids],
+      custom_section_names: params[:custom_section_names]
     )
   end
 
