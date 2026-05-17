@@ -119,31 +119,78 @@ class Exercise < ApplicationRecord
 
   # -------------------------------------------------------------
   def self.search(terms, user = nil)
-    # first, turn all ids of the form X4 to just the number
+    return Exercise.none if terms.blank?
+
+    # Extract any X-numeric IDs (e.g., X123)
     ids = []
-    terms = terms.map{ |t| Regexp.escape(t) }
+    search_words = []
     terms.each do |t|
       if t =~ /^[x]\d+$/i
-        ids.append t[1..-1]
+        ids << t[1..-1].to_i
+      else
+        search_words << t
       end
     end
-    r = terms.join("|")
-    if r.blank?
-      return nil
+
+    # 1. Match Exercises by Name or ID
+    matching_name_or_id = Exercise.all
+    name_clauses = []
+    name_params = []
+    search_words.each do |word|
+      name_clauses << "exercises.name LIKE ?"
+      name_params << "%#{word}%"
     end
+
+    if name_clauses.any?
+      matching_name_or_id = matching_name_or_id.where(name_clauses.join(' OR '), *name_params)
+      if ids.any?
+        matching_name_or_id = matching_name_or_id.or(Exercise.where(id: ids))
+      end
+    elsif ids.any?
+      matching_name_or_id = Exercise.where(id: ids)
+    else
+      matching_name_or_id = Exercise.none
+    end
+
+    matching_ids = matching_name_or_id.pluck(:id)
+
+    # 2. Match Exercises by Tags, Languages, or Styles
+    matching_tag_ids = []
+    if search_words.any?
+      tag_clauses = []
+      tag_params = []
+      search_words.each do |word|
+        tag_clauses << "tags.name LIKE ?"
+        tag_params << "%#{word}%"
+      end
+      matching_tag_ids = Exercise.joins(taggings: :tag)
+        .where(tag_clauses.join(' OR '), *tag_params)
+        .pluck(:id)
+    end
+
+    # Combine all matching IDs and maintain order (best matches first)
+    all_matching_ids = (matching_ids + matching_tag_ids).uniq
+    return Exercise.none if all_matching_ids.empty?
+
+    # 3. Restrict to visible exercises only
     if user
       visible = Exercise.visible_to_user(user)
     else
       visible = Exercise.publicly_visible
     end
 
-    result = visible.tagged_with(terms, any: true, wild: true, on: :tags)
-      .union(visible.tagged_with(terms, any: true, wild: true, on: :languages))
-      .union(visible.tagged_with(terms, any: true, wild: true, on: :styles))
-      .union(visible.where('(name regexp (?)) or (exercises.id in (?))', r, ids))
-      .distinct
-      .includes(:languages, :tags, :current_version, :attempts)
-    return result
+    result = visible.where(id: all_matching_ids)
+                    .includes(:languages, :tags, :current_version, :attempts)
+
+    # Sort results by best match order
+    begin
+      result = result.order(Arel.sql("FIELD(exercises.id, #{all_matching_ids.join(',')})"))
+    rescue => e
+      # Fallback to name-based sorting if FIELD is not supported by the SQL dialect
+      result = result.order(:name)
+    end
+
+    result
   end
 
 
@@ -163,6 +210,9 @@ class Exercise < ApplicationRecord
   # part of an exercise collection owned by the user or by a group the user is a
   # member of, and exercises that are visible through a course_offering.
   def self.visible_to_user(user)
+    if user.andand.global_role.andand.is_admin?
+      return Exercise.all
+    end
     # If updating this method, remember to update the instance method
     # exercise.visible_to?(user).
 
@@ -325,6 +375,7 @@ class Exercise < ApplicationRecord
 
   # -------------------------------------------------------------
   def visible_to?(u)
+    return true if u.andand.global_role.andand.is_admin?
     # If updating this instance method, remember to update the class method
     # Exercise.visible_to_user(u). This method exists so avoid creating a list
     # of visible exercises unnecessarily.
