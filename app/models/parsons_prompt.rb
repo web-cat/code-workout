@@ -35,7 +35,7 @@ class ParsonsPrompt < ApplicationRecord
   #~ Relationships ............................................................
 
   acts_as :prompt
-  has_many :test_cases, inverse_of: :coding_prompt, dependent: :destroy
+  has_many :test_cases, as: :coding_prompt, dependent: :destroy
 
 
   #~ Validation ...............................................................
@@ -71,6 +71,12 @@ class ParsonsPrompt < ApplicationRecord
   # -------------------------------------------------------------
   def is_parsons?
     true
+  end
+
+
+  # -------------------------------------------------------------
+  def is_execution_graded?
+    grading_type == 'exec' || grading_type == 'execute'
   end
 
 

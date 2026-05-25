@@ -192,19 +192,26 @@
               %script{ id: "MathJax-script", async: true, src: "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" }
               = javascript_include_tag("parsons")
               = stylesheet_link_tag("parsons")
+            = hidden_field_tag 'exercise_version[answer_code]', '', id: 'parsons-answer-field'
             #parsons-container
             :javascript
               document.addEventListener('DOMContentLoaded', function() {
                 try {
-                  new Parsons({
+                  window.parsonsWidget = new Parsons({
                     orig: document.getElementById('parsons-container'),
                     pifJson: #{raw pif_json.to_json},
                     divid: 'parsons-container',
                     useRunestoneServices: false
                   });
+                  $(window.parsonsWidget.checkButton).hide();
+                  $(window.parsonsWidget.resetButton).hide();
+                  if (window.parsonsWidget.helpButton) {
+                    $(window.parsonsWidget.helpButton).hide();
+                    document.getElementById('parsons-help-btn').style.display = '';
+                  }
                 } catch (error) {
                   console.error('Error initializing Parsons:', error);
-                  document.getElementById('parsons-container').innerHTML = 
+                  document.getElementById('parsons-container').innerHTML =
                       '<div style="color: red; padding: 20px;">Error loading Parsons exercise: ' + error.message + '</div>';
                 }
               });
@@ -230,6 +237,9 @@
               id: 'primarybtn', disabled: disabled
         - if coding_questions
           %div.btn.btn-default{ data: { toggle: 'modal', target: '#confirm-reset' } } Reset
+        - if parsons_questions
+          %button.btn.btn-default#parsons-reset-btn{ type: 'button' } Reset
+          %button.btn.btn-primary#parsons-help-btn{ type: 'button', style: 'display: none;' } Help me
         -if @exercise.tag_list.include? 'Visualizable'
           -if @workout
             -if @workout_offering

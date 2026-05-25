@@ -20,9 +20,8 @@ class ParsonsPromptAnswer < ApplicationRecord
 
   acts_as :prompt_answer
   has_many :test_case_results,
-    #-> { includes :test_case },
     -> { order('test_case_id ASC').includes(:test_case) },
-    inverse_of: :coding_prompt_answer, dependent: :destroy
+    as: :coding_prompt_answer, dependent: :destroy
 
 
   #~ Validation ...............................................................

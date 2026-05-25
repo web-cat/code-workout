@@ -27,7 +27,7 @@ class CodingPrompt < ApplicationRecord
   #~ Relationships ............................................................
 
   acts_as :prompt
-  has_many :test_cases, inverse_of: :coding_prompt, dependent: :destroy
+  has_many :test_cases, as: :coding_prompt, dependent: :destroy
 
 
   #~ Validation ...............................................................

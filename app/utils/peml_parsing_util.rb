@@ -11,10 +11,13 @@ class PemlParsingUtil
   end
 
   # Check if PEML file is a Parsons/PIF Exercise
-  # def is_pif(text_representation)
-  #   Rails.logger.debug 'IS PIF'
-  #   Peml.is_pif(text_representation)
-  # end
+  def is_pif(text_representation)
+    value = text_representation.is_a?(String) \
+      ? Peml::Loader.new.load(text_representation).dottie! \
+      : text_representation.dottie!
+    !value['settings.grader.type'].nil?
+  end
+
 
   def parse_pif(text_representation, error_msgs)
     parsed = Peml.pif_parse(pif: text_representation)
@@ -39,12 +42,29 @@ class PemlParsingUtil
     new_hash['style_list'] = 'parsons'
     new_hash['language_list'] = value['systems[0].language'].to_s
 
-    prompt = {
-      'position' => 1,
-      'question'  => value['instructions'],
-      'pif_json'  => pif_json,
-    }
+    wrapper_code = value['systems[0].assets.code.wrapper.files[0].content']
+    class_name   = wrapper_code&.match(/(?:public\s+)?class\s+(\w+)/)&.[](1)
 
+    raw_test = value['systems[0].assets.test.files[0].content']
+    test_script = if raw_test
+      lines = raw_test.lines
+      if lines.first&.strip&.downcase == 'expected'
+        # PEML output-only format: strip header, prepend comma to create input,expected_output rows
+        lines[1..].map { |l| ",#{l.chomp}" }.join("\n")
+      else
+        lines[1..].join
+      end
+    end
+
+    prompt = {
+      'position'     => 1,
+      'question'     => value['instructions'],
+      'pif_json'     => pif_json,
+      'grading_type' => value['settings.grader.type'],
+      'wrapper_code' => wrapper_code,
+      'test_script'  => test_script,
+      'class_name'   => class_name,
+    }
     new_hash['current_version'] = {}
     new_hash['current_version.creator'] = get_author_email(value)
     new_hash['current_version.prompts'] = [{ 'parsons_prompt' => prompt }]

@@ -382,7 +382,7 @@ class ExercisesController < ApplicationController
     if text_representation.start_with?('---')
       hash = YAML.load(text_representation)
     # elsif PemlParsingUtil.new.is_pif(text_representation)
-    elsif true
+    elsif PemlParsingUtil.new.is_pif(text_representation)
       logger.debug '=========='
       logger.debug 'PIF Input'
       logger.debug '=========='
@@ -979,13 +979,13 @@ class ExercisesController < ApplicationController
               lti_launch: @lti_launch) + "' "
         end
       end
-    elsif @exercise_version.is_coding?
+    else
       @answer_code = params[:exercise_version][:answer_code]
       @exercise_version.prompts.each_with_index do |exercise_prompt, i|
         exercise_prompt_answer = @attempt.prompt_answers[i]
         exercise_prompt_answer.answer = params[:exercise_version][:answer_code]
         if exercise_prompt_answer.save
-          CodeWorker.new.async.perform(@attempt.id)
+          CodeWorker.new.async.perform(@attempt.id) if @exercise_version.is_execution_graded?
         else
           logger.error 'IMPROPER PROMPT',
             'unable to save prompt_answer: ' \
@@ -994,8 +994,6 @@ class ExercisesController < ApplicationController
         end
       end
       @workout ||= @workout_score.andand.workout
-    elsif @exercise_version.is_parsons?
-      #TODO: Implement Parsons problem evaluation
     end
   end
 

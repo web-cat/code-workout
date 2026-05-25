@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_04_14_135241) do
+ActiveRecord::Schema.define(version: 2026_05_25_110456) do
 
   create_table "active_admin_comments", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
     t.string "namespace"
@@ -404,6 +404,7 @@ ActiveRecord::Schema.define(version: 2026_04_14_135241) do
     t.string "class_name"
     t.string "method_name"
     t.boolean "hide_examples"
+    t.string "grading_type", default: "order", null: false
   end
 
   create_table "prompt_answers", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
@@ -529,7 +530,9 @@ ActiveRecord::Schema.define(version: 2026_04_14_135241) do
     t.datetime "updated_at"
     t.boolean "pass", null: false
     t.integer "coding_prompt_answer_id"
+    t.string "coding_prompt_answer_type", default: "CodingPromptAnswer"
     t.index ["coding_prompt_answer_id"], name: "index_test_case_results_on_coding_prompt_answer_id"
+    t.index ["coding_prompt_answer_type", "coding_prompt_answer_id"], name: "index_test_case_results_on_coding_prompt_answer"
     t.index ["test_case_id"], name: "index_test_case_results_on_test_case_id"
     t.index ["user_id"], name: "index_test_case_results_on_user_id"
   end
@@ -547,7 +550,9 @@ ActiveRecord::Schema.define(version: 2026_04_14_135241) do
     t.boolean "screening", default: false, null: false
     t.boolean "example", default: false, null: false
     t.boolean "hidden", default: false, null: false
+    t.string "coding_prompt_type", default: "CodingPrompt", null: false
     t.index ["coding_prompt_id"], name: "index_test_cases_on_coding_prompt_id"
+    t.index ["coding_prompt_type", "coding_prompt_id"], name: "index_test_cases_on_coding_prompt"
   end
 
   create_table "time_zones", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
@@ -739,10 +744,8 @@ ActiveRecord::Schema.define(version: 2026_04_14_135241) do
   add_foreign_key "student_extensions", "users", name: "student_extensions_user_id_fk"
   add_foreign_key "student_extensions", "workout_offerings", name: "student_extensions_workout_offering_id_fk"
   add_foreign_key "tag_user_scores", "users", name: "tag_user_scores_user_id_fk"
-  add_foreign_key "test_case_results", "coding_prompt_answers", name: "test_case_results_coding_prompt_answer_id_fk"
   add_foreign_key "test_case_results", "test_cases", name: "test_case_results_test_case_id_fk"
   add_foreign_key "test_case_results", "users", name: "test_case_results_user_id_fk"
-  add_foreign_key "test_cases", "coding_prompts", name: "test_cases_coding_prompt_id_fk"
   add_foreign_key "users", "global_roles", name: "users_global_role_id_fk"
   add_foreign_key "users", "time_zones", name: "users_time_zone_id_fk"
   add_foreign_key "users", "workout_scores", column: "current_workout_score_id", name: "users_current_workout_score_id_fk"

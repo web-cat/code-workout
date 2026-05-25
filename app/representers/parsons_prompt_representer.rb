@@ -7,6 +7,7 @@ class ParsonsPromptRepresenter < Representable::Decorator
   property :position
   property :question
   property :pif_json
+  property :grading_type
   property :wrapper_code
   property :test_script
   property :starter_code

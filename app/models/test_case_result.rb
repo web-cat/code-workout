@@ -33,10 +33,8 @@ class TestCaseResult < ApplicationRecord
   #~ Relationships ............................................................
 
   belongs_to :user, inverse_of: :test_case_results
-  belongs_to :test_case,
-    -> { includes :coding_prompt },
-    inverse_of: :test_case_results
-  belongs_to :coding_prompt_answer, inverse_of: :test_case_results
+  belongs_to :test_case, inverse_of: :test_case_results
+  belongs_to :coding_prompt_answer, polymorphic: true
 
 
   #~ Validation ...............................................................
