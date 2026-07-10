@@ -384,6 +384,29 @@ class ExercisesController < ApplicationController
     # FIXME: add support for JSON here as well
     if text_representation.start_with?('---')
       hash = YAML.safe_load(text_representation)
+    # elsif PemlParsingUtil.new.is_pif(text_representation)
+    elsif PemlParsingUtil.new.is_pif(text_representation)
+      logger.debug '=========='
+      logger.debug 'PIF Input'
+      logger.debug '=========='
+      logger.debug text_representation
+      hash = PemlParsingUtil.new.parse_pif(text_representation, error_msgs)
+      logger.debug '=========='
+      logger.debug 'PIF Hash'
+      logger.debug '=========='
+      logger.debug hash.to_yaml
+      logger.debug '=========='
+
+      if !error_msgs.empty?
+        raw_msgs = error_msgs
+        error_msgs = []
+        error_msgs << "<span>Errors while parsing PIF for exercise #{hash['name']}:</span><ul>"
+        raw_msgs.each do |msg|
+          error_msgs << "<li>#{msg}</li>"
+        end
+        error_msgs << "</ul>"
+      end
+
     else
       logger.debug '=========='
       logger.debug 'PEML Input'
@@ -966,13 +989,13 @@ class ExercisesController < ApplicationController
               lti_launch: @lti_launch) + "' "
         end
       end
-    elsif @exercise_version.is_coding?
+    else
       @answer_code = params[:exercise_version][:answer_code]
       @exercise_version.prompts.each_with_index do |exercise_prompt, i|
         exercise_prompt_answer = @attempt.prompt_answers[i]
         exercise_prompt_answer.answer = params[:exercise_version][:answer_code]
         if exercise_prompt_answer.save
-          CodeWorker.new.async.perform(@attempt.id)
+          CodeWorker.new.async.perform(@attempt.id) if @exercise_version.is_execution_graded?
         else
           logger.error 'IMPROPER PROMPT',
             'unable to save prompt_answer: ' \

@@ -40,7 +40,7 @@ class TestCase < ApplicationRecord
 
   #~ Relationships ............................................................
 
-  belongs_to :coding_prompt, inverse_of: :test_cases
+  belongs_to :coding_prompt, polymorphic: true
   has_many :test_case_results, inverse_of: :test_case, dependent: :destroy
 
   scope :only_examples, -> { where(example: true) }
