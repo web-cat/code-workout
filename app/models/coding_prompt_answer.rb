@@ -2,7 +2,7 @@
 #
 # Table name: coding_prompt_answers
 #
-#  id            :integer          not null, primary key
+#  id            :bigint           not null, primary key
 #  answer        :text(65535)
 #  error         :text(65535)
 #  error_line_no :integer

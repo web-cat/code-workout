@@ -1,10 +1,12 @@
 .progress.col-md-12
-- if (!session[:current_workout].nil? && WorkoutScore.find_by(user_id: uid, workout_id: session[:current_workout]))
+- workout ||= @workout
+- workout_score ||= @workout_score
+- if workout && workout_score
   .col-md-3
     Progress: 
   .col-md-9
-    %progress{value: WorkoutScore.find_by(user_id: uid, workout_id: session[:current_workout]).exercises_completed,max: Workout.find(session[:current_workout]).exercises.length }
-- elsif !session[:current_workout].nil?
+    %progress{value: workout_score.exercises_completed, max: workout.exercises.length }
+- elsif workout
   .col-md-3
     Progress: 
   .col-md-9

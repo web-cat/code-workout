@@ -9,7 +9,7 @@ class CreateActiveAdminComments < ActiveRecord::Migration[5.1]
       t.timestamps
     end
     add_index :active_admin_comments, [:namespace]
-    add_index :active_admin_comments, [:author_type, :author_id]
+    # add_index :active_admin_comments, [:author_type, :author_id]
     add_index :active_admin_comments, [:resource_type, :resource_id]
   end
 

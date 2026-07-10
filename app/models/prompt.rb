@@ -2,25 +2,30 @@
 #
 # Table name: prompts
 #
-#  id                  :integer          not null, primary key
+#  id                  :bigint           not null, primary key
 #  actable_type        :string(255)
 #  feedback            :text(65535)
 #  position            :integer          not null
 #  question            :text(65535)      not null
-#  created_at          :datetime
-#  updated_at          :datetime
-#  actable_id          :integer
-#  exercise_version_id :integer          not null
-#  irt_data_id         :integer
+#  created_at          :datetime         not null
+#  updated_at          :datetime         not null
+#  actable_id          :bigint
+#  exercise_version_id :bigint           not null
+#  irt_data_id         :bigint
 #
 # Indexes
 #
-#  index_prompts_on_actable_id  (actable_id)
-#  prompts_irt_data_id_fk       (irt_data_id)
+#  index_prompts_on_actable_id                   (actable_id)
+#  index_prompts_on_actable_type_and_actable_id  (actable_type,actable_id)
+#  index_prompts_on_exercise_version_id          (exercise_version_id)
+#  index_prompts_on_irt_data_id                  (irt_data_id)
 #
 # Foreign Keys
 #
-#  prompts_irt_data_id_fk  (irt_data_id => irt_data.id)
+#  fk_rails_...                    (exercise_version_id => exercise_versions.id)
+#  fk_rails_...                    (irt_data_id => irt_data.id)
+#  prompts_exercise_version_id_fk  (exercise_version_id => exercise_versions.id)
+#  prompts_irt_data_id_fk          (irt_data_id => irt_data.id)
 #
 
 # =============================================================================

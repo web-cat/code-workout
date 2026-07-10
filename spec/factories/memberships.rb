@@ -2,11 +2,11 @@
 #
 # Table name: memberships
 #
-#  id            :integer          not null, primary key
-#  user_id       :integer
+#  id            :bigint           not null, primary key
+#  created_at    :datetime         not null
+#  updated_at    :datetime         not null
 #  user_group_id :integer
-#  created_at    :datetime
-#  updated_at    :datetime
+#  user_id       :integer
 #
 
 FactoryBot.define do

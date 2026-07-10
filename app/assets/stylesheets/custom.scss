@@ -13,12 +13,13 @@ html, body { height: 100%; }
 .below-nav { padding: 56px 10px 0; }
 .embedded .below-nav { padding-top: 0; }
 .breadcrumb { margin-bottom: 15px; }
+.breadcrumb .active{ color: #4a4949; }
 
 .sidebar, .content, .maincol {
   padding-left: 0px;
   padding-right: 0px;
 }
-.content .inner, .maincol, .content#main {
+.sidebar .inner, .content .inner, .maincol, .content#main {
   padding-bottom: 60px;
 }
 .content {
@@ -28,7 +29,24 @@ html, body { height: 100%; }
 }
 .below-nav > .alert { margin: 10px 15px 20px; }
 
-#main, .sidebar { margin: 0 0 60px; }
+#main { margin: 0 0 0; }
+
+// Equal height columns fix for multi-column layouts
+@media (min-width: 992px) {
+  #main.row {
+    display: flex;
+    flex-wrap: wrap;
+
+    .sidebar, .content {
+      display: flex;
+      flex-direction: column;
+
+      .inner {
+        flex: 1;
+      }
+    }
+  }
+}
 
 .navbar .nav > li > a, .navbar-inverse .navbar-link { padding: 2px 6px; }
 .navbar .nav > li { padding: 8px 9px; }
@@ -66,6 +84,7 @@ html, body { height: 100%; }
 .form-group .CodeMirror-gutters { min-height: 18px * 12; }
 /* .practice .CodeMirror { min-height: 18px * 15; } */
 
+.CodeMirror-linenumber {color: #CCCCCC}
 .CodeMirror .widget {
   display: inline-block;
   padding: 4px 6px;
@@ -271,6 +290,13 @@ ul.wysihtml5-toolbar li {
       @extend .one-line;
       min-height: 17px;
       text-overflow: ellipsis;
+      .tag {
+        color: black !important;
+        &:hover, &:focus {
+          color: black;
+          text-decoration: none; // Optional: keeps it looking like a tag on hover
+        }
+      }
       .lang {
         background-color: #ffc107;
       }
@@ -299,7 +325,7 @@ ul.wysihtml5-toolbar li {
   .page, .next, .prev, .first, .last {
     a {
       text-decoration: none;
-      color: white;
+      color: black;
       padding: 2px 10px;
       margin: 2px;
       border-radius: 3px;
@@ -447,7 +473,7 @@ input {
   .numInput {
     cursor: text;
     &:hover {
-      background: #fff;
+      background: #000000;
     }
   }
 }

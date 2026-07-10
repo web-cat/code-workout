@@ -5,19 +5,23 @@ require 'uri'
 
 class PemlParsingUtil
   def parse (text_representation, error_msgs)
-    peml = Peml::Loader.new.load(text_representation).dottie!
-    error_msgs.concat(Peml::validate(peml))
+    parse_result = Peml.parse(PARSER_PARAMS.merge({
+      peml: text_representation
+    }))
+    peml = parse_result[:value]
+    error_msgs.concat(parse_result[:diagnostics])
     convert_peml(peml, error_msgs)
   end
 
     # Convert the parsed peml hash into a hash corresponding to exercise data model
   def convert_peml(hash, error_msgs)
-    hash = Dottie(hash)
+    hash.dottie!
         #starting with three compulsory peml keys
     new_hash = {
       'external_id' => hash['exercise_id'],
       'name' => hash['title']
-    }.dottie!
+    }
+    new_hash.dottie!
     content = hash['difficulty']
     new_hash['experience'] = content if content
     content = hash['tags.topics']
@@ -37,17 +41,20 @@ class PemlParsingUtil
     }
     systems = hash['systems']
     if systems
-      system = systems.first
-      new_hash['language_list'] = system['language']
+      system = systems.first.dottie
+      language = system['language']
+      new_hash['language_list'] = language
+      # Rails.logger.debug 'system:'
+      # Rails.logger.debug system.to_yaml 
           # assets should be under the system, so try to grab them here first
-      Rails.logger.debug 'get_file_content(system[\'assets.code.starter\'])'
+      # Rails.logger.debug 'get_file_content(system[\'assets.code.starter\'])'
       content = get_file_content(system['assets.code.starter'])
       prompt['starter_code'] = content if content
-      Rails.logger.debug 'get_file_content(system[\'assets.code.wrapper\'])'
+      # Rails.logger.debug 'get_file_content(system[\'assets.code.wrapper\'])'
       content = get_file_content(system['assets.code.wrapper'])
       prompt['wrapper_code'] = content if content
-      Rails.logger.debug 'get_test_file_content(prompt, system[\'assets.test\'])'
-      get_test_file_content(prompt, system['assets.test'])
+      # Rails.logger.debug 'get_test_file_content(prompt, system[\'assets.test\'])'
+      get_test_file_content(prompt, language, system['assets.test'])
     end
 
     new_hash['current_version'] = {}
@@ -58,29 +65,25 @@ class PemlParsingUtil
     #-----------------------------------------------------------------------
     # PEML assets might be at the global level, if they apply to all
     # systems, so fill in missing assets here
-    Rails.logger.debug 'assets:'
-    Rails.logger.debug hash['assets'].to_yaml
+    # Rails.logger.debug 'assets:'
+    # Rails.logger.debug hash['assets'].to_yaml
     if !prompt['starter_code']
-      Rails.logger.debug 'get_file_content(hash[\'assets.code.starter\'])'
+      # Rails.logger.debug 'get_file_content(hash[\'assets.code.starter\'])'
       prompt['starter_code'] = get_file_content(hash['assets.code.starter'])
     end
     if !prompt['wrapper_code']
-      Rails.logger.debug 'get_file_content(hash[\'assets.code.wrapper\'])'
+      # Rails.logger.debug 'get_file_content(hash[\'assets.code.wrapper\'])'
       prompt['wrapper_code'] =  get_file_content(hash['assets.code.wrapper'])
     end
-    Rails.logger.debug 'get_test_file_content(prompt, hash[\'assets.test\'])'
-    get_test_file_content(prompt, hash['assets.test'])
+    # Rails.logger.debug 'get_test_file_content(prompt, language, hash[\'assets.test\'])'
+    get_test_file_content(prompt, language, hash['assets.test'])
     # FIXME: give error if missing tests
     #-----------------------------------------------------------------------
-    if !prompt['class_name']
-      prompt['class_name'] = 'Answer'
-    end
-    if !prompt['method_name']
-      prompt['method_name'] = 'answer'
-    end
 
     # Again, PEML is designed for coding problems and thus, 'coding_prompt'
     new_hash['current_version.prompts'] << { 'coding_prompt' => prompt }
+    Rails.logger.debug 'new hash:'
+    Rails.logger.debug new_hash.to_yaml
     new_hash
   end
 
@@ -105,7 +108,7 @@ class PemlParsingUtil
 
 
   #-----------------------------------------------------------------------
-  def get_test_file_content(prompt, files)
+  def get_test_file_content(prompt, language, files)
     Rails.logger.debug '=========='
     Rails.logger.debug 'get_test_file_content(prompt, files), prompt:'
     Rails.logger.debug '=========='
@@ -114,46 +117,56 @@ class PemlParsingUtil
     Rails.logger.debug 'get_test_file_content(prompt, files), files:'
     Rails.logger.debug '=========='
     Rails.logger.debug files.to_yaml
-    Rails.logger.debug files.inspect
+    Rails.logger.debug files.pretty_inspect
     if files and !prompt['tests']
       file = files['files'][0]
       Rails.logger.debug '=========='
       Rails.logger.debug 'get_test_file_content(prompt, files), file:'
       Rails.logger.debug '=========='
       Rails.logger.debug file.to_yaml
-      Rails.logger.debug file.inspect
+      Rails.logger.debug file.pretty_inspect
       file.dottie!
 
       # copy class and method names from file pattern properties, if present
-      class_name = file['pattern.class_name']
-      prompt['class_name'] = class_name if class_name
-      method_name = file['pattern.method_name']
-      prompt['method_name'] = method_name if method_name
-
-      pattern_actual = file['pattern.actual'] || file['pattern_actual']
-
-      if !prompt['method_name'] && pattern_actual
-        Rails.logger.debug "pattern_actual = '#{pattern_actual}'"
-        # pattern.actual: subject.oneFinder({{nums}})
-        method_name = pattern_actual.sub(/^.*subject\.(\w+)\(.*$/, '\1')
-        Rails.logger.debug "extracted method name = '#{method_name}'"
-        prompt['method_name'] = method_name if method_name
+      class_name = prompt['class_name'] || file['pattern.class_name']
+      if class_name.blank? && !prompt['starter_code'].blank?
+        if language == 'Java' || language == 'java' || language == 'C++' || language == 'c++' || language == 'cpp'
+          class_name = prompt['starter_code'][/\bclass\s+(\w+)/, 1]
+        elsif language == 'Python' || language == 'python' || language == 'Ruby' || language == 'ruby'
+          class_name = prompt['starter_code'][/\bclass\s+(\w+)/, 1]
+        end
       end
+      if class_name.blank?
+        class_name = 'Answer'
+      end
+      prompt['class_name'] = class_name
+      
+
+      method_name = prompt['method_name'] || file['pattern.method_name']
+      if method_name.blank?
+        pattern_method_invocation = file['pattern.method_invocation']
+        if pattern_method_invocation.blank?
+          pattern_actual = file['pattern.actual'] || file['pattern_actual']
+          if !pattern_actual.blank?
+            Rails.logger.debug "pattern_actual = '#{pattern_actual}'"
+            # pattern.actual: subject.oneFinder({{nums}})
+            method_name = pattern_actual.sub(/^.*subject\.(\w+)\s*\(.*$/, '\1')
+          end
+        else
+          Rails.logger.debug "pattern_method_invocation = '#{pattern_method_invocation}'"
+          # pattern.method_invocation: subject.oneFinder({{nums}})
+          method_name = pattern_method_invocation.sub(/^\s*(\w+)\s*\(.*$/, '\1')
+        end
+        Rails.logger.debug "extracted method name = '#{method_name}'"
+      end
+      if method_name.blank?
+        method_name = 'answer'
+      end
+      prompt['method_name'] = method_name
 
       # Extract file content
-      content = get_file_content(file)
-
-      if content
-        # format: text/csv-unquoted
-        # Need to handle this
-
-        # format: text/csv
-        # Need to handle this
-        # Drop first line of colum headers
-        content = content.lines[1..-1].join if content
-
-        # Need to re-assemble straight CSV from either format
-        prompt['tests'] = content
+      if prompt['tests'].blank?
+        prompt['tests'] = get_file_content(file)
       end
     end
     Rails.logger.debug '=========='
@@ -179,20 +192,20 @@ class PemlParsingUtil
   # be retrieved.
   def get_file_content(files)
     content = nil
-    Rails.logger.debug '=========='
-    Rails.logger.debug 'get_file_content(files), files:'
-    Rails.logger.debug '=========='
-    Rails.logger.debug files.to_yaml
-    Rails.logger.debug files.inspect
+    # Rails.logger.debug '=========='
+    # Rails.logger.debug 'get_file_content(files), files:'
+    # Rails.logger.debug '=========='
+    # Rails.logger.debug files.to_yaml
+    # Rails.logger.debug files.pretty_inspect
     file = files
     if file and files['files']
       file = files['files'][0]
     end
-    Rails.logger.debug '=========='
-    Rails.logger.debug 'get_file_content(files), file:'
-    Rails.logger.debug '=========='
-    Rails.logger.debug file.to_yaml
-    Rails.logger.debug file.inspect
+    # Rails.logger.debug '=========='
+    # Rails.logger.debug 'get_file_content(files), file:'
+    # Rails.logger.debug '=========='
+    # Rails.logger.debug file.to_yaml
+    # Rails.logger.debug file.pretty_inspect
     if file.is_a? String
       file.strip!
       if file.sub!(/^url\((.*)\)$/, '\1')
@@ -233,4 +246,38 @@ class PemlParsingUtil
 #         end
 #         asset_collection.join(',')
 #       end
+
+
+  #~ Private instance methods .................................................
+  private
+
+  PARSER_PARAMS = {
+    render_tests: true,
+
+    # global template overrides
+    # language-specific template overrides
+    render_tests_params: {
+      'parse_descriptions' => true,
+      pattern: {
+        'description' => '{% include "method_call" %} -> {% include "expected_template" %}',
+        'description_annotation' => <<~DESCRIPTION_ANNOTATION
+        Description: {% show_yaml %}{% include 'description' %}{% endshow_yaml %}
+        DESCRIPTION_ANNOTATION
+      },
+
+      'java' => {
+        'pattern' => {
+          'description_annotation' => <<~JAVA_DESCRIPTION_ANNOTATION
+          {% show_yaml %}@Description({% capture desc_out %}{% include 'description' %}{% endcapture %}{{ desc_out | string_literal }}){% endshow_yaml %}
+          JAVA_DESCRIPTION_ANNOTATION
+        }
+      },
+      'python' => {
+      },
+      'ruby' => {
+      },
+      'cpp' => {
+      }
+    }
+  }
 end

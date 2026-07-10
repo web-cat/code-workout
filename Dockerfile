@@ -1,6 +1,6 @@
 FROM ruby:2.7.1
 
-MAINTAINER Jihane Najdi <jnajdi@vt.edu>
+#MAINTAINER Jihane Najdi <jnajdi@vt.edu>
 
 # Default environment
 ARG RAILS_ENV='development'
@@ -10,6 +10,11 @@ ARG BASEDIR='/code-workout'
 
 ENV TZ=America/New_York
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+RUN sed -i 's|deb.debian.org|archive.debian.org|g' /etc/apt/sources.list && \
+    sed -i 's|security.debian.org|archive.debian.org|g' /etc/apt/sources.list && \
+    apt-get -o Acquire::Check-Valid-Until=false update && \
+    apt-get install -y --no-install-recommends build-essential
 
 #install 'development tools' build-essential  dkms curl libxslt-dev libpq-dev python-dev python-pip python-feedvalidator python-software-properties python-sphinx libmariadbclient-dev libcurl4-gnutls-dev libevent-dev libffi-dev libssl-dev stunnel4 libsqlite3-dev
 #    libmariadbclient-dev

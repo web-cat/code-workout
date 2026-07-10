@@ -2,32 +2,38 @@
 #
 # Table name: exercises
 #
-#  id                     :integer          not null, primary key
+#  id                     :bigint           not null, primary key
 #  experience             :integer          not null
 #  is_public              :boolean          default(FALSE), not null
 #  name                   :string(255)
 #  question_type          :integer          not null
 #  versions               :integer
-#  created_at             :datetime
-#  updated_at             :datetime
-#  current_version_id     :integer
-#  exercise_collection_id :integer
-#  exercise_family_id     :integer
+#  created_at             :datetime         not null
+#  updated_at             :datetime         not null
+#  current_version_id     :bigint
+#  exercise_collection_id :bigint
+#  exercise_family_id     :bigint
 #  external_id            :string(255)
-#  irt_data_id            :integer
+#  irt_data_id            :bigint
 #
 # Indexes
 #
-#  exercises_irt_data_id_fk                   (irt_data_id)
+#  index_exercises_on_current_version_id      (current_version_id)
 #  index_exercises_on_exercise_collection_id  (exercise_collection_id)
 #  index_exercises_on_exercise_family_id      (exercise_family_id)
 #  index_exercises_on_external_id             (external_id) UNIQUE
+#  index_exercises_on_irt_data_id             (irt_data_id)
 #  index_exercises_on_is_public               (is_public)
 #
 # Foreign Keys
 #
+#  exercises_current_version_id_fk  (current_version_id => exercise_versions.id)
 #  exercises_exercise_family_id_fk  (exercise_family_id => exercise_families.id)
 #  exercises_irt_data_id_fk         (irt_data_id => irt_data.id)
+#  fk_rails_...                     (current_version_id => exercise_versions.id)
+#  fk_rails_...                     (exercise_collection_id => exercise_collections.id)
+#  fk_rails_...                     (exercise_family_id => exercise_families.id)
+#  fk_rails_...                     (irt_data_id => irt_data.id)
 #
 
 # =============================================================================
@@ -105,12 +111,11 @@ class Exercise < ApplicationRecord
     'C++' => 'cpp'
   }
 
-  scope :visible_through_user, -> (u) { joins{exercise_owners.outer}.joins{exercise_collection.outer}.
-    where{ (exercise_owners.owner == u) | (exercise_collection.user == u) } }
+  # NOTE: visible_through_user is defined as a class method below (line ~142)
+  # using standard ActiveRecord syntax (left_outer_joins + where).
 
-  attr_accessor :iframe_url # to get values to define in iframe url function for SPLICE
 
-  #~ Class methods ............................................................
+    #~ Class methods ............................................................
 
   # -------------------------------------------------------------
   def self.search(terms, user = nil)
@@ -140,6 +145,8 @@ class Exercise < ApplicationRecord
     return result
   end
 
+
+  # -------------------------------------------------------------
   def self.visible_through_user(user)
     return Exercise.left_outer_joins(:exercise_owners)
       .left_outer_joins(:exercise_collection)
@@ -147,6 +154,8 @@ class Exercise < ApplicationRecord
         user.id, user.id)
   end
 
+
+  # -------------------------------------------------------------
   # Get a list of Exercises that are visible to the specified user.
   #
   # It is the union of exercises that are publicly visible, created or owned by the user,
@@ -197,22 +206,6 @@ class Exercise < ApplicationRecord
     public_exercises = Exercise.where(is_public: true)
 
     return public_exercises.union(public_license)
-  end
-
-
-  # the iframeurl, iframe-embedcode and ltilaunch is to display and export each exercises information for SPLICE
-  def iframe_url
-    base_url = "https://codeworkoutdev.cs.vt.edu" # to be dynamically fetched maybe from a config file
-    "#{base_url}/gym/exercises/#{self.id}/practice"
-  end
-
-  def iframe_embed_code
-    "<iframe src='#{self.iframe_url}' height='600' width='150%'></iframe>"
-  end
-
-  def lti_launch_url
-    base_url = "https://codeworkoutdev.cs.vt.edu" # to be fetched dynamically
-    "#{base_url}/lti/launch/gym/exercises/#{self.id}/practice"
   end
 
 
@@ -341,6 +334,47 @@ class Exercise < ApplicationRecord
       self.is_public ||
         self.exercise_collection.andand.is_public?
     end
+  end
+
+  def self.generate_slc_catalog(filename, base_url="https://codeworkout.cs.vt.edu")
+    exercises = Exercise.publicly_visible
+
+    catalog = exercises.map do |exercise|
+      description = case exercise.question_type
+                    when Q_MC
+                      "Multiple-choice question"
+                    when Q_CODING
+                      "Coding question"
+                    when Q_BLANKS
+                      "Fill in the blanks question"
+                    else
+                      exercise.type_name
+                    end
+
+      item = {
+        catalog_type: "SLCItem",
+        persistentID: exercise.external_id.to_s,
+        platform_name: "CodeWorkout",
+        iframe_url: base_url +
+          Rails.application.routes.url_helpers.exercise_practice_path(exercise) +
+          "?lti_launch=true",
+        title: exercise.name.to_s,
+        description: description,
+        author: exercise.owners.empty? ? [exercise.current_version&.creator&.display_name_with_email].compact : exercise.owners.map(&:display_name_with_email),
+        features: exercise.question_type == Q_CODING ? ["Free Coding Problem"] : ["Question"],
+        institution: ["Virginia Tech"],
+        keywords: exercise.tags.map(&:name),
+        programming_language: [exercise.language].compact,
+        natural_language: ["English"]
+      }
+
+      license = exercise.exercise_collection.andand.license.andand.name
+      item[:license] = license if license
+
+      item
+    end
+
+    File.write(filename, JSON.pretty_generate(catalog))
   end
 
   def self.progsnap2_attempt_csv(exercise_id, course_id=nil, term_id=nil)

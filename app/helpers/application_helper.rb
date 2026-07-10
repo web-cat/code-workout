@@ -299,4 +299,19 @@ module ApplicationHelper
     end
   end
 
+
+  # -------------------------------------------------------------
+  def event_type_label_class(type)
+    case type
+    when 'attempt'
+      'label-primary'
+    when 'visualization'
+      'label-info'
+    when 'activity'
+      'label-success'
+    else
+      'label-default'
+    end
+  end
+
 end

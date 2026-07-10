@@ -2,15 +2,15 @@
 #
 # Table name: workouts
 #
-#  id                :integer          not null, primary key
+#  id                :bigint           not null, primary key
 #  description       :text(65535)
 #  is_public         :boolean
-#  name              :string(255)      default(""), not null
+#  name              :string(255)      not null
 #  points_multiplier :integer
 #  scrambled         :boolean          default(FALSE)
-#  created_at        :datetime
-#  updated_at        :datetime
-#  creator_id        :integer
+#  created_at        :datetime         not null
+#  updated_at        :datetime         not null
+#  creator_id        :bigint
 #  external_id       :string(255)
 #
 # Indexes
@@ -60,6 +60,13 @@ class Workout < ApplicationRecord
 
   accepts_nested_attributes_for :exercise_workouts
   accepts_nested_attributes_for :workout_offerings
+
+  # -------------------------------------------------------------
+  # Returns the workout policy shared by all offerings of this workout.
+  # If offerings point to different policies, it returns the first one found.
+  def workout_policy
+    workout_offerings.where.not(workout_policy_id: nil).first.andand.workout_policy
+  end
 
 
   #~ Validation ...............................................................
@@ -413,7 +420,7 @@ class Workout < ApplicationRecord
     return available_workouts.tagged_with(terms, any: true, wild: true, on: :tags) +
       available_workouts.tagged_with(terms, any: true, wild: true, on: :languages) +
       available_workouts.tagged_with(terms, any: true, wild: true, on: :styles) +
-      available_workouts.where('name regexp (?)', split_terms).uniq
+      available_workouts.where('name regexp (?)', split_terms).distinct
   end
 
 

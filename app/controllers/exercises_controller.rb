@@ -1,8 +1,10 @@
+require 'ims/lti'
+require 'oauth/request_proxy/action_controller_request'
+require 'zip'
+require 'tempfile'
+
 class ExercisesController < ApplicationController
-  require 'ims/lti'
-  require 'oauth/request_proxy/rack_request'
-  require 'zip'
-  require 'tempfile'
+
 
   load_and_authorize_resource
   skip_authorize_resource only: [:practice, :call_open_pop, :export]
@@ -30,31 +32,32 @@ class ExercisesController < ApplicationController
   # The export function gets all exercises metadata for SPLICE
   # GET /gym/exercises/export
   def export
-    # filter out stop/connector words for keywords from workout phrases or names
-    stop_words = ['the', 'and', 'a', 'to', 'of', 'in', 'for', 'on', 'with', 'as', 'by', 'at', 'from', 'is', 'that', 'which', 'it', 'an', 'be', 'this', 'are', 'we', 'can', 'if', 'has', 'but']
-    @exercises = Exercise.all
-    export_data = @exercises.map do |exercise|
-      workout_names = exercise.exercise_workouts.map { |ew| ew.workout.name }.uniq.push(exercise.name)
-      # split phrases and remove any stop/connector words
-      keywords_array = workout_names.map { |phrase| phrase.downcase.split(/\W+/) }.flatten.uniq.reject { |word| stop_words.include?(word) || word.empty? }
+    exercises = Exercise.publicly_visible
 
-      {
-        "catalog_type": "SLCItemCatalog",
-        "platform_name": "CodeWorkout",
-        "url": "https://codeworkout.cs.vt.edu",
-        "lti_instructions_url": "https://opendsa-server.cs.vt.edu/guides/opendsa-canvas",
-        "exercise_type": Exercise::TYPE_NAMES[exercise.question_type],
-        "license": "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)",
-        "description": exercise.exercise_collection&.description, # Safely fetching description
-        "author": "Stephen Edwards",
-        "institution": "Virginia Tech",
-        "keywords": keywords_array,
-        "exercise_name": exercise.name,
-        "iframe_url": exercise.iframe_url,
-        "lti_url": exercise.lti_launch_url
+    catalog = exercises.map do |exercise|
+      item = {
+        catalog_type: "SLCItem",
+        persistentID: exercise.external_id.to_s,
+        platform_name: "CodeWorkout",
+        iframe_url: exercise_practice_url(exercise) + "?lti_launch=true",
+        title: exercise.name.to_s,
+        description: Exercise::TYPE_NAMES[exercise.question_type],
+        author: exercise.owners.empty? ? [exercise.current_version&.creator&.display_name_with_email].compact : exercise.owners.map(&:display_name_with_email),
+        features: (exercise.question_type == Exercise::Q_CODING ?
+          ["Free Coding Problem"] : ["Question"]) + exercise.styles.map(&:name),
+        institution: ["Virginia Tech"],
+        keywords: (exercise.tags.map(&:name) + exercise.styles.map(&:name)).uniq,
+        programming_language: exercise.languages.map(&:name),
+        natural_language: ["English"]
       }
+
+      license = exercise.exercise_collection.andand.license.andand.name
+      item[:license] = license if license
+
+      item
     end
-    render json: export_data
+
+    render json: catalog
   end
 
 
@@ -66,11 +69,11 @@ class ExercisesController < ApplicationController
     respond_to do |format|
       format.csv
       format.json do
-        render text:
+        render plain:
           ExerciseRepresenter.for_collection.new(@exercises).to_hash.to_json
       end
       format.yml do
-        render text:
+        render plain:
           ExerciseRepresenter.for_collection.new(@exercises).to_hash.to_yaml
       end
     end
@@ -84,7 +87,7 @@ class ExercisesController < ApplicationController
     else
       @available_exercises = Exercise.visible_through_user(current_user)
         .union(Exercise.visible_through_user_group(current_user))
-        .uniq.select(&:is_coding?)
+        .distinct.select(&:is_coding?)
     end
   end
 
@@ -311,7 +314,7 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   def yaml_create
     # REMOVE
-    @yaml_exers = YAML.load_file(params[:form].fetch(:yamlfile).path)
+    @yaml_exers = YAML.safe_load(File.read(params[:form].fetch(:yamlfile).path))
     @yaml_exers.each do |exercise|
       @ex = Exercise.new
       @ex.name = exercise['name']
@@ -380,7 +383,7 @@ class ExercisesController < ApplicationController
     error_msgs = []
     # FIXME: add support for JSON here as well
     if text_representation.start_with?('---')
-      hash = YAML.load(text_representation)
+      hash = YAML.safe_load(text_representation)
     else
       logger.debug '=========='
       logger.debug 'PEML Input'
@@ -549,7 +552,12 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   def practice
     # lti launch
-    @lti_launch = params[:lti_launch]
+    token = params[:lti_launch]
+    if lti_context_for_token(token)
+      @lti_launch = token
+    else
+      @lti_launch = nil
+    end
 
     if params[:exercise_version_id] || params[:id]
       set_exercise_from_params
@@ -604,10 +612,6 @@ class ExercisesController < ApplicationController
       @workout_score = @workout_offering.score_for(@student_user)
     end
 
-    if @student_user
-      @student_user.current_workout_score = @workout_score
-      @student_user.save!
-    end
 
     if @workout_score
       if @workout_score.lis_result_sourcedid.nil? && @workout_score.lis_outcome_service_url.nil?
@@ -640,9 +644,10 @@ class ExercisesController < ApplicationController
     manages_course = current_user.andand.global_role.andand.is_admin? ||
       @workout_offering.andand.course_offering.andand.is_manager?(current_user)
 
+    policy = @workout_offering.andand.workout_policy
     if !manages_course && @workout_score.andand.closed? &&
-      @workout_offering.andand.workout_policy.andand.no_review_before_close &&
-      !@workout_offering.andand.shutdown?
+      (policy.andand.see_answers == false ||
+       (policy.andand.no_review_before_close && !@workout_offering.andand.shutdown?))
       path = root_path
       if @workout_offering
         path = organization_workout_offering_path(
@@ -686,9 +691,19 @@ class ExercisesController < ApplicationController
 
     # display the scored attempt if in review mode (for students or instructors)
     if @workout_score
-      @attempt = (params[:review_user_id] || student_review) ?
-        @workout_score.scoring_attempt_for(@exercise_version.exercise) :
-        @workout_score.previous_attempt_for(@exercise_version.exercise)
+      if params[:attempt_id]
+        @attempt = Attempt.find_by(id: params[:attempt_id])
+        if @attempt && (@attempt.user != @student_user ||
+          (@workout_offering && @attempt.workout_score != @workout_score))
+          @attempt = nil
+        end
+      end
+
+      if @attempt.nil?
+        @attempt = (params[:review_user_id] || student_review) ?
+          @workout_score.scoring_attempt_for(@exercise_version.exercise) :
+          @workout_score.previous_attempt_for(@exercise_version.exercise)
+      end
     end
 
     if @workout.andand.exercise_workouts.andand.where(
@@ -718,15 +733,6 @@ class ExercisesController < ApplicationController
         session[:leaf_exercises] = [@exercise.id]
       end
     end
-    # EOL stands for end of line
-    # @wexs is the variable to hold the list of exercises of this workout
-    # yet to be attempted by the user apart from the current exercise
-
-    if params[:wexes] != 'EOL'
-      @wexs = params[:wexes] || session[:remaining_wexes]
-    else
-      @wexs = nil
-    end
 
 		# decide whether or not to hide the sidebar
 		# hide it if this workout (if present) has less than two exercises
@@ -739,6 +745,20 @@ class ExercisesController < ApplicationController
     if @workout && @workout_offering && (@workout_offering.workout != @workout)
       Rails.logger.error "workout conflict: practice() with workout_offering #{@workout_offering.id} conflicting with workout #{@workout.id}"
     end
+
+    lti_context = lti_context_for_token(params[:lti_launch])
+    ActivityLog.create(
+      user: @student_user,
+      exercise: @exercise,
+      workout: @workout,
+      workout_offering: @workout_offering,
+      workout_score: @workout_score,
+      activity: 'practice_view',
+      ip_address: request.remote_ip,
+      lms_instance_id: lti_context.andand[:lms_instance_id],
+      lti_launch: lti_context.present?
+    )
+
     render layout: 'two_columns'
 
   end
@@ -796,15 +816,6 @@ class ExercisesController < ApplicationController
     else
       @workout_offering = nil
     end
-    if @workout_offering.nil? &&
-      @student_drift_user.andand.current_workout_score &&
-      @student_drift_user.current_workout_score.workout.contains?(
-        @exercise_version.exercise)
-      @workout_offering = @student_drift_user.current_workout_score.workout_offering
-      if @workout_offering.nil?
-        @workout = @student_drift_user.current_workout_score.workout
-      end
-    end
 
     if @workout.nil?
       if @workout_offering
@@ -814,12 +825,6 @@ class ExercisesController < ApplicationController
       end
     end
 
-    if @workout.nil? && session[:current_workout]
-      @workout = Workout.find_by(id: session[:current_workout])
-      if !@workout.contains?(@exercise_version.exercise)
-        @workout = nil
-      end
-    end
 
     @workout_score = nil
 
@@ -853,8 +858,13 @@ class ExercisesController < ApplicationController
     # in the partial
     @attempts_left = (@attempts_left && @attempts_left > 0) ?
       @attempts_left - 1 : @attempts_left
+    lti_context = lti_context_for_token(params[:lti_launch])
     @attempt = @exercise_version.new_attempt(
-      user: @student_drift_user, workout_score: @workout_score)
+      user: @student_drift_user, 
+      workout_score: @workout_score,
+      ip_address: request.remote_ip,
+      lms_instance_id: lti_context.andand[:lms_instance_id],
+      lti_launch: lti_context.present?)
 
     @attempt.save!
 
@@ -1039,11 +1049,19 @@ class ExercisesController < ApplicationController
     if(params[:workoutOfferingID] != '')
       workout_offering_id = WorkoutOffering.find(params[:workoutOfferingID])
     end
+    workout_score = workout_offering_id ? workout_offering_id.score_for(curr_user) : (
+      workout_id ? workout_id.score_for(curr_user, workout_offering_id) : nil
+    )
+    lti_context = lti_context_for_token(params[:lti_launch])
     @visualization_logging = VisualizationLogging.new(
       user: curr_user,
       exercise: Exercise.find_by_name(params[:exercise_id]),
       workout: workout_id,
-      workout_offering: workout_offering_id
+      workout_offering: workout_offering_id,
+      workout_score: workout_score,
+      ip_address: request.remote_ip,
+      lms_instance_id: lti_context.andand[:lms_instance_id],
+      lti_launch: lti_context.present?
     )
     @visualization_logging.save
     respond_to do |format|

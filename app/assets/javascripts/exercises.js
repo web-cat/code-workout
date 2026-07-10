@@ -24,6 +24,7 @@
         // url = '/course_offerings'
         url = '/gym/exercises/call_open_pop';
 
+        var lti_launch = VisualizeButton.data('lti-launch');
         $.ajax({
             url: url,
             type: 'GET',
@@ -32,7 +33,8 @@
                 exercise_id: exercise_id,
                 code: studentCode,
                 workoutID: workoutID,
-                workoutOfferingID: workoutOfferingID
+                workoutOfferingID: workoutOfferingID,
+                lti_launch: lti_launch
             },
             success: function(data) {
 
@@ -44,7 +46,7 @@
     };
 
     function doModal2(heading, studentCode, exercise_trace) {
-        var html = "<html>\n" + "\<script>\
+        var html = "<html lang=\"en\">\n" + "\<script>\
         var testvisualizerTrace ={\"code\":\"" + studentCode + "\",\"trace\":[" + exercise_trace + "\
         ],\"userlog\":\"Debugger VM maxMemory: 807M \\n \"}\n\
         \n\

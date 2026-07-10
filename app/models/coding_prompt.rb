@@ -2,15 +2,15 @@
 #
 # Table name: coding_prompts
 #
-#  id            :integer          not null, primary key
-#  created_at    :datetime
-#  updated_at    :datetime
+#  id            :bigint           not null, primary key
 #  class_name    :string(255)
-#  wrapper_code  :text(65535)      not null
-#  test_script   :text(65535)      not null
+#  hide_examples :boolean          default(FALSE), not null
 #  method_name   :string(255)
 #  starter_code  :text(65535)
-#  hide_examples :boolean          default(FALSE), not null
+#  test_script   :text(65535)      not null
+#  wrapper_code  :text(65535)      not null
+#  created_at    :datetime         not null
+#  updated_at    :datetime         not null
 #
 
 require 'fileutils'

@@ -2,12 +2,12 @@
 #
 # Table name: lti_workouts
 #
-#  id                :integer          not null, primary key
-#  created_at        :datetime
-#  updated_at        :datetime
+#  id                :bigint           not null, primary key
+#  created_at        :datetime         not null
+#  updated_at        :datetime         not null
 #  lms_assignment_id :string(255)      not null
-#  lms_instance_id   :integer
-#  workout_id        :integer
+#  lms_instance_id   :bigint
+#  workout_id        :bigint
 #
 # Indexes
 #
