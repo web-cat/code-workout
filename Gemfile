@@ -27,7 +27,7 @@ gem 'acts-as-taggable-on'
 gem 'representable', '~> 2.1'
 gem 'redcarpet'
 gem 'loofah', '>= 2.3.1'
-gem 'peml', github: 'CSSPLICE/peml', ref: 'bf2d685'
+gem 'peml', github: 'CSSPLICE/peml', ref: '4d45007'
 # gem 'peml', path: './peml-0.1.2'
 gem 'truncate_html'
 gem 'tzinfo' # For timezone support
