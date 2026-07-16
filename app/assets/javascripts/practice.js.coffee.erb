@@ -1,1 +1,28 @@
 # nothing happens yet. Probably a good space for client-side static analysis.
+
+$(document).on 'ajax:before', 'form', (e) ->
+  answerField = document.getElementById('parsons-answer-field')
+  if answerField && window.parsonsWidget
+    try
+      answerField.value = window.parsonsWidget.extractCode().code
+      # For order-graded parsons, run client-side grading before submitting.
+      # Execution-graded parsons are graded server-side like coding exercises.
+      unless window.parsonsWidget.options.grader == 'exec'
+        window.parsonsWidget.checkCurrentAnswer()
+        window.parsonsWidget.logCurrentAnswer()
+        window.parsonsWidget.renderFeedback()
+    catch err
+      console.error('Failed to extract Parsons answer:', err)
+
+$(document).on 'click', '#parsons-reset-btn', ->
+  return unless window.parsonsWidget
+  widget = window.parsonsWidget
+  widget.clearFeedback()
+  $(widget.checkButton).prop('disabled', false)
+  widget.resetView()
+  widget.checkCount = 0
+  widget.logMove('reset')
+  widget.setLocalStorage()
+
+$(document).on 'click', '#parsons-help-btn', ->
+  window.parsonsWidget.helpMe() if window.parsonsWidget

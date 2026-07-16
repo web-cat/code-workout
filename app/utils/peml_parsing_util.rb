@@ -13,6 +13,68 @@ class PemlParsingUtil
     convert_peml(peml, error_msgs)
   end
 
+  # Check if PEML file is a Parsons/PIF Exercise
+  def is_pif(text_representation)
+    value = text_representation.is_a?(String) \
+      ? Peml::Loader.new.load(text_representation).dottie! \
+      : text_representation.dottie!
+    !value['settings.grader.type'].nil?
+  end
+
+
+  def parse_pif(text_representation, error_msgs)
+    parsed = Peml.pif_parse(pif: text_representation)
+
+    diags = parsed[:diagnostics] || []
+    error_msgs.concat(diags)
+
+    value = parsed[:value].dottie!
+    renderable = Peml.pif_to_renderable_json(parsed)
+
+    pif_value = (renderable.is_a?(Hash) && !renderable[:diagnostics]) ? renderable : nil
+    pif_json  = pif_value ? pif_value.to_json : '{}'
+
+    new_hash = {
+      'external_id' => value['exercise_id'],
+      'name'        => value['title'],
+    }.dottie!
+    content = value['difficulty']
+    new_hash['experience'] = content if content
+    content = value['tags.topics']
+    new_hash['tag_list'] = content.to_s if content
+    new_hash['style_list'] = 'parsons'
+    new_hash['language_list'] = value['systems[0].language'].to_s
+
+    wrapper_code = value['systems[0].assets.code.wrapper.files[0].content']
+    class_name   = wrapper_code&.match(/(?:public\s+)?class\s+(\w+)/)&.[](1)
+
+    raw_test = value['systems[0].assets.test.files[0].content']
+    test_script = if raw_test
+      lines = raw_test.lines
+      if lines.first&.strip&.downcase == 'expected'
+        # PEML output-only format: strip header, prepend comma to create input,expected_output rows
+        lines[1..].map { |l| ",#{l.chomp}" }.join("\n")
+      else
+        lines[1..].join
+      end
+    end
+
+    prompt = {
+      'position'     => 1,
+      'question'     => value['instructions'],
+      'pif_json'     => pif_json,
+      'grading_type' => value['settings.grader.type'],
+      'wrapper_code' => wrapper_code,
+      'test_script'  => test_script,
+      'class_name'   => class_name,
+    }
+    new_hash['current_version'] = {}
+    new_hash['current_version.creator'] = get_author_email(value)
+    new_hash['current_version.prompts'] = [{ 'parsons_prompt' => prompt }]
+
+    new_hash
+  end
+
     # Convert the parsed peml hash into a hash corresponding to exercise data model
   def convert_peml(hash, error_msgs)
     hash.dottie!

@@ -385,4 +385,14 @@ class ExerciseVersion < ApplicationRecord
     end
   end
 
+  # -------------------------------------------------------------
+  def is_parsons?
+    exercise.is_parsons?
+  end
+
+  # -------------------------------------------------------------
+  def is_execution_graded?
+    is_coding? || (is_parsons? && prompts.first.specific.is_execution_graded?)
+  end
+
 end

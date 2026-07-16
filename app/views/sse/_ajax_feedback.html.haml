@@ -33,7 +33,7 @@
       %p= choice.feedback
   - else
     Your answer has been saved.
-- elsif @exercise_version.is_coding?
+- elsif @exercise_version.is_coding? || @exercise_version.is_parsons?
   - answer = @attempt.prompt_answers.first.specific
   - if !answer.error.blank?
     %p Your answer could not be processed because it contains errors:

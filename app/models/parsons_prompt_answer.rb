@@ -1,8 +1,8 @@
 # == Schema Information
 #
-# Table name: coding_prompt_answers
+# Table name: parsons_prompt_answers
 #
-#  id            :bigint           not null, primary key
+#  id            :integer          not null, primary key
 #  answer        :text(65535)
 #  error         :text(65535)
 #  error_line_no :integer
@@ -14,7 +14,7 @@
 # PromptAnswer via acts_as (see the documentation on-line for the
 # activerecord-acts_as gem).
 #
-class CodingPromptAnswer < ApplicationRecord
+class ParsonsPromptAnswer < ApplicationRecord
 
   #~ Relationships ............................................................
 

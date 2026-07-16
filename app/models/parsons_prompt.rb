@@ -1,28 +1,36 @@
 # == Schema Information
 #
-# Table name: coding_prompts
+# Table name: parsons_prompts
 #
-#  id            :bigint           not null, primary key
-#  class_name    :string(255)
-#  hide_examples :boolean          default(FALSE), not null
-#  method_name   :string(255)
+#  id            :integer          not null, primary key
+#  pif_json      :text(65535)      not null
+#  wrapper_code  :text(65535)
+#  test_script   :text(65535)
 #  starter_code  :text(65535)
-#  test_script   :text(65535)      not null
-#  wrapper_code  :text(65535)      not null
+#  class_name    :string(255)
+#  method_name   :string(255)
+#  hide_examples :boolean          default(FALSE), not null
 #  created_at    :datetime         not null
 #  updated_at    :datetime         not null
 #
 
 require 'fileutils'
 require 'csv'
+require 'json'
 
 # =============================================================================
-# Represents one coding prompt in an exercise.  In spirit,
+# Represents one Parsons problem prompt in an exercise. In spirit,
 # this is a subclass of Prompt, and inherits all of the fields of Prompt via
-# acts_as (see the documentation on-line for the activerecord-acts_as
-# gem).
+# acts_as (see the documentation on-line for the activerecord-acts_as gem).
 #
-class CodingPrompt < ApplicationRecord
+# The pif_json field stores the JSON blob that the Parsons Librabry uses to
+# render the Parsons problem on the client side (question text, blocks, options).
+#
+# wrapper_code, test_script, class_name, and method_name are optional —
+# only populated for execution-graded Parsons problems. Starter code is optional
+# for execution-graded Parsons problems.
+#
+class ParsonsPrompt < ApplicationRecord
 
   #~ Relationships ............................................................
 
@@ -31,9 +39,6 @@ class CodingPrompt < ApplicationRecord
 
 
   #~ Validation ...............................................................
-
-  validates :wrapper_code, presence: true
-  validates :test_script, presence: true
 
   accepts_nested_attributes_for :test_cases, allow_destroy: true
 
@@ -47,7 +52,7 @@ class CodingPrompt < ApplicationRecord
 
   # -------------------------------------------------------------
   def question_type
-    Exercise::Q_CODING
+    Exercise::Q_PARSONS
   end
 
 
@@ -59,13 +64,19 @@ class CodingPrompt < ApplicationRecord
 
   # -------------------------------------------------------------
   def is_coding?
-    true
+    false
   end
 
 
   # -------------------------------------------------------------
   def is_parsons?
-    false
+    true
+  end
+
+
+  # -------------------------------------------------------------
+  def is_execution_graded?
+    grading_type == 'exec' || grading_type == 'execute'
   end
 
 
@@ -83,7 +94,7 @@ class CodingPrompt < ApplicationRecord
 
   # -------------------------------------------------------------
   def new_answer(args)
-    CodingPromptAnswer.new()
+    ParsonsPromptAnswer.new
   end
 
 
@@ -95,14 +106,127 @@ class CodingPrompt < ApplicationRecord
 
 
   # -------------------------------------------------------------
-  def prepare_starter_code
-    result = self.starter_code
-    if result.nil?
-      result = ''
-    end
-    return result.gsub(/\b___\b/, '')
+  # def prepare_starter_code
+  #   result = self.starter_code
+  #   if result.nil?
+  #     result = ''
+  #   end
+  #   return result.gsub(/\b___\b/, '')
+  # end
+
+
+  # -------------------------------------------------------------
+  # Returns the PIF JSON as a parsed Ruby hash for use in views.
+  def get_pif_json
+    JSON.parse(self.pif_json)
   end
 
+  #   def get_pif_json
+#     {
+#   "value": {
+#     "question_text": "<p>Put the blocks <strong>in</strong> the proper order.</p>\n",
+#     "options": {
+#       "grader": {
+#         "type": "dag",
+#         "showFeedback": true
+#       },
+#       "maxdist": 0,
+#       "order": "",
+#       "indent": false,
+#       "adaptive": true,
+#       "numbered": false,
+#       "language": "math",
+#       "runnable": true
+#     },
+#     "blocks": [
+#       {
+#         "text": "Fixed Start",
+#         "type": "",
+#         "tag": "fixed",
+#         "depends": "",
+#         "indent": "",
+#         "displaymath": true,
+#         "feedback": ""
+#       },
+#       {
+#         "text": "Random Group 1 Block 1",
+#         "type": "",
+#         "tag": "randomg1b1",
+#         "depends": "",
+#         "indent": "",
+#         "displaymath": true,
+#         "feedback": ""
+#       },
+#       {
+#         "text": "Random Group 1 Block 2",
+#         "type": "",
+#         "tag": "randomg1b2",
+#         "depends": "randomg1b1",
+#         "indent": "",
+#         "displaymath": true,
+#         "feedback": ""
+#       },
+#       {
+#         "text": "Random Group 1 $\\textbf{Block}$ 3",
+#         "type": "",
+#         "tag": "randomg1b3",
+#         "depends": "randomg1b2",
+#         "indent": "",
+#         "displaymath": true,
+#         "feedback": ""
+#       },
+#       {
+#         "text": "Fixed $\\textbf{Middle}$",
+#         "type": "",
+#         "tag": "fixed",
+#         "depends": "",
+#         "indent": "",
+#         "displaymath": true,
+#         "feedback": ""
+#       },
+#       {
+#         "text": "Random Group 2 Block 1",
+#         "type": "",
+#         "tag": "randomg2b1",
+#         "depends": "randomg1b3",
+#         "indent": "",
+#         "displaymath": true,
+#         "feedback": ""
+#       },
+#       {
+#         "text": "Random Group 2 Block 2",
+#         "type": "",
+#         "tag": "randomg2b2",
+#         "depends": "randomg2b1",
+#         "indent": "",
+#         "displaymath": true,
+#         "feedback": ""
+#       },
+#       {
+#         "text": "Random Group 2 Block 3",
+#         "type": "",
+#         "tag": "randomg2b3",
+#         "depends": "randomg2b2",
+#         "indent": "",
+#         "displaymath": true,
+#         "feedback": ""
+#       },
+#       {
+#         "text": "Fixed End",
+#         "type": "",
+#         "tag": "fixed",
+#         "depends": "",
+#         "indent": "",
+#         "displaymath": true,
+#         "feedback": ""
+#       }
+#     ]
+#   },
+#   "diags": [
+
+#   ]
+# }
+#   end
 
   # -------------------------------------------------------------
   # Duplicates some code in parse_tests, but too lazy to refactor ATM
