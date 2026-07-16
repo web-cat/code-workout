@@ -2,9 +2,33 @@
   // A local variable to store the copied/cut content, shared across all CodeMirror instances
   var internalClipboard = '';
 
+  // Helper function to check if the page is exempt from clipboard protection
+  function isExempt() {
+    var exemptClasses = [
+      'active_admin',
+      'staff',
+      'edit',
+      'new',
+      'create',
+      'update',
+      'course_enrollments',
+      'choose_roster',
+      'roster_upload',
+      'upload_roster',
+      'generate_gradebook'
+    ];
+    return exemptClasses.some(function(cls) {
+      return $('body').hasClass(cls);
+    }) || window.location.pathname.indexOf('/admin') === 0;
+  }
+
   // 1. CodeMirror 5 Internal Clipboard Protection
   if (typeof CodeMirror !== 'undefined') {
     CodeMirror.defineInitHook(function(cm) {
+      if (isExempt()) {
+        return;
+      }
+
       // Helper function to handle copy logic
       var doCopy = function(cm) {
         var selectedText = cm.getSelection();
@@ -71,8 +95,7 @@
 
   // 2. Global Protection for the rest of the page
   $(document).ready(function() {
-    // Skip protection for ActiveAdmin pages
-    if ($('body').hasClass('active_admin') || window.location.pathname.startsWith('/admin')) {
+    if (isExempt()) {
       return;
     }
 
