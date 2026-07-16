@@ -60,3 +60,7 @@ server.crt
 
 # OpenDSA-DevStack repo management
 devstackPlaceholder.md
+
+# Ignore dev peml gem file
+*.gem
+/peml-*
