@@ -23,6 +23,7 @@ CodeWorkout::Application.configure do
   config.serve_static_files = false
 
   # Compress JavaScripts and CSS.
+  require 'uglifier'
   config.assets.js_compressor = Uglifier.new(harmony: true)
   # config.assets.css_compressor = :sass
 
