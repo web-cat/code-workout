@@ -991,11 +991,24 @@ class ExercisesController < ApplicationController
       end
     else
       @answer_code = params[:exercise_version][:answer_code]
+
       @exercise_version.prompts.each_with_index do |exercise_prompt, i|
         exercise_prompt_answer = @attempt.prompt_answers[i]
         exercise_prompt_answer.answer = params[:exercise_version][:answer_code]
         if exercise_prompt_answer.save
-          CodeWorker.new.async.perform(@attempt.id) if @exercise_version.is_execution_graded?
+          if @exercise_version.is_execution_graded?
+            CodeWorker.new.async.perform(@attempt.id)
+          elsif @exercise_version.is_parsons?
+            # Order-graded Parsons problems are graded client-side by the
+            # parsons.js widget (no server-side execution). Full credit if
+            # the widget reports the arrangement as correct, zero
+            # otherwise -- no partial credit.
+            parsons_correct = params[:exercise_version][:parsons_correct] == 'true'
+            @attempt.score = parsons_correct ? @max_points : 0.0
+            @attempt.feedback_ready = true
+            @attempt.save!
+            @workout_score.record_attempt(@attempt) if @workout_score
+          end
         else
           logger.error 'IMPROPER PROMPT',
             'unable to save prompt_answer: ' \

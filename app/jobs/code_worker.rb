@@ -27,9 +27,14 @@ class CodeWorker
       answer =
         attempt.prompt_answers.where(prompt: prompt.acting_as).first.specific
       answer_text = answer.answer
+      Rails.logger.info "CHECKPOINT-B backslashes=#{answer_text.to_s.count('\\')} value=#{answer_text.inspect}"
+
       answer_lines = answer_text ? answer_text.count("\n") : 0
       if !prompt.wrapper_code.blank?
+        Rails.logger.info "CHECKPOINT-C (pre-splice) backslashes=#{answer_text.to_s.count('\\')}"
         code_body = prompt.wrapper_code.sub(/\b___\b/, answer_text)
+        Rails.logger.info "CHECKPOINT-D (post-splice) backslashes=#{code_body.count('\\')} value=#{code_body.inspect}"
+
         if $`
           # Want pre_lines to be a count of the number of lines preceding
           # the one the match is on, so use count() instead of lines() here
