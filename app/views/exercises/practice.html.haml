@@ -5,6 +5,7 @@
   = javascript_include_tag('timeout')
 = javascript_include_tag("two_column_layout")
 = javascript_include_tag("practice")
+- has_parsons = @exercise_version.prompts.any? { |p| p.specific.is_parsons? }
 .row
   .col-md-12
     %h1
@@ -35,7 +36,7 @@
     -@file_res.each do |unique_name, real_name|
       %p
       =link_to "#{real_name}", "/uploads/resource_file/#{unique_name}"
-  .col-md-7#user-deadline{ data: { deadline: @user_deadline, server_now: @server_now } }
+  %div{ id: 'user-deadline', class: "col-md-#{has_parsons ? 12 : 7}", data: { deadline: @user_deadline, server_now: @server_now } }
     %h2 Your Answer:
     = semantic_form_for @exercise_version,
       url: (@workout_offering ? organization_workout_offering_exercise_evaluate_path(id: @exercise_version.exercise.id,
@@ -275,7 +276,7 @@
           (@exercise.language ?                                              |
           random_exercise_path(language: @exercise.language) :               |
           random_exercise_path)                                              |
-  .col-md-5
+  %div{ class: "col-md-#{has_parsons ? 12 : 5}" }
     %h2 Feedback
     #saved_assurance
     #previous_answer.previous_answer
