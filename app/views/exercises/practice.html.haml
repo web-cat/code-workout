@@ -186,7 +186,15 @@
                     },
                     startup: {
                       pageReady() {
-                        return MathJax.startup.defaultPageReady().then(function() { rsMathReady(); });
+                        return MathJax.startup.defaultPageReady().then(
+                          function () {
+                            rsMathReady();
+                          },
+                          function (err) {
+                            console.warn("MathJax's initial page-wide typeset pass failed; continuing anyway so dependent components aren't stuck waiting forever.", err);
+                            rsMathReady();
+                          }
+                      )
                       }
                     }
                   };
