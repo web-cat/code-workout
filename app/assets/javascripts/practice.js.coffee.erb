@@ -2,6 +2,7 @@
 
 $(document).on 'ajax:before', 'form', (e) ->
   answerField = document.getElementById('parsons-answer-field')
+  correctField = document.getElementById('parsons-correct-field')
   if answerField && window.parsonsWidget
     try
       answerField.value = window.parsonsWidget.extractCode().code
@@ -11,6 +12,7 @@ $(document).on 'ajax:before', 'form', (e) ->
         window.parsonsWidget.checkCurrentAnswer()
         window.parsonsWidget.logCurrentAnswer()
         window.parsonsWidget.renderFeedback()
+        correctField.value = window.parsonsWidget.correct == true
     catch err
       console.error('Failed to extract Parsons answer:', err)
 
