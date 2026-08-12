@@ -1004,7 +1004,15 @@ class ExercisesController < ApplicationController
             # the widget reports the arrangement as correct, zero
             # otherwise -- no partial credit.
             parsons_correct = params[:exercise_version][:parsons_correct] == 'true'
-            @attempt.score = parsons_correct ? @max_points : 0.0
+            # Score as a 0..1 fraction, only scaled up to an absolute point
+            # value when part of a workout -- same convention MCQ (above)
+            # and CodeWorker use. @max_points defaults to 10.0 outside a
+            # workout (see above), so storing it directly here used to
+            # double-count against exercise.experience in the exercise
+            # card's display fallback (_exercise.html.haml), inflating the
+            # shown score well past its denominator.
+            @attempt.score = parsons_correct ? 1.0 : 0.0
+            @attempt.score *= @max_points if @workout
             @attempt.feedback_ready = true
             @attempt.save!
             @workout_score.record_attempt(@attempt) if @workout_score
