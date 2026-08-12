@@ -1,9 +1,9 @@
-class ReviseTestCaseStructure < ActiveRecord::Migration
+class ReviseTestCaseStructure < ActiveRecord::Migration[5.1]
   def up
     change_table :test_cases do |t|
-      t.remove :test_script, :string
-      t.remove :input, :string
-      t.remove :expected_output, :string
+      t.remove :test_script
+      t.remove :input
+      t.remove :expected_output
 
       t.text :input
       t.text :expected_output
@@ -16,8 +16,8 @@ class ReviseTestCaseStructure < ActiveRecord::Migration
 
   def down
     change_table :test_cases do |t|
-      t.remove :input, :text
-      t.remove :expected_output, :text
+      t.remove :input
+      t.remove :expected_output
 
       t.string :test_script
       t.string :input

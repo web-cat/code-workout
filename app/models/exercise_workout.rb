@@ -2,13 +2,13 @@
 #
 # Table name: exercise_workouts
 #
-#  id          :integer          not null, primary key
+#  id          :bigint           not null, primary key
 #  points      :float(24)        default(1.0)
 #  position    :integer          not null
-#  created_at  :datetime
-#  updated_at  :datetime
-#  exercise_id :integer          not null
-#  workout_id  :integer          not null
+#  created_at  :datetime         not null
+#  updated_at  :datetime         not null
+#  exercise_id :bigint           not null
+#  workout_id  :bigint           not null
 #
 # Indexes
 #
@@ -19,6 +19,8 @@
 #
 #  exercise_workouts_exercise_id_fk  (exercise_id => exercises.id)
 #  exercise_workouts_workout_id_fk   (workout_id => workouts.id)
+#  fk_rails_...                      (exercise_id => exercise_versions.id)
+#  fk_rails_...                      (workout_id => workouts.id)
 #
 
 # =============================================================================
@@ -26,7 +28,7 @@
 # indicating which exercises are included in a given workout, and in
 # what order.  The order is determined by "position", which starts at 1.
 #
-class ExerciseWorkout < ActiveRecord::Base
+class ExerciseWorkout < ApplicationRecord
 
   #~ Relationships ............................................................
 

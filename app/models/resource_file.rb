@@ -2,14 +2,14 @@
 #
 # Table name: resource_files
 #
-#  id         :integer          not null, primary key
+#  id         :bigint           not null, primary key
 #  filename   :string(255)
 #  hashval    :string(255)
 #  public     :boolean          default(TRUE)
-#  token      :string(255)      default(""), not null
-#  created_at :datetime
-#  updated_at :datetime
-#  user_id    :integer          not null
+#  token      :string(255)      not null
+#  created_at :datetime         not null
+#  updated_at :datetime         not null
+#  user_id    :bigint           not null
 #
 # Indexes
 #
@@ -19,6 +19,7 @@
 #
 # Foreign Keys
 #
+#  fk_rails_...               (user_id => users.id)
 #  resource_files_user_id_fk  (user_id => users.id)
 #
 
@@ -26,7 +27,7 @@
 # Represents a file uploaded by a user for use in exercises, such as an
 # image or video file.
 #
-class ResourceFile < ActiveRecord::Base
+class ResourceFile < ApplicationRecord
   include Tokenable #for unique non-serial url tokens
 
 

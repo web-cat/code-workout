@@ -1,4 +1,4 @@
-class AddKeys < ActiveRecord::Migration
+class AddKeys < ActiveRecord::Migration[5.1]
   def change
     add_foreign_key "attempts", "workout_scores", name: "attempts_active_score_id_fk", column: "active_score_id"
     add_foreign_key "attempts", "exercise_versions", name: "attempts_exercise_version_id_fk"
@@ -19,6 +19,7 @@ class AddKeys < ActiveRecord::Migration
     add_foreign_key "courses", "organizations", name: "courses_organization_id_fk"
     add_foreign_key "exercise_owners", "exercises", name: "exercise_owners_exercise_id_fk"
     add_foreign_key "exercise_owners", "users", name: "exercise_owners_owner_id_fk", column: "owner_id"
+    change_column :exercise_versions, :creator_id, :bigint
     add_foreign_key "exercise_versions", "users", name: "exercise_versions_creator_id_fk", column: "creator_id"
     add_foreign_key "exercise_versions", "exercises", name: "exercise_versions_exercise_id_fk"
     add_foreign_key "exercise_versions", "irt_data", name: "exercise_versions_irt_data_id_fk", column: "irt_data_id"
@@ -55,6 +56,7 @@ class AddKeys < ActiveRecord::Migration
     add_foreign_key "workout_scores", "users", name: "workout_scores_user_id_fk"
     add_foreign_key "workout_scores", "workouts", name: "workout_scores_workout_id_fk"
     add_foreign_key "workout_scores", "workout_offerings", name: "workout_scores_workout_offering_id_fk"
+    change_column :workouts, :creator_id, :bigint
     add_foreign_key "workouts", "users", name: "workouts_creator_id_fk", column: "creator_id"
   end
 end

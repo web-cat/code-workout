@@ -92,7 +92,7 @@
     - if !new_workout
       .summary
         - if !attempt || !workout_score || workout_score.show_score?
-          .radial-progress{ 'data-progress' => score_pct }
+          .radial-progress{ 'data-progress' => score_pct, role: 'progressbar', 'aria-valuenow' => score_pct, 'aria-valuemin' => '0', 'aria-valuemax' => '100', 'aria-label' => "Exercise score: #{score.to_s} out of #{pts.to_s}" }
             .circle
               .mask.full
                 .fill
@@ -110,7 +110,7 @@
             .circle
               .shadow
             .inset
-              .score= image_tag 'pct-blur.png'
+              .score= image_tag 'pct-blur.png', alt: ''
     - else
       .summary
         .btn.btn-primary.add-ex{data: { ex_id: exercise.id, ex_name: exercise.name } }

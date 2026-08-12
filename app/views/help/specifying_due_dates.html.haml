@@ -1,0 +1,129 @@
+%h1 Instructor Guide: Specifying Due Dates
+%p
+  CodeWorkout uses a YAML-based interface for managing workout availability and student extensions. This allows you to quickly set up schedules for multiple sections and handle individual student needs in a single, human-readable view.
+
+%h2 1. Workout Offering Dates
+%p
+  Each section of a course has three primary date fields:
+%ul
+  %li
+    %b due:
+    The main due date (soft deadline). Students can still submit after this date if a hard deadline is set.
+  %li
+    %b from:
+    The opening date. The workout becomes visible and accessible at this time. Use 
+    %code always
+    if you want it available immediately.
+  %li
+    %b until:
+    The hard deadline. Submissions are completely blocked after this time. If not specified, it defaults to 
+    %code +0 minutes
+    (meaning the workout closes exactly at the due date).
+
+%h2 2. Relative Offsets
+%p
+  Instead of entering full date/time strings, you can use relative offsets from the 
+  %code due
+  date. This is especially useful for setting up consistent schedules across sections.
+%ul
+  %li
+    %b Flexible Units:
+    You can use 
+    %code minutes
+    (or 
+    %code min
+    ), 
+    %code hours
+    (or 
+    %code hr
+    ), 
+    %code days
+    (or 
+    %code d
+    ), or 
+    %code weeks
+    (or 
+    %code w
+    ).
+  %li
+    %b Opening Dates (from):
+    These must be negative. You can use a leading 
+    %code -
+    sign (e.g., 
+    %code -3 days
+    ) or no sign at all (e.g., 
+    %code 1 week
+    will be interpreted as 
+    %code -1 week
+    ).
+  %li
+    %b Hard Deadlines (until):
+    These must be non-negative. You can use a leading 
+    %code +
+    sign (e.g., 
+    %code +12 hours
+    ) or no sign at all (e.g., 
+    %code 1 day
+    will be interpreted as 
+    %code +1 day
+    ).
+
+%h3 Example Configuration:
+%pre.examples
+  :preserve
+    sections:
+      - section: CS 101 Section A
+        due: 2025-09-15 11:59 PM
+        from: 1 week           # Opens 1 week before due date
+        until: +2 days         # Closes 2 days after due date
+      - section: CS 101 Section B
+        due: 2025-09-16 11:59 PM
+        from: always           # Always open
+        until: +0 minutes      # Closes exactly at due date
+
+%h2 3. Student Extensions
+%p
+  Student extensions allow you to override the default dates for specific students. You can group multiple students who share the same extension dates.
+%ul
+  %li
+    Extensions use the same 
+    %code due
+    , 
+    %code from
+    , and 
+    %code until
+    rules as regular offerings.
+  %li
+    Students can be specified by their full name and email (e.g., 
+    %code John Doe <jdoe@example.edu>
+    ) or just their email.
+
+%h3 Example Extensions:
+%pre.examples
+  :preserve
+    extensions:
+      - due: 2025-09-20 11:59 PM
+        from: always
+        until: +0 minutes
+        students:
+          - Alice Smith <asmith@example.edu>
+          - Bob Jones <bjones@example.edu>
+      - due: +3 days           # 3 days after their original section due date
+        from: -1 week
+        until: +1 day
+        students:
+          - charlie@example.edu
+
+%h2 4. Tips for Success
+%ul
+  %li
+    %b Time Zones:
+    All absolute dates are interpreted in your current time zone (as set in your profile).
+  %li
+    %b Validation:
+    The system will notify you if you enter an invalid student or an impossible relative offset (like a positive 
+    %code from
+    date).
+  %li
+    %b Human Readable:
+    When you save the form, the system will clean up your YAML to ensure it uses standardized units and explicit signs for clarity.

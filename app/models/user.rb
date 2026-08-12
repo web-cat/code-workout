@@ -2,51 +2,49 @@
 #
 # Table name: users
 #
-#  id                       :integer          not null, primary key
-#  avatar                   :string(255)
-#  confirmation_sent_at     :datetime
-#  confirmation_token       :string(255)
-#  confirmed_at             :datetime
-#  current_sign_in_at       :datetime
-#  current_sign_in_ip       :string(255)
-#  email                    :string(255)      default(""), not null
-#  encrypted_password       :string(255)      default(""), not null
-#  first_name               :string(255)
-#  last_name                :string(255)
-#  last_sign_in_at          :datetime
-#  last_sign_in_ip          :string(255)
-#  remember_created_at      :datetime
-#  reset_password_sent_at   :datetime
-#  reset_password_token     :string(255)
-#  sign_in_count            :integer          default(0), not null
-#  slug                     :string(255)      default(""), not null
-#  created_at               :datetime
-#  updated_at               :datetime
-#  current_workout_score_id :integer
-#  global_role_id           :integer          not null
-#  time_zone_id             :integer
+#  id                     :bigint           not null, primary key
+#  avatar                 :string(255)
+#  confirmation_sent_at   :datetime
+#  confirmation_token     :string(255)
+#  confirmed_at           :datetime
+#  current_sign_in_at     :datetime
+#  current_sign_in_ip     :string(255)
+#  email                  :string(255)      default(""), not null
+#  encrypted_password     :string(255)      default(""), not null
+#  first_name             :string(255)
+#  last_name              :string(255)
+#  last_sign_in_at        :datetime
+#  last_sign_in_ip        :string(255)
+#  remember_created_at    :datetime
+#  reset_password_sent_at :datetime
+#  reset_password_token   :string(255)
+#  sign_in_count          :integer          default(0), not null
+#  slug                   :string(255)      not null
+#  created_at             :datetime         not null
+#  updated_at             :datetime         not null
+#  global_role_id         :bigint           not null
+#  time_zone_id           :bigint
 #
 # Indexes
 #
-#  index_users_on_confirmation_token        (confirmation_token) UNIQUE
-#  index_users_on_current_workout_score_id  (current_workout_score_id) UNIQUE
-#  index_users_on_email                     (email) UNIQUE
-#  index_users_on_global_role_id            (global_role_id)
-#  index_users_on_reset_password_token      (reset_password_token) UNIQUE
-#  index_users_on_slug                      (slug) UNIQUE
-#  index_users_on_time_zone_id              (time_zone_id)
+#  index_users_on_confirmation_token    (confirmation_token) UNIQUE
+#  index_users_on_email                 (email) UNIQUE
+#  index_users_on_global_role_id        (global_role_id)
+#  index_users_on_reset_password_token  (reset_password_token) UNIQUE
+#  index_users_on_slug                  (slug) UNIQUE
+#  index_users_on_time_zone_id          (time_zone_id)
 #
 # Foreign Keys
 #
-#  users_current_workout_score_id_fk  (current_workout_score_id => workout_scores.id)
-#  users_global_role_id_fk            (global_role_id => global_roles.id)
-#  users_time_zone_id_fk              (time_zone_id => time_zones.id)
+#  fk_rails_...             (global_role_id => global_roles.id)
+#  users_global_role_id_fk  (global_role_id => global_roles.id)
+#  users_time_zone_id_fk    (time_zone_id => time_zones.id)
 #
 
 # =============================================================================
 # Represents a single user account on the system.
 #
-class User < ActiveRecord::Base
+class User < ApplicationRecord
   include Gravtastic
   gravtastic secure: true, default: 'monsterid'
 
@@ -78,7 +76,6 @@ class User < ActiveRecord::Base
   has_many    :student_extensions
   has_many    :workout_offerings, through: :student_extensions
 
-  belongs_to  :current_workout_score, class_name: 'WorkoutScore'
   has_many    :test_case_results, inverse_of: :user, dependent: :destroy
   has_many    :lti_identities
 
@@ -113,7 +110,7 @@ class User < ActiveRecord::Base
   }
 
   scope :alphabetical, -> { order('last_name asc, first_name asc, email asc') }
-  scope :visible_to_user, -> (u) { joins{course_enrollments.outer}.
+  scope :visible_to_user, -> (u) { left_outer_joins(:course_enrollments)
     where{ (id == u.id) |
     (course_enrollments.course_role_id != CourseRole::STUDENT_ID) } }
 
@@ -124,7 +121,7 @@ class User < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def self.all_emails(prefix = '')
-    self.uniq.where(self.arel_table[:email].matches(
+    self.distinct.where(self.arel_table[:email].matches(
       "#{prefix}%")).reorder('email asc').pluck(:email)
   end
 
@@ -227,26 +224,24 @@ class User < ActiveRecord::Base
     course = options[:course]
     term = options[:term]
     if course.nil? && term.nil?
-      course_enrollments.where(course_roles: { can_manage_course: true }).
+      course_enrollments.joins(:course_role).where(course_roles: { can_manage_course: true }).
         map(&:course_offering)
     elsif course.nil?
-      course_enrollments.joins(:course_offering).
-        where(course_roles:
-          { can_manage_course: true }, course_offering:
-            { term: term }
-        ).map(&:course_offering)
+      course_enrollments.joins(:course_role, :course_offering)
+        .where('course_roles.can_manage_course = true and
+          course_offerings.term_id = ?', term.id)
+        .map(&:course_offering)
     elsif term.nil?
-      course_enrollments.joins(:course_offering).
-        where(course_roles:
-          { can_manage_course: true }, course_offering:
-            { course: course }
-        ).map(&:course_offering)
+      course_enrollments.joins(:course_role, :course_offering)
+        .where('course_roles.can_manage_course = true and
+          course_offerings.course_id = ?', course.id)
+        .map(&:course_offering)
     else
-      course_enrollments.joins(:course_offering).
-        where(course_roles:
-          { can_manage_course: true }, course_offering:
-            { course: course, term: term }
-        ).map(&:course_offering)
+      course_enrollments.joins(:course_offering)
+        .where('course_roles.can_manage_course = true and
+          course_offerings.course_id = ? and course_offerings.term_id = ?',
+          course.id, term.id)
+        .map(&:course_offering)
     end
   end
 
@@ -280,14 +275,14 @@ class User < ActiveRecord::Base
       enrollments = course_enrollments.
         joins(course_offering: :workout_offerings).
         where(course_roles:
-          { can_manage_course: true }, course_offering:
+          { can_manage_course: true }, course_offerings:
             { course: course, term: term }
         )
       else
         enrollments = course_enrollments.
           joins(course_offering: :workout_offerings).
           where(course_roles:
-            { can_manage_course: true }, course_offering:
+            { can_manage_course: true }, course_offerings:
               { course: course }
             )
       end
@@ -295,8 +290,7 @@ class User < ActiveRecord::Base
       enrollments.map { |e|
         if workout.kind_of?(String)
           workouts_with_name = Workout.where('lower(name) = ?', workout)
-          e.course_offering.workout_offerings.where{
-            workout_id.in(workouts_with_name.select{id}) }
+          e.course_offering.workout_offerings.where(workout_id: workouts_with_name.select(:id))
         else
           e.course_offering.workout_offerings.where(workout: workout)
         end
@@ -313,8 +307,8 @@ class User < ActiveRecord::Base
   # to get access to course materials
   def managed_workouts
     course_enrollments.
-      joins(course_offering: { course: { user_group: :memberships } }).
-      where(course_roles:
+      joins(:course_role, course_offering: { course: { user_group: :memberships } }).
+      where(course_role:
         { can_manage_course: true }, course_offering:
           { course:
             { user_group:
@@ -353,6 +347,16 @@ class User < ActiveRecord::Base
     last_name.blank? ?
       (first_name.blank? ? email : first_name) :
       (first_name.blank? ? last_name : (first_name + ' ' + last_name))
+  end
+
+
+  # -------------------------------------------------------------
+  # Gets the user's "display name", which is their full name if it is in the
+  # database, otherwise it is their e-mail address.
+  def display_name_with_email
+    last_name.blank? ?
+      (first_name.blank? ? email : first_name + ' <' + email + '>') :
+      (first_name.blank? ? last_name + ' <' + email + '>' : (first_name + ' ' + last_name + ' <' + email + '>'))
   end
 
 
@@ -535,8 +539,6 @@ class User < ActiveRecord::Base
         "remember_created_at <= #{user.created_at}"
       self.remember_created_at = user.created_at
     end
-    puts "update user #{user.id}: current_workout_score_id <= nil"
-    user.current_workout_score = nil
     user.save!
     self.save!
 
@@ -842,8 +844,8 @@ class User < ActiveRecord::Base
 
     # Move workout scores
     wos = from.workout_offerings
-    self.workout_scores.joins(:workout_offering).where(workout_offering:
-      { course_offering: from }).each do |workout_score|
+    self.workout_scores.joins(workout_offering: :course_offering).where(workout_offerings:
+      { course_offerings: from }).each do |workout_score|
       wo = workout_score.workout_offering
       sister_wo = to.workout_offerings.where(workout: wo.workout).first
       if sister_wo

@@ -2,7 +2,7 @@
 #
 # Table name: workout_offerings
 #
-#  id                       :integer          not null, primary key
+#  id                       :bigint           not null, primary key
 #  attempt_limit            :integer
 #  hard_deadline            :datetime
 #  lms_assignment_url       :string(255)
@@ -11,13 +11,13 @@
 #  published                :boolean          default(TRUE), not null
 #  soft_deadline            :datetime
 #  time_limit               :integer
-#  created_at               :datetime
-#  updated_at               :datetime
-#  continue_from_workout_id :integer
-#  course_offering_id       :integer          not null
+#  created_at               :datetime         not null
+#  updated_at               :datetime         not null
+#  continue_from_workout_id :bigint
+#  course_offering_id       :bigint           not null
 #  lms_assignment_id        :string(255)
-#  workout_id               :integer          not null
-#  workout_policy_id        :integer
+#  workout_id               :bigint           not null
+#  workout_policy_id        :bigint
 #
 # Indexes
 #
@@ -29,6 +29,9 @@
 #
 # Foreign Keys
 #
+#  fk_rails_...                                   (continue_from_workout_id => workout_offerings.id)
+#  fk_rails_...                                   (course_offering_id => course_offerings.id)
+#  fk_rails_...                                   (workout_id => workouts.id)
 #  workout_offerings_continue_from_workout_id_fk  (continue_from_workout_id => workout_offerings.id)
 #  workout_offerings_course_offering_id_fk        (course_offering_id => course_offerings.id)
 #  workout_offerings_workout_id_fk                (workout_id => workouts.id)
@@ -42,7 +45,7 @@
 # due dates that control when the students in the corresponding course
 # offering can take the workout (and thus, when they must complete it).
 #
-class WorkoutOffering < ActiveRecord::Base
+class WorkoutOffering < ApplicationRecord
 
   #~ Relationships ............................................................
 
@@ -56,10 +59,13 @@ class WorkoutOffering < ActiveRecord::Base
   has_many :users, through: :student_extensions
   has_many :lti_workouts
 
-  scope :visible_to_students, -> { joins{workout_policy.outer}.where{
-    (published == true) &
-    ((workout_policy_id == nil) | (workout_policy.invisible_before_review == false)) &
-    ((opening_date == nil) | (opening_date <= Time.zone.now)) } }
+  scope :visible_to_students, -> {
+    left_outer_joins(:workout_policy).where(published: true)
+    .where('workout_policy_id IS NULL OR workout_policies.invisible_before_review = ?', false)
+    .where('opening_date IS NULL OR opening_date <= ?', Time.zone.now)
+  }
+
+  before_validation :ensure_workout_policy
 
 
   #~ Validation ...............................................................
@@ -75,7 +81,10 @@ class WorkoutOffering < ActiveRecord::Base
     if user.nil?
       return nil
     else
-      workout_scores.where(user: user).order('updated_at DESC').first
+      # Explicitly include workout id in search for faster search using
+      # the compound index
+      workout_scores.where(user: user, workout: workout).
+        order('updated_at DESC').first
     end
   end
 
@@ -90,11 +99,16 @@ class WorkoutOffering < ActiveRecord::Base
 
   # -----------------------------------------------------------------
   def hard_deadline_for(user)
-    user_extension = student_extensions.where(user: user).first
-    user_extension.andand.hard_deadline ||
-      self.hard_deadline ||
-      user_extension.andand.soft_deadline ||
-      self.soft_deadline
+    user_ext = student_extensions.where(user: user).first
+    # (1) student extension hard deadline
+    return user_ext.hard_deadline if user_ext.andand.hard_deadline
+    
+    # (2) later of (offering hard deadline OR student extension soft deadline)
+    deadline2 = [self.hard_deadline, user_ext.andand.soft_deadline].compact.max
+    return deadline2 if deadline2
+    
+    # (3) offering soft deadline
+    self.soft_deadline
   end
 
 
@@ -115,23 +129,20 @@ class WorkoutOffering < ActiveRecord::Base
   # Else it will return the number of hours remaining to the soft deadline
   def current_deadline_distance
     current_time = Time.zone.now.to_i
+    deadline = soft_deadline || hard_deadline
 
-    if hard_deadline.nil?
-      return nil
-    end
-
-    if soft_deadline.nil?
-      return nil
-    end
-
-    if hard_deadline.to_i < current_time
+    if hard_deadline && hard_deadline.to_i < current_time
       return 1
     end
 
-    if soft_deadline.to_i - current_time > 86400
+    if deadline.nil?
+      return nil
+    end
+
+    if deadline.to_i - current_time > 86400
       return 4
     end
-    return (soft_deadline.to_i - current_time)/ 3600
+    return (deadline.to_i - current_time) / 3600
 
   end
 
@@ -161,15 +172,12 @@ class WorkoutOffering < ActiveRecord::Base
 
   def ultimate_deadline
     deadline = hard_deadline || soft_deadline
-    if student_extensions.any?
-      ext_deadline = student_extensions.maximum(:hard_deadline) ||
-        student_extensions.maximum(:soft_deadline)
-      if ext_deadline && (!deadline || ext_deadline > deadline)
-        deadline = ext_deadline
-      end
-    end
-    deadline
+    [ deadline,
+      student_extensions.maximum(:hard_deadline),
+      student_extensions.maximum(:soft_deadline)
+    ].compact.max
   end
+
 
   # -------------------------------------------------------------------
   # Method supplementary to the ultimate_deadline method
@@ -186,6 +194,7 @@ class WorkoutOffering < ActiveRecord::Base
     x
   end
 
+
   # -------------------------------------------------------------
   # Method that determines whether the given user can practice
   # this workout offering. The method looks up if the user has
@@ -194,24 +203,27 @@ class WorkoutOffering < ActiveRecord::Base
   # have full access.
 
   def can_be_practiced_by?(user)
-    workout_score = user.workout_scores.find_by(workout_offering: self)
+    return false unless course_offering.is_enrolled?(user)
+
+    workout_score = workout_scores.where(user: user).last
+    return false if workout_score && workout_score.closed?
+ 
     now = Time.zone.now
-    user_extension = StudentExtension.find_by(user: user, workout_offering: self)
-    deadline = user_extension.andand.hard_deadline ||
-      self.hard_deadline ||
-      user_extension.andand.soft_deadline ||
-      self.soft_deadline
+    user_ext = student_extensions.where(user: user).first
     opens = user_extension.andand.opening_date || self.opening_date
+    deadline = hard_deadline_for(user)
+
     course_offering.is_staff?(user) ||
-    (((opens == nil) || (opens <= now)) &&
-      ((deadline == nil) || (now <= deadline)) &&
-      (!workout_score.andand.closed?) &&
-      course_offering.is_enrolled?(user))
+      (((opens == nil) || (opens <= now)) &&
+       ((deadline == nil) || (now <= deadline)))
   end
 
+
+  # ----------------------------------------------------------------
   def show_feedback?
      workout_policy.andand.hide_feedback_before_finish ? false : true
   end
+
 
   # ----------------------------------------------------------------
   # Re-score all workout_scores for this offering based on its 'most_recent'
@@ -238,6 +250,8 @@ class WorkoutOffering < ActiveRecord::Base
     end
   end
 
+
+  # ----------------------------------------------------------------
   def organize_private_exercises
     @course = self.course_offering.course
     @user_group = @course.user_group
@@ -259,6 +273,16 @@ class WorkoutOffering < ActiveRecord::Base
     end
 
     @exercises = self.workout.exercises.where(is_public: false)
-    @exercise_collection.add(@exercises.flatten)
+    @exercise_collection.add(@exercises.to_a.flatten)
+  end
+
+
+  #~ Private instance methods .................................................
+  private
+
+  def ensure_workout_policy
+    if self.workout && self.workout_policy.nil?
+      self.workout_policy = self.workout.workout_policy || WorkoutPolicy.create!
+    end
   end
 end

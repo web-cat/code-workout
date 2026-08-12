@@ -236,7 +236,8 @@ module ApplicationHelper
     puts "html_options = #{html_options}"
     button_to_without_style(name, options, html_options, &block)
   end
-  alias_method_chain :button_to, :style
+  alias_method :button_to_without_style, :button_to
+  alias_method :button_to, :button_to_with_style
 
 
   # -------------------------------------------------------------
@@ -295,6 +296,21 @@ module ApplicationHelper
       val.to_i.to_s
     else
       val.round(1).to_s
+    end
+  end
+
+
+  # -------------------------------------------------------------
+  def event_type_label_class(type)
+    case type
+    when 'attempt'
+      'label-primary'
+    when 'visualization'
+      'label-info'
+    when 'activity'
+      'label-success'
+    else
+      'label-default'
     end
   end
 

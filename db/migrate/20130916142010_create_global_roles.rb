@@ -1,4 +1,4 @@
-class CreateGlobalRoles < ActiveRecord::Migration
+class CreateGlobalRoles < ActiveRecord::Migration[5.1]
   def change
     create_table :global_roles do |t|
       t.string :name, :unique => true, :null => false

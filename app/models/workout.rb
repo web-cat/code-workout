@@ -2,15 +2,15 @@
 #
 # Table name: workouts
 #
-#  id                :integer          not null, primary key
+#  id                :bigint           not null, primary key
 #  description       :text(65535)
 #  is_public         :boolean
-#  name              :string(255)      default(""), not null
+#  name              :string(255)      not null
 #  points_multiplier :integer
 #  scrambled         :boolean          default(FALSE)
-#  created_at        :datetime
-#  updated_at        :datetime
-#  creator_id        :integer
+#  created_at        :datetime         not null
+#  updated_at        :datetime         not null
+#  creator_id        :bigint
 #  external_id       :string(255)
 #
 # Indexes
@@ -39,7 +39,7 @@
 # the "courses" associated with a workout are those for which course
 # offerings have been given workout offerings.
 #
-class Workout < ActiveRecord::Base
+class Workout < ApplicationRecord
   #~ Relationships ............................................................
 
   acts_as_taggable_on :tags, :languages, :styles
@@ -61,6 +61,13 @@ class Workout < ActiveRecord::Base
   accepts_nested_attributes_for :exercise_workouts
   accepts_nested_attributes_for :workout_offerings
 
+  # -------------------------------------------------------------
+  # Returns the workout policy shared by all offerings of this workout.
+  # If offerings point to different policies, it returns the first one found.
+  def workout_policy
+    workout_offerings.where.not(workout_policy_id: nil).first.andand.workout_policy
+  end
+
 
   #~ Validation ...............................................................
 
@@ -76,12 +83,13 @@ class Workout < ActiveRecord::Base
 
 
   #~ Hooks ....................................................................
-  scope :visible_to_user, -> (u) { where { (creator_id == u.id) | (is_public == true) } }
 
   # paginates_per 1
 
-
   #~ Class methods ............................................................
+  def self.visible_to_user(user)
+    return Workout.where(creator_id: user.id).or(Workout.where(is_public: true))
+  end
 
   #~ Instance methods .........................................................
 
@@ -153,7 +161,7 @@ class Workout < ActiveRecord::Base
   end
 
   # ------------------------------------------------------------
-  # Given a current exercise, get the next exercise in the 
+  # Given a current exercise, get the next exercise in the
   # workout. Return the first exercise if the current exercise
   # is `nil`. Return the first exercise if the current exercise
   # does not belong to this workout.
@@ -167,10 +175,7 @@ class Workout < ActiveRecord::Base
     if ew
       ew = ew.lower_item
     end
-    if !ew
-      ew = exercise_workouts.first
-    end
-    return ew.andand.exercise
+    return ew.andand.exercise || first_exercise
   end
 
 
@@ -223,7 +228,7 @@ class Workout < ActiveRecord::Base
     gap_per = 100 - earned_per - remaining_per
     return [earned, remaining, gap, earned_per, remaining_per, gap_per]
   end
-  
+
   # -------------------------------------------------------------
   # Save this workout with the specified params. Remove any
   # exercises that have been marked for removal.
@@ -263,7 +268,7 @@ class Workout < ActiveRecord::Base
         exercise_workout.save!
       end
 
-      return self.save ? self : false 
+      return self.save ? self : false
   end
 
   # ----------------------------------------------------------------------------
@@ -273,7 +278,7 @@ class Workout < ActiveRecord::Base
     workout_offerings = [] # Workout offerings added from this submission.
     course_offerings.each do |id, offering|
       course_offering = CourseOffering.find(id)
-      workout_offering = WorkoutOffering.find_by(workout: self, 
+      workout_offering = WorkoutOffering.find_by(workout: self,
                                                  course_offering: course_offering)
       if workout_offering.blank?
         workout_offering = WorkoutOffering.new
@@ -340,27 +345,15 @@ class Workout < ActiveRecord::Base
   # -------------------------------------------------------------
   def score_for(user, workout_offering = nil,
                 lis_outcome_service_url = nil, lis_result_sourcedid = nil)
-    if workout_offering && (lis_outcome_service_url || lis_result_sourcedid)
-      workout_scores.where(
-        user: user,
-        workout_offering: workout_offering,
-        lis_outcome_service_url: lis_outcome_service_url,
-        lis_result_sourcedid: lis_result_sourcedid
-      ).order('updated_at DESC').first
-    elsif lis_outcome_service_url || lis_result_sourcedid
-      workout_scores.where(
-        user: user, 
-        workout_offering: nil,
-        lis_outcome_service_url: lis_outcome_service_url,
-        lis_result_sourcedid: lis_result_sourcedid
-      ).order('updated_at DESC').first
-    elsif workout_offering # can assume that the first one is what we want
-      workout_scores.where(
-        user: user,
-        workout_offering: workout_offering 
-      ).order('updated_at DESC').first
-    else # only user is specified
-      workout_scores.where(user: user, workout_offering: nil).first
+    scores = workout_scores.where(
+      user: user, workout_offering: workout_offering).order('updated_at DESC')
+    if lis_outcome_service_url || lis_result_sourcedid
+      scores.to_ary.detect do |s|
+        s.lis_outcome_service_url == lis_outcome_service_url and
+          s.lis_result_sourcedid == lis_result_sourcedid
+      end
+    else
+      scores.first
     end
   end
 
@@ -373,7 +366,7 @@ class Workout < ActiveRecord::Base
 
     if user
       available_workouts = Workout.where(
-        id: (Workout.visible_to_user(user) + user.managed_workouts)
+        id: (Workout.visible_to_user(user).union(user.managed_workouts))
         .map(&:id)
       )
 
@@ -427,7 +420,7 @@ class Workout < ActiveRecord::Base
     return available_workouts.tagged_with(terms, any: true, wild: true, on: :tags) +
       available_workouts.tagged_with(terms, any: true, wild: true, on: :languages) +
       available_workouts.tagged_with(terms, any: true, wild: true, on: :styles) +
-      available_workouts.where('name regexp (?)', split_terms).uniq
+      available_workouts.where('name regexp (?)', split_terms).distinct
   end
 
 

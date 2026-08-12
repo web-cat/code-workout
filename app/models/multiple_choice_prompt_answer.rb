@@ -2,7 +2,7 @@
 #
 # Table name: multiple_choice_prompt_answers
 #
-#  id :integer          not null, primary key
+#  id :bigint           not null, primary key
 #
 
 # =============================================================================
@@ -11,7 +11,7 @@
 # PromptAnswer via acts_as (see the documentation on-line for the
 # activerecord-acts_as gem).
 #
-class MultipleChoicePromptAnswer < ActiveRecord::Base
+class MultipleChoicePromptAnswer < ApplicationRecord
 
   #~ Relationships ............................................................
 

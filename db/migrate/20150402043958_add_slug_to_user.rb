@@ -1,4 +1,4 @@
-class AddSlugToUser < ActiveRecord::Migration
+class AddSlugToUser < ActiveRecord::Migration[5.1]
 
   def up
     add_column :users, :slug, :string

@@ -20,9 +20,9 @@
     %thead
       %tr
         %th Course
-        %th Open
+        %th From
         %th Due
-        %th Close
+        %th Until
         %th Time Limit
     %tbody
       - @workout.workout_offerings.each do |woff|
@@ -47,7 +47,7 @@
       Due:
       = l user_time(current_user, @workout_offering.soft_deadline)
     - elsif @workout_offering.hard_deadline
-      Due:
+      Until:
       = l user_time(current_user, @workout_offering.hard_deadline)
     &nbsp;&nbsp;&nbsp;Score:
     - if workout_score

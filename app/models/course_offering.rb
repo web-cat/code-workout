@@ -2,16 +2,16 @@
 #
 # Table name: course_offerings
 #
-#  id                      :integer          not null, primary key
+#  id                      :bigint           not null, primary key
 #  cutoff_date             :date
-#  label                   :string(255)      default(""), not null
+#  label                   :string(255)      not null
 #  self_enrollment_allowed :boolean
 #  url                     :string(255)
-#  created_at              :datetime
-#  updated_at              :datetime
-#  course_id               :integer          not null
-#  lms_instance_id         :integer
-#  term_id                 :integer          not null
+#  created_at              :datetime         not null
+#  updated_at              :datetime         not null
+#  course_id               :bigint           not null
+#  lms_instance_id         :bigint
+#  term_id                 :bigint           not null
 #
 # Indexes
 #
@@ -23,12 +23,14 @@
 #
 #  course_offerings_course_id_fk  (course_id => courses.id)
 #  course_offerings_term_id_fk    (term_id => terms.id)
+#  fk_rails_...                   (course_id => courses.id)
+#  fk_rails_...                   (term_id => terms.id)
 #
 
 # =============================================================================
 # Represents a single section (or offering) of a course in a specific term.
 #
-class CourseOffering < ActiveRecord::Base
+class CourseOffering < ApplicationRecord
 
   #~ Relationships ............................................................
 
@@ -52,10 +54,10 @@ class CourseOffering < ActiveRecord::Base
     -> { includes(:term).order('terms.starts_on DESC', 'label ASC') }
 
   # FIXME: This scope seems to be broken. Use user.managed_course_offerings instead
-  scope :managed_by_user, -> (u) { joins{course_enrollments}.
-   where{ course_enrollments.user == u &&
-    course_enrollments.course_role_id == CourseRole::INSTRUCTOR_ID } }
-  scope :for_course_in_term, -> (c, t) { where { (course == c && term == t) } }
+  scope :managed_by_user, -> (u) { joins(:course_enrollments).
+    where(course_enrollments: { user_id: u.id,
+      course_role_id: CourseRole::INSTRUCTOR_ID }) }
+  scope :for_course_in_term, -> (c, t) { where(course: c, term: t) }
 
 
   #~ Validation ...............................................................
@@ -97,7 +99,7 @@ class CourseOffering < ActiveRecord::Base
   # manage this CourseOffering.
   #
   def managers
-    course_enrollments.where(course_roles: { can_manage_course: true }).
+    course_enrollments.joins(:course_role).where(course_roles: { can_manage_course: true }).
       map(&:user)
   end
 
@@ -107,7 +109,7 @@ class CourseOffering < ActiveRecord::Base
   # this CourseOffering.
   #
   def students
-    course_enrollments.where(course_role: CourseRole.student).map(&:user)
+    course_enrollments.where(course_role_id: CourseRole.student).map(&:user)
   end
 
 
@@ -116,7 +118,7 @@ class CourseOffering < ActiveRecord::Base
   # this CourseOffering.
   #
   def instructors
-    course_enrollments.where(course_role: CourseRole.instructor).map(&:user)
+    course_enrollments.where(course_role_id: CourseRole.instructor).map(&:user)
   end
 
 

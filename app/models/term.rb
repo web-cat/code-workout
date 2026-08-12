@@ -2,18 +2,19 @@
 #
 # Table name: terms
 #
-#  id         :integer          not null, primary key
-#  season     :integer          not null
-#  starts_on  :date             not null
+#  id         :bigint           not null, primary key
 #  ends_on    :date             not null
+#  season     :integer          not null
+#  slug       :string(255)      not null
+#  starts_on  :date             not null
 #  year       :integer          not null
-#  created_at :datetime
-#  updated_at :datetime
-#  slug       :string(255)      default(""), not null
+#  created_at :datetime         not null
+#  updated_at :datetime         not null
 #
 # Indexes
 #
 #  index_terms_on_slug             (slug) UNIQUE
+#  index_terms_on_starts_on        (starts_on)
 #  index_terms_on_year_and_season  (year,season)
 #
 
@@ -21,7 +22,7 @@
 # Represents an academic term or semester, which indicates the time period
 # for one or more course offerings.
 #
-class Term < ActiveRecord::Base
+class Term < ApplicationRecord
   extend FriendlyId
   friendly_id :display_name, use: :history
 

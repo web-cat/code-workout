@@ -1,0 +1,24 @@
+name: deploy-acos
+on:
+  push:
+    branches:
+      - keweizhan
+
+jobs:
+  build:
+    name: deploy-acos
+    runs-on: self-hosted
+    steps:
+      - name: ssh
+        uses: fifsky/ssh-action@master
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          user: ${{ secrets.STAGING_USERNAME }}
+          key: ${{ secrets.STAGING_KEY }}
+          port: ${{ secrets.STAGING_PORT }}
+          args: "-tt"
+          command: |
+            cd /home/deploy/code-workout/
+            docker compose pull
+            docker-compose down
+            docker-compose up -d

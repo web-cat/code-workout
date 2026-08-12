@@ -2,7 +2,7 @@
 #
 # Table name: multiple_choice_prompts
 #
-#  id             :integer          not null, primary key
+#  id             :bigint           not null, primary key
 #  allow_multiple :boolean          default(FALSE), not null
 #  is_scrambled   :boolean          default(TRUE), not null
 #
@@ -18,7 +18,7 @@
 # One multiple-choice prompt includes one or more choices, which are
 # represented at different objects.
 #
-class MultipleChoicePrompt < ActiveRecord::Base
+class MultipleChoicePrompt < ApplicationRecord
 
   #~ Relationships ............................................................
 
@@ -52,6 +52,11 @@ class MultipleChoicePrompt < ActiveRecord::Base
 
   # -------------------------------------------------------------
   def is_coding?
+    false
+  end
+
+  # -------------------------------------------------------------
+  def is_parsons?
     false
   end
 

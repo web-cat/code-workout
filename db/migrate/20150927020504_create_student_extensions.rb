@@ -1,4 +1,4 @@
-class CreateStudentExtensions < ActiveRecord::Migration
+class CreateStudentExtensions < ActiveRecord::Migration[5.1]
   def change
     create_table :student_extensions do |t|
       t.belongs_to :user, index: true

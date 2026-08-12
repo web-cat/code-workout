@@ -2,32 +2,38 @@
 #
 # Table name: exercises
 #
-#  id                     :integer          not null, primary key
+#  id                     :bigint           not null, primary key
 #  experience             :integer          not null
 #  is_public              :boolean          default(FALSE), not null
 #  name                   :string(255)
 #  question_type          :integer          not null
 #  versions               :integer
-#  created_at             :datetime
-#  updated_at             :datetime
-#  current_version_id     :integer
-#  exercise_collection_id :integer
-#  exercise_family_id     :integer
+#  created_at             :datetime         not null
+#  updated_at             :datetime         not null
+#  current_version_id     :bigint
+#  exercise_collection_id :bigint
+#  exercise_family_id     :bigint
 #  external_id            :string(255)
-#  irt_data_id            :integer
+#  irt_data_id            :bigint
 #
 # Indexes
 #
-#  exercises_irt_data_id_fk                   (irt_data_id)
+#  index_exercises_on_current_version_id      (current_version_id)
 #  index_exercises_on_exercise_collection_id  (exercise_collection_id)
 #  index_exercises_on_exercise_family_id      (exercise_family_id)
 #  index_exercises_on_external_id             (external_id) UNIQUE
+#  index_exercises_on_irt_data_id             (irt_data_id)
 #  index_exercises_on_is_public               (is_public)
 #
 # Foreign Keys
 #
+#  exercises_current_version_id_fk  (current_version_id => exercise_versions.id)
 #  exercises_exercise_family_id_fk  (exercise_family_id => exercise_families.id)
 #  exercises_irt_data_id_fk         (irt_data_id => irt_data.id)
+#  fk_rails_...                     (current_version_id => exercise_versions.id)
+#  fk_rails_...                     (exercise_collection_id => exercise_collections.id)
+#  fk_rails_...                     (exercise_family_id => exercise_families.id)
+#  fk_rails_...                     (irt_data_id => irt_data.id)
 #
 
 # =============================================================================
@@ -48,7 +54,7 @@
 # in effect when they gave their answer.  New users seeing an exercise
 # for the first time always see the newest version.
 #
-class Exercise < ActiveRecord::Base
+class Exercise < ApplicationRecord
 
   #~ Relationships ............................................................
 
@@ -90,11 +96,13 @@ class Exercise < ActiveRecord::Base
   Q_MC     = 1
   Q_CODING = 2
   Q_BLANKS = 3
+  Q_PARSONS = 4
 
   TYPE_NAMES = {
     Q_MC     => 'Multiple Choice Question',
     Q_CODING => 'Coding Question',
-    Q_BLANKS => 'Fill in the blanks'
+    Q_BLANKS => 'Fill in the blanks',
+    Q_PARSONS => 'Parsons Problem'
   }
 
   LANGUAGE_EXTENSION = {
@@ -105,12 +113,11 @@ class Exercise < ActiveRecord::Base
     'C++' => 'cpp'
   }
 
+  # NOTE: visible_through_user is defined as a class method below (line ~142)
+  # using standard ActiveRecord syntax (left_outer_joins + where).
 
-  scope :visible_through_user, -> (u) { joins{exercise_owners.outer}.joins{exercise_collection.outer}.
-    where{ (exercise_owners.owner == u) | (exercise_collection.user == u) } }
 
-
-  #~ Class methods ............................................................
+    #~ Class methods ............................................................
 
   # -------------------------------------------------------------
   def self.search(terms, user = nil)
@@ -131,13 +138,22 @@ class Exercise < ActiveRecord::Base
     else
       visible = Exercise.publicly_visible
     end
-    
+
     result = visible.tagged_with(terms, any: true, wild: true, on: :tags)
       .union(visible.tagged_with(terms, any: true, wild: true, on: :languages))
-      .union(visible.tagged_with(terms, any: true, wild: true, on: :styles)) 
+      .union(visible.tagged_with(terms, any: true, wild: true, on: :styles))
       .union(visible.where('(name regexp (?)) or (exercises.id in (?))', r, ids))
       .distinct
     return result
+  end
+
+
+  # -------------------------------------------------------------
+  def self.visible_through_user(user)
+    return Exercise.left_outer_joins(:exercise_owners)
+      .left_outer_joins(:exercise_collection)
+      .where('exercise_owners.owner_id = ? or exercise_collections.user_id = ?',
+        user.id, user.id)
   end
 
 
@@ -167,9 +183,9 @@ class Exercise < ActiveRecord::Base
     visible_through_user_group = Exercise.visible_through_user_group(user)
 
     return visible_through_user
-      .union(publicly_visible)
+      .union(Exercise.publicly_visible)
       .union(visible_through_course_offering)
-      .union(visible_through_user_group)
+      .union(Exercise.visible_through_user_group(user))
   end
 
 
@@ -182,15 +198,16 @@ class Exercise < ActiveRecord::Base
   def self.publicly_visible
     public_license = Exercise.joins(
       exercise_collection: [ license: :license_policy ])
-      .where(is_public: nil, exercise_collection:
-        { license:
-          { license_policy:
-            { is_public: true } } }
-      )
+      .where('exercises.is_public is null and license_policies.is_public = true')
+      # .where(is_public: nil, exercise_collection:
+      #   { license:
+      #     { license_policy:
+      #       { is_public: true } } }
+      # )
 
-    public_exercise = Exercise.where(is_public: true)
+    public_exercises = Exercise.where(is_public: true)
 
-    return public_exercise.union(public_license)
+    return public_exercises.union(public_license)
   end
 
 
@@ -240,6 +257,11 @@ class Exercise < ActiveRecord::Base
     self.question_type == Q_BLANKS
   end
 
+  # -------------------------------------------------------------
+  def is_parsons?
+    self.question_type == Q_PARSONS
+  end
+
 
   # -------------------------------------------------------------
   # getter override for name
@@ -281,7 +303,7 @@ class Exercise < ActiveRecord::Base
   end
 
   # Does the user have privileged access to this exercise, either
-  # by owning the exercise or having access to its 
+  # by owning the exercise or having access to its
   # exercise_collection?
   def can_be_assigned_by?(u)
     return self.owned_by?(u) ||
@@ -321,7 +343,48 @@ class Exercise < ActiveRecord::Base
     end
   end
 
-  def self.progsnap2_attempt_csv(exercise_id, course_id=nil, term_id=nil) 
+  def self.generate_slc_catalog(filename, base_url="https://codeworkout.cs.vt.edu")
+    exercises = Exercise.publicly_visible
+
+    catalog = exercises.map do |exercise|
+      description = case exercise.question_type
+                    when Q_MC
+                      "Multiple-choice question"
+                    when Q_CODING
+                      "Coding question"
+                    when Q_BLANKS
+                      "Fill in the blanks question"
+                    else
+                      exercise.type_name
+                    end
+
+      item = {
+        catalog_type: "SLCItem",
+        persistentID: exercise.external_id.to_s,
+        platform_name: "CodeWorkout",
+        iframe_url: base_url +
+          Rails.application.routes.url_helpers.exercise_practice_path(exercise) +
+          "?lti_launch=true",
+        title: exercise.name.to_s,
+        description: description,
+        author: exercise.owners.empty? ? [exercise.current_version&.creator&.display_name_with_email].compact : exercise.owners.map(&:display_name_with_email),
+        features: exercise.question_type == Q_CODING ? ["Free Coding Problem"] : ["Question"],
+        institution: ["Virginia Tech"],
+        keywords: exercise.tags.map(&:name),
+        programming_language: [exercise.language].compact,
+        natural_language: ["English"]
+      }
+
+      license = exercise.exercise_collection.andand.license.andand.name
+      item[:license] = license if license
+
+      item
+    end
+
+    File.write(filename, JSON.pretty_generate(catalog))
+  end
+
+  def self.progsnap2_attempt_csv(exercise_id, course_id=nil, term_id=nil)
     denormalized = Exercise.denormalized_attempt_data(exercise_id, course_id, term_id)
     main_events = Exercise.progsnap2_main_events_csv(denormalized)
     code_states = Exercise.progsnap2_code_states_csv(denormalized)
@@ -375,7 +438,7 @@ class Exercise < ActiveRecord::Base
         'a course id and term id.'
     end
 
-    course_filter = course_id ? 
+    course_filter = course_id ?
       "AND courses.id = #{course_id}" :
       ""
     term_filter = term_id ?
@@ -400,7 +463,7 @@ class Exercise < ActiveRecord::Base
       .joins('LEFT JOIN courses ON courses.id = course_offerings.course_id')
       .joins('LEFT JOIN coding_prompt_answers ON
         prompt_answers.actable_id = coding_prompt_answers.id')
-      
+
       if course_id
         result = result.where('courses.id = ?', course_id)
       end

@@ -58,13 +58,22 @@ class ExerciseRepresenter < Representable::Decorator
         end
       },
       class: lambda { |hsh, *|
-        hsh.has_key?('coding_prompt') ?
-          CodingPrompt : MultipleChoicePrompt
+        if hsh.has_key?('coding_prompt')
+          CodingPrompt
+        elsif hsh.has_key?('parsons_prompt')
+          ParsonsPrompt
+        else
+          MultipleChoicePrompt
+        end
       },
       decorator: lambda { |o, *|
-        o.is_a?(CodingPrompt) ?
-          CodingPromptRepresenter : MultipleChoicePromptRepresenter
+        if o.is_a?(CodingPrompt)
+          CodingPromptRepresenter
+        elsif o.is_a?(ParsonsPrompt)
+          ParsonsPromptRepresenter
+        else
+          MultipleChoicePromptRepresenter
+        end
       }
   end
-
 end

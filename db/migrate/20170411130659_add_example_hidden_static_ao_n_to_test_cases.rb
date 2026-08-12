@@ -1,4 +1,4 @@
-class AddExampleHiddenStaticAoNToTestCases < ActiveRecord::Migration
+class AddExampleHiddenStaticAoNToTestCases < ActiveRecord::Migration[5.1]
   def change
     add_column :test_cases, :static, :boolean, null: false, default: false
     add_column :test_cases, :all_or_nothing, :boolean, null: false, default: false

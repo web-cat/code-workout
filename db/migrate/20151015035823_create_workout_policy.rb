@@ -1,4 +1,4 @@
-class CreateWorkoutPolicy < ActiveRecord::Migration
+class CreateWorkoutPolicy < ActiveRecord::Migration[5.1]
   def change
     create_table :workout_policies do |t|
       t.boolean :hide_thumbnails_before_start

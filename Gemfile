@@ -1,7 +1,8 @@
 source 'https://rubygems.org'
 
-gem 'rails', '~> 4.2'
-gem 'bootstrap-sass-backport', '~> 3.2.0'
+gem 'rails', '~> 5.2.8'
+gem 'sprockets', '< 4.0.0'
+gem 'bootstrap-sass', '~> 3.2.0'
 gem 'jquery-rails'
 gem 'jquery-ui-rails'
 gem 'bootstrap-editable-rails'
@@ -12,12 +13,12 @@ gem 'formtastic-bootstrap'
 gem 'sucker_punch', '~> 1.0'
 gem 'haml', '>= 3.1.4'
 gem 'haml-rails'
-gem 'coffee-rails', '~> 4.0.0'
+gem 'coffee-rails', '~> 4.2'
 gem 'coffee-script-source'
 gem 'test-unit', '~> 3.0.9'
-gem 'nokogiri', '~> 1.10.4'
+gem 'nokogiri', '~> 1.13', '>= 1.13.10'
 gem 'csv_shaper'
-gem 'andand', github: 'raganwald/andand'
+gem 'andand', git: 'https://github.com/raganwald/andand'
 gem 'responders' # Can't move above 1.1 until migrating to rails 4.2+
 gem 'friendly_id', '~> 5'
 gem 'active_record-acts_as'
@@ -26,12 +27,16 @@ gem 'acts-as-taggable-on'
 gem 'representable', '~> 2.1'
 gem 'redcarpet'
 gem 'loofah', '>= 2.3.1'
+gem 'peml', github: 'CSSPLICE/peml', ref: '4d45007'
+# gem 'peml', path: './peml-0.1.2'
 gem 'truncate_html'
 gem 'tzinfo' # For timezone support
 gem 'active_record_union'
+gem 'dottie', '~> 0.0.3'
 gem 'mysql2', '~> 0.4.0'
 gem 'modernizr-rails'
 gem 'rubyzip', '>= 1.3.0'
+gem 'bootsnap' # Added during Rails 5.2 upgrade
 
 # For JSON support
 gem 'rabl'
@@ -48,26 +53,23 @@ group :development, :test do
   gem 'thin'
   gem 'byebug'
   gem 'sqlite3', '~> 1.3.0'
+  gem 'listen'
   gem 'rspec-rails'
   gem 'annotate'
-  gem 'rails-erd', github: 'voormedia/rails-erd'
+  gem 'rails-erd', git: 'https://github.com/voormedia/rails-erd'
   gem 'faker'
-  # Needed for debugging support in Aptana Studio.  Disabled, since these
-  # two gems do not support Ruby 2.0 yet :-(.
-  # gem 'ruby-debug-base'
-  # gem 'ruby-debug-ide'
   gem 'pry'
   gem 'request-log-analyzer'
+  gem 'capybara', '~> 3.12.0'
 end
 gem 'factory_bot_rails'
 gem 'log_file'
 
 group :test do
-  gem 'capybara'
 end
 
 group :production, :staging, :deploy  do
-  gem 'puma', '~> 4.3.5'
+  gem 'puma', '~> 4.3.12'
 end
 
 group :doc do
@@ -78,12 +80,13 @@ end
 # Gems for authentication and authorization.
 gem 'devise'
 gem 'omniauth'
+gem 'omniauth-rails_csrf_protection'
 gem 'omniauth-facebook'
 gem 'omniauth-google-oauth2'
 gem 'omniauth-cas'
 gem 'cancancan'
 gem 'activeadmin'
-gem 'exception_handler', '= 0.3.45'
+gem 'exception_handler', '~> 0.8.0.0'
 
 gem 'kaminari', '~> 1.2.1'        # Auto-paginated views
 gem 'remotipart'      # Adds support for remote mulitpart forms (file uploads)
@@ -98,9 +101,6 @@ gem 'bootstrap-wysihtml5-rails'
 gem 'momentjs-rails', '>= 2.9.0'
 gem 'bootstrap3-datetimepicker-rails', '~> 4.17.37'
 
-#gem for improved WHERE querying
-gem 'squeel', '~> 1.2'
-
 #for nested forms
 gem 'cocoon'
 
@@ -113,7 +113,8 @@ group :deploy do
   gem 'capistrano-bundler'
   gem 'capistrano-rails'
   gem 'capistrano-rvm'
-  gem 'capistrano3-puma', github: 'seuros/capistrano-puma'
+  gem 'capistrano3-puma', '~> 4.0.0',
+      git: 'https://github.com/seuros/capistrano-puma', branch: 'v4.x'
 end
 
 #for multi-color progress bar
@@ -127,11 +128,10 @@ gem 'rest-client'
 # Gems for cookie updates
 gem 'user_agent_parser', '~> 2.7.0'
 gem 'rails_same_site_cookie'
-gem 'sprockets', '< 4.0.0'
 gem 'image_hash'
 
 # Gems for resource uploder
-gem 'carrierwave', '1.3.2'
+gem 'carrierwave', '~> 1.3.3'
 
 gem 'ed25519'
 gem 'bcrypt_pbkdf'

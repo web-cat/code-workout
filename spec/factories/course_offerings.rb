@@ -2,16 +2,16 @@
 #
 # Table name: course_offerings
 #
-#  id                      :integer          not null, primary key
+#  id                      :bigint           not null, primary key
 #  cutoff_date             :date
-#  label                   :string(255)      default(""), not null
+#  label                   :string(255)      not null
 #  self_enrollment_allowed :boolean
 #  url                     :string(255)
-#  created_at              :datetime
-#  updated_at              :datetime
-#  course_id               :integer          not null
-#  lms_instance_id         :integer
-#  term_id                 :integer          not null
+#  created_at              :datetime         not null
+#  updated_at              :datetime         not null
+#  course_id               :bigint           not null
+#  lms_instance_id         :bigint
+#  term_id                 :bigint           not null
 #
 # Indexes
 #
@@ -23,6 +23,8 @@
 #
 #  course_offerings_course_id_fk  (course_id => courses.id)
 #  course_offerings_term_id_fk    (term_id => terms.id)
+#  fk_rails_...                   (course_id => courses.id)
+#  fk_rails_...                   (term_id => terms.id)
 #
 
 FactoryBot.define do

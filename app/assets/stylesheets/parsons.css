@@ -1,0 +1,454 @@
+:root {
+    --parsonsBorderColor: #cccccc;
+    --parsonsCorrectBorderColor: #5cb85c;
+    --parsonsIncorrectBorderColor: #d9534f;
+    --parsonsBgColor: #f9f9f9;
+    --parsonsCorrectBgColor: #dff0d8;
+    --parsonsIncorrectBgColor: #f2dede;
+}
+
+.parsons-container {
+    clear: both;
+}
+
+.parsons .sortable-code-container {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 10px;
+    text-align: center;
+    overflow-x: auto;
+}
+.parsons .sortable-code-container:not(.block) {
+    /* Remove text highlighting in widget */
+    -webkit-user-select: none;
+    -moz-user-select: -moz-none;
+    -ms-user-select: none;
+    user-select: none;
+}
+.parsons .sortable-code {
+    position: static;
+    padding-left: 0px;
+    margin: 0px 15px;
+    display: block;
+    text-align: left;
+    vertical-align: top;
+    flex-shrink: 0;
+}
+.parsons .source,
+.parsons .answer,
+.parsons .answer1,
+.parsons .answer2,
+.parsons .answer3,
+.parsons .answer4 {
+    position: relative;
+    font-size: 100%;
+    list-style: none;
+    background-color: var(--questionBgColor, #efefff);
+    padding-bottom: 10px;
+    padding-left: 0;
+    margin-left: 0;
+    border: 1px solid var(--componentBorderColor, #efefff);
+}
+.parsons .source {
+    background-color: var(--questionBgColor, #efefff);
+}
+.parsons .answer {
+    background-color: var(--parsonsBgColor);
+    border-color: var(--parsonsBorderColor);
+}
+.parsons .answer.incorrect {
+    background-color: var(--parsonsIncorrectBgColor);
+    border-color: var(--parsonsIncorrectBorderColor);
+}
+.parsons .answer.correct {
+    background-color: var(--parsonsCorrectBgColor);
+    border-color: var(--parsonsCorrectBorderColor);
+}
+.parsons .answer1 {
+    background: linear-gradient(var(--parsonsBorderColor), var(--parsonsBorderColor)) no-repeat border-box;
+    background-size: 1px 100%;
+    background-position: 30px 0;
+    background-origin: content-box;
+    background-color: var(--parsonsBgColor);
+    border-color: var(--parsonsBorderColor);
+}
+.parsons .answer1.incorrect {
+    background: linear-gradient(var(--parsonsIncorrectBorderColor), var(--parsonsIncorrectBorderColor)) no-repeat border-box;
+    background-size: 1px 100%;
+    background-position: 30px 0;
+    background-origin: content-box;
+    background-color: var(--parsonsIncorrectBgColor);
+    border-color: var(--parsonsIncorrectBorderColor);
+}
+.parsons .answer1.correct {
+    background: linear-gradient(var(--parsonsCorrectBorderColor), var(--parsonsCorrectBorderColor)) no-repeat border-box;
+    background-size: 1px 100%;
+    background-position: 30px 0;
+    background-origin: content-box;
+    background-color: var(--parsonsCorrectBgColor);
+    border-color: var(--parsonsCorrectBorderColor);
+}
+.parsons .answer2 {
+    background: linear-gradient(var(--parsonsBorderColor), var(--parsonsBorderColor)) no-repeat border-box,
+        linear-gradient(var(--parsonsBorderColor), var(--parsonsBorderColor)) no-repeat border-box;
+    background-size: 1px 100%, 1px 100%;
+    background-position: 30px 0, 60px 0;
+    background-origin: padding-box, padding-box;
+    background-color: var(--parsonsBgColor);
+    border-color: var(--parsonsBorderColor);
+}
+.parsons .answer2.incorrect {
+    background: linear-gradient(var(--parsonsIncorrectBorderColor), var(--parsonsIncorrectBorderColor)) no-repeat border-box,
+        linear-gradient(var(--parsonsIncorrectBorderColor), var(--parsonsIncorrectBorderColor)) no-repeat border-box;
+    background-size: 1px 100%, 1px 100%;
+    background-position: 30px 0, 60px 0;
+    background-origin: padding-box, padding-box;
+    background-color: var(--parsonsIncorrectBgColor);
+    border-color: var(--parsonsIncorrectBorderColor);
+}
+.parsons .answer2.correct {
+    background: linear-gradient(var(--parsonsCorrectBorderColor), var(--parsonsCorrectBorderColor)) no-repeat border-box,
+        linear-gradient(var(--parsonsCorrectBorderColor), var(--parsonsCorrectBorderColor)) no-repeat border-box;
+    background-size: 1px 100%, 1px 100%;
+    background-position: 30px 0, 60px 0;
+    background-origin: padding-box, padding-box;
+    background-color: var(--parsonsCorrectBgColor);
+    border-color: var(--parsonsCorrectBorderColor);
+}
+.parsons .answer3 {
+    background: linear-gradient(var(--parsonsBorderColor), var(--parsonsBorderColor)) no-repeat border-box,
+        linear-gradient(var(--parsonsBorderColor), var(--parsonsBorderColor)) no-repeat border-box,
+        linear-gradient(var(--parsonsBorderColor), var(--parsonsBorderColor)) no-repeat border-box;
+    background-size: 1px 100%, 1px 100%, 1px 100%;
+    background-position: 30px 0, 60px 0, 90px 0;
+    background-origin: padding-box, padding-box, padding-box;
+    background-color: var(--parsonsBgColor);
+    border-color: var(--parsonsBorderColor);
+}
+.parsons .answer3.incorrect {
+    background: linear-gradient(var(--parsonsIncorrectBorderColor), var(--parsonsIncorrectBorderColor)) no-repeat border-box,
+        linear-gradient(var(--parsonsIncorrectBorderColor), var(--parsonsIncorrectBorderColor)) no-repeat border-box,
+        linear-gradient(var(--parsonsIncorrectBorderColor), var(--parsonsIncorrectBorderColor)) no-repeat border-box;
+    background-size: 1px 100%, 1px 100%, 1px 100%;
+    background-position: 30px 0, 60px 0, 90px 0;
+    background-origin: padding-box, padding-box, padding-box;
+    background-color: var(--parsonsIncorrectBgColor);
+    border-color: var(--parsonsIncorrectBorderColor);
+}
+.parsons .answer3.correct {
+    background: linear-gradient(var(--parsonsCorrectBorderColor), var(--parsonsCorrectBorderColor)) no-repeat border-box,
+        linear-gradient(var(--parsonsCorrectBorderColor), var(--parsonsCorrectBorderColor)) no-repeat border-box,
+        linear-gradient(var(--parsonsCorrectBorderColor), var(--parsonsCorrectBorderColor)) no-repeat border-box;
+    background-size: 1px 100%, 1px 100%, 1px 100%;
+    background-position: 30px 0, 60px 0, 90px 0;
+    background-origin: padding-box, padding-box, padding-box;
+    background-color: var(--parsonsCorrectBgColor);
+    border-color: var(--parsonsCorrectBorderColor);
+}
+.parsons .answer4 {
+    background: linear-gradient(var(--parsonsBorderColor), var(--parsonsBorderColor)) no-repeat border-box,
+        linear-gradient(var(--parsonsBorderColor), var(--parsonsBorderColor)) no-repeat border-box,
+        linear-gradient(var(--parsonsBorderColor), var(--parsonsBorderColor)) no-repeat border-box,
+        linear-gradient(var(--parsonsBorderColor), var(--parsonsBorderColor)) no-repeat border-box;
+    background-size: 1px 100%, 1px 100%, 1px 100%, 1px 100%;
+    background-position: 30px 0, 60px 0, 90px 0, 120px 0;
+    background-origin: padding-box, padding-box, padding-box, padding-box;
+    background-color: var(--parsonsBgColor);
+    border-color: var(--parsonsBorderColor);
+}
+.parsons .answer4.incorrect {
+    background: linear-gradient(var(--parsonsIncorrectBorderColor), var(--parsonsIncorrectBorderColor)) no-repeat border-box,
+        linear-gradient(var(--parsonsIncorrectBorderColor), var(--parsonsIncorrectBorderColor)) no-repeat border-box,
+        linear-gradient(var(--parsonsIncorrectBorderColor), var(--parsonsIncorrectBorderColor)) no-repeat border-box,
+        linear-gradient(var(--parsonsIncorrectBorderColor), var(--parsonsIncorrectBorderColor)) no-repeat border-box;
+    background-size: 1px 100%, 1px 100%, 1px 100%, 1px 100%;
+    background-position: 30px 0, 60px 0, 90px 0, 120px 0;
+    background-origin: padding-box, padding-box, padding-box, padding-box;
+    background-color: var(--parsonsIncorrectBgColor);
+    border-color: var(--parsonsIncorrectBorderColor);
+}
+.parsons .answer4.correct {
+    background: linear-gradient(var(--parsonsCorrectBorderColor), var(--parsonsCorrectBorderColor)) no-repeat border-box,
+        linear-gradient(var(--parsonsCorrectBorderColor), var(--parsonsCorrectBorderColor)) no-repeat border-box,
+        linear-gradient(var(--parsonsCorrectBorderColor), var(--parsonsCorrectBorderColor)) no-repeat border-box,
+        linear-gradient(var(--parsonsCorrectBorderColor), var(--parsonsCorrectBorderColor)) no-repeat border-box;
+    background-size: 1px 100%, 1px 100%, 1px 100%, 1px 100%;
+    background-position: 30px 0, 60px 0, 90px 0, 120px 0;
+    background-origin: padding-box, padding-box, padding-box, padding-box;
+    background-color: var(--parsonsCorrectBgColor);
+    border-color: var(--parsonsCorrectBorderColor);
+}
+.parsons .block {
+    position: absolute;
+    -moz-border-radius: 10px;
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+    background-color: var(--background, #efefef);
+    border: 1px solid #d3d3d3;
+    padding: 5px 10px;
+    margin-top: 5px;
+    overflow: hidden;
+    cursor: move;
+}
+.parsons .block.disabled {
+    opacity: 0.3;
+}
+.parsons .block.fixed-block {
+    cursor: default;
+    border-style: dashed;
+    opacity: 0.85;
+}
+.parsons .drop-zone {
+    position: absolute;
+    border-radius: 5px;
+    background-color: rgba(255, 165, 0, 0.25);
+    border: none !important;
+    border-style: none !important;
+    box-sizing: border-box;
+    z-index: 0;
+    pointer-events: none;
+    outline: none !important;
+}
+.parsons .block.down {
+    border: 2px solid black;
+    padding: 4px 9px;
+}
+.parsons .block.up {
+    border: 2px solid black;
+    padding: 4px 9px;
+    background-color: white;
+    box-shadow: 3px 3px 4px black;
+}
+.parsons {
+    display: block;
+}
+.parsons .block {
+    clear: both;
+    float: left;
+    /*background-color: transparent;*/
+}
+
+.parsons .sortable-code code {
+    clear: both;
+    float: left;
+    background-color: transparent;
+}
+
+.parsons .block p {
+    margin: 0;
+}
+.parsons .block,
+.parsons .block:before,
+.parsons .block:after {
+    box-sizing: content-box;
+}
+.parsons .indent1 {
+    margin-left: 30px;
+}
+.parsons .indent2 {
+    margin-left: 60px;
+}
+.parsons .indent3 {
+    margin-left: 90px;
+}
+.parsons .indent4 {
+    margin-left: 120px;
+}
+.parsons .correct {
+    border: 1px solid #d6e9c6;
+    background: none;
+    background-color: var(--parsonsCorrectBgColor);
+}
+.parsons .indentLeft,
+.parsons .indentRight {
+    border: 2px solid #ffcc00;
+    padding: 4px 9px;
+    background-color: #fff0b3;
+}
+.parsons .indentLeft {
+    background-image: url(parsons-ll.svg),
+        url(parsons-rl.svg);
+    background-repeat: no-repeat, no-repeat;
+    background-position: left center, right center;
+}
+.parsons .indentRight {
+    background-image: url(parsons-lr.svg),
+        url(parsons-rr.svg);
+    background-repeat: no-repeat, no-repeat;
+    background-position: left center, right center;
+}
+.parsons .incorrectPosition {
+    background-color: #ffbaba;
+    border: 1px solid red;
+}
+.parsons .paired {
+    position: absolute;
+    -moz-border-radius: 10px;
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+    background-color: transparent;
+    border-left: 11px solid #b8b8f2;
+    border-right: 11px solid #b8b8f2;
+    border-top: 1px solid #b8b8f2;
+    border-bottom: 1px solid #b8b8f2;
+    margin-top: 5px;
+    overflow: hidden;
+}
+.parsons {
+    border-left: 0;
+    border-right: 0;
+    border-radius: 0;
+    margin: 10px 0;
+}
+.parsons .parsons-text {
+    max-width: var(--contentWidthRegular);
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.parsons .parsons-img {
+    display: inline-block;
+    text-align: center;
+    width: 100%;
+}
+
+.parsons .parsons-controls {
+    max-width: var(--contentWidthRegular);
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+    margin-top: 10px;
+}
+
+.parsons [role="tooltip"] {
+    max-width: var(--contentWidthRegular);
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    padding: 0px 10px;
+    top: 0;
+    text-align: center;
+    font-style: italic;
+}
+
+.block-label {
+    font-size: 90%;
+    color: #7e7ee7;
+    vertical-align: top;
+    white-space: pre;
+}
+.right-label {
+    padding: 0.2em 0em 0.3em 0.6em;
+}
+.left-label {
+    padding: 0.2em 0.6em 0.3em 0em;
+}
+
+.labels {
+    padding-top: 2px;
+    display: inline-block;
+    vertical-align: top;
+}
+
+.runestone .lines {
+    display: inline-block;
+    align-self: left;
+}
+
+.border_left {
+    border-left: 1px solid #b0b0b0;
+}
+
+.block {
+    display: flex;
+    align-items: stretch;
+    align-content: stretch;
+}
+
+.parsons,
+.parsons .sortable-code-container,
+.cd_section {
+    max-width: none;
+}
+
+#timed_Test .pagination {
+    margin: 5px 0;
+}
+
+/* =============================================
+   Grouped Blocks Styling (OR indicator overlay)
+   ============================================= */
+
+/* Allow overflow so the indicator can extend outside the source area */
+.parsons .sortable-code {
+    overflow: visible !important;
+}
+
+.parsons .source {
+    overflow: visible !important;
+}
+
+.grouped-blocks-overlay {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.grouped-blocks-overlay .or-indicator {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: 100%;
+}
+
+.grouped-blocks-overlay .or-text {
+    color: #7e7ee7;
+    font-style: italic;
+    font-size: 14px;
+    font-weight: 600;
+    margin-right: 2px;
+}
+
+.grouped-blocks-overlay .curly-brace {
+    width: 14px;
+    height: 100%;
+    min-height: 40px;
+    position: relative;
+}
+
+/* Draw curly brace using CSS */
+.grouped-blocks-overlay .curly-brace::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 3px;
+    width: 10px;
+    height: 50%;
+    border: 3px solid #7e7ee7;
+    border-right: none;
+    border-top-left-radius: 12px;
+    border-bottom: none;
+    box-sizing: border-box;
+}
+
+.grouped-blocks-overlay .curly-brace::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 3px;
+    width: 10px;
+    height: 50%;
+    border: 3px solid #7e7ee7;
+    border-right: none;
+    border-bottom-left-radius: 12px;
+    border-top: none;
+    box-sizing: border-box;
+}
+
+body:not(.pretext) {
+    .str{color:#080}.kwd{color:#008}.com{color:#800}.typ{color:#606}.lit{color:#066}.pun{color:#660}.pln{color:#000}.tag{color:#008}.atn{color:#606}.atv{color:#080}.dec{color:#606}pre.prettyprint{padding:2px;border:1px solid #888}@media print{.str{color:#060}.kwd{color:#006;font-weight:bold}.com{color:#600;font-style:italic}.typ{color:#404;font-weight:bold}.lit{color:#044}.pun{color:#440}.pln{color:#000}.tag{color:#006;font-weight:bold}.atn{color:#404}.atv{color:#060}}
+}

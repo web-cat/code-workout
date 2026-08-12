@@ -1,4 +1,4 @@
-class CreateAttemptsTagUserScores < ActiveRecord::Migration
+class CreateAttemptsTagUserScores < ActiveRecord::Migration[5.1]
   def change
     # HABTM table attempts <-> tag_user_scores (many to many)
     create_table :attempts_tag_user_scores, id: false do |t|

@@ -1,4 +1,4 @@
-class CreatePrompts < ActiveRecord::Migration
+class CreatePrompts < ActiveRecord::Migration[5.1]
   def change
     create_table :prompts do |t|
       t.belongs_to :exercise, index: true, null: false

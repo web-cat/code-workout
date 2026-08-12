@@ -2,7 +2,7 @@
 #
 # Table name: workout_scores
 #
-#  id                      :integer          not null, primary key
+#  id                      :bigint           not null, primary key
 #  completed               :boolean
 #  completed_at            :datetime
 #  exercises_completed     :integer
@@ -12,23 +12,27 @@
 #  lis_result_sourcedid    :string(255)
 #  score                   :float(24)
 #  started_at              :datetime
-#  created_at              :datetime
-#  updated_at              :datetime
-#  lti_workout_id          :integer
-#  user_id                 :integer          not null
-#  workout_id              :integer          not null
-#  workout_offering_id     :integer
+#  created_at              :datetime         not null
+#  updated_at              :datetime         not null
+#  lti_workout_id          :bigint
+#  user_id                 :bigint           not null
+#  workout_id              :bigint           not null
+#  workout_offering_id     :bigint
 #
 # Indexes
 #
-#  index_workout_scores_on_lti_workout_id  (lti_workout_id)
-#  index_workout_scores_on_user_id         (user_id)
-#  index_workout_scores_on_workout_id      (workout_id)
-#  workout_scores_workout_offering_id_fk   (workout_offering_id)
+#  idx_ws_on_user_workout_workout_offering      (user_id,workout_id,workout_offering_id)
+#  index_workout_scores_on_lti_workout_id       (lti_workout_id)
+#  index_workout_scores_on_user_id              (user_id)
+#  index_workout_scores_on_workout_id           (workout_id)
+#  index_workout_scores_on_workout_offering_id  (workout_offering_id)
 #
 # Foreign Keys
 #
 #  fk_rails_...                           (lti_workout_id => lti_workouts.id)
+#  fk_rails_...                           (user_id => users.id)
+#  fk_rails_...                           (workout_id => workouts.id)
+#  fk_rails_...                           (workout_offering_id => workout_offerings.id)
 #  workout_scores_user_id_fk              (user_id => users.id)
 #  workout_scores_workout_id_fk           (workout_id => workouts.id)
 #  workout_scores_workout_offering_id_fk  (workout_offering_id => workout_offerings.id)
@@ -77,7 +81,7 @@
 # offering, meaning a second workout offering of the same workout).
 # We want to support all of these situations.
 #
-class WorkoutScore < ActiveRecord::Base
+class WorkoutScore < ApplicationRecord
 
   #~ Relationships ............................................................
 
@@ -219,6 +223,16 @@ class WorkoutScore < ActiveRecord::Base
 
 
   # -------------------------------------------------------------
+  def show_answers?
+    if !self.workout_offering
+      return true
+    end
+
+    workout_offering.andand.workout_policy.andand.see_answers != false
+  end
+
+
+  # -------------------------------------------------------------
   def attempts_left_for_exercise_version(exercise_version)
     if self.workout_offering.andand.attempt_limit
       attempts_made = self
@@ -235,16 +249,26 @@ class WorkoutScore < ActiveRecord::Base
   # -------------------------------------------------------------
   def scoring_attempt_for(exercise)
     workout_score = self
-    Attempt.joins{exercise_version}.
-      where{(active_score_id == workout_score.id) &
-      (exercise_version.exercise_id == exercise.id)}.first
+
+    # First, check for current version only, which is faster
+    Attempt.where(
+      active_score_id: workout_score.id,
+      exercise_version_id: exercise.current_version_id).first ||
+
+      # Or, if that is nil, try search over all versions
+      Attempt.joins(:exercise_version).
+        where(active_score_id: workout_score.id,
+          exercise_versions: { exercise_id: exercise.id }).first
   end
 
 
   # -------------------------------------------------------------
   def previous_attempt_for(exercise)
-    attempts.joins{exercise_version}.
-      where{exercise_version.exercise_id == exercise.id}.first
+    # First, check for current version only, which is faster
+    attempts.where(exercise_version_id: exercise.current_version_id).first ||
+      # Or, if that is nil, try search over all versions
+      attempts.joins(:exercise_version).
+        where(exercise_versions: { exercise_id: exercise.id }).first
   end
 
 
@@ -268,30 +292,38 @@ class WorkoutScore < ActiveRecord::Base
   def record_attempt(attempt)
     needs_repost = false
     self.with_lock do
-      scored_for_this = self.scored_attempts.
-        joins(exercise_version: :exercise).
-        where(exercise_version: {
-          exercise: attempt.exercise_version.exercise
-        })
+      this_workout_score = self
+      scored_for_this =
+        #self.scored_attemptzs.
+        #  where(exercise_version_id: attempt.exercise_version_id)
+        Attempt.joins(:exercise_version).
+          where(active_score_id: this_workout_score.id,
+            exercise_versions: { exercise_id:
+              attempt.exercise_version.exercise.id })
 
-      last_attempt = scored_for_this.first
+      scoring_attempt = scored_for_this.first
 
-      record_score = last_attempt ? (
-        (self.workout_offering.andand.most_recent) ?
-          (attempt.submit_time > last_attempt.submit_time) :
-          (attempt.score > last_attempt.score ||
-          (attempt.score == last_attempt.score &&
-          attempt.submit_time > last_attempt.submit_time))) :
-        true
+      record_score = true
+      if scoring_attempt
+        if self.workout_offering.andand.most_recent
+          #if  last_attempt
+          record_score = (attempt.submit_time > scoring_attempt.submit_time)
+        else
+          record_score = (attempt.score > scoring_attempt.score ||
+            (attempt.score == scoring_attempt.score &&
+            attempt.submit_time > scoring_attempt.submit_time))
+        end
+      end
 
       # Only update if this attempt is included in score
       if record_score
-        if last_attempt
+        if scoring_attempt
           # clear previous active score
           scored_for_this.each do |a|
             self.scored_attempts.delete(a)
           end
-        else
+          self.scored_attempts.delete(scoring_attempt)
+        elsif !scored_for_this.any?
           # update number of exercises completed
           if self.exercises_completed &&
               self.exercises_completed < self.workout.exercises.length
@@ -370,7 +402,7 @@ class WorkoutScore < ActiveRecord::Base
   # Class method to find workout scores that were computed after
   # they were closed. Outputs a list of workout scores.
   def self.late(options={})
-    WorkoutScore.joins{ workout_offering }
+    WorkoutScore.joins(:workout_offering)
       .joins('inner join student_extensions on student_extensions.workout_offering_id = workout_offerings.id
              and student_extensions.user_id = workout_scores.user_id')
       .where('workout_scores.last_attempted_at >
@@ -390,8 +422,10 @@ class WorkoutScore < ActiveRecord::Base
         end
       end
       ws.workout.exercises.each do |e|
-        a = ws.attempts.joins{exercise_version}.
-          where{(exercise_version.exercise_id == e.id)}.
+        a = ws.attempts.where(exercise_version_id: e.current_version_id).
+          order('submit_time DESC').first ||
+          ws.attempts.joins(:exercise_version).
+          where(exercise_versions: { exercise_id: e.id }).
           order('submit_time DESC').first
         if a
           a.active_score = ws

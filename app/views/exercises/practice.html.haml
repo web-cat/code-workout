@@ -11,7 +11,7 @@
       = @exercise.display_name
       - if current_user.andand.can? :edit, @exercise
         %small
-          = link_to "", edit_exercise_path(@exercise), class: 'glyphicon glyphicon-pencil'
+          = link_to "", edit_exercise_path(@exercise), class: 'glyphicon glyphicon-pencil' , "aria-label": "Edit this exercise"
     - if @exercise_version.stem && !@exercise_version.stem.preamble.blank?
       - cache @exercise_version.stem do
         = markdown @exercise_version.stem.preamble
@@ -57,6 +57,8 @@
         = render 'attempts_left', attempts_left: @attempts_left
       - allow_write = true
       - coding_questions = false
+      - parsons_questions = false
+      - parsons_scripts_loaded = false
       - @exercise_version.prompts.each do |question_prompt|
         - prompt = question_prompt.specific
         - if prompt.is_mcq?
@@ -118,10 +120,108 @@
               - allow_write = false
           - if allow_write && params[:review_user_id].nil?
             = f.input :answer_code, as: :text, class: 'code',
-            input_html: { class: 'code', readonly: true, autofocus: true,
+            input_html: { class: 'code', readonly: true,
               value: prior_answer ? prior_answer.specific.answer : prompt.prepare_starter_code,
               data: { lang: 'text/x-' + (@exercise.language + (@exercise.language == 'C++'?'src':'')|| 'java').downcase,
               starter_code: prompt.prepare_starter_code } }
+          - else
+            %pre{ data: { lang: 'text/x-java' } }
+              = prior_answer ? prior_answer.specific.answer : prompt.prepare_starter_code
+        - elsif prompt.is_parsons?
+          - parsons_questions = true
+          - pif_json = prompt.get_pif_json
+          - prior_answer = @attempt && @attempt.prompt_answers.where(prompt: prompt.acting_as).first
+          - if !prior_answer && @workout_offering.andand.continue_from_workout
+            - prior_score = @workout_offering.continue_from_workout.score_for(@student_user, @workout_offering)
+            - prior_attempt = prior_score.previous_attempt_for(@exercise_version.exercise)
+            - prior_answer = prior_attempt && prior_attempt.prompt_answers.where(prompt: prompt.acting_as).first
+            // Getting this user's latest attempt on the exercise in the gym
+          - if !prior_answer && !@workout_score
+            - prior_attempt = @exercise.latest_attempt_for(current_user)
+            - prior_answer = prior_attempt && prior_attempt.prompt_answers.where(prompt: prompt.acting_as).first
+          - if prior_answer && @workout_offering
+            - if !@workout_offering.can_be_practiced_by?(current_user)
+              - allow_write = false
+          - if allow_write && params[:review_user_id].nil?
+            - unless parsons_scripts_loaded
+              - parsons_scripts_loaded = true
+              %script
+                :plain
+                  if (typeof eBookConfig === "undefined") { eBookConfig = {}; }
+                  eBookConfig.host = '';
+                  eBookConfig.app = eBookConfig.host + '/runestone';
+                  eBookConfig.ajaxURL = eBookConfig.app + '/ajax/';
+                  eBookConfig.course = "";
+                  eBookConfig.logLevel = 10;
+                  eBookConfig.username = "";
+                  eBookConfig.useRunestoneServices = false;
+                  eBookConfig.isPlaygroundEnv = true;
+              %script{ src: "https://cdnjs.cloudflare.com/ajax/libs/jquery.i18n/1.0.9/jquery.i18n.min.js", crossorigin: "anonymous" }
+              %script{ src: "https://cdnjs.cloudflare.com/ajax/libs/jquery.i18n/1.0.9/jquery.i18n.emitter.bidi.min.js", crossorigin: "anonymous" }
+              %script{ src: "https://cdnjs.cloudflare.com/ajax/libs/jquery.i18n/1.0.9/jquery.i18n.emitter.min.js", crossorigin: "anonymous" }
+              %script{ src: "https://cdnjs.cloudflare.com/ajax/libs/jquery.i18n/1.0.9/jquery.i18n.fallbacks.min.js", crossorigin: "anonymous" }
+              %script{ src: "https://cdnjs.cloudflare.com/ajax/libs/jquery.i18n/1.0.9/jquery.i18n.language.min.js", crossorigin: "anonymous" }
+              %script{ src: "https://cdnjs.cloudflare.com/ajax/libs/jquery.i18n/1.0.9/jquery.i18n.messagestore.min.js", crossorigin: "anonymous" }
+              %script{ src: "https://cdnjs.cloudflare.com/ajax/libs/jquery.i18n/1.0.9/jquery.i18n.parser.min.js", crossorigin: "anonymous" }
+              %script{ src: "https://cdn.jsdelivr.net/npm/marked/marked.min.js" }
+              %script
+                :plain
+                  var runestoneMathReady = new Promise((resolve) => window.rsMathReady = resolve);
+                  window.MathJax = {
+                    tex: {
+                      inlineMath: [["$", "$"]],
+                      tags: "none",
+                      tagSide: "right",
+                      tagIndent: ".8em",
+                      packages: { "[+]": ["base", "extpfeil", "ams", "amscd", "color", "newcommand"] }
+                    },
+                    options: {
+                      ignoreHtmlClass: "tex2jax_ignore|ignore-math",
+                      processHtmlClass: "process-math"
+                    },
+                    chtml: { scale: 0.98, mtextInheritFont: true },
+                    loader: {
+                      load: ["input/asciimath", "[tex]/extpfeil", "[tex]/amscd", "[tex]/color", "[tex]/newcommand"]
+                    },
+                    startup: {
+                      pageReady() {
+                        return MathJax.startup.defaultPageReady().then(function() { rsMathReady(); });
+                      }
+                    }
+                  };
+              %script{ id: "MathJax-script", async: true, src: "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" }
+              = javascript_include_tag("parsons")
+              = stylesheet_link_tag("parsons")
+            = hidden_field_tag 'exercise_version[answer_code]', '', id: 'parsons-answer-field'
+            = hidden_field_tag 'exercise_version[parsons_correct]', '', id: 'parsons-correct-field'
+            #parsons-container
+            :javascript
+              document.addEventListener('DOMContentLoaded', function() {
+                try {
+                  window.parsonsWidget = new Parsons({
+                    orig: document.getElementById('parsons-container'),
+                    pifJson: #{raw pif_json.to_json},
+                    divid: 'parsons-container',
+                    useRunestoneServices: false
+                  });
+                  $(window.parsonsWidget.checkButton).hide();
+                  $(window.parsonsWidget.resetButton).hide();
+                  if (window.parsonsWidget.helpButton) {
+                    $(window.parsonsWidget.helpButton).hide();
+                    document.getElementById('parsons-help-btn').style.display = '';
+                  }
+                } catch (error) {
+                  console.error('Error initializing Parsons:', error);
+                  document.getElementById('parsons-container').innerHTML =
+                      '<div style="color: red; padding: 20px;">Error loading Parsons exercise: ' + error.message + '</div>';
+                }
+              });
+
+            -# = f.input :answer_code, as: :text, class: 'code',
+            -# input_html: { class: 'code', readonly: true,
+            -#   value: prior_answer ? prior_answer.specific.answer : prompt.prepare_starter_code,
+            -#   data: { lang: 'text/x-' + (@exercise.language + (@exercise.language == 'C++'?'src':'')|| 'java').downcase,
+            -#   starter_code: prompt.prepare_starter_code } }
           - else
             %pre{ data: { lang: 'text/x-java' } }
               = prior_answer ? prior_answer.specific.answer : prompt.prepare_starter_code
@@ -138,18 +238,21 @@
               id: 'primarybtn', disabled: disabled
         - if coding_questions
           %div.btn.btn-default{ data: { toggle: 'modal', target: '#confirm-reset' } } Reset
+        - if parsons_questions
+          %button.btn.btn-default#parsons-reset-btn{ type: 'button' } Reset
+          %button.btn.btn-primary#parsons-help-btn{ type: 'button', style: 'display: none;' } Help me
         -if @exercise.tag_list.include? 'Visualizable'
           -if @workout
             -if @workout_offering
-              %div.btn.btn-default{id: "visualize", disabled: true, data: {workout: @workout.id, workout_offering: @workout_offering.id}} Visualize
+              %div.btn.btn-default{id: "visualize", disabled: true, data: {workout: @workout.id, workout_offering: @workout_offering.id, lti_launch: @lti_launch}} Visualize
             -else
-              %div.btn.btn-default{id: "visualize", disabled: true, data: {workout: @workout.id, workout_offering: 'null'}} Visualize
+              %div.btn.btn-default{id: "visualize", disabled: true, data: {workout: @workout.id, workout_offering: 'null', lti_launch: @lti_launch}} Visualize
           -else
-            %div.btn.btn-default{id: "visualize", disabled: true, data: {workout: 'null', workout_offering: 'null'}} Visualize
+            %div.btn.btn-default{id: "visualize", disabled: true, data: {workout: 'null', workout_offering: 'null', lti_launch: @lti_launch}} Visualize
 
         - if @workout_offering && params[:review_user_id].nil? && @workout_offering.workout.exercise_workouts.size > 1
           = button_link 'Next exercise',
-            organization_workout_offering_practice_path(exercise_id: @workout.next_exercise(@exercise),
+            organization_workout_offering_practice_path(exercise_id: @workout_offering.workout.next_exercise(@exercise),
             organization_id: @workout_offering.course_offering.course.organization.slug,
             course_id: @workout_offering.course_offering.course.slug,
             term_id: @workout_offering.course_offering.term.slug,
@@ -162,6 +265,9 @@
             workout_id: @workout.id, workout_score_id: @workout_score.andand.id,
             lti_launch: @lti_launch),
             class: 'btn btn-info btn-next', id: 'nextbtn'
+
+        - if @workout_offering && params[:review_user_id] && (current_user.global_role.is_admin? || @workout_offering.course_offering.is_staff?(current_user))
+          = link_to 'View Activity Log', workout_offering_activity_log_path(id: @workout_offering.id, workout_score_id: @workout_score.id, exercise_id: @exercise.id, organization_id: @workout_offering.course_offering.course.organization.slug, course_id: @workout_offering.course_offering.course.slug, term_id: @workout_offering.course_offering.term.slug), class: 'btn btn-info'
 
       - if @workout.nil? && !@lti_launch
         %br

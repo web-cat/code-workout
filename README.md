@@ -21,7 +21,7 @@ You can play around without signing up if you like.
 
 ## Setting up a Development Environment Using Docker
 
-> Note: If you are comfortable setting up a Rails application, i.e., installing Ruby (2.3.8), Rails (4.2), and MySQL (5.7) on your own machine, you can just do that instead of using Docker. You'll need to change the `host` keys in [config/database.yml](config/database.yml) to `localhost`.
+> Note: If you are comfortable setting up a Rails application, i.e., installing Ruby (2.7.0), Rails (5.1), and MariaDB (10.2) on your own machine, you can just do that instead of using Docker. You'll need to change the `host` keys in [config/database.yml](config/database.yml) to `localhost`.
 
 The following steps will help set up a development environment for CodeWorkout using Docker and Docker Compose.
 You can do your editing on your own machine using an editor of your choice; changes will be reflected in the Docker container.
@@ -49,10 +49,10 @@ Docker Compose comes installed with Docker automatically.
 
 Inside the `code-workout` directory, do the following:
 ```bash
-$ docker-compose up # build and start containers for the web application and the databases
+$ docker compose up # build and start containers for the web application and the databases
 ```
 
-This step builds the `web` container using the provided [Dockerfile](Dockerfile) to install Ruby, Rails, and required dependencies. It also builds the `db_dev` and `db_test` containers, each of which pull a ready-to-use MySQL image from DockerHub. Two databases are set up:
+This step builds the `web` container using the provided [Dockerfile](Dockerfile) to install Ruby, Rails, and required dependencies. It also builds the `db_dev` and `db_test` containers, each of which pull a ready-to-use MariaDB image from DockerHub. Two databases are set up:
 * `codeworkout`, running on port 3306 on the `db_dev` container and port 3307 on the host
 * `codeworkout_test`, running on port 3306 on the `db_test` container and port 3308 on the host
 
@@ -66,10 +66,10 @@ Output from the containers will appear in your console. Do `Ctrl-C` to exit and 
 
 Do the following if you want to run the containers in the background and get your terminal back:
 ```bash
-$ docker-compose up -d
+$ docker compose up -d
 ```
 
-You can `docker-compose down` to stop and remove the containers (or just `docker-compose stop` to stop without removing).
+You can `docker compose down` to stop and remove the containers (or just `docker compose stop` to stop without removing).
 
 ### Set up some development data 
 
@@ -77,7 +77,7 @@ This next step sets up the database and populates it with fake data for developm
 Do the following in the `code-workout` directory on your machine.
 
 ```bash
-$ docker-compose run web rake db:populate
+$ docker compose run web rake db:populate
 ```
 
 The above command is telling Docker to "run the command `rake db:populate` on the `web` container and exit".
@@ -115,7 +115,7 @@ Initial database contents provided for all new installs, including the productio
 
 - To reset the database to the initial state do the following:
   - `$ cd code-workout`
-  - `$ docker-compose run web rake db:populate`
+  - `$ docker compose run web rake db:populate`
 
 **A note on setting up a development database.**
 
@@ -125,7 +125,7 @@ We load the schema directly from [db/schema.rb](db/schema.rb), because database 
 To run the development server, do the following in the `code-workout` directory:
 
 ```bash
-$ docker-compose up # this may take a minute
+$ docker compose up # this may take a minute
 ```
 
 In your browser, navigate to [https://localhost:9292](https://localhost:9292) and you should see the CodeWorkout homepage. (Make sure you have `https` in front of the URL.)
@@ -134,11 +134,11 @@ You can edit files on your own machine; changes will be reflected in container.
 
 ### Other notes 
 
-**NOTE 1**: Since the Rails application is running on the `web` container, your typical `rails` or `rake` commands are run as you see above, i.e., with `docker-compose run web` in front of it. For example, to generate a model you would do `docker-compose run web rails g model MyModel`.
+**NOTE 1**: Since the Rails application is running on the `web` container, your typical `rails` or `rake` commands are run as you see above, i.e., with `docker compose run web` in front of it. For example, to generate a model you would do `docker compose run web rails g model MyModel`.
 
 **NOTE 2**: To end up in a bash shell in the container (i.e., to "SSH" into the server), do the following:
 ```bash
-docker-compose run web bash
+docker compose run web bash
 ```
 Note that this does not set up the port forwarding, so if you do this and manually run the server (`./runservers.sh`), you won't be able to access it from your browser.
 
@@ -147,3 +147,37 @@ Note that this does not set up the port forwarding, so if you do this and manual
 ## Making an Exercise
 
 For instructions on how to make an exercise, see [making_an_exercise.md](making_an_exercise.md). Note that this functionality is not directly available through the web interface for most users. Please get in touch if you want to add exercises to CodeWorkout. 
+
+## Systemd Unit Files
+
+There are two systemd unit files in this directory:
+
+* [codeworkout.service](codeworkout.service): This is the main service file for the Rails application.
+* [java-daemon.service](java-daemon.service): This is a service file for the Java daemon.
+
+These files are used to start, stop, and restart the Rails application and Java daemon on a systemd-based system.
+
+### Installation Instructions
+
+To install this service on your production server:
+
+Copy the file to the systemd directory:
+```bash
+sudo cp codeworkout.service /etc/systemd/system/
+```
+Reload systemd to recognize the new service:
+```bash
+sudo systemctl daemon-reload
+```
+Enable the service to start on boot:
+```bash
+sudo systemctl enable codeworkout
+```
+Start the service:
+```bash
+sudo systemctl start codeworkout
+```
+Check the status:
+```bash
+sudo systemctl status codeworkout
+```

@@ -1,5 +1,5 @@
 class CourseOfferingsController < ApplicationController
-  before_filter :rename_course_offering_id_param
+  before_action :rename_course_offering_id_param
   load_and_authorize_resource
 
 
@@ -154,7 +154,7 @@ class CourseOfferingsController < ApplicationController
     if @course_offering &&
       !already_enrolled &&
       (can_enroll || enrollee_manages_course || current_user_manages_course)
-        
+
 
       co = CourseEnrollment.new(
         course_offering: @course_offering,
@@ -187,8 +187,8 @@ class CourseOfferingsController < ApplicationController
         end
       else
         message = "Could not enroll #{@user.display_name} in #{@course_offering.display_name_with_term} because"
-        reasons = "#{errors.to_sentence}." 
-        message = "#{message} #{reasons}" 
+        reasons = "#{errors.to_sentence}."
+        message = "#{message} #{reasons}"
         respond_to do |format|
           format.html {
             flash[:warning] = 'Unable to enroll in that course.'

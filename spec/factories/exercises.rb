@@ -2,32 +2,38 @@
 #
 # Table name: exercises
 #
-#  id                     :integer          not null, primary key
+#  id                     :bigint           not null, primary key
 #  experience             :integer          not null
 #  is_public              :boolean          default(FALSE), not null
 #  name                   :string(255)
 #  question_type          :integer          not null
 #  versions               :integer
-#  created_at             :datetime
-#  updated_at             :datetime
-#  current_version_id     :integer
-#  exercise_collection_id :integer
-#  exercise_family_id     :integer
+#  created_at             :datetime         not null
+#  updated_at             :datetime         not null
+#  current_version_id     :bigint
+#  exercise_collection_id :bigint
+#  exercise_family_id     :bigint
 #  external_id            :string(255)
-#  irt_data_id            :integer
+#  irt_data_id            :bigint
 #
 # Indexes
 #
-#  exercises_irt_data_id_fk                   (irt_data_id)
+#  index_exercises_on_current_version_id      (current_version_id)
 #  index_exercises_on_exercise_collection_id  (exercise_collection_id)
 #  index_exercises_on_exercise_family_id      (exercise_family_id)
 #  index_exercises_on_external_id             (external_id) UNIQUE
+#  index_exercises_on_irt_data_id             (irt_data_id)
 #  index_exercises_on_is_public               (is_public)
 #
 # Foreign Keys
 #
+#  exercises_current_version_id_fk  (current_version_id => exercise_versions.id)
 #  exercises_exercise_family_id_fk  (exercise_family_id => exercise_families.id)
 #  exercises_irt_data_id_fk         (irt_data_id => irt_data.id)
+#  fk_rails_...                     (current_version_id => exercise_versions.id)
+#  fk_rails_...                     (exercise_collection_id => exercise_collections.id)
+#  fk_rails_...                     (exercise_family_id => exercise_families.id)
+#  fk_rails_...                     (irt_data_id => irt_data.id)
 #
 
 FactoryBot.define do
@@ -46,7 +52,7 @@ FactoryBot.define do
 
     factory :coding_exercise do
       transient do
-        creator_id { 1 }
+        creator { FactoryBot.create :user }
         question { "Write a function in Java called `factorial()` that will "\
           "take a\npositive integer as input and returns its factorial as "\
           "output.\n" }
@@ -79,7 +85,7 @@ FactoryBot.define do
       after :create do |e, v|
         e.current_version = FactoryBot.create :exercise_version,
           exercise: e,
-          creator_id: v.creator_id
+          creator: v.creator
         e.exercise_versions << e.current_version
         FactoryBot.create :coding_prompt,
           exercise_version: e.current_version,
@@ -96,7 +102,7 @@ FactoryBot.define do
 
     factory :mc_exercise do
       transient do
-        creator_id { 2 }
+        creator { FactoryBot.create :user }
         question { "This is a sample multiple choice question.  It has only "\
           "one correct answer.\n" }
         feedback { "Explanation for the correct answer goes here.  This is "\
@@ -111,7 +117,7 @@ FactoryBot.define do
       after :create do |e, v|
         e.current_version = FactoryBot.create :exercise_version,
           exercise: e,
-          creator_id: v.creator_id
+          creator: v.creator
         e.exercise_versions << e.current_version
         FactoryBot.create :mc_with_choices,
           exercise_version: e.current_version,

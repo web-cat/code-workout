@@ -17,10 +17,11 @@ jQuery.fn.StudentSearch = (config) ->
 
     init_autocomplete: ->
       that = this
+      url = config.search_url || "/course_offerings/#{course_offering_id}/search_enrolled_users?notin=#{notin}"
       autocomplete = element.find('#student').autocomplete
         minLength: 2
         autoFocus: true
-        source: "/course_offerings/#{course_offering_id}/search_enrolled_users?notin=#{notin}"
+        source: url
         select: (event, ui) ->
           that.handle_autocomplete_select(event, ui)
           return false

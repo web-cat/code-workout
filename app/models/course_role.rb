@@ -2,20 +2,20 @@
 #
 # Table name: course_roles
 #
-#  id                         :integer          not null, primary key
-#  name                       :string(255)      default(""), not null
-#  can_manage_course          :boolean          default(FALSE), not null
-#  can_manage_assignments     :boolean          default(FALSE), not null
-#  can_grade_submissions      :boolean          default(FALSE), not null
-#  can_view_other_submissions :boolean          default(FALSE), not null
+#  id                         :bigint           not null, primary key
 #  builtin                    :boolean          default(FALSE), not null
+#  can_grade_submissions      :boolean          default(FALSE), not null
+#  can_manage_assignments     :boolean          default(FALSE), not null
+#  can_manage_course          :boolean          default(FALSE), not null
+#  can_view_other_submissions :boolean          default(FALSE), not null
+#  name                       :string(255)      not null
 #
 
 # =============================================================================
 # Represents the role a user has with respect to a course offering in which
 # the user is enrolled.  Roles are stored in the CourseEnrollment relationship.
 #
-class CourseRole < ActiveRecord::Base
+class CourseRole < ApplicationRecord
 
   #~ Validation ...............................................................
 

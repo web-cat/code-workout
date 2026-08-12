@@ -27,9 +27,14 @@ class CodeWorker
       answer =
         attempt.prompt_answers.where(prompt: prompt.acting_as).first.specific
       answer_text = answer.answer
+      Rails.logger.info "CHECKPOINT-B backslashes=#{answer_text.to_s.count('\\')} value=#{answer_text.inspect}"
+
       answer_lines = answer_text ? answer_text.count("\n") : 0
       if !prompt.wrapper_code.blank?
+        Rails.logger.info "CHECKPOINT-C (pre-splice) backslashes=#{answer_text.to_s.count('\\')}"
         code_body = prompt.wrapper_code.sub(/\b___\b/, answer_text)
+        Rails.logger.info "CHECKPOINT-D (post-splice) backslashes=#{code_body.count('\\')} value=#{code_body.inspect}"
+
         if $`
           # Want pre_lines to be a count of the number of lines preceding
           # the one the match is on, so use count() instead of lines() here
@@ -53,12 +58,11 @@ class CodeWorker
       # compile and evaluate the attempt in a temporary location
       attempt_dir = "usr/attempts/active/#{current_attempt}"
       # puts "DIRECTORY",attempt_dir,"DIRECTORY"
-      FileUtils.mkdir_p(attempt_dir)
       if !Dir[attempt_dir].empty?
         puts 'WARNING, OVERWRITING EXISTING DIRECTORY = ' + attempt_dir
         FileUtils.remove_dir(attempt_dir, true)
-        FileUtils.mkdir_p(attempt_dir)
       end
+      FileUtils.mkdir_p(attempt_dir)
       if !File.exist?(prompt.test_file_name)
         # Workaround for bug in correctly pre-generating test file
         # on exercise creation. If it doesn't exist, force regeneration
@@ -66,6 +70,16 @@ class CodeWorker
       end
       FileUtils.cp(prompt.test_file_name, attempt_dir)
       File.write(attempt_dir + '/' + prompt.class_name + '.' + lang, code_body)
+
+      # clear any previous test case results, if regrading
+      if answer.test_case_results.any?
+        answer.test_case_results.destroy_all
+      end
+      if !answer.error.nil?
+        answer.error = nil
+        answer.error_line_no = nil
+        answer.save!
+      end
 
       # Run static checks
       result = nil
@@ -119,7 +133,7 @@ class CodeWorker
           test_case = prompt.test_cases.where(id: test_id).first
           tc_score = test_case.record_result(answer, line)
           if test_case.screening?
-            tcr = TestCaseResult.find(attempt: attempt, test_case: test_case).first
+            tcr = TestCaseResult.find(coding_prompt_answer: answer, test_case: test_case).first
             if !tcr.pass?
               screening_failed = true
               correct = 0.0
@@ -158,8 +172,13 @@ class CodeWorker
       end
 
       # move the attempt to permanent storage
-      term_dir = "usr/attempts/#{term_name}/"
+      term_dir = "usr/attempts/#{term_name}"
       FileUtils.mkdir_p(term_dir) # create the term_dir if it doesn't exist
+      term_attempt_dir = "#{term_dir}/#{current_attempt}"
+      if !Dir[term_attempt_dir].empty?
+        puts 'WARNING, OVERWRITING EXISTING DIRECTORY = ' + term_attempt_dir
+        FileUtils.remove_dir(term_attempt_dir, true)
+      end
       FileUtils.mv(attempt_dir, term_dir)
 
       # calculate various time values. all times are in ms
@@ -185,8 +204,9 @@ class CodeWorker
 
       Rails.logger.info "[pid:#{Process.pid}/thread:#{Thread.current.object_id}] " \
         "processed attempt #{attempt_id}; #{worker_time}ms; " \
-        "time taken: #{attempt.time_taken}; new feedback timeout: " \
-        "#{attempt.feedback_timeout}"
+        "time taken: #{attempt.time_taken}; new attempt timeout: " \
+        "#{attempt.feedback_timeout}; new feedback timeout: " \
+        "#{Rails.application.config.feedback_timeout}"
     end
   end
 
@@ -198,8 +218,54 @@ class CodeWorker
   def execute_javatest(class_name, attempt_dir, pre_lines, answer_lines)
     if CodeWorkout::Config::CMD[:java].key? :daemon_url
       url = CodeWorkout::Config::CMD[:java][:daemon_url] % {attempt_dir: attempt_dir}
-      response = Net::HTTP.get_response(URI.parse(url))
+      uri = URI.parse(url)
+
+      # response = Net::HTTP.get_response(URI.parse(url))
       # puts "%{url} => response %{response.code}"
+
+      response = nil
+
+      max_retries = 3
+      for a in 1..max_retries do
+        begin
+          time1 = Time.now
+          net = Net::HTTP.new(uri.hostname, uri.port)
+          net.open_timeout = 30
+          net.start do |http|
+            response = http.request_get(uri.request_uri)
+
+            if response.nil?
+              Rails.logger.error "GET #{url} => try #{a} no response"
+            elsif response.kind_of? Net::HTTPSuccess # response.code == 200
+              break
+            else
+              Rails.logger.error "GET #{url} => try #{a} bad response: #{response.code}"
+            end
+            # puts "%{url} => response %{response.code}"
+          end
+
+          # break out of loop, after first break escaped the block above
+          if !response.nil? && (response.kind_of? Net::HTTPSuccess)
+            break
+          end
+
+          time1 = Time.now.to_f - time1.to_f
+          Rails.logger.warn "GET #{url} => try #{a} response timed out after #{time1}s"
+          # pause before retrying
+          sleep(10)
+        rescue => e
+          Rails.logger.error "GET #{url} => try #{a} error: #{e.message}"
+        end
+      end
+      if response.nil? then
+        Rails.logger.error "Server backend error [no response] for #{attempt_dir}"
+        return "Server backend error [no response]. Please resubmit your answer."
+      elsif !(response.kind_of? Net::HTTPSuccess) # response.code != 200
+        Rails.logger.error "Server backend error #{response.code} for #{attempt_dir}:"
+        Rails.logger.error response.body
+        return "Server backend error #{response.code}. Please resubmit your answer."
+      end
+
     else
       cmd = CodeWorkout::Config::CMD[:java][:cmd] % {attempt_dir: attempt_dir}
       # puts(cmd + '>> err.log 2>> err.log')

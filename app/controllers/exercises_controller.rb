@@ -1,12 +1,13 @@
+require 'ims/lti'
+require 'oauth/request_proxy/action_controller_request'
+require 'zip'
+require 'tempfile'
+
 class ExercisesController < ApplicationController
-  require 'ims/lti'
-  require 'oauth/request_proxy/rack_request'
-  require 'zip'
-  require 'tempfile'
 
 
   load_and_authorize_resource
-  skip_authorize_resource only: [:practice, :call_open_pop]
+  skip_authorize_resource only: [:practice, :call_open_pop, :export]
 
   #~ Action methods ...........................................................
   after_action :allow_iframe, only: [:practice, :embed]
@@ -28,6 +29,39 @@ class ExercisesController < ApplicationController
 
 
   # -------------------------------------------------------------
+  # The export function gets all exercises metadata for SPLICE
+  # GET /gym/exercises/export
+  def export
+    exercises = Exercise.publicly_visible
+
+    catalog = exercises.map do |exercise|
+      item = {
+        catalog_type: "SLCItem",
+        persistentID: exercise.external_id.to_s,
+        platform_name: "CodeWorkout",
+        iframe_url: exercise_practice_url(exercise) + "?lti_launch=true",
+        title: exercise.name.to_s,
+        description: Exercise::TYPE_NAMES[exercise.question_type],
+        author: exercise.owners.empty? ? [exercise.current_version&.creator&.display_name_with_email].compact : exercise.owners.map(&:display_name_with_email),
+        features: (exercise.question_type == Exercise::Q_CODING ?
+          ["Free Coding Problem"] : ["Question"]) + exercise.styles.map(&:name),
+        institution: ["Virginia Tech"],
+        keywords: (exercise.tags.map(&:name) + exercise.styles.map(&:name)).uniq,
+        programming_language: exercise.languages.map(&:name),
+        natural_language: ["English"]
+      }
+
+      license = exercise.exercise_collection.andand.license.andand.name
+      item[:license] = license if license
+
+      item
+    end
+
+    render json: catalog
+  end
+
+
+  # -------------------------------------------------------------
   # GET /exercises/download.csv
   def download
     @exercises = Exercise.accessible_by(current_ability)
@@ -35,11 +69,11 @@ class ExercisesController < ApplicationController
     respond_to do |format|
       format.csv
       format.json do
-        render text:
+        render plain:
           ExerciseRepresenter.for_collection.new(@exercises).to_hash.to_json
       end
       format.yml do
-        render text:
+        render plain:
           ExerciseRepresenter.for_collection.new(@exercises).to_hash.to_yaml
       end
     end
@@ -53,7 +87,7 @@ class ExercisesController < ApplicationController
     else
       @available_exercises = Exercise.visible_through_user(current_user)
         .union(Exercise.visible_through_user_group(current_user))
-        .uniq.select(&:is_coding?)
+        .distinct.select(&:is_coding?)
     end
   end
 
@@ -134,7 +168,7 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # GET /exercises/1/edit
   def edit
-    puts "ResourceFile.UPLOAD_PATH = #{ResourceFile::UPLOAD_PATH}"
+    logger.debug "ResourceFile.UPLOAD_PATH = #{ResourceFile::UPLOAD_PATH}"
     @exercise_version = @exercise.current_version
     @attached_files = []
     @exercise_version.ownerships.each do |e|
@@ -170,6 +204,7 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # POST /exercises
   def create
+    # REMOVE?
     ex = Exercise.new
     exercise_version = ExerciseVersion.new(exercise: ex)
     msg = params[:exercise] || params[:coding_question]
@@ -244,6 +279,7 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # POST exercises/create_mcqs
   def create_mcqs
+    # REMOVE
     CSV.foreach(params[:form].fetch(:mcqfile).path, {headers: true}) do |row|
       if row['Question'].include?('Python')
         next
@@ -258,23 +294,27 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   # GET exercises/upload_mcqs
   def upload_mcqs
+    # REMOVE
   end
 
 
   # -------------------------------------------------------------
   # GET exercises/upload_exercises
   def upload
+    # REMOVE
   end
 
 
   # -------------------------------------------------------------
   def upload_yaml
+    # REMOVE
   end
 
 
   # -------------------------------------------------------------
   def yaml_create
-    @yaml_exers = YAML.load_file(params[:form].fetch(:yamlfile).path)
+    # REMOVE
+    @yaml_exers = YAML.safe_load(File.read(params[:form].fetch(:yamlfile).path))
     @yaml_exers.each do |exercise|
       @ex = Exercise.new
       @ex.name = exercise['name']
@@ -336,18 +376,70 @@ class ExercisesController < ApplicationController
       exercise_version_params = exercise_params[:exercise_version]
       use_rights = exercise_params[:exercise_collection_id].to_i
       text_representation = exercise_version_params['text_representation']
-      hash = YAML.load(text_representation)
     else
       text_representation = File.read(params[:form][:file].path)
-      hash = YAML.load(text_representation)
-      use_rights = 0 # Personal exercise
+      edit_rights = 0 # Personal exercise
+    end
+    error_msgs = []
+    # FIXME: add support for JSON here as well
+    if text_representation.start_with?('---')
+      hash = YAML.safe_load(text_representation)
+    # elsif PemlParsingUtil.new.is_pif(text_representation)
+    elsif PemlParsingUtil.new.is_pif(text_representation)
+      logger.debug '=========='
+      logger.debug 'PIF Input'
+      logger.debug '=========='
+      logger.debug text_representation
+      hash = PemlParsingUtil.new.parse_pif(text_representation, error_msgs)
+      logger.debug '=========='
+      logger.debug 'PIF Hash'
+      logger.debug '=========='
+      logger.debug hash.to_yaml
+      logger.debug '=========='
+
+      if !error_msgs.empty?
+        raw_msgs = error_msgs
+        error_msgs = []
+        error_msgs << "<span>Errors while parsing PIF for exercise #{hash['name']}:</span><ul>"
+        raw_msgs.each do |msg|
+          error_msgs << "<li>#{msg}</li>"
+        end
+        error_msgs << "</ul>"
+      end
+
+    else
+      logger.debug '=========='
+      logger.debug 'PEML Input'
+      logger.debug '=========='
+      logger.debug text_representation
+      hash = PemlParsingUtil.new.parse(text_representation, error_msgs)
+      logger.debug '=========='
+      logger.debug 'PEML Hash'
+      logger.debug '=========='
+      logger.debug hash.to_yaml
+      logger.debug '=========='
+
+      if !error_msgs.empty?
+        raw_msgs = error_msgs
+        error_msgs = []
+        error_msgs <<  "<span>Errors while parsing PEML for exercise #{hash['name']}:</span><ul>"
+        raw_msgs.each do |msg|
+          error_msgs << "<li>#{msg}</li>"
+        end
+        error_msgs << "</ul>"
+      end
+
     end
     if !hash.kind_of?(Array)
       hash = [hash]
     end
 
     files = exercise_params[:files]
-    puts "files = #{files.inspect}"
+    fileList = exercise_params[:fileList]
+    if fileList != "" && !files.nil?
+      files = cleanFile(files,fileList)
+    end
+    logger.debug "files = #{files.inspect}"
     @attached_files = exercise_params[:attached_files]
     if @attached_files == "null"
       @attached_files = nil
@@ -355,7 +447,7 @@ class ExercisesController < ApplicationController
     if @attached_files
       @attached_files = JSON.parse(@attached_files)
     end
-    puts "attached files = #{@attached_files.inspect}"
+    logger.debug "attached files = #{@attached_files.inspect}"
 
     # figure out if we need to add this to an exercise collection
     exercise_collection = nil
@@ -384,82 +476,85 @@ class ExercisesController < ApplicationController
 
     # parse the text_representation
     exercises = ExerciseRepresenter.for_collection.new([]).from_hash(hash)
-    success_all = true
-    error_msgs = []
+    success_all = error_msgs.empty?
     success_msgs = []
-    exercises.each do |e|
-      if !e.save
-        success_all = false
-        # put together an error message
-        error_msgs <<  "Errors while saving exercise #{e.andand.name}:<ul>"
-        e.errors.full_messages.each do |msg|
-          error_msgs << "<li>#{msg}</li>"
-        end
-        error_msgs << "</ul>"
-      else # successfully created the exercise
-        ex_ver = e.current_version
+    successful_exercise = nil
+    if success_all
+      exercises.each do |e|
+        if !e.save
+          success_all = false
+          # put together an error message
+          error_msgs <<  "<span>Errors while saving exercise #{e.andand.name}:</span><ul>"
+          e.errors.full_messages.each do |msg|
+            error_msgs << "<li>#{msg}</li>"
+          end
+          error_msgs << "</ul>"
+        else # successfully created the exercise
+          successful_exercise ||= e
+          ex_ver = e.current_version
 
-        # make the current user an exercise owner if they aren't already
-        e.add_owner!(current_user)
+          # make the current user an exercise owner if they aren't already
+          e.add_owner!(current_user)
 
-        # copy all retained resource files, skipping any to be removed
-        prev_version = e.exercise_versions.offset(1).first
-        if prev_version
-          puts "processing ownerships from prev version #{prev_version.id}"
-          prev_version.ownerships.each do |o|
-            puts "checking ownership #{o.inspect}"
-            # Double-loop isn't the greatest design, but both lists are short
-            @attached_files.each do |a|
-              puts "checking against attachment #{a.inspect}"
-              # uploaded flag is true if it was previously uploaded
-              # deleted flag is true if it is to be pruned/removed from exercise
-              if a['name'] == o.filename && a['uploaded'] && !a['deleted']
-                puts "adding ownership record"
-                ownertable = ex_ver.ownerships.create!(
-                  filename: o.filename,
-                  resource_file: o.resource_file)
+          # copy all retained resource files, skipping any to be removed
+          prev_version = e.exercise_versions.offset(1).first
+          if prev_version
+            logger.debug "processing ownerships from prev version #{prev_version.id}"
+            prev_version.ownerships.each do |o|
+              logger.debug "checking ownership #{o.inspect}"
+              # Double-loop isn't the greatest design, but both lists are short
+              @attached_files.each do |a|
+                logger.debug "checking against attachment #{a.inspect}"
+                # uploaded flag is true if it was previously uploaded
+                # deleted flag is true if it is to be pruned/removed from exercise
+                if a['name'] == o.filename && a['uploaded'] && !a['deleted']
+                  logger.debug "adding ownership record"
+                  ownertable = ex_ver.ownerships.create!(
+                    filename: o.filename,
+                    resource_file: o.resource_file)
+                end
               end
             end
           end
-        end
-        # Now add all newly uploaded attached files
-        if files
-          files.each do |file|
-            puts "processing new upload #{file.inspect}"
-            @attached_files.each do |a|
-              puts "checking against attachment #{a.inspect}"
-              if a['name'] == file.original_filename && !a['uploaded'] && !a['deleted']
-                Ownership.create!(
-                  filename: file.original_filename,
-                  exercise_version: ex_ver,
-                  resource_file: ResourceFile.for_upload(file, current_user)
-                )
+          # Now add all newly uploaded attached files
+          if files
+            files.each do |file|
+              logger.debug "processing new upload #{file.inspect}"
+              @attached_files.each do |a|
+                logger.debug "checking against attachment #{a.inspect}"
+                if a['name'] == file.original_filename && !a['uploaded'] && !a['deleted']
+                  Ownership.create!(
+                    filename: file.original_filename,
+                    exercise_version: ex_ver,
+                    resource_file: ResourceFile.for_upload(file, current_user)
+                  )
+                end
               end
             end
           end
+
+          # Add exercise to collection
+          exercise_collection.andand.add(e, override: true)
+
+          # Update the text representation
+          e.current_version.update(text_representation: text_representation)
+
+          # Notify user of success
+          success_msgs <<
+            "<li>X#{e.id}: #{e.name} saved</li>"
         end
-
-        # Add exercise to collection
-        exercise_collection.andand.add(e, override: true)
-
-        # Update the text representation
-        e.current_version.update(text_representation: text_representation)
-
-        # Notify user of success
-        success_msgs <<
-          "<li>X#{e.id}: #{e.name} saved, try it #{view_context.link_to 'here', exercise_practice_path(e)}.</li>"
       end
     end
 
     if success_all
       success_msgs = '<ul>' + success_msgs.join("") + '</ul>'
-      redirect_to @return_to, flash: { success: success_msgs.html_safe } and return
+      redirect_to exercise_practice_path(successful_exercise), flash: { success: success_msgs.html_safe } and return
     else
       if !success_msgs.blank?
-        error_msgs << 'Some exercises were successfully saved.'
+        error_msgs << '<span>Some exercises were successfully saved.</span>'
         error_msgs << '<ul>' + success_msgs.join('') + '</ul>'
       end
-      redirect_to @return_to, flash: { error: error_msgs.join("").html_safe } and return
+      redirect_back fallback_location: @return_to, flash: { error: error_msgs.join("").html_safe } and return
     end
   end
 
@@ -480,7 +575,12 @@ class ExercisesController < ApplicationController
   # -------------------------------------------------------------
   def practice
     # lti launch
-    @lti_launch = params[:lti_launch]
+    token = params[:lti_launch]
+    if lti_context_for_token(token)
+      @lti_launch = token
+    else
+      @lti_launch = nil
+    end
 
     if params[:exercise_version_id] || params[:id]
       set_exercise_from_params
@@ -526,19 +626,15 @@ class ExercisesController < ApplicationController
           @workout ? @workout.score_for(@student_user, @workout_offering) : nil
     ))
 
-    if @student_user
-      @student_user.current_workout_score = @workout_score ? @workout_score : nil
-      @student_user.save!
-    end
-
     if @workout_offering && @workout_score &&
       @workout_score.workout_offering != @workout_offering
       @workout_score = nil
     end
 
-    if @workout_offering && !@workout_score
+    if !@workout_score && @student_user && @workout_offering
       @workout_score = @workout_offering.score_for(@student_user)
     end
+
 
     if @workout_score
       if @workout_score.lis_result_sourcedid.nil? && @workout_score.lis_outcome_service_url.nil?
@@ -571,9 +667,10 @@ class ExercisesController < ApplicationController
     manages_course = current_user.andand.global_role.andand.is_admin? ||
       @workout_offering.andand.course_offering.andand.is_manager?(current_user)
 
+    policy = @workout_offering.andand.workout_policy
     if !manages_course && @workout_score.andand.closed? &&
-      @workout_offering.andand.workout_policy.andand.no_review_before_close &&
-      !@workout_offering.andand.shutdown?
+      (policy.andand.see_answers == false ||
+       (policy.andand.no_review_before_close && !@workout_offering.andand.shutdown?))
       path = root_path
       if @workout_offering
         path = organization_workout_offering_path(
@@ -617,9 +714,19 @@ class ExercisesController < ApplicationController
 
     # display the scored attempt if in review mode (for students or instructors)
     if @workout_score
-      @attempt = (params[:review_user_id] || student_review) ?
-        @workout_score.scoring_attempt_for(@exercise_version.exercise) :
-        @workout_score.previous_attempt_for(@exercise_version.exercise)
+      if params[:attempt_id]
+        @attempt = Attempt.find_by(id: params[:attempt_id])
+        if @attempt && (@attempt.user != @student_user ||
+          (@workout_offering && @attempt.workout_score != @workout_score))
+          @attempt = nil
+        end
+      end
+
+      if @attempt.nil?
+        @attempt = (params[:review_user_id] || student_review) ?
+          @workout_score.scoring_attempt_for(@exercise_version.exercise) :
+          @workout_score.previous_attempt_for(@exercise_version.exercise)
+      end
     end
 
     if @workout.andand.exercise_workouts.andand.where(
@@ -649,15 +756,6 @@ class ExercisesController < ApplicationController
         session[:leaf_exercises] = [@exercise.id]
       end
     end
-    # EOL stands for end of line
-    # @wexs is the variable to hold the list of exercises of this workout
-    # yet to be attempted by the user apart from the current exercise
-
-    if params[:wexes] != 'EOL'
-      @wexs = params[:wexes] || session[:remaining_wexes]
-    else
-      @wexs = nil
-    end
 
 		# decide whether or not to hide the sidebar
 		# hide it if this workout (if present) has less than two exercises
@@ -667,6 +765,23 @@ class ExercisesController < ApplicationController
     @exercise_version.image_processing(true)
     # Display all files to students
     @file_res = @exercise_version.file_processing
+    if @workout && @workout_offering && (@workout_offering.workout != @workout)
+      Rails.logger.error "workout conflict: practice() with workout_offering #{@workout_offering.id} conflicting with workout #{@workout.id}"
+    end
+
+    lti_context = lti_context_for_token(params[:lti_launch])
+    ActivityLog.create(
+      user: @student_user,
+      exercise: @exercise,
+      workout: @workout,
+      workout_offering: @workout_offering,
+      workout_score: @workout_score,
+      activity: 'practice_view',
+      ip_address: request.remote_ip,
+      lms_instance_id: lti_context.andand[:lms_instance_id],
+      lti_launch: lti_context.present?
+    )
+
     render layout: 'two_columns'
 
   end
@@ -724,15 +839,6 @@ class ExercisesController < ApplicationController
     else
       @workout_offering = nil
     end
-    if @workout_offering.nil? &&
-      @student_drift_user.andand.current_workout_score &&
-      @student_drift_user.current_workout_score.workout.contains?(
-        @exercise_version.exercise)
-      @workout_offering = @student_drift_user.current_workout_score.workout_offering
-      if @workout_offering.nil?
-        @workout = @student_drift_user.current_workout_score.workout
-      end
-    end
 
     if @workout.nil?
       if @workout_offering
@@ -742,12 +848,6 @@ class ExercisesController < ApplicationController
       end
     end
 
-    if @workout.nil? && session[:current_workout]
-      @workout = Workout.find_by(id: session[:current_workout])
-      if !@workout.contains?(@exercise_version.exercise)
-        @workout = nil
-      end
-    end
 
     @workout_score = nil
 
@@ -781,8 +881,13 @@ class ExercisesController < ApplicationController
     # in the partial
     @attempts_left = (@attempts_left && @attempts_left > 0) ?
       @attempts_left - 1 : @attempts_left
+    lti_context = lti_context_for_token(params[:lti_launch])
     @attempt = @exercise_version.new_attempt(
-      user: @student_drift_user, workout_score: @workout_score)
+      user: @student_drift_user, 
+      workout_score: @workout_score,
+      ip_address: request.remote_ip,
+      lms_instance_id: lti_context.andand[:lms_instance_id],
+      lti_launch: lti_context.present?)
 
     @attempt.save!
 
@@ -884,15 +989,28 @@ class ExercisesController < ApplicationController
               lti_launch: @lti_launch) + "' "
         end
       end
-    elsif @exercise_version.is_coding?
+    else
       @answer_code = params[:exercise_version][:answer_code]
+
       @exercise_version.prompts.each_with_index do |exercise_prompt, i|
         exercise_prompt_answer = @attempt.prompt_answers[i]
         exercise_prompt_answer.answer = params[:exercise_version][:answer_code]
         if exercise_prompt_answer.save
-          CodeWorker.new.async.perform(@attempt.id)
+          if @exercise_version.is_execution_graded?
+            CodeWorker.new.async.perform(@attempt.id)
+          elsif @exercise_version.is_parsons?
+            # Order-graded Parsons problems are graded client-side by the
+            # parsons.js widget (no server-side execution). Full credit if
+            # the widget reports the arrangement as correct, zero
+            # otherwise -- no partial credit.
+            parsons_correct = params[:exercise_version][:parsons_correct] == 'true'
+            @attempt.score = parsons_correct ? @max_points : 0.0
+            @attempt.feedback_ready = true
+            @attempt.save!
+            @workout_score.record_attempt(@attempt) if @workout_score
+          end
         else
-          puts 'IMPROPER PROMPT',
+          logger.error 'IMPROPER PROMPT',
             'unable to save prompt_answer: ' \
             "#{prompt_answer.errors.full_messages.to_s}",
             'IMPROPER PROMPT'
@@ -967,11 +1085,19 @@ class ExercisesController < ApplicationController
     if(params[:workoutOfferingID] != '')
       workout_offering_id = WorkoutOffering.find(params[:workoutOfferingID])
     end
+    workout_score = workout_offering_id ? workout_offering_id.score_for(curr_user) : (
+      workout_id ? workout_id.score_for(curr_user, workout_offering_id) : nil
+    )
+    lti_context = lti_context_for_token(params[:lti_launch])
     @visualization_logging = VisualizationLogging.new(
       user: curr_user,
       exercise: Exercise.find_by_name(params[:exercise_id]),
       workout: workout_id,
-      workout_offering: workout_offering_id
+      workout_offering: workout_offering_id,
+      workout_score: workout_score,
+      ip_address: request.remote_ip,
+      lms_instance_id: lti_context.andand[:lms_instance_id],
+      lti_launch: lti_context.present?
     )
     @visualization_logging.save
     respond_to do |format|
@@ -1028,7 +1154,6 @@ class ExercisesController < ApplicationController
       newexercise.discrimination = @exercise.discrimination
       return newexercise
     end
-
 
     # -------------------------------------------------------------
     # Only allow a trusted parameter "white list" through.

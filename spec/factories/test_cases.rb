@@ -2,7 +2,7 @@
 #
 # Table name: test_cases
 #
-#  id                :integer          not null, primary key
+#  id                :bigint           not null, primary key
 #  description       :text(65535)
 #  example           :boolean          default(FALSE), not null
 #  expected_output   :text(65535)      not null
@@ -12,9 +12,18 @@
 #  screening         :boolean          default(FALSE), not null
 #  static            :boolean          default(FALSE), not null
 #  weight            :float(24)        not null
-#  created_at        :datetime
-#  updated_at        :datetime
-#  coding_prompt_id  :integer          not null
+#  created_at        :datetime         not null
+#  updated_at        :datetime         not null
+#  coding_prompt_id  :bigint           not null
+#
+# Indexes
+#
+#  index_test_cases_on_coding_prompt_id  (coding_prompt_id)
+#
+# Foreign Keys
+#
+#  fk_rails_...                    (coding_prompt_id => coding_prompts.id)
+#  test_cases_coding_prompt_id_fk  (coding_prompt_id => coding_prompts.id)
 #
 
 # Read about factories at https://github.com/thoughtbot/factory_bot

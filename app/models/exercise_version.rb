@@ -2,27 +2,32 @@
 #
 # Table name: exercise_versions
 #
-#  id                  :integer          not null, primary key
+#  id                  :bigint           not null, primary key
 #  text_representation :text(16777215)
 #  version             :integer          not null
-#  created_at          :datetime
-#  updated_at          :datetime
-#  creator_id          :integer
-#  exercise_id         :integer          not null
-#  irt_data_id         :integer
-#  stem_id             :integer
+#  created_at          :datetime         not null
+#  updated_at          :datetime         not null
+#  creator_id          :bigint
+#  exercise_id         :bigint           not null
+#  irt_data_id         :bigint
+#  stem_id             :bigint
 #
 # Indexes
 #
-#  exercise_versions_creator_id_fk     (creator_id)
-#  exercise_versions_irt_data_id_fk    (irt_data_id)
-#  index_exercise_versions_on_stem_id  (stem_id)
+#  exercise_versions_creator_id_fk         (creator_id)
+#  index_exercise_versions_on_exercise_id  (exercise_id)
+#  index_exercise_versions_on_irt_data_id  (irt_data_id)
+#  index_exercise_versions_on_stem_id      (stem_id)
 #
 # Foreign Keys
 #
 #  exercise_versions_creator_id_fk   (creator_id => users.id)
+#  exercise_versions_exercise_id_fk  (exercise_id => exercises.id)
 #  exercise_versions_irt_data_id_fk  (irt_data_id => irt_data.id)
 #  exercise_versions_stem_id_fk      (stem_id => stems.id)
+#  fk_rails_...                      (exercise_id => exercises.id)
+#  fk_rails_...                      (irt_data_id => irt_data.id)
+#  fk_rails_...                      (stem_id => stems.id)
 #
 
 require "cgi"
@@ -31,7 +36,7 @@ require "cgi"
 # Represents one version of an exercise--a single snapshot in the exercise's
 # entire edit history.
 #
-class ExerciseVersion < ActiveRecord::Base
+class ExerciseVersion < ApplicationRecord
 
   #~ Accessor
   attr_accessor :answer_code
@@ -270,7 +275,8 @@ class ExerciseVersion < ActiveRecord::Base
       user: user,
       exercise_version: self,
       submit_time: Time.zone.now,
-      submit_num: num
+      submit_num: num,
+      ip_address: args[:ip_address]
       )
     if args[:workout_score]
       attempt.workout_score = args[:workout_score]
@@ -377,6 +383,16 @@ class ExerciseVersion < ActiveRecord::Base
     else
       return self.exercise.experience * total / options / attempt_no
     end
+  end
+
+  # -------------------------------------------------------------
+  def is_parsons?
+    exercise.is_parsons?
+  end
+
+  # -------------------------------------------------------------
+  def is_execution_graded?
+    is_coding? || (is_parsons? && prompts.first.specific.is_execution_graded?)
   end
 
 end

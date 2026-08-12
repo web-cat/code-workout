@@ -1,6 +1,6 @@
 att_id = <%= JSON.generate @attempt.andand.id %>
 user_id = <%= JSON.generate @student_drift_user.id %>
-is_coding = <%= JSON.generate @exercise.is_coding? %>
+is_coding = <%= JSON.generate @exercise_version.is_execution_graded? %>
 attempts_exhausted = <%= JSON.generate(@attempts_left == 0) %>
 feedback_timeout = <%= JSON.generate Rails.application.config.feedback_timeout %>
 feedback_padding = <%= JSON.generate Rails.application.config.feedback_timeout_padding %>

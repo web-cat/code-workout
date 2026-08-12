@@ -1,7 +1,7 @@
 class SseController < ApplicationController
   include ActionController::Live
   require 'ims/lti'
-  require 'oauth/request_proxy/rack_request'
+  require 'oauth/request_proxy/action_controller_request'
 
   # -------------------------------------------------------------
   def feedback_wait
@@ -30,7 +30,7 @@ class SseController < ApplicationController
     while flag
       sleep(1)
     end
-    render nothing: true
+    head :ok
   end
 
 
@@ -58,7 +58,11 @@ class SseController < ApplicationController
   def feedback_poll
     @attempt = Attempt.find_by(id: params[:att_id])
     @exercise_version = @attempt.exercise_version
-    @student_drift_user = current_user ? current_user : session[:student_drift_user_id]? User.find_by(session[:student_drift_user_id]) : User.find_by(params[:drift_user_id])
+    @student_drift_user = current_user ?
+      current_user :
+      (session[:student_drift_user_id] ?
+        User.find_by(id: session[:student_drift_user_id]) :
+        User.find_by(id: params[:drift_user_id]))
     @exercise = @exercise_version.exercise
     # authorize! :read, @attempt
     if !@attempt.feedback_ready

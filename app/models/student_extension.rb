@@ -2,15 +2,15 @@
 #
 # Table name: student_extensions
 #
-#  id                  :integer          not null, primary key
+#  id                  :bigint           not null, primary key
 #  hard_deadline       :datetime
 #  opening_date        :datetime
 #  soft_deadline       :datetime
 #  time_limit          :integer
-#  created_at          :datetime
-#  updated_at          :datetime
-#  user_id             :integer
-#  workout_offering_id :integer
+#  created_at          :datetime         not null
+#  updated_at          :datetime         not null
+#  user_id             :bigint
+#  workout_offering_id :bigint
 #
 # Indexes
 #
@@ -23,7 +23,7 @@
 #  student_extensions_workout_offering_id_fk  (workout_offering_id => workout_offerings.id)
 #
 
-class StudentExtension < ActiveRecord::Base
+class StudentExtension < ApplicationRecord
 
   belongs_to :user
   belongs_to :workout_offering

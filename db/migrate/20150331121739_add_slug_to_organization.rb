@@ -1,4 +1,4 @@
-class AddSlugToOrganization < ActiveRecord::Migration
+class AddSlugToOrganization < ActiveRecord::Migration[5.1]
 
   def up
     remove_column :organizations, :url_part, :string

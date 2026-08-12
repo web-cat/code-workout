@@ -1,4 +1,4 @@
-class AddBaseExerciseIdToExercise < ActiveRecord::Migration
+class AddBaseExerciseIdToExercise < ActiveRecord::Migration[5.1]
   def change
     add_column :exercises, :base_exercise_id, :integer
     add_index :exercises, :base_exercise_id

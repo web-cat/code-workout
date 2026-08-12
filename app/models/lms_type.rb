@@ -2,17 +2,17 @@
 #
 # Table name: lms_types
 #
-#  id         :integer          not null, primary key
+#  id         :bigint           not null, primary key
 #  name       :string(255)      not null
-#  created_at :datetime
-#  updated_at :datetime
+#  created_at :datetime         not null
+#  updated_at :datetime         not null
 #
 # Indexes
 #
 #  index_lms_types_on_name  (name) UNIQUE
 #
 
-class LmsType < ActiveRecord::Base
+class LmsType < ApplicationRecord
   #~ Relationships ............................................................
 has_many :lms_instances, inverse_of: :lms_types
 

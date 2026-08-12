@@ -2,14 +2,14 @@
 #
 # Table name: user_groups
 #
-#  id          :integer          not null, primary key
-#  name        :string(255)
-#  created_at  :datetime
-#  updated_at  :datetime
+#  id          :bigint           not null, primary key
 #  description :text(65535)
+#  name        :string(255)
+#  created_at  :datetime         not null
+#  updated_at  :datetime         not null
 #
 
-class UserGroup < ActiveRecord::Base
+class UserGroup < ApplicationRecord
   has_many :memberships
   has_many :users, through: :memberships
   has_many :group_access_requests, inverse_of: :user_group

@@ -1,4 +1,4 @@
-class AddLmsAssignmentIdToWorkoutOfferings < ActiveRecord::Migration
+class AddLmsAssignmentIdToWorkoutOfferings < ActiveRecord::Migration[5.1]
   def change
     add_column :workout_offerings, :lms_assignment_id, :string
 

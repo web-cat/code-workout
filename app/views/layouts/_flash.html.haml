@@ -3,4 +3,7 @@
     %div{ class: "alert #{flash_class_for(type)} fade in", role: 'alert' }
       %button.close{ data: { dismiss: 'alert'} } &times;
       = icon_tag_for(type)
-      = message
+      - if message && message.start_with?('<')
+        = raw message
+      - else
+        = message

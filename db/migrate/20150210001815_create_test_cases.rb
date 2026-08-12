@@ -1,4 +1,4 @@
-class CreateTestCases < ActiveRecord::Migration
+class CreateTestCases < ActiveRecord::Migration[5.1]
   def change
     # created in 2131210061217_add_coding_exercise_columns,
     # but here we blast it and recreate a new structure.

@@ -1,4 +1,4 @@
-class AddNullConstraintsAndIndices < ActiveRecord::Migration
+class AddNullConstraintsAndIndices < ActiveRecord::Migration[5.1]
   def change
     # identities
     change_column_null :identities, :user_id, false
@@ -78,8 +78,8 @@ class AddNullConstraintsAndIndices < ActiveRecord::Migration
     # exercises_tags
     change_column_null :exercises_tags, :exercise_id, false
     change_column_null :exercises_tags, :tag_id, false
-    add_index :exercises_tags, :exercise_id
-    add_index :exercises_tags, :tag_id
+    # add_index :exercises_tags, :exercise_id # overlaps existing index, not needed
+    # add_index :exercises_tags, :tag_id      # overlaps existing index, not needed
 
     # prompts
     change_column_null :prompts, :max_user_attempts, false
@@ -89,7 +89,7 @@ class AddNullConstraintsAndIndices < ActiveRecord::Migration
     # resource_files
     change_column_null :resource_files, :user_id, false
     change_column_null :resource_files, :token, false
-    add_index :resource_files, :user_id
+    # add_index :resource_files, :user_id
     add_index :resource_files, :token
 
     # tags_workouts
@@ -100,8 +100,8 @@ class AddNullConstraintsAndIndices < ActiveRecord::Migration
     change_column_null :test_case_results, :user_id, false
     change_column_null :test_case_results, :test_case_id, false
     change_column_null :test_case_results, :pass, false
-    add_index :test_case_results, :user_id
-    add_index :test_case_results, :test_case_id
+    # add_index :test_case_results, :user_id
+    # add_index :test_case_results, :test_case_id
 
     # test_cases
     change_column_null :test_cases, :input, false

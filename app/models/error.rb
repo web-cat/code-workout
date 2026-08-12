@@ -2,18 +2,19 @@
 #
 # Table name: errors
 #
-#  id          :integer          not null, primary key
-#  usable_type :string(255)
-#  usable_id   :integer
-#  class_name  :string(255)
+#  id          :bigint           not null, primary key
+#  class_name  :text(65535)
 #  message     :text(65535)
-#  trace       :text(65535)
-#  target_url  :text(65535)
-#  referer_url :text(65535)
 #  params      :text(65535)
+#  referrer    :text(65535)
+#  status      :text(65535)
+#  target      :text(65535)
+#  trace       :text(65535)
+#  usable_type :string(255)
 #  user_agent  :text(65535)
-#  created_at  :datetime
-#  updated_at  :datetime
+#  created_at  :datetime         not null
+#  updated_at  :datetime         not null
+#  usable_id   :integer
 #
 # Indexes
 #
@@ -26,6 +27,6 @@
 # This model class is here purely so that run-time errors can be tracked
 # in the database for development/debugging purposes.
 #
-class Error < ActiveRecord::Base
+class Error < ApplicationRecord
 #  belongs_to :usable, polymorphic: true
 end

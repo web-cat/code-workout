@@ -2,27 +2,27 @@
 #
 # Table name: lms_instances
 #
-#  id              :integer          not null, primary key
+#  id              :bigint           not null, primary key
 #  consumer_key    :string(255)
 #  consumer_secret :string(255)
 #  url             :string(255)
-#  created_at      :datetime
-#  updated_at      :datetime
-#  lms_type_id     :integer
-#  organization_id :integer
+#  created_at      :datetime         not null
+#  updated_at      :datetime         not null
+#  lms_type_id     :bigint
+#  organization_id :bigint
 #
 # Indexes
 #
+#  index_lms_instances_on_lms_type_id      (lms_type_id)
 #  index_lms_instances_on_organization_id  (organization_id)
 #  index_lms_instances_on_url              (url) UNIQUE
-#  lms_instances_lms_type_id_fk            (lms_type_id)
 #
 # Foreign Keys
 #
-#  lms_instances_lms_type_id_fk  (lms_type_id => lms_types.id)
+#  fk_rails_...  (lms_type_id => lms_types.id)
 #
 
-class LmsInstance < ActiveRecord::Base
+class LmsInstance < ApplicationRecord
   belongs_to  :lms_type, inverse_of: :lms_instances
   belongs_to :organization
   has_many :course_offerings, inverse_of: :lms_instance

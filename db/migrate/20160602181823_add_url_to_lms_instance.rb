@@ -1,4 +1,4 @@
-class AddUrlToLmsInstance < ActiveRecord::Migration
+class AddUrlToLmsInstance < ActiveRecord::Migration[5.1]
   def change
     add_column :lms_instances, :url, :string
     

@@ -1,4 +1,4 @@
-class CreateTimeZones < ActiveRecord::Migration
+class CreateTimeZones < ActiveRecord::Migration[5.1]
   def change
     create_table :time_zones do |t|
       t.string :name

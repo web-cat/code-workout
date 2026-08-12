@@ -2,10 +2,10 @@
 #
 # Table name: stems
 #
-#  id         :integer          not null, primary key
+#  id         :bigint           not null, primary key
 #  preamble   :text(65535)
-#  created_at :datetime
-#  updated_at :datetime
+#  created_at :datetime         not null
+#  updated_at :datetime         not null
 #
 
 
@@ -26,7 +26,7 @@
 # ExerciseVersions on the same edit history for one exercise may refer
 # to the same stem, if the stem was not edited.
 #
-class Stem < ActiveRecord::Base
+class Stem < ApplicationRecord
 
   #~ Relationships ............................................................
 

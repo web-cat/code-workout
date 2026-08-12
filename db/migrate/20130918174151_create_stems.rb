@@ -1,4 +1,4 @@
-class CreateStems < ActiveRecord::Migration
+class CreateStems < ActiveRecord::Migration[5.1]
   def change
     create_table :stems do |t|
       t.text :preamble

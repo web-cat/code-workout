@@ -38,18 +38,23 @@
       %ul.list-group#ex-list{ style: "display: #{ex_any ? 'block;' : 'none;'}",
         data: { exercises: "#{@exercises.to_json}" } }
 
-  -# Common controls on all offerings of this workout: policy, time limit,
-  -# and attempt limit
   .form-group
-    = label_tag :policy_select, 'Policy', class: 'control-label col-xs-1'
-    .col-xs-2
-      = collection_select nil, nil, WorkoutPolicy.all, :id, :name, 
-        { prompt: 'Select', selected: @policy ? @policy.id : nil },
-        { id: 'policy-select', class: 'form-control input-sm' }
-    %small.text.text-warning.col-xs-7
-      %i.fa.fa-info-circle.action{ data: { toggle: 'modal', 
-        target: '#policy-help-modal' } }
-      Click to see available policies regarding grade release, hints, etc. 
+    = label_tag :policy, 'Policy Options', class: 'control-label col-xs-2'
+    .col-xs-10
+      - [ ['Before starting the workout:', [[:invisible_before_review, 'Hide workout on course page?'], [:hide_thumbnails_before_start, 'Hide exercise thumbnails on workout page?']] ],
+          ['While doing the workout:', [[:hide_score_before_finish, 'Hide scores?'], [:hide_feedback_before_finish, 'Hide test results?'], [:hide_compilation_feedback_before_finish, 'Hide compilation feedback?']] ],
+          ['After finishing the workout:', [[:see_answers, 'Let students see their answers?'], [:no_review_before_close, 'Hide student answers until everyone finishes?'], [:hide_score_in_review_before_close, 'Hide scores?'], [:hide_feedback_in_review_before_close, 'Hide test results?']] ] ].each do |header, items|
+        .row
+          .col-xs-10
+            %strong{ style: 'border-bottom: 2px solid #dfcdb2;' }= header
+        .row
+          - items.each do |attr, label|
+            .col-xs-10
+              .checkbox
+                %label
+                  = check_box_tag "policy[#{attr}]", '1', @policy.andand.send(attr), class: 'policy-checkbox', data: { attribute: attr }
+                  = label
+        %br
   
   - if @course
     .form-group
@@ -103,59 +108,20 @@
           score. Leave it blank to use the student's highest scoring attempt.
 
     .form-group
-      %p.lead Add to Course Offerings
-      .col-lg-9.col-md-6.col-xs-9
-        %table#workout-offering-fields.table{ data: { can_update: "#{@can_update}", 
-          lms_assignment_id: @lms_assignment_id } }
-          %thead
-            %tr
-              %th Course Offering
-              %th.lms-url
-                LMS URL
-                %i.fa.fa-info-circle.action{ data: { toggle: 'modal', 
-                  target: '#lms-url-help-modal' } }
-              %th Opens On
-              %th Due Date
-              %th Accepts Until
-              %th Student Extensions
-              %th Remove
-          %tbody
-            - if ['new', 'clone'].include?(action_name) && @course_offerings
-              - @course_offerings.each do |co|
-                = render partial: 'workout_offering_fields', 
-                  locals: { removable: true,
-                  workout_offering: nil, 
-                  course_offering: co }
-            - elsif @workout_offerings 
-              - @workout_offerings.each do |offering|
-                - removable = offering.workout_scores.blank?
-                = render partial: 'workout_offering_fields', 
-                  locals: { removable: "#{removable}", 
-                  course_offering: offering.course_offering, 
-                  workout_offering: offering }
-
-    .form-group
-      = button_tag type: 'button', id: 'add-offering', 
-        class: 'btn btn-success btn-sm', data: { toggle: 'modal', 
-        target: '#offerings-modal' } do
-        %i.fa.fa-plus{ style: 'padding-right 5px;' }
-        Add to Course Offering
-
-    .form-group#extensions{ style: 'display: none;', 
-      data: { student_extensions: "#{@student_extensions.to_json}" } }
-      %p.lead Student Extensions
-      .col-lg-10.col-md-6.col-xs-9
-        %table#student-extension-fields.table
-          %thead
-            %tr
-              %th Course Offering
-              %th Student
-              %th Opens On
-              %th Due Date
-              %th Accepts Until
-              %th Time Limit
-              %th Remove
-          %tbody
+      = label_tag :date_yaml, 'Offerings and Extensions (YAML)', class: 'control-label col-xs-2'
+      .col-lg-7.col-md-6.col-xs-7
+        .yaml-toolbar.btn-toolbar{ role: 'toolbar', style: 'border: 1px solid #ccc; border-bottom: none; background: #f8f8f8; padding: 5px; border-top-left-radius: 4px; border-top-right-radius: 4px; margin-left: 0;' }
+          .btn-group
+            %button.btn.btn-default.btn-sm#add-offering-btn{ type: 'button', data: { toggle: 'modal', target: '#offerings-modal' } }
+              %i.fa.fa-plus
+              Course Offering
+            %button.btn.btn-default.btn-sm#add-student-btn{ type: 'button' }
+              %i.fa.fa-user-plus
+              + Add Student
+            %button.btn.btn-default.btn-sm#select-date-btn{ type: 'button' }
+              %i.fa.fa-calendar
+              Select Date
+        = text_area_tag :date_yaml, @date_yaml, id: 'date-yaml', class: 'form-control', rows: 15, spellcheck: false, style: 'border-top-left-radius: 0; border-top-right-radius: 0;'
 
   .form-group
     %button#btn-submit-wo.btn.btn-primary Submit
@@ -201,31 +167,6 @@
                 data: { course_offering_id: co.id } }
                 = co.display_name_with_term
 
-  #policy-help-modal.modal.fade{role: 'dialog', tabindex: '-1' }
-    .modal-dialog.modal-md{ style: modal_style }
-      .modal-content
-        .modal-header
-          %p.lead Workout Policy Information
-        .modal-body
-          %small
-            Control policies like showing feedback before the assignment closes,
-            showing results from test cases, review ability, etc.
-          - if WorkoutPolicy.any?
-            %table.table
-              %thead
-                %th Name
-                %th Description
-              %tbody
-                - WorkoutPolicy.all.each do |policy|
-                  %tr
-                    %td
-                      = policy.name
-                    %td
-                      = policy.description
-          - else
-            %small
-              %br
-              There are no workout policies available for use at the moment.
 
   #lms-url-help-modal.modal.fade{role: 'dialog', tabindex: '-1' }
     .modal-dialog.modal-md{ style: modal_style }

@@ -46,11 +46,11 @@ class WorkoutsController < ApplicationController
     @workouts = Workout.accessible_by(current_ability)
     respond_to do |format|
       format.json do
-        render text:
+        render plain:
           WorkoutRepresenter.for_collection.new(@workouts).to_hash.to_json
       end
       format.yml do
-        render text:
+        render plain:
           WorkoutRepresenter.for_collection.new(@workouts).to_hash.to_yaml
       end
     end
@@ -87,6 +87,36 @@ class WorkoutsController < ApplicationController
         send_data data, filename: "workout-#{params[:id]}-submissions.csv"
       end
     end
+  end
+
+
+  # -------------------------------------------------------------
+  # The export function gets all workouts metadata for SPLICE
+  # GET /gym/workouts/export
+  def export
+    workouts = Workout.where(is_public: true)
+
+    catalog = workouts.map do |workout|
+      item = {
+        catalog_type: "SLCItem",
+        persistentID: workout.external_id.to_s,
+        platform_name: "CodeWorkout",
+        iframe_url: practice_workout_url(workout) + "?lti_launch=true",
+        title: workout.name.to_s,
+        description: workout.description,
+        author: workout.owners.empty? ? [workout.creator&.display_name_with_email].compact : workout.owners.map(&:display_name_with_email),
+        features: (["Workout", "Problem Set"] + workout.exercises.flat_map { |ex| ex.styles.map(&:name) }).uniq,
+        institution: ["Virginia Tech"],
+        keywords: (workout.tags.map(&:name) +
+          workout.exercises.flat_map { |ex| ex.tags.map(&:name) + ex.styles.map(&:name) }).uniq,
+        programming_language: workout.exercises.flat_map { |ex| ex.languages.map(&:name) }.uniq,
+        natural_language: ["English"],
+        protocols: ['LTI'],
+        protocol_urls: [lti_launch_url + "?gym_workout_id=" + workout.id.to_s]
+      }
+    end
+
+    render json: catalog
   end
 
 
@@ -173,6 +203,7 @@ class WorkoutsController < ApplicationController
     @lms_assignment_id = params[:lms_assignment_id]
     @lms_instance_id = params[:lms_instance_id]
     @suggested_name = params[:suggested_name]
+    @policy = WorkoutPolicy.new
 
     if params[:notice]
       flash.now[:notice] = params[:notice]
@@ -314,10 +345,10 @@ class WorkoutsController < ApplicationController
       @attempt_limit = @workout_offering.andand.attempt_limit
       @published = @workout_offering.andand.published
       @most_recent = @workout_offering.andand.most_recent
-      @policy = @workout_offering.andand.workout_policy
+      @policy = @workout_offering.andand.workout_policy || @workout.workout_policy || WorkoutPolicy.new
 
       @workout_offerings = current_user.managed_workout_offerings_in_term(
-        @workout, @course, @term).flatten
+        @workout, @course, @term).to_a.flatten
 
       course_offerings = current_user.managed_course_offerings(
         course: @course, term: @term)
@@ -348,6 +379,10 @@ class WorkoutsController < ApplicationController
         course_id: @course,
         term_id: @term,
       )
+      @date_yaml = serialize_workout_offerings_to_yaml(@workout_offerings, @student_extensions)
+    else
+      @policy = @workout.workout_policy || WorkoutPolicy.new
+      @date_yaml = serialize_workout_offerings_to_yaml([], [])
     end
 
     @can_update = can? :edit, @workout
@@ -526,7 +561,7 @@ class WorkoutsController < ApplicationController
           params[:workout_name].downcase, @course, @term)
       end
 
-      @workout_offering = workout_offerings.flatten.first
+      @workout_offering = workout_offerings.to_a.flatten.first
 
       if workout_offerings.blank?
         # check past terms
@@ -534,7 +569,7 @@ class WorkoutsController < ApplicationController
           params[:workout_name].downcase, @course, nil)
       end
 
-      workout_offerings = workout_offerings.andand.flatten.uniq
+      workout_offerings = workout_offerings.andand.to_a.flatten.uniq
       found_workout ||= workout_offerings.andand
         .uniq{ |wo| wo.workout }.andand
         .sort_by{ |wo| wo.course_offering.term.starts_on }.andand
@@ -690,12 +725,21 @@ class WorkoutsController < ApplicationController
 
       if !@workout_offering
         # don't have a workout_offering, but may have narrowed it down
-        workout_offerings = workout_offerings.flatten.uniq
+        workout_offerings = workout_offerings.to_a.flatten.uniq
         enrolled_workout_offerings = workout_offerings.andand
           .select { |wo| @user.is_enrolled?(wo.course_offering) }
 
         if enrolled_workout_offerings.any?
           @workout_offering = enrolled_workout_offerings.andand.first
+        elsif workout_offerings.count == 1
+          # Exactly one match, use it even if not enrolled
+          @workout_offering = workout_offerings.first
+        elsif workout_offerings.count > 1
+          # Multiple matches, let the user choose
+          @existing_workout_offerings = workout_offerings
+            .uniq { |wo| wo.course_offering }
+          @available_offerings = @existing_workout_offerings.map(&:course_offering)
+          render layout: 'one_column' and return
         elsif @course_offering
           # found an enrolled course_offering, so we don't need to ask the student anything
           # but the course offering does not include the workout offering, so add it
@@ -766,7 +810,7 @@ class WorkoutsController < ApplicationController
     end
 
     if !@user.is_enrolled?(@course_offering) &&
-        (@course_offering.can_enroll? || role.is_instructor?)
+        (@course_offering.can_enroll? || role.is_instructor? || matching_lms_assignment_id)
       CourseEnrollment.create(course_offering: @course_offering, user: @user, course_role: role)
     end
 
@@ -791,7 +835,7 @@ class WorkoutsController < ApplicationController
 
   # -------------------------------------------------------------
   def yaml_create
-    @yaml_wkts = YAML.load_file(params[:form].fetch(:yamlfile).path)
+    @yaml_wkts = YAML.safe_load(File.read(params[:form].fetch(:yamlfile).path))
     @yaml_wkts.each do |workout|
       wkt = workout['workout']
       @wkt = Workout.new
@@ -841,18 +885,12 @@ class WorkoutsController < ApplicationController
 
   # -------------------------------------------------------------
   def evaluate
-    if session[:current_workout].nil?
-      redirect_to root_path, notice: 'Invalid action' and return
-    end
-    @workout_feedback = session[:workout_feedback].values
-    @current_workout = Workout.find(session[:current_workout])
+    @workout_feedback = session[:workout_feedback].andand.values || []
+    @current_workout = Workout.find(params[:id])
     @user_workout_score = WorkoutScore.find_by!(
-      user_id: current_user.id, workout_id: session[:current_workout]).score
+      user_id: current_user.id, workout_id: @current_workout.id).score
     @max_workout_score = @current_workout.returnTotalWorkoutPoints
-    session[:current_workout] = nil
     session[:workout_feedback] = nil
-    session[:wexes] = nil
-    session[:remaining_wexes] = nil
     render layout: 'two_columns'
   end
 
@@ -921,8 +959,14 @@ class WorkoutsController < ApplicationController
     if !@lti_workout
       authorize! :practice, @workout
     end
+    token = params[:lti_launch]
+    if lti_context_for_token(token)
+      @lti_launch = token
+    else
+      @lti_launch = nil
+    end
+
     if @workout
-      session[:current_workout] = @workout.id
       if current_user
         @workout_score = @workout.score_for(current_user, nil,
                                             params[:lis_outcome_service_url],
@@ -940,12 +984,12 @@ class WorkoutsController < ApplicationController
             workout: @workout)
           @workout_score.save!
         end
-        current_user.current_workout_score = @workout_score
-        current_user.save!
-        if @workout_score.andand.closed? &&
-          @workout_score.andand.workout_offering.andand.workout_policy.
-          andand.no_review_before_close &&
-          !@workout_score.andand.workout_offering.andand.shutdown?
+        manages_course = current_user.andand.global_role.andand.is_admin? ||
+          @workout_score.andand.workout_offering.andand.course_offering.andand.is_manager?(current_user)
+        policy = @workout_score.andand.workout_offering.andand.workout_policy
+        if !manages_course && @workout_score.andand.closed? &&
+          (policy.andand.see_answers == false ||
+           (policy.andand.no_review_before_close && !@workout_score.andand.workout_offering.andand.shutdown?))
           redirect_to workout_path(@workout),
             notice: "The time limit has passed for this workout." and return
         end
@@ -953,7 +997,7 @@ class WorkoutsController < ApplicationController
       redirect_to exercise_practice_path(
         @workout.first_exercise,
         workout_id: @workout.id,
-        lti_launch: params[:lti_launch],
+        lti_launch: @lti_launch,
         workout_score_id: @workout_score.andand.id
       )
     else
@@ -976,28 +1020,317 @@ class WorkoutsController < ApplicationController
 
     def create_or_update_offerings(workout)
       common = {}  # params that are common among all offerings of this workout
-      common[:workout_policy] = WorkoutPolicy.find_by id: params[:policy_id]
+      policy_params = params[:policy].present? ? JSON.parse(params[:policy]) : {}
+      
+      policy = workout.workout_policy || WorkoutPolicy.create!
+      policy.update(policy_params)
+
+      # Ensure all existing offerings use this policy
+      workout.workout_offerings.update_all(workout_policy_id: policy.id)
+      common[:workout_policy] = policy
       common[:time_limit] = params[:time_limit]
       common[:attempt_limit] = params[:attempt_limit]
       common[:published] = params[:published]
       common[:most_recent] = params[:most_recent]
       common[:lms_assignment_id] = params[:lms_assignment_id]
 
-      removed_extensions = JSON.parse params[:removed_extensions]
-      removed_extensions.each do |extension_id|
-        StudentExtension.destroy extension_id
+      if params[:date_yaml].present?
+        begin
+          data = YAML.safe_load(params[:date_yaml])
+          sections_yaml = data['sections'] || []
+          extensions_yaml = data['extensions'] || []
+          
+          user_tz = current_user.time_zone.andand.name || 'America/New_York'
+          @course = Course.find_with_id_or_slug(params[:course_id], params[:organization_id])
+          @term = Term.find(params[:term_id])
+          
+          managed_course_offerings = current_user.managed_course_offerings(course: @course, term: @term)
+          managed_course_offerings_map = managed_course_offerings.each_with_object({}) { |co, h| h[co.label] = co }
+          
+          # 1. Handle Workout Offerings
+          new_offerings_data = {}
+          sections_yaml.each do |s|
+            label = s['section']
+            co = managed_course_offerings_map[label]
+            if co
+              due = parse_date(s['due'], user_tz)
+              from = parse_date(s['from'], user_tz, due, :from)
+              until_date = parse_date(s['until'], user_tz, due, :until)
+              
+              new_offerings_data[co.id.to_s] = {
+                'opening_date' => from.andand.to_i.andand.*(1000), # millisecond timestamp for add_workout_offerings
+                'soft_deadline' => due.andand.to_i.andand.*(1000),
+                'hard_deadline' => until_date.andand.to_i.andand.*(1000),
+                'extensions' => []
+              }
+            else
+              workout.errors.add(:base, "Course offering with label '#{label}' not found or not managed by you.")
+            end
+          end
+          
+          # Identify removed offerings
+          existing_offerings = workout.workout_offerings.joins(:course_offering).where(course_offerings: { term_id: @term.id })
+          existing_offering_ids = existing_offerings.map(&:id)
+          kept_offering_co_ids = new_offerings_data.keys.map(&:to_i)
+          
+          offerings_to_delete = existing_offerings.reject { |wo| kept_offering_co_ids.include?(wo.course_offering_id) }
+          offerings_to_delete.each(&:destroy)
+          
+          # Update/Create Offerings
+          workout_offerings = workout.add_workout_offerings(new_offerings_data, common)
+          
+          # 2. Handle Student Extensions
+          # First, clear existing extensions for this workout in this term
+          # (Easier to rebuild than to diff grouped YAML)
+          workout_offerings_in_term = workout.workout_offerings.joins(:course_offering).where(course_offerings: { term_id: @term.id })
+          StudentExtension.where(workout_offering_id: workout_offerings_in_term.map(&:id)).destroy_all
+          
+          extensions_yaml.each do |ext_group|
+              due = parse_date(ext_group['due'], user_tz)
+              from = parse_date(ext_group['from'], user_tz, due, :from)
+              until_date = parse_date(ext_group['until'], user_tz, due, :until)
+            students = ext_group['students'] || []
+            
+            students.each do |student_ref|
+              next if student_ref == '<insert email here>'
+              
+              # Extract email from "Name <email>" or just "email"
+              email = student_ref.match(/<([^>]+)>/).andand[1] || student_ref.strip
+              student = User.find_by(email: email)
+              if !student
+                # Try name match
+                student = User.where("CONCAT(first_name, ' ', last_name) = ?", student_ref.strip).first
+              end
+              
+              if student
+                # Check enrollment in any of the workout offerings in this term
+                enrolled_offering = workout_offerings_in_term.find { |wo| wo.course_offering.is_enrolled?(student) }
+                if enrolled_offering
+                  StudentExtension.create!(
+                    user: student,
+                    workout_offering: enrolled_offering,
+                    opening_date: from,
+                    soft_deadline: due,
+                    hard_deadline: until_date
+                  )
+                else
+                  workout.errors.add(:base, "Student '#{student_ref}' is not enrolled in any sections for this workout.")
+                end
+              else
+                workout.errors.add(:base, "Student '#{student_ref}' not found by email or name.")
+              end
+            end
+          end
+          
+          workout.save!
+          return workout_offerings.first
+          
+        rescue Psych::SyntaxError => e
+          workout.errors.add(:base, "YAML Syntax Error: #{e.message}")
+          return nil
+        rescue StandardError => e
+          workout.errors.add(:base, "Error processing YAML: #{e.message}")
+          return nil
+        end
+      else
+        # Fallback to legacy JSON behavior if date_yaml is not present
+        removed_extensions = JSON.parse params[:removed_extensions]
+        removed_extensions.each do |extension_id|
+          StudentExtension.destroy extension_id
+        end
+
+        removed_offerings = JSON.parse params[:removed_offerings]
+        removed_offerings.each do |workout_offering_id|
+          workout.workout_offerings.destroy workout_offering_id
+        end
+
+        course_offerings = JSON.parse params[:course_offerings]
+        workout_offerings =
+          workout.add_workout_offerings(course_offerings, common)
+        workout.save!
+        return workout_offerings.first
+      end
+    end
+
+    def search_students
+      @course = Course.find_with_id_or_slug(params[:course_id], params[:organization_id])
+      @term = Term.find(params[:term_id])
+      term = escape_javascript(params[:term]).downcase
+      
+      # Get all students enrolled in any course offering for this course in this term
+      course_offerings = CourseOffering.where(course: @course, term: @term)
+      users = User.joins(:course_enrollments)
+                  .where(course_enrollments: { course_offering_id: course_offerings.map(&:id) })
+                  .where("lower(first_name) like ? or lower(last_name) like ? or lower(email) like ?", "%#{term}%", "%#{term}%", "%#{term}%")
+                  .distinct
+      
+      render json: users.map { |u| { 
+        id: u.id, 
+        first_name: u.first_name, 
+        last_name: u.last_name, 
+        email: u.email 
+      } }
+    end
+
+    # -------------------------------------------------------------
+    def serialize_workout_offerings_to_yaml(workout_offerings, student_extensions)
+      user_tz = current_user.time_zone.andand.name || 'America/New_York'
+      
+      sections = workout_offerings.map do |wo|
+        {
+          'section' => wo.course_offering.display_name_with_term,
+          'due' => format_date(wo.soft_deadline, user_tz),
+          'from' => format_rel_date(wo.opening_date, wo.soft_deadline, user_tz) || 'always',
+          'until' => format_rel_date(wo.hard_deadline, wo.soft_deadline, user_tz) || '+0 minutes'
+        }
       end
 
-      removed_offerings = JSON.parse params[:removed_offerings]
-      removed_offerings.each do |workout_offering_id|
-        workout.workout_offerings.destroy workout_offering_id
+      # Group extensions by dates
+      grouped_extensions = {}
+      student_extensions.each do |ext|
+        key = {
+          'due' => format_date(ext.soft_deadline, user_tz),
+          'from' => format_rel_date(ext.opening_date, ext.soft_deadline, user_tz) || 'always',
+          'until' => format_rel_date(ext.hard_deadline, ext.soft_deadline, user_tz) || '+0 minutes'
+        }
+        
+        grouped_extensions[key] ||= []
+        grouped_extensions[key] << "#{ext.user.display_name} <#{ext.user.email}>"
       end
 
-      course_offerings = JSON.parse params[:course_offerings]
-      workout_offerings =
-        workout.add_workout_offerings(course_offerings, common)
-      workout.save!
-      return workout_offerings.first
+      ext_list = grouped_extensions.map do |dates, students|
+        {
+          'due' => dates['due'],
+          'from' => dates['from'],
+          'until' => dates['until'],
+          'students' => students
+        }
+      end
+
+      if ext_list.empty?
+        ext_list << {
+          'due' => '',
+          'from' => 'always',
+          'until' => '+0 minutes',
+          'students' => ['<insert email here>']
+        }
+      end
+
+      yaml_obj = {
+        'sections' => sections,
+        'extensions' => ext_list
+      }
+      
+      # Use custom formatting to avoid unnecessary quotes and handle nulls as requested
+      yaml_str = yaml_obj.to_yaml
+      yaml_str.gsub!(/^---\n/, '')
+      # Remove quotes from keys
+      yaml_str.gsub!(/^(\s*)['"]([^'"]+)['"]:/, '\1\2:')
+      # Remove quotes from values where possible (simple dates and names)
+      yaml_str.gsub!(/: ['"]([^'"]*)['"]$/, ': \1')
+      # Remove quotes from list items (like student names/emails)
+      yaml_str.gsub!(/^(\s*)- ['"]([^'"]*)['"]$/, '\1- \2')
+      # Handle empty strings as requested (no quotes)
+      yaml_str.gsub!(/: (''|"")$/, ': ')
+      yaml_str
+    end
+
+    def format_rel_date(target, relative_to, tz)
+      return nil if target.nil? || relative_to.nil?
+      diff = (target.to_time.to_f - relative_to.to_time.to_f).round(0)
+      sign = diff >= 0 ? '+' : '-'
+      abs_diff = diff.abs
+      
+      # (1) Exact integral number of days
+      if abs_diff % 86400 == 0
+        val = abs_diff / 86400
+        return "#{sign}#{val} #{val == 1 ? 'day' : 'days'}"
+      end
+      
+      # (2) Less than 24 hours and exact integral number of hours
+      if abs_diff < 86400 && abs_diff % 3600 == 0
+        val = abs_diff / 3600
+        return "#{sign}#{val} #{val == 1 ? 'hour' : 'hours'}"
+      end
+      
+      # (3) Less than 181 minutes and exact integral number of minutes
+      if abs_diff < (181 * 60) && abs_diff % 60 == 0
+        val = abs_diff / 60
+        return "#{sign}#{val} #{val == 1 ? 'minute' : 'minutes'}"
+      end
+      
+      # (4) Otherwise, render as absolute date/time
+      format_date(target, tz)
+    end
+
+    def format_date(date, tz)
+      return '' if date.nil? || (date.is_a?(Numeric) && date == 0)
+      d = date.is_a?(Numeric) ? Time.at(date) : date
+      d.in_time_zone(tz).strftime('%Y-%m-%d %I:%M %p')
+    end
+
+    def parse_date(date_str, tz, relative_to = nil, mode = nil)
+      return nil if date_str.blank?
+      
+      val = date_str.to_s.strip.downcase
+      return nil if ['null', 'nil', 'empty'].include?(val)
+      if mode == :from && ['always', 'unlimited'].include?(val)
+        return nil
+      end
+      
+      # Check for relative offset: +N days, -N hours, or just N days
+      # Flexible regex: optional sign, float/int, flexible whitespace, abbreviated units
+      if relative_to && date_str.strip.match?(/^([+-]?)\s*(\d*\.?\d+)\s*([a-z]+)$/i)
+        match = date_str.strip.match(/^([+-]?)\s*(\d*\.?\d+)\s*([a-z]+)$/i)
+        sign = match[1]
+        amount = match[2].to_f
+        unit_str = match[3].downcase
+        
+        # Unit mapping
+        unit_map = {
+          'm' => 'minute', 'min' => 'minute', 'mins' => 'minute', 'minutes' => 'minute',
+          'h' => 'hour', 'hr' => 'hour', 'hrs' => 'hour', 'hour' => 'hour', 'hours' => 'hour',
+          'd' => 'day', 'day' => 'day', 'days' => 'day',
+          'w' => 'week', 'wk' => 'week', 'wks' => 'week', 'week' => 'week', 'weeks' => 'week'
+        }
+        
+        unit = unit_map[unit_str]
+        raise StandardError, "Unknown unit '#{unit_str}'" unless unit
+        
+        # Validate and determine operator based on mode and sign
+        if mode == :from
+          if sign == '+'
+            raise StandardError, "Relative values for 'from' (opening date) must be negative. Use '-' or no sign."
+          end
+          operator = '-'
+        elsif mode == :until
+          if sign == '-'
+            raise StandardError, "Relative values for 'until' (hard deadline) must be non-negative. Use '+' or no sign."
+          end
+          operator = '+'
+        else
+          operator = sign.blank? ? '+' : sign
+        end
+        
+        # Calculate offset
+        duration = amount.send(unit)
+        if operator == '+'
+          return relative_to + duration
+        else
+          return relative_to - duration
+        end
+      end
+      
+      # Absolute date
+      begin
+        # Use Time.zone.parse which respects the current zone if set, 
+        # but here we want to use the user's zone.
+        Time.use_zone(tz) do
+          Time.zone.parse(date_str)
+        end
+      rescue
+        nil
+      end
     end
 
     # -------------------------------------------------------------
@@ -1015,7 +1348,8 @@ class WorkoutsController < ApplicationController
         :scrambled,
         :soft_deadline,
         :target_group,
-        :workout_offerings_attributes
+        :workout_offerings_attributes,
+        :date_yaml
       )
     end
 

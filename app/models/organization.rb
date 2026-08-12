@@ -2,16 +2,17 @@
 #
 # Table name: organizations
 #
-#  id           :integer          not null, primary key
-#  name         :string(255)      default(""), not null
-#  created_at   :datetime
-#  updated_at   :datetime
+#  id           :bigint           not null, primary key
 #  abbreviation :string(255)
-#  slug         :string(255)      default(""), not null
 #  is_hidden    :boolean          default(FALSE)
+#  name         :string(255)      not null
+#  slug         :string(255)      not null
+#  created_at   :datetime         not null
+#  updated_at   :datetime         not null
 #
 # Indexes
 #
+#  index_organizations_on_name  (name) UNIQUE
 #  index_organizations_on_slug  (slug) UNIQUE
 #
 
@@ -19,7 +20,7 @@
 # Represents a university, college, school, or other organization that
 # has courses.
 #
-class Organization < ActiveRecord::Base
+class Organization < ApplicationRecord
   extend FriendlyId
   friendly_id :abbreviation, use: :history
 

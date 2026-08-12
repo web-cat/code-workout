@@ -1,7 +1,7 @@
-version: '3.8'
+#version: '3.8'
 services:
   db_dev:
-    image: mysql:5.7
+    image: mariadb:10.2
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_USER: codeworkout
@@ -10,9 +10,9 @@ services:
     ports:
       - "3307:3306"
     volumes:
-      - dbdata:/var/lib/mysql:delegated
+      - dbdata:/var/lib/mariadb:delegated
   db_test:
-    image: mysql:5.7
+    image: mariadb:10.2
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_USER: codeworkout
@@ -30,6 +30,7 @@ services:
     stdin_open: true
     tty: true
     environment:
+      RUBYOPT: -W:no-deprecated
       DB_USERNAME: codeworkout
       DB_PASSWORD: codeworkout
       DB_DATABASE: codeworkout

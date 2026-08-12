@@ -1,4 +1,4 @@
-class CreateGroupAccessRequests < ActiveRecord::Migration
+class CreateGroupAccessRequests < ActiveRecord::Migration[5.1]
   def change
     create_table :group_access_requests do |t|
       t.references :user, index: true, foreign_key: true
