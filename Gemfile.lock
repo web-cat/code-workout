@@ -1,7 +1,6 @@
 GIT
   remote: https://github.com/CSSPLICE/peml.git
-  revision: 4d450079904c341ee3286f4f69b257ee4cefb001
-  ref: 4d45007
+  revision: 8535a85bb4dc8384f3033562005cf3e5ab0b4b21
   specs:
     peml (0.1.2)
       dottie (~> 0.0.3)
@@ -588,7 +587,7 @@ DEPENDENCIES
   css3-progress-bar-rails
   csv_shaper
   devise
-  dottie (~> 0.0.3)
+  dottie (~> 0.0.1)
   ed25519
   exception_handler (~> 0.8.0.0)
   factory_bot_rails
