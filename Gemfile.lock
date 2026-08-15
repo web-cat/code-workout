@@ -1,7 +1,6 @@
 GIT
   remote: https://github.com/CSSPLICE/peml.git
-  revision: 4d450079904c341ee3286f4f69b257ee4cefb001
-  ref: 4d45007
+  revision: 8abcb107bea40826d3c671ce88ca9491a8ae116b
   specs:
     peml (0.1.2)
       dottie (~> 0.0.3)

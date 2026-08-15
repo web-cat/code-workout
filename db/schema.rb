@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_05_25_110456) do
+ActiveRecord::Schema.define(version: 2026_08_14_124641) do
 
   create_table "active_admin_comments", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
     t.string "namespace"
@@ -419,6 +419,7 @@ ActiveRecord::Schema.define(version: 2026_05_25_110456) do
     t.text "answer"
     t.text "error"
     t.integer "error_line_no"
+    t.text "attempt_state"
   end
 
   create_table "parsons_prompts", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|

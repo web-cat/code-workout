@@ -1,6 +1,9 @@
 $("#saved_assurance").html("")
 $("#exercisefeedback").html("<%= j(render 'ajax_feedback' ) %>")
 
+if window.parsonsFeedbackMessage
+  $("#parsons-feedback-message").text(window.parsonsFeedbackMessage)
+
 attempt_score = <%= @attempt.score %>
 max_points = <%= @max_points %>
 attempts_exhausted = <%= @attempts_exhausted %>

@@ -203,28 +203,10 @@
               = stylesheet_link_tag("parsons")
             = hidden_field_tag 'exercise_version[answer_code]', '', id: 'parsons-answer-field'
             = hidden_field_tag 'exercise_version[parsons_correct]', '', id: 'parsons-correct-field'
-            #parsons-container
-            :javascript
-              document.addEventListener('DOMContentLoaded', function() {
-                try {
-                  window.parsonsWidget = new Parsons({
-                    orig: document.getElementById('parsons-container'),
-                    pifJson: #{raw pif_json.to_json},
-                    divid: 'parsons-container',
-                    useRunestoneServices: false
-                  });
-                  $(window.parsonsWidget.checkButton).hide();
-                  $(window.parsonsWidget.resetButton).hide();
-                  if (window.parsonsWidget.helpButton) {
-                    $(window.parsonsWidget.helpButton).hide();
-                    document.getElementById('parsons-help-btn').style.display = '';
-                  }
-                } catch (error) {
-                  console.error('Error initializing Parsons:', error);
-                  document.getElementById('parsons-container').innerHTML =
-                      '<div style="color: red; padding: 20px;">Error loading Parsons exercise: ' + error.message + '</div>';
-                }
-              });
+            = hidden_field_tag 'exercise_version[attempt_state]', '', id: 'parsons-state-field'
+            %div#parsons-container{ data: { pif_json: pif_json.to_json,
+              initial_state: prior_answer ? prior_answer.specific.get_attempt_state.to_json : 'null',
+              save_state_url: exercise_save_parsons_state_path(@exercise_version.exercise, exercise_version_id: @exercise_version.id) } }
 
             -# = f.input :answer_code, as: :text, class: 'code',
             -# input_html: { class: 'code', readonly: true,
