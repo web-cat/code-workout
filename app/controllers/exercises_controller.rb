@@ -184,7 +184,9 @@ class ExercisesController < ApplicationController
       ExerciseRepresenter.new(@exercise).to_hash.to_yaml
     @user_groups = current_user.user_groups
     # figure out the use/assign rights to this exercise
-    if ec = @exercise.exercise_collection
+    if @exercise.is_public
+      @exercise_collection = -1 # Everyone
+    elsif ec = @exercise.exercise_collection
       if ec.owned_by?(current_user)
         @exercise_collection = 0 # Only Me
       elsif @user_groups.include?(ec.user_group)
@@ -451,6 +453,7 @@ class ExercisesController < ApplicationController
 
     # figure out if we need to add this to an exercise collection
     exercise_collection = nil
+    is_public = false
     if use_rights == 0
       exercise_collection = current_user.exercise_collection
       if exercise_collection.nil?
@@ -460,7 +463,9 @@ class ExercisesController < ApplicationController
         )
         exercise_collection.save!
       end
-    elsif use_rights != -1 # then it must be a user group
+    elsif use_rights == -1 # Everyone
+      is_public = true
+    else # then it must be a user group
       user_group = UserGroup.find(use_rights)
       exercise_collection = user_group.exercise_collection
       if exercise_collection.nil?
@@ -535,6 +540,9 @@ class ExercisesController < ApplicationController
 
           # Add exercise to collection
           exercise_collection.andand.add(e, override: true)
+
+          # Set public/everyone access
+          e.update!(is_public: is_public)
 
           # Update the text representation
           e.current_version.update(text_representation: text_representation)
