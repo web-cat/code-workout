@@ -91,6 +91,67 @@ class Workout < ApplicationRecord
     return Workout.where(creator_id: user.id).or(Workout.where(is_public: true))
   end
 
+
+  # -------------------------------------------------------------
+  # Creates a new workout with the specified descriptive parameters and
+  # populates it with all exercises from the specified list of workout IDs.
+  # Exercises are copied in the order of the provided workout IDs, preserving
+  # their original order and points, and skipping duplicate exercises.
+  #
+  # @param params [Hash, ActionController::Parameters] Attributes for the new workout
+  #   (e.g., :name, :description, :creator, :is_public, :scrambled, etc.)
+  # @param workout_ids [Array<Integer, String>] Array of workout IDs to copy exercises from
+  # @return [Workout] The created workout (persisted if valid)
+  #
+  # @example Create a new combined workout from existing workouts
+  #   new_workout = Workout.create_from_workouts(
+  #     {
+  #       name: 'Combined Unit Review',
+  #       description: 'Exercises from workouts 10, 12, and 15',
+  #       creator: current_user,
+  #       is_public: true
+  #     },
+  #     [10, 12, 15]
+  #   )
+  #
+  def self.create_from_workouts(params, workout_ids = [])
+    # Support flexible argument order: (workout_ids, params) or (params, workout_ids)
+    if params.is_a?(Array) && workout_ids.is_a?(Hash)
+      workout_ids, params = params, workout_ids
+    end
+
+    workout = Workout.new(params)
+
+    transaction do
+      if workout.save
+        position = 1
+        seen_exercise_ids = Set.new
+
+        # Preserve the sequence of workouts as passed in workout_ids
+        source_workouts = Workout.where(id: workout_ids).index_by(&:id)
+        ordered_workouts = Array(workout_ids).map { |id| source_workouts[id.to_i] }.compact
+
+        ordered_workouts.each do |source_workout|
+          source_workout.exercise_workouts.order(:position).each do |ew|
+            next if seen_exercise_ids.include?(ew.exercise_id)
+            seen_exercise_ids.add(ew.exercise_id)
+
+            ExerciseWorkout.create!(
+              workout: workout,
+              exercise_id: ew.exercise_id,
+              points: ew.points,
+              position: position
+            )
+            position += 1
+          end
+        end
+      end
+    end
+
+    workout
+  end
+
+
   #~ Instance methods .........................................................
 
   # Workout is visible if the user is the creator or

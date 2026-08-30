@@ -7,7 +7,7 @@
   = render partial: 'workouts/status',
     locals: { workout_score: workout_score, workout_offering: workout_offering, review: params[:review_user_id].present? }
 - elsif user_signed_in? && session[:leaf_exercises]
-  = render Exercise.find(session[:leaf_exercises]),
+  = render Exercise.where(id: session[:leaf_exercises]),
     user: user, size: 'sm'
 - elsif !user
   = render @exercise, user: nil, size: 'sm'

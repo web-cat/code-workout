@@ -1,11 +1,12 @@
 GIT
   remote: https://github.com/CSSPLICE/peml.git
-  revision: cfa1d6f23522aa8c164b3b41bad70f7f3a3098ab
+  revision: 8535a85bb4dc8384f3033562005cf3e5ab0b4b21
   specs:
     peml (0.1.2)
       dottie (~> 0.0.3)
       json_schemer (>= 0.2)
       kramdown (~> 2.3.1)
+      kramdown-math-katex (~> 1.0.1)
       kramdown-parser-gfm (~> 1.1.0)
       liquid (>= 3.0.6)
       parslet (>= 1.8)
@@ -303,8 +304,13 @@ GEM
       activerecord
       kaminari-core (= 1.2.1)
     kaminari-core (1.2.1)
+    katex (0.9.0)
+      execjs (~> 2.7)
     kramdown (2.3.2)
       rexml
+    kramdown-math-katex (1.0.1)
+      katex (~> 0.4)
+      kramdown (~> 2.0)
     kramdown-parser-gfm (1.1.0)
       kramdown (~> 2.0)
     liquid (5.5.1)

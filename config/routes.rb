@@ -416,6 +416,8 @@ Rails.application.routes.draw do
       as: :exercise_practice
     patch 'exercises/:id/practice' => 'exercises#evaluate',
       as: :exercise_evaluate
+    patch 'exercises/:id/practice/save_parsons_state' =>
+      'exercises#save_parsons_state', as: :exercise_save_parsons_state
 		get 'exercises/:id/embed' => 'exercises#embed', as: :exercise_embed
     get 'exercises/search' => 'exercises#search', as: :exercises_search
     get 'exercises/query_data' => 'exercises#query_data',

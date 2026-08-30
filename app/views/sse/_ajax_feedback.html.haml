@@ -33,7 +33,15 @@
       %p= choice.feedback
   - else
     Your answer has been saved.
-- elsif @exercise_version.is_coding?
+- elsif @exercise_version.is_parsons? && !@exercise_version.is_execution_graded?
+  - if show_score
+    - if @attempt.earned_full_points?
+      %p#parsons-feedback-message Your arrangement is correct!
+    - else
+      %p#parsons-feedback-message Your arrangement is incorrect.
+  - else
+    %p Your answer has been saved.
+- elsif @exercise_version.is_coding? || @exercise_version.is_parsons?
   - answer = @attempt.prompt_answers.first.specific
   - if !answer.error.blank?
     %p Your answer could not be processed because it contains errors:

@@ -6,7 +6,8 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
   window.codeworkout.removed_exercises = []
   
   # Store initial state for removal confirmation
-  $('#date-yaml').data('initial-sections', ($('#date-yaml').val().match(/section:/g) || []).length)
+  if $('#date-yaml').length
+    $('#date-yaml').data('initial-sections', ($('#date-yaml').val().match(/section:/g) || []).length)
   
   # Track last cursor position in textarea
   $('#date-yaml').on 'blur focus click input', ->
@@ -261,12 +262,12 @@ handle_submit = ->
     form_alert messages
     return
 
-  # Confirmation for removal
-  initial_sections = $('#date-yaml').data('initial-sections') || 0
-  current_sections = ($('#date-yaml').val().match(/section:/g) || []).length
-  if current_sections < initial_sections
-    if !confirm("You have removed one or more course offerings. This will delete all student scores for those offerings. Are you sure?")
-      return
+  if $('#date-yaml').length
+    initial_sections = $('#date-yaml').data('initial-sections') || 0
+    current_sections = ($('#date-yaml').val().match(/section:/g) || []).length
+    if current_sections < initial_sections
+      if !confirm("You have removed one or more course offerings. This will delete all student scores for those offerings. Are you sure?")
+        return
 
   # Collect info
   fd = new FormData

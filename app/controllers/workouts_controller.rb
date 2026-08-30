@@ -49,7 +49,7 @@ class WorkoutsController < ApplicationController
         render plain:
           WorkoutRepresenter.for_collection.new(@workouts).to_hash.to_json
       end
-      format.yml do
+      format.yaml do
         render plain:
           WorkoutRepresenter.for_collection.new(@workouts).to_hash.to_yaml
       end

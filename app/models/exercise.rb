@@ -96,11 +96,13 @@ class Exercise < ApplicationRecord
   Q_MC     = 1
   Q_CODING = 2
   Q_BLANKS = 3
+  Q_PARSONS = 4
 
   TYPE_NAMES = {
     Q_MC     => 'Multiple Choice Question',
     Q_CODING => 'Coding Question',
-    Q_BLANKS => 'Fill in the blanks'
+    Q_BLANKS => 'Fill in the blanks',
+    Q_PARSONS => 'Parsons Problem'
   }
 
   LANGUAGE_EXTENSION = {
@@ -304,6 +306,11 @@ class Exercise < ApplicationRecord
   # -------------------------------------------------------------
   def is_fill_in_the_blanks?
     self.question_type == Q_BLANKS
+  end
+
+  # -------------------------------------------------------------
+  def is_parsons?
+    self.question_type == Q_PARSONS
   end
 
 

@@ -1,1 +1,87 @@
 # nothing happens yet. Probably a good space for client-side static analysis.
+
+saveParsonsResetState = ->
+  container = document.getElementById('parsons-container')
+  widget = window.parsonsWidget
+  url = container && container.dataset.saveStateUrl
+  return unless container && widget && url
+
+  code = null
+  try
+    code = widget.extractCode().code
+  catch err
+    console.error('Failed to extract Parsons code for autosave:', err)
+
+  $.ajax
+    url: url
+    method: 'PATCH'
+    data:
+      answer_code: code
+      attempt_state: document.getElementById('parsons-state-field').value
+    error: (xhr) ->
+      console.error('Failed to autosave Parsons reset state:', xhr.status)
+
+$ ->
+  container = document.getElementById('parsons-container')
+  return unless container
+
+  try
+    pifJson = JSON.parse(container.dataset.pifJson)
+    initialState = if container.dataset.initialState then JSON.parse(container.dataset.initialState) else null
+
+    window.parsonsWidget = new Parsons
+      orig: container
+      pifJson: pifJson
+      divid: 'parsons-container'
+      initialState: initialState,
+      showFeedbackText: false,
+      onFeedback: (feedback) ->
+        window.parsonsFeedbackMessage = feedback.message
+      onStateChange: (state) ->
+        document.getElementById('parsons-state-field').value = JSON.stringify(state)
+      onCheck: ->
+        $(container).closest('form').trigger('submit')
+      onReset: ->
+        setTimeout saveParsonsResetState, 0
+
+    $(window.parsonsWidget.checkButton).hide()
+    $(window.parsonsWidget.resetButton).hide()
+    if window.parsonsWidget.helpButton
+      $(window.parsonsWidget.helpButton).hide()
+      document.getElementById('parsons-help-btn').style.display = ''
+  catch error
+    console.error('Error initializing Parsons:', error)
+    container.innerHTML = '<div style="color: red; padding: 20px;">Error loading Parsons exercise: ' + error.message + '</div>'
+
+$(document).on 'ajax:before', 'form', (e) ->
+  answerField = document.getElementById('parsons-answer-field')
+  correctField = document.getElementById('parsons-correct-field')
+  if answerField && window.parsonsWidget
+    console.log("came here")
+    console.log("answerField: ", answerField)
+    console.log("correctField: ", correctField)
+    try
+      answerField.value = window.parsonsWidget.extractCode().code
+      # For order-graded parsons, run client-side grading before submitting.
+      # Execution-graded parsons are graded server-side like coding exercises.
+      unless window.parsonsWidget.options.grader == 'exec'
+        window.parsonsWidget.checkCurrentAnswer()
+        window.parsonsWidget.logCurrentAnswer()
+        window.parsonsWidget.renderFeedback()
+        correctField.value = window.parsonsWidget.correct == true
+    catch err
+      console.error('Failed to extract Parsons answer:', err)
+
+
+$(document).on 'click', '#primarybtn', (e) ->
+  widget = window.parsonsWidget
+  if widget
+    e.preventDefault()
+    $(widget.checkButton).prop('disabled', false)
+    widget.checkButton.click()
+
+$(document).on 'click', '#parsons-reset-btn', ->
+  window.parsonsWidget?.resetButton?.click()
+
+$(document).on 'click', '#parsons-help-btn', ->
+  window.parsonsWidget.helpMe() if window.parsonsWidget

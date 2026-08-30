@@ -1,20 +1,21 @@
 # == Schema Information
 #
-# Table name: coding_prompt_answers
+# Table name: parsons_prompt_answers
 #
-#  id            :bigint           not null, primary key
+#  id            :integer          not null, primary key
 #  answer        :text(65535)
 #  error         :text(65535)
 #  error_line_no :integer
+#  attempt_state :text(65535)
 #
 
 # =============================================================================
-# Represents one coding prompt answer in an exercise attempt.  In spirit,
+# Represents one parsons prompt answer in an exercise attempt.  In spirit,
 # this is a subclass of PromptAnswer, and inherits all of the fields of
 # PromptAnswer via acts_as (see the documentation on-line for the
 # activerecord-acts_as gem).
 #
-class CodingPromptAnswer < ApplicationRecord
+class ParsonsPromptAnswer < ApplicationRecord
 
   #~ Relationships ............................................................
 
@@ -33,6 +34,15 @@ class CodingPromptAnswer < ApplicationRecord
 
 
   #~ Instance methods .........................................................
+
+  # -------------------------------------------------------------
+  def get_attempt_state
+    return nil if attempt_state.blank?
+    JSON.parse(attempt_state)
+  rescue JSON::ParserError
+    nil
+  end
+
 
   # -------------------------------------------------------------
   def execute_static_tests

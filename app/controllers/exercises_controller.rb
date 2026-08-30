@@ -18,11 +18,12 @@ class ExercisesController < ApplicationController
 
   # GET /exercises
   def index
-    if current_user
-      @exercises = Exercise.visible_to_user(current_user)
-    else
-      @exercises = Exercise.publicly_visible
-    end
+    # if current_user
+    #   @exercises = Exercise.visible_to_user(current_user)
+    # else
+    #   @exercises = Exercise.publicly_visible
+    # end
+    @exercises = Exercise.publicly_visible
 
     @exercises = @exercises.includes(:languages, :tags, :current_version, :attempts).page params[:page]
   end
@@ -184,7 +185,9 @@ class ExercisesController < ApplicationController
       ExerciseRepresenter.new(@exercise).to_hash.to_yaml
     @user_groups = current_user.user_groups
     # figure out the use/assign rights to this exercise
-    if ec = @exercise.exercise_collection
+    if @exercise.is_public
+      @exercise_collection = -1 # Everyone
+    elsif ec = @exercise.exercise_collection
       if ec.owned_by?(current_user)
         @exercise_collection = 0 # Only Me
       elsif @user_groups.include?(ec.user_group)
@@ -384,6 +387,29 @@ class ExercisesController < ApplicationController
     # FIXME: add support for JSON here as well
     if text_representation.start_with?('---')
       hash = YAML.safe_load(text_representation)
+    # elsif PemlParsingUtil.new.is_pif(text_representation)
+    elsif PemlParsingUtil.new.is_pif(text_representation)
+      logger.debug '=========='
+      logger.debug 'PIF Input'
+      logger.debug '=========='
+      logger.debug text_representation
+      hash = PemlParsingUtil.new.parse_pif(text_representation, error_msgs)
+      logger.debug '=========='
+      logger.debug 'PIF Hash'
+      logger.debug '=========='
+      logger.debug hash.to_yaml
+      logger.debug '=========='
+
+      if !error_msgs.empty?
+        raw_msgs = error_msgs
+        error_msgs = []
+        error_msgs << "<span>Errors while parsing PIF for exercise #{hash['name']}:</span><ul>"
+        raw_msgs.each do |msg|
+          error_msgs << "<li>#{msg}</li>"
+        end
+        error_msgs << "</ul>"
+      end
+
     else
       logger.debug '=========='
       logger.debug 'PEML Input'
@@ -428,6 +454,7 @@ class ExercisesController < ApplicationController
 
     # figure out if we need to add this to an exercise collection
     exercise_collection = nil
+    is_public = false
     if use_rights == 0
       exercise_collection = current_user.exercise_collection
       if exercise_collection.nil?
@@ -437,7 +464,9 @@ class ExercisesController < ApplicationController
         )
         exercise_collection.save!
       end
-    elsif use_rights != -1 # then it must be a user group
+    elsif use_rights == -1 # Everyone
+      is_public = true
+    else # then it must be a user group
       user_group = UserGroup.find(use_rights)
       exercise_collection = user_group.exercise_collection
       if exercise_collection.nil?
@@ -512,6 +541,9 @@ class ExercisesController < ApplicationController
 
           # Add exercise to collection
           exercise_collection.andand.add(e, override: true)
+
+          # Set public/everyone access
+          e.update!(is_public: is_public)
 
           # Update the text representation
           e.current_version.update(text_representation: text_representation)
@@ -790,22 +822,7 @@ class ExercisesController < ApplicationController
       end
     end
 
-    if current_user
-      @student_drift_user = current_user
-    elsif session[:student_drift_user_id]
-      @student_drift_user = User.find(session[:student_drift_user_id])
-    else
-      user_ip = request.remote_ip.clone()
-      fake_email = user_ip.clone().gsub('.','') + Time.now.to_i.to_s + '@cw.edu'
-      fake_password = Time.now.to_i.to_s + user_ip.clone().gsub('.','')
-      @student_drift_user = User.new(email: fake_email, slug: fake_email,
-                              password: fake_password,
-                              current_sign_in_ip: request.remote_ip,
-                              last_sign_in_ip: request.remote_ip,
-                              global_role_id: 4)
-      @student_drift_user.save!
-      session[:student_drift_user_id] = @student_drift_user.id
-    end
+    @student_drift_user = resolve_student_drift_user
     @workout = nil
     @workout_offering = nil
     if params[:workout_offering_id]
@@ -972,13 +989,27 @@ class ExercisesController < ApplicationController
               lti_launch: @lti_launch) + "' "
         end
       end
-    elsif @exercise_version.is_coding?
+    else
       @answer_code = params[:exercise_version][:answer_code]
+
       @exercise_version.prompts.each_with_index do |exercise_prompt, i|
         exercise_prompt_answer = @attempt.prompt_answers[i]
         exercise_prompt_answer.answer = params[:exercise_version][:answer_code]
+        if @exercise_version.is_parsons?
+          exercise_prompt_answer.attempt_state =
+            params[:exercise_version][:attempt_state]
+        end
         if exercise_prompt_answer.save
-          CodeWorker.new.async.perform(@attempt.id)
+          if @exercise_version.is_execution_graded?
+            CodeWorker.new.async.perform(@attempt.id)
+          elsif @exercise_version.is_parsons?
+            parsons_correct = params[:exercise_version][:parsons_correct] == 'true'
+            @attempt.score = parsons_correct ? 1.0 : 0.0
+            @attempt.score *= @max_points if @workout
+            @attempt.feedback_ready = true
+            @attempt.save!
+            @workout_score.record_attempt(@attempt) if @workout_score
+          end
         else
           logger.error 'IMPROPER PROMPT',
             'unable to save prompt_answer: ' \
@@ -987,6 +1018,37 @@ class ExercisesController < ApplicationController
         end
       end
       @workout ||= @workout_score.andand.workout
+    end
+  end
+
+
+  # -------------------------------------------------------------
+  # PATCH /gym/exercises/:id/practice/save_parsons_state
+  def save_parsons_state
+    set_exercise_from_params
+    unless @exercise_version && @exercise_version.is_parsons?
+      head :unprocessable_entity and return
+    end
+
+    student_user = resolve_student_drift_user
+
+    attempt = @exercise_version.new_attempt(
+      user: student_user,
+      ip_address: request.remote_ip)
+    # Deliberately not passing workout_score: -- see comment above.
+    attempt.score = 0.0
+    attempt.feedback_ready = false
+
+    saved = attempt.prompt_answers.all? do |prompt_answer|
+      prompt_answer.answer = params[:answer_code]
+      prompt_answer.attempt_state = params[:attempt_state]
+      prompt_answer.save
+    end
+
+    if saved && attempt.save
+      head :ok
+    else
+      head :unprocessable_entity
     end
   end
 
@@ -1079,6 +1141,28 @@ class ExercisesController < ApplicationController
 
   #~ Private instance methods .................................................
   private
+
+    # ----------------------------------------------------------
+    def resolve_student_drift_user
+      if current_user
+        return current_user
+      elsif session[:student_drift_user_id]
+        drift_user = User.find_by(id: session[:student_drift_user_id])
+        return drift_user if drift_user
+      end
+
+      user_ip = request.remote_ip.clone()
+      fake_email = user_ip.clone().gsub('.','') + Time.now.to_i.to_s + '@cw.edu'
+      fake_password = Time.now.to_i.to_s + user_ip.clone().gsub('.','')
+      drift_user = User.new(email: fake_email, slug: fake_email,
+                              password: fake_password,
+                              current_sign_in_ip: request.remote_ip,
+                              last_sign_in_ip: request.remote_ip,
+                              global_role_id: 4)
+      drift_user.save!
+      session[:student_drift_user_id] = drift_user.id
+      drift_user
+    end
 
     # set @exercise and @exercise_version based on params
     # ----------------------------------------------------------
