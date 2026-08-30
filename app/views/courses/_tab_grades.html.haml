@@ -33,13 +33,15 @@
                   = student.email
             - grand_total = 0.0
             - workout_offerings.each do |wkto|
-              - score = wkto.score_for(student).andand.score
+              - workout_score = @workout_scores_by_offering_and_user ? @workout_scores_by_offering_and_user[[wkto.id, student.id]]&.first : wkto.score_for(student)
+              - score = workout_score.andand.score
               - if score
                 %td= link_to score.to_s,
-    organization_workout_offering_review_path(id: wkto.id,
-    course_id: wkto.course_offering.course.slug,
-    term_id: wkto.course_offering.term.slug,
-    organization_id: wkto.course_offering.course.organization.slug, review_user_id: student.id)
+                  organization_workout_offering_review_path(id: wkto.id,
+                  course_id: (@course || wkto.course_offering.course).slug,
+                  term_id: (@term || wkto.course_offering.term).slug,
+                  organization_id: (@organization || wkto.course_offering.course.organization).slug,
+                  review_user_id: student.id)
                 - grand_total += score
               - else
                 %td -/-
@@ -54,7 +56,7 @@
         - workout_offerings.each do |wkto|
           %tr
             %td= wkto.workout.name
-            - workout_score = wkto.score_for(current_user)
+            - workout_score = @workout_scores_by_offering_id ? @workout_scores_by_offering_id[wkto.id]&.first : wkto.score_for(current_user)
             - score = workout_score.andand.score
             - if score && workout_score.show_score?
               %td= score

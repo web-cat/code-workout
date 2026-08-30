@@ -678,7 +678,8 @@ class ExercisesController < ApplicationController
 
 
     if @workout_score
-      if @workout_score.lis_result_sourcedid.nil? && @workout_score.lis_outcome_service_url.nil?
+      if @workout_score.lis_result_sourcedid.nil? && @workout_score.lis_outcome_service_url.nil? &&
+        (params[:lis_result_sourcedid].present? || params[:lis_outcome_service_url].present?)
         @workout_score.lis_result_sourcedid = params[:lis_result_sourcedid]
         @workout_score.lis_outcome_service_url = params[:lis_outcome_service_url]
 
@@ -798,9 +799,33 @@ class ExercisesController < ApplicationController
       end
     end
 
-		# decide whether or not to hide the sidebar
-		# hide it if this workout (if present) has less than two exercises
-		ex_count = @workout.andand.exercises.andand.count
+    # Preload exercises and attempt data for the workout sidebar
+    if @workout
+      @workout_exercises = @workout.exercises.includes(
+        { current_version: :prompts },
+        :tags,
+        :languages,
+        :exercise_workouts
+      )
+      ex_count = @workout_exercises.size
+    else
+      ex_count = nil
+    end
+
+    if @workout_score
+      @scoring_attempts_by_version_id = @workout_score.scored_attempts
+        .group_by(&:exercise_version_id)
+    elsif @student_user && @workout_exercises.present?
+      version_ids = @workout_exercises.map(&:current_version_id).compact
+      @attempts_by_version_id = Attempt.where(
+        user_id: @student_user.id,
+        workout_score_id: nil,
+        exercise_version_id: version_ids
+      ).order('updated_at DESC').group_by(&:exercise_version_id)
+    end
+
+    # decide whether or not to hide the sidebar
+    # hide it if this workout (if present) has less than two exercises
     @hide_sidebar = (!@workout && @lti_launch) || (ex_count && ex_count < 2)
     # Updata image tags in the exercise question
     @exercise_version.image_processing(true)

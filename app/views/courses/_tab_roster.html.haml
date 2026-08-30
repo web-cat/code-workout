@@ -23,7 +23,7 @@
         %th
           %i.fa.fa-cog
     %tbody#roster
-      - @sec = offering.course_enrollments.               |
-        page(params[:page]).per(params[:per])             |
+      - @sec = offering.course_enrollments.includes(:user, :course_role). |
+        page(params[:page]).per(params[:per])                             |
       = render @sec
   #roster_paginator= paginate @sec, remote: true

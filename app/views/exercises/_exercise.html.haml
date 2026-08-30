@@ -58,7 +58,7 @@
                 term_id: workout_offering.course_offering.term.slug,
                 id: workout_offering.id,
                 lti_launch: @lti_launch)
-          - elsif review && Attempt.where(exercise_version: exercise.current_version, user: user).any?
+          - elsif review && ((@scoring_attempts_by_version_id && @scoring_attempts_by_version_id[exercise.current_version_id].present?) || (@attempts_by_version_id && @attempts_by_version_id[exercise.current_version_id].present?) || Attempt.where(exercise_version: exercise.current_version, user: user).any?)
             = link_to exercise.display_name,
               organization_workout_offering_exercise_review_path(id: exercise.id,
                 organization_id: workout_offering.course_offering.course.organization.slug,

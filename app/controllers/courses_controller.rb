@@ -28,11 +28,37 @@ class CoursesController < ApplicationController
       @term = Term.find(params[:term_id])
       @course_offerings =
         current_user.andand.course_offerings_for_term(@term, @course)
+      if @course_offerings.present? && @course_offerings.respond_to?(:includes)
+        @course_offerings = @course_offerings.includes(
+          :course,
+          :term,
+          course_enrollments: [:user, :course_role],
+          workout_offerings: [
+            :workout_policy,
+            :student_extensions,
+            workout: :exercise_workouts
+          ]
+        )
+      end
       @course_offering = @course_offerings.andand.first
       if current_user
         @is_instructor = current_user.global_role.is_admin? ||
           @course_offerings.any? { |co| co.is_instructor? current_user }
         @is_student = !@is_instructor
+
+        if @course_offerings.present?
+          workout_offering_ids = @course_offerings.flat_map(&:workout_offering_ids).uniq
+          if workout_offering_ids.any?
+            @workout_scores_by_offering_id = WorkoutScore.where(
+              workout_offering_id: workout_offering_ids,
+              user_id: current_user.id
+            ).group_by(&:workout_offering_id)
+            @workout_scores_by_workout_id = WorkoutScore.where(
+              workout_offering_id: workout_offering_ids,
+              user_id: current_user.id
+            ).group_by(&:workout_id)
+          end
+        end
       end
       @is_privileged = current_user.andand.is_a_member_of?(@course.user_group)
       @access_request = current_user.andand.access_request_for(@course.user_group)
@@ -113,12 +139,86 @@ class CoursesController < ApplicationController
     )
     authorize! :tab_content, @course
     @term = Term.find params[:term_id]
+    @tab = params[:tab]
+
     @course_offerings = current_user.andand.course_offerings_for_term(@term, @course)
     @is_student = !user_signed_in? ||
       !current_user.global_role.is_admin? &&
-      (@course_offerings.any? {|co| co.is_student? current_user } ||
-      !@course_offerings.any? {|co| co.is_staff? current_user })
-    @tab = params[:tab]
+      (@course_offerings.any? { |co| co.is_student? current_user } ||
+      !@course_offerings.any? { |co| co.is_staff? current_user })
+
+    if @course_offerings.present?
+      case @tab
+      when 'tab_workouts'
+        if @course_offerings.respond_to?(:includes)
+          @course_offerings = @course_offerings.includes(
+            :course,
+            :term,
+            course_enrollments: [:user, :course_role],
+            workout_offerings: [
+              :workout_policy,
+              :student_extensions,
+              workout: :exercise_workouts
+            ]
+          )
+        end
+        if current_user
+          workout_offering_ids = @course_offerings.flat_map(&:workout_offering_ids).uniq
+          if workout_offering_ids.any?
+            @workout_scores_by_offering_id = WorkoutScore.where(
+              workout_offering_id: workout_offering_ids,
+              user_id: current_user.id
+            ).group_by(&:workout_offering_id)
+            @workout_scores_by_workout_id = WorkoutScore.where(
+              workout_offering_id: workout_offering_ids,
+              user_id: current_user.id
+            ).group_by(&:workout_id)
+          end
+        end
+      when 'tab_grades'
+        if @course_offerings.respond_to?(:includes)
+          @course_offerings = @course_offerings.includes(
+            :course,
+            :term,
+            course_enrollments: [:user, :course_role],
+            workout_offerings: [
+              :workout_policy,
+              workout: :exercise_workouts
+            ]
+          )
+        end
+        workout_offering_ids = @course_offerings.flat_map(&:workout_offering_ids).uniq
+        if @is_student
+          if current_user && workout_offering_ids.any?
+            @workout_scores_by_offering_id = WorkoutScore.where(
+              workout_offering_id: workout_offering_ids,
+              user_id: current_user.id
+            ).group_by(&:workout_offering_id)
+          end
+        else
+          # Instructor view: load scores for all students across offerings in 1 batch query
+          student_ids = @course_offerings.flat_map do |co|
+            co.course_enrollments.select { |ce| ce.course_role_id == CourseRole::STUDENT_ID }.map(&:user_id)
+          end.uniq
+          if workout_offering_ids.any? && student_ids.any?
+            @workout_scores_by_offering_and_user = WorkoutScore.where(
+              workout_offering_id: workout_offering_ids,
+              user_id: student_ids
+            ).order('updated_at DESC').group_by { |ws| [ws.workout_offering_id, ws.user_id] }
+          else
+            @workout_scores_by_offering_and_user = {}
+          end
+        end
+      when 'tab_roster'
+        if @course_offerings.respond_to?(:includes)
+          @course_offerings = @course_offerings.includes(
+            course_enrollments: [:user, :course_role]
+          )
+        end
+      when 'tab_exercises'
+        @exercises = @course.exercises.includes(:exercise_family, :current_version)
+      end
+    end
 
     respond_to do |format|
       format.js
