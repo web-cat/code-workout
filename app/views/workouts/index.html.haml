@@ -11,6 +11,7 @@
   - @workouts.in_groups_of(2, false) do |row|
     = render row, locals: { uid: uid }
     .clearfix
+  = paginate @workouts
 - else
   %p
     No public workouts are available to view right now.  Please wait for

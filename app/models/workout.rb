@@ -84,11 +84,77 @@ class Workout < ApplicationRecord
 
   #~ Hooks ....................................................................
 
-  # paginates_per 1
+  paginates_per 40
 
   #~ Class methods ............................................................
   def self.visible_to_user(user)
     return Workout.where(creator_id: user.id).or(Workout.where(is_public: true))
+  end
+
+  # -------------------------------------------------------------
+  # Finds a workout by numeric ID or by name / parameterized name.
+  # If a course and term are provided, it searches workouts offered
+  # in that course and term before falling back to global lookup.
+  def self.find_by_id_or_name(id_or_name, course = nil, term = nil)
+    return nil if id_or_name.blank?
+
+    # 1. If purely numeric, find by primary key ID
+    if id_or_name.to_s =~ /\A\d+\z/
+      w = Workout.find_by(id: id_or_name)
+      return w if w
+    end
+
+    idparam = id_or_name.to_s.downcase
+
+    # 2. If course and term are provided, search workouts offered in that course/term
+    if course && term
+      offerings = WorkoutOffering.joins(:course_offering).where(
+        course_offerings: { course_id: course.id, term_id: term.id }
+      ).includes(:workout)
+      w = offerings.map(&:workout).compact.uniq.find do |workout|
+        wname = workout.name.downcase
+        wparam = workout.name.downcase.parameterize
+        idparam == wname || idparam == wparam
+      end
+      return w if w
+    end
+
+    # 3. Fallback: search by exact or case-insensitive name globally
+    Workout.where('lower(name) = ?', idparam).first ||
+      Workout.all.find { |workout| workout.name.downcase.parameterize == idparam }
+  end
+
+  # -------------------------------------------------------------
+  # Finds the appropriate WorkoutOffering for a user in a course and term.
+  # Checks student enrolled sections first, then instructor managed sections,
+  # and finally falls back to any offering for this workout in the course/term.
+  def workout_offering_for(user, course, term)
+    return nil unless course && term
+
+    if user
+      enrolled_offerings = user.course_offerings_for_term(term, course)
+      if enrolled_offerings.any?
+        wo = WorkoutOffering.where(
+          course_offering_id: enrolled_offerings.map(&:id),
+          workout_id: self.id
+        ).first
+        return wo if wo
+      end
+
+      managed_offerings = user.managed_course_offerings(course: course, term: term)
+      if managed_offerings.any?
+        wo = WorkoutOffering.where(
+          course_offering_id: managed_offerings.map(&:id),
+          workout_id: self.id
+        ).first
+        return wo if wo
+      end
+    end
+
+    WorkoutOffering.joins(:course_offering).where(
+      course_offerings: { course_id: course.id, term_id: term.id },
+      workout_id: self.id
+    ).first
   end
 
 
@@ -174,7 +240,11 @@ class Workout < ApplicationRecord
   # FIXME: Why isn't this a property of the workout?  The exercises
   # themselves don't record absolute points at all!
   def total_points
-    self.exercise_workouts.pluck(:points).reduce(0.0, :+)
+    if exercise_workouts.loaded?
+      exercise_workouts.map { |ew| ew.points || 0 }.sum.to_f
+    else
+      exercise_workouts.pluck(:points).compact.sum.to_f
+    end
   end
 
 
@@ -258,7 +328,8 @@ class Workout < ApplicationRecord
   # -------------------------------------------------------------
   def highest_difficulty
     diff = 0
-    (exercises.loaded? ? exercises : exercises.includes(:irt_data).references(:all)).each do |x|
+    exs = exercises.loaded? ? exercises : exercises.includes(:irt_data)
+    exs.each do |x|
       x_diff = x.andand.irt_data.andand.difficulty || 0
       if x_diff > diff
         diff = x_diff
@@ -360,18 +431,12 @@ class Workout < ApplicationRecord
       workout_offering.lms_assignment_url = offering['lms_assignment_url']
 
       # set deadlines
-      if offering['opening_date'].present?
-        workout_offering.opening_date =
-          DateTime.strptime(offering['opening_date'].to_s, '%Q')
-      end
-      if offering['soft_deadline'].present?
-        workout_offering.soft_deadline =
-          DateTime.strptime(offering['soft_deadline'].to_s, '%Q')
-      end
-      if offering['hard_deadline'].present?
-        workout_offering.hard_deadline =
-          DateTime.strptime(offering['hard_deadline'].to_s, '%Q')
-      end
+      workout_offering.opening_date = offering['opening_date'].present? ?
+        DateTime.strptime(offering['opening_date'].to_s, '%Q') : nil
+      workout_offering.soft_deadline = offering['soft_deadline'].present? ?
+        DateTime.strptime(offering['soft_deadline'].to_s, '%Q') : nil
+      workout_offering.hard_deadline = offering['hard_deadline'].present? ?
+        DateTime.strptime(offering['hard_deadline'].to_s, '%Q') : nil
 
       workout_offering.workout_policy = common[:workout_policy]
       if common[:lms_assignment_id].present?

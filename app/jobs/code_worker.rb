@@ -24,12 +24,13 @@ class CodeWorker
       exv = attempt.exercise_version
       prompt = exv.prompts.first.specific
       pre_lines = 0
-      answer =
-        attempt.prompt_answers.where(prompt: prompt.acting_as).first.specific
-      answer_text = answer.answer
+      pa_record =
+        attempt.prompt_answers.where(prompt: prompt.acting_as).first
+      answer = pa_record.andand.specific || pa_record
+      answer_text = answer.andand.answer.to_s
       Rails.logger.info "CHECKPOINT-B backslashes=#{answer_text.to_s.count('\\')} value=#{answer_text.inspect}"
 
-      answer_lines = answer_text ? answer_text.count("\n") : 0
+      answer_lines = answer_text.count("\n")
       if !prompt.wrapper_code.blank?
         Rails.logger.info "CHECKPOINT-C (pre-splice) backslashes=#{answer_text.to_s.count('\\')}"
         code_body = prompt.wrapper_code.sub(/\b___\b/, answer_text)

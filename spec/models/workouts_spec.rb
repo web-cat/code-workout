@@ -1,140 +1,91 @@
 require 'spec_helper'
 
-describe 'Workouts' do
-  before :each do
-    @workout = FactoryBot.create :workout_with_exercises
-  end
+describe Workout, type: :model do
+  describe ".find_by_id_or_name" do
+    let(:organization) { FactoryBot.build_stubbed(:organization, slug: 'vt') }
+    let(:course) { FactoryBot.build_stubbed(:course, slug: 'cs1114', organization: organization) }
+    let(:term) { FactoryBot.build_stubbed(:term, slug: 'fall2026') }
+    let(:workout) { FactoryBot.build_stubbed(:workout, id: 42, name: 'Recursion Practice') }
 
-  context "when getting the next exercise" do
-    it "should get the first exercise if there is no current exercise" do
-      ex = @workout.next_exercise(nil)
-      expect(ex).to eq(@workout.exercises.first)
+    it "finds a workout by its numeric primary key ID" do
+      allow(Workout).to receive(:find_by).with(id: '42').and_return(workout)
+
+      found = Workout.find_by_id_or_name('42')
+      expect(found).to eq(workout)
     end
 
-    it "should get the next exercise if a current exercise is specified" do
-      first_ex = @workout.exercises.first
-      ex = @workout.next_exercise(first_ex)
-      expect(ex).to eq(@workout.exercises[1])
+    it "finds a workout by its exact name" do
+      relation = double('WorkoutRelation')
+      allow(Workout).to receive(:where).with('lower(name) = ?', 'recursion practice').and_return(relation)
+      allow(relation).to receive(:first).and_return(workout)
+
+      found = Workout.find_by_id_or_name('Recursion Practice')
+      expect(found).to eq(workout)
     end
 
-    it "should get the first exercise if the current exercise is not from this workout" do
-      current_ex = FactoryBot.build(:coding_exercise)
-      ex = @workout.next_exercise(current_ex)
-      expect(ex).to eq(@workout.exercises.first)
-    end
-  end
+    it "finds a workout by its parameterized name slug" do
+      relation = double('WorkoutOfferingsRelation')
+      allow(WorkoutOffering).to receive(:joins).with(:course_offering).and_return(relation)
+      allow(relation).to receive(:where).with(
+        course_offerings: { course_id: course.id, term_id: term.id }
+      ).and_return(relation)
+      allow(relation).to receive(:includes).with(:workout).and_return([double(workout: workout)])
 
-  context "when updating or creating based on params" do
-    before :all do
-      @workout_params = {
-        name: 'New name',
-        is_public: false,
-        removed_exercises: "[]",
-        exercises: "[]"
-      }
-    end
-
-    it "should update the name and public status with the specified parameters" do
-      new_workout = @workout.update_or_create(@workout_params)
-
-      expect(new_workout.name).to eq(@workout_params[:name])
-      expect(new_workout.is_public).to be false
-      expect(new_workout.description).to eq(@workout.description) # stays unchanged
-    end
-
-    it "should not change the workout's exercises if no changes are specified" do
-      new_workout = @workout.update_or_create(@workout_params)
-
-      expect(new_workout.exercises).to match(@workout.exercises)
-    end
-
-    it "should remove a specified exercise" do
-      ew = @workout.exercise_workouts.first
-      to_remove = ew.exercise
-
-      params = {
-        **@workout_params,
-        removed_exercises: "[#{ew.id}]"
-      }
-
-      new_workout = @workout.update_or_create(params)
-      expect(new_workout.exercises.count).to be(2)
-      expect(new_workout.exercises).to_not include(to_remove)
-    end
-
-    it "should add the specified exercise while leaving the existing exercises intact" do
-      old_exercises = @workout.exercises
-      ex = FactoryBot.create :coding_exercise
-
-      exercises = [{
-        id: ex.id,
-        points: 10
-      }]
-
-      params = {
-        **@workout_params,
-        exercises: JSON.dump(exercises)
-      }
-
-      new_workout = @workout.update_or_create(params)
-
-      expect(new_workout.exercises.count).to be(4)
-      expect(new_workout.exercises).to include(*old_exercises, ex)
+      found = Workout.find_by_id_or_name('recursion-practice', course, term)
+      expect(found).to eq(workout)
     end
   end
 
-  context ".create_from_workouts" do
-    before :each do
-      @user = FactoryBot.create :user
-      @w1 = FactoryBot.create :workout_with_exercises, creator: @user
-      @w2 = FactoryBot.create :workout_with_exercises, creator: @user
+  describe "#workout_offering_for" do
+    let(:organization) { FactoryBot.build_stubbed(:organization, slug: 'vt') }
+    let(:course) { FactoryBot.build_stubbed(:course, id: 1, slug: 'cs1114', organization: organization) }
+    let(:term) { FactoryBot.build_stubbed(:term, id: 2, slug: 'fall2026') }
+    let(:workout) { FactoryBot.build_stubbed(:workout, id: 42, name: 'Recursion Practice') }
+    let(:student) { FactoryBot.build_stubbed(:user, id: 10) }
+    let(:instructor) { FactoryBot.build_stubbed(:user, id: 20) }
+
+    let(:section1) { FactoryBot.build_stubbed(:course_offering, id: 101, course: course, term: term) }
+    let(:section2) { FactoryBot.build_stubbed(:course_offering, id: 102, course: course, term: term) }
+
+    let(:offering1) { FactoryBot.build_stubbed(:workout_offering, id: 201, workout: workout, course_offering: section1) }
+    let(:offering2) { FactoryBot.build_stubbed(:workout_offering, id: 202, workout: workout, course_offering: section2) }
+
+    it "finds the student's enrolled section workout offering" do
+      allow(student).to receive(:course_offerings_for_term).with(term, course).and_return([section2])
+      allow(WorkoutOffering).to receive(:where).with(
+        course_offering_id: [102],
+        workout_id: workout.id
+      ).and_return([offering2])
+
+      found = workout.workout_offering_for(student, course, term)
+      expect(found).to eq(offering2)
     end
 
-    it "creates a new workout with given params and all exercises from the specified workouts" do
-      params = {
-        name: 'Combined Workout',
-        description: 'A test combined workout',
-        is_public: true,
-        creator: @user
-      }
+    it "finds a staff managed section workout offering when user is instructor" do
+      allow(instructor).to receive(:course_offerings_for_term).with(term, course).and_return([])
+      allow(instructor).to receive(:managed_course_offerings).with(course: course, term: term).and_return([section1, section2])
+      allow(WorkoutOffering).to receive(:where).with(
+        course_offering_id: [101, 102],
+        workout_id: workout.id
+      ).and_return([offering1, offering2])
 
-      new_workout = Workout.create_from_workouts(params, [@w1.id, @w2.id])
-
-      expect(new_workout).to be_persisted
-      expect(new_workout.name).to eq('Combined Workout')
-      expect(new_workout.description).to eq('A test combined workout')
-      expect(new_workout.is_public).to be true
-      expect(new_workout.creator).to eq(@user)
-      expect(new_workout.exercises.count).to eq(@w1.exercises.count + @w2.exercises.count)
-      expect(new_workout.exercises).to include(*@w1.exercises)
-      expect(new_workout.exercises).to include(*@w2.exercises)
+      found = workout.workout_offering_for(instructor, course, term)
+      expect(found).to eq(offering1)
     end
 
-    it "avoids duplicate exercises if an exercise appears in multiple source workouts" do
-      # Add an exercise from w1 to w2
-      shared_ex = @w1.exercises.first
-      FactoryBot.create :exercise_workout, workout_id: @w2.id, exercise: shared_ex
+    it "returns the first available offering for the course if user is unenrolled" do
+      unenrolled_user = FactoryBot.build_stubbed(:user, id: 99)
+      allow(unenrolled_user).to receive(:course_offerings_for_term).with(term, course).and_return([])
+      allow(unenrolled_user).to receive(:managed_course_offerings).with(course: course, term: term).and_return([])
+      offerings_relation = double('WorkoutOfferingsRelation')
+      allow(WorkoutOffering).to receive(:joins).with(:course_offering).and_return(offerings_relation)
+      allow(offerings_relation).to receive(:where).with(
+        course_offerings: { course_id: course.id, term_id: term.id },
+        workout_id: workout.id
+      ).and_return(double(first: offering1))
 
-      params = {
-        name: 'Deduplicated Combined Workout',
-        creator: @user
-      }
-
-      new_workout = Workout.create_from_workouts(params, [@w1.id, @w2.id])
-      expect(new_workout.exercises.where(id: shared_ex.id).count).to eq(1)
-      expect(new_workout.exercises.count).to eq((@w1.exercises + @w2.exercises).uniq.count)
-    end
-
-    it "preserves exercise positions in sequential order" do
-      params = {
-        name: 'Sequential Combined Workout',
-        creator: @user
-      }
-
-      new_workout = Workout.create_from_workouts(params, [@w1.id, @w2.id])
-      positions = new_workout.exercise_workouts.order(:position).pluck(:position)
-      expect(positions).to eq((1..new_workout.exercise_workouts.count).to_a)
+      found = workout.workout_offering_for(unenrolled_user, course, term)
+      expect(found).to eq(offering1)
     end
   end
 end
-

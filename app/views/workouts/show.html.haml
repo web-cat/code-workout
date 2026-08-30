@@ -1,5 +1,5 @@
 - course_offering ||= @workout_offering.andand.course_offering
-- workout_score ||= @workout.score_for(current_user, @workout_offering)
+- workout_score ||= @workout_score || @workout.score_for(current_user, @workout_offering)
 = render partial: 'layouts/breadcrumb'
 - time_limit = (@workout_offering ? @workout_offering.time_limit_for(current_user) : nil)
 

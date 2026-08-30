@@ -1,5 +1,5 @@
 require 'ims/lti'
-require 'oauth/request_proxy/action_controller_request'
+require 'oauth/request_proxy/rack_request'
 require 'zip'
 require 'tempfile'
 
@@ -24,8 +24,23 @@ class ExercisesController < ApplicationController
     #   @exercises = Exercise.publicly_visible
     # end
     @exercises = Exercise.publicly_visible
+      .includes(
+        { current_version: :prompts },
+        :tags,
+        :languages,
+        :exercise_owners,
+        :exercise_collection
+      )
+      .page(params[:page])
 
-    @exercises = @exercises.includes(:languages, :tags, :current_version, :attempts).page params[:page]
+    if current_user
+      ex_version_ids = @exercises.map(&:current_version_id).compact
+      @attempts_by_version_id = Attempt.where(
+        user: current_user,
+        workout_score_id: nil,
+        exercise_version_id: ex_version_ids
+      ).order('updated_at DESC').group_by(&:exercise_version_id)
+    end
   end
 
 
@@ -141,6 +156,23 @@ class ExercisesController < ApplicationController
     if @exs.blank?
       @msg = "No exercises were found for the search terms: #{@terms}"
       redirect_to(exercises_path, alert: @msg) and return
+    end
+
+    @exs = @exs.includes(
+      { current_version: :prompts },
+      :tags,
+      :languages,
+      :exercise_owners,
+      :exercise_collection
+    )
+
+    if current_user
+      ex_version_ids = @exs.map(&:current_version_id).compact
+      @attempts_by_version_id = Attempt.where(
+        user: current_user,
+        workout_score_id: nil,
+        exercise_version_id: ex_version_ids
+      ).order('updated_at DESC').group_by(&:exercise_version_id)
     end
 
     respond_to do |format|
@@ -646,7 +678,8 @@ class ExercisesController < ApplicationController
 
 
     if @workout_score
-      if @workout_score.lis_result_sourcedid.nil? && @workout_score.lis_outcome_service_url.nil?
+      if @workout_score.lis_result_sourcedid.nil? && @workout_score.lis_outcome_service_url.nil? &&
+        (params[:lis_result_sourcedid].present? || params[:lis_outcome_service_url].present?)
         @workout_score.lis_result_sourcedid = params[:lis_result_sourcedid]
         @workout_score.lis_outcome_service_url = params[:lis_outcome_service_url]
 
@@ -768,9 +801,33 @@ class ExercisesController < ApplicationController
       end
     end
 
-		# decide whether or not to hide the sidebar
-		# hide it if this workout (if present) has less than two exercises
-		ex_count = @workout.andand.exercises.andand.count
+    # Preload exercises and attempt data for the workout sidebar
+    if @workout
+      @workout_exercises = @workout.exercises.includes(
+        { current_version: :prompts },
+        :tags,
+        :languages,
+        :exercise_workouts
+      )
+      ex_count = @workout_exercises.size
+    else
+      ex_count = nil
+    end
+
+    if @workout_score
+      @scoring_attempts_by_version_id = @workout_score.scored_attempts
+        .group_by(&:exercise_version_id)
+    elsif @student_user && @workout_exercises.present?
+      version_ids = @workout_exercises.map(&:current_version_id).compact
+      @attempts_by_version_id = Attempt.where(
+        user_id: @student_user.id,
+        workout_score_id: nil,
+        exercise_version_id: version_ids
+      ).order('updated_at DESC').group_by(&:exercise_version_id)
+    end
+
+    # decide whether or not to hide the sidebar
+    # hide it if this workout (if present) has less than two exercises
     @hide_sidebar = (!@workout && @lti_launch) || (ex_count && ex_count < 2)
     # Updata image tags in the exercise question
     @exercise_version.image_processing(true)
@@ -910,10 +967,6 @@ class ExercisesController < ApplicationController
         # Multi-prompt questions
         prompt_keys = params.keys.select{|key| key.include?("prompt-") }
         response_ids = prompt_keys.map{|prompt_key| params[prompt_key] }
-
-        prompt_keys.each_with_index do |prompt_key, i|
-          @attempt.prompt_answers[i].choices << Choice.find(response_ids[i])
-        end
       end
 
       @responses = Array.new
@@ -936,9 +989,12 @@ class ExercisesController < ApplicationController
       end
 
       # recording the answer choices
-      # FIXME: Only temporary
-      if params[:exercise_version]
-        @attempt.prompt_answers.first.choices = @responses
+      @exercise_version.prompts.each_with_index do |exercise_prompt, i|
+        prompt_answer = exercise_prompt.specific.new_answer({})
+        prompt_answer.attempt = @attempt
+        prompt_answer.prompt = exercise_prompt
+        prompt_answer.choices = @responses
+        prompt_answer.save!
       end
 
       @score = @exercise_version.score(@responses)
@@ -951,7 +1007,6 @@ class ExercisesController < ApplicationController
       # + "#{@exercise.id}:#{@exercise.name}" +
       #  ' and its feedback for you: ' +
       #  @explain.to_sentence
-
       # TODO: calculate experience based on correctness and num submissions
       # using count_submission()
       @xp = @exercise_version.mcq_experience_on(@responses, @attempt.submit_num)
@@ -993,13 +1048,15 @@ class ExercisesController < ApplicationController
       @answer_code = params[:exercise_version][:answer_code]
 
       @exercise_version.prompts.each_with_index do |exercise_prompt, i|
-        exercise_prompt_answer = @attempt.prompt_answers[i]
-        exercise_prompt_answer.answer = params[:exercise_version][:answer_code]
+        prompt_answer = exercise_prompt.specific.new_answer(params[:exercise_version])
+        prompt_answer.attempt = @attempt
+        prompt_answer.prompt = exercise_prompt
+        prompt_answer.answer = params[:exercise_version][:answer_code]
         if @exercise_version.is_parsons?
-          exercise_prompt_answer.attempt_state =
+          prompt_answer.attempt_state =
             params[:exercise_version][:attempt_state]
         end
-        if exercise_prompt_answer.save
+        if prompt_answer.save
           if @exercise_version.is_execution_graded?
             CodeWorker.new.async.perform(@attempt.id)
           elsif @exercise_version.is_parsons?
@@ -1011,10 +1068,7 @@ class ExercisesController < ApplicationController
             @workout_score.record_attempt(@attempt) if @workout_score
           end
         else
-          logger.error 'IMPROPER PROMPT',
-            'unable to save prompt_answer: ' \
-            "#{prompt_answer.errors.full_messages.to_s}",
-            'IMPROPER PROMPT'
+          logger.error "IMPROPER PROMPT: unable to save prompt_answer: #{prompt_answer.errors.full_messages}"
         end
       end
       @workout ||= @workout_score.andand.workout
@@ -1038,14 +1092,18 @@ class ExercisesController < ApplicationController
     # Deliberately not passing workout_score: -- see comment above.
     attempt.score = 0.0
     attempt.feedback_ready = false
+    attempt.save!
 
-    saved = attempt.prompt_answers.all? do |prompt_answer|
+    saved = @exercise_version.prompts.all? do |exercise_prompt|
+      prompt_answer = exercise_prompt.specific.new_answer
+      prompt_answer.attempt = attempt
+      prompt_answer.prompt = exercise_prompt
       prompt_answer.answer = params[:answer_code]
       prompt_answer.attempt_state = params[:attempt_state]
       prompt_answer.save
     end
 
-    if saved && attempt.save
+    if saved
       head :ok
     else
       head :unprocessable_entity
