@@ -114,4 +114,3 @@ describe ExercisesController do
     end
   end
 end
-

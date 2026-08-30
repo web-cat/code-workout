@@ -226,5 +226,3 @@ describe WorkoutsController do
     end
   end
 end
-
-

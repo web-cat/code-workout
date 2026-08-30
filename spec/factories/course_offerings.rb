@@ -9,15 +9,19 @@
 #  url                     :string(255)
 #  created_at              :datetime         not null
 #  updated_at              :datetime         not null
+#  canvas_course_id        :string(255)
 #  course_id               :bigint           not null
 #  lms_instance_id         :bigint
+#  lti_context_id          :string(255)
 #  term_id                 :bigint           not null
 #
 # Indexes
 #
-#  index_course_offerings_on_course_id        (course_id)
-#  index_course_offerings_on_lms_instance_id  (lms_instance_id)
-#  index_course_offerings_on_term_id          (term_id)
+#  index_course_offerings_on_canvas_course_id  (canvas_course_id)
+#  index_course_offerings_on_course_id         (course_id)
+#  index_course_offerings_on_lms_instance_id   (lms_instance_id)
+#  index_course_offerings_on_lti_context_id    (lti_context_id)
+#  index_course_offerings_on_term_id           (term_id)
 #
 # Foreign Keys
 #

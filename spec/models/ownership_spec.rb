@@ -21,7 +21,7 @@
 #  fk_rails_...  (resource_file_id => resource_files.id)
 #
 
-require 'rails_helper'
+require 'spec_helper'
 
 RSpec.describe Ownership, type: :model do
   pending "add some examples to (or delete) #{__FILE__}"

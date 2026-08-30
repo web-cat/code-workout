@@ -33,7 +33,7 @@ describe CourseOfferingsController do
   describe "GET index" do
     it "assigns all course_offerings as @course_offerings" do
       course_offering = CourseOffering.create! valid_attributes
-      get :index, {}, valid_session
+      get :index, params: {}, session: valid_session
       assigns(:course_offerings).should eq([course_offering])
     end
   end
@@ -41,14 +41,14 @@ describe CourseOfferingsController do
   describe "GET show" do
     it "assigns the requested course_offering as @course_offering" do
       course_offering = CourseOffering.create! valid_attributes
-      get :show, {:id => course_offering.to_param}, valid_session
+      get :show, params: {:id => course_offering.to_param}, session: valid_session
       assigns(:course_offering).should eq(course_offering)
     end
   end
 
   describe "GET new" do
     it "assigns a new course_offering as @course_offering" do
-      get :new, {}, valid_session
+      get :new, params: {}, session: valid_session
       assigns(:course_offering).should be_a_new(CourseOffering)
     end
   end
@@ -56,7 +56,7 @@ describe CourseOfferingsController do
   describe "GET edit" do
     it "assigns the requested course_offering as @course_offering" do
       course_offering = CourseOffering.create! valid_attributes
-      get :edit, {:id => course_offering.to_param}, valid_session
+      get :edit, params: {:id => course_offering.to_param}, session: valid_session
       assigns(:course_offering).should eq(course_offering)
     end
   end
@@ -65,18 +65,18 @@ describe CourseOfferingsController do
     describe "with valid params" do
       it "creates a new CourseOffering" do
         expect {
-          post :create, {:course_offering => valid_attributes}, valid_session
+          post :create, params: {:course_offering => valid_attributes}, session: valid_session
         }.to change(CourseOffering, :count).by(1)
       end
 
       it "assigns a newly created course_offering as @course_offering" do
-        post :create, {:course_offering => valid_attributes}, valid_session
+        post :create, params: {:course_offering => valid_attributes}, session: valid_session
         assigns(:course_offering).should be_a(CourseOffering)
         assigns(:course_offering).should be_persisted
       end
 
       it "redirects to the created course_offering" do
-        post :create, {:course_offering => valid_attributes}, valid_session
+        post :create, params: {:course_offering => valid_attributes}, session: valid_session
         response.should redirect_to(CourseOffering.last)
       end
     end
@@ -85,14 +85,14 @@ describe CourseOfferingsController do
       it "assigns a newly created but unsaved course_offering as @course_offering" do
         # Trigger the behavior that occurs when invalid params are submitted
         CourseOffering.any_instance.stub(:save).and_return(false)
-        post :create, {:course_offering => { "course_id" => "invalid value" }}, valid_session
+        post :create, params: {:course_offering => { "course_id" => "invalid value" }}, session: valid_session
         assigns(:course_offering).should be_a_new(CourseOffering)
       end
 
       it "re-renders the 'new' template" do
         # Trigger the behavior that occurs when invalid params are submitted
         CourseOffering.any_instance.stub(:save).and_return(false)
-        post :create, {:course_offering => { "course_id" => "invalid value" }}, valid_session
+        post :create, params: {:course_offering => { "course_id" => "invalid value" }}, session: valid_session
         response.should render_template("new")
       end
     end
@@ -107,18 +107,18 @@ describe CourseOfferingsController do
         # receives the :update_attributes message with whatever params are
         # submitted in the request.
         CourseOffering.any_instance.should_receive(:update).with({ "course_id" => "1" })
-        put :update, {:id => course_offering.to_param, :course_offering => { "course_id" => "1" }}, valid_session
+        put :update, params: {:id => course_offering.to_param, :course_offering => { "course_id" => "1" }}, session: valid_session
       end
 
       it "assigns the requested course_offering as @course_offering" do
         course_offering = CourseOffering.create! valid_attributes
-        put :update, {:id => course_offering.to_param, :course_offering => valid_attributes}, valid_session
+        put :update, params: {:id => course_offering.to_param, :course_offering => valid_attributes}, session: valid_session
         assigns(:course_offering).should eq(course_offering)
       end
 
       it "redirects to the course_offering" do
         course_offering = CourseOffering.create! valid_attributes
-        put :update, {:id => course_offering.to_param, :course_offering => valid_attributes}, valid_session
+        put :update, params: {:id => course_offering.to_param, :course_offering => valid_attributes}, session: valid_session
         response.should redirect_to(course_offering)
       end
     end
@@ -128,7 +128,7 @@ describe CourseOfferingsController do
         course_offering = CourseOffering.create! valid_attributes
         # Trigger the behavior that occurs when invalid params are submitted
         CourseOffering.any_instance.stub(:save).and_return(false)
-        put :update, {:id => course_offering.to_param, :course_offering => { "course_id" => "invalid value" }}, valid_session
+        put :update, params: {:id => course_offering.to_param, :course_offering => { "course_id" => "invalid value" }}, session: valid_session
         assigns(:course_offering).should eq(course_offering)
       end
 
@@ -136,7 +136,7 @@ describe CourseOfferingsController do
         course_offering = CourseOffering.create! valid_attributes
         # Trigger the behavior that occurs when invalid params are submitted
         CourseOffering.any_instance.stub(:save).and_return(false)
-        put :update, {:id => course_offering.to_param, :course_offering => { "course_id" => "invalid value" }}, valid_session
+        put :update, params: {:id => course_offering.to_param, :course_offering => { "course_id" => "invalid value" }}, session: valid_session
         response.should render_template("edit")
       end
     end
@@ -146,13 +146,13 @@ describe CourseOfferingsController do
     it "destroys the requested course_offering" do
       course_offering = CourseOffering.create! valid_attributes
       expect {
-        delete :destroy, {:id => course_offering.to_param}, valid_session
+        delete :destroy, params: {:id => course_offering.to_param}, session: valid_session
       }.to change(CourseOffering, :count).by(-1)
     end
 
     it "redirects to the course_offerings list" do
       course_offering = CourseOffering.create! valid_attributes
-      delete :destroy, {:id => course_offering.to_param}, valid_session
+      delete :destroy, params: {:id => course_offering.to_param}, session: valid_session
       response.should redirect_to(course_offerings_url)
     end
   end

@@ -220,6 +220,21 @@ class CoursesController < ApplicationController
       end
     end
 
+    if @tab == 'tab_grades'
+      @course_offerings = @course_offerings.includes(
+        course_enrollments: [:user, :course_role],
+        workout_offerings: [:workout, :workout_policy, :workout_scores]
+      )
+    elsif @tab == 'tab_roster'
+      @course_offerings = @course_offerings.includes(
+        course_enrollments: [:user, :course_role]
+      )
+    elsif @tab == 'tab_workouts'
+      @course_offerings = @course_offerings.includes(
+        workout_offerings: [:workout, :workout_policy]
+      )
+    end
+
     respond_to do |format|
       format.js
     end

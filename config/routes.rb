@@ -2,6 +2,9 @@
 #
 #                                          Prefix Verb     URI Pattern                                                                                                 Controller#Action
 #                                            root GET      /                                                                                                           home#index
+#                        api_passport_v1_register POST     /api/passport/v1/register(.:format)                                                                         api/passport/v1/registration#register
+#                       api_passport_v1_extension POST     /api/passport/v1/extension(.:format)                                                                        api/passport/v1/extension#create
+#                                                 DELETE   /api/passport/v1/extension(.:format)                                                                        api/passport/v1/extension#destroy
 #                                      lti_launch POST     /lti/launch(.:format)                                                                                       lti#launch
 #                                  lti_assessment POST     /lti/assessment(.:format)                                                                                   lti#assessment
 #                                            home GET      /home(.:format)                                                                                             home#index
@@ -345,6 +348,16 @@ Rails.application.routes.draw do
 
   root 'home#index'
 
+  namespace :api do
+    namespace :passport do
+      namespace :v1 do
+        post 'register' => 'registration#register'
+        post 'extension' => 'extension#create'
+        delete 'extension' => 'extension#destroy'
+      end
+    end
+  end
+
   post 'lti/launch', as: :lti_launch # => 'workout_offerings#practice', as: :lti_workout_offering_practice
 
   post 'lti/assessment'
@@ -455,6 +468,7 @@ Rails.application.routes.draw do
     get ':id/privileged_users' => 'courses#privileged_users', as: :course_privileged_users
     get ':course_id/new_offering' => 'course_offerings#new', as: :new_course_offering
     post ':course_id/create_offering' => 'course_offerings#create', as: :course_offering_create
+    get ':course_id/:term_id/select_offering' => 'course_offerings#select_offering', as: :course_select_offering
     get ':course_id/:term_id/tab_content/:tab' => 'courses#tab_content'
     get ':course_id/:term_id/course_enrollments/new' => 'course_enrollments#new', as: :new_course_enrollment
     post ':course_id/:term_id/course_enrollments/:course_offering_id/enroll_users' => 'course_enrollments#enroll_users', as: :course_enroll_users
@@ -490,8 +504,8 @@ Rails.application.routes.draw do
   resources :course_offerings, only: [ :edit, :update, :index, :show ] do
     post 'enroll' => :enroll, as: :enroll
     delete 'unenroll' => :unenroll, as: :unenroll
-    match 'upload_roster/:action', controller: 'upload_roster',
-      as: :upload_roster, via: [:get, :post]
+    get 'upload_roster' => 'upload_roster#index', as: :upload_roster
+    post 'upload_roster/upload' => 'upload_roster#upload', as: :upload_roster_upload
     post 'generate_gradebook' => :generate_gradebook, as: :gradebook
     post 'add_workout/:workout_name' => 'course_offerings#add_workout', as: :add_workout
     post 'store_workout/:id' => :store_workout, as: :store_workout
@@ -537,9 +551,15 @@ Rails.application.routes.draw do
   end
 
   get 'help' => 'help#index'
-  match 'help/:action', controller: 'help', via: [:get]
-  match 'static_pages/:action', controller: 'static_pages', via: [:get]
+  get 'help/exercise_format' => 'help#exercise_format'
+  get 'help/exercise_peml_format' => 'help#exercise_peml_format'
+  get 'help/lti_configuration' => 'help#lti_configuration'
+  get 'help/specifying_due_dates' => 'help#specifying_due_dates'
 
+  get 'static_pages/home' => 'static_pages#home'
+  get 'static_pages/info' => 'static_pages#info'
+  get 'static_pages/splash' => 'static_pages#splash'
+  get 'static_pages/typography' => 'static_pages#typography'
   get 'static_pages/mockup1' => 'static_pages#mockup1'
   get 'static_pages/mockup2' => 'static_pages#mockup2'
   get 'static_pages/mockup3' => 'static_pages#mockup3'

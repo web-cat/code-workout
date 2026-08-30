@@ -442,6 +442,9 @@ class Workout < ApplicationRecord
       if common[:lms_assignment_id].present?
         workout_offering.lms_assignment_id = common[:lms_assignment_id]
       end
+      if common[:lti_assignment_id].present?
+        workout_offering.lti_assignment_id = common[:lti_assignment_id]
+      end
       workout_offering.save!
       workout_offerings << workout_offering.id
       extensions = offering['extensions']
@@ -471,15 +474,30 @@ class Workout < ApplicationRecord
   # -------------------------------------------------------------
   def score_for(user, workout_offering = nil,
                 lis_outcome_service_url = nil, lis_result_sourcedid = nil)
-    scores = workout_scores.where(
-      user: user, workout_offering: workout_offering).order('updated_at DESC')
-    if lis_outcome_service_url || lis_result_sourcedid
-      scores.to_ary.detect do |s|
-        s.lis_outcome_service_url == lis_outcome_service_url and
-          s.lis_result_sourcedid == lis_result_sourcedid
+    if workout_scores.loaded?
+      scores = workout_scores.select do |s|
+        s.user_id == user.andand.id && s.workout_offering_id == workout_offering.andand.id
+      end.sort_by { |s| s.updated_at || Time.at(0) }.reverse
+
+      if lis_outcome_service_url || lis_result_sourcedid
+        scores.detect do |s|
+          s.lis_outcome_service_url == lis_outcome_service_url &&
+            s.lis_result_sourcedid == lis_result_sourcedid
+        end
+      else
+        scores.first
       end
     else
-      scores.first
+      scores = workout_scores.where(
+        user: user, workout_offering: workout_offering).order('updated_at DESC')
+      if lis_outcome_service_url || lis_result_sourcedid
+        scores.to_ary.detect do |s|
+          s.lis_outcome_service_url == lis_outcome_service_url and
+            s.lis_result_sourcedid == lis_result_sourcedid
+        end
+      else
+        scores.first
+      end
     end
   end
 
@@ -491,7 +509,7 @@ class Workout < ApplicationRecord
     split_terms = terms.blank? ? '.' : terms.join('|')
 
     if user
-      available_workouts = Workout.where(
+      available_workouts = Workout.includes(:tags, :exercise_workouts, :workout_scores, exercises: :irt_data).where(
         id: (Workout.visible_to_user(user).union(user.managed_workouts))
         .map(&:id)
       )
@@ -540,7 +558,7 @@ class Workout < ApplicationRecord
         return results
       end
     else
-      available_workouts = Workout.where(is_public: true)
+      available_workouts = Workout.includes(:tags, :exercise_workouts, :workout_scores, exercises: :irt_data).where(is_public: true)
     end
 
     return available_workouts.tagged_with(terms, any: true, wild: true, on: :tags) +

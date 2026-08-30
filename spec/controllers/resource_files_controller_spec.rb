@@ -33,7 +33,7 @@ describe ResourceFilesController do
   describe "GET index" do
     it "assigns all resource_files as @resource_files" do
       resource_file = ResourceFile.create! valid_attributes
-      get :index, {}, valid_session
+      get :index, params: {}, session: valid_session
       assigns(:resource_files).should eq([resource_file])
     end
   end
@@ -41,14 +41,14 @@ describe ResourceFilesController do
   describe "GET show" do
     it "assigns the requested resource_file as @resource_file" do
       resource_file = ResourceFile.create! valid_attributes
-      get :show, {:id => resource_file.to_param}, valid_session
+      get :show, params: {:id => resource_file.to_param}, session: valid_session
       assigns(:resource_file).should eq(resource_file)
     end
   end
 
   describe "GET new" do
     it "assigns a new resource_file as @resource_file" do
-      get :new, {}, valid_session
+      get :new, params: {}, session: valid_session
       assigns(:resource_file).should be_a_new(ResourceFile)
     end
   end
@@ -56,7 +56,7 @@ describe ResourceFilesController do
   describe "GET edit" do
     it "assigns the requested resource_file as @resource_file" do
       resource_file = ResourceFile.create! valid_attributes
-      get :edit, {:id => resource_file.to_param}, valid_session
+      get :edit, params: {:id => resource_file.to_param}, session: valid_session
       assigns(:resource_file).should eq(resource_file)
     end
   end
@@ -65,18 +65,18 @@ describe ResourceFilesController do
     describe "with valid params" do
       it "creates a new ResourceFile" do
         expect {
-          post :create, {:resource_file => valid_attributes}, valid_session
+          post :create, params: {:resource_file => valid_attributes}, session: valid_session
         }.to change(ResourceFile, :count).by(1)
       end
 
       it "assigns a newly created resource_file as @resource_file" do
-        post :create, {:resource_file => valid_attributes}, valid_session
+        post :create, params: {:resource_file => valid_attributes}, session: valid_session
         assigns(:resource_file).should be_a(ResourceFile)
         assigns(:resource_file).should be_persisted
       end
 
       it "redirects to the created resource_file" do
-        post :create, {:resource_file => valid_attributes}, valid_session
+        post :create, params: {:resource_file => valid_attributes}, session: valid_session
         response.should redirect_to(ResourceFile.last)
       end
     end
@@ -85,14 +85,14 @@ describe ResourceFilesController do
       it "assigns a newly created but unsaved resource_file as @resource_file" do
         # Trigger the behavior that occurs when invalid params are submitted
         ResourceFile.any_instance.stub(:save).and_return(false)
-        post :create, {:resource_file => {  }}, valid_session
+        post :create, params: {:resource_file => {  }}, session: valid_session
         assigns(:resource_file).should be_a_new(ResourceFile)
       end
 
       it "re-renders the 'new' template" do
         # Trigger the behavior that occurs when invalid params are submitted
         ResourceFile.any_instance.stub(:save).and_return(false)
-        post :create, {:resource_file => {  }}, valid_session
+        post :create, params: {:resource_file => {  }}, session: valid_session
         response.should render_template("new")
       end
     end
@@ -107,18 +107,18 @@ describe ResourceFilesController do
         # receives the :update_attributes message with whatever params are
         # submitted in the request.
         ResourceFile.any_instance.should_receive(:update).with({ "these" => "params" })
-        put :update, {:id => resource_file.to_param, :resource_file => { "these" => "params" }}, valid_session
+        put :update, params: {:id => resource_file.to_param, :resource_file => { "these" => "params" }}, session: valid_session
       end
 
       it "assigns the requested resource_file as @resource_file" do
         resource_file = ResourceFile.create! valid_attributes
-        put :update, {:id => resource_file.to_param, :resource_file => valid_attributes}, valid_session
+        put :update, params: {:id => resource_file.to_param, :resource_file => valid_attributes}, session: valid_session
         assigns(:resource_file).should eq(resource_file)
       end
 
       it "redirects to the resource_file" do
         resource_file = ResourceFile.create! valid_attributes
-        put :update, {:id => resource_file.to_param, :resource_file => valid_attributes}, valid_session
+        put :update, params: {:id => resource_file.to_param, :resource_file => valid_attributes}, session: valid_session
         response.should redirect_to(resource_file)
       end
     end
@@ -128,7 +128,7 @@ describe ResourceFilesController do
         resource_file = ResourceFile.create! valid_attributes
         # Trigger the behavior that occurs when invalid params are submitted
         ResourceFile.any_instance.stub(:save).and_return(false)
-        put :update, {:id => resource_file.to_param, :resource_file => {  }}, valid_session
+        put :update, params: {:id => resource_file.to_param, :resource_file => {  }}, session: valid_session
         assigns(:resource_file).should eq(resource_file)
       end
 
@@ -136,7 +136,7 @@ describe ResourceFilesController do
         resource_file = ResourceFile.create! valid_attributes
         # Trigger the behavior that occurs when invalid params are submitted
         ResourceFile.any_instance.stub(:save).and_return(false)
-        put :update, {:id => resource_file.to_param, :resource_file => {  }}, valid_session
+        put :update, params: {:id => resource_file.to_param, :resource_file => {  }}, session: valid_session
         response.should render_template("edit")
       end
     end
@@ -146,13 +146,13 @@ describe ResourceFilesController do
     it "destroys the requested resource_file" do
       resource_file = ResourceFile.create! valid_attributes
       expect {
-        delete :destroy, {:id => resource_file.to_param}, valid_session
+        delete :destroy, params: {:id => resource_file.to_param}, session: valid_session
       }.to change(ResourceFile, :count).by(-1)
     end
 
     it "redirects to the resource_files list" do
       resource_file = ResourceFile.create! valid_attributes
-      delete :destroy, {:id => resource_file.to_param}, valid_session
+      delete :destroy, params: {:id => resource_file.to_param}, session: valid_session
       response.should redirect_to(resource_files_url)
     end
   end

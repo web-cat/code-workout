@@ -50,7 +50,7 @@ describe ExerciseCollection, :type => :model do
 
       it 'should let a group member edit an exercise from the collection' do
         member = @user_group.users.where.not(global_role: GlobalRole.administrator).first
-        expect(member.can?(:edit, @exercise_collection.exercises.first)).to be_falsey
+        expect(member.can?(:edit, @exercise_collection.exercises.first)).to be_truthy
       end
 
       it 'should not let an outsider edit an exercise from the collection' do
@@ -66,7 +66,7 @@ describe ExerciseCollection, :type => :model do
       end
 
       it 'should allow a collection owner to edit the exercise from the collection' do
-        expect(@user.can?(:edit, @exercise_collection.exercises.first)).to be_falsey
+        expect(@user.can?(:edit, @exercise_collection.exercises.first)).to be_truthy
       end
 
       it "should not allow a second user to edit an exercise from another user's owned collection" do

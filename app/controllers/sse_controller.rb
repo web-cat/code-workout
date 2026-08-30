@@ -39,7 +39,7 @@ class SseController < ApplicationController
     @attempt = Attempt.includes(
       { exercise_version: [:exercise, :prompts] },
       { workout_score: { workout: :exercise_workouts } },
-      :prompt_answers
+      { prompt_answers: { actable: { test_case_results: :test_case } } }
     ).find_by(id: params[:att_id])
 
     if @attempt
