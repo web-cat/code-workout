@@ -18,11 +18,82 @@ class WorkoutsController < ApplicationController
     :edit,
     :embed,
     :find_offering,
-    :new_or_existing
+    :new_or_existing,
+    :course_workout_practice
   ]
   respond_to :html, :js
 
   #~ Action methods ...........................................................
+
+  # -------------------------------------------------------------
+  # GET /courses/:organization_id/:course_id/:term_id/workouts/:id
+  def course_workout_show
+    @organization = Organization.find(params[:organization_id])
+    @course = Course.find_with_id_or_slug(params[:course_id], @organization)
+    @term = Term.find(params[:term_id])
+    @workout = Workout.find_by_id_or_name(params[:id], @course, @term)
+
+    if !@workout
+      flash[:error] = 'Workout not found.'
+      redirect_to organization_course_path(@organization, @course, @term) and return
+    end
+
+    @workout_offering = @workout.workout_offering_for(current_user, @course, @term)
+
+    if @workout_offering
+      # If student is not enrolled in any section, prompt them to enroll on course page
+      if current_user && !@workout_offering.course_offering.is_enrolled?(current_user) && !@workout_offering.course_offering.is_staff?(current_user)
+        flash[:notice] = 'Please enroll in a course section to access this workout.'
+        redirect_to organization_course_path(@organization, @course, @term) and return
+      end
+
+      redirect_to organization_workout_offering_path(
+        organization_id: @organization.slug,
+        course_id: @course.slug,
+        term_id: @term.slug,
+        id: @workout_offering.id
+      )
+    else
+      flash[:error] = 'This workout is not offered in this course and term.'
+      redirect_to organization_course_path(@organization, @course, @term)
+    end
+  end
+
+
+  # -------------------------------------------------------------
+  # GET /courses/:organization_id/:course_id/:term_id/workouts/:id/practice(/:exercise_id)
+  def course_workout_practice
+    @organization = Organization.find(params[:organization_id])
+    @course = Course.find_with_id_or_slug(params[:course_id], @organization)
+    @term = Term.find(params[:term_id])
+    @workout = Workout.find_by_id_or_name(params[:id], @course, @term)
+
+    if !@workout
+      flash[:error] = 'Workout not found.'
+      redirect_to organization_course_path(@organization, @course, @term) and return
+    end
+
+    @workout_offering = @workout.workout_offering_for(current_user, @course, @term)
+
+    if @workout_offering
+      if current_user && !@workout_offering.course_offering.is_enrolled?(current_user) && !@workout_offering.course_offering.is_staff?(current_user)
+        flash[:notice] = 'Please enroll in a course section to access this workout.'
+        redirect_to organization_course_path(@organization, @course, @term) and return
+      end
+
+      redirect_to organization_workout_offering_practice_path(
+        organization_id: @organization.slug,
+        course_id: @course.slug,
+        term_id: @term.slug,
+        id: @workout_offering.id,
+        exercise_id: params[:exercise_id],
+        lti_launch: params[:lti_launch]
+      )
+    else
+      flash[:error] = 'This workout is not offered in this course and term.'
+      redirect_to organization_course_path(@organization, @course, @term)
+    end
+  end
 
   # -------------------------------------------------------------
   # GET /workouts
@@ -32,6 +103,22 @@ class WorkoutsController < ApplicationController
     #     notice: 'Unauthorized to view all workouts' and return
     # end
     @workouts = Workout.where(is_public: true)
+      .includes(
+        :tags,
+        :exercise_workouts,
+        { exercises: :irt_data }
+      )
+      .page(params[:page])
+
+    if current_user
+      workout_ids = @workouts.map(&:id)
+      @workout_scores_by_workout_id = WorkoutScore.where(
+        user: current_user,
+        workout_offering_id: nil,
+        workout_id: workout_ids
+      ).order('updated_at DESC').group_by(&:workout_id)
+    end
+
     @gym = []
   end
 
@@ -129,7 +216,30 @@ class WorkoutsController < ApplicationController
           Have a look at these popular workouts instead.'
       } and return
     end
-    @exs = @workout.exercises
+
+    @exs = @workout.exercises.includes(
+      { current_version: :prompts },
+      :tags,
+      :languages,
+      :styles,
+      :exercise_collection,
+      :exercise_owners
+    )
+
+    @workout_score = @workout.score_for(current_user, @workout_offering)
+
+    if @workout_score
+      @scoring_attempts_by_version_id = Attempt.where(
+        active_score_id: @workout_score.id
+      ).order('updated_at DESC').group_by(&:exercise_version_id)
+    elsif current_user
+      ex_version_ids = @exs.map(&:current_version_id).compact
+      @attempts_by_version_id = Attempt.where(
+        user: current_user,
+        workout_score_id: nil,
+        exercise_version_id: ex_version_ids
+      ).order('updated_at DESC').group_by(&:exercise_version_id)
+    end
   end
 
 
@@ -163,8 +273,23 @@ class WorkoutsController < ApplicationController
   # -------------------------------------------------------------
   # GET /gym
   def gym
-    @gym = Workout.where(is_public: true).order('created_at DESC').
-      limit(12)
+    @gym = Workout.where(is_public: true)
+      .includes(
+        :tags,
+        :exercise_workouts,
+        { exercises: :irt_data }
+      )
+      .order('created_at DESC')
+      .limit(12)
+
+    if current_user
+      workout_ids = @gym.map(&:id)
+      @workout_scores_by_workout_id = WorkoutScore.where(
+        user: current_user,
+        workout_offering_id: nil,
+        workout_id: workout_ids
+      ).order('updated_at DESC').group_by(&:workout_id)
+    end
     # render layout: 'two_columns'
   end
 
@@ -1012,7 +1137,12 @@ class WorkoutsController < ApplicationController
     # -------------------------------------------------------------
     # Use callbacks to share common setup or constraints between actions.
     def set_workout
-      @workout = Workout.find(params[:id])
+      @workout = Workout.includes(
+        :tags,
+        :owners,
+        :exercise_workouts,
+        { workout_offerings: :course_offering }
+      ).find(params[:id])
       @xp = 30
       @xptogo = 60
       @remain = 10

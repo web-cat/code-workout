@@ -39,15 +39,14 @@
 require 'spec_helper'
 
 describe Exercise do
-  before :all do
-    @admin = FactoryBot.build :admin
-    @user = FactoryBot.build :confirmed_user
+  before :each do
+    @admin = FactoryBot.create :admin, email: "admin_#{SecureRandom.hex(4)}@codeworkout.org"
+    @user = FactoryBot.create :confirmed_user, email: "user_#{SecureRandom.hex(4)}@codeworkout.org"
   end
 
   context 'SLC items catalog generation' do
     it 'generates a valid JSON catalog for public exercises' do
-      # Create a public exercise using the factory which sets tags automatically
-      ex = FactoryBot.create :coding_exercise, is_public: true, name: 'Test Exercise', external_id: 'test-123'
+      ex = FactoryBot.create :coding_exercise, is_public: true, name: 'Test Exercise', external_id: 'test-123', creator: @user
       
       filename = Rails.root.join('tmp', 'slc_catalog.json')
       Exercise.generate_slc_catalog(filename)

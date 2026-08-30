@@ -57,7 +57,6 @@ class ExerciseVersion < ApplicationRecord
   has_many :attempts, dependent: :destroy
   has_many :ownerships 
   has_many :resource_files, through: :ownerships
-  belongs_to :creator, class_name: 'User'
   belongs_to :irt_data, dependent: :destroy
 
 

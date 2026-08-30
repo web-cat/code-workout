@@ -2,6 +2,7 @@ class WorkoutOfferingsController < ApplicationController
   # Isn't this handled by authorize_resource already?
   # skip_before_action :authenticate_user!, :only => :practice
 
+  before_action :resolve_section_offering, only: [:show, :practice, :review]
   load_and_authorize_resource
   skip_authorize_resource :only => :practice
 
@@ -246,6 +247,58 @@ class WorkoutOfferingsController < ApplicationController
         course_offering: @course_offering,
         user: current_user,
         course_role: CourseRole.student)
+      end
+    end
+
+    def resolve_section_offering
+      return unless current_user && params[:id].present?
+
+      target_offering = WorkoutOffering.find_by(id: params[:id])
+      return unless target_offering
+
+      course_offering = target_offering.course_offering
+      return unless course_offering
+
+      # If current_user is already enrolled or staff in this section, proceed normally
+      return if course_offering.is_staff?(current_user) || course_offering.is_enrolled?(current_user)
+
+      # Check if current_user is enrolled in a sibling section for the same course and term
+      enrolled_offerings = current_user.course_offerings_for_term(course_offering.term, course_offering.course)
+      if enrolled_offerings.any?
+        sister_offering = WorkoutOffering.where(
+          course_offering_id: enrolled_offerings.map(&:id),
+          workout_id: target_offering.workout_id
+        ).first
+
+        if sister_offering
+          target_path = case action_name
+          when 'practice'
+            organization_workout_offering_practice_path(
+              organization_id: sister_offering.course_offering.course.organization.slug,
+              course_id: sister_offering.course_offering.course.slug,
+              term_id: sister_offering.course_offering.term.slug,
+              id: sister_offering.id,
+              exercise_id: params[:exercise_id],
+              lti_launch: params[:lti_launch]
+            )
+          when 'review'
+            organization_workout_offering_review_path(
+              organization_id: sister_offering.course_offering.course.organization.slug,
+              course_id: sister_offering.course_offering.course.slug,
+              term_id: sister_offering.course_offering.term.slug,
+              id: sister_offering.id,
+              review_user_id: params[:review_user_id] || current_user.id
+            )
+          else
+            organization_workout_offering_path(
+              organization_id: sister_offering.course_offering.course.organization.slug,
+              course_id: sister_offering.course_offering.course.slug,
+              term_id: sister_offering.course_offering.term.slug,
+              id: sister_offering.id
+            )
+          end
+          redirect_to target_path and return
+        end
       end
     end
 

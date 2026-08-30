@@ -24,8 +24,23 @@ class ExercisesController < ApplicationController
     #   @exercises = Exercise.publicly_visible
     # end
     @exercises = Exercise.publicly_visible
+      .includes(
+        { current_version: :prompts },
+        :tags,
+        :languages,
+        :exercise_owners,
+        :exercise_collection
+      )
+      .page(params[:page])
 
-    @exercises = @exercises.page params[:page]
+    if current_user
+      ex_version_ids = @exercises.map(&:current_version_id).compact
+      @attempts_by_version_id = Attempt.where(
+        user: current_user,
+        workout_score_id: nil,
+        exercise_version_id: ex_version_ids
+      ).order('updated_at DESC').group_by(&:exercise_version_id)
+    end
   end
 
 
@@ -141,6 +156,23 @@ class ExercisesController < ApplicationController
     if @exs.blank?
       @msg = "No exercises were found for the search terms: #{@terms}"
       redirect_to(exercises_path, alert: @msg) and return
+    end
+
+    @exs = @exs.includes(
+      { current_version: :prompts },
+      :tags,
+      :languages,
+      :exercise_owners,
+      :exercise_collection
+    )
+
+    if current_user
+      ex_version_ids = @exs.map(&:current_version_id).compact
+      @attempts_by_version_id = Attempt.where(
+        user: current_user,
+        workout_score_id: nil,
+        exercise_version_id: ex_version_ids
+      ).order('updated_at DESC').group_by(&:exercise_version_id)
     end
 
     respond_to do |format|

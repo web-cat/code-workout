@@ -5,7 +5,9 @@
 - workout ||= workout_offering ? workout_offering.workout : nil
 - course ||= @course
 - course ||= workout_offering ? workout_offering.course_offering.course : nil
-- workout_score ||= workout.andand.score_for(current_user, workout_offering)
+- term ||= @term
+- term ||= workout_offering ? workout_offering.course_offering.term : nil
+- workout_score ||= workout_offering ? workout.andand.score_for(current_user, workout_offering) : (@workout_scores_by_workout_id && workout ? @workout_scores_by_workout_id[workout.id]&.first : workout.andand.score_for(current_user, workout_offering))
 - new_or_existing ||= false
 
 - if workout_score && ((workout && workout_score.workout != workout) ||      |
@@ -51,7 +53,13 @@
     - if new_or_existing
       = workout.name
     - else
-      - if workout_offering
+      - if course && term
+        = link_to workout.name,
+            organization_course_workout_path(id: workout.id,
+            course_id: course.slug,
+            term_id: term.slug,
+            organization_id: course.organization.slug)
+      - elsif workout_offering
         = link_to workout.name,
             organization_workout_offering_path(id: workout_offering.id,
             course_id: workout_offering.course_offering.course.slug,
@@ -59,7 +67,7 @@
             organization_id: workout_offering.course_offering.course.organization.slug)
       - else
         = link_to workout.name, workout_path(id: workout[:id])
-    %span.badge.badge-info= workout.exercises.count.to_s
+    %span.badge.badge-info= (workout.respond_to?(:exercise_workouts) && workout.exercise_workouts.loaded?) ? workout.exercise_workouts.size.to_s : workout.exercises.size.to_s
 
   .summary
     - course_id = course.andand.slug

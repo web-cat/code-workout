@@ -14,10 +14,10 @@ FactoryBot.define do
 
     factory :mc_with_choices do
       after :create do |p|
-        p.choices << FactoryBot.create(:choice, multiple_choice_prompt: p)
-        p.choices << FactoryBot.create(:choice,
+        FactoryBot.create(:choice, multiple_choice_prompt: p)
+        FactoryBot.create(:choice,
           answer: 'The right choice', value: 100, multiple_choice_prompt: p)
-        p.choices << FactoryBot.create(:choice, multiple_choice_prompt: p)
+        FactoryBot.create(:choice, multiple_choice_prompt: p)
       end
     end
   end
