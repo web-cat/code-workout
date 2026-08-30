@@ -18,7 +18,7 @@ describe WorkoutOffering, type: :model do
     before do
       allow(course_offering).to receive(:is_enrolled?).with(user).and_return(true)
       allow(course_offering).to receive(:is_staff?).with(user).and_return(false)
-      allow(workout_offering).to receive(:workout_scores).and_return(double(where: double(last: nil)))
+      allow(workout_offering).to receive(:workout_scores).and_return(double(where: double(last: nil), loaded?: false))
     end
 
     it "returns true when within open dates and hard deadline" do

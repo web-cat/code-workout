@@ -89,6 +89,7 @@ describe ExercisesController do
 
     it "preloads workout exercises and scored attempts for sidebar" do
       allow(Workout).to receive(:find).with('5').and_return(workout)
+      allow(WorkoutScore).to receive_message_chain(:includes, :find).and_return(workout_score)
       allow(WorkoutScore).to receive(:find).with('7').and_return(workout_score)
       allow(workout_score).to receive(:attempts_left_for_exercise_version).and_return(nil)
       allow(workout_score).to receive(:previous_attempt_for).and_return(nil)
