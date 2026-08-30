@@ -8,4 +8,7 @@
       at
       = link_to @organization.name, organization_path(@organization)
 
-  = render partial: 'form', locals: { term: @term }
+  - if @custom_section_ids && @custom_section_ids.size > 1
+    = render partial: 'batch_form', locals: { term: @term }
+  - else
+    = render partial: 'form', locals: { term: @term }

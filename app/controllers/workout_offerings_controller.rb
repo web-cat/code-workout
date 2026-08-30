@@ -13,12 +13,12 @@ class WorkoutOfferingsController < ApplicationController
   # /courses/:organization_id/:course_id/:term_id/:id
   def show
     if @workout_offering
-      @workout = @workout_offering.workout
+      @workout = Workout.includes(:tags, :exercise_workouts, :workout_offerings).find(@workout_offering.workout_id)
       @organization = Organization.find params[:organization_id]
       @course = Course.find_with_id_or_slug(params[:course_id], params[:organization_id])
       @term = Term.find params[:term_id]
       @course_offering = CourseOffering.find_by course: @course, term: @term
-      @exs = @workout.exercises
+      @exs = @workout.exercises.includes(:languages, :tags, :current_version)
     end
     render 'workouts/show'
   end
@@ -27,8 +27,8 @@ class WorkoutOfferingsController < ApplicationController
   # --------------------------------------------------------------
   def review
     if @workout_offering
-      @workout = @workout_offering.workout
-      @exs = @workout.exercises
+      @workout = Workout.includes(:tags, :exercise_workouts, :workout_offerings).find(@workout_offering.workout_id)
+      @exs = @workout.exercises.includes(:languages, :tags, :current_version)
     end
     render 'workouts/review'
   end
@@ -97,7 +97,8 @@ class WorkoutOfferingsController < ApplicationController
       @workout_score = @workout_offering.score_for(current_user)
 
       should_force_lti = !@lti_launch &&
-        @workout_offering.lms_assignment_id.present? &&
+        (@workout_offering.lms_assignment_id.present? ||
+         @workout_offering.lti_assignment_id.present?) &&
         (@workout_score.nil? ||
         @workout_score.lis_result_sourcedid.nil? ||
         @workout_score.lis_outcome_service_url.nil?)

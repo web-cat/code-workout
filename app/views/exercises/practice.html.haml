@@ -5,6 +5,7 @@
   = javascript_include_tag('timeout')
 = javascript_include_tag("two_column_layout")
 = javascript_include_tag("practice")
+- has_parsons = @exercise_version.prompts.any? { |p| p.specific.is_parsons? }
 .row
   .col-md-12
     %h1
@@ -35,7 +36,7 @@
     -@file_res.each do |unique_name, real_name|
       %p
       =link_to "#{real_name}", "/uploads/resource_file/#{unique_name}"
-  .col-md-7#user-deadline{ data: { deadline: @user_deadline, server_now: @server_now } }
+  %div{ id: 'user-deadline', class: "col-md-#{has_parsons ? 12 : 7}", data: { deadline: @user_deadline, server_now: @server_now } }
     %h2 Your Answer:
     = semantic_form_for @exercise_version,
       url: (@workout_offering ? organization_workout_offering_exercise_evaluate_path(id: @exercise_version.exercise.id,
@@ -185,7 +186,15 @@
                     },
                     startup: {
                       pageReady() {
-                        return MathJax.startup.defaultPageReady().then(function() { rsMathReady(); });
+                        return MathJax.startup.defaultPageReady().then(
+                          function () {
+                            rsMathReady();
+                          },
+                          function (err) {
+                            console.warn("MathJax's initial page-wide typeset pass failed; continuing anyway so dependent components aren't stuck waiting forever.", err);
+                            rsMathReady();
+                          }
+                      )
                       }
                     }
                   };
@@ -194,28 +203,10 @@
               = stylesheet_link_tag("parsons")
             = hidden_field_tag 'exercise_version[answer_code]', '', id: 'parsons-answer-field'
             = hidden_field_tag 'exercise_version[parsons_correct]', '', id: 'parsons-correct-field'
-            #parsons-container
-            :javascript
-              document.addEventListener('DOMContentLoaded', function() {
-                try {
-                  window.parsonsWidget = new Parsons({
-                    orig: document.getElementById('parsons-container'),
-                    pifJson: #{raw pif_json.to_json},
-                    divid: 'parsons-container',
-                    useRunestoneServices: false
-                  });
-                  $(window.parsonsWidget.checkButton).hide();
-                  $(window.parsonsWidget.resetButton).hide();
-                  if (window.parsonsWidget.helpButton) {
-                    $(window.parsonsWidget.helpButton).hide();
-                    document.getElementById('parsons-help-btn').style.display = '';
-                  }
-                } catch (error) {
-                  console.error('Error initializing Parsons:', error);
-                  document.getElementById('parsons-container').innerHTML =
-                      '<div style="color: red; padding: 20px;">Error loading Parsons exercise: ' + error.message + '</div>';
-                }
-              });
+            = hidden_field_tag 'exercise_version[attempt_state]', '', id: 'parsons-state-field'
+            %div#parsons-container{ data: { pif_json: pif_json.to_json,
+              initial_state: prior_answer ? prior_answer.specific.get_attempt_state.to_json : 'null',
+              save_state_url: exercise_save_parsons_state_path(@exercise_version.exercise, exercise_version_id: @exercise_version.id) } }
 
             -# = f.input :answer_code, as: :text, class: 'code',
             -# input_html: { class: 'code', readonly: true,
@@ -275,7 +266,7 @@
           (@exercise.language ?                                              |
           random_exercise_path(language: @exercise.language) :               |
           random_exercise_path)                                              |
-  .col-md-5
+  %div{ class: "col-md-#{has_parsons ? 12 : 5}" }
     %h2 Feedback
     #saved_assurance
     #previous_answer.previous_answer
