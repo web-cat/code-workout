@@ -18,11 +18,12 @@ class ExercisesController < ApplicationController
 
   # GET /exercises
   def index
-    if current_user
-      @exercises = Exercise.visible_to_user(current_user)
-    else
-      @exercises = Exercise.publicly_visible
-    end
+    # if current_user
+    #   @exercises = Exercise.visible_to_user(current_user)
+    # else
+    #   @exercises = Exercise.publicly_visible
+    # end
+    @exercises = Exercise.publicly_visible
 
     @exercises = @exercises.page params[:page]
   end

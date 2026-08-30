@@ -91,6 +91,7 @@ class Workout < ApplicationRecord
     return Workout.where(creator_id: user.id).or(Workout.where(is_public: true))
   end
 
+
   # -------------------------------------------------------------
   # Creates a new workout with the specified descriptive parameters and
   # populates it with all exercises from the specified list of workout IDs.
@@ -149,6 +150,7 @@ class Workout < ApplicationRecord
 
     workout
   end
+
 
   #~ Instance methods .........................................................
 
