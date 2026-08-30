@@ -27,7 +27,7 @@
 
 FactoryBot.define do
   factory :exercise_workout do
-    association :exercise
+    association :exercise, factory: :coding_exercise
     association :workout
     points { 10 }
   end

@@ -38,16 +38,15 @@
 
 require 'spec_helper'
 
-describe Exercise do
-  before :all do
-    @admin = FactoryBot.build :admin
-    @user = FactoryBot.build :confirmed_user
+describe Exercise, type: :model do
+  before :each do
+    @admin = FactoryBot.create :admin, email: "admin_#{SecureRandom.hex(4)}@codeworkout.org"
+    @user = FactoryBot.create :confirmed_user, email: "user_#{SecureRandom.hex(4)}@codeworkout.org"
   end
 
   context 'SLC items catalog generation' do
     it 'generates a valid JSON catalog for public exercises' do
-      # Create a public exercise using the factory which sets tags automatically
-      ex = FactoryBot.create :coding_exercise, is_public: true, name: 'Test Exercise', external_id: 'test-123'
+      ex = FactoryBot.create :coding_exercise, is_public: true, name: 'Test Exercise', external_id: 'test-123', creator: @user
       
       filename = Rails.root.join('tmp', 'slc_catalog.json')
       Exercise.generate_slc_catalog(filename)
@@ -71,14 +70,34 @@ describe Exercise do
   end
 
   context 'creator edit permissions' do
-    it 'should not be editable by the exercise creator' do
-      ex = FactoryBot.build :mc_exercise
+    it 'should not be editable by non-creator' do
+      ex = FactoryBot.create :mc_exercise
       expect(@user.cannot? :edit, ex).to be_truthy
     end
 
     it 'should be editable by an administrator' do
-      ex = FactoryBot.build :coding_exercise
+      ex = FactoryBot.create :coding_exercise
       expect(@admin.can? :edit, ex).to be_truthy
     end
   end
+
+  context 'attempt creation' do
+    it 'creates and saves an attempt with prompt answers without foreign key violation' do
+      ex = FactoryBot.create :coding_exercise, creator: @user
+      version = ex.current_version
+      attempt = version.new_attempt(user: @user)
+      expect { attempt.save! }.not_to raise_error
+      expect(attempt.persisted?).to be_truthy
+
+      prompt = version.prompts.first
+      pa = prompt.specific.new_answer
+      pa.attempt = attempt
+      pa.prompt = prompt
+      pa.answer = 'public boolean cigarParty() { return true; }'
+      expect { pa.save! }.not_to raise_error
+      expect(pa.persisted?).to be_truthy
+      expect(attempt.reload.prompt_answers.size).to eq(1)
+    end
+  end
 end
+

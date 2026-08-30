@@ -31,13 +31,12 @@ FactoryBot.define do
   factory :course do
     name { "Introduction to Software Design" }
     number { "CS 1114" }
-    organization_id { 1 }
-    # url_part "cs-1114"
+    organization
   end
 
-  factory :cs_3114 do
+  factory :cs_3114, class: 'Course' do
     name { 'Data Structures and Algorithms' }
     number { 'CS 3114' }
-    organization_id { 1 }
+    organization
   end
 end

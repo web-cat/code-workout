@@ -42,11 +42,12 @@
 #
 
 FactoryBot.define do
+  sequence(:user_email) { |n| "hokie#{n}_#{SecureRandom.hex(4)}@codeworkout.org" }
 
  factory :user do
    first_name { 'Joe' }
    last_name  { 'Hokie' }
-   sequence(:email) { |n| "hokie-#{n}@codeworkout.org" }
+   email      { generate :user_email }
    password   { 'hokiehokie' }
 #    password_confirmation 'hokiehokie'
    global_role { GlobalRole.regular_user }

@@ -4,7 +4,7 @@
 - review ||= false
 - workout = workout_score.andand.workout || workout_offering.andand.workout
 - if workout
-  - exs = workout.exercises
+  - exs = @workout_exercises || workout.exercises
   - cache [workout_score, workout, workout_offering] do
     = render workout, size: 'sm', workout_score: workout_score, workout_offering: workout_offering
 

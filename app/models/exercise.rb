@@ -66,12 +66,12 @@ class Exercise < ApplicationRecord
   has_many :courses, through: :course_exercises
   has_many :exercise_workouts, inverse_of: :exercise, dependent: :destroy
   has_many :workouts, through: :exercise_workouts
-  belongs_to :exercise_family, inverse_of: :exercises
+  belongs_to :exercise_family, inverse_of: :exercises, optional: true
   has_many :exercise_owners, inverse_of: :exercise, dependent: :destroy
   has_many :owners, through: :exercise_owners
-  belongs_to :current_version, class_name: 'ExerciseVersion'
-  belongs_to :irt_data, dependent: :destroy
-  belongs_to :exercise_collection
+  belongs_to :current_version, class_name: 'ExerciseVersion', optional: true
+  belongs_to :irt_data, dependent: :destroy, optional: true
+  belongs_to :exercise_collection, optional: true
 
   accepts_nested_attributes_for :exercise_versions, allow_destroy: true
 
