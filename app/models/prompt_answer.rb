@@ -41,7 +41,7 @@ class PromptAnswer < ApplicationRecord
   #~ Relationships ............................................................
 
   # MTI, with subclasses CodingPromptAnswer and MultipleChoicePromptAnswer
-  actable
+  actable autosave: false
 
   belongs_to :attempt, inverse_of: :prompt_answers
   belongs_to :prompt, inverse_of: :prompt_answers
@@ -60,18 +60,26 @@ class PromptAnswer < ApplicationRecord
 
   #~ Instance methods .........................................................
 
-  # null method to catch calls from subclass MultipleChoicePromptAnswer
-  def error
-    nil
+  def specific
+    actable || self
   end
 
-  # null method to catch calls from subclass MultipleChoicePromptAnswer
-  def error_line_no
-    nil
+  # Prevent circular autosave rollback in Rails 5.2 when saving subclasses
+  def autosave_associated_records_for_actable
   end
+
+  attr_accessor :error, :error_line_no, :answer
 
   # null method to catch calls from subclass MultipleChoicePromptAnswer
   def test_case_results(order=true)
     TestCaseResult.none
+  end
+
+  def choices
+    Choice.none
+  end
+
+  def get_attempt_state
+    nil
   end
 end

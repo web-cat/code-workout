@@ -431,18 +431,12 @@ class Workout < ApplicationRecord
       workout_offering.lms_assignment_url = offering['lms_assignment_url']
 
       # set deadlines
-      if offering['opening_date'].present?
-        workout_offering.opening_date =
-          DateTime.strptime(offering['opening_date'].to_s, '%Q')
-      end
-      if offering['soft_deadline'].present?
-        workout_offering.soft_deadline =
-          DateTime.strptime(offering['soft_deadline'].to_s, '%Q')
-      end
-      if offering['hard_deadline'].present?
-        workout_offering.hard_deadline =
-          DateTime.strptime(offering['hard_deadline'].to_s, '%Q')
-      end
+      workout_offering.opening_date = offering['opening_date'].present? ?
+        DateTime.strptime(offering['opening_date'].to_s, '%Q') : nil
+      workout_offering.soft_deadline = offering['soft_deadline'].present? ?
+        DateTime.strptime(offering['soft_deadline'].to_s, '%Q') : nil
+      workout_offering.hard_deadline = offering['hard_deadline'].present? ?
+        DateTime.strptime(offering['hard_deadline'].to_s, '%Q') : nil
 
       workout_offering.workout_policy = common[:workout_policy]
       if common[:lms_assignment_id].present?

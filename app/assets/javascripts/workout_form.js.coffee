@@ -317,4 +317,5 @@ handle_submit = ->
     success: (data) ->
       window.location.href = data['url']
     error: (xhr) ->
-      form_alert ["Error: #{xhr.responseText}"]
+      errorMsg = xhr.responseJSON?.error || xhr.responseText || 'An error occurred'
+      form_alert ["Error: #{errorMsg}"]

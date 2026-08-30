@@ -157,4 +157,74 @@ describe WorkoutsController do
       )
     end
   end
+
+  describe "PATCH #update" do
+    let(:workout) { FactoryBot.build_stubbed(:workout, id: 30) }
+    let(:user) { FactoryBot.build_stubbed(:user) }
+
+    before do
+      allow(controller).to receive(:current_user).and_return(user)
+      allow(controller).to receive(:cannot?).and_return(false)
+      allow(Workout).to receive_message_chain(:includes, :find).and_return(workout)
+      allow(workout).to receive(:update_or_create).and_return(workout)
+      allow(controller).to receive(:create_or_update_offerings).and_return(true)
+    end
+
+    it "returns the organization_course_workout_path JSON url when course_id is present" do
+      patch :update, params: {
+        id: '30',
+        course_id: 'cs1114',
+        organization_id: 'vt',
+        term_id: 'fall2026'
+      }, format: :json
+
+      expect(response.status).to eq(200)
+      json = JSON.parse(response.body)
+      expect(json['url']).to eq('/courses/vt/cs1114/fall2026/workouts/30')
+    end
+
+    it "returns 422 with error message when workout errors are present" do
+      allow(controller).to receive(:create_or_update_offerings) do |w|
+        w.errors.add(:base, "Invalid section date")
+      end
+
+      patch :update, params: {
+        id: '30',
+        course_id: 'cs1114',
+        organization_id: 'vt',
+        term_id: 'fall2026'
+      }, format: :json
+
+      expect(response.status).to eq(422)
+      json = JSON.parse(response.body)
+      expect(json['error']).to include("Invalid section date")
+    end
+  end
+
+  describe "#parse_date" do
+    let(:tz) { 'America/New_York' }
+
+    it "correctly parses absolute date strings with time" do
+      result = controller.send(:parse_date, '2026-09-15 11:59 PM', tz)
+      expect(result.year).to eq(2026)
+      expect(result.month).to eq(9)
+      expect(result.day).to eq(15)
+      expect(result.hour).to eq(23)
+      expect(result.min).to eq(59)
+    end
+
+    it "correctly parses relative offsets for hard deadlines" do
+      base_time = Time.zone.parse('2026-09-15 12:00:00')
+      result = controller.send(:parse_date, '+2 days', tz, base_time, :until)
+      expect(result).to eq(base_time + 2.days)
+    end
+
+    it "correctly handles Time and Date objects directly" do
+      time_obj = Time.zone.parse('2026-09-15 10:00:00')
+      result = controller.send(:parse_date, time_obj, tz)
+      expect(result).to eq(time_obj.in_time_zone(tz))
+    end
+  end
 end
+
+

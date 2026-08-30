@@ -7,8 +7,6 @@
       %li
         = link_to 'Upload a roster...', organization_course_choose_roster_path(organization_id: @organization.slug, course_id: @course.slug, term_id: @term), remote: true
 
-= stylesheet_link_tag('pagination')
-
 - @course_offerings.each do |offering|
   %table.table.table-striped
     %thead

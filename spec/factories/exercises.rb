@@ -83,7 +83,7 @@ FactoryBot.define do
       style_list { 'code writing' }
 
       after :create do |e, v|
-        creator_user = v.creator || FactoryBot.create(:user)
+        creator_user = (v.creator && v.creator.persisted?) ? v.creator : FactoryBot.create(:user)
         e.current_version = FactoryBot.create :exercise_version,
           exercise: e,
           creator: creator_user
@@ -116,7 +116,7 @@ FactoryBot.define do
       style_list { 'forced choice' }
 
       after :create do |e, v|
-        creator_user = v.creator || FactoryBot.create(:user)
+        creator_user = (v.creator && v.creator.persisted?) ? v.creator : FactoryBot.create(:user)
         e.current_version = FactoryBot.create :exercise_version,
           exercise: e,
           creator: creator_user

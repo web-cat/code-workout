@@ -90,16 +90,26 @@ class WorkoutOffering < ApplicationRecord
 
 
   # -----------------------------------------------------------------
+  def extension_for(user)
+    return nil unless user
+    if student_extensions.is_a?(Array) || (student_extensions.respond_to?(:loaded?) && student_extensions.loaded?)
+      student_extensions.find { |e| e.user_id == user.id }
+    else
+      student_extensions.find_by(user_id: user.id)
+    end
+  end
+
+
+  # -----------------------------------------------------------------
   def time_limit_for(user)
-    user_extension =
-      StudentExtension.find_by(user: user, workout_offering: self)
+    user_extension = extension_for(user)
     user_extension.andand.time_limit || self.time_limit
   end
 
 
   # -----------------------------------------------------------------
   def hard_deadline_for(user)
-    user_ext = student_extensions.where(user: user).first
+    user_ext = extension_for(user)
     # (1) student extension hard deadline
     return user_ext.hard_deadline if user_ext.andand.hard_deadline
     
@@ -114,8 +124,7 @@ class WorkoutOffering < ApplicationRecord
 
   # -----------------------------------------------------------------
   def opening_date_for(user)
-    user_extension =
-      StudentExtension.find_by(user: user, workout_offering: self)
+    user_extension = extension_for(user)
     user_extension.andand.opening_date ||
       self.opening_date
   end
@@ -209,8 +218,7 @@ class WorkoutOffering < ApplicationRecord
     return false if workout_score && workout_score.closed?
  
     now = Time.zone.now
-    user_ext = student_extensions.where(user: user).first
-    opens = user_extension.andand.opening_date || self.opening_date
+    opens = opening_date_for(user)
     deadline = hard_deadline_for(user)
 
     course_offering.is_staff?(user) ||

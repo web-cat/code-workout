@@ -264,7 +264,7 @@ class ExerciseVersion < ApplicationRecord
 
 
   # -------------------------------------------------------------
-  def new_attempt(args)
+  def new_attempt(args = {})
     num = 1
     user = args[:user]
     if user
@@ -276,13 +276,9 @@ class ExerciseVersion < ApplicationRecord
       submit_time: Time.zone.now,
       submit_num: num,
       ip_address: args[:ip_address]
-      )
+    )
     if args[:workout_score]
       attempt.workout_score = args[:workout_score]
-    end
-    args.merge!(attempt: attempt)
-    prompts.each do |prompt|
-      prompt.new_answer(args)
     end
     attempt
   end

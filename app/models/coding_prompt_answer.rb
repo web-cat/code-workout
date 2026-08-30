@@ -18,7 +18,8 @@ class CodingPromptAnswer < ApplicationRecord
 
   #~ Relationships ............................................................
 
-  acts_as :prompt_answer
+  include ActablePromptAnswer
+
   has_many :test_case_results,
     -> { order('test_case_id ASC').includes(:test_case) },
     as: :coding_prompt_answer, dependent: :destroy

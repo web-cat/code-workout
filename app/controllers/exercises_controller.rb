@@ -1,5 +1,5 @@
 require 'ims/lti'
-require 'oauth/request_proxy/action_controller_request'
+require 'oauth/request_proxy/rack_request'
 require 'zip'
 require 'tempfile'
 
@@ -961,10 +961,6 @@ class ExercisesController < ApplicationController
         # Multi-prompt questions
         prompt_keys = params.keys.select{|key| key.include?("prompt-") }
         response_ids = prompt_keys.map{|prompt_key| params[prompt_key] }
-
-        prompt_keys.each_with_index do |prompt_key, i|
-          @attempt.prompt_answers[i].choices << Choice.find(response_ids[i])
-        end
       end
 
       @responses = Array.new
@@ -987,9 +983,12 @@ class ExercisesController < ApplicationController
       end
 
       # recording the answer choices
-      # FIXME: Only temporary
-      if params[:exercise_version]
-        @attempt.prompt_answers.first.choices = @responses
+      @exercise_version.prompts.each_with_index do |exercise_prompt, i|
+        prompt_answer = exercise_prompt.specific.new_answer({})
+        prompt_answer.attempt = @attempt
+        prompt_answer.prompt = exercise_prompt
+        prompt_answer.choices = @responses
+        prompt_answer.save!
       end
 
       @score = @exercise_version.score(@responses)
@@ -1002,7 +1001,6 @@ class ExercisesController < ApplicationController
       # + "#{@exercise.id}:#{@exercise.name}" +
       #  ' and its feedback for you: ' +
       #  @explain.to_sentence
-
       # TODO: calculate experience based on correctness and num submissions
       # using count_submission()
       @xp = @exercise_version.mcq_experience_on(@responses, @attempt.submit_num)
@@ -1044,13 +1042,15 @@ class ExercisesController < ApplicationController
       @answer_code = params[:exercise_version][:answer_code]
 
       @exercise_version.prompts.each_with_index do |exercise_prompt, i|
-        exercise_prompt_answer = @attempt.prompt_answers[i]
-        exercise_prompt_answer.answer = params[:exercise_version][:answer_code]
+        prompt_answer = exercise_prompt.specific.new_answer(params[:exercise_version])
+        prompt_answer.attempt = @attempt
+        prompt_answer.prompt = exercise_prompt
+        prompt_answer.answer = params[:exercise_version][:answer_code]
         if @exercise_version.is_parsons?
-          exercise_prompt_answer.attempt_state =
+          prompt_answer.attempt_state =
             params[:exercise_version][:attempt_state]
         end
-        if exercise_prompt_answer.save
+        if prompt_answer.save
           if @exercise_version.is_execution_graded?
             CodeWorker.new.async.perform(@attempt.id)
           elsif @exercise_version.is_parsons?
@@ -1062,10 +1062,7 @@ class ExercisesController < ApplicationController
             @workout_score.record_attempt(@attempt) if @workout_score
           end
         else
-          logger.error 'IMPROPER PROMPT',
-            'unable to save prompt_answer: ' \
-            "#{prompt_answer.errors.full_messages.to_s}",
-            'IMPROPER PROMPT'
+          logger.error "IMPROPER PROMPT: unable to save prompt_answer: #{prompt_answer.errors.full_messages}"
         end
       end
       @workout ||= @workout_score.andand.workout
@@ -1089,14 +1086,18 @@ class ExercisesController < ApplicationController
     # Deliberately not passing workout_score: -- see comment above.
     attempt.score = 0.0
     attempt.feedback_ready = false
+    attempt.save!
 
-    saved = attempt.prompt_answers.all? do |prompt_answer|
+    saved = @exercise_version.prompts.all? do |exercise_prompt|
+      prompt_answer = exercise_prompt.specific.new_answer
+      prompt_answer.attempt = attempt
+      prompt_answer.prompt = exercise_prompt
       prompt_answer.answer = params[:answer_code]
       prompt_answer.attempt_state = params[:attempt_state]
       prompt_answer.save
     end
 
-    if saved && attempt.save
+    if saved
       head :ok
     else
       head :unprocessable_entity

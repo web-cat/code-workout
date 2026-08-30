@@ -29,7 +29,7 @@
     - else
       %p Your choice is incorrect.
     -#= Choice.find(attempt.answer.to_i).feedback
-    - @attempt.prompt_answers.first.specific.choices.each do |choice|
+    - (@attempt.prompt_answers.first.andand.specific.andand.choices || []).each do |choice|
       %p= choice.feedback
   - else
     Your answer has been saved.
