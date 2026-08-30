@@ -16,21 +16,27 @@
 #  continue_from_workout_id :bigint
 #  course_offering_id       :bigint           not null
 #  lms_assignment_id        :string(255)
+#  lms_instance_id          :bigint
+#  lti_assignment_id        :string(255)
 #  workout_id               :bigint           not null
 #  workout_policy_id        :bigint
 #
 # Indexes
 #
-#  index_workout_offerings_on_course_offering_id  (course_offering_id)
-#  index_workout_offerings_on_lms_assignment_id   (lms_assignment_id)
-#  index_workout_offerings_on_workout_id          (workout_id)
-#  index_workout_offerings_on_workout_policy_id   (workout_policy_id)
-#  workout_offerings_continue_from_workout_id_fk  (continue_from_workout_id)
+#  idx_workout_offerings_on_lms_and_lti_assignment  (lms_instance_id,lti_assignment_id) UNIQUE
+#  index_workout_offerings_on_course_offering_id    (course_offering_id)
+#  index_workout_offerings_on_lms_assignment_id     (lms_assignment_id)
+#  index_workout_offerings_on_lms_instance_id       (lms_instance_id)
+#  index_workout_offerings_on_lti_assignment_id     (lti_assignment_id)
+#  index_workout_offerings_on_workout_id            (workout_id)
+#  index_workout_offerings_on_workout_policy_id     (workout_policy_id)
+#  workout_offerings_continue_from_workout_id_fk    (continue_from_workout_id)
 #
 # Foreign Keys
 #
 #  fk_rails_...                                   (continue_from_workout_id => workout_offerings.id)
 #  fk_rails_...                                   (course_offering_id => course_offerings.id)
+#  fk_rails_...                                   (lms_instance_id => lms_instances.id)
 #  fk_rails_...                                   (workout_id => workouts.id)
 #  workout_offerings_continue_from_workout_id_fk  (continue_from_workout_id => workout_offerings.id)
 #  workout_offerings_course_offering_id_fk        (course_offering_id => course_offerings.id)
@@ -54,6 +60,7 @@ class WorkoutOffering < ApplicationRecord
   belongs_to :continue_from_workout, foreign_key: 'continue_from_workout_id',
     class_name: 'WorkoutOffering'
   belongs_to :course_offering, inverse_of: :workout_offerings
+  belongs_to :lms_instance
   has_many :workout_scores, inverse_of: :workout_offering, dependent: :nullify
   has_many :student_extensions
   has_many :users, through: :student_extensions
@@ -81,10 +88,14 @@ class WorkoutOffering < ApplicationRecord
     if user.nil?
       return nil
     else
-      # Explicitly include workout id in search for faster search using
-      # the compound index
-      workout_scores.where(user: user, workout: workout).
-        order('updated_at DESC').first
+      if workout_scores.loaded?
+        workout_scores.find { |ws| ws.user_id == user.id && ws.workout_id == workout_id }
+      else
+        # Explicitly include workout id in search for faster search using
+        # the compound index
+        workout_scores.where(user: user, workout: workout).
+          order('updated_at DESC').first
+      end
     end
   end
 
@@ -99,7 +110,7 @@ class WorkoutOffering < ApplicationRecord
 
   # -----------------------------------------------------------------
   def hard_deadline_for(user)
-    user_ext = student_extensions.where(user: user).first
+    user_ext = student_extensions.loaded? ? student_extensions.find { |e| e.user_id == user.andand.id } : student_extensions.where(user: user).first
     # (1) student extension hard deadline
     return user_ext.hard_deadline if user_ext.andand.hard_deadline
     
@@ -205,12 +216,12 @@ class WorkoutOffering < ApplicationRecord
   def can_be_practiced_by?(user)
     return false unless course_offering.is_enrolled?(user)
 
-    workout_score = workout_scores.where(user: user).last
+    workout_score = workout_scores.loaded? ? workout_scores.select { |s| s.user_id == user.andand.id }.sort_by { |s| s.updated_at || Time.at(0) }.last : workout_scores.where(user: user).last
     return false if workout_score && workout_score.closed?
  
     now = Time.zone.now
-    user_ext = student_extensions.where(user: user).first
-    opens = user_extension.andand.opening_date || self.opening_date
+    user_ext = student_extensions.loaded? ? student_extensions.find { |e| e.user_id == user.andand.id } : student_extensions.where(user: user).first
+    opens = user_ext.andand.opening_date || self.opening_date
     deadline = hard_deadline_for(user)
 
     course_offering.is_staff?(user) ||

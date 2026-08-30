@@ -46,7 +46,7 @@ FactoryBot.define do
  factory :user do
    first_name { 'Joe' }
    last_name  { 'Hokie' }
-   email      { 'hokie@codeworkout.org' }
+   sequence(:email) { |n| "hokie-#{n}@codeworkout.org" }
    password   { 'hokiehokie' }
 #    password_confirmation 'hokiehokie'
    global_role { GlobalRole.regular_user }

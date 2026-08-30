@@ -25,7 +25,7 @@ class ExercisesController < ApplicationController
     # end
     @exercises = Exercise.publicly_visible
 
-    @exercises = @exercises.page params[:page]
+    @exercises = @exercises.includes(:languages, :tags, :current_version, :attempts).page params[:page]
   end
 
 
@@ -657,7 +657,8 @@ class ExercisesController < ApplicationController
       end
 
       should_force_lti = !@lti_launch &&
-        @workout_offering.andand.lms_assignment_id.present? &&
+        (@workout_offering.andand.lms_assignment_id.present? ||
+         @workout_offering.andand.lti_assignment_id.present?) &&
         (@workout_score.andand.lis_result_sourcedid.nil? ||
           @workout_score.andand.lis_outcome_service_url.nil?)
 
@@ -668,6 +669,7 @@ class ExercisesController < ApplicationController
         render 'lti/error' and return
       end
 
+      @workout_score = WorkoutScore.includes(scored_attempts: :exercise_version, attempts: []).find(@workout_score.id)
       @attempts_left = @workout_score
         .attempts_left_for_exercise_version(@exercise_version)
     end
@@ -851,6 +853,10 @@ class ExercisesController < ApplicationController
       @workout_score = @workout.score_for(@student_drift_user, nil,
                                           params[:lis_outcome_service_url],
                                           params[:lis_result_sourcedid])
+    end
+
+    if @workout_score
+      @workout_score = WorkoutScore.includes(scored_attempts: :exercise_version, attempts: []).find(@workout_score.id)
     end
 
     # Has the allotted time for the workout offering passed?

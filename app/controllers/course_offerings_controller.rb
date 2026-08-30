@@ -19,6 +19,24 @@ class CourseOfferingsController < ApplicationController
   end
 
 
+  # GET /courses/:organization_id/:course_id/:term_id/select_offering
+  def select_offering
+    @organization = Organization.find(params[:organization_id])
+    @course = Course.find_with_id_or_slug(params[:course_id], params[:organization_id])
+    @term = Term.find(params[:term_id])
+    candidate_ids = session[:candidate_course_offering_ids] || []
+    
+    @course_offerings = CourseOffering.where(id: candidate_ids)
+    
+    @workout_name = params[:workout_name]
+    @ext_lti_assignment_id = params[:ext_lti_assignment_id]
+    @custom_canvas_assignment_id = params[:custom_canvas_assignment_id]
+    @resource_link_id = params[:resource_link_id]
+    @from_collection = params[:from_collection]
+    
+    render layout: 'one_column'
+  end
+
   # -------------------------------------------------------------
   # GET /course_offerings/new
   def new
@@ -34,6 +52,27 @@ class CourseOfferingsController < ApplicationController
     if params[:new_course]
       flash.now[:success] = "#{@course.name} was successfully created in #{@organization.name}"
     end
+
+    @lti_payload = session[:lti_payload]
+    @course_offering = CourseOffering.new
+    
+    if @lti_payload
+      @course_offering.label = @lti_payload['context_label'] || @lti_payload['context_title'] || "#{@course.name} - #{@term.andand.display_name}"
+      @course_offering.lms_instance_id = @lti_payload['lms_instance_id']
+      @course_offering.lti_context_id = @lti_payload['lti_context_id']
+      @course_offering.canvas_course_id = @lti_payload['canvas_course_id']
+      
+      if @lti_payload['custom_section_ids'].present?
+        @custom_section_ids = @lti_payload['custom_section_ids'].split(',')
+        @custom_section_names = @lti_payload['custom_section_names'].to_s.split(',')
+      end
+    end
+    
+    @workout_name = params[:workout_name]
+    @ext_lti_assignment_id = params[:ext_lti_assignment_id]
+    @custom_canvas_assignment_id = params[:custom_canvas_assignment_id]
+    @resource_link_id = params[:resource_link_id]
+    @from_collection = params[:from_collection]
   end
 
 
@@ -67,31 +106,73 @@ class CourseOfferingsController < ApplicationController
 
   # POST /courses/:organization_id/:course_id/create_offering
   def create
-    @course_offering = CourseOffering.new(course_offering_params)
-
-    # until we figure out how to use formtastic hidden fields
     @course = Course.find_with_id_or_slug(
       params[:course_id], params[:organization_id]
     )
-    @course_offering.course = @course
 
-    if @course_offering.save
-      CourseEnrollment.create(
-        course_offering: @course_offering,
-        user: current_user,
-        course_role: CourseRole.instructor
-      )
+    created_offerings = []
 
-      redirect_to organization_course_path(
-        @course_offering.course.organization,
-        @course_offering.course,
-        @course_offering.term),
-        notice: "#{@course_offering.display_name} was successfully created."
+    if params[:batch_create_sections] == '1' && params[:custom_sections].is_a?(ActionController::Parameters)
+      params[:custom_sections].each do |idx, section_data|
+        next unless section_data[:create] == '1'
+        
+        co = CourseOffering.new(course_offering_params)
+        co.course = @course
+        co.label = section_data[:label]
+        co.lms_section_id = section_data[:lms_section_id]
+        
+        if co.save
+          CourseEnrollment.create(
+            course_offering: co,
+            user: current_user,
+            course_role: CourseRole.instructor
+          )
+          created_offerings << co
+        end
+      end
     else
-      redirect_to organization_new_course_offering_path(
+      @course_offering = CourseOffering.new(course_offering_params)
+      @course_offering.course = @course
+
+      if @course_offering.save
+        CourseEnrollment.create(
+          course_offering: @course_offering,
+          user: current_user,
+          course_role: CourseRole.instructor
+        )
+        created_offerings << @course_offering
+      end
+    end
+
+    if created_offerings.any?
+      if params[:workout_name].present?
+        redirect_to organization_find_workout_offering_path(
+          organization_id: params[:organization_id],
+          course_id: params[:course_id],
+          term_id: params[:term_id],
+          workout_name: params[:workout_name],
+          ext_lti_assignment_id: params[:ext_lti_assignment_id],
+          custom_canvas_assignment_id: params[:custom_canvas_assignment_id],
+          resource_link_id: params[:resource_link_id],
+          from_collection: params[:from_collection],
+          course_offering_id: created_offerings.first.id
+        ) and return
+      else
+        redirect_to organization_course_path(
+          created_offerings.first.course.organization,
+          created_offerings.first.course,
+          created_offerings.first.term),
+          notice: "#{created_offerings.size} course offering(s) successfully created."
+      end
+    else
+      @organization = Organization.find(params[:organization_id])
+      @url = organization_course_offering_create_path(
         organization_id: params[:organization_id],
         course_id: params[:course_id]
       )
+      @term = params[:term_id].nil? ? nil : Term.find(params[:term_id])
+      @course_offering ||= CourseOffering.new(course_offering_params)
+      render action: 'new'
     end
   end
 
@@ -362,10 +443,9 @@ class CourseOfferingsController < ApplicationController
     end
 
 
-    # -------------------------------------------------------------
     # Only allow a trusted parameter "white list" through.
     def course_offering_params
       params.require(:course_offering).permit(:course_id, :term_id,
-        :label, :url, :self_enrollment_allowed)
+        :label, :url, :self_enrollment_allowed, :lms_instance_id, :lti_context_id, :canvas_course_id, :lms_section_id)
     end
 end

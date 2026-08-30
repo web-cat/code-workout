@@ -36,7 +36,10 @@ class SseController < ApplicationController
 
   # -------------------------------------------------------------
   def feedback_update
-    @attempt = Attempt.find_by(id: params[:att_id])
+    @attempt = Attempt.includes(
+      workout_score: { workout: :exercise_workouts },
+      prompt_answers: { actable: { test_case_results: :test_case } }
+    ).find_by(id: params[:att_id])
     @attempts_exhausted = params[:attempts_exhausted].to_b
     @exercise_version = @attempt.exercise_version
     @exercise = @exercise_version.exercise
@@ -45,8 +48,7 @@ class SseController < ApplicationController
     workout_score = @attempt.workout_score
     if workout_score
       @workout = workout_score.workout
-      @max_points = @workout.exercise_workouts.where(exercise: @exercise).
-        first.points
+      @max_points = @workout.exercise_workouts.find { |ew| ew.exercise_id == @exercise.id }.andand.points || @exercise.experience
     end
 
     respond_to do |format|
