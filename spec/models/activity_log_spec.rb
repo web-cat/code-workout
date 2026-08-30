@@ -31,7 +31,7 @@
 #  fk_rails_...  (workout_id => workouts.id)
 #  fk_rails_...  (workout_offering_id => workout_offerings.id)
 #
-require 'rails_helper'
+require 'spec_helper'
 
 RSpec.describe ActivityLog, type: :model do
   pending "add some examples to (or delete) #{__FILE__}"

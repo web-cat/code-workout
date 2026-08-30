@@ -82,4 +82,59 @@ describe 'Workouts' do
       expect(new_workout.exercises).to include(*old_exercises, ex)
     end
   end
+
+  context ".create_from_workouts" do
+    before :each do
+      @user = FactoryBot.create :user
+      @w1 = FactoryBot.create :workout_with_exercises, creator: @user
+      @w2 = FactoryBot.create :workout_with_exercises, creator: @user
+    end
+
+    it "creates a new workout with given params and all exercises from the specified workouts" do
+      params = {
+        name: 'Combined Workout',
+        description: 'A test combined workout',
+        is_public: true,
+        creator: @user
+      }
+
+      new_workout = Workout.create_from_workouts(params, [@w1.id, @w2.id])
+
+      expect(new_workout).to be_persisted
+      expect(new_workout.name).to eq('Combined Workout')
+      expect(new_workout.description).to eq('A test combined workout')
+      expect(new_workout.is_public).to be true
+      expect(new_workout.creator).to eq(@user)
+      expect(new_workout.exercises.count).to eq(@w1.exercises.count + @w2.exercises.count)
+      expect(new_workout.exercises).to include(*@w1.exercises)
+      expect(new_workout.exercises).to include(*@w2.exercises)
+    end
+
+    it "avoids duplicate exercises if an exercise appears in multiple source workouts" do
+      # Add an exercise from w1 to w2
+      shared_ex = @w1.exercises.first
+      FactoryBot.create :exercise_workout, workout_id: @w2.id, exercise: shared_ex
+
+      params = {
+        name: 'Deduplicated Combined Workout',
+        creator: @user
+      }
+
+      new_workout = Workout.create_from_workouts(params, [@w1.id, @w2.id])
+      expect(new_workout.exercises.where(id: shared_ex.id).count).to eq(1)
+      expect(new_workout.exercises.count).to eq((@w1.exercises + @w2.exercises).uniq.count)
+    end
+
+    it "preserves exercise positions in sequential order" do
+      params = {
+        name: 'Sequential Combined Workout',
+        creator: @user
+      }
+
+      new_workout = Workout.create_from_workouts(params, [@w1.id, @w2.id])
+      positions = new_workout.exercise_workouts.order(:position).pluck(:position)
+      expect(positions).to eq((1..new_workout.exercise_workouts.count).to_a)
+    end
+  end
 end
+

@@ -2,6 +2,13 @@
 - method = action_name == 'edit' ? :put : :post
 = semantic_form_for @course_offering, url: url, html: { class: "form-horizontal col-xs-10", method: method } do |f|
   = f.semantic_errors
+
+  = hidden_field_tag :workout_name, @workout_name
+  = hidden_field_tag :ext_lti_assignment_id, @ext_lti_assignment_id
+  = hidden_field_tag :custom_canvas_assignment_id, @custom_canvas_assignment_id
+  = hidden_field_tag :resource_link_id, @resource_link_id
+  = hidden_field_tag :from_collection, @from_collection
+
   = f.inputs do
     = f.input :label, input_html: { placeholder: "e.g. MWF 10:00am" }
     = f.input :term, collection: Term.where('ends_on > (?)', DateTime.now)
@@ -9,6 +16,16 @@
     = f.input :self_enrollment_allowed, label: false
     %br
     = f.input :cutoff_date, as: :date_picker, hint: 'The last date for self-enrollment.'
+    
+    - if @course_offering.lms_instance_id.present?
+      = f.input :lms_instance_id, as: :hidden
+    - if @course_offering.lti_context_id.present?
+      = f.input :lti_context_id, as: :hidden
+    - if @course_offering.canvas_course_id.present?
+      = f.input :canvas_course_id, as: :hidden
+    - if @custom_section_ids && @custom_section_ids.size == 1
+      = f.input :lms_section_id, as: :hidden, input_html: { value: @custom_section_ids.first }
+      
   = f.actions do
     = f.action :submit, as: :button, button_html: { class: 'btn btn-primary' }
     = f.action :cancel, as: :link, label: 'Cancel', url: organizations_path, button_html: { class: 'btn btn-default' }

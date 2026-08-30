@@ -12,12 +12,7 @@
 }
 
 .parsons .sortable-code-container {
-    display: flex;
-    flex-direction: row;
-    align-items: flex-start;
-    gap: 10px;
     text-align: center;
-    overflow-x: auto;
 }
 .parsons .sortable-code-container:not(.block) {
     /* Remove text highlighting in widget */
@@ -30,10 +25,9 @@
     position: static;
     padding-left: 0px;
     margin: 0px 15px;
-    display: block;
+    display: inline-block;
     text-align: left;
     vertical-align: top;
-    flex-shrink: 0;
 }
 .parsons .source,
 .parsons .answer,
