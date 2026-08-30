@@ -8,6 +8,7 @@ class LtiController < ApplicationController
   def launch
     # must include the oauth proxy object
     require 'oauth/request_proxy/rack_request'
+    OAuth::RequestProxy.available_proxies[ActionDispatch::Request] ||= OAuth::RequestProxy::RackRequest
 
     render :error and return unless request.post? && lti_authorize!
 
