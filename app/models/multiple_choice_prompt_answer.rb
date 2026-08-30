@@ -15,7 +15,7 @@ class MultipleChoicePromptAnswer < ApplicationRecord
 
   #~ Relationships ............................................................
 
-  acts_as :prompt_answer
+  include ActablePromptAnswer
   has_and_belongs_to_many :choices, inverse_of: :multiple_choice_prompt_answers
 
 

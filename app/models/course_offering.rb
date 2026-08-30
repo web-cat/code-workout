@@ -116,7 +116,7 @@ class CourseOffering < ApplicationRecord
     if course_enrollments.loaded?
       course_enrollments.select { |ce| ce.course_role_id == CourseRole::STUDENT_ID }.map(&:user)
     else
-      course_enrollments.where(course_role_id: CourseRole.student).map(&:user)
+      course_enrollments.includes(:user).where(course_role_id: CourseRole.student).map(&:user)
     end
   end
 
@@ -129,7 +129,7 @@ class CourseOffering < ApplicationRecord
     if course_enrollments.loaded?
       course_enrollments.select { |ce| ce.course_role_id == CourseRole::INSTRUCTOR_ID }.map(&:user)
     else
-      course_enrollments.where(course_role_id: CourseRole.instructor).map(&:user)
+      course_enrollments.includes(:user).where(course_role_id: CourseRole.instructor).map(&:user)
     end
   end
 
@@ -156,7 +156,7 @@ class CourseOffering < ApplicationRecord
     if course_enrollments.loaded?
       course_enrollments.select { |ce| ce.course_role_id == CourseRole::GRADER_ID }.map(&:user)
     else
-      course_enrollments.where(course_role: CourseRole.grader).map(&:user)
+      course_enrollments.includes(:user).where(course_role: CourseRole.grader).map(&:user)
     end
   end
 
@@ -211,12 +211,11 @@ class CourseOffering < ApplicationRecord
 
   # -------------------------------------------------------------
   def role_for_user(user)
-    if user
-      if course_enrollments.loaded?
-        course_enrollments.find { |ce| ce.user_id == user.id }.andand.course_role
-      else
-        course_enrollments.where(user: user).first.andand.course_role
-      end
+    return nil unless user
+    if course_enrollments.loaded?
+      course_enrollments.find { |ce| ce.user_id == user.id }.andand.course_role
+    else
+      course_enrollments.includes(:course_role).find_by(user: user).andand.course_role
     end
   end
 

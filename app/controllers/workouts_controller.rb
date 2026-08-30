@@ -18,11 +18,82 @@ class WorkoutsController < ApplicationController
     :edit,
     :embed,
     :find_offering,
-    :new_or_existing
+    :new_or_existing,
+    :course_workout_practice
   ]
   respond_to :html, :js
 
   #~ Action methods ...........................................................
+
+  # -------------------------------------------------------------
+  # GET /courses/:organization_id/:course_id/:term_id/workouts/:id
+  def course_workout_show
+    @organization = Organization.find(params[:organization_id])
+    @course = Course.find_with_id_or_slug(params[:course_id], @organization)
+    @term = Term.find(params[:term_id])
+    @workout = Workout.find_by_id_or_name(params[:id], @course, @term)
+
+    if !@workout
+      flash[:error] = 'Workout not found.'
+      redirect_to organization_course_path(@organization, @course, @term) and return
+    end
+
+    @workout_offering = @workout.workout_offering_for(current_user, @course, @term)
+
+    if @workout_offering
+      # If student is not enrolled in any section, prompt them to enroll on course page
+      if current_user && !@workout_offering.course_offering.is_enrolled?(current_user) && !@workout_offering.course_offering.is_staff?(current_user)
+        flash[:notice] = 'Please enroll in a course section to access this workout.'
+        redirect_to organization_course_path(@organization, @course, @term) and return
+      end
+
+      redirect_to organization_workout_offering_path(
+        organization_id: @organization.slug,
+        course_id: @course.slug,
+        term_id: @term.slug,
+        id: @workout_offering.id
+      )
+    else
+      flash[:error] = 'This workout is not offered in this course and term.'
+      redirect_to organization_course_path(@organization, @course, @term)
+    end
+  end
+
+
+  # -------------------------------------------------------------
+  # GET /courses/:organization_id/:course_id/:term_id/workouts/:id/practice(/:exercise_id)
+  def course_workout_practice
+    @organization = Organization.find(params[:organization_id])
+    @course = Course.find_with_id_or_slug(params[:course_id], @organization)
+    @term = Term.find(params[:term_id])
+    @workout = Workout.find_by_id_or_name(params[:id], @course, @term)
+
+    if !@workout
+      flash[:error] = 'Workout not found.'
+      redirect_to organization_course_path(@organization, @course, @term) and return
+    end
+
+    @workout_offering = @workout.workout_offering_for(current_user, @course, @term)
+
+    if @workout_offering
+      if current_user && !@workout_offering.course_offering.is_enrolled?(current_user) && !@workout_offering.course_offering.is_staff?(current_user)
+        flash[:notice] = 'Please enroll in a course section to access this workout.'
+        redirect_to organization_course_path(@organization, @course, @term) and return
+      end
+
+      redirect_to organization_workout_offering_practice_path(
+        organization_id: @organization.slug,
+        course_id: @course.slug,
+        term_id: @term.slug,
+        id: @workout_offering.id,
+        exercise_id: params[:exercise_id],
+        lti_launch: params[:lti_launch]
+      )
+    else
+      flash[:error] = 'This workout is not offered in this course and term.'
+      redirect_to organization_course_path(@organization, @course, @term)
+    end
+  end
 
   # -------------------------------------------------------------
   # GET /workouts
@@ -32,6 +103,22 @@ class WorkoutsController < ApplicationController
     #     notice: 'Unauthorized to view all workouts' and return
     # end
     @workouts = Workout.where(is_public: true)
+      .includes(
+        :tags,
+        :exercise_workouts,
+        { exercises: :irt_data }
+      )
+      .page(params[:page])
+
+    if current_user
+      workout_ids = @workouts.map(&:id)
+      @workout_scores_by_workout_id = WorkoutScore.where(
+        user: current_user,
+        workout_offering_id: nil,
+        workout_id: workout_ids
+      ).order('updated_at DESC').group_by(&:workout_id)
+    end
+
     @gym = []
   end
 
@@ -129,7 +216,29 @@ class WorkoutsController < ApplicationController
           Have a look at these popular workouts instead.'
       } and return
     end
-    @exs = @workout.exercises.includes(:languages, :tags, :current_version)
+    @exs = @workout.exercises.includes(
+      { current_version: :prompts },
+      :tags,
+      :languages,
+      :styles,
+      :exercise_collection,
+      :exercise_owners
+    )
+
+    @workout_score = @workout.score_for(current_user, @workout_offering)
+
+    if @workout_score
+      @scoring_attempts_by_version_id = Attempt.where(
+        active_score_id: @workout_score.id
+      ).order('updated_at DESC').group_by(&:exercise_version_id)
+    elsif current_user
+      ex_version_ids = @exs.map(&:current_version_id).compact
+      @attempts_by_version_id = Attempt.where(
+        user: current_user,
+        workout_score_id: nil,
+        exercise_version_id: ex_version_ids
+      ).order('updated_at DESC').group_by(&:exercise_version_id)
+    end
   end
 
 
@@ -163,8 +272,23 @@ class WorkoutsController < ApplicationController
   # -------------------------------------------------------------
   # GET /gym
   def gym
-    @gym = Workout.includes(:tags, :exercise_workouts, :workout_scores, exercises: :irt_data).
-      where(is_public: true).order('created_at DESC').limit(12)
+    @gym = Workout.where(is_public: true)
+      .includes(
+        :tags,
+        :exercise_workouts,
+        { exercises: :irt_data }
+      )
+      .order('created_at DESC')
+      .limit(12)
+
+    if current_user
+      workout_ids = @gym.map(&:id)
+      @workout_scores_by_workout_id = WorkoutScore.where(
+        user: current_user,
+        workout_offering_id: nil,
+        workout_id: workout_ids
+      ).order('updated_at DESC').group_by(&:workout_id)
+    end
     # render layout: 'two_columns'
   end
 
@@ -375,11 +499,11 @@ class WorkoutsController < ApplicationController
         end
       end
 
-      @return_to = organization_workout_offering_path(
-        @workout_offering,
-        organization_id: @organization,
-        course_id: @course,
-        term_id: @term,
+      @return_to = organization_course_workout_path(
+        organization_id: @organization.slug,
+        course_id: @course.slug,
+        term_id: @term.slug,
+        id: @workout.id
       )
       @date_yaml = serialize_workout_offerings_to_yaml(@workout_offerings, @student_extensions)
     else
@@ -501,20 +625,18 @@ class WorkoutsController < ApplicationController
     @workout = @workout.update_or_create(workout_params)
 
     if @workout && course.present?
-      workout_offering_id = create_or_update_offerings(@workout)
-      if workout_offering_id
-        lti_params = session[:lti_params]
-        url = url_for(organization_workout_offering_path(
-            organization_id: params[:organization_id],
-            course_id: params[:course_id],
-            term_id: params[:term_id],
-            id: workout_offering_id,
-            lti_launch: @lti_launch
-          )
-        )
-      else
-        url = url_for(practice_workout_path(id: @workout.id))
+      create_or_update_offerings(@workout)
+      if @workout.errors.any?
+        render json: { error: @workout.errors.full_messages.join(', ') }, status: :unprocessable_entity and return
       end
+      url = url_for(organization_course_workout_path(
+          organization_id: params[:organization_id],
+          course_id: params[:course_id],
+          term_id: params[:term_id],
+          id: @workout.id,
+          lti_launch: @lti_launch
+        )
+      )
     elsif !@workout
       err_string = 'There was a problem while creating the workout.'
       url = url_for(root_path(notice: err_string))
@@ -959,16 +1081,17 @@ class WorkoutsController < ApplicationController
     @workout = @workout.update_or_create(workout_params)
 
     if @workout && params[:course_id].present?
-      workout_offering_id = create_or_update_offerings(@workout)
-      if workout_offering_id
-        url = url_for(organization_workout_offering_path(
-            organization_id: params[:organization_id],
-            term_id: params[:term_id],
-            course_id: params[:course_id],
-            id: workout_offering_id
-          )
-        )
+      create_or_update_offerings(@workout)
+      if @workout.errors.any?
+        render json: { error: @workout.errors.full_messages.join(', ') }, status: :unprocessable_entity and return
       end
+      url = url_for(organization_course_workout_path(
+          organization_id: params[:organization_id],
+          term_id: params[:term_id],
+          course_id: params[:course_id],
+          id: @workout.id
+        )
+      )
     elsif @workout
       url = url_for(workout_path(id: @workout.id))
     else
@@ -1054,7 +1177,12 @@ class WorkoutsController < ApplicationController
     # -------------------------------------------------------------
     # Use callbacks to share common setup or constraints between actions.
     def set_workout
-      @workout = Workout.includes(:tags, :exercise_workouts, :workout_offerings).find(params[:id])
+      @workout = Workout.includes(
+        :tags,
+        :owners,
+        :exercise_workouts,
+        { workout_offerings: :course_offering }
+      ).find(params[:id])
       @xp = 30
       @xptogo = 60
       @remain = 10
@@ -1079,7 +1207,18 @@ class WorkoutsController < ApplicationController
 
       if params[:date_yaml].present?
         begin
-          data = YAML.safe_load(params[:date_yaml])
+          data = begin
+            YAML.safe_load(
+              params[:date_yaml],
+              permitted_classes: [Date, Time, DateTime, ActiveSupport::TimeWithZone, Symbol],
+              aliases: true
+            )
+          rescue ArgumentError
+            YAML.safe_load(
+              params[:date_yaml],
+              [Date, Time, DateTime, ActiveSupport::TimeWithZone, Symbol]
+            )
+          end
           sections_yaml = data['sections'] || []
           extensions_yaml = data['extensions'] || []
           
@@ -1088,13 +1227,27 @@ class WorkoutsController < ApplicationController
           @term = Term.find(params[:term_id])
           
           managed_course_offerings = current_user.managed_course_offerings(course: @course, term: @term)
-          managed_course_offerings_map = managed_course_offerings.each_with_object({}) { |co, h| h[co.label] = co }
+          managed_course_offerings_map = {}
+          managed_course_offerings.each do |co|
+            managed_course_offerings_map[co.label.to_s.strip] = co
+            managed_course_offerings_map[co.display_name_with_term.strip] = co
+            managed_course_offerings_map[co.display_name.strip] = co
+            managed_course_offerings_map[co.display_name_with_org_and_term.strip] = co
+            managed_course_offerings_map[co.id.to_s] = co
+            managed_course_offerings_map[co.label.to_s.downcase.strip] = co if co.label.present?
+          end
           
           # 1. Handle Workout Offerings
           new_offerings_data = {}
           sections_yaml.each do |s|
-            label = s['section']
-            co = managed_course_offerings_map[label]
+            label_str = s['section'].to_s.strip
+            co = managed_course_offerings_map[label_str] ||
+                 managed_course_offerings_map[label_str.downcase]
+            if !co && label_str =~ /\((?:.*,\s*)?([^\)]+)\)\z/
+              extracted_label = $1.strip
+              co = managed_course_offerings_map[extracted_label] || managed_course_offerings_map[extracted_label.downcase]
+            end
+
             if co
               due = parse_date(s['due'], user_tz)
               from = parse_date(s['from'], user_tz, due, :from)
@@ -1107,7 +1260,7 @@ class WorkoutsController < ApplicationController
                 'extensions' => []
               }
             else
-              workout.errors.add(:base, "Course offering with label '#{label}' not found or not managed by you.")
+              workout.errors.add(:base, "Course offering with label '#{label_str}' not found or not managed by you.")
             end
           end
           
@@ -1315,6 +1468,12 @@ class WorkoutsController < ApplicationController
     def parse_date(date_str, tz, relative_to = nil, mode = nil)
       return nil if date_str.blank?
       
+      if date_str.is_a?(Time) || date_str.is_a?(DateTime) || date_str.is_a?(ActiveSupport::TimeWithZone)
+        return date_str.in_time_zone(tz)
+      elsif date_str.is_a?(Date)
+        return date_str.in_time_zone(tz).end_of_day
+      end
+      
       val = date_str.to_s.strip.downcase
       return nil if ['null', 'nil', 'empty'].include?(val)
       if mode == :from && ['always', 'unlimited'].include?(val)
@@ -1323,8 +1482,8 @@ class WorkoutsController < ApplicationController
       
       # Check for relative offset: +N days, -N hours, or just N days
       # Flexible regex: optional sign, float/int, flexible whitespace, abbreviated units
-      if relative_to && date_str.strip.match?(/^([+-]?)\s*(\d*\.?\d+)\s*([a-z]+)$/i)
-        match = date_str.strip.match(/^([+-]?)\s*(\d*\.?\d+)\s*([a-z]+)$/i)
+      if relative_to && date_str.to_s.strip.match?(/^([+-]?)\s*(\d*\.?\d+)\s*([a-z]+)$/i)
+        match = date_str.to_s.strip.match(/^([+-]?)\s*(\d*\.?\d+)\s*([a-z]+)$/i)
         sign = match[1]
         amount = match[2].to_f
         unit_str = match[3].downcase
@@ -1366,10 +1525,8 @@ class WorkoutsController < ApplicationController
       
       # Absolute date
       begin
-        # Use Time.zone.parse which respects the current zone if set, 
-        # but here we want to use the user's zone.
         Time.use_zone(tz) do
-          Time.zone.parse(date_str)
+          Time.zone.parse(date_str.to_s)
         end
       rescue
         nil

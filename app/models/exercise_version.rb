@@ -57,7 +57,6 @@ class ExerciseVersion < ApplicationRecord
   has_many :attempts, dependent: :destroy
   has_many :ownerships 
   has_many :resource_files, through: :ownerships
-  belongs_to :creator, class_name: 'User'
   belongs_to :irt_data, dependent: :destroy
 
 
@@ -265,7 +264,7 @@ class ExerciseVersion < ApplicationRecord
 
 
   # -------------------------------------------------------------
-  def new_attempt(args)
+  def new_attempt(args = {})
     num = 1
     user = args[:user]
     if user
@@ -277,13 +276,9 @@ class ExerciseVersion < ApplicationRecord
       submit_time: Time.zone.now,
       submit_num: num,
       ip_address: args[:ip_address]
-      )
+    )
     if args[:workout_score]
       attempt.workout_score = args[:workout_score]
-    end
-    args.merge!(attempt: attempt)
-    prompts.each do |prompt|
-      prompt.new_answer(args)
     end
     attempt
   end

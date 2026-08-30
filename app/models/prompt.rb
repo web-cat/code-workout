@@ -113,7 +113,6 @@ class Prompt < ApplicationRecord
     answer.attempt = args[:attempt]
     args[:attempt].prompt_answers << answer
     answer.prompt = self
-    prompt_answers << answer
     answer
   end
 

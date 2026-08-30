@@ -477,6 +477,8 @@ Rails.application.routes.draw do
     get ':course_id/:term_id/workouts/new' => 'workouts#new', as: :new_workout
     get ':course_id/:term_id/workouts/:workout_id/clone' => 'workouts#clone', as: :clone_workout
     get ':course_id/:term_id/workouts/new_or_existing' => 'workouts#new_or_existing', as: :new_or_existing_workout
+    get ':course_id/:term_id/workouts/:id/practice(/:exercise_id)' => 'workouts#course_workout_practice', as: :course_workout_practice
+    get ':course_id/:term_id/workouts/:id' => 'workouts#course_workout_show', as: :course_workout
     get ':course_id/:term_id/:workout_offering_id/edit_workout' => 'workouts#edit', as: :edit_workout
     get ':course_id/:term_id/:id/practice(/:exercise_id)' => 'workout_offerings#practice', as: :workout_offering_practice
     get ':course_id/:term_id/find_offering/:workout_name' => 'workouts#find_offering', as: :find_workout_offering

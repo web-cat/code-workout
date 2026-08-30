@@ -43,13 +43,13 @@ FactoryBot.define do
         exercise_creator = evaluator.creator || FactoryBot.create(:user)
         
         FactoryBot.create :exercise_workout,
-          workout_id: w.id,
+          workout: w,
           exercise: FactoryBot.create(:coding_exercise, creator: exercise_creator)
         FactoryBot.create :exercise_workout,
-          workout_id: w.id,
+          workout: w,
           exercise: FactoryBot.create(:mc_exercise, creator: exercise_creator)
         FactoryBot.create :exercise_workout,
-          workout_id: w.id,
+          workout: w,
           exercise: FactoryBot.create(:coding_exercise, creator: exercise_creator)
       end
     end

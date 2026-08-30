@@ -52,7 +52,7 @@ FactoryBot.define do
 
     factory :coding_exercise do
       transient do
-        creator { FactoryBot.create :user }
+        creator { nil }
         question { "Write a function in Java called `factorial()` that will "\
           "take a\npositive integer as input and returns its factorial as "\
           "output.\n" }
@@ -83,9 +83,10 @@ FactoryBot.define do
       style_list { 'code writing' }
 
       after :create do |e, v|
+        creator_user = (v.creator && v.creator.persisted?) ? v.creator : FactoryBot.create(:user)
         e.current_version = FactoryBot.create :exercise_version,
           exercise: e,
-          creator: v.creator
+          creator: creator_user
         e.exercise_versions << e.current_version
         FactoryBot.create :coding_prompt,
           exercise_version: e.current_version,
@@ -102,7 +103,7 @@ FactoryBot.define do
 
     factory :mc_exercise do
       transient do
-        creator { FactoryBot.create :user }
+        creator { nil }
         question { "This is a sample multiple choice question.  It has only "\
           "one correct answer.\n" }
         feedback { "Explanation for the correct answer goes here.  This is "\
@@ -115,9 +116,10 @@ FactoryBot.define do
       style_list { 'forced choice' }
 
       after :create do |e, v|
+        creator_user = (v.creator && v.creator.persisted?) ? v.creator : FactoryBot.create(:user)
         e.current_version = FactoryBot.create :exercise_version,
           exercise: e,
-          creator: v.creator
+          creator: creator_user
         e.exercise_versions << e.current_version
         FactoryBot.create :mc_with_choices,
           exercise_version: e.current_version,
