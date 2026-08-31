@@ -194,7 +194,8 @@ class WorkoutOfferingsController < ApplicationController
         workout_offering_id: @workout_offering.id,
         lis_result_sourcedid: lis_result_sourcedid,
         lis_outcome_service_url: lis_outcome_service_url,
-        lti_launch: @lti_launch
+        lti_launch: @lti_launch,
+        launch_presentation_document_target: params[:launch_presentation_document_target]
       )
     else
       redirect_to root_path, notice: 'Workout offering not found' and return
