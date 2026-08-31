@@ -509,7 +509,7 @@ class Workout < ApplicationRecord
     split_terms = terms.blank? ? '.' : terms.join('|')
 
     if user
-      available_workouts = Workout.includes(:tags, :exercise_workouts, :workout_scores, exercises: :irt_data).where(
+      available_workouts = Workout.includes(:tags, :exercise_workouts, exercises: :irt_data).where(
         id: (Workout.visible_to_user(user).union(user.managed_workouts))
         .map(&:id)
       )
@@ -558,7 +558,7 @@ class Workout < ApplicationRecord
         return results
       end
     else
-      available_workouts = Workout.includes(:tags, :exercise_workouts, :workout_scores, exercises: :irt_data).where(is_public: true)
+      available_workouts = Workout.includes(:tags, :exercise_workouts, exercises: :irt_data).where(is_public: true)
     end
 
     return available_workouts.tagged_with(terms, any: true, wild: true, on: :tags) +
