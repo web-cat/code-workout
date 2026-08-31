@@ -95,7 +95,7 @@
     - elsif @workout_offering.nil?
       = link_to 'Start Workout', practice_workout_path(params[:id]), |
         class: 'btn btn-primary'
-    - if manages_course || current_user == @workout.creator || @workout.owners.exists?(current_user)
+    - if manages_course || (current_user && (current_user == @workout.creator || @workout.owners.exists?(current_user.id)))
       - if @workout_offering
         = link_to 'Edit Workout',
           organization_edit_workout_path(organization_id: @organization.slug,
