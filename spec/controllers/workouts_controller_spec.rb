@@ -225,4 +225,108 @@ describe WorkoutsController do
       expect(result).to eq(time_obj.in_time_zone(tz))
     end
   end
+
+  describe "GET #find_offering" do
+    let(:organization) { FactoryBot.build_stubbed(:organization, slug: 'vt') }
+    let(:course) { FactoryBot.build_stubbed(:course, slug: 'cs1114', organization: organization) }
+    let(:term) { FactoryBot.build_stubbed(:term, slug: 'fall2026') }
+    let(:workout) { FactoryBot.build_stubbed(:workout, id: 10, name: 'Practice Workout') }
+    let(:course_offering) do
+      FactoryBot.build_stubbed(:course_offering, id: 101, course: course, term: term, label: 'Section 1')
+    end
+    let(:workout_offering) do
+      FactoryBot.build_stubbed(:workout_offering, id: 201, workout: workout, course_offering: course_offering)
+    end
+    let(:user) { FactoryBot.build_stubbed(:user, id: 1) }
+
+    before do
+      allow(controller).to receive(:current_user).and_return(user)
+      allow(User).to receive(:find).with(user.id.to_s).and_return(user)
+      allow(Term).to receive(:find).with('fall2026').and_return(term)
+      allow(Course).to receive(:find_with_id_or_slug).with('cs1114', 'vt').and_return(course)
+      allow(user).to receive(:is_enrolled?).with(course_offering).and_return(false)
+      allow(CourseEnrollment).to receive(:create).and_return(true)
+      allow(workout_offering).to receive(:changed?).and_return(false)
+      allow(course_offering).to receive(:changed?).and_return(false)
+    end
+
+    it "directly resolves to practice when WorkoutOffering exists with matching ext_lti_assignment_id" do
+      allow(WorkoutOffering).to receive(:find_by).with(
+        lms_instance_id: '1',
+        lti_assignment_id: 'ext_assignment_100'
+      ).and_return(workout_offering)
+
+      get :find_offering, params: {
+        organization_id: 'vt',
+        course_id: 'cs1114',
+        term_id: 'fall2026',
+        workout_name: 'Practice Workout',
+        user_id: user.id.to_s,
+        lms_instance_id: '1',
+        ext_lti_assignment_id: 'ext_assignment_100'
+      }
+
+      expect(response).to redirect_to(
+        organization_workout_offering_practice_path(
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          id: 201,
+          lti_launch: true
+        )
+      )
+    end
+
+    it "resolves when WorkoutOffering exists with legacy compound assignment id" do
+      allow(WorkoutOffering).to receive(:find_by).with(
+        lms_instance_id: '1',
+        lti_assignment_id: 'legacy_100'
+      ).and_return(nil)
+      allow(WorkoutOffering).to receive(:find_by).with(
+        lms_instance_id: '1',
+        lms_assignment_id: 'legacy_100'
+      ).and_return(nil)
+      allow(WorkoutOffering).to receive(:find_by).with(
+        lms_assignment_id: '1-legacy_100'
+      ).and_return(workout_offering)
+
+      get :find_offering, params: {
+        organization_id: 'vt',
+        course_id: 'cs1114',
+        term_id: 'fall2026',
+        workout_name: 'Practice Workout',
+        user_id: user.id.to_s,
+        lms_instance_id: '1',
+        ext_lti_assignment_id: 'legacy_100'
+      }
+
+      expect(response).to redirect_to(
+        organization_workout_offering_practice_path(
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          id: 201,
+          lti_launch: true
+        )
+      )
+    end
+
+    it "renders lti/error for student when no workout offering and no candidate course offerings exist" do
+      allow(WorkoutOffering).to receive(:find_by).and_return(nil)
+      allow(user).to receive(:course_offerings_for_term).and_return([])
+
+      get :find_offering, params: {
+        organization_id: 'vt',
+        course_id: 'cs1114',
+        term_id: 'fall2026',
+        workout_name: 'Nonexistent Workout',
+        user_id: user.id.to_s,
+        lms_instance_id: '1',
+        ext_lti_assignment_id: 'unmatched_id'
+      }, session: { is_instructor: false }
+
+      expect(response.status).to eq(200)
+      expect(controller.instance_variable_get(:@message)).to include("not yet available")
+    end
+  end
 end
