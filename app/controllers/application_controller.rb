@@ -69,13 +69,16 @@ class ApplicationController < ActionController::Base
     token = (rand(90000000) + 10000000).to_s
     session[:lti_contexts] ||= {}
     session[:lti_contexts][token] = {
-      lms_instance_id: lms_instance_id,
-      timestamp: Time.now.to_i
+      'lms_instance_id' => lms_instance_id,
+      'timestamp' => Time.now.to_i
     }
     
     # Keep only the last 2 launches to minimize cookie size
     if session[:lti_contexts].size > 2
-      oldest_token = session[:lti_contexts].keys.sort_by { |t| session[:lti_contexts][t][:timestamp] }.first
+      oldest_token = session[:lti_contexts].keys.min_by do |t|
+        ctx = session[:lti_contexts][t]
+        ctx.is_a?(Hash) ? (ctx['timestamp'] || ctx[:timestamp] || 0) : 0
+      end
       session[:lti_contexts].delete(oldest_token)
     end
     
@@ -85,8 +88,9 @@ class ApplicationController < ActionController::Base
 
   # -------------------------------------------------------------
   def lti_context_for_token(token)
-    return nil if token.blank?
-    session[:lti_contexts].andand[token.to_s]
+    return nil if token.blank? || !session[:lti_contexts].is_a?(Hash)
+    ctx = session[:lti_contexts][token.to_s] || session[:lti_contexts][token.to_sym]
+    ctx.is_a?(Hash) ? ctx.with_indifferent_access : nil
   end
 
 end
