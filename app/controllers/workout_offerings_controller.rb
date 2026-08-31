@@ -297,10 +297,9 @@ class WorkoutOfferingsController < ApplicationController
           :tags,
           :owners,
           :exercise_workouts,
-          { exercises: :current_version },
-          { workout_offerings: { course_offering: :course_enrollments } }
+          { exercises: :current_version }
         ],
-        course_offering: [:term, { course: :organization }, :course_enrollments]
+        course_offering: [:term, { course: :organization }]
       ).find_by(id: params[:id])
       return unless @workout_offering
 
