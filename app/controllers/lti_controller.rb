@@ -67,6 +67,7 @@ class LtiController < ApplicationController
     session[:lis_result_sourcedid] = params[:lis_result_sourcedid]
     session[:lms_instance_id] = @lms_instance.id
     session[:is_instructor] = @tp.context_instructor?
+    session[:lti_document_target] = params[:launch_presentation_document_target]
 
     @lti_token = generate_lti_launch_token(@lms_instance.id)
 
@@ -81,7 +82,8 @@ class LtiController < ApplicationController
           redirect_to new_or_existing_workout_path(
             lti_launch: @lti_token,
             lms_instance_id: @lms_instance.id,
-            lti_assignment_id: ext_lti_assignment_id
+            lti_assignment_id: ext_lti_assignment_id,
+            launch_presentation_document_target: params[:launch_presentation_document_target]
           ) and return
         else
           @message = 'The requested workout does not exist, and your role does
@@ -106,7 +108,8 @@ class LtiController < ApplicationController
         lti_launch: @lti_token,
         lti_workout_id: lti_workout.id,
         lis_outcome_service_url: params[:lis_outcome_service_url],
-        lis_result_sourcedid: params[:lis_result_sourcedid]
+        lis_result_sourcedid: params[:lis_result_sourcedid],
+        launch_presentation_document_target: params[:launch_presentation_document_target]
       ) and return
     end
 
@@ -191,7 +194,8 @@ class LtiController < ApplicationController
       context_label: params[:context_label],
       context_title: params[:context_title],
       custom_section_ids: params[:custom_section_ids],
-      custom_section_names: params[:custom_section_names]
+      custom_section_names: params[:custom_section_names],
+      launch_presentation_document_target: params[:launch_presentation_document_target]
     )
   end
 

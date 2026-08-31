@@ -26,5 +26,21 @@ RSpec.describe SseController, type: :controller do
       expect(controller.instance_variable_get(:@exercise)).to eq(mock_exercise)
       expect(controller.instance_variable_get(:@max_points)).to eq(50)
     end
+
+    it "assigns @workout_score, @workout, and @workout_offering when workout_score is present" do
+      mock_offering = double("WorkoutOffering", id: 99)
+      mock_workout = double("Workout", id: 88, exercise_workouts: [])
+      allow(mock_workout.exercise_workouts).to receive(:loaded?).and_return(false)
+      allow(mock_workout.exercise_workouts).to receive_message_chain(:where, :first).and_return(nil)
+      mock_score = double("WorkoutScore", id: 77, workout: mock_workout, workout_offering: mock_offering)
+
+      allow(mock_attempt).to receive(:workout_score).and_return(mock_score)
+
+      get :feedback_update, params: { att_id: 1, format: :js }
+      expect(response.status).to eq(200)
+      expect(controller.instance_variable_get(:@workout_score)).to eq(mock_score)
+      expect(controller.instance_variable_get(:@workout)).to eq(mock_workout)
+      expect(controller.instance_variable_get(:@workout_offering)).to eq(mock_offering)
+    end
   end
 end
