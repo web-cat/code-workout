@@ -314,4 +314,14 @@ module ApplicationHelper
     end
   end
 
+
+  # -------------------------------------------------------------
+  # Checks whether the current request is an LTI launch running inside
+  # an embedded iframe (default) rather than in a standalone window/tab.
+  def embedded_lti_launch?
+    return false unless params[:lti_launch].present? || @lti_launch.present?
+    target = params[:launch_presentation_document_target] || session[:lti_document_target]
+    target != 'window'
+  end
+
 end

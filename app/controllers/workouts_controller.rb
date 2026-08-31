@@ -674,6 +674,7 @@ class WorkoutsController < ApplicationController
     custom_section_names = params[:custom_section_names] || payload['custom_section_names']
     context_label = params[:context_label] || payload['context_label']
     context_title = params[:context_title] || payload['context_title']
+    launch_presentation_document_target = params[:launch_presentation_document_target] || payload['launch_presentation_document_target'] || session[:lti_document_target]
     
     resource_link_id = params[:resource_link_id]
     lms_section_ids = custom_section_ids.to_s.split(',')
@@ -682,6 +683,8 @@ class WorkoutsController < ApplicationController
     @lms_assignment_id = ext_lti_assignment_id
     
     role = session[:is_instructor].to_b ? CourseRole.instructor : CourseRole.student
+
+    session[:lti_document_target] = launch_presentation_document_target if launch_presentation_document_target.present?
 
     # LTI_MATCHING_VERIFICATION_LOGGING: Log initial parameter state
     Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Starting LTI Launch matching strategy. Parameters: " \
@@ -697,6 +700,7 @@ class WorkoutsController < ApplicationController
       "resource_link_id: #{resource_link_id}, " \
       "ext_lti_assignment_id: #{ext_lti_assignment_id}, " \
       "custom_canvas_assignment_id: #{custom_canvas_assignment_id}, " \
+      "launch_presentation_document_target: #{launch_presentation_document_target}, " \
       "role: #{role.name}, " \
       "is_instructor: #{role.is_instructor?}"
 
@@ -707,7 +711,8 @@ class WorkoutsController < ApplicationController
       custom_section_ids: custom_section_ids,
       custom_section_names: custom_section_names,
       context_label: context_label,
-      context_title: context_title
+      context_title: context_title,
+      launch_presentation_document_target: launch_presentation_document_target
     }
 
     # =========================================================================
@@ -955,7 +960,8 @@ class WorkoutsController < ApplicationController
       organization_id: params[:organization_id],
       term_id: params[:term_id],
       course_id: params[:course_id],
-      lti_launch: true
+      lti_launch: true,
+      launch_presentation_document_target: launch_presentation_document_target
     )
   end
 
