@@ -182,7 +182,7 @@ class Exercise < ApplicationRecord
     end
 
     result = visible.where(id: all_matching_ids)
-                    .includes(:languages, :tags, :current_version, :attempts)
+                    .includes(:languages, :tags, :current_version)
 
     # Sort results by best match order
     begin
