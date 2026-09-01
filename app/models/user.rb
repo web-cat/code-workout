@@ -308,7 +308,7 @@ class User < ApplicationRecord
   def managed_workouts
     course_enrollments.
       joins(:course_role, course_offering: { course: { user_group: :memberships } }).
-      where(course_role:
+      where(course_roles:
         { can_manage_course: true }, course_offering:
           { course:
             { user_group:
@@ -914,7 +914,7 @@ class User < ApplicationRecord
     end
 
     # patch for VT Canvas non-PID e-mails
-    if user && canvas_login.andand.match(Devise.email_regexp).nil?
+    if user && canvas_login.present? && canvas_login.match(Devise.email_regexp).nil?
       email = "#{canvas_login}@#{domain}" # PID-like email
       if email != user.email
         to_merge = User.find_by(email: email)
@@ -951,7 +951,12 @@ class User < ApplicationRecord
       last_name: opts[:last_name]
     )
     user.skip_password_validation = true
-    user.save!
+    begin
+      user.save!
+    rescue ActiveRecord::RecordNotUnique
+      # Handle race condition where a concurrent LTI launch already created the user
+      user = User.find_by(email: lis_email)
+    end
 
     return user
   end
