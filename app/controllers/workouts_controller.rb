@@ -314,6 +314,10 @@ class WorkoutsController < ApplicationController
         id: @course.slug,
         term_id: @term.slug
       )
+      @date_yaml = serialize_workout_offerings_to_yaml(@course_offerings, [])
+    else
+      @return_to = workouts_path
+      @date_yaml = serialize_workout_offerings_to_yaml([], [])
     end
 
     # Only let the user through if
@@ -592,13 +596,16 @@ class WorkoutsController < ApplicationController
       @course_offerings =
         current_user.andand.managed_course_offerings(course: @course, term: @term)
       @unused_course_offerings = nil
+      @return_to = organization_course_path(
+        organization_id: @organization.slug,
+        id: @course.slug,
+        term_id: @term.slug
+      )
+      @date_yaml = serialize_workout_offerings_to_yaml(@course_offerings, [])
+    else
+      @return_to = workouts_path
+      @date_yaml = serialize_workout_offerings_to_yaml([], [])
     end
-
-    @return_to = organization_course_path(
-      organization_id: @organization.slug,
-      id: @course.slug,
-      term_id: @term.slug
-    )
 
     render layout: 'two_columns'
   end
@@ -1397,14 +1404,18 @@ class WorkoutsController < ApplicationController
 
     # -------------------------------------------------------------
     def serialize_workout_offerings_to_yaml(workout_offerings, student_extensions)
-      user_tz = current_user.time_zone.andand.name || 'America/New_York'
+      user_tz = current_user.andand.time_zone.andand.name || 'America/New_York'
       
-      sections = workout_offerings.map do |wo|
+      sections = (workout_offerings || []).map do |wo|
+        course_offering = wo.respond_to?(:course_offering) ? wo.course_offering : wo
+        soft_deadline = wo.respond_to?(:soft_deadline) ? wo.soft_deadline : nil
+        opening_date = wo.respond_to?(:opening_date) ? wo.opening_date : nil
+        hard_deadline = wo.respond_to?(:hard_deadline) ? wo.hard_deadline : nil
         {
-          'section' => wo.course_offering.display_name_with_term,
-          'due' => format_date(wo.soft_deadline, user_tz),
-          'from' => format_rel_date(wo.opening_date, wo.soft_deadline, user_tz) || 'always',
-          'until' => format_rel_date(wo.hard_deadline, wo.soft_deadline, user_tz) || '+0 minutes'
+          'section' => course_offering.display_name_with_term,
+          'due' => format_date(soft_deadline, user_tz),
+          'from' => format_rel_date(opening_date, soft_deadline, user_tz) || 'always',
+          'until' => format_rel_date(hard_deadline, soft_deadline, user_tz) || '+0 minutes'
         }
       end
 
