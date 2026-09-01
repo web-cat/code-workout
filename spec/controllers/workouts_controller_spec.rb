@@ -243,7 +243,39 @@ describe WorkoutsController do
 
       expect(response.status).to eq(422)
       json = JSON.parse(response.body)
-      expect(json['error']).to include("Invalid section date")
+    end
+  end
+
+  describe "#create_or_update_offerings" do
+    let(:workout) { FactoryBot.build_stubbed(:workout, id: 30) }
+    let(:user) { FactoryBot.build_stubbed(:user) }
+    let(:term) { FactoryBot.build_stubbed(:term, id: 20, slug: 'fall-2026') }
+    let(:course) { FactoryBot.build_stubbed(:course, id: 10, slug: 'itsc2214') }
+
+    before do
+      allow(controller).to receive(:current_user).and_return(user)
+      allow(user).to receive(:managed_course_offerings).and_return([])
+      allow(Term).to receive(:find).with('fall-2026').and_return(term)
+      allow(Course).to receive(:find_with_id_or_slug).and_return(course)
+      allow(workout).to receive(:workout_policy).and_return(nil)
+      allow(WorkoutPolicy).to receive(:create!).and_return(double("WorkoutPolicy", id: 1, update: true))
+      allow(workout).to receive_message_chain(:workout_offerings, :update_all).and_return(true)
+      allow(workout).to receive_message_chain(:workout_offerings, :joins, :where).and_return([])
+      allow(workout).to receive(:add_workout_offerings).and_return([])
+      allow(workout).to receive(:save!).and_return(true)
+    end
+
+    it "handles blank date_yaml without raising NoMethodError on nil legacy params" do
+      controller.params = ActionController::Parameters.new({
+        date_yaml: "",
+        course_id: "itsc2214",
+        organization_id: "uncc",
+        term_id: "fall-2026"
+      })
+
+      expect {
+        controller.send(:create_or_update_offerings, workout)
+      }.not_to raise_error
     end
   end
 

@@ -1238,121 +1238,127 @@ class WorkoutsController < ApplicationController
       common[:lms_assignment_id] = params[:lms_assignment_id]
       common[:lti_assignment_id] = params[:lti_assignment_id]
 
-      if params[:date_yaml].present?
+      if params[:date_yaml].present? || params[:course_offerings].blank?
         begin
-          data = begin
-            YAML.safe_load(
-              params[:date_yaml],
-              permitted_classes: [Date, Time, DateTime, ActiveSupport::TimeWithZone, Symbol],
-              aliases: true
-            )
-          rescue ArgumentError
-            YAML.safe_load(
-              params[:date_yaml],
-              [Date, Time, DateTime, ActiveSupport::TimeWithZone, Symbol]
-            )
-          end
+          data = if params[:date_yaml].present?
+                   begin
+                     YAML.safe_load(
+                       params[:date_yaml],
+                       permitted_classes: [Date, Time, DateTime, ActiveSupport::TimeWithZone, Symbol],
+                       aliases: true
+                     )
+                   rescue ArgumentError
+                     YAML.safe_load(
+                       params[:date_yaml],
+                       [Date, Time, DateTime, ActiveSupport::TimeWithZone, Symbol]
+                     )
+                   end
+                 else
+                   {}
+                 end || {}
+
           sections_yaml = data['sections'] || []
           extensions_yaml = data['extensions'] || []
           
           user_tz = current_user.time_zone.andand.name || 'America/New_York'
           @course = Course.find_with_id_or_slug(params[:course_id], params[:organization_id])
-          @term = Term.find(params[:term_id])
+          @term = Term.find(params[:term_id]) if params[:term_id].present?
           
-          managed_course_offerings = current_user.managed_course_offerings(course: @course, term: @term)
-          managed_course_offerings_map = {}
-          managed_course_offerings.each do |co|
-            managed_course_offerings_map[co.label.to_s.strip] = co
-            managed_course_offerings_map[co.display_name_with_term.strip] = co
-            managed_course_offerings_map[co.display_name.strip] = co
-            managed_course_offerings_map[co.display_name_with_org_and_term.strip] = co
-            managed_course_offerings_map[co.id.to_s] = co
-            managed_course_offerings_map[co.label.to_s.downcase.strip] = co if co.label.present?
-          end
-          
-          # 1. Handle Workout Offerings
-          new_offerings_data = {}
-          sections_yaml.each do |s|
-            label_str = s['section'].to_s.strip
-            co = managed_course_offerings_map[label_str] ||
-                 managed_course_offerings_map[label_str.downcase]
-            if !co && label_str =~ /\((?:.*,\s*)?([^\)]+)\)\z/
-              extracted_label = $1.strip
-              co = managed_course_offerings_map[extracted_label] || managed_course_offerings_map[extracted_label.downcase]
+          if @term
+            managed_course_offerings = current_user.managed_course_offerings(course: @course, term: @term)
+            managed_course_offerings_map = {}
+            managed_course_offerings.each do |co|
+              managed_course_offerings_map[co.label.to_s.strip] = co
+              managed_course_offerings_map[co.display_name_with_term.strip] = co
+              managed_course_offerings_map[co.display_name.strip] = co
+              managed_course_offerings_map[co.display_name_with_org_and_term.strip] = co
+              managed_course_offerings_map[co.id.to_s] = co
+              managed_course_offerings_map[co.label.to_s.downcase.strip] = co if co.label.present?
             end
+            
+            # 1. Handle Workout Offerings
+            new_offerings_data = {}
+            sections_yaml.each do |s|
+              label_str = s['section'].to_s.strip
+              co = managed_course_offerings_map[label_str] ||
+                   managed_course_offerings_map[label_str.downcase]
+              if !co && label_str =~ /\((?:.*,\s*)?([^\)]+)\)\z/
+                extracted_label = $1.strip
+                co = managed_course_offerings_map[extracted_label] || managed_course_offerings_map[extracted_label.downcase]
+              end
 
-            if co
-              due = parse_date(s['due'], user_tz)
-              from = parse_date(s['from'], user_tz, due, :from)
-              until_date = parse_date(s['until'], user_tz, due, :until)
-              
-              new_offerings_data[co.id.to_s] = {
-                'opening_date' => from.andand.to_i.andand.*(1000), # millisecond timestamp for add_workout_offerings
-                'soft_deadline' => due.andand.to_i.andand.*(1000),
-                'hard_deadline' => until_date.andand.to_i.andand.*(1000),
-                'extensions' => []
-              }
-            else
-              workout.errors.add(:base, "Course offering with label '#{label_str}' not found or not managed by you.")
+              if co
+                due = parse_date(s['due'], user_tz)
+                from = parse_date(s['from'], user_tz, due, :from)
+                until_date = parse_date(s['until'], user_tz, due, :until)
+                
+                new_offerings_data[co.id.to_s] = {
+                  'opening_date' => from.andand.to_i.andand.*(1000), # millisecond timestamp for add_workout_offerings
+                  'soft_deadline' => due.andand.to_i.andand.*(1000),
+                  'hard_deadline' => until_date.andand.to_i.andand.*(1000),
+                  'extensions' => []
+                }
+              else
+                workout.errors.add(:base, "Course offering with label '#{label_str}' not found or not managed by you.")
+              end
             end
-          end
-          
-          # Identify removed offerings
-          existing_offerings = workout.workout_offerings.joins(:course_offering).where(course_offerings: { term_id: @term.id })
-          existing_offering_ids = existing_offerings.map(&:id)
-          kept_offering_co_ids = new_offerings_data.keys.map(&:to_i)
-          
-          offerings_to_delete = existing_offerings.reject { |wo| kept_offering_co_ids.include?(wo.course_offering_id) }
-          offerings_to_delete.each(&:destroy)
-          
-          # Update/Create Offerings
-          workout_offerings = workout.add_workout_offerings(new_offerings_data, common)
-          
-          # 2. Handle Student Extensions
-          # First, clear existing extensions for this workout in this term
-          # (Easier to rebuild than to diff grouped YAML)
-          workout_offerings_in_term = workout.workout_offerings.joins(:course_offering).where(course_offerings: { term_id: @term.id })
-          StudentExtension.where(workout_offering_id: workout_offerings_in_term.map(&:id)).destroy_all
-          
-          extensions_yaml.each do |ext_group|
+            
+            # Identify removed offerings
+            existing_offerings = workout.workout_offerings.joins(:course_offering).where(course_offerings: { term_id: @term.id })
+            existing_offering_ids = existing_offerings.map(&:id)
+            kept_offering_co_ids = new_offerings_data.keys.map(&:to_i)
+            
+            offerings_to_delete = existing_offerings.reject { |wo| kept_offering_co_ids.include?(wo.course_offering_id) }
+            offerings_to_delete.each(&:destroy)
+            
+            # Update/Create Offerings
+            workout_offerings = workout.add_workout_offerings(new_offerings_data, common)
+            
+            # 2. Handle Student Extensions
+            # First, clear existing extensions for this workout in this term
+            workout_offerings_in_term = workout.workout_offerings.joins(:course_offering).where(course_offerings: { term_id: @term.id })
+            StudentExtension.where(workout_offering_id: workout_offerings_in_term.map(&:id)).destroy_all
+            
+            extensions_yaml.each do |ext_group|
               due = parse_date(ext_group['due'], user_tz)
               from = parse_date(ext_group['from'], user_tz, due, :from)
               until_date = parse_date(ext_group['until'], user_tz, due, :until)
-            students = ext_group['students'] || []
-            
-            students.each do |student_ref|
-              next if student_ref == '<insert email here>'
+              students = ext_group['students'] || []
               
-              # Extract email from "Name <email>" or just "email"
-              email = student_ref.match(/<([^>]+)>/).andand[1] || student_ref.strip
-              student = User.find_by(email: email)
-              if !student
-                # Try name match
-                student = User.where("CONCAT(first_name, ' ', last_name) = ?", student_ref.strip).first
-              end
-              
-              if student
-                # Check enrollment in any of the workout offerings in this term
-                enrolled_offering = workout_offerings_in_term.find { |wo| wo.course_offering.is_enrolled?(student) }
-                if enrolled_offering
-                  StudentExtension.create!(
-                    user: student,
-                    workout_offering: enrolled_offering,
-                    opening_date: from,
-                    soft_deadline: due,
-                    hard_deadline: until_date
-                  )
-                else
-                  workout.errors.add(:base, "Student '#{student_ref}' is not enrolled in any sections for this workout.")
+              students.each do |student_ref|
+                next if student_ref == '<insert email here>'
+                
+                # Extract email from "Name <email>" or just "email"
+                email = student_ref.match(/<([^>]+)>/).andand[1] || student_ref.strip
+                student = User.find_by(email: email)
+                if !student
+                  # Try name match
+                  student = User.where("CONCAT(first_name, ' ', last_name) = ?", student_ref.strip).first
                 end
-              else
-                workout.errors.add(:base, "Student '#{student_ref}' not found by email or name.")
+                
+                if student
+                  # Check enrollment in any of the workout offerings in this term
+                  enrolled_offering = workout_offerings_in_term.find { |wo| wo.course_offering.is_enrolled?(student) }
+                  if enrolled_offering
+                    StudentExtension.create!(
+                      user: student,
+                      workout_offering: enrolled_offering,
+                      opening_date: from,
+                      soft_deadline: due,
+                      hard_deadline: until_date
+                    )
+                  else
+                    workout.errors.add(:base, "Student '#{student_ref}' is not enrolled in any sections for this workout.")
+                  end
+                else
+                  workout.errors.add(:base, "Student '#{student_ref}' not found by email or name.")
+                end
               end
             end
           end
           
           workout.save!
-          return workout_offerings.first
+          return workout_offerings&.first
           
         rescue Psych::SyntaxError => e
           workout.errors.add(:base, "YAML Syntax Error: #{e.message}")
@@ -1362,22 +1368,26 @@ class WorkoutsController < ApplicationController
           return nil
         end
       else
-        # Fallback to legacy JSON behavior if date_yaml is not present
-        removed_extensions = JSON.parse params[:removed_extensions]
-        removed_extensions.each do |extension_id|
-          StudentExtension.destroy extension_id
+        # Fallback to legacy JSON behavior if course_offerings is present
+        if params[:removed_extensions].present?
+          removed_extensions = (JSON.parse(params[:removed_extensions]) rescue []) || []
+          removed_extensions.each do |extension_id|
+            StudentExtension.destroy extension_id
+          end
         end
 
-        removed_offerings = JSON.parse params[:removed_offerings]
-        removed_offerings.each do |workout_offering_id|
-          workout.workout_offerings.destroy workout_offering_id
+        if params[:removed_offerings].present?
+          removed_offerings = (JSON.parse(params[:removed_offerings]) rescue []) || []
+          removed_offerings.each do |workout_offering_id|
+            workout.workout_offerings.destroy workout_offering_id
+          end
         end
 
-        course_offerings = JSON.parse params[:course_offerings]
+        course_offerings = (JSON.parse(params[:course_offerings]) rescue {}) || {}
         workout_offerings =
           workout.add_workout_offerings(course_offerings, common)
         workout.save!
-        return workout_offerings.first
+        return workout_offerings&.first
       end
     end
 
