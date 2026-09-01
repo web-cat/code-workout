@@ -1,5 +1,7 @@
 - course_offering ||= @workout_offering.andand.course_offering
 - workout_score ||= @workout_score || @workout.score_for(current_user, @workout_offering)
+- is_staff = @is_staff.nil? ? (course_offering && course_offering.is_staff?(current_user)) : @is_staff
+- manages_course = @manages_course.nil? ? (current_user ? (current_user.global_role.is_admin? || course_offering.andand.is_manager?(current_user)) : false) : @manages_course
 = render partial: 'layouts/breadcrumb'
 - time_limit = (@workout_offering ? @workout_offering.time_limit_for(current_user) : nil)
 
@@ -15,7 +17,7 @@
     - @workout.tags.each do |t|
       =link_to t.name, exercises_search_path(search: t.name), class: 'tag'
 
-- if course_offering && course_offering.is_staff?(current_user)
+- if is_staff
   %table.table.table-striped{ style: 'width: auto' }
     %thead
       %tr
@@ -26,21 +28,20 @@
         %th Time Limit
     %tbody
       - @workout.workout_offerings.each do |woff|
-        - if woff.course_offering.is_staff?(current_user)
-          %tr
-            %td= woff.course_offering.display_name
-            %td
-              - if woff.opening_date
-                = l user_time(current_user, woff.opening_date)
-            %td
-              - if woff.soft_deadline
-                = l user_time(current_user, woff.soft_deadline)
-            %td
-              - if woff.hard_deadline
-                = l user_time(current_user, woff.hard_deadline)
-            %td
-              - if time_limit
-                = "#{n_to_s(time_limit)} minutes"
+        %tr
+          %td= woff.course_offering.display_name
+          %td
+            - if woff.opening_date
+              = l user_time(current_user, woff.opening_date)
+          %td
+            - if woff.soft_deadline
+              = l user_time(current_user, woff.soft_deadline)
+          %td
+            - if woff.hard_deadline
+              = l user_time(current_user, woff.hard_deadline)
+          %td
+            - if time_limit
+              = "#{n_to_s(time_limit)} minutes"
 - elsif @workout_offering
   %p.due
     - if @workout_offering.soft_deadline
@@ -65,8 +66,6 @@
 
 - if @workout.description
   %p= markdown(@workout.description)
-
-- manages_course = current_user ? (current_user.global_role.is_admin? || course_offering.andand.is_manager?(current_user)) : false
 
 .col-md-4
   .btn-group
@@ -125,6 +124,7 @@
       workout_offering: @workout_offering,
       workout_score: workout_score,
       workout: @workout,
+      manages_course: manages_course,
       start_workout: true,
       review: false
     .clearfix
