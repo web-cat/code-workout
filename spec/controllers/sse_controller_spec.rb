@@ -18,6 +18,16 @@ RSpec.describe SseController, type: :controller do
       allow(Attempt).to receive_message_chain(:includes, :find_by).and_return(mock_attempt)
     end
 
+    it "eager loads prompt_answers with :actable without causing association errors on MCQs" do
+      expect(Attempt).to receive(:includes).with(
+        { exercise_version: [:exercise, :prompts] },
+        { workout_score: [{ workout: [:exercise_workouts, :exercises] }, :workout_offering] },
+        { prompt_answers: :actable }
+      ).and_return(double(find_by: mock_attempt))
+
+      get :feedback_update, params: { att_id: 1, format: :js }
+    end
+
     it "assigns attempt, exercise_version, exercise, and max_points" do
       get :feedback_update, params: { att_id: 1, format: :js }
       expect(response.status).to eq(200)
