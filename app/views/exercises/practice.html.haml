@@ -258,7 +258,7 @@
             class: 'btn btn-info btn-next', id: 'nextbtn'
 
         - if @workout_offering && params[:review_user_id] && (current_user.global_role.is_admin? || @workout_offering.course_offering.is_staff?(current_user))
-          = link_to 'View Activity Log', workout_offering_activity_log_path(id: @workout_offering.id, workout_score_id: @workout_score.id, exercise_id: @exercise.id, organization_id: @workout_offering.course_offering.course.organization.slug, course_id: @workout_offering.course_offering.course.slug, term_id: @workout_offering.course_offering.term.slug), class: 'btn btn-info'
+          = link_to 'View Activity Log', organization_workout_offering_activity_log_path(id: @workout_offering.id, workout_score_id: @workout_score.id, exercise_id: @exercise.id, organization_id: @workout_offering.course_offering.course.organization.slug, course_id: @workout_offering.course_offering.course.slug, term_id: @workout_offering.course_offering.term.slug), class: 'btn btn-info'
 
       - if @workout.nil? && !@lti_launch
         %br
