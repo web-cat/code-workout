@@ -407,4 +407,57 @@ describe WorkoutsController do
       expect(controller.instance_variable_get(:@message)).to include("not yet available")
     end
   end
+
+  describe "#serialize_workout_offerings_to_yaml" do
+    let(:user) { FactoryBot.build_stubbed(:user, first_name: 'John', last_name: 'Doe', email: 'jdoe@vt.edu') }
+    let(:term) { FactoryBot.build_stubbed(:term, slug: 'fall-2026', season: 400, year: 2026) }
+    let(:course) { FactoryBot.build_stubbed(:course, slug: 'cs1114') }
+    let(:course_offering) { FactoryBot.build_stubbed(:course_offering, course: course, term: term, label: 'Section 1') }
+    let(:workout_offering) do
+      FactoryBot.build_stubbed(:workout_offering,
+        course_offering: course_offering,
+        soft_deadline: Time.zone.parse('2026-09-15 23:59:00'),
+        opening_date: Time.zone.parse('2026-09-01 00:00:00'),
+        hard_deadline: Time.zone.parse('2026-09-17 23:59:00')
+      )
+    end
+
+    before do
+      allow(controller).to receive(:current_user).and_return(user)
+    end
+
+    it "serializes StudentExtension model objects into extensions YAML" do
+      extension = FactoryBot.build_stubbed(:student_extension,
+        user: user,
+        workout_offering: workout_offering,
+        soft_deadline: Time.zone.parse('2026-09-20 23:59:00'),
+        opening_date: Time.zone.parse('2026-09-01 00:00:00'),
+        hard_deadline: Time.zone.parse('2026-09-22 23:59:00')
+      )
+
+      yaml = controller.send(:serialize_workout_offerings_to_yaml, [workout_offering], [extension])
+      data = YAML.safe_load(yaml)
+
+      expect(data['sections']).to be_an(Array)
+      expect(data['sections'].first['section']).to eq(course_offering.display_name_with_term)
+      expect(data['extensions']).to be_an(Array)
+      expect(data['extensions'].first['students']).to include("John Doe <jdoe@vt.edu>")
+    end
+
+    it "serializes extension Hashes without raising NoMethodError" do
+      ext_hash = {
+        student_id: user.id,
+        student_display: 'John Doe',
+        student_email: 'jdoe@vt.edu',
+        soft_deadline: Time.zone.parse('2026-09-20 23:59:00').to_i,
+        opening_date: Time.zone.parse('2026-09-01 00:00:00').to_i,
+        hard_deadline: Time.zone.parse('2026-09-22 23:59:00').to_i
+      }
+
+      yaml = controller.send(:serialize_workout_offerings_to_yaml, [workout_offering], [ext_hash])
+      data = YAML.safe_load(yaml)
+
+      expect(data['extensions'].first['students']).to include("John Doe <jdoe@vt.edu>")
+    end
+  end
 end
