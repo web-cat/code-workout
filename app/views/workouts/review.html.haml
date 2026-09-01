@@ -52,7 +52,7 @@
     = @workout.total_points
     - if current_user.global_role.is_admin? || course_offering.andand.is_staff?(current_user)
       &nbsp;&nbsp;&nbsp;
-      = link_to 'View Activity Log', workout_offering_activity_log_path(id: @workout_offering.id, workout_score_id: workout_score.id, organization_id: course_offering.course.organization.slug, course_id: course_offering.course.slug, term_id: course_offering.term.slug), class: 'btn btn-info btn-sm'
+      = link_to 'View Activity Log', organization_workout_offering_activity_log_path(id: @workout_offering.id, workout_score_id: workout_score.id, organization_id: course_offering.course.organization.slug, course_id: course_offering.course.slug, term_id: course_offering.term.slug), class: 'btn btn-info btn-sm'
 -else
   %p.due
     Score: 0 /
