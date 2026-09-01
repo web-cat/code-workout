@@ -14,11 +14,18 @@ class WorkoutOfferingsController < ApplicationController
   # /courses/:organization_id/:course_id/:term_id/:id
   def show
     if @workout_offering
-      @workout = @workout_offering.workout
+      @workout = Workout.includes(
+        :tags,
+        :exercise_workouts,
+        workout_offerings: [course_offering: [:term, :course, { course_enrollments: :course_role }]]
+      ).find_by(id: @workout_offering.workout_id) || @workout_offering.workout
       @course_offering = @workout_offering.course_offering
       @course = @course_offering.andand.course
       @term = @course_offering.andand.term
       @organization = @course.andand.organization
+      @user_course_role = @course_offering.andand.role_for_user(current_user)
+      @is_staff = current_user.andand.global_role.andand.is_admin? || @user_course_role.andand.is_staff?
+      @manages_course = current_user.andand.global_role.andand.is_admin? || @user_course_role.andand.can_manage_course?
       @exs = @workout ? @workout.exercises.includes(
         :tags,
         :taggings,
@@ -49,7 +56,10 @@ class WorkoutOfferingsController < ApplicationController
   # --------------------------------------------------------------
   def review
     if @workout_offering
-      @workout = @workout_offering.workout
+      @workout = Workout.includes(
+        :tags,
+        :exercise_workouts
+      ).find_by(id: @workout_offering.workout_id) || @workout_offering.workout
       @course_offering = @workout_offering.course_offering
       @course = @course_offering.andand.course
       @term = @course_offering.andand.term
