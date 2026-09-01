@@ -99,5 +99,119 @@ describe Exercise, type: :model do
       expect(attempt.reload.prompt_answers.size).to eq(1)
     end
   end
+
+  context '.search' do
+    let(:admin_user) { FactoryBot.build_stubbed(:admin, id: 1) }
+    let(:regular_user) { FactoryBot.build_stubbed(:confirmed_user, id: 2) }
+    let(:owner_user) { FactoryBot.build_stubbed(:confirmed_user, id: 3) }
+
+    let(:public_ex1) do
+      FactoryBot.build_stubbed(
+        :exercise,
+        id: 101,
+        name: 'Recursion Base Case',
+        is_public: true
+      )
+    end
+
+    let(:public_ex2) do
+      FactoryBot.build_stubbed(
+        :exercise,
+        id: 102,
+        name: 'Binary Tree Traversal',
+        is_public: true
+      )
+    end
+
+    let(:private_ex) do
+      FactoryBot.build_stubbed(
+        :exercise,
+        id: 103,
+        name: 'Secret Exam Exercise',
+        is_public: false
+      )
+    end
+
+    before :each do
+      allow(public_ex1).to receive(:visible_to?).with(regular_user).and_return(true)
+      allow(public_ex1).to receive(:visible_to?).with(admin_user).and_return(true)
+      allow(public_ex2).to receive(:visible_to?).with(regular_user).and_return(true)
+      allow(private_ex).to receive(:visible_to?).with(regular_user).and_return(false)
+      allow(private_ex).to receive(:visible_to?).with(owner_user).and_return(true)
+      allow(private_ex).to receive(:visible_to?).with(admin_user).and_return(true)
+    end
+
+    it 'returns exercises by X-prefixed ID (case-insensitive)' do
+      relation = double('ExerciseRelation')
+      allow(relation).to receive(:includes).and_return(relation)
+      allow(relation).to receive(:order).and_return([public_ex1])
+      allow(relation).to receive(:index_by).and_return({ 101 => public_ex1 })
+      allow(relation).to receive(:each).and_yield(public_ex1)
+      allow(Exercise).to receive(:where).with(id: [101]).and_return(relation)
+
+      results = Exercise.search(['X101'], regular_user)
+      expect(results).to eq([public_ex1])
+
+      results_lower = Exercise.search(['x101'], regular_user)
+      expect(results_lower).to eq([public_ex1])
+    end
+
+    it 'returns exercises by raw numeric ID and hash-prefixed ID' do
+      relation = double('ExerciseRelation')
+      allow(relation).to receive(:includes).and_return(relation)
+      allow(relation).to receive(:order).and_return([public_ex1])
+      allow(relation).to receive(:index_by).and_return({ 101 => public_ex1 })
+      allow(relation).to receive(:each).and_yield(public_ex1)
+      allow(Exercise).to receive(:where).with(id: [101]).and_return(relation)
+
+      results_numeric = Exercise.search(['101'], regular_user)
+      expect(results_numeric).to eq([public_ex1])
+
+      results_hash = Exercise.search(['#101'], regular_user)
+      expect(results_hash).to eq([public_ex1])
+    end
+
+    it 'returns multiple exercises by ID preserving requested order' do
+      relation = double('ExerciseRelation')
+      allow(relation).to receive(:includes).and_return(relation)
+      allow(relation).to receive(:order).and_return([public_ex2, public_ex1])
+      allow(relation).to receive(:index_by).and_return({ 102 => public_ex2, 101 => public_ex1 })
+      allow(Exercise).to receive(:where).with(id: [102, 101]).and_return(relation)
+
+      results = Exercise.search(['X102', 'X101'], regular_user)
+      expect(results).to eq([public_ex2, public_ex1])
+    end
+
+    it 'filters out private exercises for unauthorized users' do
+      relation = double('ExerciseRelation')
+      allow(relation).to receive(:includes).and_return(relation)
+      allow(relation).to receive(:order).and_return([private_ex])
+      allow(relation).to receive(:index_by).and_return({ 103 => private_ex })
+      allow(Exercise).to receive(:where).with(id: [103]).and_return(relation)
+
+      other_results = Exercise.search(['X103'], regular_user)
+      expect(other_results).to eq(Exercise.none)
+
+      owner_results = Exercise.search(['X103'], owner_user)
+      expect(owner_results).to eq([private_ex])
+
+      admin_results = Exercise.search(['X103'], admin_user)
+      expect(admin_results).to eq([private_ex])
+    end
+
+    it 'caps candidate and return list at MAX_SEARCH_RESULTS (50)' do
+      expect(Exercise::MAX_SEARCH_RESULTS).to eq(50)
+      many_ids = (1..60).map { |n| "X#{n}" }
+
+      relation = double('ExerciseRelation')
+      allow(relation).to receive(:includes).and_return(relation)
+      allow(relation).to receive(:order).and_return([])
+      allow(relation).to receive(:index_by).and_return({})
+      expect(Exercise).to receive(:where).with(id: (1..50).to_a).and_return(relation)
+
+      Exercise.search(many_ids, admin_user)
+    end
+  end
 end
+
 

@@ -119,76 +119,113 @@ class Exercise < ApplicationRecord
 
     #~ Class methods ............................................................
 
+  MAX_SEARCH_RESULTS = 50
+
   # -------------------------------------------------------------
   def self.search(terms, user = nil)
     return Exercise.none if terms.blank?
 
-    # Extract any X-numeric IDs (e.g., X123)
+    # Extract any numeric IDs (e.g., X123, x123, #123, 123)
     ids = []
     search_words = []
     terms.each do |t|
-      if t =~ /^[x]\d+$/i
-        ids << t[1..-1].to_i
-      else
-        search_words << t
+      cleaned = t.to_s.strip
+      if cleaned =~ /^(?:x|#)?(\d+)$/i
+        ids << $1.to_i
+      elsif cleaned.present?
+        search_words << cleaned
       end
     end
 
-    # 1. Match Exercises by Name or ID
-    matching_name_or_id = Exercise.all
-    name_clauses = []
-    name_params = []
-    search_words.each do |word|
-      name_clauses << "exercises.name LIKE ?"
-      name_params << "%#{word}%"
-    end
+    return Exercise.none if ids.empty? && search_words.empty?
 
-    if name_clauses.any?
-      matching_name_or_id = matching_name_or_id.where(name_clauses.join(' OR '), *name_params)
-      if ids.any?
-        matching_name_or_id = matching_name_or_id.or(Exercise.where(id: ids))
-      end
-    elsif ids.any?
-      matching_name_or_id = Exercise.where(id: ids)
+    # 1. Fast Path: Pure ID Search
+    if search_words.empty?
+      candidate_ids = ids.uniq.first(MAX_SEARCH_RESULTS)
     else
-      matching_name_or_id = Exercise.none
-    end
-
-    matching_ids = matching_name_or_id.pluck(:id)
-
-    # 2. Match Exercises by Tags, Languages, or Styles
-    matching_tag_ids = []
-    if search_words.any?
-      tag_clauses = []
-      tag_params = []
+      # 2. General / Keyword Search
+      # 2a. Match Exercises by Name or ID
+      matching_name_or_id = Exercise.all
+      name_clauses = []
+      name_params = []
       search_words.each do |word|
-        tag_clauses << "tags.name LIKE ?"
-        tag_params << "%#{word}%"
+        name_clauses << 'exercises.name LIKE ?'
+        name_params << "%#{word}%"
       end
-      matching_tag_ids = Exercise.joins(taggings: :tag)
-        .where(tag_clauses.join(' OR '), *tag_params)
-        .pluck(:id)
+
+      if name_clauses.any?
+        matching_name_or_id = matching_name_or_id.where(name_clauses.join(' OR '), *name_params)
+        if ids.any?
+          matching_name_or_id = matching_name_or_id.or(Exercise.where(id: ids))
+        end
+      elsif ids.any?
+        matching_name_or_id = Exercise.where(id: ids)
+      else
+        matching_name_or_id = Exercise.none
+      end
+
+      matching_ids = matching_name_or_id.limit(MAX_SEARCH_RESULTS * 2).pluck(:id)
+
+      # 2b. Match Exercises by Tags
+      matching_tag_ids = []
+      if search_words.any?
+        tag_clauses = []
+        tag_params = []
+        search_words.each do |word|
+          tag_clauses << 'tags.name LIKE ?'
+          tag_params << "%#{word}%"
+        end
+        matching_tag_ids = Exercise.joins(taggings: :tag)
+          .where(tag_clauses.join(' OR '), *tag_params)
+          .limit(MAX_SEARCH_RESULTS * 2)
+          .pluck(:id)
+      end
+
+      # Combine IDs preserving ranking (ID matches first, then name matches, then tag matches)
+      all_matching_ids = (ids + matching_ids + matching_tag_ids).uniq
+      candidate_ids = all_matching_ids.first(MAX_SEARCH_RESULTS * 2)
     end
 
-    # Combine all matching IDs and maintain order (best matches first)
-    all_matching_ids = (matching_ids + matching_tag_ids).uniq
-    return Exercise.none if all_matching_ids.empty?
+    return Exercise.none if candidate_ids.empty?
 
-    # 3. Restrict to visible exercises only
-    if user
-      visible = Exercise.visible_to_user(user)
-    else
-      visible = Exercise.publicly_visible
+    # 3. In-Memory Visibility Filtering
+    # Preload associations needed for visibility checks and rendering
+    candidates = Exercise.where(id: candidate_ids)
+                         .includes(
+                           :exercise_owners,
+                           { exercise_collection: [ :user_group, { license: :license_policy }, :course_offering ] }
+                         )
+
+    candidate_map = candidates.index_by(&:id)
+
+    visible_ids = []
+    is_admin = user.andand.global_role.andand.is_admin?
+
+    candidate_ids.each do |id|
+      exercise = candidate_map[id]
+      next unless exercise
+
+      if is_admin || exercise.visible_to?(user)
+        visible_ids << id
+        break if visible_ids.size >= MAX_SEARCH_RESULTS
+      end
     end
 
-    result = visible.where(id: all_matching_ids)
-                    .includes(:languages, :tags, :current_version)
+    return Exercise.none if visible_ids.empty?
 
-    # Sort results by best match order
+    # 4. Return an ActiveRecord::Relation with preloaded associations, preserving order
+    result = Exercise.where(id: visible_ids)
+                     .includes(
+                       { current_version: :prompts },
+                       :tags,
+                       :languages,
+                       :exercise_owners,
+                       :exercise_collection
+                     )
+
     begin
-      result = result.order(Arel.sql("FIELD(exercises.id, #{all_matching_ids.join(',')})"))
+      result = result.order(Arel.sql("FIELD(exercises.id, #{visible_ids.join(',')})"))
     rescue => e
-      # Fallback to name-based sorting if FIELD is not supported by the SQL dialect
       result = result.order(:name)
     end
 
@@ -383,13 +420,14 @@ class Exercise < ApplicationRecord
   # -------------------------------------------------------------
   def visible_to?(u)
     return true if u.andand.global_role.andand.is_admin?
-    # If updating this instance method, remember to update the class method
-    # Exercise.visible_to_user(u). This method exists so avoid creating a list
-    # of visible exercises unnecessarily.
+    return self.is_publicly_available? if u.nil?
+
     self.is_publicly_available? ||
+    self.exercise_owners.any? { |eo| eo.owner_id == u.id } ||
     self.owners.include?(u) ||
     u.is_a_member_of?(self.exercise_collection.andand.user_group) ||
-    self.exercise_collection.andand.owned_by?(u)
+    self.exercise_collection.andand.owned_by?(u) ||
+    (self.exercise_collection.andand.course_offering.andand.is_enrolled?(u))
   end
 
   def is_publicly_available?
