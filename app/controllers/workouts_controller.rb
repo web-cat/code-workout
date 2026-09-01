@@ -373,8 +373,9 @@ class WorkoutsController < ApplicationController
     if @course
       @new_workout_path = organization_new_workout_path(
         lti_launch: @lti_launch,
-        organization_id: @organization.slug,
-        term_id: @term.slug,
+        organization_id: @organization,
+        course_id: @course,
+        term_id: @term,
         lms_assignment_id: @lms_assignment_id,
         lti_assignment_id: @lti_assignment_id,
         suggested_name: @suggested_name
