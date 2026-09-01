@@ -40,9 +40,9 @@ describe WorkoutsController do
   end
 
   describe "GET #new_or_existing" do
-    let(:mock_org) { double("Organization", id: 1, slug: "vt") }
-    let(:mock_course) { double("Course", id: 10, slug: "cs1114", organization: mock_org) }
-    let(:mock_term) { double("Term", id: 20, slug: "fall2026", display_name: "Fall 2026") }
+    let(:mock_org) { double("Organization", id: 1, slug: "vt", to_param: "vt") }
+    let(:mock_course) { double("Course", id: 10, slug: "cs1114", to_param: "cs1114", organization: mock_org) }
+    let(:mock_term) { double("Term", id: 20, slug: "fall2026", to_param: "fall2026", display_name: "Fall 2026") }
     let(:mock_workout) { double("Workout", id: 100, name: "Loops") }
     let(:mock_offering) { double("WorkoutOffering", id: 200, workout: mock_workout) }
     let(:mock_course_offering) { double("CourseOffering", id: 300, term: mock_term, workout_offerings: [mock_offering]) }
@@ -82,6 +82,8 @@ describe WorkoutsController do
       default_results = controller.instance_variable_get(:@default_results)
       expect(default_results).to be_a(Hash)
       expect(default_results[mock_term]).to eq([mock_workout])
+      new_workout_path = controller.instance_variable_get(:@new_workout_path)
+      expect(new_workout_path).to eq("/courses/vt/cs1114/fall2026/workouts/new")
     end
   end
 
