@@ -87,6 +87,73 @@ describe WorkoutsController do
     end
   end
 
+  describe "GET #new" do
+    let(:user) { FactoryBot.build_stubbed(:user) }
+    let(:mock_org) { double("Organization", id: 1, slug: "vt", to_param: "vt") }
+    let(:mock_course) { double("Course", id: 10, slug: "cs1114", to_param: "cs1114", organization: mock_org) }
+    let(:mock_term) { double("Term", id: 20, slug: "fall2026", to_param: "fall2026", display_name: "Fall 2026") }
+    let(:mock_course_offering) do
+      double("CourseOffering", id: 300, display_name_with_term: "CS 1114 (Fall 2026, 98765)", term: mock_term)
+    end
+
+    before do
+      allow(controller).to receive(:current_user).and_return(user)
+      allow(user).to receive_message_chain(:global_role, :is_admin?).and_return(true)
+      allow(Course).to receive(:find_with_id_or_slug).and_return(mock_course)
+      allow(Term).to receive(:find).and_return(mock_term)
+      allow(Organization).to receive(:find).and_return(mock_org)
+      allow(user).to receive(:managed_course_offerings).and_return([mock_course_offering])
+    end
+
+    it "prepopulates @date_yaml with managed course offerings" do
+      get :new, params: {
+        organization_id: 'vt',
+        course_id: 'cs1114',
+        term_id: 'fall2026'
+      }
+
+      expect(response.status).to eq(200)
+      date_yaml = controller.instance_variable_get(:@date_yaml)
+      expect(date_yaml).to include("CS 1114 (Fall 2026, 98765)")
+      expect(date_yaml).to include("sections:")
+    end
+  end
+
+  describe "GET #clone" do
+    let(:user) { FactoryBot.build_stubbed(:user) }
+    let(:mock_org) { double("Organization", id: 1, slug: "vt", to_param: "vt") }
+    let(:mock_course) { double("Course", id: 10, slug: "cs1114", to_param: "cs1114", organization: mock_org) }
+    let(:mock_term) { double("Term", id: 20, slug: "fall2026", to_param: "fall2026", display_name: "Fall 2026") }
+    let(:mock_workout) { double("Workout", id: 100, name: "Loops", workout_policy: nil, exercise_workouts: [], workout_offerings: []) }
+    let(:mock_course_offering) do
+      double("CourseOffering", id: 300, display_name_with_term: "CS 1114 (Fall 2026, 98765)", term: mock_term)
+    end
+
+    before do
+      allow(controller).to receive(:current_user).and_return(user)
+      allow(controller).to receive(:authorize!).and_return(true)
+      allow(Workout).to receive(:find).and_return(mock_workout)
+      allow(Course).to receive(:find_with_id_or_slug).and_return(mock_course)
+      allow(Term).to receive(:find).and_return(mock_term)
+      allow(Organization).to receive(:find).and_return(mock_org)
+      allow(user).to receive(:managed_course_offerings).and_return([mock_course_offering])
+    end
+
+    it "prepopulates @date_yaml with managed course offerings" do
+      get :clone, params: {
+        id: '100',
+        organization_id: 'vt',
+        course_id: 'cs1114',
+        term_id: 'fall2026'
+      }
+
+      expect(response.status).to eq(200)
+      date_yaml = controller.instance_variable_get(:@date_yaml)
+      expect(date_yaml).to include("CS 1114 (Fall 2026, 98765)")
+      expect(date_yaml).to include("sections:")
+    end
+  end
+
   describe "GET #show" do
     let(:mock_workout) do
       double(
