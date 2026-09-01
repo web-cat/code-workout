@@ -148,23 +148,14 @@ class ExercisesController < ApplicationController
 
   # -------------------------------------------------------------
   def search
-    @terms = escape_javascript(params[:search])
-    @terms = @terms.split(@terms.include?(',') ? /\s*,\s*/ : nil)
+    @terms = escape_javascript(params[:search]).to_s.split(/[,\s]+/).reject(&:blank?)
     @wos = []
     @exs = Exercise.search(@terms, current_user)
     @msg = ''
     if @exs.blank?
-      @msg = "No exercises were found for the search terms: #{@terms}"
+      @msg = "No exercises were found for the search terms: #{@terms.join(', ')}"
       redirect_to(exercises_path, alert: @msg) and return
     end
-
-    @exs = @exs.includes(
-      { current_version: :prompts },
-      :tags,
-      :languages,
-      :exercise_owners,
-      :exercise_collection
-    )
 
     if current_user
       ex_version_ids = @exs.map(&:current_version_id).compact
