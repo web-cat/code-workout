@@ -39,6 +39,52 @@ describe WorkoutsController do
     end
   end
 
+  describe "GET #new_or_existing" do
+    let(:mock_org) { double("Organization", id: 1, slug: "vt") }
+    let(:mock_course) { double("Course", id: 10, slug: "cs1114", organization: mock_org) }
+    let(:mock_term) { double("Term", id: 20, slug: "fall2026", display_name: "Fall 2026") }
+    let(:mock_workout) { double("Workout", id: 100, name: "Loops") }
+    let(:mock_offering) { double("WorkoutOffering", id: 200, workout: mock_workout) }
+    let(:mock_course_offering) { double("CourseOffering", id: 300, term: mock_term, workout_offerings: [mock_offering]) }
+
+    before do
+      allow(Course).to receive(:find_with_id_or_slug).and_return(mock_course)
+      allow(Term).to receive(:find).and_return(mock_term)
+      allow(Organization).to receive(:find).and_return(mock_org)
+      allow(controller).to receive(:can?).with(:new, Workout).and_return(true)
+      allow(controller).to receive(:can?).with(:edit, anything).and_return(true)
+    end
+
+    it "scopes default results to recent terms and eager loads workouts" do
+      course_offerings_relation = double("CourseOfferingsRelation")
+      allow(mock_course).to receive(:course_offerings).and_return(course_offerings_relation)
+
+      recent_query = double("RecentQuery")
+      allow(course_offerings_relation).to receive(:joins).with(:term).and_return(recent_query)
+      allow(recent_query).to receive(:where).with('terms.ends_on >= ?', anything).and_return(recent_query)
+      allow(recent_query).to receive(:order).with('terms.ends_on DESC').and_return(recent_query)
+      allow(recent_query).to receive(:distinct).and_return(recent_query)
+      allow(recent_query).to receive(:pluck).with('terms.id').and_return([20])
+
+      scoped_query = double("ScopedQuery")
+      allow(course_offerings_relation).to receive(:where).with(term_id: [20]).and_return(scoped_query)
+      allow(scoped_query).to receive(:joins).with(:term).and_return(scoped_query)
+      allow(scoped_query).to receive(:order).with('terms.ends_on DESC').and_return(scoped_query)
+      allow(scoped_query).to receive(:includes).with(:term, workout_offerings: { workout: :exercise_workouts }).and_return([mock_course_offering])
+
+      get :new_or_existing, params: {
+        organization_id: 'vt',
+        course_id: 'cs1114',
+        term_id: '20'
+      }
+
+      expect(response.status).to eq(200)
+      default_results = controller.instance_variable_get(:@default_results)
+      expect(default_results).to be_a(Hash)
+      expect(default_results[mock_term]).to eq([mock_workout])
+    end
+  end
+
   describe "GET #show" do
     let(:mock_workout) do
       double(

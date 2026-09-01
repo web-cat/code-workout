@@ -380,23 +380,41 @@ class WorkoutsController < ApplicationController
         suggested_name: @suggested_name
       )
 
-      @workout_offerings = @course.course_offerings.joins(:workout_offerings, :term)
+      # Limit default workout offerings to recent semesters (last 2 years) to prevent performance degradation,
+      # falling back to the 3 most recent terms if the course has not been offered recently.
+      recent_term_ids = @course.course_offerings.joins(:term)
+        .where('terms.ends_on >= ?', 2.years.ago.to_date)
         .order('terms.ends_on DESC')
-        .flat_map(&:workout_offerings)
+        .distinct
+        .pluck('terms.id')
 
-      # workouts_with_term is of the form [[CourseOffering, WorkoutOffering],
-      # [CourseOffering, WorkoutOffering], [CourseOffering, WorkoutOffering]]
-      # we will convert it into a Hash where each key is a term, and each value
-      # is an array of Workouts
-      workouts_with_term = @workout_offerings.map { |wo|
-        [wo.course_offering.term, wo]
-      }.group_by(&:first).map{ |k, a| [k, a.map(&:last)] }
+      if recent_term_ids.empty?
+        recent_term_ids = @course.course_offerings.joins(:term)
+          .order('terms.ends_on DESC')
+          .distinct
+          .limit(3)
+          .pluck('terms.id')
+      end
 
-      @default_results = array_to_hash(workouts_with_term)
+      if recent_term_ids.any?
+        course_offerings = @course.course_offerings
+          .where(term_id: recent_term_ids)
+          .joins(:term)
+          .order('terms.ends_on DESC')
+          .includes(:term, workout_offerings: { workout: :exercise_workouts })
 
-      # make sure each term shows unique Workouts
-      @default_results.each do |term, workout_offerings|
-        @default_results[term] = workout_offerings.uniq{ |wo| wo.workout }
+        workouts_by_term = {}
+        course_offerings.each do |co|
+          term = co.term
+          workouts_by_term[term] ||= []
+          co.workout_offerings.each do |wo|
+            workouts_by_term[term] << wo.workout if wo.workout
+          end
+        end
+
+        @default_results = workouts_by_term.transform_values(&:uniq)
+      else
+        @default_results = {}
       end
     else
       @new_workout_path = new_workout_path(
