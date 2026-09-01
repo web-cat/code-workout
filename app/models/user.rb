@@ -308,7 +308,7 @@ class User < ApplicationRecord
   def managed_workouts
     course_enrollments.
       joins(:course_role, course_offering: { course: { user_group: :memberships } }).
-      where(course_role:
+      where(course_roles:
         { can_manage_course: true }, course_offering:
           { course:
             { user_group:
