@@ -498,24 +498,7 @@ class WorkoutsController < ApplicationController
         course: @course, term: @term)
       used_course_offerings = @workout_offerings.flat_map(&:course_offering)
       @unused_course_offerings = course_offerings - used_course_offerings
-
-      @student_extensions = []
-      @workout_offerings.each do |workout_offering|
-        workout_offering.student_extensions.each do |e|
-          ext = {}
-          ext[:id] = e.id
-          ext[:student_id] = e.user.id
-          ext[:student_display] = e.user.display_name
-          ext[:course_offering_id] = e.workout_offering.course_offering_id
-          ext[:course_offering_display] =
-            e.workout_offering.course_offering.display_name_with_term
-          ext[:opening_date] = e.opening_date.andand.to_i
-          ext[:soft_deadline] = e.soft_deadline.andand.to_i
-          ext[:hard_deadline] = e.hard_deadline.andand.to_i
-          ext[:time_limit] = e.time_limit
-          @student_extensions.push(ext)
-        end
-      end
+      @student_extensions = @workout_offerings.flat_map(&:student_extensions)
 
       @return_to = organization_course_workout_path(
         organization_id: @organization.slug,
@@ -1426,15 +1409,33 @@ class WorkoutsController < ApplicationController
 
       # Group extensions by dates
       grouped_extensions = {}
-      student_extensions.each do |ext|
+      (student_extensions || []).each do |ext|
+        if ext.is_a?(Hash)
+          soft = ext[:soft_deadline] || ext['soft_deadline']
+          open_d = ext[:opening_date] || ext['opening_date']
+          hard = ext[:hard_deadline] || ext['hard_deadline']
+          soft = Time.at(soft) if soft.is_a?(Numeric)
+          open_d = Time.at(open_d) if open_d.is_a?(Numeric)
+          hard = Time.at(hard) if hard.is_a?(Numeric)
+
+          user_display = ext[:student_display] || ext['student_display']
+          user_email = ext[:student_email] || ext['student_email'] || (User.find_by(id: ext[:student_id] || ext['student_id']).andand.email)
+          student_label = user_email.present? ? "#{user_display} <#{user_email}>" : user_display
+        else
+          soft = ext.soft_deadline
+          open_d = ext.opening_date
+          hard = ext.hard_deadline
+          student_label = "#{ext.user.display_name} <#{ext.user.email}>"
+        end
+
         key = {
-          'due' => format_date(ext.soft_deadline, user_tz),
-          'from' => format_rel_date(ext.opening_date, ext.soft_deadline, user_tz) || 'always',
-          'until' => format_rel_date(ext.hard_deadline, ext.soft_deadline, user_tz) || '+0 minutes'
+          'due' => format_date(soft, user_tz),
+          'from' => format_rel_date(open_d, soft, user_tz) || 'always',
+          'until' => format_rel_date(hard, soft, user_tz) || '+0 minutes'
         }
         
         grouped_extensions[key] ||= []
-        grouped_extensions[key] << "#{ext.user.display_name} <#{ext.user.email}>"
+        grouped_extensions[key] << student_label if student_label.present?
       end
 
       ext_list = grouped_extensions.map do |dates, students|
