@@ -15,6 +15,10 @@ module ExceptionHandler
     'AbstractController::ActionNotFound'
   ].freeze
 
+  IGNORED_ROUTING_PREFIXES = %w[
+    /api/v1/
+  ].freeze
+
   class Exception < (ExceptionHandler.config.try(:db) && defined?(ActiveRecord) ? ActiveRecord::Base : Object)
     if ExceptionHandler.config.try(:db)
       def self.table_name
@@ -111,8 +115,35 @@ module ExceptionHandler
 
     def ignore_unsolicited_client_errors
       if CLIENT_ERROR_STATUSES.include?(status.to_i) || CLIENT_ERROR_CLASSES.include?(class_name)
-        errors.add(:base, 'External or missing referrer on 4xx client error') unless internal_referrer?
+        if ignored_routing_path?
+          errors.add(:base, 'Ignored third-party or API routing error')
+        elsif !internal_referrer?
+          errors.add(:base, 'External or missing referrer on 4xx client error')
+        end
       end
+    end
+
+    def ignored_routing_path?
+      req_path = (request.respond_to?(:path) ? request.path : nil) ||
+                 (request.respond_to?(:fullpath) ? request.fullpath : nil)
+      if req_path.present? && IGNORED_ROUTING_PREFIXES.any? { |prefix| req_path.start_with?(prefix) }
+        return true
+      end
+
+      if target.present?
+        target_path = (URI.parse(target).path rescue nil)
+        if target_path.present? && IGNORED_ROUTING_PREFIXES.any? { |prefix| target_path.start_with?(prefix) }
+          return true
+        end
+      end
+
+      if message.present?
+        IGNORED_ROUTING_PREFIXES.any? { |prefix| message.include?("\"#{prefix}") || message.include?(" '#{prefix}") || message.include?(prefix) }
+      else
+        false
+      end
+    rescue StandardError
+      false
     end
 
     def internal_referrer?
