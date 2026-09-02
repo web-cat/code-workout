@@ -798,7 +798,7 @@ class WorkoutsController < ApplicationController
           ) and return
         else
           Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Phase 2: No CourseOfferings found for instructor. Redirecting to new course offering creation page."
-          redirect_to new_organization_course_offering_path(
+          redirect_to organization_new_course_offering_path(
             organization_id: @course.organization.slug,
             course_id: @course.slug,
             term_id: @term.slug,

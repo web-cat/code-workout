@@ -475,6 +475,36 @@ describe WorkoutsController do
       expect(response.status).to eq(200)
       expect(controller.instance_variable_get(:@message)).to include("not yet available")
     end
+
+    it "redirects instructor to new course offering creation when no course offerings exist" do
+      allow(WorkoutOffering).to receive(:find_by).and_return(nil)
+      allow(user).to receive(:managed_course_offerings).and_return([])
+
+      get :find_offering, params: {
+        organization_id: 'vt',
+        course_id: 'cs1114',
+        term_id: 'fall2026',
+        workout_name: 'Example CBTF Question',
+        user_id: user.id.to_s,
+        lms_instance_id: '1',
+        ext_lti_assignment_id: '53db16ed-ee26-4b6b-82e7-0e2cee966c05',
+        custom_canvas_assignment_id: '2853105',
+        resource_link_id: 'f8b49093fc74aa27938a038e21565149b24b697c'
+      }, session: { is_instructor: true }
+
+      expect(response).to redirect_to(
+        organization_new_course_offering_path(
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          workout_name: 'Example CBTF Question',
+          ext_lti_assignment_id: '53db16ed-ee26-4b6b-82e7-0e2cee966c05',
+          custom_canvas_assignment_id: '2853105',
+          resource_link_id: 'f8b49093fc74aa27938a038e21565149b24b697c',
+          from_collection: nil
+        )
+      )
+    end
   end
 
   describe "#serialize_workout_offerings_to_yaml" do
