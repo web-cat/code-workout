@@ -5,6 +5,12 @@ ActiveAdmin.register CourseOffering do
   permit_params :course_id, :term_id, :name, :label, :url,
     :self_enrollment_allowed
 
+  filter :course
+  filter :term
+  filter :label
+  filter :self_enrollment_allowed
+  filter :created_at
+
   index do
     id_column
     column :course, sortable: 'courses.number' do |c|

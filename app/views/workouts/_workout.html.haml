@@ -7,17 +7,18 @@
 - course ||= workout_offering ? workout_offering.course_offering.course : nil
 - term ||= @term
 - term ||= workout_offering ? workout_offering.course_offering.term : nil
-- workout_score ||= workout_offering ? workout.andand.score_for(current_user, workout_offering) : (@workout_scores_by_workout_id && workout ? @workout_scores_by_workout_id[workout.id]&.first : workout.andand.score_for(current_user, workout_offering))
-- new_or_existing ||= false
-
-- if workout_score && ((workout && workout_score.workout != workout) ||      |
-  (workout_offering && workout_score.workout_offering != workout_offering))  |
+- show_score = true if local_assigns[:show_score].nil?
+- if show_score
+  - workout_score ||= workout_offering ? workout.andand.score_for(current_user, workout_offering) : (@workout_scores_by_workout_id && workout ? @workout_scores_by_workout_id[workout.id]&.first : workout.andand.score_for(current_user, workout_offering))
+  - if workout_score && ((workout && workout_score.workout != workout) ||      |
+    (workout_offering && workout_score.workout_offering != workout_offering))  |
+    - workout_score = nil
+  - workout_score ||= user ? WorkoutScore.find_by(workout: workout,
+    workout_offering: workout_offering, user: user) : nil
+  - workout ||= workout_score.andand.workout
+  - workout_offering ||= workout_score.andand.workout_offering
+- else
   - workout_score = nil
-- workout_score ||= user ? WorkoutScore.find_by(workout: workout,
-  workout_offering: workout_offering, user: user) : nil
-- workout ||= workout_score.andand.workout
-- workout ||= workout_offering.andand.workout
-- workout_offering ||= workout_score.andand.workout_offering
 - score_pct = workout_score ? ((workout.total_points > 0) ? (workout_score.score/workout.total_points * 100).round(0) : 0) : 0
 - if score_pct == 100 && workout_score.score < workout.total_points
   - score_pct = 99
@@ -50,7 +51,7 @@
       .due.late
         = 'Due in a few minutes'
 
-    - if new_or_existing
+    - if !show_score
       = workout.name
     - else
       - if course && term
@@ -73,7 +74,7 @@
     - course_id = course.andand.slug
     - organization_id = course.andand.organization.andand.slug
 
-    - if new_or_existing
+    - if !show_score
       - message = 'A clone of this workout will be created, which you can use and modify. Is this okay?'
 
       - if course_id

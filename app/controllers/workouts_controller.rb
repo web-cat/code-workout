@@ -406,7 +406,7 @@ class WorkoutsController < ApplicationController
           .where(term_id: recent_term_ids)
           .joins(:term)
           .order('terms.ends_on DESC')
-          .includes(:term, workout_offerings: { workout: :exercise_workouts })
+          .includes(:term, workout_offerings: { workout: [:tags, :exercise_workouts] })
 
         workouts_by_term = {}
         course_offerings.each do |co|

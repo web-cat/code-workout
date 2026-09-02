@@ -3,6 +3,12 @@ ActiveAdmin.register ExerciseCollection do
 
   menu parent: 'Gym-oriented', priority: 20
 
+  filter :name
+  filter :user
+  filter :user_group
+  filter :license
+  filter :created_at
+
   index do
     id_column
     column(:name) { |ec| link_to ec.name, admin_exercise_collection_path(ec) }

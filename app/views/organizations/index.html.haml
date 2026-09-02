@@ -18,48 +18,37 @@
 
 - if @organizations.any?
   - @organizations.each do |organization|
-    - courses_with_offerings = organization.courses.select do |course|
-      - show_course = !course.is_hidden || current_user.andand.is_a_member_of?(course.user_group)
-      - if show_course
-        - offs = course.course_offerings.select { |o| o.term_id == @term.id }
-        - offs = offs.select { |o| current_user.andand.is_enrolled?(o) } if params[:enrolled_only].to_b
-        - offs.any?
-      - else
-        - false
-    - show_org = courses_with_offerings.any? && !organization.is_hidden
-    - if show_org
+    - courses = @courses_by_organization[organization] || []
+    - if courses.any?
       %h2= link_to organization.name, organization_path(organization)
 
       %ul
-        - organization.courses.each do |course|
-          - show_course = !course.is_hidden || current_user.andand.is_a_member_of?(course.user_group)
-          - if show_course
-            - offerings = course.course_offerings.select { |o| o.term_id == @term.id }
-            - offerings = offerings.select { |o| current_user.andand.is_enrolled?(o) } if params[:enrolled_only].to_b
-            - if offerings.any?
-              %li
-                = link_to course.number_and_name,
-                  organization_course_path(organization, course, @term)
-                - if course.is_hidden
-                  %small.text.text-warning
-                    Hidden course, displayed because you have course privileges.
-                %table.table.table-striped{ style: 'width: auto' }
-                  %thead
-                    %th Term
-                    %th Section
-                    %th Instructor(s)
-                    %th Enroll
-                  %tbody
-                    - offerings.each do |o|
-                      %tr
-                        %td= o.term.display_name
-                        %td= link_to o.display_name,
-                          organization_course_path(o.course.organization,
-                          o.course, o.term)
-                        %td!= o.instructors.map{ |i| link_to i.display_name,
-                          user_path(i) }.to_sentence
-                        %td= render partial: "course_offerings/self_enrollment",
-                          locals: { off: o }
+        - courses.each do |course|
+          - offerings = @offerings_by_course[course] || []
+          - if offerings.any?
+            %li
+              = link_to course.number_and_name,
+                organization_course_path(organization, course, @term)
+              - if course.is_hidden
+                %small.text.text-warning
+                  Hidden course, displayed because you have course privileges.
+              %table.table.table-striped{ style: 'width: auto' }
+                %thead
+                  %th Term
+                  %th Section
+                  %th Instructor(s)
+                  %th Enroll
+                %tbody
+                  - offerings.each do |o|
+                    %tr
+                      %td= o.term.display_name
+                      %td= link_to o.display_name,
+                        organization_course_path(o.course.organization,
+                        o.course, o.term)
+                      %td!= o.instructors.map{ |i| link_to i.display_name,
+                        user_path(i) }.to_sentence
+                      %td= render partial: "course_offerings/self_enrollment",
+                        locals: { off: o }
 - else
   %p
     No organizations have courses offered in
