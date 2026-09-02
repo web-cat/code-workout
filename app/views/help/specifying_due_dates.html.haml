@@ -114,14 +114,128 @@
         students:
           - charlie@example.edu
 
-%h2 4. Tips for Success
+%h2 4. IP Access Restrictions
+%p
+  You can restrict workout access to specific network locations (such as on-campus labs or test centers) using the
+  %code ips:
+  setting in the YAML.
+%ul
+  %li
+    %b Global Default:
+    Specify
+    %code ips:
+    at the top level to apply to all sections by default.
+  %li
+    %b Per-Section Override:
+    Specify
+    %code ips:
+    inside a specific section to override the default for that section.
+  %li
+    %b Student Extension Override:
+    Specify
+    %code ips:
+    within an extension group to allow specific students to access from different IPs or use
+    %code any
+    to completely remove all IP restrictions for those students.
+  %li
+    %b Supported Formats:
+    Single IPs (e.g.
+    %code 192.168.1.50
+    ,
+    %code ::1
+    ), CIDR notation (e.g.
+    %code 192.168.1.0/24
+    ,
+    %code 10.0.0.0/8
+    ), wildcards (e.g.
+    %code 128.173.*.*
+    ), or comma-separated lists. Use
+    %code any
+    to permit access from anywhere.
+
+%h3 Example with IP Restrictions:
+%pre.examples
+  :preserve
+    ips: 128.173.*.*, 198.82.0.0/16     # Default for all sections
+    sections:
+      - section: CS 101 Section A
+        due: 2025-09-15 11:59 PM
+        from: 1 week
+        until: +2 days
+      - section: CS 101 Lab B
+        due: 2025-09-16 11:59 PM
+        from: always
+        until: +0 minutes
+        ips: 192.168.1.0/24             # Overrides default for Lab B
+
+    extensions:
+      - ips: any                        # Removes IP restrictions for Alice
+        students:
+          - Alice Smith <asmith@example.edu>
+
+%h2 5. Browser Agent Requirements
+%p
+  You can require students to use specific secure testing browsers (such as Respondus LockDown Browser or Secure Exam Browser) using the
+  %code browsers:
+  setting in the YAML.
+%ul
+  %li
+    %b Global Default:
+    Specify
+    %code browsers:
+    at the top level to require the browser for all sections by default.
+  %li
+    %b Per-Section Override:
+    Specify
+    %code browsers:
+    inside a section to set or override the requirement for that section.
+  %li
+    %b Student Extension Override:
+    Specify
+    %code browsers:
+    in an extension group to allow specific students to use a different browser or specify
+    %code any
+    to completely lift browser restrictions for those students.
+  %li
+    %b Supported Formats:
+    Browser substrings (e.g.
+    %code LockDown Browser
+    ,
+    %code SEB
+    ), wildcards (e.g.
+    %code *LockDown*
+    ), or comma-separated lists. Use
+    %code any
+    to allow any standard browser.
+
+%h3 Example with Browser Requirements:
+%pre.examples
+  :preserve
+    browsers: LockDown Browser, SEB     # Require LockDown Browser or SEB for all sections
+    sections:
+      - section: CS 101 Section A
+        due: 2025-09-15 11:59 PM
+        from: 1 week
+        until: +2 days
+      - section: CS 101 Practice Lab
+        due: 2025-09-16 11:59 PM
+        from: always
+        until: +0 minutes
+        browsers: any                   # No browser requirement for practice lab
+
+    extensions:
+      - browsers: any                   # Removes browser requirement for Alice
+        students:
+          - Alice Smith <asmith@example.edu>
+
+%h2 6. Tips for Success
 %ul
   %li
     %b Time Zones:
     All absolute dates are interpreted in your current time zone (as set in your profile).
   %li
     %b Validation:
-    The system will notify you if you enter an invalid student or an impossible relative offset (like a positive 
+    The system will notify you if you enter an invalid student or an impossible relative offset (like a positive
     %code from
     date).
   %li

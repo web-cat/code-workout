@@ -227,6 +227,40 @@ class WorkoutsController < ApplicationController
 
     @workout_score = @workout.score_for(current_user, @workout_offering)
 
+    if @workout_offering && !@workout_offering.ip_allowed?(request.remote_ip, current_user, @workout_score)
+      if current_user
+        ActivityLog.create(
+          user: (current_user.is_a?(User) ? current_user : nil),
+          workout: (@workout.is_a?(Workout) ? @workout : nil),
+          workout_offering: @workout_offering,
+          workout_score: (@workout_score.is_a?(WorkoutScore) ? @workout_score : nil),
+          activity: 'workout_view_ip_blocked',
+          ip_address: request.remote_ip,
+          user_agent: request.user_agent,
+          lti_launch: false
+        )
+      end
+      @message = "This workout cannot be accessed from your network location (#{request.remote_ip})."
+      render 'workout_offerings/error' and return
+    end
+
+    if @workout_offering && !@workout_offering.user_agent_allowed?(request.user_agent, current_user, @workout_score)
+      if current_user
+        ActivityLog.create(
+          user: (current_user.is_a?(User) ? current_user : nil),
+          workout: (@workout.is_a?(Workout) ? @workout : nil),
+          workout_offering: @workout_offering,
+          workout_score: (@workout_score.is_a?(WorkoutScore) ? @workout_score : nil),
+          activity: 'workout_view_user_agent_blocked',
+          ip_address: request.remote_ip,
+          user_agent: request.user_agent,
+          lti_launch: false
+        )
+      end
+      @message = "This workout requires a specific browser (such as LockDown Browser or Secure Exam Browser) and cannot be accessed from your current browser."
+      render 'workout_offerings/error' and return
+    end
+
     if @workout_score
       @scoring_attempts_by_version_id = Attempt.where(
         active_score_id: @workout_score.id
@@ -238,6 +272,19 @@ class WorkoutsController < ApplicationController
         workout_score_id: nil,
         exercise_version_id: ex_version_ids
       ).order('updated_at DESC').group_by(&:exercise_version_id)
+    end
+
+    if current_user
+      ActivityLog.create(
+        user: (current_user.is_a?(User) ? current_user : nil),
+        workout: (@workout.is_a?(Workout) ? @workout : nil),
+        workout_offering: (@workout_offering.is_a?(WorkoutOffering) ? @workout_offering : nil),
+        workout_score: (@workout_score.is_a?(WorkoutScore) ? @workout_score : nil),
+        activity: 'workout_view',
+        ip_address: request.remote_ip,
+        user_agent: request.user_agent,
+        lti_launch: false
+      )
     end
   end
 
@@ -969,7 +1016,7 @@ class WorkoutsController < ApplicationController
       organization_id: params[:organization_id],
       term_id: params[:term_id],
       course_id: params[:course_id],
-      lti_launch: true,
+      lti_launch: params[:lti_launch] || true,
       launch_presentation_document_target: launch_presentation_document_target
     )
   end
@@ -1142,6 +1189,20 @@ class WorkoutsController < ApplicationController
           redirect_to workout_path(@workout),
             notice: "The time limit has passed for this workout." and return
         end
+
+        if @lti_launch.present? || params[:lti_launch].present?
+          token = @lti_launch || params[:lti_launch]
+          lti_context = lti_context_for_token(token)
+          ActivityLog.create(
+            user: (current_user.is_a?(User) ? current_user : nil),
+            workout: (@workout.is_a?(Workout) ? @workout : nil),
+            workout_score: (@workout_score.is_a?(WorkoutScore) ? @workout_score : nil),
+            activity: 'lti_launch',
+            ip_address: request.remote_ip,
+            lms_instance_id: lti_context.andand[:lms_instance_id] || session[:lms_instance_id] || @lti_workout.andand.lms_instance_id,
+            lti_launch: true
+          )
+        end
       end
       redirect_to exercise_practice_path(
         @workout.first_exercise,
@@ -1251,6 +1312,16 @@ class WorkoutsController < ApplicationController
           sections_yaml = data['sections'] || []
           extensions_yaml = data['extensions'] || []
           
+          # Default top-level IP restriction for all offerings
+          default_ips = data['ips'] || data['allowed_ips'] || data['ip_restrictions']
+          default_ips = default_ips.is_a?(Array) ? default_ips.join(', ') : default_ips.to_s.strip if default_ips.present?
+          default_ips = nil if default_ips.blank?
+
+          # Default top-level browser requirement for all offerings
+          default_browsers = data['browsers'] || data['user_agents'] || data['allowed_user_agents']
+          default_browsers = default_browsers.is_a?(Array) ? default_browsers.join(', ') : default_browsers.to_s.strip if default_browsers.present?
+          default_browsers = nil if default_browsers.blank?
+
           user_tz = current_user.time_zone.andand.name || 'America/New_York'
           @course = Course.find_with_id_or_slug(params[:course_id], params[:organization_id])
           @term = Term.find(params[:term_id]) if params[:term_id].present?
@@ -1283,10 +1354,20 @@ class WorkoutsController < ApplicationController
                 from = parse_date(s['from'], user_tz, due, :from)
                 until_date = parse_date(s['until'], user_tz, due, :until)
                 
+                section_ips = s['ips'] || s['allowed_ips'] || s['ip_restrictions']
+                section_ips = section_ips.is_a?(Array) ? section_ips.join(', ') : section_ips.to_s.strip if section_ips.present?
+                allowed_ips = section_ips.present? ? section_ips : default_ips
+
+                section_browsers = s['browsers'] || s['user_agents'] || s['allowed_user_agents']
+                section_browsers = section_browsers.is_a?(Array) ? section_browsers.join(', ') : section_browsers.to_s.strip if section_browsers.present?
+                allowed_user_agents = section_browsers.present? ? section_browsers : default_browsers
+
                 new_offerings_data[co.id.to_s] = {
                   'opening_date' => from.andand.to_i.andand.*(1000), # millisecond timestamp for add_workout_offerings
                   'soft_deadline' => due.andand.to_i.andand.*(1000),
                   'hard_deadline' => until_date.andand.to_i.andand.*(1000),
+                  'allowed_ips' => allowed_ips,
+                  'allowed_user_agents' => allowed_user_agents,
                   'extensions' => []
                 }
               else
@@ -1314,6 +1395,14 @@ class WorkoutsController < ApplicationController
               due = parse_date(ext_group['due'], user_tz)
               from = parse_date(ext_group['from'], user_tz, due, :from)
               until_date = parse_date(ext_group['until'], user_tz, due, :until)
+              ext_ips = ext_group['ips'] || ext_group['allowed_ips'] || ext_group['ip_restrictions']
+              ext_ips = ext_ips.is_a?(Array) ? ext_ips.join(', ') : ext_ips.to_s.strip if ext_ips.present?
+              ext_ips = nil if ext_ips.blank?
+
+              ext_browsers = ext_group['browsers'] || ext_group['user_agents'] || ext_group['allowed_user_agents']
+              ext_browsers = ext_browsers.is_a?(Array) ? ext_browsers.join(', ') : ext_browsers.to_s.strip if ext_browsers.present?
+              ext_browsers = nil if ext_browsers.blank?
+
               students = ext_group['students'] || []
               
               students.each do |student_ref|
@@ -1336,7 +1425,9 @@ class WorkoutsController < ApplicationController
                       workout_offering: enrolled_offering,
                       opening_date: from,
                       soft_deadline: due,
-                      hard_deadline: until_date
+                      hard_deadline: until_date,
+                      allowed_ips: ext_ips,
+                      allowed_user_agents: ext_browsers
                     )
                   else
                     workout.errors.add(:base, "Student '#{student_ref}' is not enrolled in any sections for this workout.")
@@ -1406,20 +1497,43 @@ class WorkoutsController < ApplicationController
     def serialize_workout_offerings_to_yaml(workout_offerings, student_extensions)
       user_tz = current_user.andand.time_zone.andand.name || 'America/New_York'
       
+      all_ips = (workout_offerings || []).map do |wo|
+        wo.respond_to?(:allowed_ips) ? wo.allowed_ips.presence : nil
+      end.compact.uniq
+
+      # If all offerings share the same non-blank IP restriction, serialize at top-level
+      common_ips = (all_ips.size == 1 && (workout_offerings || []).all? { |wo| wo.respond_to?(:allowed_ips) && wo.allowed_ips.present? }) ? all_ips.first : nil
+
+      all_browsers = (workout_offerings || []).map do |wo|
+        wo.respond_to?(:allowed_user_agents) ? wo.allowed_user_agents.presence : nil
+      end.compact.uniq
+
+      # If all offerings share the same non-blank browser requirement, serialize at top-level
+      common_browsers = (all_browsers.size == 1 && (workout_offerings || []).all? { |wo| wo.respond_to?(:allowed_user_agents) && wo.allowed_user_agents.present? }) ? all_browsers.first : nil
+
       sections = (workout_offerings || []).map do |wo|
         course_offering = wo.respond_to?(:course_offering) ? wo.course_offering : wo
         soft_deadline = wo.respond_to?(:soft_deadline) ? wo.soft_deadline : nil
         opening_date = wo.respond_to?(:opening_date) ? wo.opening_date : nil
         hard_deadline = wo.respond_to?(:hard_deadline) ? wo.hard_deadline : nil
-        {
+        allowed_ips = wo.respond_to?(:allowed_ips) ? wo.allowed_ips.presence : nil
+        allowed_user_agents = wo.respond_to?(:allowed_user_agents) ? wo.allowed_user_agents.presence : nil
+        sec_hash = {
           'section' => course_offering.display_name_with_term,
           'due' => format_date(soft_deadline, user_tz),
           'from' => format_rel_date(opening_date, soft_deadline, user_tz) || 'always',
           'until' => format_rel_date(hard_deadline, soft_deadline, user_tz) || '+0 minutes'
         }
+        if allowed_ips.present? && allowed_ips != common_ips
+          sec_hash['ips'] = allowed_ips
+        end
+        if allowed_user_agents.present? && allowed_user_agents != common_browsers
+          sec_hash['browsers'] = allowed_user_agents
+        end
+        sec_hash
       end
 
-      # Group extensions by dates
+      # Group extensions by dates, IP restrictions, and browser requirements
       grouped_extensions = {}
       (student_extensions || []).each do |ext|
         if ext.is_a?(Hash)
@@ -1430,6 +1544,9 @@ class WorkoutsController < ApplicationController
           open_d = Time.at(open_d) if open_d.is_a?(Numeric)
           hard = Time.at(hard) if hard.is_a?(Numeric)
 
+          ext_ips = ext[:allowed_ips] || ext['allowed_ips'] || ext[:ips] || ext['ips']
+          ext_browsers = ext[:allowed_user_agents] || ext['allowed_user_agents'] || ext[:user_agents] || ext['user_agents'] || ext[:browsers] || ext['browsers']
+
           user_display = ext[:student_display] || ext['student_display']
           user_email = ext[:student_email] || ext['student_email'] || (User.find_by(id: ext[:student_id] || ext['student_id']).andand.email)
           student_label = user_email.present? ? "#{user_display} <#{user_email}>" : user_display
@@ -1437,26 +1554,33 @@ class WorkoutsController < ApplicationController
           soft = ext.soft_deadline
           open_d = ext.opening_date
           hard = ext.hard_deadline
+          ext_ips = ext.respond_to?(:allowed_ips) ? ext.allowed_ips.presence : nil
+          ext_browsers = ext.respond_to?(:allowed_user_agents) ? ext.allowed_user_agents.presence : nil
           student_label = "#{ext.user.display_name} <#{ext.user.email}>"
         end
 
         key = {
           'due' => format_date(soft, user_tz),
           'from' => format_rel_date(open_d, soft, user_tz) || 'always',
-          'until' => format_rel_date(hard, soft, user_tz) || '+0 minutes'
+          'until' => format_rel_date(hard, soft, user_tz) || '+0 minutes',
+          'ips' => ext_ips.presence,
+          'browsers' => ext_browsers.presence
         }
         
         grouped_extensions[key] ||= []
         grouped_extensions[key] << student_label if student_label.present?
       end
 
-      ext_list = grouped_extensions.map do |dates, students|
-        {
-          'due' => dates['due'],
-          'from' => dates['from'],
-          'until' => dates['until'],
-          'students' => students
+      ext_list = grouped_extensions.map do |meta, students|
+        h = {
+          'due' => meta['due'],
+          'from' => meta['from'],
+          'until' => meta['until']
         }
+        h['ips'] = meta['ips'] if meta['ips'].present?
+        h['browsers'] = meta['browsers'] if meta['browsers'].present?
+        h['students'] = students
+        h
       end
 
       if ext_list.empty?
@@ -1468,10 +1592,11 @@ class WorkoutsController < ApplicationController
         }
       end
 
-      yaml_obj = {
-        'sections' => sections,
-        'extensions' => ext_list
-      }
+      yaml_obj = {}
+      yaml_obj['ips'] = common_ips if common_ips.present?
+      yaml_obj['browsers'] = common_browsers if common_browsers.present?
+      yaml_obj['sections'] = sections
+      yaml_obj['extensions'] = ext_list
       
       # Use custom formatting to avoid unnecessary quotes and handle nulls as requested
       yaml_str = yaml_obj.to_yaml
