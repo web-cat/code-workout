@@ -31,4 +31,4 @@
 
   %p.mt-4
     %strong Don't see your course offering?
-    = link_to 'Create New Course Offering', new_organization_course_offering_path(organization_id: @organization.slug, course_id: @course.slug, term_id: @term.slug, workout_name: @workout_name, ext_lti_assignment_id: @ext_lti_assignment_id, custom_canvas_assignment_id: @custom_canvas_assignment_id, resource_link_id: @resource_link_id, from_collection: @from_collection), class: 'btn btn-success'
+    = link_to 'Create New Course Offering', organization_new_course_offering_path(organization_id: @organization.slug, course_id: @course.slug, term_id: @term.slug, workout_name: @workout_name, ext_lti_assignment_id: @ext_lti_assignment_id, custom_canvas_assignment_id: @custom_canvas_assignment_id, resource_link_id: @resource_link_id, from_collection: @from_collection), class: 'btn btn-success'

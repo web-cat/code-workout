@@ -119,7 +119,7 @@ class Exercise < ApplicationRecord
 
     #~ Class methods ............................................................
 
-  MAX_SEARCH_RESULTS = 50
+  MAX_SEARCH_RESULTS = 200
 
   # -------------------------------------------------------------
   def self.search(terms, user = nil)
