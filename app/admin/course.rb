@@ -4,6 +4,12 @@ ActiveAdmin.register Course, sort_order: :number_asc do
   menu parent: 'University-oriented', priority: 30
   permit_params :name, :number, :organization_id
 
+  filter :organization
+  filter :number
+  filter :name
+  filter :is_hidden
+  filter :created_at
+
   index do
     id_column
     column(:number) { |c| link_to c.number, admin_course_path(c) }

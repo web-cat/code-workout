@@ -9,6 +9,12 @@ ActiveAdmin.register User do
       :id, :user_group_id
     ]
 
+  filter :email
+  filter :first_name
+  filter :last_name
+  filter :global_role
+  filter :created_at
+
   index do
     selectable_column
     id_column

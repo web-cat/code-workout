@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_08_14_124641) do
+ActiveRecord::Schema.define(version: 2026_09_01_203700) do
 
   create_table "active_admin_comments", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
     t.string "namespace"
@@ -68,6 +68,7 @@ ActiveRecord::Schema.define(version: 2026_08_14_124641) do
     t.index ["exercise_version_id"], name: "index_attempts_on_exercise_version_id"
     t.index ["lms_instance_id"], name: "index_attempts_on_lms_instance_id"
     t.index ["user_id", "exercise_version_id"], name: "idx_attempts_on_user_exercise_version"
+    t.index ["user_id", "workout_score_id", "exercise_version_id", "updated_at"], name: "idx_attempts_on_user_ws_ver_updated"
     t.index ["user_id"], name: "index_attempts_on_user_id"
     t.index ["workout_score_id", "exercise_version_id"], name: "idx_attempts_on_workout_score_exercise_version"
     t.index ["workout_score_id"], name: "index_attempts_on_workout_score_id"

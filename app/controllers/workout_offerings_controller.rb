@@ -17,7 +17,7 @@ class WorkoutOfferingsController < ApplicationController
       @workout = Workout.includes(
         :tags,
         :exercise_workouts,
-        workout_offerings: [course_offering: [:term, :course, { course_enrollments: :course_role }]]
+        workout_offerings: [course_offering: [:term, :course]]
       ).find_by(id: @workout_offering.workout_id) || @workout_offering.workout
       @course_offering = @workout_offering.course_offering
       @course = @course_offering.andand.course
@@ -36,18 +36,10 @@ class WorkoutOfferingsController < ApplicationController
 
       if @workout_score
         @scoring_attempts_by_version_id = @workout_score.scored_attempts.group_by(&:exercise_version_id)
-      elsif current_user
-        exercise_version_ids = @exs.map(&:current_version_id).compact
-        if exercise_version_ids.any?
-          @attempts_by_version_id = Attempt.where(
-            user_id: current_user.id,
-            exercise_version_id: exercise_version_ids,
-            workout_score_id: nil
-          ).order(submit_time: :desc).group_by(&:exercise_version_id)
-        else
-          @attempts_by_version_id = {}
-        end
+      else
+        @scoring_attempts_by_version_id = {}
       end
+      @attempts_by_version_id = {}
     end
     render 'workouts/show'
   end
