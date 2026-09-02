@@ -8,8 +8,8 @@ class PemlParsingUtil
     parse_result = Peml.parse(PARSER_PARAMS.merge({
       peml: text_representation
     }))
-    peml = parse_result[:value]
-    error_msgs.concat(parse_result[:diagnostics])
+    peml = parse_result["value"]
+    error_msgs.concat(parse_result["diagnostics"] || [])
     convert_peml(peml, error_msgs)
   end
 
@@ -43,21 +43,17 @@ class PemlParsingUtil
     content = value['tags.topics']
     new_hash['tag_list'] = content.to_s if content
     new_hash['style_list'] = 'parsons'
-    new_hash['language_list'] = value['systems[0].language'].to_s
+    language = value['systems[0].language'].to_s
+    new_hash['language_list'] = language
 
     wrapper_code = value['systems[0].assets.code.wrapper.files[0].content']
     class_name   = wrapper_code&.match(/(?:public\s+)?class\s+(\w+)/)&.[](1)
 
-    raw_test = value['systems[0].assets.test.files[0].content']
-    test_script = if raw_test
-      lines = raw_test.lines
-      if lines.first&.strip&.downcase == 'expected'
-        # PEML output-only format: strip header, prepend comma to create input,expected_output rows
-        lines[1..].map { |l| ",#{l.chomp}" }.join("\n")
-      else
-        lines[1..].join
-      end
-    end
+    render_params = PARSER_PARAMS.deep_dup
+    render_params[:render_tests_params]['pattern']['class_name'] = class_name if class_name
+    rendered = Peml.parse(render_params.merge(peml: text_representation))
+    error_msgs.concat(rendered['diagnostics'] || [])
+    rendered_value = rendered['value'].dottie!
 
     prompt = {
       'position'     => 1,
@@ -65,9 +61,12 @@ class PemlParsingUtil
       'pif_json'     => pif_json,
       'grading_type' => value['settings.grader.type'],
       'wrapper_code' => wrapper_code,
-      'test_script'  => test_script,
       'class_name'   => class_name,
     }
+
+    get_test_file_content(prompt, language, rendered_value['systems[0].assets.test'])
+    prompt['test_script'] = prompt.delete('tests')
+
     new_hash['current_version'] = {}
     new_hash['current_version.creator'] = get_author_email(value)
     new_hash['current_version.prompts'] = [{ 'parsons_prompt' => prompt }]
@@ -320,8 +319,10 @@ class PemlParsingUtil
     # language-specific template overrides
     render_tests_params: {
       'parse_descriptions' => true,
-      pattern: {
-        'description' => '{% include "method_call" %} -> {% include "expected_template" %}',
+      'pattern' => {
+        'description' => '{% if expected %}{% include "method_call" %} -> ' \
+          '{% include "expected_template" %}{% endif %}' \
+          '{% if stdout %}{{stdin}} -> {{stdout}}{% endif %}',
         'description_annotation' => <<~DESCRIPTION_ANNOTATION
         Description: {% show_yaml %}{% include 'description' %}{% endshow_yaml %}
         DESCRIPTION_ANNOTATION
@@ -329,9 +330,14 @@ class PemlParsingUtil
 
       'java' => {
         'pattern' => {
-          'description_annotation' => <<~JAVA_DESCRIPTION_ANNOTATION
+          'description_annotation' => <<~JAVA_DESCRIPTION_ANNOTATION,
           {% show_yaml %}@Description({% capture desc_out %}{% include 'description' %}{% endcapture %}{{ desc_out | string_literal }}){% endshow_yaml %}
           JAVA_DESCRIPTION_ANNOTATION
+          # java/test_class_extends.liquid's actual content is
+          # `{% if test_case_superclass %}extends {{test_case_superclass}}
+          'test_class_extends' => 'extends codeworkout.CodeWorkoutTest',
+          'extra_imports' => "import codeworkout.*;\n",
+          'test_case_actions' => '{% if stdout %}subject.main(new String[0]);{% endif %}'
         }
       },
       'python' => {

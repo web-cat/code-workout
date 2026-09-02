@@ -47,7 +47,9 @@
   </target>
 
   <target name="run" depends="compile">
-    <junit printsummary="off"
+    <junit fork="true"
+           forkmode="once"
+           printsummary="off"
            haltonerror="no"
            haltonfailure="no"
            filtertrace="no"

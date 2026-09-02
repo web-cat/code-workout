@@ -79,6 +79,44 @@ describe CourseOfferingsController do
         post :create, params: {:course_offering => valid_attributes}, session: valid_session
         response.should redirect_to(CourseOffering.last)
       end
+
+      it "redirects to find_offering with term slug from created offering when workout_name is present" do
+        org = FactoryBot.build_stubbed(:organization, slug: 'vt')
+        course = FactoryBot.build_stubbed(:course, slug: 'cbtf', organization: org)
+        term = FactoryBot.build_stubbed(:term, slug: 'fall-2026')
+        user = FactoryBot.build_stubbed(:user)
+        allow(controller).to receive(:current_user).and_return(user)
+        allow(Course).to receive(:find_with_id_or_slug).and_return(course)
+        offering = FactoryBot.build_stubbed(:course_offering, id: 1509, course: course, term: term)
+        allow(CourseOffering).to receive(:new).and_return(offering)
+        allow(offering).to receive(:save).and_return(true)
+        allow(CourseEnrollment).to receive(:create).and_return(true)
+
+        post :create, params: {
+          organization_id: 'vt',
+          course_id: 'cbtf',
+          workout_name: 'Example CBTF CodeWorkout Question',
+          ext_lti_assignment_id: '53db16ed-ee26-4b6b-82e7-0e2cee966c05',
+          custom_canvas_assignment_id: '2853105',
+          resource_link_id: 'f8b49093fc74aa27938a038e21565149b24b697c',
+          from_collection: '',
+          course_offering: { label: 'CBTF', term_id: '47' }
+        }
+
+        expect(response).to redirect_to(
+          organization_find_workout_offering_path(
+            organization_id: 'vt',
+            course_id: 'cbtf',
+            term_id: 'fall-2026',
+            workout_name: 'Example CBTF CodeWorkout Question',
+            ext_lti_assignment_id: '53db16ed-ee26-4b6b-82e7-0e2cee966c05',
+            custom_canvas_assignment_id: '2853105',
+            resource_link_id: 'f8b49093fc74aa27938a038e21565149b24b697c',
+            from_collection: '',
+            course_offering_id: 1509
+          )
+        )
+      end
     end
 
     describe "with invalid params" do
