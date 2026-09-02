@@ -17,7 +17,7 @@ RSpec.describe ExceptionHandler::Exception, type: :model do
 
   describe 'validation for 404 and routing errors' do
     let(:routing_error) do
-      ActionController::RoutingError.new('No route matches [GET] "/api/v1/courses/uncc/tabs"')
+      ActionController::RoutingError.new('No route matches [GET] "/courses/uncc/missing_page"')
     end
 
     it 'is invalid when a 404 routing error has no referrer (direct/bot probe)' do
@@ -40,6 +40,13 @@ RSpec.describe ExceptionHandler::Exception, type: :model do
     it 'is valid when a 404 routing error has an internal relative referrer' do
       record = build_exception(routing_error, path_info: '/404', referrer: '/gym/workouts')
       expect(record).to be_valid
+    end
+
+    it 'is invalid when a routing error matches /api/v1/* even with an internal referrer' do
+      api_routing_error = ActionController::RoutingError.new('No route matches [GET] "/api/v1/features/environment"')
+      record = build_exception(api_routing_error, path_info: '/404', referrer: "http://#{host}/courses/uncc/itsc2214/fall-2026/14374/982")
+      expect(record).not_to be_valid
+      expect(record.errors[:base]).to include('Ignored third-party or API routing error')
     end
   end
 
