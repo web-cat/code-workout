@@ -54,6 +54,16 @@ RUN apt-get update -qq \
 ## JAVA INSTALLATION
 RUN apt-get install -y default-jre default-jdk
 
+## DOCKER CLI (client only -- talks to the HOST daemon over the
+## /var/run/docker.sock mounted in by docker-compose.yml, so cpp/python/ruby
+## grading can launch their language containers as siblings of this one)
+ENV DOCKER_CLI_VERSION=24.0.7
+RUN curl -fsSL "https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_CLI_VERSION}.tgz" \
+      -o /tmp/docker.tgz \
+    && tar -xzf /tmp/docker.tgz -C /tmp \
+    && mv /tmp/docker/docker /usr/local/bin/docker \
+    && rm -rf /tmp/docker.tgz /tmp/docker
+
 # install rubygems
 ENV BUNDLER_VERSION 2.1.4
 ENV RAILS_ENV=$RAILS_ENV

@@ -46,7 +46,7 @@ class ParsonsPrompt < ApplicationRecord
   #~ Hooks ....................................................................
 
   before_validation :set_defaults
-  after_commit :parse_tests, on: [ :create, :update ], if: :test_script_changed?
+  after_commit :parse_tests, on: [ :create, :update ]
 
   #~ Instance methods .........................................................
 

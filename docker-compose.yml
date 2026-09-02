@@ -38,8 +38,10 @@ services:
       DB_HOST: db
       RAILS_ENV: development
       SPROCKETS_CACHE: /cache # added to support windows
+      HOST_PROJECT_DIR: ${PWD}
     volumes:
       - .:/code-workout
+      - /var/run/docker.sock:/var/run/docker.sock
 volumes:
   dbdata:
   cache: # added to support windows
