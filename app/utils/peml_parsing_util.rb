@@ -8,8 +8,8 @@ class PemlParsingUtil
     parse_result = Peml.parse(PARSER_PARAMS.merge({
       peml: text_representation
     }))
-    peml = parse_result[:value]
-    error_msgs.concat(parse_result[:diagnostics])
+    peml = parse_result["value"]
+    error_msgs.concat(parse_result["diagnostics"] || [])
     convert_peml(peml, error_msgs)
   end
 
