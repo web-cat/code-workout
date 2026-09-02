@@ -206,6 +206,7 @@
             = hidden_field_tag 'exercise_version[attempt_state]', '', id: 'parsons-state-field'
             %div#parsons-container{ data: { pif_json: pif_json.to_json,
               initial_state: (prior_answer.andand.specific.andand.get_attempt_state || 'null').to_json,
+              supportsExecutionGrading: false,
               save_state_url: exercise_save_parsons_state_path(@exercise_version.exercise, exercise_version_id: @exercise_version.id) } }
 
             -# = f.input :answer_code, as: :text, class: 'code',
