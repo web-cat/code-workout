@@ -70,7 +70,7 @@ describe WorkoutsController do
       allow(course_offerings_relation).to receive(:where).with(term_id: [20]).and_return(scoped_query)
       allow(scoped_query).to receive(:joins).with(:term).and_return(scoped_query)
       allow(scoped_query).to receive(:order).with('terms.ends_on DESC').and_return(scoped_query)
-      allow(scoped_query).to receive(:includes).with(:term, workout_offerings: { workout: :exercise_workouts }).and_return([mock_course_offering])
+      allow(scoped_query).to receive(:includes).with(:term, workout_offerings: { workout: [:tags, :exercise_workouts] }).and_return([mock_course_offering])
 
       get :new_or_existing, params: {
         organization_id: 'vt',
