@@ -145,23 +145,24 @@ class CourseOfferingsController < ApplicationController
     end
 
     if created_offerings.any?
+      first_offering = created_offerings.first
       if params[:workout_name].present?
         redirect_to organization_find_workout_offering_path(
-          organization_id: params[:organization_id],
-          course_id: params[:course_id],
-          term_id: params[:term_id],
+          organization_id: @course.organization,
+          course_id: @course,
+          term_id: first_offering.term,
           workout_name: params[:workout_name],
           ext_lti_assignment_id: params[:ext_lti_assignment_id],
           custom_canvas_assignment_id: params[:custom_canvas_assignment_id],
           resource_link_id: params[:resource_link_id],
           from_collection: params[:from_collection],
-          course_offering_id: created_offerings.first.id
+          course_offering_id: first_offering.id
         ) and return
       else
         redirect_to organization_course_path(
-          created_offerings.first.course.organization,
-          created_offerings.first.course,
-          created_offerings.first.term),
+          first_offering.course.organization,
+          first_offering.course,
+          first_offering.term),
           notice: "#{created_offerings.size} course offering(s) successfully created."
       end
     else
