@@ -3,5 +3,5 @@
   .below-nav.content.full-height.container-fluid
     = render partial: 'layouts/flash'
     = yield
-    - if !params[:lti_launch]
+    - if !embedded_lti_launch?
       = render partial: 'layouts/footer'

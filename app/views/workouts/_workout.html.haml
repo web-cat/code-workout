@@ -5,17 +5,20 @@
 - workout ||= workout_offering ? workout_offering.workout : nil
 - course ||= @course
 - course ||= workout_offering ? workout_offering.course_offering.course : nil
-- workout_score ||= workout.andand.score_for(current_user, workout_offering)
-- new_or_existing ||= false
-
-- if workout_score && ((workout && workout_score.workout != workout) ||      |
-  (workout_offering && workout_score.workout_offering != workout_offering))  |
+- term ||= @term
+- term ||= workout_offering ? workout_offering.course_offering.term : nil
+- show_score = true if local_assigns[:show_score].nil?
+- if show_score
+  - workout_score ||= workout_offering ? workout.andand.score_for(current_user, workout_offering) : (@workout_scores_by_workout_id && workout ? @workout_scores_by_workout_id[workout.id]&.first : workout.andand.score_for(current_user, workout_offering))
+  - if workout_score && ((workout && workout_score.workout != workout) ||      |
+    (workout_offering && workout_score.workout_offering != workout_offering))  |
+    - workout_score = nil
+  - workout_score ||= user ? WorkoutScore.find_by(workout: workout,
+    workout_offering: workout_offering, user: user) : nil
+  - workout ||= workout_score.andand.workout
+  - workout_offering ||= workout_score.andand.workout_offering
+- else
   - workout_score = nil
-- workout_score ||= user ? WorkoutScore.find_by(workout: workout,
-  workout_offering: workout_offering, user: user) : nil
-- workout ||= workout_score.andand.workout
-- workout ||= workout_offering.andand.workout
-- workout_offering ||= workout_score.andand.workout_offering
 - score_pct = workout_score ? ((workout.total_points > 0) ? (workout_score.score/workout.total_points * 100).round(0) : 0) : 0
 - if score_pct == 100 && workout_score.score < workout.total_points
   - score_pct = 99
@@ -48,10 +51,16 @@
       .due.late
         = 'Due in a few minutes'
 
-    - if new_or_existing
+    - if !show_score
       = workout.name
     - else
-      - if workout_offering
+      - if course && term
+        = link_to workout.name,
+            organization_course_workout_path(id: workout.id,
+            course_id: course.slug,
+            term_id: term.slug,
+            organization_id: course.organization.slug)
+      - elsif workout_offering
         = link_to workout.name,
             organization_workout_offering_path(id: workout_offering.id,
             course_id: workout_offering.course_offering.course.slug,
@@ -59,13 +68,13 @@
             organization_id: workout_offering.course_offering.course.organization.slug)
       - else
         = link_to workout.name, workout_path(id: workout[:id])
-    %span.badge.badge-info= workout.exercises.count.to_s
+    %span.badge.badge-info= (workout.respond_to?(:exercise_workouts) && workout.exercise_workouts.loaded?) ? workout.exercise_workouts.size.to_s : workout.exercises.size.to_s
 
   .summary
     - course_id = course.andand.slug
     - organization_id = course.andand.organization.andand.slug
 
-    - if new_or_existing
+    - if !show_score
       - message = 'A clone of this workout will be created, which you can use and modify. Is this okay?'
 
       - if course_id
@@ -74,6 +83,7 @@
           organization_id: organization_id,
           workout_id: workout.id,
           lms_assignment_id: lms_assignment_id,
+          lti_assignment_id: lti_assignment_id,
           lti_launch: @lti_launch,
           suggested_name: suggested_name), class: 'btn btn-sm btn-primary',
           data: { confirm: message }
@@ -82,11 +92,13 @@
           - if session[:is_instructor]
             = link_to 'Clone', clone_workout_path(id: workout.id,
               lms_assignment_id: lms_assignment_id,
+              lti_assignment_id: lti_assignment_id,
               lti_launch: @lti_launch,
               suggested_name: @suggested_name), class: 'btn btn-sm btn-primary',
               data: { confirm: message }
           = link_to 'Use', clone_workout_path(id: workout.id,
             lms_assignment_id: lms_assignment_id,
+            lti_assignment_id: lti_assignment_id,
             lms_instance_id: session[:lms_instance_id],
             lti_launch: @lti_launch), class: 'btn btn-sm btn-primary'
     - elsif !workout_score || workout_score.show_score?

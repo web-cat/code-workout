@@ -1,0 +1,46 @@
+- url = @url
+= form_tag url, method: :post, class: "form-horizontal col-xs-10" do
+  = hidden_field_tag :batch_create_sections, '1'
+  = hidden_field_tag :workout_name, @workout_name
+  = hidden_field_tag :ext_lti_assignment_id, @ext_lti_assignment_id
+  = hidden_field_tag :custom_canvas_assignment_id, @custom_canvas_assignment_id
+  = hidden_field_tag :resource_link_id, @resource_link_id
+  = hidden_field_tag :from_collection, @from_collection
+
+  = hidden_field_tag 'course_offering[course_id]', @course.id
+  = hidden_field_tag 'course_offering[lms_instance_id]', @course_offering.lms_instance_id
+  = hidden_field_tag 'course_offering[lti_context_id]', @course_offering.lti_context_id
+  = hidden_field_tag 'course_offering[canvas_course_id]', @course_offering.canvas_course_id
+  
+  .form-group
+    = label_tag 'course_offering[term_id]', 'Term', class: 'control-label col-sm-3'
+    .col-sm-9
+      = select_tag 'course_offering[term_id]', options_from_collection_for_select(Term.where('ends_on > (?)', DateTime.now).or(Term.where(id: @term.andand.id)), 'id', 'display_name', @term.andand.id), class: 'form-control'
+
+  .form-group
+    = label_tag 'course_offering[self_enrollment_allowed]', 'Self enrollment allowed', class: 'control-label col-sm-3'
+    .col-sm-9
+      = check_box_tag 'course_offering[self_enrollment_allowed]', '1', true
+      
+  %p The Canvas course has multiple sections. You can create a distinct CodeWorkout course offering for each section, or just create one.
+
+  %table.table.table-striped
+    %thead
+      %tr
+        %th Create?
+        %th Section Name
+        %th CodeWorkout Offering Label
+    %tbody
+      - @custom_section_ids.each_with_index do |section_id, idx|
+        - section_name = @custom_section_names[idx] || "Section #{idx+1}"
+        %tr
+          %td
+            = check_box_tag "custom_sections[#{idx}][create]", '1', true
+            = hidden_field_tag "custom_sections[#{idx}][lms_section_id]", section_id
+          %td= section_name
+          %td
+            = text_field_tag "custom_sections[#{idx}][label]", "#{@course_offering.label} - #{section_name}", class: 'form-control'
+            
+  .form-actions
+    = submit_tag 'Create Selected Offerings', class: 'btn btn-primary'
+    = link_to 'Cancel', organizations_path, class: 'btn btn-default'

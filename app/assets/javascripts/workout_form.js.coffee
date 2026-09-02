@@ -294,6 +294,7 @@ handle_submit = ->
   fd.append 'organization_id', window.codeworkout.organization_id
   fd.append 'course_id', window.codeworkout.course_id
   fd.append 'lms_assignment_id', window.codeworkout.lms_assignment_id
+  fd.append 'lti_assignment_id', window.codeworkout.lti_assignment_id
   
   if window.codeworkout.lti_launch != ''
     fd.append 'lti_launch', window.codeworkout.lti_launch
@@ -317,4 +318,5 @@ handle_submit = ->
     success: (data) ->
       window.location.href = data['url']
     error: (xhr) ->
-      form_alert ["Error: #{xhr.responseText}"]
+      errorMsg = xhr.responseJSON?.error || xhr.responseText || 'An error occurred'
+      form_alert ["Error: #{errorMsg}"]

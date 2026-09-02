@@ -8,23 +8,30 @@ include AbbrHelper
       @term = Term.current_term
     end
 
-    # equivalent to load_and_authorize_resource.
-    # The authorize is handled with accessible_by, then the load is
-    # performed with a custom query
-    
+    offerings_scope = CourseOffering.where(term: @term)
+      .includes(
+        :term,
+        { course: [:organization, :user_group] },
+        { course_enrollments: [:user, :course_role] }
+      )
+
     if params[:enrolled_only].to_b
-      @organizations = Organization.accessible_by(current_ability).
-        includes(courses: { course_offerings: :course_enrollments } ).
-        joins(courses: { course_offerings: :course_enrollments } ).
-        where('course_offerings.term_id' => @term, 'course_enrollments.user_id' => current_user.id).
-        distinct
-    else
-      @organizations = Organization.accessible_by(current_ability).
-        includes(courses: :course_offerings).
-        joins(courses: :course_offerings).
-        where('course_offerings.term_id' => @term).
-        distinct
+      if current_user
+        offerings_scope = offerings_scope.joins(:course_enrollments)
+          .where(course_enrollments: { user_id: current_user.id })
+      else
+        offerings_scope = CourseOffering.none
+      end
     end
+
+    @offerings = offerings_scope.select do |off|
+      course = off.course
+      course && (!course.is_hidden || current_user.andand.is_a_member_of?(course.user_group))
+    end
+
+    @offerings_by_course = @offerings.group_by(&:course)
+    @courses_by_organization = @offerings_by_course.keys.group_by(&:organization)
+    @organizations = @courses_by_organization.keys.compact.reject(&:is_hidden).sort_by(&:name)
   end
 
   def search
@@ -92,7 +99,7 @@ include AbbrHelper
     # The authorize is handled with accessible_by, then the load is
     # performed with a custom query
     @organization = Organization.accessible_by(current_ability).
-      includes(courses: :course_offerings).
+      includes(courses: { course_offerings: [:term, { course_enrollments: [:user, :course_role] }] } ).
       joins(courses: :course_offerings).
       where('course_offerings.term_id' => @term).
       find(params[:id])

@@ -82,7 +82,7 @@
             %h3 Select only one answer for each of the sub-questions:
             - prior_answer = @attempt && @attempt.prompt_answers.where(prompt: prompt.acting_as).first
             - if prior_answer
-              - answer = prior_answer.specific.choices.first || answer
+              - answer = prior_answer.specific.andand.choices.andand.first || answer
             .answers
               = f.semantic_fields_for answer do |p|
                 = p.input :id,
@@ -96,7 +96,7 @@
             %h3 Select one answer:
             - prior_answer = @attempt && @attempt.prompt_answers.where(prompt: prompt.acting_as).first
             - if prior_answer
-              - answer = prior_answer.specific.choices.first || answer
+              - answer = prior_answer.specific.andand.choices.andand.first || answer
             .answers
               = f.semantic_fields_for answer do |p|
                 = p.input :id,
@@ -122,12 +122,12 @@
           - if allow_write && params[:review_user_id].nil?
             = f.input :answer_code, as: :text, class: 'code',
             input_html: { class: 'code', readonly: true,
-              value: prior_answer ? prior_answer.specific.answer : prompt.prepare_starter_code,
+              value: (prior_answer.andand.specific.andand.answer || prompt.prepare_starter_code),
               data: { lang: 'text/x-' + (@exercise.language + (@exercise.language == 'C++'?'src':'')|| 'java').downcase,
               starter_code: prompt.prepare_starter_code } }
           - else
             %pre{ data: { lang: 'text/x-java' } }
-              = prior_answer ? prior_answer.specific.answer : prompt.prepare_starter_code
+              = prior_answer.andand.specific.andand.answer || prompt.prepare_starter_code
         - elsif prompt.is_parsons?
           - parsons_questions = true
           - pif_json = prompt.get_pif_json
@@ -205,7 +205,7 @@
             = hidden_field_tag 'exercise_version[parsons_correct]', '', id: 'parsons-correct-field'
             = hidden_field_tag 'exercise_version[attempt_state]', '', id: 'parsons-state-field'
             %div#parsons-container{ data: { pif_json: pif_json.to_json,
-              initial_state: prior_answer ? prior_answer.specific.get_attempt_state.to_json : 'null',
+              initial_state: (prior_answer.andand.specific.andand.get_attempt_state || 'null').to_json,
               save_state_url: exercise_save_parsons_state_path(@exercise_version.exercise, exercise_version_id: @exercise_version.id) } }
 
             -# = f.input :answer_code, as: :text, class: 'code',
@@ -215,7 +215,7 @@
             -#   starter_code: prompt.prepare_starter_code } }
           - else
             %pre{ data: { lang: 'text/x-java' } }
-              = prior_answer ? prior_answer.specific.answer : prompt.prepare_starter_code
+              = prior_answer.andand.specific.andand.answer || prompt.prepare_starter_code
       .actions
         - disabled = !current_user.andand.is_staff?(@workout_offering.andand.course_offering) && @attempts_left && @attempts_left == 0
         - if @workout_offering.nil? || @workout_offering.can_be_practiced_by?(current_user)
@@ -258,7 +258,7 @@
             class: 'btn btn-info btn-next', id: 'nextbtn'
 
         - if @workout_offering && params[:review_user_id] && (current_user.global_role.is_admin? || @workout_offering.course_offering.is_staff?(current_user))
-          = link_to 'View Activity Log', workout_offering_activity_log_path(id: @workout_offering.id, workout_score_id: @workout_score.id, exercise_id: @exercise.id, organization_id: @workout_offering.course_offering.course.organization.slug, course_id: @workout_offering.course_offering.course.slug, term_id: @workout_offering.course_offering.term.slug), class: 'btn btn-info'
+          = link_to 'View Activity Log', organization_workout_offering_activity_log_path(id: @workout_offering.id, workout_score_id: @workout_score.id, exercise_id: @exercise.id, organization_id: @workout_offering.course_offering.course.organization.slug, course_id: @workout_offering.course_offering.course.slug, term_id: @workout_offering.course_offering.term.slug), class: 'btn btn-info'
 
       - if @workout.nil? && !@lti_launch
         %br

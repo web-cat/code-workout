@@ -4,6 +4,12 @@ ActiveAdmin.register Exercise do
   menu parent: 'Gym-oriented', priority: 10
   permit_params :name, :current_version, owner_ids: []
 
+  filter :name
+  filter :is_public
+  filter :question_type
+  filter :experience
+  filter :created_at
+
   index do
     id_column
     column :name, sortable: 'exercises.name'

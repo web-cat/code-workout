@@ -19,7 +19,9 @@
       %script{ src: 'http://html5shim.googlecode.com/svn/trunk/html5.js' }
 
   - classes = ["#{controller_name}", "#{action_name}"]
-  - if @lti_launch
+  - if embedded_lti_launch?
     - classes << 'embedded'
+  - if user_signed_in? && (current_user.global_role.is_admin? || (@course_offering && current_user.is_staff?(@course_offering)))
+    - classes << 'staff'
   %body{ class: classes }
     = yield

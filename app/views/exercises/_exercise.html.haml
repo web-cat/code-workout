@@ -3,10 +3,11 @@
 - new_workout ||= nil
 - user ||= current_user || User.find_by(id: session[:student_drift_user_id])
 - review ||= false
+- workout_offering ||= nil
+- manages_course = (current_user.andand.global_role.andand.is_admin? || workout_offering.andand.course_offering.andand.is_manager?(current_user)) if local_assigns[:manages_course].nil?
 
 - if params[:review_user_id]
   - user = User.find(params[:review_user_id])
-- workout_offering ||= nil
 - workout ||= workout_offering.andand.workout
 - if workout
   - workout_id ||= workout
@@ -18,8 +19,8 @@
 - else
   - workout_score ||= workout && user && workout.score_for(user, nil)
 
-- pts = workout ? workout.exercise_workouts.where(exercise: exercise).first.andand.points : nil
-- attempt = workout_score ? workout_score.scoring_attempt_for(exercise) : exercise.latest_attempt_for(user)
+- pts = workout ? (workout.exercise_workouts.loaded? ? workout.exercise_workouts.find { |ew| ew.exercise_id == exercise.id }&.points : workout.exercise_workouts.where(exercise: exercise).first.andand.points) : nil
+- attempt = workout_score ? (@scoring_attempts_by_version_id ? @scoring_attempts_by_version_id[exercise.current_version_id]&.first : workout_score.scoring_attempt_for(exercise)) : (@attempts_by_version_id ? @attempts_by_version_id[exercise.current_version_id]&.first : exercise.latest_attempt_for(user))
 - score = attempt ? attempt.score : 0
 - if !pts
   - pts = exercise.experience
@@ -49,7 +50,7 @@
       - else
         %i.fa-pencil-square-o
       - if workout_offering
-        - if workout_offering.can_be_seen_by?(user) || current_user.global_role.is_admin? || workout_offering.course_offering.is_manager?(current_user)
+        - if current_user.andand.global_role.andand.is_admin? || manages_course || workout_offering.can_be_seen_by?(user)
           - if start_workout
             = link_to exercise.display_name,
               organization_workout_offering_practice_path(exercise_id: exercise.id,
@@ -58,7 +59,7 @@
                 term_id: workout_offering.course_offering.term.slug,
                 id: workout_offering.id,
                 lti_launch: @lti_launch)
-          - elsif review && Attempt.where(exercise_version: exercise.current_version, user: user).any?
+          - elsif review && ((@scoring_attempts_by_version_id && @scoring_attempts_by_version_id[exercise.current_version_id].present?) || (@attempts_by_version_id && @attempts_by_version_id[exercise.current_version_id].present?) || (workout_score && workout_score.attempts.loaded? ? workout_score.attempts.any? { |a| a.exercise_version_id == exercise.current_version_id } : Attempt.where(exercise_version: exercise.current_version, user: user).any?))
             = link_to exercise.display_name,
               organization_workout_offering_exercise_review_path(id: exercise.id,
                 organization_id: workout_offering.course_offering.course.organization.slug,
@@ -85,9 +86,6 @@
           workout_id: workout.id, lti_launch: @lti_launch))
       - else
         = link_to exercise.display_name, exercise_practice_path(exercise)
-
-      - if [ 'show', 'index', 'search' ].include?(action_name) && (current_user.andand.can? :edit, exercise)
-        .right= button_link 'Edit', edit_exercise_path(exercise), class: 'btn btn-primary btn-sm'
 
     - if !new_workout
       .summary

@@ -7,7 +7,8 @@ class LtiController < ApplicationController
 
   def launch
     # must include the oauth proxy object
-    require 'oauth/request_proxy/action_controller_request'
+    require 'oauth/request_proxy/rack_request'
+    OAuth::RequestProxy.available_proxies[ActionDispatch::Request] ||= OAuth::RequestProxy::RackRequest
 
     render :error and return unless request.post? && lti_authorize!
 
@@ -53,13 +54,20 @@ class LtiController < ApplicationController
 
     # Serving a public workout?
     lti_workout =
-      LtiWorkout.find_by(lms_assignment_id: ext_lti_assignment_id) ||
-      LtiWorkout.find_by(lms_assignment_id: custom_canvas_assignment_id)
+      LtiWorkout.find_by(
+        lms_instance: @lms_instance,
+        lms_assignment_id: ext_lti_assignment_id
+      ) ||
+      LtiWorkout.find_by(
+        lms_instance: @lms_instance,
+        lms_assignment_id: custom_canvas_assignment_id
+      )
 
     session[:lis_outcome_service_url] = params[:lis_outcome_service_url]
     session[:lis_result_sourcedid] = params[:lis_result_sourcedid]
     session[:lms_instance_id] = @lms_instance.id
     session[:is_instructor] = @tp.context_instructor?
+    session[:lti_document_target] = params[:launch_presentation_document_target]
 
     @lti_token = generate_lti_launch_token(@lms_instance.id)
 
@@ -73,7 +81,9 @@ class LtiController < ApplicationController
         if @tp.context_instructor?
           redirect_to new_or_existing_workout_path(
             lti_launch: @lti_token,
-            lms_assignment_id: ext_lti_assignment_id
+            lms_instance_id: @lms_instance.id,
+            lti_assignment_id: ext_lti_assignment_id,
+            launch_presentation_document_target: params[:launch_presentation_document_target]
           ) and return
         else
           @message = 'The requested workout does not exist, and your role does
@@ -98,7 +108,8 @@ class LtiController < ApplicationController
         lti_launch: @lti_token,
         lti_workout_id: lti_workout.id,
         lis_outcome_service_url: params[:lis_outcome_service_url],
-        lis_result_sourcedid: params[:lis_result_sourcedid]
+        lis_result_sourcedid: params[:lis_result_sourcedid],
+        launch_presentation_document_target: params[:launch_presentation_document_target]
       ) and return
     end
 
@@ -172,11 +183,19 @@ class LtiController < ApplicationController
       custom_canvas_assignment_id: custom_canvas_assignment_id,
       dynamic_lms_assignment: dynamic_lms_assignment,
       lms_instance_id: @lms_instance.id,
+      lti_context_id: params[:context_id],
+      canvas_course_id: params[:custom_canvas_course_id],
       label: params[:custom_label], # can be nil
       lis_outcome_service_url: params[:lis_outcome_service_url],
       lis_result_sourcedid: params[:lis_result_sourcedid],
       lti_launch: @lti_token,
-      from_collection: workout_from_collection
+      from_collection: workout_from_collection,
+      resource_link_id: params[:resource_link_id],
+      context_label: params[:context_label],
+      context_title: params[:context_title],
+      custom_section_ids: params[:custom_section_ids],
+      custom_section_names: params[:custom_section_names],
+      launch_presentation_document_target: params[:launch_presentation_document_target]
     )
   end
 

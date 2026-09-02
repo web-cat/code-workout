@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_08_14_124641) do
+ActiveRecord::Schema.define(version: 2026_09_01_203700) do
 
   create_table "active_admin_comments", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
     t.string "namespace"
@@ -26,7 +26,7 @@ ActiveRecord::Schema.define(version: 2026_08_14_124641) do
     t.index ["resource_type", "resource_id"], name: "index_active_admin_comments_on_resource_type_and_resource_id"
   end
 
-  create_table "activity_logs", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
+  create_table "activity_logs", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
     t.integer "user_id"
     t.integer "exercise_id"
     t.integer "workout_id"
@@ -68,6 +68,7 @@ ActiveRecord::Schema.define(version: 2026_08_14_124641) do
     t.index ["exercise_version_id"], name: "index_attempts_on_exercise_version_id"
     t.index ["lms_instance_id"], name: "index_attempts_on_lms_instance_id"
     t.index ["user_id", "exercise_version_id"], name: "idx_attempts_on_user_exercise_version"
+    t.index ["user_id", "workout_score_id", "exercise_version_id", "updated_at"], name: "idx_attempts_on_user_ws_ver_updated"
     t.index ["user_id"], name: "index_attempts_on_user_id"
     t.index ["workout_score_id", "exercise_version_id"], name: "idx_attempts_on_workout_score_exercise_version"
     t.index ["workout_score_id"], name: "index_attempts_on_workout_score_id"
@@ -144,8 +145,14 @@ ActiveRecord::Schema.define(version: 2026_08_14_124641) do
     t.datetime "updated_at"
     t.date "cutoff_date"
     t.integer "lms_instance_id"
+    t.string "canvas_course_id"
+    t.string "lti_context_id"
+    t.string "lms_section_id"
+    t.index ["canvas_course_id"], name: "index_course_offerings_on_canvas_course_id"
     t.index ["course_id"], name: "index_course_offerings_on_course_id"
+    t.index ["lms_instance_id", "lti_context_id", "lms_section_id"], name: "idx_course_offerings_on_lms_context_section", unique: true
     t.index ["lms_instance_id"], name: "index_course_offerings_on_lms_instance_id"
+    t.index ["lti_context_id"], name: "index_course_offerings_on_lti_context_id"
     t.index ["term_id"], name: "index_course_offerings_on_term_id"
   end
 
@@ -228,7 +235,6 @@ ActiveRecord::Schema.define(version: 2026_08_14_124641) do
     t.integer "irt_data_id"
     t.text "text_representation", limit: 16777215
     t.index ["creator_id"], name: "exercise_versions_creator_id_fk"
-    t.index ["exercise_id"], name: "index_exercise_versions_on_exercise_id"
     t.index ["irt_data_id"], name: "exercise_versions_irt_data_id_fk"
     t.index ["stem_id"], name: "index_exercise_versions_on_stem_id"
   end
@@ -264,12 +270,22 @@ ActiveRecord::Schema.define(version: 2026_08_14_124641) do
     t.integer "irt_data_id"
     t.string "external_id"
     t.integer "exercise_collection_id"
-    t.index ["current_version_id"], name: "index_exercises_on_current_version_id"
     t.index ["exercise_collection_id"], name: "index_exercises_on_exercise_collection_id"
     t.index ["exercise_family_id"], name: "index_exercises_on_exercise_family_id"
     t.index ["external_id"], name: "index_exercises_on_external_id", unique: true
     t.index ["irt_data_id"], name: "exercises_irt_data_id_fk"
     t.index ["is_public"], name: "index_exercises_on_is_public"
+  end
+
+  create_table "extension_managers", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "broker_base_url", null: false
+    t.string "client_id", null: false
+    t.string "client_secret", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["broker_base_url"], name: "index_extension_managers_on_broker_base_url", unique: true
+    t.index ["client_id"], name: "index_extension_managers_on_client_id", unique: true
   end
 
   create_table "friendly_id_slugs", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
@@ -412,20 +428,20 @@ ActiveRecord::Schema.define(version: 2026_08_14_124641) do
     t.datetime "updated_at", null: false
     t.index ["exercise_version_id"], name: "index_ownerships_on_exercise_version_id"
     t.index ["filename"], name: "index_ownerships_on_filename"
-    t.index ["resource_file_id"], name: "index_ownerships_on_resource_file_id"
   end
 
-  create_table "parsons_prompt_answers", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
+  create_table "parsons_prompt_answers", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
     t.text "answer"
     t.text "error"
     t.integer "error_line_no"
     t.text "attempt_state"
   end
 
-  create_table "parsons_prompts", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
+  create_table "parsons_prompts", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
     t.text "pif_json"
     t.text "wrapper_code"
     t.text "test_script"
+    t.text "starter_code"
     t.string "class_name"
     t.string "method_name"
     t.boolean "hide_examples"
@@ -454,7 +470,6 @@ ActiveRecord::Schema.define(version: 2026_08_14_124641) do
     t.string "actable_type"
     t.integer "irt_data_id"
     t.index ["actable_id"], name: "index_prompts_on_actable_id"
-    t.index ["exercise_version_id"], name: "index_prompts_on_exercise_version_id"
     t.index ["irt_data_id"], name: "prompts_irt_data_id_fk"
   end
 
@@ -576,7 +591,6 @@ ActiveRecord::Schema.define(version: 2026_08_14_124641) do
     t.boolean "example", default: false, null: false
     t.boolean "hidden", default: false, null: false
     t.string "coding_prompt_type", default: "CodingPrompt", null: false
-    t.index ["coding_prompt_id"], name: "index_test_cases_on_coding_prompt_id"
     t.index ["coding_prompt_type", "coding_prompt_id"], name: "index_test_cases_on_coding_prompt"
   end
 
@@ -660,9 +674,16 @@ ActiveRecord::Schema.define(version: 2026_08_14_124641) do
     t.boolean "most_recent", default: true
     t.string "lms_assignment_url"
     t.integer "attempt_limit"
+    t.string "lti_assignment_id"
+    t.integer "lms_instance_id"
+    t.string "resource_link_id"
     t.index ["continue_from_workout_id"], name: "workout_offerings_continue_from_workout_id_fk"
     t.index ["course_offering_id"], name: "index_workout_offerings_on_course_offering_id"
     t.index ["lms_assignment_id"], name: "index_workout_offerings_on_lms_assignment_id"
+    t.index ["lms_instance_id", "lti_assignment_id"], name: "idx_workout_offerings_on_lms_and_lti_assignment", unique: true
+    t.index ["lms_instance_id", "resource_link_id"], name: "idx_workout_offerings_on_lms_and_resource_link", unique: true
+    t.index ["lms_instance_id"], name: "index_workout_offerings_on_lms_instance_id"
+    t.index ["lti_assignment_id"], name: "index_workout_offerings_on_lti_assignment_id"
     t.index ["workout_id"], name: "index_workout_offerings_on_workout_id"
     t.index ["workout_policy_id"], name: "index_workout_offerings_on_workout_policy_id"
   end
@@ -750,9 +771,7 @@ ActiveRecord::Schema.define(version: 2026_08_14_124641) do
   add_foreign_key "course_offerings", "courses", name: "course_offerings_course_id_fk"
   add_foreign_key "course_offerings", "terms", name: "course_offerings_term_id_fk"
   add_foreign_key "courses", "organizations", name: "courses_organization_id_fk"
-  add_foreign_key "exercise_owners", "exercises", name: "exercise_owners_exercise_id_fk"
   add_foreign_key "exercise_owners", "users", column: "owner_id", name: "exercise_owners_owner_id_fk"
-  add_foreign_key "exercise_versions", "exercises", name: "exercise_versions_exercise_id_fk"
   add_foreign_key "exercise_versions", "irt_data", column: "irt_data_id", name: "exercise_versions_irt_data_id_fk"
   add_foreign_key "exercise_versions", "stems", name: "exercise_versions_stem_id_fk"
   add_foreign_key "exercise_versions", "users", column: "creator_id", name: "exercise_versions_creator_id_fk"
@@ -761,16 +780,13 @@ ActiveRecord::Schema.define(version: 2026_08_14_124641) do
   add_foreign_key "exercise_workouts", "exercises", name: "exercise_workouts_exercise_id_fk"
   add_foreign_key "exercise_workouts", "workouts", name: "exercise_workouts_workout_id_fk"
   add_foreign_key "exercises", "exercise_families", name: "exercises_exercise_family_id_fk"
-  add_foreign_key "exercises", "exercise_versions", column: "current_version_id", name: "exercises_current_version_id_fk"
   add_foreign_key "exercises", "irt_data", column: "irt_data_id", name: "exercises_irt_data_id_fk"
   add_foreign_key "identities", "users", name: "identities_user_id_fk"
   add_foreign_key "lms_instances", "lms_types", name: "lms_instances_lms_type_id_fk"
   add_foreign_key "lti_workouts", "lms_instances"
   add_foreign_key "ownerships", "exercise_versions"
-  add_foreign_key "ownerships", "resource_files"
   add_foreign_key "prompt_answers", "attempts", name: "prompt_answers_attempt_id_fk"
   add_foreign_key "prompt_answers", "prompts", name: "prompt_answers_prompt_id_fk"
-  add_foreign_key "prompts", "exercise_versions", name: "prompts_exercise_version_id_fk"
   add_foreign_key "prompts", "irt_data", column: "irt_data_id", name: "prompts_irt_data_id_fk"
   add_foreign_key "resource_files", "users", name: "resource_files_user_id_fk"
   add_foreign_key "student_extensions", "users", name: "student_extensions_user_id_fk"
@@ -781,6 +797,7 @@ ActiveRecord::Schema.define(version: 2026_08_14_124641) do
   add_foreign_key "users", "global_roles", name: "users_global_role_id_fk"
   add_foreign_key "users", "time_zones", name: "users_time_zone_id_fk"
   add_foreign_key "workout_offerings", "course_offerings", name: "workout_offerings_course_offering_id_fk"
+  add_foreign_key "workout_offerings", "lms_instances"
   add_foreign_key "workout_offerings", "workout_offerings", column: "continue_from_workout_id", name: "workout_offerings_continue_from_workout_id_fk"
   add_foreign_key "workout_offerings", "workout_policies", name: "workout_offerings_workout_policy_id_fk"
   add_foreign_key "workout_offerings", "workouts", name: "workout_offerings_workout_id_fk"

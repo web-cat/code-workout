@@ -4,6 +4,13 @@ ActiveAdmin.register WorkoutOffering do
   menu parent: 'University-oriented', priority: 40
   permit_params :course_offering_id, :workout_id, :opening_date, :soft_deadline, :hard_deadline
 
+  filter :workout
+  filter :course_offering
+  filter :opening_date
+  filter :soft_deadline
+  filter :hard_deadline
+  filter :created_at
+
   index do
     id_column
     column :course_offering_id, sortable: 'course_offering.label' do |wo|

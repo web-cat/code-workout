@@ -82,7 +82,7 @@ class CodingPrompt < ApplicationRecord
 
 
   # -------------------------------------------------------------
-  def new_answer(args)
+  def new_answer(args = {})
     CodingPromptAnswer.new()
   end
 

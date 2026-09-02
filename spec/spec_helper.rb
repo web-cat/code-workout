@@ -44,4 +44,7 @@ RSpec.configure do |config|
 
   # So that spec type is inferred from its directory location
   config.infer_spec_type_from_file_location!
+
+  # Include Devise test helpers for controller specs
+  config.include Devise::Test::ControllerHelpers, type: :controller
 end

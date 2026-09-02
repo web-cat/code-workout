@@ -17,9 +17,10 @@
 #
 
 FactoryBot.define do
+  sequence(:org_name) { |n| "Virginia Tech #{n}" }
 
   factory :organization do
-    name { "Virginia Tech" }
+    name { generate :org_name }
     abbreviation { "VT" }
   end
 

@@ -1,7 +1,7 @@
 class SseController < ApplicationController
   include ActionController::Live
   require 'ims/lti'
-  require 'oauth/request_proxy/action_controller_request'
+  require 'oauth/request_proxy/rack_request'
 
   # -------------------------------------------------------------
   def feedback_wait
@@ -36,17 +36,29 @@ class SseController < ApplicationController
 
   # -------------------------------------------------------------
   def feedback_update
-    @attempt = Attempt.find_by(id: params[:att_id])
-    @attempts_exhausted = params[:attempts_exhausted].to_b
-    @exercise_version = @attempt.exercise_version
-    @exercise = @exercise_version.exercise
-    @max_points = @exercise.experience
-    @student_drift_user =  current_user ? current_user : session[:drift_user_id]
-    workout_score = @attempt.workout_score
-    if workout_score
-      @workout = workout_score.workout
-      @max_points = @workout.exercise_workouts.where(exercise: @exercise).
-        first.points
+    @attempt = Attempt.includes(
+      { exercise_version: [:exercise, :prompts] },
+      { workout_score: [{ workout: [:exercise_workouts, :exercises] }, :workout_offering] },
+      { prompt_answers: :actable }
+    ).find_by(id: params[:att_id])
+
+    if @attempt
+      @attempts_exhausted = params[:attempts_exhausted].to_b
+      @exercise_version = @attempt.exercise_version
+      @exercise = @exercise_version.andand.exercise
+      @max_points = @exercise.andand.experience
+      @student_drift_user = current_user ? current_user : session[:drift_user_id]
+      @workout_score = @attempt.workout_score
+      if @workout_score
+        @workout = @workout_score.workout
+        @workout_offering = @workout_score.workout_offering
+        if @workout && @exercise
+          pts = @workout.exercise_workouts.loaded? ?
+            @workout.exercise_workouts.find { |ew| ew.exercise_id == @exercise.id }&.points :
+            @workout.exercise_workouts.where(exercise: @exercise).first&.points
+          @max_points = pts if pts
+        end
+      end
     end
 
     respond_to do |format|

@@ -84,12 +84,139 @@ class Workout < ApplicationRecord
 
   #~ Hooks ....................................................................
 
-  # paginates_per 1
+  paginates_per 40
 
   #~ Class methods ............................................................
   def self.visible_to_user(user)
     return Workout.where(creator_id: user.id).or(Workout.where(is_public: true))
   end
+
+  # -------------------------------------------------------------
+  # Finds a workout by numeric ID or by name / parameterized name.
+  # If a course and term are provided, it searches workouts offered
+  # in that course and term before falling back to global lookup.
+  def self.find_by_id_or_name(id_or_name, course = nil, term = nil)
+    return nil if id_or_name.blank?
+
+    # 1. If purely numeric, find by primary key ID
+    if id_or_name.to_s =~ /\A\d+\z/
+      w = Workout.find_by(id: id_or_name)
+      return w if w
+    end
+
+    idparam = id_or_name.to_s.downcase
+
+    # 2. If course and term are provided, search workouts offered in that course/term
+    if course && term
+      offerings = WorkoutOffering.joins(:course_offering).where(
+        course_offerings: { course_id: course.id, term_id: term.id }
+      ).includes(:workout)
+      w = offerings.map(&:workout).compact.uniq.find do |workout|
+        wname = workout.name.downcase
+        wparam = workout.name.downcase.parameterize
+        idparam == wname || idparam == wparam
+      end
+      return w if w
+    end
+
+    # 3. Fallback: search by exact or case-insensitive name globally
+    Workout.where('lower(name) = ?', idparam).first ||
+      Workout.all.find { |workout| workout.name.downcase.parameterize == idparam }
+  end
+
+  # -------------------------------------------------------------
+  # Finds the appropriate WorkoutOffering for a user in a course and term.
+  # Checks student enrolled sections first, then instructor managed sections,
+  # and finally falls back to any offering for this workout in the course/term.
+  def workout_offering_for(user, course, term)
+    return nil unless course && term
+
+    if user
+      enrolled_offerings = user.course_offerings_for_term(term, course)
+      if enrolled_offerings.any?
+        wo = WorkoutOffering.where(
+          course_offering_id: enrolled_offerings.map(&:id),
+          workout_id: self.id
+        ).first
+        return wo if wo
+      end
+
+      managed_offerings = user.managed_course_offerings(course: course, term: term)
+      if managed_offerings.any?
+        wo = WorkoutOffering.where(
+          course_offering_id: managed_offerings.map(&:id),
+          workout_id: self.id
+        ).first
+        return wo if wo
+      end
+    end
+
+    WorkoutOffering.joins(:course_offering).where(
+      course_offerings: { course_id: course.id, term_id: term.id },
+      workout_id: self.id
+    ).first
+  end
+
+
+  # -------------------------------------------------------------
+  # Creates a new workout with the specified descriptive parameters and
+  # populates it with all exercises from the specified list of workout IDs.
+  # Exercises are copied in the order of the provided workout IDs, preserving
+  # their original order and points, and skipping duplicate exercises.
+  #
+  # @param params [Hash, ActionController::Parameters] Attributes for the new workout
+  #   (e.g., :name, :description, :creator, :is_public, :scrambled, etc.)
+  # @param workout_ids [Array<Integer, String>] Array of workout IDs to copy exercises from
+  # @return [Workout] The created workout (persisted if valid)
+  #
+  # @example Create a new combined workout from existing workouts
+  #   new_workout = Workout.create_from_workouts(
+  #     {
+  #       name: 'Combined Unit Review',
+  #       description: 'Exercises from workouts 10, 12, and 15',
+  #       creator: current_user,
+  #       is_public: true
+  #     },
+  #     [10, 12, 15]
+  #   )
+  #
+  def self.create_from_workouts(params, workout_ids = [])
+    # Support flexible argument order: (workout_ids, params) or (params, workout_ids)
+    if params.is_a?(Array) && workout_ids.is_a?(Hash)
+      workout_ids, params = params, workout_ids
+    end
+
+    workout = Workout.new(params)
+
+    transaction do
+      if workout.save
+        position = 1
+        seen_exercise_ids = Set.new
+
+        # Preserve the sequence of workouts as passed in workout_ids
+        source_workouts = Workout.where(id: workout_ids).index_by(&:id)
+        ordered_workouts = Array(workout_ids).map { |id| source_workouts[id.to_i] }.compact
+
+        ordered_workouts.each do |source_workout|
+          source_workout.exercise_workouts.order(:position).each do |ew|
+            next if seen_exercise_ids.include?(ew.exercise_id)
+            seen_exercise_ids.add(ew.exercise_id)
+
+            ExerciseWorkout.create!(
+              workout: workout,
+              exercise_id: ew.exercise_id,
+              points: ew.points,
+              position: position
+            )
+            position += 1
+          end
+        end
+      end
+    end
+
+    workout
+  end
+
 
   #~ Instance methods .........................................................
 
@@ -113,7 +240,11 @@ class Workout < ApplicationRecord
   # FIXME: Why isn't this a property of the workout?  The exercises
   # themselves don't record absolute points at all!
   def total_points
-    self.exercise_workouts.pluck(:points).reduce(0.0, :+)
+    if exercise_workouts.loaded?
+      exercise_workouts.map { |ew| ew.points || 0 }.sum.to_f
+    else
+      exercise_workouts.pluck(:points).compact.sum.to_f
+    end
   end
 
 
@@ -197,7 +328,8 @@ class Workout < ApplicationRecord
   # -------------------------------------------------------------
   def highest_difficulty
     diff = 0
-    self.exercises.includes(:irt_data).references(:all).each do |x|
+    exs = exercises.loaded? ? exercises : exercises.includes(:irt_data)
+    exs.each do |x|
       x_diff = x.andand.irt_data.andand.difficulty || 0
       if x_diff > diff
         diff = x_diff
@@ -299,22 +431,19 @@ class Workout < ApplicationRecord
       workout_offering.lms_assignment_url = offering['lms_assignment_url']
 
       # set deadlines
-      if offering['opening_date'].present?
-        workout_offering.opening_date =
-          DateTime.strptime(offering['opening_date'].to_s, '%Q')
-      end
-      if offering['soft_deadline'].present?
-        workout_offering.soft_deadline =
-          DateTime.strptime(offering['soft_deadline'].to_s, '%Q')
-      end
-      if offering['hard_deadline'].present?
-        workout_offering.hard_deadline =
-          DateTime.strptime(offering['hard_deadline'].to_s, '%Q')
-      end
+      workout_offering.opening_date = offering['opening_date'].present? ?
+        DateTime.strptime(offering['opening_date'].to_s, '%Q') : nil
+      workout_offering.soft_deadline = offering['soft_deadline'].present? ?
+        DateTime.strptime(offering['soft_deadline'].to_s, '%Q') : nil
+      workout_offering.hard_deadline = offering['hard_deadline'].present? ?
+        DateTime.strptime(offering['hard_deadline'].to_s, '%Q') : nil
 
       workout_offering.workout_policy = common[:workout_policy]
       if common[:lms_assignment_id].present?
         workout_offering.lms_assignment_id = common[:lms_assignment_id]
+      end
+      if common[:lti_assignment_id].present?
+        workout_offering.lti_assignment_id = common[:lti_assignment_id]
       end
       workout_offering.save!
       workout_offerings << workout_offering.id
@@ -345,15 +474,30 @@ class Workout < ApplicationRecord
   # -------------------------------------------------------------
   def score_for(user, workout_offering = nil,
                 lis_outcome_service_url = nil, lis_result_sourcedid = nil)
-    scores = workout_scores.where(
-      user: user, workout_offering: workout_offering).order('updated_at DESC')
-    if lis_outcome_service_url || lis_result_sourcedid
-      scores.to_ary.detect do |s|
-        s.lis_outcome_service_url == lis_outcome_service_url and
-          s.lis_result_sourcedid == lis_result_sourcedid
+    if workout_scores.loaded?
+      scores = workout_scores.select do |s|
+        s.user_id == user.andand.id && s.workout_offering_id == workout_offering.andand.id
+      end.sort_by { |s| s.updated_at || Time.at(0) }.reverse
+
+      if lis_outcome_service_url || lis_result_sourcedid
+        scores.detect do |s|
+          s.lis_outcome_service_url == lis_outcome_service_url &&
+            s.lis_result_sourcedid == lis_result_sourcedid
+        end
+      else
+        scores.first
       end
     else
-      scores.first
+      scores = workout_scores.where(
+        user: user, workout_offering: workout_offering).order('updated_at DESC')
+      if lis_outcome_service_url || lis_result_sourcedid
+        scores.to_ary.detect do |s|
+          s.lis_outcome_service_url == lis_outcome_service_url and
+            s.lis_result_sourcedid == lis_result_sourcedid
+        end
+      else
+        scores.first
+      end
     end
   end
 
@@ -365,7 +509,7 @@ class Workout < ApplicationRecord
     split_terms = terms.blank? ? '.' : terms.join('|')
 
     if user
-      available_workouts = Workout.where(
+      available_workouts = Workout.includes(:tags, :exercise_workouts, exercises: :irt_data).where(
         id: (Workout.visible_to_user(user).union(user.managed_workouts))
         .map(&:id)
       )
@@ -414,7 +558,7 @@ class Workout < ApplicationRecord
         return results
       end
     else
-      available_workouts = Workout.where(is_public: true)
+      available_workouts = Workout.includes(:tags, :exercise_workouts, exercises: :irt_data).where(is_public: true)
     end
 
     return available_workouts.tagged_with(terms, any: true, wild: true, on: :tags) +

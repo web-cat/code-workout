@@ -9,15 +9,19 @@
 #  url                     :string(255)
 #  created_at              :datetime         not null
 #  updated_at              :datetime         not null
+#  canvas_course_id        :string(255)
 #  course_id               :bigint           not null
 #  lms_instance_id         :bigint
+#  lti_context_id          :string(255)
 #  term_id                 :bigint           not null
 #
 # Indexes
 #
-#  index_course_offerings_on_course_id        (course_id)
-#  index_course_offerings_on_lms_instance_id  (lms_instance_id)
-#  index_course_offerings_on_term_id          (term_id)
+#  index_course_offerings_on_canvas_course_id  (canvas_course_id)
+#  index_course_offerings_on_course_id         (course_id)
+#  index_course_offerings_on_lms_instance_id   (lms_instance_id)
+#  index_course_offerings_on_lti_context_id    (lti_context_id)
+#  index_course_offerings_on_term_id           (term_id)
 #
 # Foreign Keys
 #
@@ -109,7 +113,11 @@ class CourseOffering < ApplicationRecord
   # this CourseOffering.
   #
   def students
-    course_enrollments.where(course_role_id: CourseRole.student).map(&:user)
+    if course_enrollments.loaded?
+      course_enrollments.select { |ce| ce.course_role_id == CourseRole::STUDENT_ID }.map(&:user)
+    else
+      course_enrollments.includes(:user).where(course_role_id: CourseRole.student).map(&:user)
+    end
   end
 
 
@@ -118,7 +126,11 @@ class CourseOffering < ApplicationRecord
   # this CourseOffering.
   #
   def instructors
-    course_enrollments.where(course_role_id: CourseRole.instructor).map(&:user)
+    if course_enrollments.loaded?
+      course_enrollments.select { |ce| ce.course_role_id == CourseRole::INSTRUCTOR_ID }.map(&:user)
+    else
+      course_enrollments.includes(:user).where(course_role_id: CourseRole.instructor).map(&:user)
+    end
   end
 
 
@@ -141,7 +153,11 @@ class CourseOffering < ApplicationRecord
   # this CourseOffering.
   #
   def graders
-    course_enrollments.where(course_role: CourseRole.grader).map(&:user)
+    if course_enrollments.loaded?
+      course_enrollments.select { |ce| ce.course_role_id == CourseRole::GRADER_ID }.map(&:user)
+    else
+      course_enrollments.includes(:user).where(course_role: CourseRole.grader).map(&:user)
+    end
   end
 
 
@@ -153,7 +169,15 @@ class CourseOffering < ApplicationRecord
 
   # -------------------------------------------------------------
   def is_enrolled?(user)
-    user && users.include?(user)
+    if user
+      if course_enrollments.loaded?
+        course_enrollments.any? { |ce| ce.user_id == user.id }
+      else
+        users.include?(user)
+      end
+    else
+      false
+    end
   end
 
 
@@ -187,7 +211,12 @@ class CourseOffering < ApplicationRecord
 
   # -------------------------------------------------------------
   def role_for_user(user)
-    user && course_enrollments.where(user: user).first.andand.course_role
+    return nil unless user
+    if course_enrollments.loaded?
+      course_enrollments.find { |ce| ce.user_id == user.id }.andand.course_role
+    else
+      course_enrollments.includes(:course_role).find_by(user: user).andand.course_role
+    end
   end
 
   def add_workout(workout, workout_offering_options={})
@@ -228,7 +257,8 @@ class CourseOffering < ApplicationRecord
       opening_date: workout_offering_options[:opening_date] || DateTime.now,
       soft_deadline: workout_offering_options[:soft_deadline],
       hard_deadline: workout_offering_options[:hard_deadline],
-      lms_assignment_id: workout_offering_options[:lms_assignment_id]
+      lms_assignment_id: workout_offering_options[:lms_assignment_id],
+      lti_assignment_id: workout_offering_options[:lti_assignment_id]
     )
     workout_offering.save
 

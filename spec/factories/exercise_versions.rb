@@ -32,5 +32,6 @@
 
 FactoryBot.define do
   factory :exercise_version do
+    version { 1 }
   end
 end

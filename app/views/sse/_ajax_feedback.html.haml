@@ -2,9 +2,9 @@
 - show_score = !@attempt.workout_score || @attempt.workout_score.show_score?
 - @workout ||= @attempt.workout_score.andand.workout
 - if @workout && show_score
-  - pts = @workout.exercise_workouts.find_by(exercise: @exercise).andand.points
+  - pts = @max_points || (@workout.exercise_workouts.loaded? ? @workout.exercise_workouts.find { |ew| ew.exercise_id == @exercise.id }&.points : @workout.exercise_workouts.find_by(exercise: @exercise)&.points) || @exercise.andand.experience
   - score = @attempt.score
-  - score_pct = pts > 0 ? score * 100.0 / pts : 0
+  - score_pct = (pts && pts > 0) ? score * 100.0 / pts : 0
   .summary
     .radial-progress{ 'data-progress' => score_pct.round() }
       .circle
@@ -29,7 +29,7 @@
     - else
       %p Your choice is incorrect.
     -#= Choice.find(attempt.answer.to_i).feedback
-    - @attempt.prompt_answers.first.specific.choices.each do |choice|
+    - (@attempt.prompt_answers.first.andand.specific.andand.choices || []).each do |choice|
       %p= choice.feedback
   - else
     Your answer has been saved.
@@ -59,7 +59,7 @@
       %tbody
         - has_hidden = false
         - hidden_pass = true
-        - answer.test_case_results().each do |tcr|
+        - answer.test_case_results.each do |tcr|
           - if tcr.test_case.hidden?
             - has_hidden = true
             - hidden_pass = hidden_pass && tcr.pass
@@ -99,7 +99,7 @@
           %th Behavior
       %tbody
         - if examples.any?
-          - answer.test_case_results().each do |tcr|
+          - answer.test_case_results.each do |tcr|
             - if tcr.test_case.is_example?
               %tr
                 - if tcr.pass
