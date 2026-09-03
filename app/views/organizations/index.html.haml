@@ -20,7 +20,7 @@
   - @organizations.each do |organization|
     - courses = @courses_by_organization[organization] || []
     - if courses.any?
-      %h2= link_to organization.name, organization_path(organization)
+      %h2= link_to organization.name, organization_path(organization, term_id: @term)
 
       %ul
         - courses.each do |course|
