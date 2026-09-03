@@ -858,13 +858,45 @@ class WorkoutsController < ApplicationController
         end
       else
         if candidate_course_offerings.any?
-          if lms_section_ids.any? && candidate_course_offerings.any? { |co| lms_section_ids.include?(co.lms_section_id) }
+          # 1. Check if the student is already enrolled in one of the candidate offerings
+          enrolled_offering = candidate_course_offerings.find { |co| @user.is_enrolled?(co) }
+          if enrolled_offering
+            @course_offering = enrolled_offering
+            Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Phase 2 resolved CourseOffering by prior enrollment for student: ID #{@course_offering.id}, label #{@course_offering.label}"
+          elsif lms_section_ids.any? && candidate_course_offerings.any? { |co| lms_section_ids.include?(co.lms_section_id) }
             first_matching_id = lms_section_ids.find { |id| candidate_course_offerings.any? { |co| co.lms_section_id == id } }
             @course_offering = candidate_course_offerings.find { |co| co.lms_section_id == first_matching_id }
             Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Phase 2 resolved CourseOffering by matching LMS section ID #{first_matching_id} for student: ID #{@course_offering.id}, label #{@course_offering.label}"
-          else
+          elsif candidate_course_offerings.count == 1
             @course_offering = candidate_course_offerings.first
-            Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Phase 2 fell back to first candidate CourseOffering for student: ID #{@course_offering.id}, label #{@course_offering.label}"
+            Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Phase 2 resolved single candidate CourseOffering for student: ID #{@course_offering.id}, label #{@course_offering.label}"
+          else
+            # Multiple candidate offerings exist. Check if only one candidate offering contains the target workout.
+            candidates_with_workout = []
+            if params[:workout_name].present?
+              candidates_with_workout = candidate_course_offerings.select do |co|
+                co.workout_offerings.joins(:workout).where('lower(workouts.name) = ?', params[:workout_name].downcase).exists?
+              end
+            end
+
+            if candidates_with_workout.count == 1
+              @course_offering = candidates_with_workout.first
+              Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Phase 2 resolved CourseOffering with matching workout for student: ID #{@course_offering.id}, label #{@course_offering.label}"
+            else
+              # Still ambiguous: prompt the student to select their section
+              Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Phase 2: Multiple CourseOfferings found for student: #{candidate_course_offerings.map(&:id)}. Redirecting to select_offering."
+              session[:candidate_course_offering_ids] = candidate_course_offerings.map(&:id)
+              redirect_to organization_course_select_offering_path(
+                organization_id: @course.organization.slug,
+                course_id: @course.slug,
+                term_id: @term.slug,
+                workout_name: params[:workout_name],
+                ext_lti_assignment_id: ext_lti_assignment_id,
+                custom_canvas_assignment_id: custom_canvas_assignment_id,
+                resource_link_id: resource_link_id,
+                from_collection: params[:from_collection]
+              ) and return
+            end
           end
         else
           Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Phase 2: No eligible CourseOfferings found for student. Rendering LTI error."

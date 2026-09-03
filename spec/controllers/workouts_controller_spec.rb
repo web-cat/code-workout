@@ -805,6 +805,65 @@ describe WorkoutsController do
         )
       )
     end
+
+    it "resolves to already-enrolled candidate offering when student has prior enrollment" do
+      allow(WorkoutOffering).to receive(:find_by).and_return(nil)
+      offering2 = FactoryBot.build_stubbed(:course_offering, id: 102, course: course, term: term, label: 'Section 2')
+      candidates = [course_offering, offering2]
+      relation = instance_double(ActiveRecord::Relation, to_a: candidates, any?: true, count: 2, empty?: false)
+      allow(CourseOffering).to receive(:where).with(hash_including(lms_instance_id: '1', lti_context_id: 'ctx_123')).and_return(relation)
+      allow(user).to receive(:is_enrolled?).with(course_offering).and_return(false)
+      allow(user).to receive(:is_enrolled?).with(offering2).and_return(true)
+      allow(offering2).to receive(:changed?).and_return(false)
+
+      get :find_offering, params: {
+        organization_id: 'vt',
+        course_id: 'cs1114',
+        term_id: 'fall2026',
+        workout_name: 'Practice Workout',
+        user_id: user.id.to_s,
+        lms_instance_id: '1',
+        lti_context_id: 'ctx_123'
+      }, session: { is_instructor: false }
+
+      expect(controller.instance_variable_get(:@course_offering)).to eq(offering2)
+    end
+
+    it "redirects student to select_offering when multiple offerings exist and cannot be disambiguated" do
+      allow(WorkoutOffering).to receive(:find_by).and_return(nil)
+      offering2 = FactoryBot.build_stubbed(:course_offering, id: 102, course: course, term: term, label: 'Section 2')
+      candidates = [course_offering, offering2]
+      relation = instance_double(ActiveRecord::Relation, to_a: candidates, any?: true, count: 2, empty?: false)
+      allow(CourseOffering).to receive(:where).with(hash_including(lms_instance_id: '1', lti_context_id: 'ctx_123')).and_return(relation)
+      allow(user).to receive(:is_enrolled?).and_return(false)
+      # Neither offering has the workout offering pre-associated
+      allow(course_offering).to receive(:workout_offerings).and_return(WorkoutOffering.none)
+      allow(offering2).to receive(:workout_offerings).and_return(WorkoutOffering.none)
+
+      get :find_offering, params: {
+        organization_id: 'vt',
+        course_id: 'cs1114',
+        term_id: 'fall2026',
+        workout_name: 'Practice Workout',
+        user_id: user.id.to_s,
+        lms_instance_id: '1',
+        lti_context_id: 'ctx_123'
+      }, session: { is_instructor: false }
+
+      expect(response).to redirect_to(
+        organization_course_select_offering_path(
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          workout_name: 'Practice Workout',
+          ext_lti_assignment_id: nil,
+          custom_canvas_assignment_id: nil,
+          resource_link_id: nil,
+          from_collection: nil
+        )
+      )
+      expect(session[:candidate_course_offering_ids]).to eq([101, 102])
+    end
   end
 
   describe "#serialize_workout_offerings_to_yaml" do

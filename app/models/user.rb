@@ -888,13 +888,49 @@ class User < ApplicationRecord
   end
 
   # -------------------------------------------------------------
+  # Checks whether the given LTI launch options indicate a test student launch
+  # (e.g. Canvas Student View).
+  def self.test_student_launch?(opts)
+    return false if opts.blank?
+
+    full_name = opts[:full_name].to_s.strip.downcase
+    given_name = opts[:first_name].to_s.strip.downcase
+    family_name = opts[:last_name].to_s.strip.downcase
+
+    full_name == 'test student' || (given_name == 'test' && family_name == 'student')
+  end
+
+  # -------------------------------------------------------------
   # Find or create a user based on information received in a launch
   # request.
-  # Required params: lis_person_contact_email_primary (a valid email)
-  # Optional params: lti_identity, custom_canvas_user_login_id, first_name, last_name
+  # Required params: lis_person_contact_email_primary (a valid email, or
+  #   omitted only if test_student_launch?(opts) is true)
+  # Optional params: lti_identity, custom_canvas_user_login_id, first_name,
+  #   last_name, full_name, lms_instance, lti_user_id, custom_canvas_api_domain
   def self.lti_new_or_existing_user(opts)
-    lis_email = opts[:lis_person_contact_email_primary]
-    lis_email_match = lis_email.andand.match(/[^@]+@([^@]+)/) # Devise.email_regexp, but capturing the domain
+    # Find by lti_identity first if already linked
+    user = opts[:lti_identity].andand.user
+    return user unless user.nil?
+
+    lis_email = opts[:lis_person_contact_email_primary].to_s.strip
+
+    if lis_email.blank?
+      if test_student_launch?(opts)
+        if opts[:lti_user_id].present? && opts[:lms_instance].present?
+          domain = opts[:custom_canvas_api_domain].presence || 'synthetic.codeworkout.org'
+          lis_email = "teststudent-#{opts[:lms_instance].id}-#{opts[:lti_user_id]}@#{domain}"
+        else
+          raise ArgumentError.new(
+            'Expected valid LTI user identifier and LMS instance for test student launch')
+        end
+      else
+        raise ArgumentError.new(
+          "Expected opts[:lis_person_contact_email_primary] to be "\
+          "a valid email address. Got #{opts[:lis_person_contact_email_primary]}")
+      end
+    end
+
+    lis_email_match = lis_email.match(/[^@]+@([^@]+)/) # Devise.email_regexp, but capturing the domain
 
     unless lis_email_match
       raise ArgumentError.new(
@@ -905,13 +941,8 @@ class User < ApplicationRecord
     domain = lis_email_match.captures[0]
     canvas_login = opts[:custom_canvas_user_login_id]
 
-    # Find by lti_identity
-    user = opts[:lti_identity].andand.user
-
-    # Or find user by LTI email (guaranteed to be present in LTI v1.x)
-    if !user
-      user = User.find_by(email: lis_email)
-    end
+    # Find user by LTI email (guaranteed to be present in LTI v1.x or synthetic)
+    user = User.find_by(email: lis_email)
 
     # patch for VT Canvas non-PID e-mails
     if user && canvas_login.present? && canvas_login.match(Devise.email_regexp).nil?
@@ -945,10 +976,13 @@ class User < ApplicationRecord
     return user unless user.nil?
 
     # Haven't yet found a user
+    first_name = opts[:first_name].presence || (test_student_launch?(opts) ? 'Test' : nil)
+    last_name = opts[:last_name].presence || (test_student_launch?(opts) ? 'Student' : nil)
+
     user = User.new(
       email: lis_email,
-      first_name: opts[:first_name],
-      last_name: opts[:last_name]
+      first_name: first_name,
+      last_name: last_name
     )
     user.skip_password_validation = true
     begin
