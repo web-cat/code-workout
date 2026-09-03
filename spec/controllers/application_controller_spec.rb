@@ -61,4 +61,25 @@ RSpec.describe ApplicationController, type: :controller do
       expect(session[:lti_contexts].size).to eq(2)
     end
   end
+
+  describe 'rescue_from ActionController::InvalidAuthenticityToken' do
+    controller do
+      def test_csrf_error
+        raise ActionController::InvalidAuthenticityToken
+      end
+    end
+
+    before do
+      routes.draw do
+        root to: 'anonymous#test_generate'
+        get 'test_csrf_error' => 'anonymous#test_csrf_error'
+      end
+    end
+
+    it 'redirects to root_path with flash alert' do
+      get :test_csrf_error
+      expect(response).to redirect_to('/')
+      expect(flash[:alert]).to include('session has expired')
+    end
+  end
 end

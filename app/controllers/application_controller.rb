@@ -19,11 +19,22 @@ class ApplicationController < ActionController::Base
     access_denied(exception)
   end
 
+  rescue_from ActionController::InvalidAuthenticityToken do |exception|
+    invalid_authenticity_token(exception)
+  end
+
 
   # -------------------------------------------------------------
   def access_denied(exception)
     flash[:error] = exception.message.gsub(/this page/, 'that page')
     redirect_to root_url
+  end
+
+
+  # -------------------------------------------------------------
+  def invalid_authenticity_token(exception)
+    flash[:alert] = 'Your session has expired. Please try signing in again.'
+    redirect_to root_path
   end
 
 
