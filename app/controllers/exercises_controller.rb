@@ -631,8 +631,9 @@ class ExercisesController < ApplicationController
       @workout_offering =
         WorkoutOffering.find_by(id: params[:workout_offering_id])
       @workout = @workout_offering.workout
-      if @workout_offering.time_limit_for(@student_user)
-        @user_time_limit = @workout_offering.time_limit_for(@student_user)
+      user_time_limit = @workout_offering.time_limit_for(@student_user)
+      if user_time_limit.present? && user_time_limit.to_i > 0
+        @user_time_limit = user_time_limit.to_i
       else
         @user_time_limit = nil
       end
@@ -1023,7 +1024,19 @@ class ExercisesController < ApplicationController
     # Has the allotted time for the workout offering passed?
     if @workout_score.andand.closed? &&
       !@workout_offering.andand.can_be_practiced_by?(@student_drift_user)
-      p 'WARNING: attempt to evaluate exercise after time expired.'
+      msg = 'The time limit or deadline for this workout has passed. This assignment is closed and no longer accepting submissions.'
+      respond_to do |format|
+        format.js do
+          render js: <<~JS
+            $("#saved_assurance").html("<div class='alert alert-danger'>#{msg}</div>");
+            $("#exercisefeedback").hide();
+            $(".btn-submit").prop('disabled', true);
+            alert("#{msg}");
+          JS
+        end
+        format.html { redirect_back fallback_location: root_path, alert: msg }
+        format.json { render json: { error: msg }, status: :forbidden }
+      end
       return
     end
 
@@ -1034,7 +1047,19 @@ class ExercisesController < ApplicationController
       !current_user.is_staff?(@workout_offering.andand.course_offering) &&
       @attempts_left &&
       @attempts_left <= 0
-      p 'WARNING: attempt to evaluate workout_offering after attempts expired.'
+      msg = 'You have exhausted all attempts for this exercise.'
+      respond_to do |format|
+        format.js do
+          render js: <<~JS
+            $("#saved_assurance").html("<div class='alert alert-warning'>#{msg}</div>");
+            $("#exercisefeedback").hide();
+            $(".btn-submit").prop('disabled', true);
+            alert("#{msg}");
+          JS
+        end
+        format.html { redirect_back fallback_location: root_path, alert: msg }
+        format.json { render json: { error: msg }, status: :forbidden }
+      end
       return
     end
 

@@ -37,6 +37,60 @@ describe WorkoutOffering, type: :model do
       allow(workout_offering).to receive(:student_extensions).and_return([extension])
       expect(workout_offering.can_be_practiced_by?(user)).to be true
     end
+
+    it "returns true after soft deadline when hard_deadline is unset" do
+      workout_offering.soft_deadline = 1.day.ago
+      workout_offering.hard_deadline = nil
+      allow(workout_offering).to receive(:student_extensions).and_return([])
+      expect(workout_offering.can_be_practiced_by?(user)).to be true
+    end
+  end
+
+  describe "#hard_deadline_for" do
+    let(:user) { FactoryBot.build_stubbed(:user, id: 1) }
+    let(:workout_offering) do
+      FactoryBot.build_stubbed(
+        :workout_offering,
+        id: 20,
+        soft_deadline: 1.day.ago,
+        hard_deadline: nil
+      )
+    end
+
+    it "returns nil when hard_deadline is unset, even if soft_deadline is set" do
+      allow(workout_offering).to receive(:student_extensions).and_return([])
+      expect(workout_offering.hard_deadline_for(user)).to be_nil
+    end
+
+    it "returns offering hard_deadline when set" do
+      workout_offering.hard_deadline = 2.days.from_now
+      allow(workout_offering).to receive(:student_extensions).and_return([])
+      expect(workout_offering.hard_deadline_for(user)).to eq(workout_offering.hard_deadline)
+    end
+
+    it "overrides with student extension hard_deadline if present" do
+      ext = FactoryBot.build_stubbed(
+        :student_extension,
+        user: user,
+        workout_offering: workout_offering,
+        hard_deadline: 5.days.from_now
+      )
+      allow(workout_offering).to receive(:student_extensions).and_return([ext])
+      expect(workout_offering.hard_deadline_for(user)).to eq(ext.hard_deadline)
+    end
+
+    it "extends offering hard_deadline if student extension soft_deadline is later" do
+      workout_offering.hard_deadline = 2.days.from_now
+      ext = FactoryBot.build_stubbed(
+        :student_extension,
+        user: user,
+        workout_offering: workout_offering,
+        soft_deadline: 4.days.from_now,
+        hard_deadline: nil
+      )
+      allow(workout_offering).to receive(:student_extensions).and_return([ext])
+      expect(workout_offering.hard_deadline_for(user)).to eq(ext.soft_deadline)
+    end
   end
 
   describe "#ip_allowed?" do

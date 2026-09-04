@@ -243,6 +243,35 @@ describe ExercisesController do
         expect(response).to redirect_to(expected_path)
         expect(flash[:error]).to include("requires a specific browser")
       end
+
+      it "returns explicit error response when workout score is closed" do
+        allow(WorkoutScore).to receive_message_chain(:includes, :find).and_return(workout_score)
+        allow(workout_offering).to receive(:ip_allowed?).and_return(true)
+        allow(workout_offering).to receive(:user_agent_allowed?).and_return(true)
+        allow(workout_score).to receive(:closed?).and_return(true)
+        allow(workout_offering).to receive(:can_be_practiced_by?).and_return(false)
+
+        expect(exercise_version).not_to receive(:new_attempt)
+
+        patch :evaluate, params: { id: '1', workout_offering_id: '201', exercise_version_id: '101' }, format: :js
+        expect(response.body).to include("The time limit or deadline for this workout has passed")
+        expect(response.body).to include("$(\".btn-submit\").prop('disabled', true)")
+      end
+
+      it "returns explicit error response when attempts are exhausted" do
+        allow(WorkoutScore).to receive_message_chain(:includes, :find).and_return(workout_score)
+        allow(workout_offering).to receive(:ip_allowed?).and_return(true)
+        allow(workout_offering).to receive(:user_agent_allowed?).and_return(true)
+        allow(workout_score).to receive(:closed?).and_return(false)
+        allow(user).to receive(:is_staff?).and_return(false)
+        allow(workout_score).to receive(:attempts_left_for_exercise_version).and_return(0)
+
+        expect(exercise_version).not_to receive(:new_attempt)
+
+        patch :evaluate, params: { id: '1', workout_offering_id: '201', exercise_version_id: '101' }, format: :js
+        expect(response.body).to include("You have exhausted all attempts for this exercise")
+        expect(response.body).to include("$(\".btn-submit\").prop('disabled', true)")
+      end
     end
   end
 end
