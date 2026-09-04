@@ -62,7 +62,8 @@ class WorkoutOffering < ApplicationRecord
   belongs_to :course_offering, inverse_of: :workout_offerings
   belongs_to :lms_instance
   has_many :workout_scores, inverse_of: :workout_offering, dependent: :nullify
-  has_many :student_extensions
+  has_many :activity_logs, dependent: :nullify
+  has_many :student_extensions, dependent: :destroy
   has_many :users, through: :student_extensions
   has_many :lti_workouts
 

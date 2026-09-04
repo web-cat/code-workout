@@ -1323,164 +1323,190 @@ class WorkoutsController < ApplicationController
       common[:lti_assignment_id] = params[:lti_assignment_id]
 
       if params[:date_yaml].present? || params[:course_offerings].blank?
-        begin
-          data = if params[:date_yaml].present?
-                   begin
-                     YAML.safe_load(
-                       params[:date_yaml],
-                       permitted_classes: [Date, Time, DateTime, ActiveSupport::TimeWithZone, Symbol],
-                       aliases: true
-                     )
-                   rescue ArgumentError
-                     YAML.safe_load(
-                       params[:date_yaml],
-                       [Date, Time, DateTime, ActiveSupport::TimeWithZone, Symbol]
-                     )
-                   end
-                 else
-                   {}
-                 end || {}
+        Workout.transaction do
+          begin
+            data = if params[:date_yaml].present?
+                     begin
+                       YAML.safe_load(
+                         params[:date_yaml],
+                         permitted_classes: [Date, Time, DateTime, ActiveSupport::TimeWithZone, Symbol],
+                         aliases: true
+                       )
+                     rescue ArgumentError
+                       YAML.safe_load(
+                         params[:date_yaml],
+                         [Date, Time, DateTime, ActiveSupport::TimeWithZone, Symbol]
+                       )
+                     end
+                   else
+                     {}
+                   end || {}
 
-          sections_yaml = data['sections'] || []
-          extensions_yaml = data['extensions'] || []
-          
-          # Default top-level IP restriction for all offerings
-          default_ips = data['ips'] || data['allowed_ips'] || data['ip_restrictions']
-          default_ips = default_ips.is_a?(Array) ? default_ips.join(', ') : default_ips.to_s.strip if default_ips.present?
-          default_ips = nil if default_ips.blank?
-
-          # Default top-level browser requirement for all offerings
-          default_browsers = data['browsers'] || data['user_agents'] || data['allowed_user_agents']
-          default_browsers = default_browsers.is_a?(Array) ? default_browsers.join(', ') : default_browsers.to_s.strip if default_browsers.present?
-          default_browsers = nil if default_browsers.blank?
-
-          user_tz = current_user.time_zone.andand.name || 'America/New_York'
-          @course = Course.find_with_id_or_slug(params[:course_id], params[:organization_id])
-          @term = Term.find(params[:term_id]) if params[:term_id].present?
-          
-          if @term
-            managed_course_offerings = current_user.managed_course_offerings(course: @course, term: @term)
-            managed_course_offerings_map = {}
-            managed_course_offerings.each do |co|
-              managed_course_offerings_map[co.label.to_s.strip] = co
-              managed_course_offerings_map[co.display_name_with_term.strip] = co
-              managed_course_offerings_map[co.display_name.strip] = co
-              managed_course_offerings_map[co.display_name_with_org_and_term.strip] = co
-              managed_course_offerings_map[co.id.to_s] = co
-              managed_course_offerings_map[co.label.to_s.downcase.strip] = co if co.label.present?
-            end
+            sections_yaml = data['sections'] || []
+            extensions_yaml = data['extensions'] || []
             
-            # 1. Handle Workout Offerings
-            new_offerings_data = {}
-            sections_yaml.each do |s|
-              label_str = s['section'].to_s.strip
-              co = managed_course_offerings_map[label_str] ||
-                   managed_course_offerings_map[label_str.downcase]
-              if !co && label_str =~ /\((?:.*,\s*)?([^\)]+)\)\z/
-                extracted_label = $1.strip
-                co = managed_course_offerings_map[extracted_label] || managed_course_offerings_map[extracted_label.downcase]
+            # Default top-level IP restriction for all offerings
+            default_ips = data['ips'] || data['allowed_ips'] || data['ip_restrictions']
+            default_ips = default_ips.is_a?(Array) ? default_ips.join(', ') : default_ips.to_s.strip if default_ips.present?
+            default_ips = nil if default_ips.blank?
+
+            # Default top-level browser requirement for all offerings
+            default_browsers = data['browsers'] || data['user_agents'] || data['allowed_user_agents']
+            default_browsers = default_browsers.is_a?(Array) ? default_browsers.join(', ') : default_browsers.to_s.strip if default_browsers.present?
+            default_browsers = nil if default_browsers.blank?
+
+            user_tz = current_user.time_zone.andand.name || 'America/New_York'
+            @course = Course.find_with_id_or_slug(params[:course_id], params[:organization_id])
+            @term = Term.find(params[:term_id]) if params[:term_id].present?
+            
+            if @term
+              managed_course_offerings = current_user.managed_course_offerings(course: @course, term: @term)
+              managed_course_offerings_map = {}
+              managed_course_offerings.each do |co|
+                managed_course_offerings_map[co.label.to_s.strip] = co
+                managed_course_offerings_map[co.display_name_with_term.strip] = co
+                managed_course_offerings_map[co.display_name.strip] = co
+                managed_course_offerings_map[co.display_name_with_org_and_term.strip] = co
+                managed_course_offerings_map[co.id.to_s] = co
+                managed_course_offerings_map[co.label.to_s.downcase.strip] = co if co.label.present?
               end
-
-              if co
-                due = parse_date(s['due'], user_tz)
-                from = parse_date(s['from'], user_tz, due, :from)
-                until_date = parse_date(s['until'], user_tz, due, :until)
-                
-                section_ips = s['ips'] || s['allowed_ips'] || s['ip_restrictions']
-                section_ips = section_ips.is_a?(Array) ? section_ips.join(', ') : section_ips.to_s.strip if section_ips.present?
-                allowed_ips = section_ips.present? ? section_ips : default_ips
-
-                section_browsers = s['browsers'] || s['user_agents'] || s['allowed_user_agents']
-                section_browsers = section_browsers.is_a?(Array) ? section_browsers.join(', ') : section_browsers.to_s.strip if section_browsers.present?
-                allowed_user_agents = section_browsers.present? ? section_browsers : default_browsers
-
-                new_offerings_data[co.id.to_s] = {
-                  'opening_date' => from.andand.to_i.andand.*(1000), # millisecond timestamp for add_workout_offerings
-                  'soft_deadline' => due.andand.to_i.andand.*(1000),
-                  'hard_deadline' => until_date.andand.to_i.andand.*(1000),
-                  'allowed_ips' => allowed_ips,
-                  'allowed_user_agents' => allowed_user_agents,
-                  'extensions' => []
-                }
-              else
-                workout.errors.add(:base, "Course offering with label '#{label_str}' not found or not managed by you.")
-              end
-            end
-            
-            # Identify removed offerings
-            existing_offerings = workout.workout_offerings.joins(:course_offering).where(course_offerings: { term_id: @term.id })
-            existing_offering_ids = existing_offerings.map(&:id)
-            kept_offering_co_ids = new_offerings_data.keys.map(&:to_i)
-            
-            offerings_to_delete = existing_offerings.reject { |wo| kept_offering_co_ids.include?(wo.course_offering_id) }
-            offerings_to_delete.each(&:destroy)
-            
-            # Update/Create Offerings
-            workout_offerings = workout.add_workout_offerings(new_offerings_data, common)
-            
-            # 2. Handle Student Extensions
-            # First, clear existing extensions for this workout in this term
-            workout_offerings_in_term = workout.workout_offerings.joins(:course_offering).where(course_offerings: { term_id: @term.id })
-            StudentExtension.where(workout_offering_id: workout_offerings_in_term.map(&:id)).destroy_all
-            
-            extensions_yaml.each do |ext_group|
-              due = parse_date(ext_group['due'], user_tz)
-              from = parse_date(ext_group['from'], user_tz, due, :from)
-              until_date = parse_date(ext_group['until'], user_tz, due, :until)
-              ext_ips = ext_group['ips'] || ext_group['allowed_ips'] || ext_group['ip_restrictions']
-              ext_ips = ext_ips.is_a?(Array) ? ext_ips.join(', ') : ext_ips.to_s.strip if ext_ips.present?
-              ext_ips = nil if ext_ips.blank?
-
-              ext_browsers = ext_group['browsers'] || ext_group['user_agents'] || ext_group['allowed_user_agents']
-              ext_browsers = ext_browsers.is_a?(Array) ? ext_browsers.join(', ') : ext_browsers.to_s.strip if ext_browsers.present?
-              ext_browsers = nil if ext_browsers.blank?
-
-              students = ext_group['students'] || []
               
-              students.each do |student_ref|
-                next if student_ref == '<insert email here>'
-                
-                # Extract email from "Name <email>" or just "email"
-                email = student_ref.match(/<([^>]+)>/).andand[1] || student_ref.strip
-                student = User.find_by(email: email)
-                if !student
-                  # Try name match
-                  student = User.where("CONCAT(first_name, ' ', last_name) = ?", student_ref.strip).first
+              # 1. Handle Workout Offerings
+              new_offerings_data = {}
+              sections_yaml.each do |s|
+                label_str = s['section'].to_s.strip
+                co = managed_course_offerings_map[label_str] ||
+                     managed_course_offerings_map[label_str.downcase]
+                if !co && label_str =~ /\((?:.*,\s*)?([^\)]+)\)\z/
+                  extracted_label = $1.strip
+                  co = managed_course_offerings_map[extracted_label] || managed_course_offerings_map[extracted_label.downcase]
                 end
-                
-                if student
-                  # Check enrollment in any of the workout offerings in this term
-                  enrolled_offering = workout_offerings_in_term.find { |wo| wo.course_offering.is_enrolled?(student) }
-                  if enrolled_offering
-                    StudentExtension.create!(
-                      user: student,
-                      workout_offering: enrolled_offering,
-                      opening_date: from,
-                      soft_deadline: due,
-                      hard_deadline: until_date,
-                      allowed_ips: ext_ips,
-                      allowed_user_agents: ext_browsers
-                    )
-                  else
-                    workout.errors.add(:base, "Student '#{student_ref}' is not enrolled in any sections for this workout.")
-                  end
+
+                if co
+                  due = parse_date(s['due'], user_tz)
+                  from = parse_date(s['from'], user_tz, due, :from)
+                  until_date = parse_date(s['until'], user_tz, due, :until)
+                  
+                  section_ips = s['ips'] || s['allowed_ips'] || s['ip_restrictions']
+                  section_ips = section_ips.is_a?(Array) ? section_ips.join(', ') : section_ips.to_s.strip if section_ips.present?
+                  allowed_ips = section_ips.present? ? section_ips : default_ips
+
+                  section_browsers = s['browsers'] || s['user_agents'] || s['allowed_user_agents']
+                  section_browsers = section_browsers.is_a?(Array) ? section_browsers.join(', ') : section_browsers.to_s.strip if section_browsers.present?
+                  allowed_user_agents = section_browsers.present? ? section_browsers : default_browsers
+
+                  new_offerings_data[co.id.to_s] = {
+                    'opening_date' => from.andand.to_i.andand.*(1000), # millisecond timestamp for add_workout_offerings
+                    'soft_deadline' => due.andand.to_i.andand.*(1000),
+                    'hard_deadline' => until_date.andand.to_i.andand.*(1000),
+                    'allowed_ips' => allowed_ips,
+                    'allowed_user_agents' => allowed_user_agents,
+                    'extensions' => []
+                  }
                 else
-                  workout.errors.add(:base, "Student '#{student_ref}' not found by email or name.")
+                  workout.errors.add(:base, "Course offering with label '#{label_str}' not found or not managed by you.")
                 end
               end
+
+              if workout.errors.any?
+                raise ActiveRecord::Rollback
+              end
+
+              # Identify removed offerings among course offerings managed by the current user
+              managed_co_ids = managed_course_offerings.map(&:id)
+              existing_offerings = workout.workout_offerings.joins(:course_offering).where(course_offerings: { id: managed_co_ids })
+              kept_offering_co_ids = new_offerings_data.keys.map(&:to_i)
+              
+              offerings_to_delete = existing_offerings.reject { |wo| kept_offering_co_ids.include?(wo.course_offering_id) }
+              
+              offerings_to_delete.each do |wo|
+                if wo.workout_scores.exists? || wo.activity_logs.exists?
+                  section_name = wo.course_offering&.display_name || "Section (ID #{wo.course_offering_id})"
+                  workout.errors.add(
+                    :base,
+                    "Section '#{section_name}' was omitted from the YAML, but students have already accessed or submitted work for it. It cannot be deleted. Please keep the section in the YAML, or unpublish the workout if you wish to hide it."
+                  )
+                end
+              end
+
+              if workout.errors.any?
+                raise ActiveRecord::Rollback
+              end
+
+              offerings_to_delete.each(&:destroy)
+              
+              # Update/Create Offerings
+              workout_offerings = workout.add_workout_offerings(new_offerings_data, common)
+              
+              # 2. Handle Student Extensions
+              # Clear existing extensions only for offerings in sections managed by the current user
+              managed_workout_offerings = workout.workout_offerings.joins(:course_offering).where(course_offerings: { id: managed_co_ids })
+              StudentExtension.where(workout_offering_id: managed_workout_offerings.map(&:id)).destroy_all
+              
+              extensions_yaml.each do |ext_group|
+                due = parse_date(ext_group['due'], user_tz)
+                from = parse_date(ext_group['from'], user_tz, due, :from)
+                until_date = parse_date(ext_group['until'], user_tz, due, :until)
+                ext_ips = ext_group['ips'] || ext_group['allowed_ips'] || ext_group['ip_restrictions']
+                ext_ips = ext_ips.is_a?(Array) ? ext_ips.join(', ') : ext_ips.to_s.strip if ext_ips.present?
+                ext_ips = nil if ext_ips.blank?
+
+                ext_browsers = ext_group['browsers'] || ext_group['user_agents'] || ext_group['allowed_user_agents']
+                ext_browsers = ext_browsers.is_a?(Array) ? ext_browsers.join(', ') : ext_browsers.to_s.strip if ext_browsers.present?
+                ext_browsers = nil if ext_browsers.blank?
+
+                students = ext_group['students'] || []
+                
+                students.each do |student_ref|
+                  next if student_ref == '<insert email here>'
+                  
+                  # Extract email from "Name <email>" or just "email"
+                  email = student_ref.match(/<([^>]+)>/).andand[1] || student_ref.strip
+                  student = User.find_by(email: email)
+                  if !student
+                    # Try name match
+                    student = User.where("CONCAT(first_name, ' ', last_name) = ?", student_ref.strip).first
+                  end
+                  
+                  if student
+                    # Check enrollment in any of the managed workout offerings in this term
+                    enrolled_offering = managed_workout_offerings.find { |wo| wo.course_offering.is_enrolled?(student) }
+                    if enrolled_offering
+                      StudentExtension.create!(
+                        user: student,
+                        workout_offering: enrolled_offering,
+                        opening_date: from,
+                        soft_deadline: due,
+                        hard_deadline: until_date,
+                        allowed_ips: ext_ips,
+                        allowed_user_agents: ext_browsers
+                      )
+                    else
+                      workout.errors.add(:base, "Student '#{student_ref}' is not enrolled in any sections for this workout.")
+                    end
+                  else
+                    workout.errors.add(:base, "Student '#{student_ref}' not found by email or name.")
+                  end
+                end
+              end
+
+              if workout.errors.any?
+                raise ActiveRecord::Rollback
+              end
             end
+            
+            workout.save!
+            return workout_offerings&.first
+            
+          rescue Psych::SyntaxError => e
+            workout.errors.add(:base, "YAML Syntax Error: #{e.message}")
+            raise ActiveRecord::Rollback
+          rescue StandardError => e
+            workout.errors.add(:base, "Error processing YAML: #{e.message}")
+            raise ActiveRecord::Rollback
           end
-          
-          workout.save!
-          return workout_offerings&.first
-          
-        rescue Psych::SyntaxError => e
-          workout.errors.add(:base, "YAML Syntax Error: #{e.message}")
-          return nil
-        rescue StandardError => e
-          workout.errors.add(:base, "Error processing YAML: #{e.message}")
-          return nil
         end
+        return nil
       else
         # Fallback to legacy JSON behavior if course_offerings is present
         if params[:removed_extensions].present?
