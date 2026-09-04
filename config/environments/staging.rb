@@ -88,6 +88,6 @@ CodeWorkout::Application.configure do
   # Disable automatic flushing of the log to improve performance.
   # config.autoflush_log = false
 
-  config.action_mailer.default_url_options = { :host => 'http://codeworkoutdev.cs.vt.edu/' }
+  config.action_mailer.default_url_options = { host: 'codeworkoutdev.cs.vt.edu', protocol: 'https' }
   config.middleware.use LogFile::Display
 end

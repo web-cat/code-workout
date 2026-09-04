@@ -439,6 +439,12 @@ class Workout < ApplicationRecord
         DateTime.strptime(offering['hard_deadline'].to_s, '%Q') : nil
 
       workout_offering.workout_policy = common[:workout_policy]
+      if offering.key?('allowed_ips') || offering.key?('ips')
+        workout_offering.allowed_ips = offering['allowed_ips'] || offering['ips']
+      end
+      if offering.key?('allowed_user_agents') || offering.key?('user_agents') || offering.key?('browsers')
+        workout_offering.allowed_user_agents = offering['allowed_user_agents'] || offering['user_agents'] || offering['browsers']
+      end
       if common[:lms_assignment_id].present?
         workout_offering.lms_assignment_id = common[:lms_assignment_id]
       end

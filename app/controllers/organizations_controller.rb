@@ -95,14 +95,24 @@ include AbbrHelper
       @term = Term.current_term
     end
 
-    # equivalent to load_and_authorize_resource.
-    # The authorize is handled with accessible_by, then the load is
-    # performed with a custom query
-    @organization = Organization.accessible_by(current_ability).
-      includes(courses: { course_offerings: [:term, { course_enrollments: [:user, :course_role] }] } ).
-      joins(courses: :course_offerings).
-      where('course_offerings.term_id' => @term).
-      find(params[:id])
+    @organization = Organization.accessible_by(current_ability).find(params[:id])
+
+    offerings_scope = CourseOffering.where(term: @term)
+      .joins(:course)
+      .where(courses: { organization_id: @organization.id })
+      .includes(
+        :term,
+        { course: [:organization, :user_group] },
+        { course_enrollments: [:user, :course_role] }
+      )
+
+    @offerings = offerings_scope.select do |off|
+      course = off.course
+      course && (!course.is_hidden || current_user.andand.is_a_member_of?(course.user_group))
+    end
+
+    @offerings_by_course = @offerings.group_by(&:course)
+    @courses = @offerings_by_course.keys.sort_by(&:number)
   end
 
   def new_or_existing

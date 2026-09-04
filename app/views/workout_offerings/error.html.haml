@@ -1,3 +1,9 @@
 .container
   .alert.alert-danger
     = @message
+  - if @workout_offering.andand.course_offering
+    %p
+      = link_to 'Back to Course', organization_course_path(@workout_offering.course_offering.course.organization, @workout_offering.course_offering.course, @workout_offering.course_offering.term), class: 'btn btn-default'
+  - else
+    %p
+      = link_to 'Home', root_path, class: 'btn btn-default'

@@ -106,7 +106,11 @@ class WorkoutOffering < ApplicationRecord
     if student_extensions.is_a?(Array) || (student_extensions.respond_to?(:loaded?) && student_extensions.loaded?)
       student_extensions.find { |e| e.user_id == user.id }
     else
-      student_extensions.find_by(user_id: user.id)
+      begin
+        student_extensions.find_by(user_id: user.id)
+      rescue StandardError
+        nil
+      end
     end
   end
 
@@ -138,6 +142,86 @@ class WorkoutOffering < ApplicationRecord
     user_extension = extension_for(user)
     user_extension.andand.opening_date ||
       self.opening_date
+  end
+
+
+  # -----------------------------------------------------------------
+  # Returns the effective allowed IP string/list for the given user, taking into
+  # account any StudentExtension overrides.
+  def allowed_ips_for(user)
+    user_ext = extension_for(user)
+    if user_ext && user_ext.allowed_ips.present?
+      user_ext.allowed_ips
+    else
+      self.allowed_ips
+    end
+  end
+
+
+  # -----------------------------------------------------------------
+  # Checks whether the client_ip is permitted for the given user (and optional workout_score).
+  # Course staff and admins always have full access.
+  # If a matching last_ip_address is cached on the workout_score, short-circuit immediately.
+  def ip_allowed?(client_ip, user = nil, workout_score = nil)
+    return true if user && (user.global_role.andand.is_admin? || course_offering.andand.is_staff?(user))
+
+    ws = workout_score || (user ? score_for(user) : nil)
+    if ws && ws.last_ip_address.present? && ws.last_ip_address == client_ip.to_s.strip
+      return true
+    end
+
+    effective_ips = allowed_ips_for(user)
+    is_allowed = IpAccessFilter.allowed?(effective_ips, client_ip)
+
+    if is_allowed && ws && ws.respond_to?(:persisted?) && ws.persisted? && ws.last_ip_address != client_ip.to_s.strip
+      begin
+        ws.update_columns(last_ip_address: client_ip.to_s.strip)
+      rescue StandardError => e
+        # Ignore database/stubbed model errors in test or readonly contexts
+      end
+    end
+
+    is_allowed
+  end
+
+
+  # -----------------------------------------------------------------
+  # Returns the effective allowed user agents string/list for the given user, taking into
+  # account any StudentExtension overrides.
+  def allowed_user_agents_for(user)
+    user_ext = extension_for(user)
+    if user_ext && user_ext.allowed_user_agents.present?
+      user_ext.allowed_user_agents
+    else
+      self.allowed_user_agents
+    end
+  end
+
+
+  # -----------------------------------------------------------------
+  # Checks whether the client_user_agent is permitted for the given user (and optional workout_score).
+  # Course staff within the course offering context and global admins always have full access.
+  # If a matching last_user_agent is cached on the workout_score, short-circuit immediately.
+  def user_agent_allowed?(client_user_agent, user = nil, workout_score = nil)
+    return true if user && (user.global_role.andand.is_admin? || course_offering.andand.is_staff?(user))
+
+    ws = workout_score || (user ? score_for(user) : nil)
+    if ws && ws.last_user_agent.present? && ws.last_user_agent == client_user_agent.to_s.strip
+      return true
+    end
+
+    effective_agents = allowed_user_agents_for(user)
+    is_allowed = UserAgentAccessFilter.allowed?(effective_agents, client_user_agent)
+
+    if is_allowed && ws && ws.respond_to?(:persisted?) && ws.persisted? && ws.last_user_agent != client_user_agent.to_s.strip
+      begin
+        ws.update_columns(last_user_agent: client_user_agent.to_s.strip)
+      rescue StandardError => e
+        # Ignore database/stubbed model errors in test or readonly contexts
+      end
+    end
+
+    is_allowed
   end
 
 

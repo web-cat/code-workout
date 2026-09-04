@@ -19,19 +19,29 @@ class LtiController < ApplicationController
     # Get a new or existing user based on LTI params
     @user = User.lti_new_or_existing_user({
       lti_identity: @lti_identity,
+      lms_instance: @lms_instance,
+      lti_user_id: params[:user_id],
       lis_person_contact_email_primary: params[:lis_person_contact_email_primary],
       custom_canvas_user_login_id: params[:custom_canvas_user_login_id],
+      custom_canvas_api_domain: params[:custom_canvas_api_domain],
       first_name: params[:lis_person_name_given],
-      last_name: params[:lis_person_name_family]
+      last_name: params[:lis_person_name_family],
+      full_name: params[:lis_person_name_full]
     })
 
     # Check for incomplete fields and update with info from LMS if needed
+    is_test_student = User.test_student_launch?(
+      first_name: params[:lis_person_name_given],
+      last_name: params[:lis_person_name_family],
+      full_name: params[:lis_person_name_full]
+    )
+
     if @user.first_name.blank?
-      @user.first_name = params[:lis_person_name_given]
+      @user.first_name = params[:lis_person_name_given].presence || (is_test_student ? 'Test' : nil)
     end
 
     if @user.last_name.blank?
-      @user.last_name = params[:lis_person_name_family]
+      @user.last_name = params[:lis_person_name_family].presence || (is_test_student ? 'Student' : nil)
     end
 
     # Old users and newly created ones may not have an LtiIdentity set up

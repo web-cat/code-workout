@@ -195,4 +195,66 @@ describe CourseOfferingsController do
     end
   end
 
+  describe "GET search_students" do
+    let(:user) { FactoryBot.build_stubbed(:admin, id: 1) }
+    let(:mock_org) { double('Organization', id: 1, slug: 'uncc') }
+    let(:mock_course) { double('Course', id: 10, slug: 'itsc2214') }
+    let(:mock_term) { double('Term', id: 20, slug: 'fall-2026') }
+    let(:student1) { double('User', id: 101, first_name: 'Krish', last_name: 'Patel', email: 'kpatel@uncc.edu') }
+
+    before do
+      allow(controller).to receive(:current_user).and_return(user)
+    end
+
+    it "returns matching enrolled students for the course and term as JSON" do
+      allow(Course).to receive(:find_with_id_or_slug).with('itsc2214', 'uncc').and_return(mock_course)
+      allow(Term).to receive(:find).with('fall-2026').and_return(mock_term)
+
+      mock_offering = double('CourseOffering', id: 50)
+      allow(CourseOffering).to receive(:where).with(course: mock_course, term: mock_term).and_return([mock_offering])
+
+      matching_users = double('ActiveRecord::Relation')
+      allow(User).to receive(:joins).with(:course_enrollments).and_return(matching_users)
+      allow(matching_users).to receive(:where).with(course_enrollments: { course_offering_id: [50] }).and_return(matching_users)
+      allow(matching_users).to receive(:where).with(
+        "lower(first_name) like ? or lower(last_name) like ? or lower(email) like ?",
+        "%krish%", "%krish%", "%krish%"
+      ).and_return(matching_users)
+      allow(matching_users).to receive(:distinct).and_return([student1])
+
+      get :search_students, params: {
+        organization_id: 'uncc',
+        course_id: 'itsc2214',
+        term_id: 'fall-2026',
+        term: 'krish'
+      }, format: :json
+
+      expect(response.status).to eq(200)
+      json = JSON.parse(response.body)
+      expect(json).to eq([
+        {
+          'id' => 101,
+          'first_name' => 'Krish',
+          'last_name' => 'Patel',
+          'email' => 'kpatel@uncc.edu'
+        }
+      ])
+    end
+
+    it "returns empty array when term param is blank" do
+      allow(Course).to receive(:find_with_id_or_slug).with('itsc2214', 'uncc').and_return(mock_course)
+      allow(Term).to receive(:find).with('fall-2026').and_return(mock_term)
+
+      get :search_students, params: {
+        organization_id: 'uncc',
+        course_id: 'itsc2214',
+        term_id: 'fall-2026',
+        term: ''
+      }, format: :json
+
+      expect(response.status).to eq(200)
+      expect(JSON.parse(response.body)).to eq([])
+    end
+  end
+
 end

@@ -4,7 +4,7 @@ describe OrganizationsController, type: :controller do
   render_views
 
   let(:user) { FactoryBot.build_stubbed(:user) }
-  let(:mock_org) { double('Organization', id: 1, name: 'Virginia Tech', slug: 'vt', to_param: 'vt', is_hidden: false) }
+  let(:mock_org) { double('Organization', id: 1, name: 'Virginia Tech', abbreviation: 'VT', slug: 'vt', to_param: 'vt', is_hidden: false) }
   let(:mock_term) { double('Term', id: 20, slug: 'fall-2026', to_param: 'fall-2026', display_name: 'Fall 2026') }
   let(:mock_course) do
     double(
@@ -69,6 +69,46 @@ describe OrganizationsController, type: :controller do
       expect(response.status).to eq(200)
       expect(controller.instance_variable_get(:@organizations)).to eq([])
       expect(response.body).to include('No organizations have courses offered in')
+    end
+  end
+
+  describe 'GET #show' do
+    before do
+      allow(Organization).to receive_message_chain(:accessible_by, :find).and_return(mock_org)
+      allow(CourseOffering).to receive_message_chain(:where, :joins, :where, :includes).and_return([mock_course_offering])
+    end
+
+    it 'renders the organization show page with courses for the given term' do
+      get :show, params: { id: 'vt', term_id: '20' }
+
+      expect(response.status).to eq(200)
+      expect(controller.instance_variable_get(:@organization)).to eq(mock_org)
+      expect(controller.instance_variable_get(:@term)).to eq(mock_term)
+      expect(controller.instance_variable_get(:@courses)).to eq([mock_course])
+      expect(response.body).to include('Courses from')
+      expect(response.body).to include('Virginia Tech')
+      expect(response.body).to include('CS 1114')
+    end
+
+    it 'renders empty message without crashing when organization has no courses in term' do
+      allow(CourseOffering).to receive_message_chain(:where, :joins, :where, :includes).and_return([])
+
+      get :show, params: { id: 'vt', term_id: '20' }
+
+      expect(response.status).to eq(200)
+      expect(controller.instance_variable_get(:@organization)).to eq(mock_org)
+      expect(controller.instance_variable_get(:@courses)).to eq([])
+      expect(response.body).to include('This organization does not have any courses in')
+      expect(response.body).to include('Fall 2026')
+    end
+
+    it 'defaults to Term.current_term when term_id is omitted' do
+      allow(Term).to receive(:current_term).and_return(mock_term)
+
+      get :show, params: { id: 'vt' }
+
+      expect(response.status).to eq(200)
+      expect(controller.instance_variable_get(:@term)).to eq(mock_term)
     end
   end
 end

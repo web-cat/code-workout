@@ -28,8 +28,10 @@
         - if offering.is_manager? current_user
           = link_to 'edit', edit_course_offering_path(offering)
         - else
-          = link_to 'unenroll', course_offering_unenroll_path(offering),
-            method: :delete
+          = button_to 'unenroll', course_offering_unenroll_path(offering),
+            method: :delete, class: 'btn btn-link', form_class: 'inline-form',
+            form: { style: 'display: inline;' },
+            style: 'padding: 0; border: none; vertical-align: baseline;'
       - if offering.instructors.any?
         = succeed ':' do
           = 'instructor'.pluralize(offering.instructors.size)
