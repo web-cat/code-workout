@@ -127,13 +127,14 @@ class WorkoutOffering < ApplicationRecord
     user_ext = extension_for(user)
     # (1) student extension hard deadline
     return user_ext.hard_deadline if user_ext.andand.hard_deadline
-    
-    # (2) later of (offering hard deadline OR student extension soft deadline)
-    deadline2 = [self.hard_deadline, user_ext.andand.soft_deadline].compact.max
-    return deadline2 if deadline2
-    
-    # (3) offering soft deadline
-    self.soft_deadline
+
+    # (2) if offering has a hard deadline, extend it if the student has a later soft deadline
+    if self.hard_deadline
+      return [self.hard_deadline, user_ext.andand.soft_deadline].compact.max
+    end
+
+    # (3) no hard deadline set
+    nil
   end
 
 
