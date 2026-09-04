@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_09_01_203700) do
+ActiveRecord::Schema.define(version: 2026_09_02_200000) do
 
   create_table "active_admin_comments", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
     t.string "namespace"
@@ -38,6 +38,7 @@ ActiveRecord::Schema.define(version: 2026_09_01_203700) do
     t.integer "lms_instance_id"
     t.boolean "lti_launch", default: false
     t.integer "workout_score_id"
+    t.text "user_agent"
     t.index ["exercise_id"], name: "index_activity_logs_on_exercise_id"
     t.index ["lms_instance_id"], name: "index_activity_logs_on_lms_instance_id"
     t.index ["user_id"], name: "index_activity_logs_on_user_id"
@@ -277,7 +278,7 @@ ActiveRecord::Schema.define(version: 2026_09_01_203700) do
     t.index ["is_public"], name: "index_exercises_on_is_public"
   end
 
-  create_table "extension_managers", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
+  create_table "extension_managers", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
     t.string "name", null: false
     t.string "broker_base_url", null: false
     t.string "client_id", null: false
@@ -511,6 +512,8 @@ ActiveRecord::Schema.define(version: 2026_09_01_203700) do
     t.datetime "updated_at"
     t.integer "time_limit"
     t.datetime "opening_date"
+    t.text "allowed_ips"
+    t.text "allowed_user_agents"
     t.index ["user_id"], name: "index_student_extensions_on_user_id"
     t.index ["workout_offering_id"], name: "index_student_extensions_on_workout_offering_id"
   end
@@ -677,6 +680,8 @@ ActiveRecord::Schema.define(version: 2026_09_01_203700) do
     t.string "lti_assignment_id"
     t.integer "lms_instance_id"
     t.string "resource_link_id"
+    t.text "allowed_ips"
+    t.text "allowed_user_agents"
     t.index ["continue_from_workout_id"], name: "workout_offerings_continue_from_workout_id_fk"
     t.index ["course_offering_id"], name: "index_workout_offerings_on_course_offering_id"
     t.index ["lms_assignment_id"], name: "index_workout_offerings_on_lms_assignment_id"
@@ -728,6 +733,8 @@ ActiveRecord::Schema.define(version: 2026_09_01_203700) do
     t.string "lis_result_sourcedid"
     t.integer "lti_workout_id"
     t.datetime "started_at"
+    t.string "last_ip_address"
+    t.text "last_user_agent"
     t.index ["lti_workout_id"], name: "index_workout_scores_on_lti_workout_id"
     t.index ["user_id", "workout_id", "workout_offering_id"], name: "idx_ws_on_user_workout_workout_offering"
     t.index ["user_id"], name: "index_workout_scores_on_user_id"

@@ -451,7 +451,7 @@ Rails.application.routes.draw do
     get 'workouts/:id/download_attempt_data' =>
       'workouts#download_attempt_data', as: :download_workout_attempt_data
     get 'workouts/export' => 'workouts#export', as: :workouts_export
-    get 'workouts/search_students' => 'workouts#search_students', as: :workouts_student_search
+    get 'workouts/search_students' => 'course_offerings#search_students'
     # At the bottom, so the routes above take precedence over existing ids
     resources :workouts, except: [ :new, :edit ]
   end
@@ -482,12 +482,13 @@ Rails.application.routes.draw do
     get ':course_id/:term_id/:workout_offering_id/edit_workout' => 'workouts#edit', as: :edit_workout
     get ':course_id/:term_id/:id/practice(/:exercise_id)' => 'workout_offerings#practice', as: :workout_offering_practice
     get ':course_id/:term_id/find_offering/:workout_name' => 'workouts#find_offering', as: :find_workout_offering
+    get ':course_id/:term_id/:id/error' => 'workout_offerings#error', as: :workout_offering_error
+    get ':course_id/:term_id/:id/activity_log' => 'workout_offerings#activity_log', as: :workout_offering_activity_log
     get ':course_id/:term_id/:workout_offering_id/:id' => 'exercises#practice', as: :workout_offering_exercise
     patch ':course_id/:term_id/:workout_offering_id/:id' => 'exercises#evaluate', as: :workout_offering_exercise_evaluate
     get ':course_id/:term_id/:workout_offering_id/review/:review_user_id/:id' => 'exercises#practice', as: :workout_offering_exercise_review
     get ':course_id/:term_id/:id' => 'workout_offerings#show', as: :workout_offering
     get ':course_id/:term_id/review/:review_user_id/:id' => 'workout_offerings#review', as: :workout_offering_review
-    get ':course_id/:term_id/:id/activity_log' => 'workout_offerings#activity_log', as: :workout_offering_activity_log
     post ':id/:term_id/generate_gradebook/' => 'courses#generate_gradebook', as: :course_gradebook
     get ':id(/:term_id)' => 'courses#show', as: :course
   end
@@ -511,6 +512,7 @@ Rails.application.routes.draw do
     post 'store_workout/:id' => :store_workout, as: :store_workout
     get '/search_enrolled_users' => :search_enrolled_users, as: :search_enrolled_users
     collection do
+      get 'search_students' => :search_students, as: :search_students
       post 'remote_create' => :remote_create, as: :remote_create
     end
   end

@@ -15,6 +15,7 @@
           %th Event Type
           %th Activity
           %th IP Address
+          %th Browser Agent
           %th LTI?
           %th Details
       %tbody
@@ -24,8 +25,11 @@
             %td
               %span.label{ class: event_type_label_class(event[:type]) }
                 = event[:type].capitalize
-            %td= event[:activity].humanize
+            %td= event[:activity] == 'lti_launch' ? 'LTI launch' : event[:activity].humanize
             %td= event[:ip]
+            %td
+              - if event[:user_agent].present?
+                %small= truncate(event[:user_agent], length: 60)
             %td
               - if event[:lti]
                 %span.glyphicon.glyphicon-ok.text-success
@@ -39,6 +43,22 @@
                   = link_to 'View', organization_workout_offering_exercise_review_path(workout_offering_id: @workout_offering.id, review_user_id: @student.id, id: @exercise.id, attempt_id: event[:details].id, organization_id: @course_offering.course.organization.slug, course_id: @course_offering.course.slug, term_id: @course_offering.term.slug), class: 'btn btn-default btn-xs'
               - elsif event[:type] == 'activity' && event[:activity] == 'practice_view'
                 Viewed practice page
+              - elsif event[:type] == 'activity' && event[:activity] == 'workout_view'
+                Viewed workout show page
+              - elsif event[:type] == 'activity' && event[:activity] == 'lti_launch'
+                Successful LTI launch
+              - elsif event[:type] == 'activity' && event[:activity] == 'workout_view_ip_blocked'
+                %span.text-danger Blocked viewing workout (network location not permitted)
+              - elsif event[:type] == 'activity' && event[:activity] == 'practice_view_ip_blocked'
+                %span.text-danger Blocked practice access (network location not permitted)
+              - elsif event[:type] == 'activity' && event[:activity] == 'attempt_ip_blocked'
+                %span.text-danger Blocked attempt submission (network location not permitted)
+              - elsif event[:type] == 'activity' && event[:activity] == 'workout_view_user_agent_blocked'
+                %span.text-danger Blocked viewing workout (browser agent not permitted)
+              - elsif event[:type] == 'activity' && event[:activity] == 'practice_view_user_agent_blocked'
+                %span.text-danger Blocked practice access (browser agent not permitted)
+              - elsif event[:type] == 'activity' && event[:activity] == 'attempt_user_agent_blocked'
+                %span.text-danger Blocked attempt submission (browser agent not permitted)
               - elsif event[:type] == 'visualization'
                 Used code visualizer
 

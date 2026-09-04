@@ -22,8 +22,9 @@
     class: 'form-control inline'
 
 %ul
-  - if @organization.courses.any?
-    - @organization.courses.each do |course|
+  - courses = @courses || @organization.courses
+  - if courses.any?
+    - courses.each do |course|
       - show_course = !course.is_hidden || current_user.andand.is_a_member_of?(course.user_group)
       - if show_course
         %li
@@ -39,7 +40,8 @@
               %th Instructor(s)
               %th Enroll
             %tbody
-              - course.course_offerings.each do |o|
+              - offerings = (@offerings_by_course && @offerings_by_course[course]) || course.course_offerings.where(term: @term)
+              - offerings.each do |o|
                 %tr
                   %td= o.term.display_name
                   %td= link_to o.display_name,

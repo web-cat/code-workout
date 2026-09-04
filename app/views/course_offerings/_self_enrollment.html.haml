@@ -4,7 +4,10 @@
   - elsif off.is_grader?(current_user)
     Enrolled as grader
   - elsif off.is_student?(current_user)
-    = link_to 'Unenroll', course_offering_unenroll_path(off), method: :delete
+    = button_to 'Unenroll', course_offering_unenroll_path(off), method: :delete,
+      class: 'btn btn-link', form_class: 'inline-form',
+      form: { style: 'display: inline;' },
+      style: 'padding: 0; border: none; vertical-align: baseline;'
 - else
   - if off.effective_cutoff_date < Time.zone.now
     Closed

@@ -1,21 +1,28 @@
 .container
-  %h1 Select a Course Offering
-  
-  - if @course && @organization
-    %p.lead
-      Choose an existing offering for 
-      = @course.display_name
-      at
-      = @organization.name
-      to bind to your Canvas course.
+  - if session[:is_instructor]
+    %h1 Select a Course Offering
+    - if @course && @organization
+      %p.lead
+        Choose an existing offering for 
+        = @course.display_name
+        at
+        = @organization.name
+        to bind to your Canvas course.
 
-  %p
-    We found multiple potential course offerings in CodeWorkout that you manage. Please select the one that corresponds to your Canvas course, or create a new one.
+    %p
+      We found multiple potential course offerings in CodeWorkout that you manage. Please select the one that corresponds to your Canvas course, or create a new one.
+  - else
+    %h1 Select Your Section
+    - if @course && @organization
+      %p.lead
+        Please select your section for
+        = @course.display_name
+        to continue to your assignment.
 
   %table.table.table-striped
     %thead
       %tr
-        %th Label
+        %th= session[:is_instructor] ? 'Label' : 'Section / Label'
         %th Term
         %th Action
     %tbody
@@ -29,6 +36,7 @@
             - else
               = link_to 'Select', '#', class: 'btn btn-primary btn-sm'
 
-  %p.mt-4
-    %strong Don't see your course offering?
-    = link_to 'Create New Course Offering', organization_new_course_offering_path(organization_id: @organization.slug, course_id: @course.slug, term_id: @term.slug, workout_name: @workout_name, ext_lti_assignment_id: @ext_lti_assignment_id, custom_canvas_assignment_id: @custom_canvas_assignment_id, resource_link_id: @resource_link_id, from_collection: @from_collection), class: 'btn btn-success'
+  - if session[:is_instructor]
+    %p.mt-4
+      %strong Don't see your course offering?
+      = link_to 'Create New Course Offering', organization_new_course_offering_path(organization_id: @organization.slug, course_id: @course.slug, term_id: @term.slug, workout_name: @workout_name, ext_lti_assignment_id: @ext_lti_assignment_id, custom_canvas_assignment_id: @custom_canvas_assignment_id, resource_link_id: @resource_link_id, from_collection: @from_collection), class: 'btn btn-success'

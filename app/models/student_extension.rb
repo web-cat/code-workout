@@ -53,6 +53,12 @@ class StudentExtension < ApplicationRecord
         DateTime.strptime(opts['hard_deadline'].to_s, '%Q')
     end
     student_extension.time_limit = opts['time_limit'] if opts['time_limit'].present?
+    if opts.key?('allowed_ips') || opts.key?('ips')
+      student_extension.allowed_ips = opts['allowed_ips'] || opts['ips']
+    end
+    if opts.key?('allowed_user_agents') || opts.key?('user_agents') || opts.key?('browsers')
+      student_extension.allowed_user_agents = opts['allowed_user_agents'] || opts['user_agents'] || opts['browsers']
+    end
     student_extension.save!
   end
 end
