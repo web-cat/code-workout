@@ -35,6 +35,7 @@ $ ->
       divid: 'parsons-container'
       initialState: initialState,
       showFeedbackText: false,
+      supportsExecutionGrading: true,
       onFeedback: (feedback) ->
         window.parsonsFeedbackMessage = feedback.message
       onStateChange: (state) ->

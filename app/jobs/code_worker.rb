@@ -128,7 +128,7 @@ class CodeWorker
         answer.save
       else
         screening_failed = false
-        CSV.foreach(attempt_dir + '/results.csv') do |line|
+        parse_results_records(attempt_dir + '/results.csv').each do |line|
           # find test id
           test_id = line[2][/\d+$/].to_i
           test_case = prompt.test_cases.where(id: test_id).first
@@ -214,6 +214,42 @@ class CodeWorker
 
   #~ Private instance methods .................................................
   private
+
+  # -------------------------------------------------------------
+  # Reads a test-results file and returns an array of 8-field
+  # records: [attempt_dir, class_name, test_name, num, num,
+  # exception_name, message, pass_flag].
+  def parse_results_records(path)
+    return [] unless File.exist?(path)
+
+    raw = File.read(path)
+    record_start = /^([^\r\n,]*),([^\r\n,]*),([^\r\n,]*),(\d+),(\d+),([^\r\n,]*),/
+
+    starts = []
+    raw.scan(record_start) { starts << $~.begin(0) }
+    return [] if starts.empty?
+    starts << raw.length
+
+    records = []
+    starts.each_cons(2) do |s, e|
+      chunk = raw[s...e].chomp("\n").chomp("\r")
+      m = record_start.match(chunk)
+      next unless m
+
+      remainder = m.post_match
+      last_comma = remainder.rindex(',')
+      if last_comma
+        message = remainder[0...last_comma]
+        flag = remainder[(last_comma + 1)..-1]
+      else
+        message = remainder
+        flag = ''
+      end
+      records << (m.captures + [message, flag])
+    end
+    records
+  end
+
 
   # -------------------------------------------------------------
   def execute_javatest(class_name, attempt_dir, pre_lines, answer_lines)
