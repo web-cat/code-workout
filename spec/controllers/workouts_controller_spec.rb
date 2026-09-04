@@ -565,6 +565,113 @@ describe WorkoutsController do
 
       controller.send(:create_or_update_offerings, workout)
     end
+
+    it "aborts and does not delete offerings when a section label is unrecognized" do
+      co1 = FactoryBot.build_stubbed(:course_offering, id: 101, label: 'Section A', course: course, term: term)
+      wo1 = FactoryBot.build_stubbed(:workout_offering, id: 201, course_offering: co1, workout: workout)
+      allow(user).to receive(:managed_course_offerings).and_return([co1])
+      allow(workout).to receive_message_chain(:workout_offerings, :joins, :where).and_return([wo1])
+
+      yaml_input = <<~YAML
+        sections:
+          - section: Nonexistent Section
+            due: 2026-09-15 11:59 PM
+      YAML
+
+      controller.params = ActionController::Parameters.new({
+        date_yaml: yaml_input,
+        course_id: "itsc2214",
+        organization_id: "uncc",
+        term_id: "fall-2026"
+      })
+
+      expect(wo1).not_to receive(:destroy)
+      controller.send(:create_or_update_offerings, workout)
+
+      expect(workout.errors[:base]).to include("Course offering with label 'Nonexistent Section' not found or not managed by you.")
+    end
+
+    it "prevents deleting an existing offering when it has student scores or activity logs" do
+      co1 = FactoryBot.build_stubbed(:course_offering, id: 101, label: 'Section A', course: course, term: term)
+      wo1 = FactoryBot.build_stubbed(:workout_offering, id: 201, course_offering: co1, workout: workout)
+      allow(co1).to receive(:display_name).and_return('ITSC 2214 (Section A)')
+      allow(user).to receive(:managed_course_offerings).and_return([co1])
+      allow(workout).to receive_message_chain(:workout_offerings, :joins, :where).and_return([wo1])
+      allow(wo1).to receive_message_chain(:workout_scores, :exists?).and_return(true)
+      allow(wo1).to receive_message_chain(:activity_logs, :exists?).and_return(false)
+
+      yaml_input = <<~YAML
+        sections: []
+      YAML
+
+      controller.params = ActionController::Parameters.new({
+        date_yaml: yaml_input,
+        course_id: "itsc2214",
+        organization_id: "uncc",
+        term_id: "fall-2026"
+      })
+
+      expect(wo1).not_to receive(:destroy)
+      controller.send(:create_or_update_offerings, workout)
+
+      expect(workout.errors[:base].first).to match(/cannot be deleted/)
+    end
+
+    it "allows deleting an existing offering when it has no student scores and no activity logs" do
+      co1 = FactoryBot.build_stubbed(:course_offering, id: 101, label: 'Section A', course: course, term: term)
+      wo1 = FactoryBot.build_stubbed(:workout_offering, id: 201, course_offering: co1, workout: workout)
+      allow(user).to receive(:managed_course_offerings).and_return([co1])
+      allow(workout).to receive_message_chain(:workout_offerings, :joins, :where).and_return([wo1])
+      allow(wo1).to receive_message_chain(:workout_scores, :exists?).and_return(false)
+      allow(wo1).to receive_message_chain(:activity_logs, :exists?).and_return(false)
+
+      yaml_input = <<~YAML
+        sections: []
+      YAML
+
+      controller.params = ActionController::Parameters.new({
+        date_yaml: yaml_input,
+        course_id: "itsc2214",
+        organization_id: "uncc",
+        term_id: "fall-2026"
+      })
+
+      expect(wo1).to receive(:destroy)
+      controller.send(:create_or_update_offerings, workout)
+
+      expect(workout.errors).to be_empty
+    end
+
+    it "only considers offerings managed by current_user for deletion and leaves other instructors' offerings untouched" do
+      co1 = FactoryBot.build_stubbed(:course_offering, id: 101, label: 'Section A', course: course, term: term)
+      wo1 = FactoryBot.build_stubbed(:workout_offering, id: 201, course_offering_id: 101, course_offering: co1, workout: workout)
+      allow(co1).to receive(:display_name_with_term).and_return('Section A')
+      allow(co1).to receive(:display_name_with_org_and_term).and_return('Section A')
+      allow(co1).to receive(:display_name).and_return('Section A')
+      allow(user).to receive(:managed_course_offerings).and_return([co1])
+
+      relation_double = double('relation')
+      allow(workout).to receive_message_chain(:workout_offerings, :joins).and_return(relation_double)
+      allow(relation_double).to receive(:where).with(course_offerings: { id: [101] }).and_return([wo1])
+
+      yaml_input = <<~YAML
+        sections:
+          - section: Section A
+            due: 2026-09-15 11:59 PM
+      YAML
+
+      controller.params = ActionController::Parameters.new({
+        date_yaml: yaml_input,
+        course_id: "itsc2214",
+        organization_id: "uncc",
+        term_id: "fall-2026"
+      })
+
+      expect(wo1).not_to receive(:destroy)
+      controller.send(:create_or_update_offerings, workout)
+
+      expect(workout.errors).to be_empty
+    end
   end
 
   describe "#serialize_workout_offerings_to_yaml" do

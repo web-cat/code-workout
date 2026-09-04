@@ -275,4 +275,20 @@ describe WorkoutOffering, type: :model do
       expect(workout_offering.user_agent_allowed?(chrome_ua, user, workout_score)).to be false
     end
   end
+
+  describe "associations" do
+    it "nullifies activity_logs on destroy" do
+      assoc = WorkoutOffering.reflect_on_association(:activity_logs)
+      expect(assoc).not_to be_nil
+      expect(assoc.macro).to eq(:has_many)
+      expect(assoc.options[:dependent]).to eq(:nullify)
+    end
+
+    it "destroys student_extensions on destroy" do
+      assoc = WorkoutOffering.reflect_on_association(:student_extensions)
+      expect(assoc).not_to be_nil
+      expect(assoc.macro).to eq(:has_many)
+      expect(assoc.options[:dependent]).to eq(:destroy)
+    end
+  end
 end
