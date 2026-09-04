@@ -1505,26 +1505,6 @@ class WorkoutsController < ApplicationController
       end
     end
 
-    def search_students
-      @course = Course.find_with_id_or_slug(params[:course_id], params[:organization_id])
-      @term = Term.find(params[:term_id])
-      term = escape_javascript(params[:term]).downcase
-      
-      # Get all students enrolled in any course offering for this course in this term
-      course_offerings = CourseOffering.where(course: @course, term: @term)
-      users = User.joins(:course_enrollments)
-                  .where(course_enrollments: { course_offering_id: course_offerings.map(&:id) })
-                  .where("lower(first_name) like ? or lower(last_name) like ? or lower(email) like ?", "%#{term}%", "%#{term}%", "%#{term}%")
-                  .distinct
-      
-      render json: users.map { |u| { 
-        id: u.id, 
-        first_name: u.first_name, 
-        last_name: u.last_name, 
-        email: u.email 
-      } }
-    end
-
     # -------------------------------------------------------------
     def serialize_workout_offerings_to_yaml(workout_offerings, student_extensions)
       user_tz = current_user.andand.time_zone.andand.name || 'America/New_York'

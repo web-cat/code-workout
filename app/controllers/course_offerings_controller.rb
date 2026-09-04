@@ -1,6 +1,8 @@
 class CourseOfferingsController < ApplicationController
   before_action :rename_course_offering_id_param
   load_and_authorize_resource
+  skip_authorize_resource only: [:search_students]
+  skip_load_resource only: [:search_students]
 
 
   # -------------------------------------------------------------
@@ -102,6 +104,33 @@ class CourseOfferingsController < ApplicationController
     end
 
     render json: @results.uniq.to_json and return
+  end
+
+  # -------------------------------------------------------------
+  # GET /course_offerings/search_students
+  def search_students
+    @course = Course.find_with_id_or_slug(params[:course_id], params[:organization_id])
+    @term = Term.find(params[:term_id]) if params[:term_id].present?
+
+    if @course.blank? || @term.blank? || params[:term].blank?
+      render json: [] and return
+    end
+
+    term = escape_javascript(params[:term]).downcase
+
+    # Get all students enrolled in any course offering for this course in this term
+    course_offerings = CourseOffering.where(course: @course, term: @term)
+    users = User.joins(:course_enrollments)
+                .where(course_enrollments: { course_offering_id: course_offerings.map(&:id) })
+                .where("lower(first_name) like ? or lower(last_name) like ? or lower(email) like ?", "%#{term}%", "%#{term}%", "%#{term}%")
+                .distinct
+
+    render json: users.map { |u| {
+      id: u.id,
+      first_name: u.first_name,
+      last_name: u.last_name,
+      email: u.email
+    } }
   end
 
   # POST /courses/:organization_id/:course_id/create_offering

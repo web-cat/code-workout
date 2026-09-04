@@ -451,7 +451,7 @@ Rails.application.routes.draw do
     get 'workouts/:id/download_attempt_data' =>
       'workouts#download_attempt_data', as: :download_workout_attempt_data
     get 'workouts/export' => 'workouts#export', as: :workouts_export
-    get 'workouts/search_students' => 'workouts#search_students', as: :workouts_student_search
+    get 'workouts/search_students' => 'course_offerings#search_students'
     # At the bottom, so the routes above take precedence over existing ids
     resources :workouts, except: [ :new, :edit ]
   end
@@ -512,6 +512,7 @@ Rails.application.routes.draw do
     post 'store_workout/:id' => :store_workout, as: :store_workout
     get '/search_enrolled_users' => :search_enrolled_users, as: :search_enrolled_users
     collection do
+      get 'search_students' => :search_students, as: :search_students
       post 'remote_create' => :remote_create, as: :remote_create
     end
   end
