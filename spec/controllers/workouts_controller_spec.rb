@@ -446,6 +446,43 @@ describe WorkoutsController do
       controller.send(:create_or_update_offerings, workout)
     end
 
+    it "parses top-level lms_assignment_url and per-section overrides" do
+      co1 = FactoryBot.build_stubbed(:course_offering, id: 101, label: 'Section A', course: course, term: term)
+      co2 = FactoryBot.build_stubbed(:course_offering, id: 102, label: 'Section B', course: course, term: term)
+      allow(co1).to receive(:display_name_with_term).and_return('Section A')
+      allow(co1).to receive(:display_name_with_org_and_term).and_return('Section A')
+      allow(co1).to receive(:display_name).and_return('Section A')
+      allow(co2).to receive(:display_name_with_term).and_return('Section B')
+      allow(co2).to receive(:display_name_with_org_and_term).and_return('Section B')
+      allow(co2).to receive(:display_name).and_return('Section B')
+      allow(user).to receive(:managed_course_offerings).and_return([co1, co2])
+
+      yaml_input = <<~YAML
+        lms_assignment_url: https://canvas.vt.edu/courses/1/assignments/10
+        sections:
+          - section: Section A
+            due: 2026-09-15 11:59 PM
+          - section: Section B
+            due: 2026-09-15 11:59 PM
+            lms_assignment_url: https://canvas.vt.edu/courses/1/assignments/20
+      YAML
+
+      controller.params = ActionController::Parameters.new({
+        date_yaml: yaml_input,
+        course_id: "itsc2214",
+        organization_id: "uncc",
+        term_id: "fall-2026"
+      })
+
+      expect(workout).to receive(:add_workout_offerings) do |offerings_data, common|
+        expect(offerings_data['101']['lms_assignment_url']).to eq('https://canvas.vt.edu/courses/1/assignments/10')
+        expect(offerings_data['102']['lms_assignment_url']).to eq('https://canvas.vt.edu/courses/1/assignments/20')
+        []
+      end
+
+      controller.send(:create_or_update_offerings, workout)
+    end
+
     it "parses student extension ips overrides" do
       co1 = FactoryBot.build_stubbed(:course_offering, id: 101, label: 'Section A', course: course, term: term)
       wo1 = FactoryBot.build_stubbed(:workout_offering, id: 201, course_offering: co1, workout: workout)
@@ -752,6 +789,34 @@ describe WorkoutsController do
       yaml_str = controller.send(:serialize_workout_offerings_to_yaml, [wo1], [ext])
       expect(yaml_str).to include("browsers: any")
       expect(yaml_str).to include("Jane Doe <jdoe@example.edu>")
+    end
+
+    it "serializes lms_assignment_url before sections with empty default when none present" do
+      wo1 = FactoryBot.build_stubbed(:workout_offering, course_offering: course_offering1)
+      wo2 = FactoryBot.build_stubbed(:workout_offering, course_offering: course_offering2)
+
+      yaml_str = controller.send(:serialize_workout_offerings_to_yaml, [wo1, wo2], [])
+      expect(yaml_str).to match(/lms_assignment_url:\s*\nsections:/)
+      expect(yaml_str).not_to match(/section:.*\n\s*lms_assignment_url:/)
+    end
+
+    it "serializes common lms_assignment_url at top level when all sections share same URL" do
+      wo1 = FactoryBot.build_stubbed(:workout_offering, course_offering: course_offering1, lms_assignment_url: 'https://canvas.vt.edu/courses/1/assignments/10')
+      wo2 = FactoryBot.build_stubbed(:workout_offering, course_offering: course_offering2, lms_assignment_url: 'https://canvas.vt.edu/courses/1/assignments/10')
+
+      yaml_str = controller.send(:serialize_workout_offerings_to_yaml, [wo1, wo2], [])
+      expect(yaml_str).to match(/lms_assignment_url:\s*https:\/\/canvas\.vt\.edu\/courses\/1\/assignments\/10\nsections:/)
+      expect(yaml_str).not_to match(/section:.*\n\s*lms_assignment_url:/)
+    end
+
+    it "serializes per-section lms_assignment_url when sections have different URLs" do
+      wo1 = FactoryBot.build_stubbed(:workout_offering, course_offering: course_offering1, lms_assignment_url: 'https://canvas.vt.edu/courses/1/assignments/10')
+      wo2 = FactoryBot.build_stubbed(:workout_offering, course_offering: course_offering2, lms_assignment_url: 'https://canvas.vt.edu/courses/1/assignments/20')
+
+      yaml_str = controller.send(:serialize_workout_offerings_to_yaml, [wo1, wo2], [])
+      expect(yaml_str).to match(/lms_assignment_url:\s*\nsections:/)
+      expect(yaml_str).to include("lms_assignment_url: https://canvas.vt.edu/courses/1/assignments/10")
+      expect(yaml_str).to include("lms_assignment_url: https://canvas.vt.edu/courses/1/assignments/20")
     end
   end
 
