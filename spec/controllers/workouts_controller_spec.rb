@@ -971,6 +971,48 @@ describe WorkoutsController do
       )
       expect(session[:candidate_course_offering_ids]).to eq([101, 102])
     end
+
+    it "correctly resolves to the student's section WorkoutOffering when multiple sections share the same resource_link_id" do
+      offering2 = FactoryBot.build_stubbed(:course_offering, id: 102, course: course, term: term, label: 'Section 2', lms_section_id: 'sec_2')
+      wo2 = FactoryBot.build_stubbed(:workout_offering, id: 202, workout: workout, course_offering: offering2)
+      candidates = [course_offering, offering2]
+      relation = instance_double(ActiveRecord::Relation, to_a: candidates, any?: true, count: 2, empty?: false)
+      allow(CourseOffering).to receive(:where).with(hash_including(lms_instance_id: '1', lti_context_id: 'ctx_123')).and_return(relation)
+      allow(user).to receive(:is_enrolled?).with(course_offering).and_return(false)
+      allow(user).to receive(:is_enrolled?).with(offering2).and_return(true)
+      allow(offering2).to receive(:changed?).and_return(false)
+      allow(wo2).to receive(:changed?).and_return(false)
+
+      wo_scope = double('WorkoutOfferingsAssociation')
+      allow(offering2).to receive(:workout_offerings).and_return(wo_scope)
+      allow(wo_scope).to receive(:find_by).with(
+        lms_instance_id: '1',
+        resource_link_id: 'shared_resource_link_100'
+      ).and_return(wo2)
+
+      get :find_offering, params: {
+        organization_id: 'vt',
+        course_id: 'cs1114',
+        term_id: 'fall2026',
+        workout_name: 'Practice Workout',
+        user_id: user.id.to_s,
+        lms_instance_id: '1',
+        lti_context_id: 'ctx_123',
+        resource_link_id: 'shared_resource_link_100'
+      }, session: { is_instructor: false }
+
+      expect(response).to redirect_to(
+        organization_workout_offering_practice_path(
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          id: 202,
+          lti_launch: true
+        )
+      )
+      expect(controller.instance_variable_get(:@workout_offering)).to eq(wo2)
+      expect(controller.instance_variable_get(:@course_offering)).to eq(offering2)
+    end
   end
 
   describe "#serialize_workout_offerings_to_yaml" do
