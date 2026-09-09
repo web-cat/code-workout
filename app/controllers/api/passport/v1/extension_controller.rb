@@ -54,19 +54,8 @@ module Api
           Rails.logger.debug "[PASSPORT_API_VERIFICATION_LOGGING] Resolved User ID: #{user.id}, Username/Email: #{user.email || user.username}"
 
           # 4. Find WorkoutOffering
-          # We use the decoupled identifiers from Phase 1
-          offering = WorkoutOffering.find_by(
-            lms_instance: lms_instance,
-            lti_assignment_id: lti_assignment_id
-          )
-          if offering.nil?
-            # PASSPORT_API_VERIFICATION_LOGGING: Decoupled lms_assignment_id fallback lookup
-            Rails.logger.debug "[PASSPORT_API_VERIFICATION_LOGGING] WorkoutOffering not resolved via lti_assignment_id '#{lti_assignment_id}'. Falling back to lms_assignment_id lookup."
-            offering = WorkoutOffering.find_by(
-              lms_instance: lms_instance,
-              lms_assignment_id: lti_assignment_id
-            )
-          end
+          # Resolves offering scoped to user's enrolled section if available, with global fallback
+          offering = find_workout_offering(lms_instance, user, lti_assignment_id)
 
           if offering.nil?
             # PASSPORT_API_VERIFICATION_LOGGING: WorkoutOffering resolution failed
@@ -121,7 +110,8 @@ module Api
 
           lms_instance = LmsInstance.find_by(url: lms_instance_url)
           identity = LtiIdentity.find_by(lms_instance: lms_instance, lti_user_id: lti_user_id) if lms_instance
-          offering = WorkoutOffering.find_by(lms_instance: lms_instance, lti_assignment_id: lti_assignment_id) if lms_instance
+          user = identity.andand.user
+          offering = find_workout_offering(lms_instance, user, lti_assignment_id)
 
           # PASSPORT_API_VERIFICATION_LOGGING: Log lookup resolutions
           Rails.logger.debug "[PASSPORT_API_VERIFICATION_LOGGING] Resource resolutions - " \
@@ -149,6 +139,36 @@ module Api
             Rails.logger.debug "[PASSPORT_API_VERIFICATION_LOGGING] Extension removal aborted: Issuer/User/Assignment resource not found."
             render json: { error: 'Resource not found' }, status: :not_found
           end
+        end
+
+        private
+
+        def find_workout_offering(lms_instance, user, lti_assignment_id)
+          return nil unless lms_instance && lti_assignment_id.present?
+
+          # 1. Preferred: Find offering among course offerings the student is enrolled in
+          if user
+            offering = WorkoutOffering.joins(course_offering: :course_enrollments)
+              .where(lms_instance: lms_instance)
+              .where(course_enrollments: { user_id: user.id })
+              .where(
+                'workout_offerings.lti_assignment_id = :id OR workout_offerings.resource_link_id = :id OR workout_offerings.lms_assignment_id = :id',
+                id: lti_assignment_id
+              ).first
+            if offering
+              Rails.logger.debug "[PASSPORT_API_VERIFICATION_LOGGING] Resolved WorkoutOffering ID #{offering.id} scoped by student enrollment (User ID #{user.id})."
+              return offering
+            end
+          end
+
+          # 2. Fallback: Lookup across all offerings for this LMS instance
+          offering = WorkoutOffering.find_by(lms_instance: lms_instance, lti_assignment_id: lti_assignment_id)
+          offering ||= WorkoutOffering.find_by(lms_instance: lms_instance, resource_link_id: lti_assignment_id)
+          offering ||= WorkoutOffering.find_by(lms_instance: lms_instance, lms_assignment_id: lti_assignment_id)
+          if offering
+            Rails.logger.debug "[PASSPORT_API_VERIFICATION_LOGGING] Resolved WorkoutOffering ID #{offering.id} via LMS instance fallback."
+          end
+          offering
         end
       end
     end
