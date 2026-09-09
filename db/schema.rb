@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_09_02_200000) do
+ActiveRecord::Schema.define(version: 2026_09_09_180000) do
 
   create_table "active_admin_comments", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
     t.string "namespace"
@@ -685,8 +685,8 @@ ActiveRecord::Schema.define(version: 2026_09_02_200000) do
     t.index ["continue_from_workout_id"], name: "workout_offerings_continue_from_workout_id_fk"
     t.index ["course_offering_id"], name: "index_workout_offerings_on_course_offering_id"
     t.index ["lms_assignment_id"], name: "index_workout_offerings_on_lms_assignment_id"
-    t.index ["lms_instance_id", "lti_assignment_id"], name: "idx_workout_offerings_on_lms_and_lti_assignment", unique: true
-    t.index ["lms_instance_id", "resource_link_id"], name: "idx_workout_offerings_on_lms_and_resource_link", unique: true
+    t.index ["lms_instance_id", "lti_assignment_id"], name: "idx_workout_offerings_on_lms_and_lti_assignment"
+    t.index ["lms_instance_id", "resource_link_id"], name: "idx_workout_offerings_on_lms_and_resource_link"
     t.index ["lms_instance_id"], name: "index_workout_offerings_on_lms_instance_id"
     t.index ["lti_assignment_id"], name: "index_workout_offerings_on_lti_assignment_id"
     t.index ["workout_id"], name: "index_workout_offerings_on_workout_id"

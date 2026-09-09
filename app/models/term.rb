@@ -67,7 +67,7 @@ class Term < ApplicationRecord
 
   # -------------------------------------------------------------
   def self.season_name(season)
-    SEASONS.rassoc(season).first
+    SEASONS.rassoc(season)&.first
   end
 
 
