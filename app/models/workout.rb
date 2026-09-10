@@ -428,7 +428,9 @@ class Workout < ApplicationRecord
         workout_offering.rescore_all
       end
 
-      workout_offering.lms_assignment_url = offering['lms_assignment_url']
+      if offering.key?('lms_assignment_url') || offering.key?('url')
+        workout_offering.lms_assignment_url = offering['lms_assignment_url'] || offering['url']
+      end
 
       # set deadlines
       workout_offering.opening_date = offering['opening_date'].present? ?
@@ -453,7 +455,7 @@ class Workout < ApplicationRecord
       end
       workout_offering.save!
       workout_offerings << workout_offering.id
-      extensions = offering['extensions']
+      extensions = offering['extensions'] || []
       extensions.each do |ext|
         student_id = ext['student_id']
         student = User.find(student_id)

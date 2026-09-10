@@ -88,4 +88,46 @@ describe Workout, type: :model do
       expect(found).to eq(offering1)
     end
   end
+
+  describe "#add_workout_offerings" do
+    let(:workout) { FactoryBot.build(:workout) }
+    let(:course_offering) { FactoryBot.build_stubbed(:course_offering, id: 101) }
+
+    before do
+      allow(CourseOffering).to receive(:find).with(101).and_return(course_offering)
+      allow(WorkoutOffering).to receive(:find_by).and_return(nil)
+      allow_any_instance_of(WorkoutOffering).to receive(:save!).and_return(true)
+      allow_any_instance_of(WorkoutOffering).to receive(:rescore_all).and_return(true)
+    end
+
+    it "sets lms_assignment_url from offering hash" do
+      common = { time_limit: nil, attempt_limit: nil, published: true }
+      offerings_data = {
+        101 => {
+          'lms_assignment_url' => 'https://canvas.vt.edu/courses/1/assignments/10'
+        }
+      }
+
+      wo = WorkoutOffering.new
+      allow(WorkoutOffering).to receive(:new).and_return(wo)
+
+      workout.add_workout_offerings(offerings_data, common)
+      expect(wo.lms_assignment_url).to eq('https://canvas.vt.edu/courses/1/assignments/10')
+    end
+
+    it "sets lms_assignment_url when key is 'url'" do
+      common = { time_limit: nil, attempt_limit: nil, published: true }
+      offerings_data = {
+        101 => {
+          'url' => 'https://canvas.vt.edu/courses/1/assignments/20'
+        }
+      }
+
+      wo = WorkoutOffering.new
+      allow(WorkoutOffering).to receive(:new).and_return(wo)
+
+      workout.add_workout_offerings(offerings_data, common)
+      expect(wo.lms_assignment_url).to eq('https://canvas.vt.edu/courses/1/assignments/20')
+    end
+  end
 end
