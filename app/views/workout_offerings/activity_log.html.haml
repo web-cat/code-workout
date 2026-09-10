@@ -62,4 +62,4 @@
               - elsif event[:type] == 'visualization'
                 Used code visualizer
 
-= link_to 'Back to Review', workout_offering_review_path(id: @workout_offering.id, review_user_id: @student.id), class: 'btn btn-default'
+= link_to 'Back to Review', organization_workout_offering_review_path(organization_id: @course_offering.course.organization.slug, course_id: @course_offering.course.slug, term_id: @course_offering.term.slug, id: @workout_offering.id, review_user_id: @student.id), class: 'btn btn-default'
