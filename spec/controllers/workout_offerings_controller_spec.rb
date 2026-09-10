@@ -264,6 +264,28 @@ RSpec.describe WorkoutOfferingsController, type: :controller do
       expect(events.length).to eq(2)
       expect(events.map { |e| e[:activity] }).to contain_exactly('workout_view', 'lti_launch')
     end
+
+    context "with views rendered" do
+      render_views
+
+      before do
+        allow(instructor).to receive_message_chain(:global_role, :can_edit_system_configuration?).and_return(false)
+      end
+
+      it "renders the activity_log template with the review link" do
+        get :activity_log, params: {
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          id: '201',
+          workout_score_id: '301'
+        }
+
+        expect(response.status).to eq(200)
+        expect(response.body).to include('Back to Review')
+        expect(response.body).to include('/courses/vt/cs1114/fall2026/review/')
+      end
+    end
   end
 
   describe "IP access restrictions enforcement" do
