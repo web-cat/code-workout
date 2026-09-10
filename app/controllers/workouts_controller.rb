@@ -1509,6 +1509,11 @@ class WorkoutsController < ApplicationController
             default_browsers = default_browsers.is_a?(Array) ? default_browsers.join(', ') : default_browsers.to_s.strip if default_browsers.present?
             default_browsers = nil if default_browsers.blank?
 
+            # Default top-level LMS assignment URL for all offerings
+            default_lms_url = data['lms_assignment_url'] || data['url']
+            default_lms_url = default_lms_url.to_s.strip if default_lms_url.present?
+            default_lms_url = nil if default_lms_url.blank?
+
             user_tz = current_user.time_zone.andand.name || 'America/New_York'
             @course = Course.find_with_id_or_slug(params[:course_id], params[:organization_id])
             @term = Term.find(params[:term_id]) if params[:term_id].present?
@@ -1549,12 +1554,17 @@ class WorkoutsController < ApplicationController
                   section_browsers = section_browsers.is_a?(Array) ? section_browsers.join(', ') : section_browsers.to_s.strip if section_browsers.present?
                   allowed_user_agents = section_browsers.present? ? section_browsers : default_browsers
 
+                  section_lms_url = s['lms_assignment_url'] || s['url']
+                  section_lms_url = section_lms_url.to_s.strip if section_lms_url.present?
+                  lms_assignment_url = section_lms_url.present? ? section_lms_url : default_lms_url
+
                   new_offerings_data[co.id.to_s] = {
                     'opening_date' => from.andand.to_i.andand.*(1000), # millisecond timestamp for add_workout_offerings
                     'soft_deadline' => due.andand.to_i.andand.*(1000),
                     'hard_deadline' => until_date.andand.to_i.andand.*(1000),
                     'allowed_ips' => allowed_ips,
                     'allowed_user_agents' => allowed_user_agents,
+                    'lms_assignment_url' => lms_assignment_url,
                     'extensions' => []
                   }
                 else
@@ -1705,6 +1715,13 @@ class WorkoutsController < ApplicationController
       # If all offerings share the same non-blank browser requirement, serialize at top-level
       common_browsers = (all_browsers.size == 1 && (workout_offerings || []).all? { |wo| wo.respond_to?(:allowed_user_agents) && wo.allowed_user_agents.present? }) ? all_browsers.first : nil
 
+      all_urls = (workout_offerings || []).map do |wo|
+        wo.respond_to?(:lms_assignment_url) ? wo.lms_assignment_url.presence : nil
+      end.compact.uniq
+
+      # If all offerings share the same non-blank LMS assignment URL, serialize at top-level
+      common_url = (all_urls.size == 1 && (workout_offerings || []).all? { |wo| wo.respond_to?(:lms_assignment_url) && wo.lms_assignment_url.present? }) ? all_urls.first : nil
+
       sections = (workout_offerings || []).map do |wo|
         course_offering = wo.respond_to?(:course_offering) ? wo.course_offering : wo
         soft_deadline = wo.respond_to?(:soft_deadline) ? wo.soft_deadline : nil
@@ -1712,6 +1729,7 @@ class WorkoutsController < ApplicationController
         hard_deadline = wo.respond_to?(:hard_deadline) ? wo.hard_deadline : nil
         allowed_ips = wo.respond_to?(:allowed_ips) ? wo.allowed_ips.presence : nil
         allowed_user_agents = wo.respond_to?(:allowed_user_agents) ? wo.allowed_user_agents.presence : nil
+        wo_url = wo.respond_to?(:lms_assignment_url) ? wo.lms_assignment_url.presence : nil
         sec_hash = {
           'section' => course_offering.display_name_with_term,
           'due' => format_date(soft_deadline, user_tz),
@@ -1723,6 +1741,9 @@ class WorkoutsController < ApplicationController
         end
         if allowed_user_agents.present? && allowed_user_agents != common_browsers
           sec_hash['browsers'] = allowed_user_agents
+        end
+        if wo_url.present? && wo_url != common_url
+          sec_hash['lms_assignment_url'] = wo_url
         end
         sec_hash
       end
@@ -1789,6 +1810,7 @@ class WorkoutsController < ApplicationController
       yaml_obj = {}
       yaml_obj['ips'] = common_ips if common_ips.present?
       yaml_obj['browsers'] = common_browsers if common_browsers.present?
+      yaml_obj['lms_assignment_url'] = common_url.presence || ''
       yaml_obj['sections'] = sections
       yaml_obj['extensions'] = ext_list
       
