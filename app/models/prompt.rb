@@ -116,4 +116,16 @@ class Prompt < ApplicationRecord
     answer
   end
 
+
+  # -------------------------------------------------------------
+  def wrap_code(code = '')
+    specific.respond_to?(:wrap_code) ? specific.wrap_code(code) : code.to_s
+  end
+
+
+  # -------------------------------------------------------------
+  def pre_lines
+    specific.respond_to?(:pre_lines) ? specific.pre_lines : 0
+  end
+
 end
