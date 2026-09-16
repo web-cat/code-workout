@@ -114,7 +114,72 @@
         students:
           - charlie@example.edu
 
-%h2 4. IP Access Restrictions
+%h2 4. Time Limit Overrides (Extensions)
+%p
+  Student extensions allow you to override the workout's time duration limit for specific students (e.g., for SSD accommodations or individual adjustments) using the
+  %code time_limit:
+  setting within an extension group.
+%ul
+  %li
+    %b Minutes:
+    Specify exact minutes such as
+    %code 90
+    ,
+    %code 90 minutes
+    , or
+    %code 90 min
+    .
+  %li
+    %b Hours:
+    Specify hours such as
+    %code 1.5 hours
+    ,
+    %code 2 hrs
+    , or
+    %code 1 hour
+    (automatically converted to minutes).
+  %li
+    %b Multipliers:
+    Specify a multiplier relative to the workout's base time limit, such as
+    %code 1.5x
+    or
+    %code 2x
+    (e.g.,
+    %code 1.5x
+    on a workout with a 60-minute base time limit automatically computes a 90-minute limit).
+  %li
+    %b Unlimited:
+    Specify
+    %code unlimited
+    or
+    %code none
+    to completely lift the time limit for those students.
+  %li
+    %b Aliases:
+    You can also use
+    %code time:
+    or
+    %code duration:
+    interchangeably with
+    %code time_limit:
+    .
+
+%h3 Example with Time Limit Overrides:
+%pre.examples
+  :preserve
+    extensions:
+      - time_limit: 1.5x                # 1.5x accommodation on base time limit
+        students:
+          - Alice Smith <asmith@example.edu>
+      - due: 2025-09-20 11:59 PM
+        time_limit: 90 minutes          # Overrides time limit to 90 minutes
+        students:
+          - Bob Jones <bjones@example.edu>
+      - time_limit: unlimited           # No time limit for Charlie
+        students:
+          - charlie@example.edu
+
+%h2 5. IP Access Restrictions
 %p
   You can restrict workout access to specific network locations (such as on-campus labs or test centers) using the
   %code ips:
@@ -173,7 +238,7 @@
         students:
           - Alice Smith <asmith@example.edu>
 
-%h2 5. Browser Agent Requirements
+%h2 6. Browser Agent Requirements
 %p
   You can require students to use specific secure testing browsers (such as Respondus LockDown Browser or Secure Exam Browser) using the
   %code browsers:
@@ -228,7 +293,7 @@
         students:
           - Alice Smith <asmith@example.edu>
 
-%h2 6. Tips for Success
+%h2 7. Tips for Success
 %ul
   %li
     %b Time Zones:

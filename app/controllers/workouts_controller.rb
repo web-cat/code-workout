@@ -1648,6 +1648,8 @@ class WorkoutsController < ApplicationController
                 ext_browsers = ext_browsers.is_a?(Array) ? ext_browsers.join(', ') : ext_browsers.to_s.strip if ext_browsers.present?
                 ext_browsers = nil if ext_browsers.blank?
 
+                ext_time_raw = ext_group['time_limit'] || ext_group['time'] || ext_group['duration']
+
                 students = ext_group['students'] || []
                 
                 students.each do |student_ref|
@@ -1665,12 +1667,15 @@ class WorkoutsController < ApplicationController
                     # Check enrollment in any of the managed workout offerings in this term
                     enrolled_offering = managed_workout_offerings.find { |wo| wo.course_offering.is_enrolled?(student) }
                     if enrolled_offering
+                      base_time_limit = enrolled_offering.andand.time_limit.presence || common[:time_limit].presence
+                      ext_time_limit = parse_time_limit(ext_time_raw, base_time_limit)
                       StudentExtension.create!(
                         user: student,
                         workout_offering: enrolled_offering,
                         opening_date: from,
                         soft_deadline: due,
                         hard_deadline: until_date,
+                        time_limit: ext_time_limit,
                         allowed_ips: ext_ips,
                         allowed_user_agents: ext_browsers
                       )
@@ -1790,6 +1795,7 @@ class WorkoutsController < ApplicationController
 
           ext_ips = ext[:allowed_ips] || ext['allowed_ips'] || ext[:ips] || ext['ips']
           ext_browsers = ext[:allowed_user_agents] || ext['allowed_user_agents'] || ext[:user_agents] || ext['user_agents'] || ext[:browsers] || ext['browsers']
+          ext_time_limit = ext[:time_limit] || ext['time_limit']
 
           user_display = ext[:student_display] || ext['student_display']
           user_email = ext[:student_email] || ext['student_email'] || (User.find_by(id: ext[:student_id] || ext['student_id']).andand.email)
@@ -1800,6 +1806,7 @@ class WorkoutsController < ApplicationController
           hard = ext.hard_deadline
           ext_ips = ext.respond_to?(:allowed_ips) ? ext.allowed_ips.presence : nil
           ext_browsers = ext.respond_to?(:allowed_user_agents) ? ext.allowed_user_agents.presence : nil
+          ext_time_limit = ext.respond_to?(:time_limit) ? ext.time_limit : nil
           student_label = "#{ext.user.display_name} <#{ext.user.email}>"
         end
 
@@ -1807,6 +1814,7 @@ class WorkoutsController < ApplicationController
           'due' => format_date(soft, user_tz),
           'from' => format_rel_date(open_d, soft, user_tz) || 'always',
           'until' => format_rel_date(hard, soft, user_tz) || '+0 minutes',
+          'time_limit' => ext_time_limit.present? ? ext_time_limit.to_i : nil,
           'ips' => ext_ips.presence,
           'browsers' => ext_browsers.presence
         }
@@ -1821,6 +1829,10 @@ class WorkoutsController < ApplicationController
           'from' => meta['from'],
           'until' => meta['until']
         }
+        if meta['time_limit'].present?
+          tl = meta['time_limit']
+          h['time_limit'] = tl == 0 ? 'unlimited' : (tl == 1 ? '1 minute' : "#{tl} minutes")
+        end
         h['ips'] = meta['ips'] if meta['ips'].present?
         h['browsers'] = meta['browsers'] if meta['browsers'].present?
         h['students'] = students
@@ -1957,6 +1969,48 @@ class WorkoutsController < ApplicationController
       rescue
         nil
       end
+    end
+
+    # -------------------------------------------------------------
+    def parse_time_limit(val, base_time_limit = nil)
+      return nil if val.blank?
+      if val.is_a?(Numeric)
+        raise StandardError, "time_limit cannot be negative." if val < 0
+        return val.to_i
+      end
+
+      str = val.to_s.strip.downcase
+      return 0 if ['unlimited', 'none'].include?(str)
+
+      # Multiplier check: e.g. "1.5x", "2x", "1.5 *", "2.0x"
+      if str =~ /\A(\d*\.?\d+)\s*(?:x|\*)\z/i
+        mult = $1.to_f
+        base = base_time_limit.to_i
+        if base <= 0
+          raise StandardError, "Cannot apply time_limit multiplier '#{val}' because no base time limit is set for this workout."
+        end
+        parsed = (base * mult).round
+        raise StandardError, "time_limit cannot be negative." if parsed < 0
+        return parsed
+      end
+
+      # Hours check: e.g. "1.5 hours", "2 hr", "2 hrs", "1.5h", "1 hour"
+      if str =~ /\A(\d*\.?\d+)\s*(?:h|hr|hrs|hour|hours)\z/i
+        hrs = $1.to_f
+        parsed = (hrs * 60).round
+        raise StandardError, "time_limit cannot be negative." if parsed < 0
+        return parsed
+      end
+
+      # Minutes check: e.g. "90", "90m", "90 min", "90 mins", "90 minute", "90 minutes"
+      if str =~ /\A(\d*\.?\d+)\s*(?:m|min|mins|minute|minutes)?\z/i
+        mins = $1.to_f
+        parsed = mins.round
+        raise StandardError, "time_limit cannot be negative." if parsed < 0
+        return parsed
+      end
+
+      raise StandardError, "Invalid time_limit '#{val}'. Expected minutes (e.g. 90, 90 mins), hours (e.g. 1.5 hours), or multiplier (e.g. 1.5x)."
     end
 
     # -------------------------------------------------------------
