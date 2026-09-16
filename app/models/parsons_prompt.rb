@@ -35,6 +35,8 @@ class ParsonsPrompt < ApplicationRecord
   #~ Relationships ............................................................
 
   acts_as :prompt
+  include HasWrapperCode
+
   has_many :test_cases, as: :coding_prompt, dependent: :destroy
 
 
