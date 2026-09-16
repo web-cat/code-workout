@@ -632,6 +632,96 @@ describe WorkoutsController do
       controller.send(:create_or_update_offerings, workout)
     end
 
+    it "parses student extension time_limit with exact minutes, hours, and multipliers" do
+      co1 = FactoryBot.build_stubbed(:course_offering, id: 101, label: 'Section A', course: course, term: term)
+      wo1 = FactoryBot.build_stubbed(:workout_offering, id: 201, course_offering: co1, workout: workout, time_limit: 60)
+      allow(co1).to receive(:display_name_with_term).and_return('Section A')
+      allow(co1).to receive(:display_name_with_org_and_term).and_return('Section A')
+      allow(co1).to receive(:display_name).and_return('Section A')
+      allow(user).to receive(:managed_course_offerings).and_return([co1])
+      allow(workout).to receive(:add_workout_offerings).and_return([wo1])
+      allow(workout).to receive_message_chain(:workout_offerings, :joins, :where).and_return([wo1])
+
+      student1 = FactoryBot.build_stubbed(:user, email: 'student1@example.edu')
+      student2 = FactoryBot.build_stubbed(:user, email: 'student2@example.edu')
+      student3 = FactoryBot.build_stubbed(:user, email: 'student3@example.edu')
+      student4 = FactoryBot.build_stubbed(:user, email: 'student4@example.edu')
+      allow(User).to receive(:find_by).with(email: 'student1@example.edu').and_return(student1)
+      allow(User).to receive(:find_by).with(email: 'student2@example.edu').and_return(student2)
+      allow(User).to receive(:find_by).with(email: 'student3@example.edu').and_return(student3)
+      allow(User).to receive(:find_by).with(email: 'student4@example.edu').and_return(student4)
+      allow(co1).to receive(:is_enrolled?).and_return(true)
+
+      yaml_input = <<~YAML
+        sections:
+          - section: Section A
+            due: 2026-09-15 11:59 PM
+        extensions:
+          - time_limit: 90 minutes
+            students:
+              - student1@example.edu
+          - time_limit: 1.5 hours
+            students:
+              - student2@example.edu
+          - time_limit: 1.5x
+            students:
+              - student3@example.edu
+          - time_limit: unlimited
+            students:
+              - student4@example.edu
+      YAML
+
+      controller.params = ActionController::Parameters.new({
+        date_yaml: yaml_input,
+        course_id: "itsc2214",
+        organization_id: "uncc",
+        term_id: "fall-2026",
+        time_limit: 60
+      })
+
+      expect(StudentExtension).to receive(:create!).with(hash_including(user: student1, time_limit: 90))
+      expect(StudentExtension).to receive(:create!).with(hash_including(user: student2, time_limit: 90))
+      expect(StudentExtension).to receive(:create!).with(hash_including(user: student3, time_limit: 90))
+      expect(StudentExtension).to receive(:create!).with(hash_including(user: student4, time_limit: 0))
+
+      controller.send(:create_or_update_offerings, workout)
+    end
+
+    it "adds error when multiplier time_limit is used but workout has no base time limit" do
+      co1 = FactoryBot.build_stubbed(:course_offering, id: 101, label: 'Section A', course: course, term: term)
+      wo1 = FactoryBot.build_stubbed(:workout_offering, id: 201, course_offering: co1, workout: workout, time_limit: nil)
+      allow(co1).to receive(:display_name_with_term).and_return('Section A')
+      allow(co1).to receive(:display_name_with_org_and_term).and_return('Section A')
+      allow(co1).to receive(:display_name).and_return('Section A')
+      allow(user).to receive(:managed_course_offerings).and_return([co1])
+      allow(workout).to receive(:add_workout_offerings).and_return([wo1])
+      allow(workout).to receive_message_chain(:workout_offerings, :joins, :where).and_return([wo1])
+
+      student1 = FactoryBot.build_stubbed(:user, email: 'student1@example.edu')
+      allow(User).to receive(:find_by).with(email: 'student1@example.edu').and_return(student1)
+      allow(co1).to receive(:is_enrolled?).and_return(true)
+
+      yaml_input = <<~YAML
+        sections:
+          - section: Section A
+            due: 2026-09-15 11:59 PM
+        extensions:
+          - time_limit: 1.5x
+            students:
+              - student1@example.edu
+      YAML
+
+      controller.params = ActionController::Parameters.new({
+        date_yaml: yaml_input,
+        course_id: "itsc2214",
+        organization_id: "uncc",
+        term_id: "fall-2026"
+      })
+
+      controller.send(:create_or_update_offerings, workout)
+      expect(workout.errors[:base].first).to match(/Cannot apply time_limit multiplier/)
+    end
+
     it "aborts and does not delete offerings when a section label is unrecognized" do
       co1 = FactoryBot.build_stubbed(:course_offering, id: 101, label: 'Section A', course: course, term: term)
       wo1 = FactoryBot.build_stubbed(:workout_offering, id: 201, course_offering: co1, workout: workout)
@@ -820,6 +910,33 @@ describe WorkoutsController do
       expect(yaml_str).to include("Jane Doe <jdoe@example.edu>")
     end
 
+    it "serializes time_limit on student extensions and groups matching extensions" do
+      wo1 = FactoryBot.build_stubbed(:workout_offering, course_offering: course_offering1)
+      s1 = FactoryBot.build_stubbed(:user, first_name: 'Jane', last_name: 'Doe', email: 'jdoe@example.edu')
+      s2 = FactoryBot.build_stubbed(:user, first_name: 'Bob', last_name: 'Smith', email: 'bsmith@example.edu')
+      s3 = FactoryBot.build_stubbed(:user, first_name: 'Charlie', last_name: 'Brown', email: 'cbrown@example.edu')
+      ext1 = FactoryBot.build_stubbed(:student_extension, user: s1, workout_offering: wo1, time_limit: 90)
+      ext2 = FactoryBot.build_stubbed(:student_extension, user: s2, workout_offering: wo1, time_limit: 90)
+      ext3 = FactoryBot.build_stubbed(:student_extension, user: s3, workout_offering: wo1, time_limit: 0)
+
+      yaml_str = controller.send(:serialize_workout_offerings_to_yaml, [wo1], [ext1, ext2, ext3])
+      expect(yaml_str).to include("time_limit: 90 minutes")
+      expect(yaml_str).to include("time_limit: unlimited")
+      expect(yaml_str).to include("Jane Doe <jdoe@example.edu>")
+      expect(yaml_str).to include("Bob Smith <bsmith@example.edu>")
+      expect(yaml_str).to include("Charlie Brown <cbrown@example.edu>")
+    end
+
+    it "omits time_limit key on student extensions when time_limit is nil" do
+      wo1 = FactoryBot.build_stubbed(:workout_offering, course_offering: course_offering1)
+      s1 = FactoryBot.build_stubbed(:user, first_name: 'Jane', last_name: 'Doe', email: 'jdoe@example.edu')
+      ext1 = FactoryBot.build_stubbed(:student_extension, user: s1, workout_offering: wo1, time_limit: nil)
+
+      yaml_str = controller.send(:serialize_workout_offerings_to_yaml, [wo1], [ext1])
+      expect(yaml_str).not_to include("time_limit:")
+      expect(yaml_str).to include("Jane Doe <jdoe@example.edu>")
+    end
+
     it "serializes lms_assignment_url before sections with empty default when none present" do
       wo1 = FactoryBot.build_stubbed(:workout_offering, course_offering: course_offering1)
       wo2 = FactoryBot.build_stubbed(:workout_offering, course_offering: course_offering2)
@@ -871,6 +988,73 @@ describe WorkoutsController do
       time_obj = Time.zone.parse('2026-09-15 10:00:00')
       result = controller.send(:parse_date, time_obj, tz)
       expect(result).to eq(time_obj.in_time_zone(tz))
+    end
+  end
+
+  describe "#parse_time_limit" do
+    it "handles nil and blank inputs" do
+      expect(controller.send(:parse_time_limit, nil)).to be_nil
+      expect(controller.send(:parse_time_limit, "")).to be_nil
+      expect(controller.send(:parse_time_limit, "   ")).to be_nil
+    end
+
+    it "handles numeric inputs" do
+      expect(controller.send(:parse_time_limit, 90)).to eq(90)
+      expect(controller.send(:parse_time_limit, 45.0)).to eq(45)
+    end
+
+    it "handles minute strings with various units" do
+      expect(controller.send(:parse_time_limit, "90")).to eq(90)
+      expect(controller.send(:parse_time_limit, "90m")).to eq(90)
+      expect(controller.send(:parse_time_limit, "90 min")).to eq(90)
+      expect(controller.send(:parse_time_limit, "90 mins")).to eq(90)
+      expect(controller.send(:parse_time_limit, "90 minute")).to eq(90)
+      expect(controller.send(:parse_time_limit, "90 minutes")).to eq(90)
+    end
+
+    it "handles hour strings and converts to minutes" do
+      expect(controller.send(:parse_time_limit, "1 hour")).to eq(60)
+      expect(controller.send(:parse_time_limit, "1.5 hours")).to eq(90)
+      expect(controller.send(:parse_time_limit, "2 hrs")).to eq(120)
+      expect(controller.send(:parse_time_limit, "2.5h")).to eq(150)
+    end
+
+    it "handles multipliers against base time limit" do
+      expect(controller.send(:parse_time_limit, "1.5x", 60)).to eq(90)
+      expect(controller.send(:parse_time_limit, "2x", 60)).to eq(120)
+      expect(controller.send(:parse_time_limit, "1.5 *", 60)).to eq(90)
+      expect(controller.send(:parse_time_limit, "2.0X", 45)).to eq(90)
+    end
+
+    it "raises an error when a multiplier is used without a base time limit" do
+      expect {
+        controller.send(:parse_time_limit, "1.5x", nil)
+      }.to raise_error(StandardError, /Cannot apply time_limit multiplier/)
+
+      expect {
+        controller.send(:parse_time_limit, "1.5x", 0)
+      }.to raise_error(StandardError, /Cannot apply time_limit multiplier/)
+    end
+
+    it "handles unlimited and none by returning 0" do
+      expect(controller.send(:parse_time_limit, "unlimited")).to eq(0)
+      expect(controller.send(:parse_time_limit, "none")).to eq(0)
+    end
+
+    it "raises error on negative numbers or negative parsed values" do
+      expect {
+        controller.send(:parse_time_limit, -10)
+      }.to raise_error(StandardError, /cannot be negative/)
+
+      expect {
+        controller.send(:parse_time_limit, "-10 mins")
+      }.to raise_error(StandardError, /Invalid time_limit/)
+    end
+
+    it "raises error on invalid format" do
+      expect {
+        controller.send(:parse_time_limit, "invalid_time")
+      }.to raise_error(StandardError, /Invalid time_limit/)
     end
   end
 
