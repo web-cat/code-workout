@@ -76,6 +76,18 @@ class ParsonsPromptAnswer < ApplicationRecord
   end
 
 
+  # -------------------------------------------------------------
+  def code_body
+    prompt ? prompt.specific.wrap_code(answer) : answer.to_s
+  end
+
+
+  # -------------------------------------------------------------
+  def pre_lines
+    prompt ? prompt.specific.pre_lines : 0
+  end
+
+
   #~ Private instance methods .................................................
   private
 

@@ -117,6 +117,21 @@ describe WorkoutsController do
       expect(date_yaml).to include("CS 1114 (Fall 2026, 98765)")
       expect(date_yaml).to include("sections:")
     end
+
+    it "scopes @course_offerings to session[:target_course_offering_ids] when present" do
+      offering_rel = double("ManagedOfferingsRelation")
+      allow(user).to receive(:managed_course_offerings).with(course: mock_course, term: mock_term).and_return(offering_rel)
+      allow(offering_rel).to receive(:where).with(id: [300]).and_return([mock_course_offering])
+
+      get :new, params: {
+        organization_id: 'vt',
+        course_id: 'cs1114',
+        term_id: 'fall2026'
+      }, session: { target_course_offering_ids: [300] }
+
+      expect(response.status).to eq(200)
+      expect(controller.instance_variable_get(:@course_offerings)).to eq([mock_course_offering])
+    end
   end
 
   describe "GET #clone" do
@@ -151,6 +166,22 @@ describe WorkoutsController do
       date_yaml = controller.instance_variable_get(:@date_yaml)
       expect(date_yaml).to include("CS 1114 (Fall 2026, 98765)")
       expect(date_yaml).to include("sections:")
+    end
+
+    it "scopes @course_offerings to session[:target_course_offering_ids] when present" do
+      offering_rel = double("ManagedOfferingsRelation")
+      allow(user).to receive(:managed_course_offerings).with(course: mock_course, term: mock_term).and_return(offering_rel)
+      allow(offering_rel).to receive(:where).with(id: [300]).and_return([mock_course_offering])
+
+      get :clone, params: {
+        id: '100',
+        organization_id: 'vt',
+        course_id: 'cs1114',
+        term_id: 'fall2026'
+      }, session: { target_course_offering_ids: [300] }
+
+      expect(response.status).to eq(200)
+      expect(controller.instance_variable_get(:@course_offerings)).to eq([mock_course_offering])
     end
   end
 
@@ -1077,6 +1108,155 @@ describe WorkoutsController do
       )
       expect(controller.instance_variable_get(:@workout_offering)).to eq(wo2)
       expect(controller.instance_variable_get(:@course_offering)).to eq(offering2)
+    end
+
+    context "when an instructor launches an assignment" do
+      let(:offering2) do
+        FactoryBot.build_stubbed(:course_offering, id: 102, course: course, term: term, label: 'Section 2')
+      end
+
+      it "uses current_user when params[:user_id] is omitted" do
+        allow(WorkoutOffering).to receive(:where).with(
+          lms_instance_id: '1',
+          lti_assignment_id: 'ext_assignment_100'
+        ).and_return([workout_offering])
+
+        get :find_offering, params: {
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          workout_name: 'Practice Workout',
+          lms_instance_id: '1',
+          ext_lti_assignment_id: 'ext_assignment_100'
+        }, session: { is_instructor: true }
+
+        expect(response).to redirect_to(
+          organization_workout_offering_practice_path(
+            organization_id: 'vt',
+            course_id: 'cs1114',
+            term_id: 'fall2026',
+            id: 201,
+            lti_launch: true
+          )
+        )
+        expect(controller.instance_variable_get(:@user)).to eq(user)
+      end
+
+      it "resolves directly to the first offering when workout offerings already exist without going to select_offering" do
+        wo2 = FactoryBot.build_stubbed(:workout_offering, id: 202, workout: workout, course_offering: offering2)
+        allow(WorkoutOffering).to receive(:where).with(
+          lms_instance_id: '1',
+          lti_assignment_id: 'shared_ext_id'
+        ).and_return([workout_offering, wo2])
+
+        get :find_offering, params: {
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          workout_name: 'Practice Workout',
+          user_id: user.id.to_s,
+          lms_instance_id: '1',
+          ext_lti_assignment_id: 'shared_ext_id'
+        }, session: { is_instructor: true }
+
+        expect(response).to redirect_to(
+          organization_workout_offering_practice_path(
+            organization_id: 'vt',
+            course_id: 'cs1114',
+            term_id: 'fall2026',
+            id: 201,
+            lti_launch: true
+          )
+        )
+      end
+
+      it "targets matching course offerings by lti_context_id and goes directly to clone or new_or_existing" do
+        # No existing workout offerings
+        allow(WorkoutOffering).to receive(:where).and_return([])
+        allow(WorkoutOffering).to receive(:find_by).and_return(nil)
+
+        managed = [course_offering, offering2]
+        allow(user).to receive(:managed_course_offerings).with(course: course, term: term).and_return(managed)
+        allow(CourseOffering).to receive(:where).with(
+          lms_instance_id: '1',
+          lti_context_id: 'ctx_multi',
+          course: course,
+          term: term
+        ).and_return(managed)
+        allow(user).to receive(:managed_workout_offerings_in_term).and_return([])
+
+        get :find_offering, params: {
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          workout_name: 'New Workout',
+          user_id: user.id.to_s,
+          lms_instance_id: '1',
+          lti_context_id: 'ctx_multi',
+          ext_lti_assignment_id: 'unknown_assignment_id'
+        }, session: { is_instructor: true }
+
+        expect(response).to redirect_to(
+          organization_new_or_existing_workout_path(
+            organization_id: 'vt',
+            course_id: 'cs1114',
+            term_id: 'fall2026',
+            lti_launch: true,
+            lms_assignment_id: 'unknown_assignment_id',
+            lti_assignment_id: 'unknown_assignment_id',
+            resource_link_id: nil,
+            suggested_name: 'New Workout'
+          )
+        )
+        expect(session[:target_course_offering_ids]).to eq([101, 102])
+      end
+
+      it "backfills lti_context_id and canvas_course_id onto managed offerings when no matches exist" do
+        allow(WorkoutOffering).to receive(:where).and_return([])
+        allow(WorkoutOffering).to receive(:find_by).and_return(nil)
+
+        managed = [course_offering, offering2]
+        allow(user).to receive(:managed_course_offerings).with(course: course, term: term).and_return(managed)
+        allow(CourseOffering).to receive(:where).and_return([])
+        allow(user).to receive(:managed_workout_offerings_in_term).and_return([])
+
+        allow(course_offering).to receive(:changed?).and_return(true)
+        allow(offering2).to receive(:changed?).and_return(true)
+
+        expect(course_offering).to receive(:save)
+        expect(offering2).to receive(:save)
+
+        get :find_offering, params: {
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          workout_name: 'Unmapped Assignment',
+          user_id: user.id.to_s,
+          lms_instance_id: '1',
+          lti_context_id: 'ctx_backfill_1',
+          canvas_course_id: 'canvas_backfill_1',
+          ext_lti_assignment_id: 'unknown_assignment_id'
+        }, session: { is_instructor: true }
+
+        expect(course_offering.lti_context_id).to eq('ctx_backfill_1')
+        expect(course_offering.canvas_course_id).to eq('canvas_backfill_1')
+        expect(offering2.lti_context_id).to eq('ctx_backfill_1')
+        expect(offering2.canvas_course_id).to eq('canvas_backfill_1')
+        expect(session[:target_course_offering_ids]).to eq([101, 102])
+
+        expect(response).to redirect_to(
+          organization_new_or_existing_workout_path(
+            organization_id: 'vt',
+            course_id: 'cs1114',
+            term_id: 'fall2026',
+            lti_launch: true,
+            lms_assignment_id: 'unknown_assignment_id',
+            lti_assignment_id: 'unknown_assignment_id',
+            resource_link_id: nil,
+            suggested_name: 'Unmapped Assignment'
+          )
+        )
+      end
     end
   end
 
