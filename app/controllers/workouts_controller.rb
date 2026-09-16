@@ -354,13 +354,13 @@ class WorkoutsController < ApplicationController
       @organization = params[:organization_id] ?
         Organization.find(params[:organization_id]) : nil
       @course = Course.find_with_id_or_slug(params[:course_id], params[:organization_id])
+      all_managed = current_user.managed_course_offerings(course: @course, term: @term)
       if session[:target_course_offering_ids].present?
-        target_ids = session[:target_course_offering_ids]
-        @course_offerings = current_user.managed_course_offerings(course: @course, term: @term).where(id: target_ids)
-        @course_offerings = current_user.managed_course_offerings(course: @course, term: @term) if @course_offerings.blank?
+        target_ids = session[:target_course_offering_ids].map(&:to_i)
+        scoped = all_managed.select { |co| target_ids.include?(co.id) }
+        @course_offerings = scoped.presence || all_managed
       else
-        @course_offerings = current_user.managed_course_offerings(
-          course: @course, term: @term)
+        @course_offerings = all_managed
       end
       @return_to = organization_course_path(
         organization_id: @organization.slug,
@@ -646,13 +646,14 @@ class WorkoutsController < ApplicationController
       @attempt_limit = @workout_offering.andand.attempt_limit
       @policy = (@workout_offering.andand.workout_policy || @policy).dup
       @organization = Organization.find params[:organization_id]
+      all_managed = current_user.andand.managed_course_offerings(course: @course, term: @term) || []
       @course_offerings =
         if session[:target_course_offering_ids].present?
-          target_ids = session[:target_course_offering_ids]
-          scoped = current_user.andand.managed_course_offerings(course: @course, term: @term)&.where(id: target_ids)
-          scoped.presence || current_user.andand.managed_course_offerings(course: @course, term: @term)
+          target_ids = session[:target_course_offering_ids].map(&:to_i)
+          scoped = all_managed.select { |co| target_ids.include?(co.id) }
+          scoped.presence || all_managed
         else
-          current_user.andand.managed_course_offerings(course: @course, term: @term)
+          all_managed
         end
       @unused_course_offerings = nil
       @return_to = organization_course_path(

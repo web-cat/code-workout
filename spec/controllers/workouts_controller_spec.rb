@@ -119,9 +119,8 @@ describe WorkoutsController do
     end
 
     it "scopes @course_offerings to session[:target_course_offering_ids] when present" do
-      offering_rel = double("ManagedOfferingsRelation")
-      allow(user).to receive(:managed_course_offerings).with(course: mock_course, term: mock_term).and_return(offering_rel)
-      allow(offering_rel).to receive(:where).with(id: [300]).and_return([mock_course_offering])
+      other_offering = double("CourseOffering", id: 301, display_name_with_term: "Other", term: mock_term)
+      allow(user).to receive(:managed_course_offerings).with(course: mock_course, term: mock_term).and_return([mock_course_offering, other_offering])
 
       get :new, params: {
         organization_id: 'vt',
@@ -169,9 +168,8 @@ describe WorkoutsController do
     end
 
     it "scopes @course_offerings to session[:target_course_offering_ids] when present" do
-      offering_rel = double("ManagedOfferingsRelation")
-      allow(user).to receive(:managed_course_offerings).with(course: mock_course, term: mock_term).and_return(offering_rel)
-      allow(offering_rel).to receive(:where).with(id: [300]).and_return([mock_course_offering])
+      other_offering = double("CourseOffering", id: 301, display_name_with_term: "Other", term: mock_term)
+      allow(user).to receive(:managed_course_offerings).with(course: mock_course, term: mock_term).and_return([mock_course_offering, other_offering])
 
       get :clone, params: {
         id: '100',
