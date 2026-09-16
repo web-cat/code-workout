@@ -32,7 +32,7 @@
           %td= co.term.display_name
           %td
             - if @workout_name.present?
-              = link_to 'Select', organization_find_workout_offering_path(organization_id: @organization.slug, course_id: @course.slug, term_id: @term.slug, workout_name: @workout_name, ext_lti_assignment_id: @ext_lti_assignment_id, custom_canvas_assignment_id: @custom_canvas_assignment_id, resource_link_id: @resource_link_id, from_collection: @from_collection, course_offering_id: co.id), class: 'btn btn-primary btn-sm'
+              = link_to 'Select', organization_find_workout_offering_path(organization_id: @organization.slug, course_id: @course.slug, term_id: @term.slug, workout_name: @workout_name, ext_lti_assignment_id: @ext_lti_assignment_id, custom_canvas_assignment_id: @custom_canvas_assignment_id, resource_link_id: @resource_link_id, from_collection: @from_collection, course_offering_id: co.id, user_id: current_user.try(:id)), class: 'btn btn-primary btn-sm'
             - else
               = link_to 'Select', '#', class: 'btn btn-primary btn-sm'
 
