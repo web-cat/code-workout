@@ -278,7 +278,7 @@ ActiveRecord::Schema.define(version: 2026_09_09_180000) do
     t.index ["is_public"], name: "index_exercises_on_is_public"
   end
 
-  create_table "extension_managers", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
+  create_table "extension_managers", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4", force: :cascade do |t|
     t.string "name", null: false
     t.string "broker_base_url", null: false
     t.string "client_id", null: false
