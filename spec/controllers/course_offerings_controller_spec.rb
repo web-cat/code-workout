@@ -79,6 +79,44 @@ describe CourseOfferingsController do
         post :create, params: {:course_offering => valid_attributes}, session: valid_session
         response.should redirect_to(CourseOffering.last)
       end
+
+      it "redirects to find_offering with term slug from created offering when workout_name is present" do
+        org = FactoryBot.build_stubbed(:organization, slug: 'vt')
+        course = FactoryBot.build_stubbed(:course, slug: 'cbtf', organization: org)
+        term = FactoryBot.build_stubbed(:term, slug: 'fall-2026')
+        user = FactoryBot.build_stubbed(:user)
+        allow(controller).to receive(:current_user).and_return(user)
+        allow(Course).to receive(:find_with_id_or_slug).and_return(course)
+        offering = FactoryBot.build_stubbed(:course_offering, id: 1509, course: course, term: term)
+        allow(CourseOffering).to receive(:new).and_return(offering)
+        allow(offering).to receive(:save).and_return(true)
+        allow(CourseEnrollment).to receive(:create).and_return(true)
+
+        post :create, params: {
+          organization_id: 'vt',
+          course_id: 'cbtf',
+          workout_name: 'Example CBTF CodeWorkout Question',
+          ext_lti_assignment_id: '53db16ed-ee26-4b6b-82e7-0e2cee966c05',
+          custom_canvas_assignment_id: '2853105',
+          resource_link_id: 'f8b49093fc74aa27938a038e21565149b24b697c',
+          from_collection: '',
+          course_offering: { label: 'CBTF', term_id: '47' }
+        }
+
+        expect(response).to redirect_to(
+          organization_find_workout_offering_path(
+            organization_id: 'vt',
+            course_id: 'cbtf',
+            term_id: 'fall-2026',
+            workout_name: 'Example CBTF CodeWorkout Question',
+            ext_lti_assignment_id: '53db16ed-ee26-4b6b-82e7-0e2cee966c05',
+            custom_canvas_assignment_id: '2853105',
+            resource_link_id: 'f8b49093fc74aa27938a038e21565149b24b697c',
+            from_collection: '',
+            course_offering_id: 1509
+          )
+        )
+      end
     end
 
     describe "with invalid params" do
@@ -154,6 +192,68 @@ describe CourseOfferingsController do
       course_offering = CourseOffering.create! valid_attributes
       delete :destroy, params: {:id => course_offering.to_param}, session: valid_session
       response.should redirect_to(course_offerings_url)
+    end
+  end
+
+  describe "GET search_students" do
+    let(:user) { FactoryBot.build_stubbed(:admin, id: 1) }
+    let(:mock_org) { double('Organization', id: 1, slug: 'uncc') }
+    let(:mock_course) { double('Course', id: 10, slug: 'itsc2214') }
+    let(:mock_term) { double('Term', id: 20, slug: 'fall-2026') }
+    let(:student1) { double('User', id: 101, first_name: 'Krish', last_name: 'Patel', email: 'kpatel@uncc.edu') }
+
+    before do
+      allow(controller).to receive(:current_user).and_return(user)
+    end
+
+    it "returns matching enrolled students for the course and term as JSON" do
+      allow(Course).to receive(:find_with_id_or_slug).with('itsc2214', 'uncc').and_return(mock_course)
+      allow(Term).to receive(:find).with('fall-2026').and_return(mock_term)
+
+      mock_offering = double('CourseOffering', id: 50)
+      allow(CourseOffering).to receive(:where).with(course: mock_course, term: mock_term).and_return([mock_offering])
+
+      matching_users = double('ActiveRecord::Relation')
+      allow(User).to receive(:joins).with(:course_enrollments).and_return(matching_users)
+      allow(matching_users).to receive(:where).with(course_enrollments: { course_offering_id: [50] }).and_return(matching_users)
+      allow(matching_users).to receive(:where).with(
+        "lower(first_name) like ? or lower(last_name) like ? or lower(email) like ?",
+        "%krish%", "%krish%", "%krish%"
+      ).and_return(matching_users)
+      allow(matching_users).to receive(:distinct).and_return([student1])
+
+      get :search_students, params: {
+        organization_id: 'uncc',
+        course_id: 'itsc2214',
+        term_id: 'fall-2026',
+        term: 'krish'
+      }, format: :json
+
+      expect(response.status).to eq(200)
+      json = JSON.parse(response.body)
+      expect(json).to eq([
+        {
+          'id' => 101,
+          'first_name' => 'Krish',
+          'last_name' => 'Patel',
+          'email' => 'kpatel@uncc.edu'
+        }
+      ])
+    end
+
+    it "returns empty array when term param is blank" do
+      allow(Course).to receive(:find_with_id_or_slug).with('itsc2214', 'uncc').and_return(mock_course)
+      allow(Term).to receive(:find).with('fall-2026').and_return(mock_term)
+
+      get :search_students, params: {
+        organization_id: 'uncc',
+        course_id: 'itsc2214',
+        term_id: 'fall-2026',
+        term: ''
+      }, format: :json
+
+      expect(response.status).to eq(200)
+      expect(JSON.parse(response.body)).to eq([])
     end
   end
 

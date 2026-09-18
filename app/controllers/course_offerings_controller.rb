@@ -1,6 +1,8 @@
 class CourseOfferingsController < ApplicationController
   before_action :rename_course_offering_id_param
   load_and_authorize_resource
+  skip_authorize_resource only: [:search_students]
+  skip_load_resource only: [:search_students]
 
 
   # -------------------------------------------------------------
@@ -104,6 +106,33 @@ class CourseOfferingsController < ApplicationController
     render json: @results.uniq.to_json and return
   end
 
+  # -------------------------------------------------------------
+  # GET /course_offerings/search_students
+  def search_students
+    @course = Course.find_with_id_or_slug(params[:course_id], params[:organization_id])
+    @term = Term.find(params[:term_id]) if params[:term_id].present?
+
+    if @course.blank? || @term.blank? || params[:term].blank?
+      render json: [] and return
+    end
+
+    term = escape_javascript(params[:term]).downcase
+
+    # Get all students enrolled in any course offering for this course in this term
+    course_offerings = CourseOffering.where(course: @course, term: @term)
+    users = User.joins(:course_enrollments)
+                .where(course_enrollments: { course_offering_id: course_offerings.map(&:id) })
+                .where("lower(first_name) like ? or lower(last_name) like ? or lower(email) like ?", "%#{term}%", "%#{term}%", "%#{term}%")
+                .distinct
+
+    render json: users.map { |u| {
+      id: u.id,
+      first_name: u.first_name,
+      last_name: u.last_name,
+      email: u.email
+    } }
+  end
+
   # POST /courses/:organization_id/:course_id/create_offering
   def create
     @course = Course.find_with_id_or_slug(
@@ -145,23 +174,24 @@ class CourseOfferingsController < ApplicationController
     end
 
     if created_offerings.any?
+      first_offering = created_offerings.first
       if params[:workout_name].present?
         redirect_to organization_find_workout_offering_path(
-          organization_id: params[:organization_id],
-          course_id: params[:course_id],
-          term_id: params[:term_id],
+          organization_id: @course.organization,
+          course_id: @course,
+          term_id: first_offering.term,
           workout_name: params[:workout_name],
           ext_lti_assignment_id: params[:ext_lti_assignment_id],
           custom_canvas_assignment_id: params[:custom_canvas_assignment_id],
           resource_link_id: params[:resource_link_id],
           from_collection: params[:from_collection],
-          course_offering_id: created_offerings.first.id
+          course_offering_id: first_offering.id
         ) and return
       else
         redirect_to organization_course_path(
-          created_offerings.first.course.organization,
-          created_offerings.first.course,
-          created_offerings.first.term),
+          first_offering.course.organization,
+          first_offering.course,
+          first_offering.term),
           notice: "#{created_offerings.size} course offering(s) successfully created."
       end
     else

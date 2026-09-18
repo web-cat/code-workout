@@ -48,6 +48,106 @@ RSpec.describe ExceptionHandler::Exception, type: :model do
       expect(record).not_to be_valid
       expect(record.errors[:base]).to include('Ignored third-party or API routing error')
     end
+
+    describe 'numeric IP filtering' do
+      let(:ip_host) { '128.173.236.42' }
+
+      it 'is invalid when the target host is a numeric IPv4 address' do
+        record = build_exception(routing_error, path_info: '/404', host: ip_host, referrer: nil)
+        expect(record).not_to be_valid
+        expect(record.errors[:base]).to include('Direct numeric IP scan probe')
+      end
+
+      it 'is invalid when the target host is a bracketed IPv6 address' do
+        record = build_exception(routing_error, path_info: '/404', host: '[2001:db8::1]', referrer: nil)
+        expect(record).not_to be_valid
+        expect(record.errors[:base]).to include('Direct numeric IP scan probe')
+      end
+
+      it 'is invalid when the target host and referrer are matching numeric IPs' do
+        record = build_exception(routing_error, path_info: '/404', host: ip_host, referrer: "http://#{ip_host}/gym/workouts")
+        expect(record).not_to be_valid
+        expect(record.errors[:base]).to include('Direct numeric IP scan probe')
+      end
+
+      it 'is invalid when the referrer is relative but target host is a numeric IP' do
+        record = build_exception(routing_error, path_info: '/404', host: ip_host, referrer: '/gym/workouts')
+        expect(record).not_to be_valid
+        expect(record.errors[:base]).to include('Direct numeric IP scan probe')
+      end
+
+      it 'is invalid when the referrer host is a numeric IP even if target host is a domain' do
+        record = build_exception(routing_error, path_info: '/404', host: host, referrer: "http://#{ip_host}/gym/workouts")
+        expect(record).not_to be_valid
+        expect(record.errors[:base]).to include('Direct numeric IP scan probe')
+      end
+    end
+
+    describe 'PHP and CMS probing patterns' do
+      it 'is invalid for PHP script probing even with an internal referrer' do
+        [
+          '/phpinfo.php',
+          '/_profiler/phpinfo.php',
+          '/app_dev.php/_profiler/phpinfo',
+          '/pi.php',
+          '/test.php',
+          '/test.php5'
+        ].each do |path|
+          err = ActionController::RoutingError.new("No route matches [GET] \"#{path}\"")
+          record = build_exception(err, path_info: '/404', referrer: "http://#{host}/gym/workouts")
+          expect(record).not_to be_valid
+          expect(record.errors[:base]).to include('Ignored third-party or API routing error')
+        end
+      end
+
+      it 'is invalid for PHP backup and editor temporary files' do
+        [
+          '/wp-config.php.bak',
+          '/wp-config.php.old',
+          '/wp-config.php.swp',
+          '/index.php~'
+        ].each do |path|
+          err = ActionController::RoutingError.new("No route matches [GET] \"#{path}\"")
+          record = build_exception(err, path_info: '/404', referrer: "http://#{host}/gym/workouts")
+          expect(record).not_to be_valid
+          expect(record.errors[:base]).to include('Ignored third-party or API routing error')
+        end
+      end
+
+      it 'is invalid for WordPress and common CMS routes' do
+        [
+          '/wp-admin',
+          '/wp-login.php',
+          '/wp-content/plugins/test/',
+          '/wp-includes/wlwmanifest.xml',
+          '/xmlrpc.php',
+          '/wordpress/',
+          '/phpmyadmin/scripts/setup.php'
+        ].each do |path|
+          err = ActionController::RoutingError.new("No route matches [GET] \"#{path}\"")
+          record = build_exception(err, path_info: '/404', referrer: "http://#{host}/gym/workouts")
+          expect(record).not_to be_valid
+          expect(record.errors[:base]).to include('Ignored third-party or API routing error')
+        end
+      end
+
+      it 'is invalid for environment files and configuration backup probes' do
+        [
+          '/.env',
+          '/.git/config',
+          '/docker-compose.yml.save',
+          '/config.json.swp',
+          '/terraform.tfstate.old',
+          '/application.yml.1',
+          '/serverless.yml~'
+        ].each do |path|
+          err = ActionController::RoutingError.new("No route matches [GET] \"#{path}\"")
+          record = build_exception(err, path_info: '/404', referrer: "http://#{host}/gym/workouts")
+          expect(record).not_to be_valid
+          expect(record.errors[:base]).to include('Ignored third-party or API routing error')
+        end
+      end
+    end
   end
 
   describe 'validation for 406 and format errors' do

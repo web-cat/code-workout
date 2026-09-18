@@ -117,6 +117,20 @@ describe WorkoutsController do
       expect(date_yaml).to include("CS 1114 (Fall 2026, 98765)")
       expect(date_yaml).to include("sections:")
     end
+
+    it "scopes @course_offerings to session[:target_course_offering_ids] when present" do
+      other_offering = double("CourseOffering", id: 301, display_name_with_term: "Other", term: mock_term)
+      allow(user).to receive(:managed_course_offerings).with(course: mock_course, term: mock_term).and_return([mock_course_offering, other_offering])
+
+      get :new, params: {
+        organization_id: 'vt',
+        course_id: 'cs1114',
+        term_id: 'fall2026'
+      }, session: { target_course_offering_ids: [300] }
+
+      expect(response.status).to eq(200)
+      expect(controller.instance_variable_get(:@course_offerings)).to eq([mock_course_offering])
+    end
   end
 
   describe "GET #clone" do
@@ -152,6 +166,21 @@ describe WorkoutsController do
       expect(date_yaml).to include("CS 1114 (Fall 2026, 98765)")
       expect(date_yaml).to include("sections:")
     end
+
+    it "scopes @course_offerings to session[:target_course_offering_ids] when present" do
+      other_offering = double("CourseOffering", id: 301, display_name_with_term: "Other", term: mock_term)
+      allow(user).to receive(:managed_course_offerings).with(course: mock_course, term: mock_term).and_return([mock_course_offering, other_offering])
+
+      get :clone, params: {
+        id: '100',
+        organization_id: 'vt',
+        course_id: 'cs1114',
+        term_id: 'fall2026'
+      }, session: { target_course_offering_ids: [300] }
+
+      expect(response.status).to eq(200)
+      expect(controller.instance_variable_get(:@course_offerings)).to eq([mock_course_offering])
+    end
   end
 
   describe "GET #show" do
@@ -174,6 +203,21 @@ describe WorkoutsController do
       allow(Workout).to receive_message_chain(:includes, :find).and_return(mock_workout)
       allow(mock_workout).to receive(:score_for).and_return(nil)
       allow(controller).to receive(:cannot?).with(:read, mock_workout).and_return(false)
+      allow(ActivityLog).to receive(:create).and_return(true)
+    end
+
+    it "logs a workout_view in ActivityLog when user is logged in" do
+      user = FactoryBot.build_stubbed(:user)
+      allow(controller).to receive(:current_user).and_return(user)
+      expect(ActivityLog).to receive(:create).with(
+        hash_including(
+          user: user,
+          activity: 'workout_view',
+          lti_launch: false
+        )
+      )
+
+      get :show, params: { id: 1 }
     end
 
     it "responds successfully and assigns @workout and @exs" do
@@ -208,6 +252,53 @@ describe WorkoutsController do
         get :show, params: { id: 1 }
         expect(response.status).to eq(200)
         expect(controller.instance_variable_get(:@scoring_attempts_by_version_id)).to be_a(Hash)
+      end
+    end
+
+    context "when workout_offering is present and IP restrictions apply" do
+      let(:mock_offering) { double("WorkoutOffering", id: 201) }
+      let(:mock_score) { double("WorkoutScore", id: 99) }
+      let(:user) { FactoryBot.build_stubbed(:user) }
+
+      before do
+        allow(controller).to receive(:current_user).and_return(user)
+        controller.instance_variable_set(:@workout_offering, mock_offering)
+        allow(mock_workout).to receive(:score_for).and_return(mock_score)
+      end
+
+      it "blocks access and logs workout_view_ip_blocked when IP is disallowed" do
+        allow(mock_offering).to receive(:ip_allowed?).with('10.0.0.1', user, mock_score).and_return(false)
+
+        expect(ActivityLog).to receive(:create).with(hash_including(
+          user: user,
+          workout_offering: mock_offering,
+          activity: 'workout_view_ip_blocked',
+          ip_address: '10.0.0.1'
+        ))
+
+        request.env['REMOTE_ADDR'] = '10.0.0.1'
+        get :show, params: { id: 1 }
+
+        expect(response.status).to eq(200)
+        expect(controller.instance_variable_get(:@message)).to include("10.0.0.1")
+      end
+
+      it "blocks access and logs workout_view_user_agent_blocked when browser user agent is disallowed" do
+        allow(mock_offering).to receive(:ip_allowed?).and_return(true)
+        allow(mock_offering).to receive(:user_agent_allowed?).with('DisallowedBrowser/1.0', user, mock_score).and_return(false)
+
+        expect(ActivityLog).to receive(:create).with(hash_including(
+          user: user,
+          workout_offering: mock_offering,
+          activity: 'workout_view_user_agent_blocked',
+          user_agent: 'DisallowedBrowser/1.0'
+        ))
+
+        request.env['HTTP_USER_AGENT'] = 'DisallowedBrowser/1.0'
+        get :show, params: { id: 1 }
+
+        expect(response.status).to eq(200)
+        expect(controller.instance_variable_get(:@message)).to include("requires a specific browser")
       end
     end
   end
@@ -346,6 +437,533 @@ describe WorkoutsController do
         controller.send(:create_or_update_offerings, workout)
       }.not_to raise_error
     end
+
+    it "parses top-level ips and per-section ips overrides" do
+      co1 = FactoryBot.build_stubbed(:course_offering, id: 101, label: 'Section A', course: course, term: term)
+      co2 = FactoryBot.build_stubbed(:course_offering, id: 102, label: 'Section B', course: course, term: term)
+      allow(co1).to receive(:display_name_with_term).and_return('Section A')
+      allow(co1).to receive(:display_name_with_org_and_term).and_return('Section A')
+      allow(co1).to receive(:display_name).and_return('Section A')
+      allow(co2).to receive(:display_name_with_term).and_return('Section B')
+      allow(co2).to receive(:display_name_with_org_and_term).and_return('Section B')
+      allow(co2).to receive(:display_name).and_return('Section B')
+      allow(user).to receive(:managed_course_offerings).and_return([co1, co2])
+
+      yaml_input = <<~YAML
+        ips: 128.173.*.*
+        sections:
+          - section: Section A
+            due: 2026-09-15 11:59 PM
+          - section: Section B
+            due: 2026-09-15 11:59 PM
+            ips: 192.168.1.0/24
+      YAML
+
+      controller.params = ActionController::Parameters.new({
+        date_yaml: yaml_input,
+        course_id: "itsc2214",
+        organization_id: "uncc",
+        term_id: "fall-2026"
+      })
+
+      expect(workout).to receive(:add_workout_offerings) do |offerings_data, common|
+        expect(offerings_data['101']['allowed_ips']).to eq('128.173.*.*')
+        expect(offerings_data['102']['allowed_ips']).to eq('192.168.1.0/24')
+        []
+      end
+
+      controller.send(:create_or_update_offerings, workout)
+    end
+
+    it "parses top-level lms_assignment_url and per-section overrides" do
+      co1 = FactoryBot.build_stubbed(:course_offering, id: 101, label: 'Section A', course: course, term: term)
+      co2 = FactoryBot.build_stubbed(:course_offering, id: 102, label: 'Section B', course: course, term: term)
+      allow(co1).to receive(:display_name_with_term).and_return('Section A')
+      allow(co1).to receive(:display_name_with_org_and_term).and_return('Section A')
+      allow(co1).to receive(:display_name).and_return('Section A')
+      allow(co2).to receive(:display_name_with_term).and_return('Section B')
+      allow(co2).to receive(:display_name_with_org_and_term).and_return('Section B')
+      allow(co2).to receive(:display_name).and_return('Section B')
+      allow(user).to receive(:managed_course_offerings).and_return([co1, co2])
+
+      yaml_input = <<~YAML
+        lms_assignment_url: https://canvas.vt.edu/courses/1/assignments/10
+        sections:
+          - section: Section A
+            due: 2026-09-15 11:59 PM
+          - section: Section B
+            due: 2026-09-15 11:59 PM
+            lms_assignment_url: https://canvas.vt.edu/courses/1/assignments/20
+      YAML
+
+      controller.params = ActionController::Parameters.new({
+        date_yaml: yaml_input,
+        course_id: "itsc2214",
+        organization_id: "uncc",
+        term_id: "fall-2026"
+      })
+
+      expect(workout).to receive(:add_workout_offerings) do |offerings_data, common|
+        expect(offerings_data['101']['lms_assignment_url']).to eq('https://canvas.vt.edu/courses/1/assignments/10')
+        expect(offerings_data['102']['lms_assignment_url']).to eq('https://canvas.vt.edu/courses/1/assignments/20')
+        []
+      end
+
+      controller.send(:create_or_update_offerings, workout)
+    end
+
+    it "parses student extension ips overrides" do
+      co1 = FactoryBot.build_stubbed(:course_offering, id: 101, label: 'Section A', course: course, term: term)
+      wo1 = FactoryBot.build_stubbed(:workout_offering, id: 201, course_offering: co1, workout: workout)
+      allow(co1).to receive(:display_name_with_term).and_return('Section A')
+      allow(co1).to receive(:display_name_with_org_and_term).and_return('Section A')
+      allow(co1).to receive(:display_name).and_return('Section A')
+      allow(user).to receive(:managed_course_offerings).and_return([co1])
+      allow(workout).to receive(:add_workout_offerings).and_return([wo1])
+      allow(workout).to receive_message_chain(:workout_offerings, :joins, :where).and_return([wo1])
+
+      student = FactoryBot.build_stubbed(:user, email: 'student@example.edu')
+      allow(User).to receive(:find_by).with(email: 'student@example.edu').and_return(student)
+      allow(co1).to receive(:is_enrolled?).with(student).and_return(true)
+
+      yaml_input = <<~YAML
+        sections:
+          - section: Section A
+            due: 2026-09-15 11:59 PM
+            ips: 192.168.1.0/24
+        extensions:
+          - due: 2026-09-20 11:59 PM
+            ips: any
+            students:
+              - student@example.edu
+      YAML
+
+      controller.params = ActionController::Parameters.new({
+        date_yaml: yaml_input,
+        course_id: "itsc2214",
+        organization_id: "uncc",
+        term_id: "fall-2026"
+      })
+
+      expect(StudentExtension).to receive(:create!).with(hash_including(
+        user: student,
+        workout_offering: wo1,
+        allowed_ips: 'any'
+      ))
+
+      controller.send(:create_or_update_offerings, workout)
+    end
+    it "parses top-level and per-section browsers requirements from YAML" do
+      co1 = FactoryBot.build_stubbed(:course_offering, id: 101, label: 'Section A', course: course, term: term)
+      co2 = FactoryBot.build_stubbed(:course_offering, id: 102, label: 'Section B', course: course, term: term)
+      allow(co1).to receive(:display_name_with_term).and_return('Section A')
+      allow(co1).to receive(:display_name_with_org_and_term).and_return('Section A')
+      allow(co1).to receive(:display_name).and_return('Section A')
+      allow(co2).to receive(:display_name_with_term).and_return('Section B')
+      allow(co2).to receive(:display_name_with_org_and_term).and_return('Section B')
+      allow(co2).to receive(:display_name).and_return('Section B')
+      allow(user).to receive(:managed_course_offerings).and_return([co1, co2])
+
+      yaml_input = <<~YAML
+        browsers: LockDown Browser
+        sections:
+          - section: Section A
+            due: 2026-09-15 11:59 PM
+          - section: Section B
+            due: 2026-09-15 11:59 PM
+            browsers: SEB
+      YAML
+
+      controller.params = ActionController::Parameters.new({
+        date_yaml: yaml_input,
+        course_id: "itsc2214",
+        organization_id: "uncc",
+        term_id: "fall-2026"
+      })
+
+      expect(workout).to receive(:add_workout_offerings) do |offerings_data, common|
+        expect(offerings_data['101']['allowed_user_agents']).to eq('LockDown Browser')
+        expect(offerings_data['102']['allowed_user_agents']).to eq('SEB')
+        []
+      end
+
+      controller.send(:create_or_update_offerings, workout)
+    end
+
+    it "parses student extension browsers overrides" do
+      co1 = FactoryBot.build_stubbed(:course_offering, id: 101, label: 'Section A', course: course, term: term)
+      wo1 = FactoryBot.build_stubbed(:workout_offering, id: 201, course_offering: co1, workout: workout)
+      allow(co1).to receive(:display_name_with_term).and_return('Section A')
+      allow(co1).to receive(:display_name_with_org_and_term).and_return('Section A')
+      allow(co1).to receive(:display_name).and_return('Section A')
+      allow(user).to receive(:managed_course_offerings).and_return([co1])
+      allow(workout).to receive(:add_workout_offerings).and_return([wo1])
+      allow(workout).to receive_message_chain(:workout_offerings, :joins, :where).and_return([wo1])
+
+      student = FactoryBot.build_stubbed(:user, email: 'student@example.edu')
+      allow(User).to receive(:find_by).with(email: 'student@example.edu').and_return(student)
+      allow(co1).to receive(:is_enrolled?).with(student).and_return(true)
+
+      yaml_input = <<~YAML
+        sections:
+          - section: Section A
+            due: 2026-09-15 11:59 PM
+            browsers: LockDown Browser
+        extensions:
+          - due: 2026-09-20 11:59 PM
+            browsers: any
+            students:
+              - student@example.edu
+      YAML
+
+      controller.params = ActionController::Parameters.new({
+        date_yaml: yaml_input,
+        course_id: "itsc2214",
+        organization_id: "uncc",
+        term_id: "fall-2026"
+      })
+
+      expect(StudentExtension).to receive(:create!).with(hash_including(
+        user: student,
+        workout_offering: wo1,
+        allowed_user_agents: 'any'
+      ))
+
+      controller.send(:create_or_update_offerings, workout)
+    end
+
+    it "parses student extension time_limit with exact minutes, hours, and multipliers" do
+      co1 = FactoryBot.build_stubbed(:course_offering, id: 101, label: 'Section A', course: course, term: term)
+      wo1 = FactoryBot.build_stubbed(:workout_offering, id: 201, course_offering: co1, workout: workout, time_limit: 60)
+      allow(co1).to receive(:display_name_with_term).and_return('Section A')
+      allow(co1).to receive(:display_name_with_org_and_term).and_return('Section A')
+      allow(co1).to receive(:display_name).and_return('Section A')
+      allow(user).to receive(:managed_course_offerings).and_return([co1])
+      allow(workout).to receive(:add_workout_offerings).and_return([wo1])
+      allow(workout).to receive_message_chain(:workout_offerings, :joins, :where).and_return([wo1])
+
+      student1 = FactoryBot.build_stubbed(:user, email: 'student1@example.edu')
+      student2 = FactoryBot.build_stubbed(:user, email: 'student2@example.edu')
+      student3 = FactoryBot.build_stubbed(:user, email: 'student3@example.edu')
+      student4 = FactoryBot.build_stubbed(:user, email: 'student4@example.edu')
+      allow(User).to receive(:find_by).with(email: 'student1@example.edu').and_return(student1)
+      allow(User).to receive(:find_by).with(email: 'student2@example.edu').and_return(student2)
+      allow(User).to receive(:find_by).with(email: 'student3@example.edu').and_return(student3)
+      allow(User).to receive(:find_by).with(email: 'student4@example.edu').and_return(student4)
+      allow(co1).to receive(:is_enrolled?).and_return(true)
+
+      yaml_input = <<~YAML
+        sections:
+          - section: Section A
+            due: 2026-09-15 11:59 PM
+        extensions:
+          - time_limit: 90 minutes
+            students:
+              - student1@example.edu
+          - time_limit: 1.5 hours
+            students:
+              - student2@example.edu
+          - time_limit: 1.5x
+            students:
+              - student3@example.edu
+          - time_limit: unlimited
+            students:
+              - student4@example.edu
+      YAML
+
+      controller.params = ActionController::Parameters.new({
+        date_yaml: yaml_input,
+        course_id: "itsc2214",
+        organization_id: "uncc",
+        term_id: "fall-2026",
+        time_limit: 60
+      })
+
+      expect(StudentExtension).to receive(:create!).with(hash_including(user: student1, time_limit: 90))
+      expect(StudentExtension).to receive(:create!).with(hash_including(user: student2, time_limit: 90))
+      expect(StudentExtension).to receive(:create!).with(hash_including(user: student3, time_limit: 90))
+      expect(StudentExtension).to receive(:create!).with(hash_including(user: student4, time_limit: 0))
+
+      controller.send(:create_or_update_offerings, workout)
+    end
+
+    it "adds error when multiplier time_limit is used but workout has no base time limit" do
+      co1 = FactoryBot.build_stubbed(:course_offering, id: 101, label: 'Section A', course: course, term: term)
+      wo1 = FactoryBot.build_stubbed(:workout_offering, id: 201, course_offering: co1, workout: workout, time_limit: nil)
+      allow(co1).to receive(:display_name_with_term).and_return('Section A')
+      allow(co1).to receive(:display_name_with_org_and_term).and_return('Section A')
+      allow(co1).to receive(:display_name).and_return('Section A')
+      allow(user).to receive(:managed_course_offerings).and_return([co1])
+      allow(workout).to receive(:add_workout_offerings).and_return([wo1])
+      allow(workout).to receive_message_chain(:workout_offerings, :joins, :where).and_return([wo1])
+
+      student1 = FactoryBot.build_stubbed(:user, email: 'student1@example.edu')
+      allow(User).to receive(:find_by).with(email: 'student1@example.edu').and_return(student1)
+      allow(co1).to receive(:is_enrolled?).and_return(true)
+
+      yaml_input = <<~YAML
+        sections:
+          - section: Section A
+            due: 2026-09-15 11:59 PM
+        extensions:
+          - time_limit: 1.5x
+            students:
+              - student1@example.edu
+      YAML
+
+      controller.params = ActionController::Parameters.new({
+        date_yaml: yaml_input,
+        course_id: "itsc2214",
+        organization_id: "uncc",
+        term_id: "fall-2026"
+      })
+
+      controller.send(:create_or_update_offerings, workout)
+      expect(workout.errors[:base].first).to match(/Cannot apply time_limit multiplier/)
+    end
+
+    it "aborts and does not delete offerings when a section label is unrecognized" do
+      co1 = FactoryBot.build_stubbed(:course_offering, id: 101, label: 'Section A', course: course, term: term)
+      wo1 = FactoryBot.build_stubbed(:workout_offering, id: 201, course_offering: co1, workout: workout)
+      allow(user).to receive(:managed_course_offerings).and_return([co1])
+      allow(workout).to receive_message_chain(:workout_offerings, :joins, :where).and_return([wo1])
+
+      yaml_input = <<~YAML
+        sections:
+          - section: Nonexistent Section
+            due: 2026-09-15 11:59 PM
+      YAML
+
+      controller.params = ActionController::Parameters.new({
+        date_yaml: yaml_input,
+        course_id: "itsc2214",
+        organization_id: "uncc",
+        term_id: "fall-2026"
+      })
+
+      expect(wo1).not_to receive(:destroy)
+      controller.send(:create_or_update_offerings, workout)
+
+      expect(workout.errors[:base]).to include("Course offering with label 'Nonexistent Section' not found or not managed by you.")
+    end
+
+    it "prevents deleting an existing offering when it has student scores or activity logs" do
+      co1 = FactoryBot.build_stubbed(:course_offering, id: 101, label: 'Section A', course: course, term: term)
+      wo1 = FactoryBot.build_stubbed(:workout_offering, id: 201, course_offering: co1, workout: workout)
+      allow(co1).to receive(:display_name).and_return('ITSC 2214 (Section A)')
+      allow(user).to receive(:managed_course_offerings).and_return([co1])
+      allow(workout).to receive_message_chain(:workout_offerings, :joins, :where).and_return([wo1])
+      allow(wo1).to receive_message_chain(:workout_scores, :exists?).and_return(true)
+      allow(wo1).to receive_message_chain(:activity_logs, :exists?).and_return(false)
+
+      yaml_input = <<~YAML
+        sections: []
+      YAML
+
+      controller.params = ActionController::Parameters.new({
+        date_yaml: yaml_input,
+        course_id: "itsc2214",
+        organization_id: "uncc",
+        term_id: "fall-2026"
+      })
+
+      expect(wo1).not_to receive(:destroy)
+      controller.send(:create_or_update_offerings, workout)
+
+      expect(workout.errors[:base].first).to match(/cannot be deleted/)
+    end
+
+    it "allows deleting an existing offering when it has no student scores and no activity logs" do
+      co1 = FactoryBot.build_stubbed(:course_offering, id: 101, label: 'Section A', course: course, term: term)
+      wo1 = FactoryBot.build_stubbed(:workout_offering, id: 201, course_offering: co1, workout: workout)
+      allow(user).to receive(:managed_course_offerings).and_return([co1])
+      allow(workout).to receive_message_chain(:workout_offerings, :joins, :where).and_return([wo1])
+      allow(wo1).to receive_message_chain(:workout_scores, :exists?).and_return(false)
+      allow(wo1).to receive_message_chain(:activity_logs, :exists?).and_return(false)
+
+      yaml_input = <<~YAML
+        sections: []
+      YAML
+
+      controller.params = ActionController::Parameters.new({
+        date_yaml: yaml_input,
+        course_id: "itsc2214",
+        organization_id: "uncc",
+        term_id: "fall-2026"
+      })
+
+      expect(wo1).to receive(:destroy)
+      controller.send(:create_or_update_offerings, workout)
+
+      expect(workout.errors).to be_empty
+    end
+
+    it "only considers offerings managed by current_user for deletion and leaves other instructors' offerings untouched" do
+      co1 = FactoryBot.build_stubbed(:course_offering, id: 101, label: 'Section A', course: course, term: term)
+      wo1 = FactoryBot.build_stubbed(:workout_offering, id: 201, course_offering_id: 101, course_offering: co1, workout: workout)
+      allow(co1).to receive(:display_name_with_term).and_return('Section A')
+      allow(co1).to receive(:display_name_with_org_and_term).and_return('Section A')
+      allow(co1).to receive(:display_name).and_return('Section A')
+      allow(user).to receive(:managed_course_offerings).and_return([co1])
+
+      relation_double = double('relation')
+      allow(workout).to receive_message_chain(:workout_offerings, :joins).and_return(relation_double)
+      allow(relation_double).to receive(:where).with(course_offerings: { id: [101] }).and_return([wo1])
+
+      yaml_input = <<~YAML
+        sections:
+          - section: Section A
+            due: 2026-09-15 11:59 PM
+      YAML
+
+      controller.params = ActionController::Parameters.new({
+        date_yaml: yaml_input,
+        course_id: "itsc2214",
+        organization_id: "uncc",
+        term_id: "fall-2026"
+      })
+
+      expect(wo1).not_to receive(:destroy)
+      controller.send(:create_or_update_offerings, workout)
+
+      expect(workout.errors).to be_empty
+    end
+  end
+
+  describe "#serialize_workout_offerings_to_yaml" do
+    let(:user) { FactoryBot.build_stubbed(:user) }
+    let(:course_offering1) { FactoryBot.build_stubbed(:course_offering, id: 101, label: 'Section 1') }
+    let(:course_offering2) { FactoryBot.build_stubbed(:course_offering, id: 102, label: 'Section 2') }
+
+    before do
+      allow(controller).to receive(:current_user).and_return(user)
+      allow(user).to receive_message_chain(:time_zone, :name).and_return('America/New_York')
+      allow(course_offering1).to receive(:display_name_with_term).and_return('CS 101 (Fall 2026, 11111)')
+      allow(course_offering2).to receive(:display_name_with_term).and_return('CS 101 (Fall 2026, 22222)')
+    end
+
+    it "serializes common ips at top level when all sections share same allowed_ips" do
+      wo1 = FactoryBot.build_stubbed(:workout_offering, course_offering: course_offering1, allowed_ips: '128.173.*.*')
+      wo2 = FactoryBot.build_stubbed(:workout_offering, course_offering: course_offering2, allowed_ips: '128.173.*.*')
+
+      yaml_str = controller.send(:serialize_workout_offerings_to_yaml, [wo1, wo2], [])
+      expect(yaml_str).to match(/^ips:\s*128\.173\.\*\.\*/)
+      expect(yaml_str).not_to match(/section:.*\n\s*ips:/)
+    end
+
+    it "serializes common browsers at top level when all sections share same allowed_user_agents" do
+      wo1 = FactoryBot.build_stubbed(:workout_offering, course_offering: course_offering1, allowed_user_agents: 'LockDown Browser')
+      wo2 = FactoryBot.build_stubbed(:workout_offering, course_offering: course_offering2, allowed_user_agents: 'LockDown Browser')
+
+      yaml_str = controller.send(:serialize_workout_offerings_to_yaml, [wo1, wo2], [])
+      expect(yaml_str).to match(/^browsers:\s*LockDown Browser/)
+      expect(yaml_str).not_to match(/section:.*\n\s*browsers:/)
+    end
+
+    it "serializes per-section ips when sections have different allowed_ips" do
+      wo1 = FactoryBot.build_stubbed(:workout_offering, course_offering: course_offering1, allowed_ips: '128.173.*.*')
+      wo2 = FactoryBot.build_stubbed(:workout_offering, course_offering: course_offering2, allowed_ips: '192.168.1.0/24')
+
+      yaml_str = controller.send(:serialize_workout_offerings_to_yaml, [wo1, wo2], [])
+      expect(yaml_str).not_to match(/^ips:/)
+      expect(yaml_str).to include("ips: 128.173.*.*")
+      expect(yaml_str).to include("ips: 192.168.1.0/24")
+    end
+
+    it "serializes per-section browsers when sections have different allowed_user_agents" do
+      wo1 = FactoryBot.build_stubbed(:workout_offering, course_offering: course_offering1, allowed_user_agents: 'LockDown Browser')
+      wo2 = FactoryBot.build_stubbed(:workout_offering, course_offering: course_offering2, allowed_user_agents: 'SEB')
+
+      yaml_str = controller.send(:serialize_workout_offerings_to_yaml, [wo1, wo2], [])
+      expect(yaml_str).not_to match(/^browsers:/)
+      expect(yaml_str).to include("browsers: LockDown Browser")
+      expect(yaml_str).to include("browsers: SEB")
+    end
+
+    it "serializes ips on student extensions" do
+      wo1 = FactoryBot.build_stubbed(:workout_offering, course_offering: course_offering1)
+      ext_student = FactoryBot.build_stubbed(:user, first_name: 'Jane', last_name: 'Doe', email: 'jdoe@example.edu')
+      ext = FactoryBot.build_stubbed(
+        :student_extension,
+        user: ext_student,
+        workout_offering: wo1,
+        allowed_ips: 'any'
+      )
+
+      yaml_str = controller.send(:serialize_workout_offerings_to_yaml, [wo1], [ext])
+      expect(yaml_str).to include("ips: any")
+      expect(yaml_str).to include("Jane Doe <jdoe@example.edu>")
+    end
+
+    it "serializes browsers on student extensions" do
+      wo1 = FactoryBot.build_stubbed(:workout_offering, course_offering: course_offering1)
+      ext_student = FactoryBot.build_stubbed(:user, first_name: 'Jane', last_name: 'Doe', email: 'jdoe@example.edu')
+      ext = FactoryBot.build_stubbed(
+        :student_extension,
+        user: ext_student,
+        workout_offering: wo1,
+        allowed_user_agents: 'any'
+      )
+
+      yaml_str = controller.send(:serialize_workout_offerings_to_yaml, [wo1], [ext])
+      expect(yaml_str).to include("browsers: any")
+      expect(yaml_str).to include("Jane Doe <jdoe@example.edu>")
+    end
+
+    it "serializes time_limit on student extensions and groups matching extensions" do
+      wo1 = FactoryBot.build_stubbed(:workout_offering, course_offering: course_offering1)
+      s1 = FactoryBot.build_stubbed(:user, first_name: 'Jane', last_name: 'Doe', email: 'jdoe@example.edu')
+      s2 = FactoryBot.build_stubbed(:user, first_name: 'Bob', last_name: 'Smith', email: 'bsmith@example.edu')
+      s3 = FactoryBot.build_stubbed(:user, first_name: 'Charlie', last_name: 'Brown', email: 'cbrown@example.edu')
+      ext1 = FactoryBot.build_stubbed(:student_extension, user: s1, workout_offering: wo1, time_limit: 90)
+      ext2 = FactoryBot.build_stubbed(:student_extension, user: s2, workout_offering: wo1, time_limit: 90)
+      ext3 = FactoryBot.build_stubbed(:student_extension, user: s3, workout_offering: wo1, time_limit: 0)
+
+      yaml_str = controller.send(:serialize_workout_offerings_to_yaml, [wo1], [ext1, ext2, ext3])
+      expect(yaml_str).to include("time_limit: 90 minutes")
+      expect(yaml_str).to include("time_limit: unlimited")
+      expect(yaml_str).to include("Jane Doe <jdoe@example.edu>")
+      expect(yaml_str).to include("Bob Smith <bsmith@example.edu>")
+      expect(yaml_str).to include("Charlie Brown <cbrown@example.edu>")
+    end
+
+    it "omits time_limit key on student extensions when time_limit is nil" do
+      wo1 = FactoryBot.build_stubbed(:workout_offering, course_offering: course_offering1)
+      s1 = FactoryBot.build_stubbed(:user, first_name: 'Jane', last_name: 'Doe', email: 'jdoe@example.edu')
+      ext1 = FactoryBot.build_stubbed(:student_extension, user: s1, workout_offering: wo1, time_limit: nil)
+
+      yaml_str = controller.send(:serialize_workout_offerings_to_yaml, [wo1], [ext1])
+      expect(yaml_str).not_to include("time_limit:")
+      expect(yaml_str).to include("Jane Doe <jdoe@example.edu>")
+    end
+
+    it "serializes lms_assignment_url before sections with empty default when none present" do
+      wo1 = FactoryBot.build_stubbed(:workout_offering, course_offering: course_offering1)
+      wo2 = FactoryBot.build_stubbed(:workout_offering, course_offering: course_offering2)
+
+      yaml_str = controller.send(:serialize_workout_offerings_to_yaml, [wo1, wo2], [])
+      expect(yaml_str).to match(/lms_assignment_url:\s*\nsections:/)
+      expect(yaml_str).not_to match(/section:.*\n\s*lms_assignment_url:/)
+    end
+
+    it "serializes common lms_assignment_url at top level when all sections share same URL" do
+      wo1 = FactoryBot.build_stubbed(:workout_offering, course_offering: course_offering1, lms_assignment_url: 'https://canvas.vt.edu/courses/1/assignments/10')
+      wo2 = FactoryBot.build_stubbed(:workout_offering, course_offering: course_offering2, lms_assignment_url: 'https://canvas.vt.edu/courses/1/assignments/10')
+
+      yaml_str = controller.send(:serialize_workout_offerings_to_yaml, [wo1, wo2], [])
+      expect(yaml_str).to match(/lms_assignment_url:\s*https:\/\/canvas\.vt\.edu\/courses\/1\/assignments\/10\nsections:/)
+      expect(yaml_str).not_to match(/section:.*\n\s*lms_assignment_url:/)
+    end
+
+    it "serializes per-section lms_assignment_url when sections have different URLs" do
+      wo1 = FactoryBot.build_stubbed(:workout_offering, course_offering: course_offering1, lms_assignment_url: 'https://canvas.vt.edu/courses/1/assignments/10')
+      wo2 = FactoryBot.build_stubbed(:workout_offering, course_offering: course_offering2, lms_assignment_url: 'https://canvas.vt.edu/courses/1/assignments/20')
+
+      yaml_str = controller.send(:serialize_workout_offerings_to_yaml, [wo1, wo2], [])
+      expect(yaml_str).to match(/lms_assignment_url:\s*\nsections:/)
+      expect(yaml_str).to include("lms_assignment_url: https://canvas.vt.edu/courses/1/assignments/10")
+      expect(yaml_str).to include("lms_assignment_url: https://canvas.vt.edu/courses/1/assignments/20")
+    end
   end
 
   describe "#parse_date" do
@@ -370,6 +988,73 @@ describe WorkoutsController do
       time_obj = Time.zone.parse('2026-09-15 10:00:00')
       result = controller.send(:parse_date, time_obj, tz)
       expect(result).to eq(time_obj.in_time_zone(tz))
+    end
+  end
+
+  describe "#parse_time_limit" do
+    it "handles nil and blank inputs" do
+      expect(controller.send(:parse_time_limit, nil)).to be_nil
+      expect(controller.send(:parse_time_limit, "")).to be_nil
+      expect(controller.send(:parse_time_limit, "   ")).to be_nil
+    end
+
+    it "handles numeric inputs" do
+      expect(controller.send(:parse_time_limit, 90)).to eq(90)
+      expect(controller.send(:parse_time_limit, 45.0)).to eq(45)
+    end
+
+    it "handles minute strings with various units" do
+      expect(controller.send(:parse_time_limit, "90")).to eq(90)
+      expect(controller.send(:parse_time_limit, "90m")).to eq(90)
+      expect(controller.send(:parse_time_limit, "90 min")).to eq(90)
+      expect(controller.send(:parse_time_limit, "90 mins")).to eq(90)
+      expect(controller.send(:parse_time_limit, "90 minute")).to eq(90)
+      expect(controller.send(:parse_time_limit, "90 minutes")).to eq(90)
+    end
+
+    it "handles hour strings and converts to minutes" do
+      expect(controller.send(:parse_time_limit, "1 hour")).to eq(60)
+      expect(controller.send(:parse_time_limit, "1.5 hours")).to eq(90)
+      expect(controller.send(:parse_time_limit, "2 hrs")).to eq(120)
+      expect(controller.send(:parse_time_limit, "2.5h")).to eq(150)
+    end
+
+    it "handles multipliers against base time limit" do
+      expect(controller.send(:parse_time_limit, "1.5x", 60)).to eq(90)
+      expect(controller.send(:parse_time_limit, "2x", 60)).to eq(120)
+      expect(controller.send(:parse_time_limit, "1.5 *", 60)).to eq(90)
+      expect(controller.send(:parse_time_limit, "2.0X", 45)).to eq(90)
+    end
+
+    it "raises an error when a multiplier is used without a base time limit" do
+      expect {
+        controller.send(:parse_time_limit, "1.5x", nil)
+      }.to raise_error(StandardError, /Cannot apply time_limit multiplier/)
+
+      expect {
+        controller.send(:parse_time_limit, "1.5x", 0)
+      }.to raise_error(StandardError, /Cannot apply time_limit multiplier/)
+    end
+
+    it "handles unlimited and none by returning 0" do
+      expect(controller.send(:parse_time_limit, "unlimited")).to eq(0)
+      expect(controller.send(:parse_time_limit, "none")).to eq(0)
+    end
+
+    it "raises error on negative numbers or negative parsed values" do
+      expect {
+        controller.send(:parse_time_limit, -10)
+      }.to raise_error(StandardError, /cannot be negative/)
+
+      expect {
+        controller.send(:parse_time_limit, "-10 mins")
+      }.to raise_error(StandardError, /Invalid time_limit/)
+    end
+
+    it "raises error on invalid format" do
+      expect {
+        controller.send(:parse_time_limit, "invalid_time")
+      }.to raise_error(StandardError, /Invalid time_limit/)
     end
   end
 
@@ -474,6 +1159,286 @@ describe WorkoutsController do
 
       expect(response.status).to eq(200)
       expect(controller.instance_variable_get(:@message)).to include("not yet available")
+    end
+
+    it "redirects instructor to new course offering creation when no course offerings exist" do
+      allow(WorkoutOffering).to receive(:find_by).and_return(nil)
+      allow(user).to receive(:managed_course_offerings).and_return([])
+
+      get :find_offering, params: {
+        organization_id: 'vt',
+        course_id: 'cs1114',
+        term_id: 'fall2026',
+        workout_name: 'Example CBTF Question',
+        user_id: user.id.to_s,
+        lms_instance_id: '1',
+        ext_lti_assignment_id: '53db16ed-ee26-4b6b-82e7-0e2cee966c05',
+        custom_canvas_assignment_id: '2853105',
+        resource_link_id: 'f8b49093fc74aa27938a038e21565149b24b697c'
+      }, session: { is_instructor: true }
+
+      expect(response).to redirect_to(
+        organization_new_course_offering_path(
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          workout_name: 'Example CBTF Question',
+          ext_lti_assignment_id: '53db16ed-ee26-4b6b-82e7-0e2cee966c05',
+          custom_canvas_assignment_id: '2853105',
+          resource_link_id: 'f8b49093fc74aa27938a038e21565149b24b697c',
+          from_collection: nil
+        )
+      )
+    end
+
+    it "resolves to already-enrolled candidate offering when student has prior enrollment" do
+      allow(WorkoutOffering).to receive(:find_by).and_return(nil)
+      offering2 = FactoryBot.build_stubbed(:course_offering, id: 102, course: course, term: term, label: 'Section 2')
+      candidates = [course_offering, offering2]
+      relation = instance_double(ActiveRecord::Relation, to_a: candidates, any?: true, count: 2, empty?: false)
+      allow(CourseOffering).to receive(:where).with(hash_including(lms_instance_id: '1', lti_context_id: 'ctx_123')).and_return(relation)
+      allow(user).to receive(:is_enrolled?).with(course_offering).and_return(false)
+      allow(user).to receive(:is_enrolled?).with(offering2).and_return(true)
+      allow(offering2).to receive(:changed?).and_return(false)
+
+      get :find_offering, params: {
+        organization_id: 'vt',
+        course_id: 'cs1114',
+        term_id: 'fall2026',
+        workout_name: 'Practice Workout',
+        user_id: user.id.to_s,
+        lms_instance_id: '1',
+        lti_context_id: 'ctx_123'
+      }, session: { is_instructor: false }
+
+      expect(controller.instance_variable_get(:@course_offering)).to eq(offering2)
+    end
+
+    it "redirects student to select_offering when multiple offerings exist and cannot be disambiguated" do
+      allow(WorkoutOffering).to receive(:find_by).and_return(nil)
+      offering2 = FactoryBot.build_stubbed(:course_offering, id: 102, course: course, term: term, label: 'Section 2')
+      candidates = [course_offering, offering2]
+      relation = instance_double(ActiveRecord::Relation, to_a: candidates, any?: true, count: 2, empty?: false)
+      allow(CourseOffering).to receive(:where).with(hash_including(lms_instance_id: '1', lti_context_id: 'ctx_123')).and_return(relation)
+      allow(user).to receive(:is_enrolled?).and_return(false)
+      # Neither offering has the workout offering pre-associated
+      allow(course_offering).to receive(:workout_offerings).and_return(WorkoutOffering.none)
+      allow(offering2).to receive(:workout_offerings).and_return(WorkoutOffering.none)
+
+      get :find_offering, params: {
+        organization_id: 'vt',
+        course_id: 'cs1114',
+        term_id: 'fall2026',
+        workout_name: 'Practice Workout',
+        user_id: user.id.to_s,
+        lms_instance_id: '1',
+        lti_context_id: 'ctx_123'
+      }, session: { is_instructor: false }
+
+      expect(response).to redirect_to(
+        organization_course_select_offering_path(
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          workout_name: 'Practice Workout',
+          ext_lti_assignment_id: nil,
+          custom_canvas_assignment_id: nil,
+          resource_link_id: nil,
+          from_collection: nil
+        )
+      )
+      expect(session[:candidate_course_offering_ids]).to eq([101, 102])
+    end
+
+    it "correctly resolves to the student's section WorkoutOffering when multiple sections share the same resource_link_id" do
+      offering2 = FactoryBot.build_stubbed(:course_offering, id: 102, course: course, term: term, label: 'Section 2', lms_section_id: 'sec_2')
+      wo2 = FactoryBot.build_stubbed(:workout_offering, id: 202, workout: workout, course_offering: offering2)
+      candidates = [course_offering, offering2]
+      relation = instance_double(ActiveRecord::Relation, to_a: candidates, any?: true, count: 2, empty?: false)
+      allow(CourseOffering).to receive(:where).with(hash_including(lms_instance_id: '1', lti_context_id: 'ctx_123')).and_return(relation)
+      allow(user).to receive(:is_enrolled?).with(course_offering).and_return(false)
+      allow(user).to receive(:is_enrolled?).with(offering2).and_return(true)
+      allow(offering2).to receive(:changed?).and_return(false)
+      allow(wo2).to receive(:changed?).and_return(false)
+
+      wo_scope = double('WorkoutOfferingsAssociation')
+      allow(offering2).to receive(:workout_offerings).and_return(wo_scope)
+      allow(wo_scope).to receive(:find_by).with(
+        lms_instance_id: '1',
+        resource_link_id: 'shared_resource_link_100'
+      ).and_return(wo2)
+
+      get :find_offering, params: {
+        organization_id: 'vt',
+        course_id: 'cs1114',
+        term_id: 'fall2026',
+        workout_name: 'Practice Workout',
+        user_id: user.id.to_s,
+        lms_instance_id: '1',
+        lti_context_id: 'ctx_123',
+        resource_link_id: 'shared_resource_link_100'
+      }, session: { is_instructor: false }
+
+      expect(response).to redirect_to(
+        organization_workout_offering_practice_path(
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          id: 202,
+          lti_launch: true
+        )
+      )
+      expect(controller.instance_variable_get(:@workout_offering)).to eq(wo2)
+      expect(controller.instance_variable_get(:@course_offering)).to eq(offering2)
+    end
+
+    context "when an instructor launches an assignment" do
+      let(:offering2) do
+        FactoryBot.build_stubbed(:course_offering, id: 102, course: course, term: term, label: 'Section 2')
+      end
+
+      it "uses current_user when params[:user_id] is omitted" do
+        allow(WorkoutOffering).to receive(:where).with(
+          lms_instance_id: '1',
+          lti_assignment_id: 'ext_assignment_100'
+        ).and_return([workout_offering])
+
+        get :find_offering, params: {
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          workout_name: 'Practice Workout',
+          lms_instance_id: '1',
+          ext_lti_assignment_id: 'ext_assignment_100'
+        }, session: { is_instructor: true }
+
+        expect(response).to redirect_to(
+          organization_workout_offering_practice_path(
+            organization_id: 'vt',
+            course_id: 'cs1114',
+            term_id: 'fall2026',
+            id: 201,
+            lti_launch: true
+          )
+        )
+        expect(controller.instance_variable_get(:@user)).to eq(user)
+      end
+
+      it "resolves directly to the first offering when workout offerings already exist without going to select_offering" do
+        wo2 = FactoryBot.build_stubbed(:workout_offering, id: 202, workout: workout, course_offering: offering2)
+        allow(WorkoutOffering).to receive(:where).with(
+          lms_instance_id: '1',
+          lti_assignment_id: 'shared_ext_id'
+        ).and_return([workout_offering, wo2])
+
+        get :find_offering, params: {
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          workout_name: 'Practice Workout',
+          user_id: user.id.to_s,
+          lms_instance_id: '1',
+          ext_lti_assignment_id: 'shared_ext_id'
+        }, session: { is_instructor: true }
+
+        expect(response).to redirect_to(
+          organization_workout_offering_practice_path(
+            organization_id: 'vt',
+            course_id: 'cs1114',
+            term_id: 'fall2026',
+            id: 201,
+            lti_launch: true
+          )
+        )
+      end
+
+      it "targets matching course offerings by lti_context_id and goes directly to clone or new_or_existing" do
+        # No existing workout offerings
+        allow(WorkoutOffering).to receive(:where).and_return([])
+        allow(WorkoutOffering).to receive(:find_by).and_return(nil)
+
+        managed = [course_offering, offering2]
+        allow(user).to receive(:managed_course_offerings).with(course: course, term: term).and_return(managed)
+        allow(CourseOffering).to receive(:where).with(
+          lms_instance_id: '1',
+          lti_context_id: 'ctx_multi',
+          course: course,
+          term: term
+        ).and_return(managed)
+        allow(user).to receive(:managed_workout_offerings_in_term).and_return([])
+
+        get :find_offering, params: {
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          workout_name: 'New Workout',
+          user_id: user.id.to_s,
+          lms_instance_id: '1',
+          lti_context_id: 'ctx_multi',
+          ext_lti_assignment_id: 'unknown_assignment_id'
+        }, session: { is_instructor: true }
+
+        expect(response).to redirect_to(
+          organization_new_or_existing_workout_path(
+            organization_id: 'vt',
+            course_id: 'cs1114',
+            term_id: 'fall2026',
+            lti_launch: true,
+            lms_assignment_id: 'unknown_assignment_id',
+            lti_assignment_id: 'unknown_assignment_id',
+            resource_link_id: nil,
+            suggested_name: 'New Workout'
+          )
+        )
+        expect(session[:target_course_offering_ids]).to eq([101, 102])
+      end
+
+      it "backfills lti_context_id and canvas_course_id onto managed offerings when no matches exist" do
+        allow(WorkoutOffering).to receive(:where).and_return([])
+        allow(WorkoutOffering).to receive(:find_by).and_return(nil)
+
+        managed = [course_offering, offering2]
+        allow(user).to receive(:managed_course_offerings).with(course: course, term: term).and_return(managed)
+        allow(CourseOffering).to receive(:where).and_return([])
+        allow(user).to receive(:managed_workout_offerings_in_term).and_return([])
+
+        allow(course_offering).to receive(:changed?).and_return(true)
+        allow(offering2).to receive(:changed?).and_return(true)
+
+        expect(course_offering).to receive(:save)
+        expect(offering2).to receive(:save)
+
+        get :find_offering, params: {
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          workout_name: 'Unmapped Assignment',
+          user_id: user.id.to_s,
+          lms_instance_id: '1',
+          lti_context_id: 'ctx_backfill_1',
+          canvas_course_id: 'canvas_backfill_1',
+          ext_lti_assignment_id: 'unknown_assignment_id'
+        }, session: { is_instructor: true }
+
+        expect(course_offering.lti_context_id).to eq('ctx_backfill_1')
+        expect(course_offering.canvas_course_id).to eq('canvas_backfill_1')
+        expect(offering2.lti_context_id).to eq('ctx_backfill_1')
+        expect(offering2.canvas_course_id).to eq('canvas_backfill_1')
+        expect(session[:target_course_offering_ids]).to eq([101, 102])
+
+        expect(response).to redirect_to(
+          organization_new_or_existing_workout_path(
+            organization_id: 'vt',
+            course_id: 'cs1114',
+            term_id: 'fall2026',
+            lti_launch: true,
+            lms_assignment_id: 'unknown_assignment_id',
+            lti_assignment_id: 'unknown_assignment_id',
+            resource_link_id: nil,
+            suggested_name: 'Unmapped Assignment'
+          )
+        )
+      end
     end
   end
 

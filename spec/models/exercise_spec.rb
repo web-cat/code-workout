@@ -199,15 +199,15 @@ describe Exercise, type: :model do
       expect(admin_results).to eq([private_ex])
     end
 
-    it 'caps candidate and return list at MAX_SEARCH_RESULTS (50)' do
-      expect(Exercise::MAX_SEARCH_RESULTS).to eq(50)
-      many_ids = (1..60).map { |n| "X#{n}" }
+    it 'caps candidate and return list at MAX_SEARCH_RESULTS (200)' do
+      expect(Exercise::MAX_SEARCH_RESULTS).to eq(200)
+      many_ids = (1..210).map { |n| "X#{n}" }
 
       relation = double('ExerciseRelation')
       allow(relation).to receive(:includes).and_return(relation)
       allow(relation).to receive(:order).and_return([])
       allow(relation).to receive(:index_by).and_return({})
-      expect(Exercise).to receive(:where).with(id: (1..50).to_a).and_return(relation)
+      expect(Exercise).to receive(:where).with(id: (1..200).to_a).and_return(relation)
 
       Exercise.search(many_ids, admin_user)
     end

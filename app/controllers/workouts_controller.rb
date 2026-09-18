@@ -227,6 +227,40 @@ class WorkoutsController < ApplicationController
 
     @workout_score = @workout.score_for(current_user, @workout_offering)
 
+    if @workout_offering && !@workout_offering.ip_allowed?(request.remote_ip, current_user, @workout_score)
+      if current_user
+        ActivityLog.create(
+          user: (current_user.is_a?(User) ? current_user : nil),
+          workout: (@workout.is_a?(Workout) ? @workout : nil),
+          workout_offering: @workout_offering,
+          workout_score: (@workout_score.is_a?(WorkoutScore) ? @workout_score : nil),
+          activity: 'workout_view_ip_blocked',
+          ip_address: request.remote_ip,
+          user_agent: request.user_agent,
+          lti_launch: false
+        )
+      end
+      @message = "This workout cannot be accessed from your network location (#{request.remote_ip})."
+      render 'workout_offerings/error' and return
+    end
+
+    if @workout_offering && !@workout_offering.user_agent_allowed?(request.user_agent, current_user, @workout_score)
+      if current_user
+        ActivityLog.create(
+          user: (current_user.is_a?(User) ? current_user : nil),
+          workout: (@workout.is_a?(Workout) ? @workout : nil),
+          workout_offering: @workout_offering,
+          workout_score: (@workout_score.is_a?(WorkoutScore) ? @workout_score : nil),
+          activity: 'workout_view_user_agent_blocked',
+          ip_address: request.remote_ip,
+          user_agent: request.user_agent,
+          lti_launch: false
+        )
+      end
+      @message = "This workout requires a specific browser (such as LockDown Browser or Secure Exam Browser) and cannot be accessed from your current browser."
+      render 'workout_offerings/error' and return
+    end
+
     if @workout_score
       @scoring_attempts_by_version_id = Attempt.where(
         active_score_id: @workout_score.id
@@ -238,6 +272,19 @@ class WorkoutsController < ApplicationController
         workout_score_id: nil,
         exercise_version_id: ex_version_ids
       ).order('updated_at DESC').group_by(&:exercise_version_id)
+    end
+
+    if current_user
+      ActivityLog.create(
+        user: (current_user.is_a?(User) ? current_user : nil),
+        workout: (@workout.is_a?(Workout) ? @workout : nil),
+        workout_offering: (@workout_offering.is_a?(WorkoutOffering) ? @workout_offering : nil),
+        workout_score: (@workout_score.is_a?(WorkoutScore) ? @workout_score : nil),
+        activity: 'workout_view',
+        ip_address: request.remote_ip,
+        user_agent: request.user_agent,
+        lti_launch: false
+      )
     end
   end
 
@@ -307,8 +354,14 @@ class WorkoutsController < ApplicationController
       @organization = params[:organization_id] ?
         Organization.find(params[:organization_id]) : nil
       @course = Course.find_with_id_or_slug(params[:course_id], params[:organization_id])
-      @course_offerings = current_user.managed_course_offerings(
-        course: @course, term: @term)
+      all_managed = current_user.managed_course_offerings(course: @course, term: @term)
+      if session[:target_course_offering_ids].present?
+        target_ids = session[:target_course_offering_ids].map(&:to_i)
+        scoped = all_managed.select { |co| target_ids.include?(co.id) }
+        @course_offerings = scoped.presence || all_managed
+      else
+        @course_offerings = all_managed
+      end
       @return_to = organization_course_path(
         organization_id: @organization.slug,
         id: @course.slug,
@@ -593,8 +646,15 @@ class WorkoutsController < ApplicationController
       @attempt_limit = @workout_offering.andand.attempt_limit
       @policy = (@workout_offering.andand.workout_policy || @policy).dup
       @organization = Organization.find params[:organization_id]
+      all_managed = current_user.andand.managed_course_offerings(course: @course, term: @term) || []
       @course_offerings =
-        current_user.andand.managed_course_offerings(course: @course, term: @term)
+        if session[:target_course_offering_ids].present?
+          target_ids = session[:target_course_offering_ids].map(&:to_i)
+          scoped = all_managed.select { |co| target_ids.include?(co.id) }
+          scoped.presence || all_managed
+        else
+          all_managed
+        end
       @unused_course_offerings = nil
       @return_to = organization_course_path(
         organization_id: @organization.slug,
@@ -666,7 +726,7 @@ class WorkoutsController < ApplicationController
 
   # /courses/:organization_id/:course_id/:term_id/find_offering/:workout_name
   def find_offering
-    @user = User.find params[:user_id]
+    @user = params[:user_id].present? ? User.find(params[:user_id]) : current_user
     @term = Term.find params[:term_id]
     @course = Course.find_with_id_or_slug(params[:course_id], params[:organization_id])
     @lti_launch = params[:lti_launch]
@@ -725,140 +785,110 @@ class WorkoutsController < ApplicationController
     }
 
     # =========================================================================
-    # Phase 1: Direct WorkoutOffering Resolution by LTI Identifiers
+    # Phase 1 & 2: Resolution
     # =========================================================================
     @workout_offering = nil
     @course_offering = nil
 
     if params[:course_offering_id].present?
       @course_offering = CourseOffering.find_by(id: params[:course_offering_id])
-    else
-      @workout_offering = find_workout_offering_by_lti_identifiers(
+      Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Resolved CourseOffering from params: ID #{@course_offering.andand.id}"
+    end
+
+    if role.is_instructor?
+      # Check if workout offerings already exist for this LMS assignment
+      existing_workout_offerings = find_all_workout_offerings_by_lti_identifiers(
         lms_instance_id,
         resource_link_id,
         ext_lti_assignment_id,
         custom_canvas_assignment_id
       )
-      if @workout_offering
+      if existing_workout_offerings.any?
+        # Legacy behavior: go directly to the workout offering
+        @workout_offering = existing_workout_offerings.first
         @course_offering = @workout_offering.course_offering
-        Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Direct resolution found WorkoutOffering ID #{@workout_offering.id} (CourseOffering ID #{@course_offering.andand.id})"
-      end
-    end
-
-    # =========================================================================
-    # Phase 2: CourseOffering Resolution (if not directly resolved by WorkoutOffering)
-    # =========================================================================
-    if !@workout_offering && !@course_offering
-      Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Phase 2: Resolving CourseOffering..."
-      candidate_course_offerings = []
-
-      if lms_instance_id.present? && lti_context_id.present?
-        query = { lms_instance_id: lms_instance_id, lti_context_id: lti_context_id }
-        query[:lms_section_id] = lms_section_ids if lms_section_ids.any?
-        Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Searching CourseOffering by lti_context_id. Query: #{query}"
-        candidate_course_offerings = CourseOffering.where(query).to_a
-        Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Search by lti_context_id found #{candidate_course_offerings.count} candidates."
-      end
-
-      if candidate_course_offerings.empty? && lms_instance_id.present? && canvas_course_id.present?
-        query = { lms_instance_id: lms_instance_id, canvas_course_id: canvas_course_id }
-        query[:lms_section_id] = lms_section_ids if lms_section_ids.any?
-        Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Searching CourseOffering by canvas_course_id fallback. Query: #{query}"
-        candidate_course_offerings = CourseOffering.where(query).to_a
-        Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Search by canvas_course_id fallback found #{candidate_course_offerings.count} candidates."
-      end
-
-      if candidate_course_offerings.empty?
-        Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Searching CourseOffering by term/course fallback."
-        if role.is_instructor?
-          candidate_course_offerings = @user.managed_course_offerings(course: @course, term: @term).to_a
-          Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Managed course offerings query found #{candidate_course_offerings.count} candidates."
-        else
-          candidate_course_offerings = @user.course_offerings_for_term(@term, @course).to_a
-          Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Enrolled course offerings query found #{candidate_course_offerings.count} candidates."
-        end
-      end
-
-      if role.is_instructor?
-        if candidate_course_offerings.count == 1
-          @course_offering = candidate_course_offerings.first
-          Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Phase 2 resolved exactly 1 CourseOffering for instructor: ID #{@course_offering.id}, label #{@course_offering.label}"
-        elsif candidate_course_offerings.count > 1
-          Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Phase 2: Multiple CourseOfferings found for instructor: #{candidate_course_offerings.map(&:id)}. Redirecting to select_offering."
-          session[:candidate_course_offering_ids] = candidate_course_offerings.map(&:id)
-          redirect_to organization_course_select_offering_path(
-            organization_id: @course.organization.slug,
-            course_id: @course.slug,
-            term_id: @term.slug,
-            workout_name: params[:workout_name],
-            ext_lti_assignment_id: ext_lti_assignment_id,
-            custom_canvas_assignment_id: custom_canvas_assignment_id,
-            resource_link_id: resource_link_id,
-            from_collection: params[:from_collection]
-          ) and return
-        else
-          Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Phase 2: No CourseOfferings found for instructor. Redirecting to new course offering creation page."
-          redirect_to new_organization_course_offering_path(
-            organization_id: @course.organization.slug,
-            course_id: @course.slug,
-            term_id: @term.slug,
-            workout_name: params[:workout_name],
-            ext_lti_assignment_id: ext_lti_assignment_id,
-            custom_canvas_assignment_id: custom_canvas_assignment_id,
-            resource_link_id: resource_link_id,
-            from_collection: params[:from_collection]
-          ) and return
-        end
+        Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Instructor launch resolved directly to existing WorkoutOffering ID #{@workout_offering.id}"
       else
-        if candidate_course_offerings.any?
-          if lms_section_ids.any? && candidate_course_offerings.any? { |co| lms_section_ids.include?(co.lms_section_id) }
-            first_matching_id = lms_section_ids.find { |id| candidate_course_offerings.any? { |co| co.lms_section_id == id } }
-            @course_offering = candidate_course_offerings.find { |co| co.lms_section_id == first_matching_id }
-            Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Phase 2 resolved CourseOffering by matching LMS section ID #{first_matching_id} for student: ID #{@course_offering.id}, label #{@course_offering.label}"
-          else
-            @course_offering = candidate_course_offerings.first
-            Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Phase 2 fell back to first candidate CourseOffering for student: ID #{@course_offering.id}, label #{@course_offering.label}"
-          end
-        else
-          Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Phase 2: No eligible CourseOfferings found for student. Rendering LTI error."
-          @message = "Your course offering is not yet available. Please contact your instructor."
-          render 'lti/error' and return
+        # Workout does NOT exist yet (unknown/unrecognized LTI ID).
+        # Identify the target set of course offerings for the new workout.
+        target_course_offerings = []
+
+        if lms_instance_id.present? && lti_context_id.present?
+          target_course_offerings = CourseOffering.where(
+            lms_instance_id: lms_instance_id,
+            lti_context_id: lti_context_id,
+            course: @course,
+            term: @term
+          ).to_a
+          target_course_offerings = CourseOffering.where(
+            lti_context_id: lti_context_id,
+            course: @course,
+            term: @term
+          ).to_a if target_course_offerings.empty?
         end
-      end
-    end
 
-    # =========================================================================
-    # Phase 3: WorkoutOffering Lookup within CourseOffering / Fallback Creation
-    # =========================================================================
-    if !@workout_offering && @course_offering
-      Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Phase 3: Searching WorkoutOffering within CourseOffering ID #{@course_offering.id}..."
-      found_workout = nil
-      if params[:from_collection].to_b
-        workouts = Workout.where('lower(name) = ?', params[:workout_name].downcase)
-        found_workout = workouts.first
-        Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Search for collection workout by name '#{params[:workout_name]}' found workout: #{found_workout.andand.id || 'not found'}"
-      end
+        if target_course_offerings.empty? && lms_instance_id.present? && canvas_course_id.present?
+          target_course_offerings = CourseOffering.where(
+            lms_instance_id: lms_instance_id,
+            canvas_course_id: canvas_course_id,
+            course: @course,
+            term: @term
+          ).to_a
+          target_course_offerings = CourseOffering.where(
+            canvas_course_id: canvas_course_id,
+            course: @course,
+            term: @term
+          ).to_a if target_course_offerings.empty?
+        end
 
-      if found_workout
-        @workout_offering = @course_offering.workout_offerings.find_by(workout_id: found_workout.id)
-      elsif params[:workout_name].present?
-        @workout_offering = @course_offering.workout_offerings.joins(:workout).find_by('lower(workouts.name) = ?', params[:workout_name].downcase)
-      end
+        managed_offerings = @user.managed_course_offerings(course: @course, term: @term).to_a
 
-      if !@workout_offering
-        Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Phase 3: WorkoutOffering is nil. Executing fallback / creation chain..."
-        if role.is_instructor?
-          Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Executing instructor fallback. Searching for past workout by name '#{params[:workout_name]}'..."
-          if !found_workout && params[:workout_name].present?
-            old_workout_offerings = @user.managed_workout_offerings_in_term(params[:workout_name].downcase, @course, nil).to_a.flatten
-            found_workout = old_workout_offerings.uniq{ |wo| wo.workout }.sort_by{ |wo| wo.course_offering.term.starts_on }.last.andand.workout
-            Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Search in managed past workouts found: #{found_workout.andand.id || 'none'}"
+        if target_course_offerings.any?
+          # Restrict to offerings managed by this instructor
+          target_course_offerings = target_course_offerings.select { |co| managed_offerings.include?(co) }
+          target_course_offerings = managed_offerings if target_course_offerings.empty?
+        else
+          # No matches on lti_context_id or canvas_course_id:
+          # Select all course offerings the user is teaching in the current semester and backfill
+          target_course_offerings = managed_offerings
+          target_course_offerings.each do |co|
+            co.lms_instance_id ||= lms_instance_id if lms_instance_id.present?
+            co.lti_context_id ||= lti_context_id if lti_context_id.present?
+            co.canvas_course_id ||= canvas_course_id if canvas_course_id.present?
+            co.save if co.changed?
           end
+        end
 
-          if params[:from_collection].to_b && found_workout
-            Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Auto-creating WorkoutOffering for collection workout #{found_workout.id}..."
-            @workout_offering = WorkoutOffering.create(
-              course_offering: @course_offering,
+        if target_course_offerings.empty?
+          redirect_to organization_new_course_offering_path(
+            organization_id: @course.organization.slug,
+            course_id: @course.slug,
+            term_id: @term.slug,
+            workout_name: params[:workout_name],
+            ext_lti_assignment_id: ext_lti_assignment_id,
+            custom_canvas_assignment_id: custom_canvas_assignment_id,
+            resource_link_id: resource_link_id,
+            from_collection: params[:from_collection]
+          ) and return
+        end
+
+        session[:target_course_offering_ids] = target_course_offerings.map(&:id)
+        @course_offering = target_course_offerings.first
+
+        found_workout = nil
+        if params[:from_collection].to_b
+          found_workout = Workout.where('lower(name) = ?', params[:workout_name].downcase).first
+        end
+
+        if !found_workout && params[:workout_name].present?
+          old_workout_offerings = @user.managed_workout_offerings_in_term(params[:workout_name].downcase, @course, nil).to_a.flatten
+          found_workout = old_workout_offerings.uniq{ |wo| wo.workout }.sort_by{ |wo| wo.course_offering.term.starts_on }.last.andand.workout
+        end
+
+        if params[:from_collection].to_b && found_workout
+          target_course_offerings.each do |co|
+            wo = WorkoutOffering.create(
+              course_offering: co,
               workout: found_workout,
               opening_date: DateTime.now,
               lms_assignment_id: @custom_canvas_lms_assignment_id,
@@ -866,32 +896,223 @@ class WorkoutsController < ApplicationController
               resource_link_id: resource_link_id,
               lms_instance_id: lms_instance_id
             )
-            Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Auto-created WorkoutOffering ID: #{@workout_offering.id}"
-          elsif found_workout
-            Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Found existing workout. Redirecting to clone page. Workout ID: #{found_workout.id}"
-            redirect_to(organization_clone_workout_path(
-              course_id: @course.slug,
-              term_id: @term.slug,
-              organization_id: @course.organization.slug,
-              workout_id: found_workout.id,
-              lti_launch: true,
-              lms_assignment_id: @lms_assignment_id,
-              lti_assignment_id: @lms_assignment_id,
-              suggested_name: params[:workout_name]
-            )) and return
+            @workout_offering ||= wo
+          end
+          @course_offering = @workout_offering.course_offering
+        elsif found_workout
+          redirect_to(organization_clone_workout_path(
+            course_id: @course.slug,
+            term_id: @term.slug,
+            organization_id: @course.organization.slug,
+            workout_id: found_workout.id,
+            lti_launch: true,
+            lms_assignment_id: @lms_assignment_id,
+            lti_assignment_id: @lms_assignment_id,
+            resource_link_id: resource_link_id,
+            suggested_name: params[:workout_name]
+          )) and return
+        else
+          redirect_to organization_new_or_existing_workout_path(
+            lti_launch: true,
+            organization_id: @course.organization.slug,
+            course_id: @course.slug,
+            term_id: @term.slug,
+            lms_assignment_id: @lms_assignment_id,
+            lti_assignment_id: @lms_assignment_id,
+            resource_link_id: resource_link_id,
+            suggested_name: params[:workout_name]
+          ) and return
+        end
+      end
+    else
+      # =======================================================================
+      # Student Resolution Path
+      # =======================================================================
+      has_lms_context = lms_instance_id.present? && (lti_context_id.present? || canvas_course_id.present? || lms_section_ids.any?)
+
+      if !@course_offering && has_lms_context
+        Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Phase 1: Resolving CourseOffering from LMS context..."
+        candidate_course_offerings = []
+
+        if lms_instance_id.present? && lti_context_id.present?
+          query = { lms_instance_id: lms_instance_id, lti_context_id: lti_context_id }
+          query[:lms_section_id] = lms_section_ids if lms_section_ids.any?
+          Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Searching CourseOffering by lti_context_id. Query: #{query}"
+          candidate_course_offerings = CourseOffering.where(query).to_a
+          Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Search by lti_context_id found #{candidate_course_offerings.count} candidates."
+        end
+
+        if candidate_course_offerings.empty? && lms_instance_id.present? && canvas_course_id.present?
+          query = { lms_instance_id: lms_instance_id, canvas_course_id: canvas_course_id }
+          query[:lms_section_id] = lms_section_ids if lms_section_ids.any?
+          Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Searching CourseOffering by canvas_course_id fallback. Query: #{query}"
+          candidate_course_offerings = CourseOffering.where(query).to_a
+          Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Search by canvas_course_id fallback found #{candidate_course_offerings.count} candidates."
+        end
+
+        if candidate_course_offerings.any?
+          enrolled_offering = candidate_course_offerings.find { |co| @user.is_enrolled?(co) }
+          if enrolled_offering
+            @course_offering = enrolled_offering
+            Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Phase 1 resolved CourseOffering by prior enrollment for student: ID #{@course_offering.id}, label #{@course_offering.label}"
+          elsif lms_section_ids.any? && candidate_course_offerings.any? { |co| lms_section_ids.include?(co.lms_section_id) }
+            first_matching_id = lms_section_ids.find { |id| candidate_course_offerings.any? { |co| co.lms_section_id == id } }
+            @course_offering = candidate_course_offerings.find { |co| co.lms_section_id == first_matching_id }
+            Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Phase 1 resolved CourseOffering by matching LMS section ID #{first_matching_id} for student: ID #{@course_offering.id}, label #{@course_offering.label}"
+          elsif candidate_course_offerings.count == 1
+            @course_offering = candidate_course_offerings.first
+            Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Phase 1 resolved single candidate CourseOffering for student: ID #{@course_offering.id}, label #{@course_offering.label}"
           else
-            Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] No existing workout found. Redirecting to new or existing selection page."
-            redirect_to organization_new_or_existing_workout_path(
-              lti_launch: true,
+            candidates_with_workout = []
+            if params[:workout_name].present?
+              candidates_with_workout = candidate_course_offerings.select do |co|
+                co.workout_offerings.joins(:workout).where('lower(workouts.name) = ?', params[:workout_name].downcase).exists?
+              end
+            end
+
+            if candidates_with_workout.count == 1
+              @course_offering = candidates_with_workout.first
+              Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Phase 1 resolved CourseOffering with matching workout for student: ID #{@course_offering.id}, label #{@course_offering.label}"
+            else
+              Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Phase 1: Multiple CourseOfferings found for student: #{candidate_course_offerings.map(&:id)}. Redirecting to select_offering."
+              session[:candidate_course_offering_ids] = candidate_course_offerings.map(&:id)
+              redirect_to organization_course_select_offering_path(
+                organization_id: @course.organization.slug,
+                course_id: @course.slug,
+                term_id: @term.slug,
+                workout_name: params[:workout_name],
+                ext_lti_assignment_id: ext_lti_assignment_id,
+                custom_canvas_assignment_id: custom_canvas_assignment_id,
+                resource_link_id: resource_link_id,
+                from_collection: params[:from_collection]
+              ) and return
+            end
+          end
+        end
+      end
+
+      # =======================================================================
+      # Phase 2: WorkoutOffering Resolution (Scoped to CourseOffering if available)
+      # =======================================================================
+      if @course_offering
+        @workout_offering = find_workout_offering_by_lti_identifiers(
+          lms_instance_id,
+          resource_link_id,
+          ext_lti_assignment_id,
+          custom_canvas_assignment_id,
+          @course_offering.workout_offerings
+        )
+        if @workout_offering
+          Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Scoped resolution found WorkoutOffering ID #{@workout_offering.id} within CourseOffering ID #{@course_offering.id}"
+        end
+      else
+        all_matching_offerings = find_all_workout_offerings_by_lti_identifiers(
+          lms_instance_id,
+          resource_link_id,
+          ext_lti_assignment_id,
+          custom_canvas_assignment_id
+        )
+        if all_matching_offerings.count == 1
+          @workout_offering = all_matching_offerings.first
+          @course_offering = @workout_offering.course_offering
+          Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Direct resolution found single WorkoutOffering ID #{@workout_offering.id} (CourseOffering ID #{@course_offering.andand.id})"
+        elsif all_matching_offerings.count > 1
+          enrolled_offering = all_matching_offerings.find { |wo| @user.is_enrolled?(wo.course_offering) }
+          enrolled_offering ||= all_matching_offerings.find { |wo| lms_section_ids.include?(wo.course_offering.lms_section_id) } if lms_section_ids.any?
+          if enrolled_offering
+            @workout_offering = enrolled_offering
+            @course_offering = @workout_offering.course_offering
+            Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Disambiguated matching WorkoutOfferings by enrollment to ID #{@workout_offering.id}"
+          else
+            session[:candidate_course_offering_ids] = all_matching_offerings.map(&:course_offering_id).uniq
+            redirect_to organization_course_select_offering_path(
               organization_id: @course.organization.slug,
               course_id: @course.slug,
               term_id: @term.slug,
-              lms_assignment_id: @lms_assignment_id,
-              lti_assignment_id: @lms_assignment_id,
-              suggested_name: params[:workout_name]
+              workout_name: params[:workout_name],
+              ext_lti_assignment_id: ext_lti_assignment_id,
+              custom_canvas_assignment_id: custom_canvas_assignment_id,
+              resource_link_id: resource_link_id,
+              from_collection: params[:from_collection]
             ) and return
           end
         else
+          single_wo = find_workout_offering_by_lti_identifiers(
+            lms_instance_id,
+            resource_link_id,
+            ext_lti_assignment_id,
+            custom_canvas_assignment_id
+          )
+          if single_wo
+            @workout_offering = single_wo
+            @course_offering = @workout_offering.course_offering
+            Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Direct single lookup found WorkoutOffering ID #{@workout_offering.id} (CourseOffering ID #{@course_offering.andand.id})"
+          end
+        end
+      end
+
+      # =======================================================================
+      # Phase 2b: CourseOffering Resolution Fallback (Term / Course Fallback)
+      # =======================================================================
+      if !@workout_offering && !@course_offering
+        Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Searching CourseOffering by term/course fallback."
+        candidate_course_offerings = @user.course_offerings_for_term(@term, @course).to_a
+        Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Enrolled course offerings query found #{candidate_course_offerings.count} candidates."
+        if candidate_course_offerings.any?
+          enrolled_offering = candidate_course_offerings.find { |co| @user.is_enrolled?(co) }
+          if enrolled_offering
+            @course_offering = enrolled_offering
+          elsif candidate_course_offerings.count == 1
+            @course_offering = candidate_course_offerings.first
+          else
+            candidates_with_workout = []
+            if params[:workout_name].present?
+              candidates_with_workout = candidate_course_offerings.select do |co|
+                co.workout_offerings.joins(:workout).where('lower(workouts.name) = ?', params[:workout_name].downcase).exists?
+              end
+            end
+            if candidates_with_workout.count == 1
+              @course_offering = candidates_with_workout.first
+            else
+              session[:candidate_course_offering_ids] = candidate_course_offerings.map(&:id)
+              redirect_to organization_course_select_offering_path(
+                organization_id: @course.organization.slug,
+                course_id: @course.slug,
+                term_id: @term.slug,
+                workout_name: params[:workout_name],
+                ext_lti_assignment_id: ext_lti_assignment_id,
+                custom_canvas_assignment_id: custom_canvas_assignment_id,
+                resource_link_id: resource_link_id,
+                from_collection: params[:from_collection]
+              ) and return
+            end
+          end
+        else
+          Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Term/course fallback: No eligible CourseOfferings found for student. Rendering LTI error."
+          @message = "Your course offering is not yet available. Please contact your instructor."
+          render 'lti/error' and return
+        end
+      end
+
+      # =======================================================================
+      # Phase 3: WorkoutOffering Lookup within CourseOffering / Fallback Creation
+      # =======================================================================
+      if !@workout_offering && @course_offering
+        Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Phase 3: Searching WorkoutOffering within CourseOffering ID #{@course_offering.id}..."
+        found_workout = nil
+        if params[:from_collection].to_b
+          workouts = Workout.where('lower(name) = ?', params[:workout_name].downcase)
+          found_workout = workouts.first
+          Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Search for collection workout by name '#{params[:workout_name]}' found workout: #{found_workout.andand.id || 'not found'}"
+        end
+
+        if found_workout
+          @workout_offering = @course_offering.workout_offerings.find_by(workout_id: found_workout.id)
+        elsif params[:workout_name].present?
+          @workout_offering = @course_offering.workout_offerings.joins(:workout).find_by('lower(workouts.name) = ?', params[:workout_name].downcase)
+        end
+
+        if !@workout_offering
           Rails.logger.debug "[LTI_MATCHING_VERIFICATION_LOGGING] Student path fallback failed: WorkoutOffering not found. Rendering LTI error."
           @message = "The workout named '#{params[:workout_name]}' does not exist or is not linked with this LMS assignment. Please contact your instructor."
           render 'lti/error' and return
@@ -969,7 +1190,7 @@ class WorkoutsController < ApplicationController
       organization_id: params[:organization_id],
       term_id: params[:term_id],
       course_id: params[:course_id],
-      lti_launch: true,
+      lti_launch: params[:lti_launch] || true,
       launch_presentation_document_target: launch_presentation_document_target
     )
   end
@@ -1142,6 +1363,20 @@ class WorkoutsController < ApplicationController
           redirect_to workout_path(@workout),
             notice: "The time limit has passed for this workout." and return
         end
+
+        if @lti_launch.present? || params[:lti_launch].present?
+          token = @lti_launch || params[:lti_launch]
+          lti_context = lti_context_for_token(token)
+          ActivityLog.create(
+            user: (current_user.is_a?(User) ? current_user : nil),
+            workout: (@workout.is_a?(Workout) ? @workout : nil),
+            workout_score: (@workout_score.is_a?(WorkoutScore) ? @workout_score : nil),
+            activity: 'lti_launch',
+            ip_address: request.remote_ip,
+            lms_instance_id: lti_context.andand[:lms_instance_id] || session[:lms_instance_id] || @lti_workout.andand.lms_instance_id,
+            lti_launch: true
+          )
+        end
       end
       redirect_to exercise_practice_path(
         @workout.first_exercise,
@@ -1161,41 +1396,80 @@ class WorkoutsController < ApplicationController
     # -------------------------------------------------------------
     # Resolves an existing WorkoutOffering using LTI / LMS identifiers,
     # with resilient fallbacks for legacy compound IDs and unmigrated records.
-    def find_workout_offering_by_lti_identifiers(lms_instance_id, resource_link_id, ext_lti_assignment_id, custom_canvas_assignment_id)
+    # Accepts an optional scope (e.g. course_offering.workout_offerings) for scoped searches.
+    def find_workout_offering_by_lti_identifiers(lms_instance_id, resource_link_id, ext_lti_assignment_id, custom_canvas_assignment_id, scope = WorkoutOffering)
       # 1. Search by resource_link_id
       if resource_link_id.present?
-        wo = WorkoutOffering.find_by(lms_instance_id: lms_instance_id, resource_link_id: resource_link_id) if lms_instance_id.present?
-        wo ||= WorkoutOffering.find_by(resource_link_id: resource_link_id)
+        wo = scope.find_by(lms_instance_id: lms_instance_id, resource_link_id: resource_link_id) if lms_instance_id.present?
+        wo ||= scope.find_by(resource_link_id: resource_link_id)
         return wo if wo
       end
 
       # 2. Search by ext_lti_assignment_id (as lti_assignment_id or lms_assignment_id, raw or compound)
       if ext_lti_assignment_id.present?
         if lms_instance_id.present?
-          wo = WorkoutOffering.find_by(lms_instance_id: lms_instance_id, lti_assignment_id: ext_lti_assignment_id)
-          wo ||= WorkoutOffering.find_by(lms_instance_id: lms_instance_id, lms_assignment_id: ext_lti_assignment_id)
-          wo ||= WorkoutOffering.find_by(lms_assignment_id: "#{lms_instance_id}-#{ext_lti_assignment_id}")
+          wo = scope.find_by(lms_instance_id: lms_instance_id, lti_assignment_id: ext_lti_assignment_id)
+          wo ||= scope.find_by(lms_instance_id: lms_instance_id, lms_assignment_id: ext_lti_assignment_id)
+          wo ||= scope.find_by(lms_assignment_id: "#{lms_instance_id}-#{ext_lti_assignment_id}")
           return wo if wo
         end
-        wo = WorkoutOffering.find_by(lti_assignment_id: ext_lti_assignment_id)
-        wo ||= WorkoutOffering.find_by(lms_assignment_id: ext_lti_assignment_id)
+        wo = scope.find_by(lti_assignment_id: ext_lti_assignment_id)
+        wo ||= scope.find_by(lms_assignment_id: ext_lti_assignment_id)
         return wo if wo
       end
 
       # 3. Search by custom_canvas_assignment_id (as lms_assignment_id or lti_assignment_id, raw or compound)
       if custom_canvas_assignment_id.present?
         if lms_instance_id.present?
-          wo = WorkoutOffering.find_by(lms_instance_id: lms_instance_id, lms_assignment_id: custom_canvas_assignment_id)
-          wo ||= WorkoutOffering.find_by(lms_instance_id: lms_instance_id, lti_assignment_id: custom_canvas_assignment_id)
-          wo ||= WorkoutOffering.find_by(lms_assignment_id: "#{lms_instance_id}-#{custom_canvas_assignment_id}")
+          wo = scope.find_by(lms_instance_id: lms_instance_id, lms_assignment_id: custom_canvas_assignment_id)
+          wo ||= scope.find_by(lms_instance_id: lms_instance_id, lti_assignment_id: custom_canvas_assignment_id)
+          wo ||= scope.find_by(lms_assignment_id: "#{lms_instance_id}-#{custom_canvas_assignment_id}")
           return wo if wo
         end
-        wo = WorkoutOffering.find_by(lms_assignment_id: custom_canvas_assignment_id)
-        wo ||= WorkoutOffering.find_by(lti_assignment_id: custom_canvas_assignment_id)
+        wo = scope.find_by(lms_assignment_id: custom_canvas_assignment_id)
+        wo ||= scope.find_by(lti_assignment_id: custom_canvas_assignment_id)
         return wo if wo
       end
 
       nil
+    end
+
+    # Returns all WorkoutOffering records matching the given LTI identifiers across the database.
+    def find_all_workout_offerings_by_lti_identifiers(lms_instance_id, resource_link_id, ext_lti_assignment_id, custom_canvas_assignment_id)
+      # 1. Search by resource_link_id
+      if resource_link_id.present?
+        offerings = WorkoutOffering.where(lms_instance_id: lms_instance_id, resource_link_id: resource_link_id).to_a if lms_instance_id.present?
+        offerings = WorkoutOffering.where(resource_link_id: resource_link_id).to_a if offerings.blank?
+        return offerings if offerings.present?
+      end
+
+      # 2. Search by ext_lti_assignment_id
+      if ext_lti_assignment_id.present?
+        if lms_instance_id.present?
+          offerings = WorkoutOffering.where(lms_instance_id: lms_instance_id, lti_assignment_id: ext_lti_assignment_id).to_a
+          offerings = WorkoutOffering.where(lms_instance_id: lms_instance_id, lms_assignment_id: ext_lti_assignment_id).to_a if offerings.blank?
+          offerings = WorkoutOffering.where(lms_assignment_id: "#{lms_instance_id}-#{ext_lti_assignment_id}").to_a if offerings.blank?
+          return offerings if offerings.present?
+        end
+        offerings = WorkoutOffering.where(lti_assignment_id: ext_lti_assignment_id).to_a
+        offerings = WorkoutOffering.where(lms_assignment_id: ext_lti_assignment_id).to_a if offerings.blank?
+        return offerings if offerings.present?
+      end
+
+      # 3. Search by custom_canvas_assignment_id
+      if custom_canvas_assignment_id.present?
+        if lms_instance_id.present?
+          offerings = WorkoutOffering.where(lms_instance_id: lms_instance_id, lms_assignment_id: custom_canvas_assignment_id).to_a
+          offerings = WorkoutOffering.where(lms_instance_id: lms_instance_id, lti_assignment_id: custom_canvas_assignment_id).to_a if offerings.blank?
+          offerings = WorkoutOffering.where(lms_assignment_id: "#{lms_instance_id}-#{custom_canvas_assignment_id}").to_a if offerings.blank?
+          return offerings if offerings.present?
+        end
+        offerings = WorkoutOffering.where(lms_assignment_id: custom_canvas_assignment_id).to_a
+        offerings = WorkoutOffering.where(lti_assignment_id: custom_canvas_assignment_id).to_a if offerings.blank?
+        return offerings if offerings.present?
+      end
+
+      []
     end
 
     # -------------------------------------------------------------
@@ -1228,136 +1502,211 @@ class WorkoutsController < ApplicationController
       common[:most_recent] = params[:most_recent]
       common[:lms_assignment_id] = params[:lms_assignment_id]
       common[:lti_assignment_id] = params[:lti_assignment_id]
+      common[:resource_link_id] = params[:resource_link_id] || session[:lti_payload]&.[]('resource_link_id')
+      common[:lms_instance_id] = params[:lms_instance_id] || session[:lti_payload]&.[]('lms_instance_id')
 
       if params[:date_yaml].present? || params[:course_offerings].blank?
-        begin
-          data = if params[:date_yaml].present?
-                   begin
-                     YAML.safe_load(
-                       params[:date_yaml],
-                       permitted_classes: [Date, Time, DateTime, ActiveSupport::TimeWithZone, Symbol],
-                       aliases: true
-                     )
-                   rescue ArgumentError
-                     YAML.safe_load(
-                       params[:date_yaml],
-                       [Date, Time, DateTime, ActiveSupport::TimeWithZone, Symbol]
-                     )
-                   end
-                 else
-                   {}
-                 end || {}
+        Workout.transaction do
+          begin
+            data = if params[:date_yaml].present?
+                     begin
+                       YAML.safe_load(
+                         params[:date_yaml],
+                         permitted_classes: [Date, Time, DateTime, ActiveSupport::TimeWithZone, Symbol],
+                         aliases: true
+                       )
+                     rescue ArgumentError
+                       YAML.safe_load(
+                         params[:date_yaml],
+                         [Date, Time, DateTime, ActiveSupport::TimeWithZone, Symbol]
+                       )
+                     end
+                   else
+                     {}
+                   end || {}
 
-          sections_yaml = data['sections'] || []
-          extensions_yaml = data['extensions'] || []
-          
-          user_tz = current_user.time_zone.andand.name || 'America/New_York'
-          @course = Course.find_with_id_or_slug(params[:course_id], params[:organization_id])
-          @term = Term.find(params[:term_id]) if params[:term_id].present?
-          
-          if @term
-            managed_course_offerings = current_user.managed_course_offerings(course: @course, term: @term)
-            managed_course_offerings_map = {}
-            managed_course_offerings.each do |co|
-              managed_course_offerings_map[co.label.to_s.strip] = co
-              managed_course_offerings_map[co.display_name_with_term.strip] = co
-              managed_course_offerings_map[co.display_name.strip] = co
-              managed_course_offerings_map[co.display_name_with_org_and_term.strip] = co
-              managed_course_offerings_map[co.id.to_s] = co
-              managed_course_offerings_map[co.label.to_s.downcase.strip] = co if co.label.present?
-            end
+            sections_yaml = data['sections'] || []
+            extensions_yaml = data['extensions'] || []
             
-            # 1. Handle Workout Offerings
-            new_offerings_data = {}
-            sections_yaml.each do |s|
-              label_str = s['section'].to_s.strip
-              co = managed_course_offerings_map[label_str] ||
-                   managed_course_offerings_map[label_str.downcase]
-              if !co && label_str =~ /\((?:.*,\s*)?([^\)]+)\)\z/
-                extracted_label = $1.strip
-                co = managed_course_offerings_map[extracted_label] || managed_course_offerings_map[extracted_label.downcase]
-              end
+            # Default top-level IP restriction for all offerings
+            default_ips = data['ips'] || data['allowed_ips'] || data['ip_restrictions']
+            default_ips = default_ips.is_a?(Array) ? default_ips.join(', ') : default_ips.to_s.strip if default_ips.present?
+            default_ips = nil if default_ips.blank?
 
-              if co
-                due = parse_date(s['due'], user_tz)
-                from = parse_date(s['from'], user_tz, due, :from)
-                until_date = parse_date(s['until'], user_tz, due, :until)
-                
-                new_offerings_data[co.id.to_s] = {
-                  'opening_date' => from.andand.to_i.andand.*(1000), # millisecond timestamp for add_workout_offerings
-                  'soft_deadline' => due.andand.to_i.andand.*(1000),
-                  'hard_deadline' => until_date.andand.to_i.andand.*(1000),
-                  'extensions' => []
-                }
-              else
-                workout.errors.add(:base, "Course offering with label '#{label_str}' not found or not managed by you.")
+            # Default top-level browser requirement for all offerings
+            default_browsers = data['browsers'] || data['user_agents'] || data['allowed_user_agents']
+            default_browsers = default_browsers.is_a?(Array) ? default_browsers.join(', ') : default_browsers.to_s.strip if default_browsers.present?
+            default_browsers = nil if default_browsers.blank?
+
+            # Default top-level LMS assignment URL for all offerings
+            default_lms_url = data['lms_assignment_url'] || data['url']
+            default_lms_url = default_lms_url.to_s.strip if default_lms_url.present?
+            default_lms_url = nil if default_lms_url.blank?
+
+            user_tz = current_user.time_zone.andand.name || 'America/New_York'
+            @course = Course.find_with_id_or_slug(params[:course_id], params[:organization_id])
+            @term = Term.find(params[:term_id]) if params[:term_id].present?
+            
+            if @term
+              managed_course_offerings = current_user.managed_course_offerings(course: @course, term: @term)
+              managed_course_offerings_map = {}
+              managed_course_offerings.each do |co|
+                managed_course_offerings_map[co.label.to_s.strip] = co
+                managed_course_offerings_map[co.display_name_with_term.strip] = co
+                managed_course_offerings_map[co.display_name.strip] = co
+                managed_course_offerings_map[co.display_name_with_org_and_term.strip] = co
+                managed_course_offerings_map[co.id.to_s] = co
+                managed_course_offerings_map[co.label.to_s.downcase.strip] = co if co.label.present?
               end
-            end
-            
-            # Identify removed offerings
-            existing_offerings = workout.workout_offerings.joins(:course_offering).where(course_offerings: { term_id: @term.id })
-            existing_offering_ids = existing_offerings.map(&:id)
-            kept_offering_co_ids = new_offerings_data.keys.map(&:to_i)
-            
-            offerings_to_delete = existing_offerings.reject { |wo| kept_offering_co_ids.include?(wo.course_offering_id) }
-            offerings_to_delete.each(&:destroy)
-            
-            # Update/Create Offerings
-            workout_offerings = workout.add_workout_offerings(new_offerings_data, common)
-            
-            # 2. Handle Student Extensions
-            # First, clear existing extensions for this workout in this term
-            workout_offerings_in_term = workout.workout_offerings.joins(:course_offering).where(course_offerings: { term_id: @term.id })
-            StudentExtension.where(workout_offering_id: workout_offerings_in_term.map(&:id)).destroy_all
-            
-            extensions_yaml.each do |ext_group|
-              due = parse_date(ext_group['due'], user_tz)
-              from = parse_date(ext_group['from'], user_tz, due, :from)
-              until_date = parse_date(ext_group['until'], user_tz, due, :until)
-              students = ext_group['students'] || []
               
-              students.each do |student_ref|
-                next if student_ref == '<insert email here>'
-                
-                # Extract email from "Name <email>" or just "email"
-                email = student_ref.match(/<([^>]+)>/).andand[1] || student_ref.strip
-                student = User.find_by(email: email)
-                if !student
-                  # Try name match
-                  student = User.where("CONCAT(first_name, ' ', last_name) = ?", student_ref.strip).first
+              # 1. Handle Workout Offerings
+              new_offerings_data = {}
+              sections_yaml.each do |s|
+                label_str = s['section'].to_s.strip
+                co = managed_course_offerings_map[label_str] ||
+                     managed_course_offerings_map[label_str.downcase]
+                if !co && label_str =~ /\((?:.*,\s*)?([^\)]+)\)\z/
+                  extracted_label = $1.strip
+                  co = managed_course_offerings_map[extracted_label] || managed_course_offerings_map[extracted_label.downcase]
                 end
-                
-                if student
-                  # Check enrollment in any of the workout offerings in this term
-                  enrolled_offering = workout_offerings_in_term.find { |wo| wo.course_offering.is_enrolled?(student) }
-                  if enrolled_offering
-                    StudentExtension.create!(
-                      user: student,
-                      workout_offering: enrolled_offering,
-                      opening_date: from,
-                      soft_deadline: due,
-                      hard_deadline: until_date
-                    )
-                  else
-                    workout.errors.add(:base, "Student '#{student_ref}' is not enrolled in any sections for this workout.")
-                  end
+
+                if co
+                  due = parse_date(s['due'], user_tz)
+                  from = parse_date(s['from'], user_tz, due, :from)
+                  until_date = parse_date(s['until'], user_tz, due, :until)
+                  
+                  section_ips = s['ips'] || s['allowed_ips'] || s['ip_restrictions']
+                  section_ips = section_ips.is_a?(Array) ? section_ips.join(', ') : section_ips.to_s.strip if section_ips.present?
+                  allowed_ips = section_ips.present? ? section_ips : default_ips
+
+                  section_browsers = s['browsers'] || s['user_agents'] || s['allowed_user_agents']
+                  section_browsers = section_browsers.is_a?(Array) ? section_browsers.join(', ') : section_browsers.to_s.strip if section_browsers.present?
+                  allowed_user_agents = section_browsers.present? ? section_browsers : default_browsers
+
+                  section_lms_url = s['lms_assignment_url'] || s['url']
+                  section_lms_url = section_lms_url.to_s.strip if section_lms_url.present?
+                  lms_assignment_url = section_lms_url.present? ? section_lms_url : default_lms_url
+
+                  new_offerings_data[co.id.to_s] = {
+                    'opening_date' => from.andand.to_i.andand.*(1000), # millisecond timestamp for add_workout_offerings
+                    'soft_deadline' => due.andand.to_i.andand.*(1000),
+                    'hard_deadline' => until_date.andand.to_i.andand.*(1000),
+                    'allowed_ips' => allowed_ips,
+                    'allowed_user_agents' => allowed_user_agents,
+                    'lms_assignment_url' => lms_assignment_url,
+                    'extensions' => []
+                  }
                 else
-                  workout.errors.add(:base, "Student '#{student_ref}' not found by email or name.")
+                  workout.errors.add(:base, "Course offering with label '#{label_str}' not found or not managed by you.")
                 end
               end
+
+              if workout.errors.any?
+                raise ActiveRecord::Rollback
+              end
+
+              # Identify removed offerings among course offerings managed by the current user
+              managed_co_ids = managed_course_offerings.map(&:id)
+              existing_offerings = workout.workout_offerings.joins(:course_offering).where(course_offerings: { id: managed_co_ids })
+              kept_offering_co_ids = new_offerings_data.keys.map(&:to_i)
+              
+              offerings_to_delete = existing_offerings.reject { |wo| kept_offering_co_ids.include?(wo.course_offering_id) }
+              
+              offerings_to_delete.each do |wo|
+                if wo.workout_scores.exists? || wo.activity_logs.exists?
+                  section_name = wo.course_offering&.display_name || "Section (ID #{wo.course_offering_id})"
+                  workout.errors.add(
+                    :base,
+                    "Section '#{section_name}' was omitted from the YAML, but students have already accessed or submitted work for it. It cannot be deleted. Please keep the section in the YAML, or unpublish the workout if you wish to hide it."
+                  )
+                end
+              end
+
+              if workout.errors.any?
+                raise ActiveRecord::Rollback
+              end
+
+              offerings_to_delete.each(&:destroy)
+              
+              # Update/Create Offerings
+              workout_offerings = workout.add_workout_offerings(new_offerings_data, common)
+              
+              # 2. Handle Student Extensions
+              # Clear existing extensions only for offerings in sections managed by the current user
+              managed_workout_offerings = workout.workout_offerings.joins(:course_offering).where(course_offerings: { id: managed_co_ids })
+              StudentExtension.where(workout_offering_id: managed_workout_offerings.map(&:id)).destroy_all
+              
+              extensions_yaml.each do |ext_group|
+                due = parse_date(ext_group['due'], user_tz)
+                from = parse_date(ext_group['from'], user_tz, due, :from)
+                until_date = parse_date(ext_group['until'], user_tz, due, :until)
+                ext_ips = ext_group['ips'] || ext_group['allowed_ips'] || ext_group['ip_restrictions']
+                ext_ips = ext_ips.is_a?(Array) ? ext_ips.join(', ') : ext_ips.to_s.strip if ext_ips.present?
+                ext_ips = nil if ext_ips.blank?
+
+                ext_browsers = ext_group['browsers'] || ext_group['user_agents'] || ext_group['allowed_user_agents']
+                ext_browsers = ext_browsers.is_a?(Array) ? ext_browsers.join(', ') : ext_browsers.to_s.strip if ext_browsers.present?
+                ext_browsers = nil if ext_browsers.blank?
+
+                ext_time_raw = ext_group['time_limit'] || ext_group['time'] || ext_group['duration']
+
+                students = ext_group['students'] || []
+                
+                students.each do |student_ref|
+                  next if student_ref == '<insert email here>'
+                  
+                  # Extract email from "Name <email>" or just "email"
+                  email = student_ref.match(/<([^>]+)>/).andand[1] || student_ref.strip
+                  student = User.find_by(email: email)
+                  if !student
+                    # Try name match
+                    student = User.where("CONCAT(first_name, ' ', last_name) = ?", student_ref.strip).first
+                  end
+                  
+                  if student
+                    # Check enrollment in any of the managed workout offerings in this term
+                    enrolled_offering = managed_workout_offerings.find { |wo| wo.course_offering.is_enrolled?(student) }
+                    if enrolled_offering
+                      base_time_limit = enrolled_offering.andand.time_limit.presence || common[:time_limit].presence
+                      ext_time_limit = parse_time_limit(ext_time_raw, base_time_limit)
+                      StudentExtension.create!(
+                        user: student,
+                        workout_offering: enrolled_offering,
+                        opening_date: from,
+                        soft_deadline: due,
+                        hard_deadline: until_date,
+                        time_limit: ext_time_limit,
+                        allowed_ips: ext_ips,
+                        allowed_user_agents: ext_browsers
+                      )
+                    else
+                      workout.errors.add(:base, "Student '#{student_ref}' is not enrolled in any sections for this workout.")
+                    end
+                  else
+                    workout.errors.add(:base, "Student '#{student_ref}' not found by email or name.")
+                  end
+                end
+              end
+
+              if workout.errors.any?
+                raise ActiveRecord::Rollback
+              end
             end
+            
+            workout.save!
+            return workout_offerings&.first
+            
+          rescue Psych::SyntaxError => e
+            workout.errors.add(:base, "YAML Syntax Error: #{e.message}")
+            raise ActiveRecord::Rollback
+          rescue ActiveRecord::Rollback
+            raise
+          rescue StandardError => e
+            workout.errors.add(:base, "Error processing YAML: #{e.message}")
+            raise ActiveRecord::Rollback
           end
-          
-          workout.save!
-          return workout_offerings&.first
-          
-        rescue Psych::SyntaxError => e
-          workout.errors.add(:base, "YAML Syntax Error: #{e.message}")
-          return nil
-        rescue StandardError => e
-          workout.errors.add(:base, "Error processing YAML: #{e.message}")
-          return nil
         end
+        return nil
       else
         # Fallback to legacy JSON behavior if course_offerings is present
         if params[:removed_extensions].present?
@@ -1382,44 +1731,58 @@ class WorkoutsController < ApplicationController
       end
     end
 
-    def search_students
-      @course = Course.find_with_id_or_slug(params[:course_id], params[:organization_id])
-      @term = Term.find(params[:term_id])
-      term = escape_javascript(params[:term]).downcase
-      
-      # Get all students enrolled in any course offering for this course in this term
-      course_offerings = CourseOffering.where(course: @course, term: @term)
-      users = User.joins(:course_enrollments)
-                  .where(course_enrollments: { course_offering_id: course_offerings.map(&:id) })
-                  .where("lower(first_name) like ? or lower(last_name) like ? or lower(email) like ?", "%#{term}%", "%#{term}%", "%#{term}%")
-                  .distinct
-      
-      render json: users.map { |u| { 
-        id: u.id, 
-        first_name: u.first_name, 
-        last_name: u.last_name, 
-        email: u.email 
-      } }
-    end
-
     # -------------------------------------------------------------
     def serialize_workout_offerings_to_yaml(workout_offerings, student_extensions)
       user_tz = current_user.andand.time_zone.andand.name || 'America/New_York'
       
+      all_ips = (workout_offerings || []).map do |wo|
+        wo.respond_to?(:allowed_ips) ? wo.allowed_ips.presence : nil
+      end.compact.uniq
+
+      # If all offerings share the same non-blank IP restriction, serialize at top-level
+      common_ips = (all_ips.size == 1 && (workout_offerings || []).all? { |wo| wo.respond_to?(:allowed_ips) && wo.allowed_ips.present? }) ? all_ips.first : nil
+
+      all_browsers = (workout_offerings || []).map do |wo|
+        wo.respond_to?(:allowed_user_agents) ? wo.allowed_user_agents.presence : nil
+      end.compact.uniq
+
+      # If all offerings share the same non-blank browser requirement, serialize at top-level
+      common_browsers = (all_browsers.size == 1 && (workout_offerings || []).all? { |wo| wo.respond_to?(:allowed_user_agents) && wo.allowed_user_agents.present? }) ? all_browsers.first : nil
+
+      all_urls = (workout_offerings || []).map do |wo|
+        wo.respond_to?(:lms_assignment_url) ? wo.lms_assignment_url.presence : nil
+      end.compact.uniq
+
+      # If all offerings share the same non-blank LMS assignment URL, serialize at top-level
+      common_url = (all_urls.size == 1 && (workout_offerings || []).all? { |wo| wo.respond_to?(:lms_assignment_url) && wo.lms_assignment_url.present? }) ? all_urls.first : nil
+
       sections = (workout_offerings || []).map do |wo|
         course_offering = wo.respond_to?(:course_offering) ? wo.course_offering : wo
         soft_deadline = wo.respond_to?(:soft_deadline) ? wo.soft_deadline : nil
         opening_date = wo.respond_to?(:opening_date) ? wo.opening_date : nil
         hard_deadline = wo.respond_to?(:hard_deadline) ? wo.hard_deadline : nil
-        {
+        allowed_ips = wo.respond_to?(:allowed_ips) ? wo.allowed_ips.presence : nil
+        allowed_user_agents = wo.respond_to?(:allowed_user_agents) ? wo.allowed_user_agents.presence : nil
+        wo_url = wo.respond_to?(:lms_assignment_url) ? wo.lms_assignment_url.presence : nil
+        sec_hash = {
           'section' => course_offering.display_name_with_term,
           'due' => format_date(soft_deadline, user_tz),
           'from' => format_rel_date(opening_date, soft_deadline, user_tz) || 'always',
           'until' => format_rel_date(hard_deadline, soft_deadline, user_tz) || '+0 minutes'
         }
+        if allowed_ips.present? && allowed_ips != common_ips
+          sec_hash['ips'] = allowed_ips
+        end
+        if allowed_user_agents.present? && allowed_user_agents != common_browsers
+          sec_hash['browsers'] = allowed_user_agents
+        end
+        if wo_url.present? && wo_url != common_url
+          sec_hash['lms_assignment_url'] = wo_url
+        end
+        sec_hash
       end
 
-      # Group extensions by dates
+      # Group extensions by dates, IP restrictions, and browser requirements
       grouped_extensions = {}
       (student_extensions || []).each do |ext|
         if ext.is_a?(Hash)
@@ -1430,6 +1793,10 @@ class WorkoutsController < ApplicationController
           open_d = Time.at(open_d) if open_d.is_a?(Numeric)
           hard = Time.at(hard) if hard.is_a?(Numeric)
 
+          ext_ips = ext[:allowed_ips] || ext['allowed_ips'] || ext[:ips] || ext['ips']
+          ext_browsers = ext[:allowed_user_agents] || ext['allowed_user_agents'] || ext[:user_agents] || ext['user_agents'] || ext[:browsers] || ext['browsers']
+          ext_time_limit = ext[:time_limit] || ext['time_limit']
+
           user_display = ext[:student_display] || ext['student_display']
           user_email = ext[:student_email] || ext['student_email'] || (User.find_by(id: ext[:student_id] || ext['student_id']).andand.email)
           student_label = user_email.present? ? "#{user_display} <#{user_email}>" : user_display
@@ -1437,26 +1804,39 @@ class WorkoutsController < ApplicationController
           soft = ext.soft_deadline
           open_d = ext.opening_date
           hard = ext.hard_deadline
+          ext_ips = ext.respond_to?(:allowed_ips) ? ext.allowed_ips.presence : nil
+          ext_browsers = ext.respond_to?(:allowed_user_agents) ? ext.allowed_user_agents.presence : nil
+          ext_time_limit = ext.respond_to?(:time_limit) ? ext.time_limit : nil
           student_label = "#{ext.user.display_name} <#{ext.user.email}>"
         end
 
         key = {
           'due' => format_date(soft, user_tz),
           'from' => format_rel_date(open_d, soft, user_tz) || 'always',
-          'until' => format_rel_date(hard, soft, user_tz) || '+0 minutes'
+          'until' => format_rel_date(hard, soft, user_tz) || '+0 minutes',
+          'time_limit' => ext_time_limit.present? ? ext_time_limit.to_i : nil,
+          'ips' => ext_ips.presence,
+          'browsers' => ext_browsers.presence
         }
         
         grouped_extensions[key] ||= []
         grouped_extensions[key] << student_label if student_label.present?
       end
 
-      ext_list = grouped_extensions.map do |dates, students|
-        {
-          'due' => dates['due'],
-          'from' => dates['from'],
-          'until' => dates['until'],
-          'students' => students
+      ext_list = grouped_extensions.map do |meta, students|
+        h = {
+          'due' => meta['due'],
+          'from' => meta['from'],
+          'until' => meta['until']
         }
+        if meta['time_limit'].present?
+          tl = meta['time_limit']
+          h['time_limit'] = tl == 0 ? 'unlimited' : (tl == 1 ? '1 minute' : "#{tl} minutes")
+        end
+        h['ips'] = meta['ips'] if meta['ips'].present?
+        h['browsers'] = meta['browsers'] if meta['browsers'].present?
+        h['students'] = students
+        h
       end
 
       if ext_list.empty?
@@ -1468,10 +1848,12 @@ class WorkoutsController < ApplicationController
         }
       end
 
-      yaml_obj = {
-        'sections' => sections,
-        'extensions' => ext_list
-      }
+      yaml_obj = {}
+      yaml_obj['ips'] = common_ips if common_ips.present?
+      yaml_obj['browsers'] = common_browsers if common_browsers.present?
+      yaml_obj['lms_assignment_url'] = common_url.presence || ''
+      yaml_obj['sections'] = sections
+      yaml_obj['extensions'] = ext_list
       
       # Use custom formatting to avoid unnecessary quotes and handle nulls as requested
       yaml_str = yaml_obj.to_yaml
@@ -1587,6 +1969,48 @@ class WorkoutsController < ApplicationController
       rescue
         nil
       end
+    end
+
+    # -------------------------------------------------------------
+    def parse_time_limit(val, base_time_limit = nil)
+      return nil if val.blank?
+      if val.is_a?(Numeric)
+        raise StandardError, "time_limit cannot be negative." if val < 0
+        return val.to_i
+      end
+
+      str = val.to_s.strip.downcase
+      return 0 if ['unlimited', 'none'].include?(str)
+
+      # Multiplier check: e.g. "1.5x", "2x", "1.5 *", "2.0x"
+      if str =~ /\A(\d*\.?\d+)\s*(?:x|\*)\z/i
+        mult = $1.to_f
+        base = base_time_limit.to_i
+        if base <= 0
+          raise StandardError, "Cannot apply time_limit multiplier '#{val}' because no base time limit is set for this workout."
+        end
+        parsed = (base * mult).round
+        raise StandardError, "time_limit cannot be negative." if parsed < 0
+        return parsed
+      end
+
+      # Hours check: e.g. "1.5 hours", "2 hr", "2 hrs", "1.5h", "1 hour"
+      if str =~ /\A(\d*\.?\d+)\s*(?:h|hr|hrs|hour|hours)\z/i
+        hrs = $1.to_f
+        parsed = (hrs * 60).round
+        raise StandardError, "time_limit cannot be negative." if parsed < 0
+        return parsed
+      end
+
+      # Minutes check: e.g. "90", "90m", "90 min", "90 mins", "90 minute", "90 minutes"
+      if str =~ /\A(\d*\.?\d+)\s*(?:m|min|mins|minute|minutes)?\z/i
+        mins = $1.to_f
+        parsed = mins.round
+        raise StandardError, "time_limit cannot be negative." if parsed < 0
+        return parsed
+      end
+
+      raise StandardError, "Invalid time_limit '#{val}'. Expected minutes (e.g. 90, 90 mins), hours (e.g. 1.5 hours), or multiplier (e.g. 1.5x)."
     end
 
     # -------------------------------------------------------------

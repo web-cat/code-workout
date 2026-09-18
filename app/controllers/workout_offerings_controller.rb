@@ -4,7 +4,8 @@ class WorkoutOfferingsController < ApplicationController
 
   before_action :resolve_section_offering, only: [:show, :practice, :review]
   load_and_authorize_resource
-  skip_authorize_resource :only => :practice
+  skip_authorize_resource :only => [:practice, :activity_log, :error]
+  skip_load_resource :only => [:error]
 
   #~ Action methods ...........................................................
   after_action :allow_iframe, only: :practice
@@ -34,12 +35,62 @@ class WorkoutOfferingsController < ApplicationController
       ) : []
       @workout_score = @workout_offering.score_for(current_user)
 
+      if !@workout_offering.ip_allowed?(request.remote_ip, current_user, @workout_score)
+        if current_user
+          ActivityLog.create(
+            user: (current_user.is_a?(User) ? current_user : nil),
+            workout: (@workout.is_a?(Workout) ? @workout : nil),
+            workout_offering: @workout_offering,
+            workout_score: (@workout_score.is_a?(WorkoutScore) ? @workout_score : nil),
+            activity: 'workout_view_ip_blocked',
+            ip_address: request.remote_ip,
+            user_agent: request.user_agent,
+            lms_instance_id: @workout_offering.andand.lms_instance_id,
+            lti_launch: false
+          )
+        end
+        @message = "This workout cannot be accessed from your network location (#{request.remote_ip})."
+        render 'workout_offerings/error' and return
+      end
+
+      if !@workout_offering.user_agent_allowed?(request.user_agent, current_user, @workout_score)
+        if current_user
+          ActivityLog.create(
+            user: (current_user.is_a?(User) ? current_user : nil),
+            workout: (@workout.is_a?(Workout) ? @workout : nil),
+            workout_offering: @workout_offering,
+            workout_score: (@workout_score.is_a?(WorkoutScore) ? @workout_score : nil),
+            activity: 'workout_view_user_agent_blocked',
+            ip_address: request.remote_ip,
+            user_agent: request.user_agent,
+            lms_instance_id: @workout_offering.andand.lms_instance_id,
+            lti_launch: false
+          )
+        end
+        @message = "This workout requires a specific browser (such as LockDown Browser or Secure Exam Browser) and cannot be accessed from your current browser."
+        render 'workout_offerings/error' and return
+      end
+
       if @workout_score
         @scoring_attempts_by_version_id = @workout_score.scored_attempts.group_by(&:exercise_version_id)
       else
         @scoring_attempts_by_version_id = {}
       end
       @attempts_by_version_id = {}
+
+      if current_user
+        ActivityLog.create(
+          user: (current_user.is_a?(User) ? current_user : nil),
+          workout: (@workout.is_a?(Workout) ? @workout : nil),
+          workout_offering: (@workout_offering.is_a?(WorkoutOffering) ? @workout_offering : nil),
+          workout_score: (@workout_score.is_a?(WorkoutScore) ? @workout_score : nil),
+          activity: 'workout_view',
+          ip_address: request.remote_ip,
+          user_agent: request.user_agent,
+          lms_instance_id: @workout_offering.andand.lms_instance_id,
+          lti_launch: false
+        )
+      end
     end
     render 'workouts/show'
   end
@@ -107,6 +158,53 @@ class WorkoutOfferingsController < ApplicationController
       lti_enroll
     end
     if @workout_offering
+      @workout_score = @workout_offering.score_for(current_user)
+      if !@workout_offering.ip_allowed?(request.remote_ip, current_user, @workout_score)
+        if current_user
+          lti_context = lti_context_for_token(@lti_launch)
+          ActivityLog.create(
+            user: (current_user.is_a?(User) ? current_user : nil),
+            workout: (@workout_offering.workout.is_a?(Workout) ? @workout_offering.workout : nil),
+            workout_offering: @workout_offering,
+            workout_score: (@workout_score.is_a?(WorkoutScore) ? @workout_score : nil),
+            activity: 'practice_view_ip_blocked',
+            ip_address: request.remote_ip,
+            user_agent: request.user_agent,
+            lms_instance_id: lti_context.andand[:lms_instance_id] || session[:lms_instance_id] || @workout_offering.andand.lms_instance_id,
+            lti_launch: @lti_launch.present?
+          )
+        end
+        @message = "This workout cannot be accessed from your network location (#{request.remote_ip})."
+        if @lti_launch
+          render 'lti/error' and return
+        else
+          render 'workout_offerings/error' and return
+        end
+      end
+
+      if !@workout_offering.user_agent_allowed?(request.user_agent, current_user, @workout_score)
+        if current_user
+          lti_context = lti_context_for_token(@lti_launch)
+          ActivityLog.create(
+            user: (current_user.is_a?(User) ? current_user : nil),
+            workout: (@workout_offering.workout.is_a?(Workout) ? @workout_offering.workout : nil),
+            workout_offering: @workout_offering,
+            workout_score: (@workout_score.is_a?(WorkoutScore) ? @workout_score : nil),
+            activity: 'practice_view_user_agent_blocked',
+            ip_address: request.remote_ip,
+            user_agent: request.user_agent,
+            lms_instance_id: lti_context.andand[:lms_instance_id] || session[:lms_instance_id] || @workout_offering.andand.lms_instance_id,
+            lti_launch: @lti_launch.present?
+          )
+        end
+        @message = "This workout requires a specific browser (such as LockDown Browser or Secure Exam Browser) and cannot be accessed from your current browser."
+        if @lti_launch
+          render 'lti/error' and return
+        else
+          render 'workout_offerings/error' and return
+        end
+      end
+
       unless current_user.andand.can? :practice, @workout_offering
         @message = 'You are not authorized to access that workout offering.'
         if !@workout_offering.published &&
@@ -176,6 +274,20 @@ class WorkoutOfferingsController < ApplicationController
             id: @workout_offering.id),
             notice: "The time limit has passed for this workout." and return
         end
+
+        if @lti_launch.present?
+          lti_context = lti_context_for_token(@lti_launch)
+          ActivityLog.create(
+            user: (current_user.is_a?(User) ? current_user : nil),
+            workout: (@workout_offering.workout.is_a?(Workout) ? @workout_offering.workout : nil),
+            workout_offering: (@workout_offering.is_a?(WorkoutOffering) ? @workout_offering : nil),
+            workout_score: (@workout_score.is_a?(WorkoutScore) ? @workout_score : nil),
+            activity: 'lti_launch',
+            ip_address: request.remote_ip,
+            lms_instance_id: lti_context.andand[:lms_instance_id] || session[:lms_instance_id] || @workout_offering.andand.lms_instance_id,
+            lti_launch: true
+          )
+        end
       end
       if ex1.nil?
         ex1 = @workout_offering.workout.first_exercise
@@ -221,7 +333,8 @@ class WorkoutOfferingsController < ApplicationController
     @exercise = Exercise.find_by(id: @exercise_id) if @exercise_id.present?
 
     # Fetch events
-    @activity_logs = ActivityLog.where(workout_score: @workout_score)
+    @activity_logs = ActivityLog.where(workout_score: @workout_score).
+      or(ActivityLog.where(workout_offering: @workout_offering, user: @student))
     @attempts = Attempt.where(workout_score: @workout_score)
     @visualization_loggings = VisualizationLogging.where(workout_score: @workout_score)
 
@@ -240,6 +353,7 @@ class WorkoutOfferingsController < ApplicationController
         time: log.created_at,
         activity: log.activity,
         ip: log.ip_address,
+        user_agent: log.respond_to?(:user_agent) ? log.user_agent : nil,
         lti: log.lti_launch,
         details: log
       }
@@ -269,6 +383,14 @@ class WorkoutOfferingsController < ApplicationController
     end
 
     @events.sort_by! { |e| e[:time] }.reverse!
+  end
+
+
+  # --------------------------------------------------------------
+  def error
+    @workout_offering = WorkoutOffering.find_by(id: params[:id])
+    @message = params[:message] || flash[:error] || "This workout cannot be accessed from your network location (#{request.remote_ip})."
+    render 'workout_offerings/error'
   end
 
 

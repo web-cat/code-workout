@@ -33,17 +33,9 @@ class CodeWorker
       answer_lines = answer_text.count("\n")
       if !prompt.wrapper_code.blank?
         Rails.logger.info "CHECKPOINT-C (pre-splice) backslashes=#{answer_text.to_s.count('\\')}"
-        code_body = prompt.wrapper_code.sub(/\b___\b/, answer_text)
-        Rails.logger.info "CHECKPOINT-D (post-splice) backslashes=#{code_body.count('\\')} value=#{code_body.inspect}"
-
-        if $`
-          # Want pre_lines to be a count of the number of lines preceding
-          # the one the match is on, so use count() instead of lines() here
-          pre_lines = $`.count("\n")
-        else
-          puts 'ERROR: no answer insertion marker in wrapper code: ' +
-            prompt.wrapper_code.to_s
-        end
+        code_body = prompt.wrap_code(answer_text)
+        Rails.logger.info "CHECKPOINT-D (post-splice) backslashes=#{code_body.to_s.count('\\')} value=#{code_body.inspect}"
+        pre_lines = prompt.pre_lines
       end
       current_attempt = attempt.id.to_s
       language = exv.exercise.language

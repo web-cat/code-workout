@@ -115,12 +115,14 @@ class WorkoutScore < ApplicationRecord
     end
 
     now = Time.zone.now
-    minutes_open = (now - self.started_at)/60.0
+    minutes_open = (now - self.started_at) / 60.0
     time_limit = workout_offering.time_limit_for(user)
     hard_deadline = workout_offering.hard_deadline_for(user)
 
-    (time_limit && self.started_at && minutes_open >= time_limit) ||
-        (hard_deadline && now > hard_deadline)
+    is_timed_out = time_limit.present? && time_limit.to_i > 0 && self.started_at && minutes_open >= time_limit.to_i
+    is_past_deadline = hard_deadline.present? && now > hard_deadline
+
+    is_timed_out || is_past_deadline || false
   end
 
 
@@ -155,9 +157,9 @@ class WorkoutScore < ApplicationRecord
     end
     time_limit = workout_offering.andand.time_limit_for(user)
 
-    if time_limit
+    if time_limit.present? && time_limit.to_i > 0
       now = Time.zone.now
-      remaining = time_limit - (now - self.started_at)/60.0
+      remaining = time_limit.to_i - (now - self.started_at) / 60.0
       hard_deadline = workout_offering.hard_deadline_for(user)
 
       if hard_deadline

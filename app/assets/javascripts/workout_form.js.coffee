@@ -81,7 +81,7 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
     textarea.data('locked-cursor', cursor)
     
     $('#student-search-modal').modal('show')
-    search_url = "/gym/workouts/search_students?organization_id=#{window.codeworkout.organization_id}&course_id=#{window.codeworkout.course_id}&term_id=#{window.codeworkout.term_id}"
+    search_url = "/course_offerings/search_students?organization_id=#{window.codeworkout.organization_id}&course_id=#{window.codeworkout.course_id}&term_id=#{window.codeworkout.term_id}"
     searchable = $('.searchable').StudentSearch
       course_offering_display: 'any section'
       course_offering_id: 0

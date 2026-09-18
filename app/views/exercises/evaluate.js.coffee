@@ -26,5 +26,6 @@ if att_id
   if attempts_exhausted
     $('.btn-submit').prop('disabled', true)
 else
-  $("#saved_assurance").html("Invalid attempt")
+  $("#saved_assurance").html("<div class='alert alert-warning'>Unable to submit attempt. Please refresh the page and try again.</div>")
   $("#exercisefeedback").hide()
+  $(".btn-submit").prop('disabled', false)

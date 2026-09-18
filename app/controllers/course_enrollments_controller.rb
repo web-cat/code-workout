@@ -25,23 +25,65 @@ class CourseEnrollmentsController < ApplicationController
     end
   end
 
+  ROSTER_HEADERS = %w[email first_name last_name course_role].freeze
+
   def roster_upload
     @course_offering = CourseOffering.find params[:course_offering_id]
     file = params[:rosterfile]
-    has_headers = !!params[:has_headers] # "true" or "false"
+    has_headers = ActiveRecord::Type::Boolean.new.cast(params[:has_headers])
+
+    if file.blank?
+      flash[:error] = 'Please choose a CSV file to upload.'
+      redirect_to organization_course_path(
+        id: @course_offering.course.slug,
+        organization_id: @course_offering.course.organization.slug,
+        term_id: @course_offering.term.slug
+      ) and return
+    end
+
+    begin
+      if has_headers
+        csv = CSV.parse(
+          File.read(file.path),
+          headers: true,
+          header_converters: lambda { |h| h.to_s.strip.downcase }
+        )
+        csv_headers = (csv.headers || []).compact
+        missing_headers = ROSTER_HEADERS - csv_headers
+        if missing_headers.any?
+          flash[:error] = "Invalid header names in CSV file. Missing required header(s): #{missing_headers.join(', ')}. Expected headers: #{ROSTER_HEADERS.join(', ')}."
+          redirect_to organization_course_path(
+            id: @course_offering.course.slug,
+            organization_id: @course_offering.course.organization.slug,
+            term_id: @course_offering.term.slug
+          ) and return
+        end
+      else
+        csv = CSV.parse(File.read(file.path), headers: false)
+      end
+    rescue CSV::MalformedCSVError => e
+      flash[:error] = "Unable to parse CSV file: #{e.message}"
+      redirect_to organization_course_path(
+        id: @course_offering.course.slug,
+        organization_id: @course_offering.course.organization.slug,
+        term_id: @course_offering.term.slug
+      ) and return
+    end
 
     success = true
     created_count = 0
     enrolled_count = 0
     duplicated_count = 0
 
-    CSV.parse(File.read(file.path), headers: has_headers) do |row|
-      email = has_headers ? row['email'] : row[0]
+    csv.each do |row|
+      email = (has_headers ? row['email'] : row[0]).to_s.strip
+      next if email.blank?
+
       user = User.find_by(email: email)
       if !user
         user = User.new(email: email, global_role: GlobalRole.regular_user)
-        user.first_name = has_headers ? row['first_name'] : row[1]
-        user.last_name = has_headers ? row['last_name'] : row[2]
+        user.first_name = (has_headers ? row['first_name'] : row[1]).to_s.strip
+        user.last_name = (has_headers ? row['last_name'] : row[2]).to_s.strip
         user.skip_password_validation = true
         if user.save
           created_count = created_count + 1
@@ -51,8 +93,7 @@ class CourseEnrollmentsController < ApplicationController
       end
 
       if !@course_offering.is_enrolled?(user)
-        course_role_field = has_headers ? row['course_role'] : row[3]
-        course_role_field = course_role_field.downcase
+        course_role_field = (has_headers ? row['course_role'] : row[3]).to_s.strip.downcase
         if course_role_field.include?('instructor')
           course_role = CourseRole.instructor
         elsif course_role_field.include?('grader') ||

@@ -428,7 +428,9 @@ class Workout < ApplicationRecord
         workout_offering.rescore_all
       end
 
-      workout_offering.lms_assignment_url = offering['lms_assignment_url']
+      if offering.key?('lms_assignment_url') || offering.key?('url')
+        workout_offering.lms_assignment_url = offering['lms_assignment_url'] || offering['url']
+      end
 
       # set deadlines
       workout_offering.opening_date = offering['opening_date'].present? ?
@@ -439,15 +441,27 @@ class Workout < ApplicationRecord
         DateTime.strptime(offering['hard_deadline'].to_s, '%Q') : nil
 
       workout_offering.workout_policy = common[:workout_policy]
+      if offering.key?('allowed_ips') || offering.key?('ips')
+        workout_offering.allowed_ips = offering['allowed_ips'] || offering['ips']
+      end
+      if offering.key?('allowed_user_agents') || offering.key?('user_agents') || offering.key?('browsers')
+        workout_offering.allowed_user_agents = offering['allowed_user_agents'] || offering['user_agents'] || offering['browsers']
+      end
       if common[:lms_assignment_id].present?
         workout_offering.lms_assignment_id = common[:lms_assignment_id]
       end
       if common[:lti_assignment_id].present?
         workout_offering.lti_assignment_id = common[:lti_assignment_id]
       end
+      if common[:resource_link_id].present?
+        workout_offering.resource_link_id = common[:resource_link_id]
+      end
+      if common[:lms_instance_id].present?
+        workout_offering.lms_instance_id = common[:lms_instance_id]
+      end
       workout_offering.save!
       workout_offerings << workout_offering.id
-      extensions = offering['extensions']
+      extensions = offering['extensions'] || []
       extensions.each do |ext|
         student_id = ext['student_id']
         student = User.find(student_id)

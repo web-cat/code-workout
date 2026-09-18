@@ -631,8 +631,9 @@ class ExercisesController < ApplicationController
       @workout_offering =
         WorkoutOffering.find_by(id: params[:workout_offering_id])
       @workout = @workout_offering.workout
-      if @workout_offering.time_limit_for(@student_user)
-        @user_time_limit = @workout_offering.time_limit_for(@student_user)
+      user_time_limit = @workout_offering.time_limit_for(@student_user)
+      if user_time_limit.present? && user_time_limit.to_i > 0
+        @user_time_limit = user_time_limit.to_i
       else
         @user_time_limit = nil
       end
@@ -667,6 +668,49 @@ class ExercisesController < ApplicationController
       @workout_score = @workout_offering.score_for(@student_user)
     end
 
+    if @workout_offering && !@workout_offering.ip_allowed?(request.remote_ip, @student_user, @workout_score)
+      lti_context = lti_context_for_token(params[:lti_launch])
+      ActivityLog.create(
+        user: (@student_user.is_a?(User) ? @student_user : nil),
+        exercise: @exercise,
+        workout: @workout,
+        workout_offering: @workout_offering,
+        workout_score: (@workout_score.is_a?(WorkoutScore) ? @workout_score : nil),
+        activity: 'practice_view_ip_blocked',
+        ip_address: request.remote_ip,
+        user_agent: request.user_agent,
+        lms_instance_id: lti_context.andand[:lms_instance_id] || @workout_offering.andand.lms_instance_id,
+        lti_launch: lti_context.present?
+      )
+      @message = "This workout cannot be accessed from your network location (#{request.remote_ip})."
+      if @lti_launch
+        render 'lti/error' and return
+      else
+        render 'workout_offerings/error' and return
+      end
+    end
+
+    if @workout_offering && !@workout_offering.user_agent_allowed?(request.user_agent, @student_user, @workout_score)
+      lti_context = lti_context_for_token(params[:lti_launch])
+      ActivityLog.create(
+        user: (@student_user.is_a?(User) ? @student_user : nil),
+        exercise: @exercise,
+        workout: @workout,
+        workout_offering: @workout_offering,
+        workout_score: (@workout_score.is_a?(WorkoutScore) ? @workout_score : nil),
+        activity: 'practice_view_user_agent_blocked',
+        ip_address: request.remote_ip,
+        user_agent: request.user_agent,
+        lms_instance_id: lti_context.andand[:lms_instance_id] || @workout_offering.andand.lms_instance_id,
+        lti_launch: lti_context.present?
+      )
+      @message = "This workout requires a specific browser (such as LockDown Browser or Secure Exam Browser) and cannot be accessed from your current browser."
+      if @lti_launch
+        render 'lti/error' and return
+      else
+        render 'workout_offerings/error' and return
+      end
+    end
 
     if @workout_score
       if @workout_score.lis_result_sourcedid.nil? && @workout_score.lis_outcome_service_url.nil? &&
@@ -907,10 +951,92 @@ class ExercisesController < ApplicationController
       @workout_score = WorkoutScore.includes(scored_attempts: :exercise_version, attempts: []).find(@workout_score.id)
     end
 
+    if @workout_offering && !@workout_offering.ip_allowed?(request.remote_ip, @student_drift_user, @workout_score)
+      lti_context = lti_context_for_token(params[:lti_launch])
+      ActivityLog.create(
+        user: (@student_drift_user.is_a?(User) ? @student_drift_user : nil),
+        exercise: @exercise,
+        workout: @workout,
+        workout_offering: @workout_offering,
+        workout_score: (@workout_score.is_a?(WorkoutScore) ? @workout_score : nil),
+        activity: 'attempt_ip_blocked',
+        ip_address: request.remote_ip,
+        user_agent: request.user_agent,
+        lms_instance_id: lti_context.andand[:lms_instance_id] || @workout_offering.andand.lms_instance_id,
+        lti_launch: lti_context.present?
+      )
+
+      error_message = "This workout cannot be accessed from your network location (#{request.remote_ip})."
+      flash[:error] = error_message
+      org = @workout_offering.course_offering.course.organization
+      crs = @workout_offering.course_offering.course
+      trm = @workout_offering.course_offering.term
+      error_url = organization_workout_offering_error_path(
+        organization_id: org.slug || org.id,
+        course_id: crs.slug || crs.id,
+        term_id: trm.slug || trm.id,
+        id: @workout_offering.id,
+        lti_launch: @lti_launch
+      )
+      respond_to do |format|
+        format.js { render js: "window.location = '#{error_url}';" }
+        format.html { redirect_to error_url }
+        format.json { render json: { error: error_message }, status: :forbidden }
+      end
+      return
+    end
+
+    if @workout_offering && !@workout_offering.user_agent_allowed?(request.user_agent, @student_drift_user, @workout_score)
+      lti_context = lti_context_for_token(params[:lti_launch])
+      ActivityLog.create(
+        user: (@student_drift_user.is_a?(User) ? @student_drift_user : nil),
+        exercise: @exercise,
+        workout: @workout,
+        workout_offering: @workout_offering,
+        workout_score: (@workout_score.is_a?(WorkoutScore) ? @workout_score : nil),
+        activity: 'attempt_user_agent_blocked',
+        ip_address: request.remote_ip,
+        user_agent: request.user_agent,
+        lms_instance_id: lti_context.andand[:lms_instance_id] || @workout_offering.andand.lms_instance_id,
+        lti_launch: lti_context.present?
+      )
+
+      error_message = "This workout requires a specific browser (such as LockDown Browser or Secure Exam Browser) and cannot be accessed from your current browser."
+      flash[:error] = error_message
+      org = @workout_offering.course_offering.course.organization
+      crs = @workout_offering.course_offering.course
+      trm = @workout_offering.course_offering.term
+      error_url = organization_workout_offering_error_path(
+        organization_id: org.slug || org.id,
+        course_id: crs.slug || crs.id,
+        term_id: trm.slug || trm.id,
+        id: @workout_offering.id,
+        lti_launch: @lti_launch
+      )
+      respond_to do |format|
+        format.js { render js: "window.location = '#{error_url}';" }
+        format.html { redirect_to error_url }
+        format.json { render json: { error: error_message }, status: :forbidden }
+      end
+      return
+    end
+
     # Has the allotted time for the workout offering passed?
     if @workout_score.andand.closed? &&
       !@workout_offering.andand.can_be_practiced_by?(@student_drift_user)
-      p 'WARNING: attempt to evaluate exercise after time expired.'
+      msg = 'The time limit or deadline for this workout has passed. This assignment is closed and no longer accepting submissions.'
+      respond_to do |format|
+        format.js do
+          render js: <<~JS
+            $("#saved_assurance").html("<div class='alert alert-danger'>#{msg}</div>");
+            $("#exercisefeedback").hide();
+            $(".btn-submit").prop('disabled', true);
+            alert("#{msg}");
+          JS
+        end
+        format.html { redirect_back fallback_location: root_path, alert: msg }
+        format.json { render json: { error: msg }, status: :forbidden }
+      end
       return
     end
 
@@ -921,7 +1047,19 @@ class ExercisesController < ApplicationController
       !current_user.is_staff?(@workout_offering.andand.course_offering) &&
       @attempts_left &&
       @attempts_left <= 0
-      p 'WARNING: attempt to evaluate workout_offering after attempts expired.'
+      msg = 'You have exhausted all attempts for this exercise.'
+      respond_to do |format|
+        format.js do
+          render js: <<~JS
+            $("#saved_assurance").html("<div class='alert alert-warning'>#{msg}</div>");
+            $("#exercisefeedback").hide();
+            $(".btn-submit").prop('disabled', true);
+            alert("#{msg}");
+          JS
+        end
+        format.html { redirect_back fallback_location: root_path, alert: msg }
+        format.json { render json: { error: msg }, status: :forbidden }
+      end
       return
     end
 
