@@ -644,6 +644,16 @@ class ExercisesController < ApplicationController
       end
     end
 
+    is_staff = current_user && (
+      current_user.global_role.andand.is_admin? ||
+      @workout_offering.andand.course_offering.andand.is_staff?(current_user)
+    )
+    @is_staff_review = params[:review_user_id].present? && is_staff
+
+    if params[:review_user_id].present? && !is_staff
+      redirect_to root_path, alert: 'You are not authorized to review other users.' and return
+    end
+
     if @workout_offering
       # Re-check workout-offering permission in case the URL was entered directly.
       authorize! :practice, @workout_offering
@@ -668,7 +678,7 @@ class ExercisesController < ApplicationController
       @workout_score = @workout_offering.score_for(@student_user)
     end
 
-    if @workout_offering && !@workout_offering.ip_allowed?(request.remote_ip, @student_user, @workout_score)
+    if !@is_staff_review && @workout_offering && !@workout_offering.ip_allowed?(request.remote_ip, @student_user, @workout_score)
       lti_context = lti_context_for_token(params[:lti_launch])
       ActivityLog.create(
         user: (@student_user.is_a?(User) ? @student_user : nil),
@@ -690,7 +700,7 @@ class ExercisesController < ApplicationController
       end
     end
 
-    if @workout_offering && !@workout_offering.user_agent_allowed?(request.user_agent, @student_user, @workout_score)
+    if !@is_staff_review && @workout_offering && !@workout_offering.user_agent_allowed?(request.user_agent, @student_user, @workout_score)
       lti_context = lti_context_for_token(params[:lti_launch])
       ActivityLog.create(
         user: (@student_user.is_a?(User) ? @student_user : nil),
@@ -872,18 +882,20 @@ class ExercisesController < ApplicationController
       Rails.logger.error "workout conflict: practice() with workout_offering #{@workout_offering.id} conflicting with workout #{@workout.id}"
     end
 
-    lti_context = lti_context_for_token(params[:lti_launch])
-    ActivityLog.create(
-      user: @student_user,
-      exercise: @exercise,
-      workout: @workout,
-      workout_offering: @workout_offering,
-      workout_score: @workout_score,
-      activity: 'practice_view',
-      ip_address: request.remote_ip,
-      lms_instance_id: lti_context.andand[:lms_instance_id],
-      lti_launch: lti_context.present?
-    )
+    unless @is_staff_review
+      lti_context = lti_context_for_token(params[:lti_launch])
+      ActivityLog.create(
+        user: @student_user,
+        exercise: @exercise,
+        workout: @workout,
+        workout_offering: @workout_offering,
+        workout_score: @workout_score,
+        activity: 'practice_view',
+        ip_address: request.remote_ip,
+        lms_instance_id: lti_context.andand[:lms_instance_id],
+        lti_launch: lti_context.present?
+      )
+    end
 
     render layout: 'two_columns'
 
