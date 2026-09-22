@@ -149,6 +149,10 @@ describe ExercisesController do
       allow(controller).to receive(:authorize!).and_return(true)
       allow(course_offering).to receive(:is_staff?).with(user).and_return(false)
       allow(workout_offering).to receive(:score_for).with(user).and_return(workout_score)
+      allow(WorkoutScore).to receive_message_chain(:includes, :find).and_return(workout_score)
+      allow(workout_score).to receive(:attempts_left_for_exercise_version).and_return(3)
+      allow(workout_score).to receive(:scoring_attempt_for).and_return(nil)
+      allow(workout_score).to receive(:previous_attempt_for).and_return(nil)
     end
 
     describe "GET #practice with workout_offering" do
@@ -187,6 +191,72 @@ describe ExercisesController do
 
         expect(response.status).to eq(200)
         expect(controller.instance_variable_get(:@message)).to include("requires a specific browser")
+      end
+
+      it "logs practice_view in ActivityLog when student accesses practice and is allowed" do
+        allow(workout_offering).to receive(:ip_allowed?).and_return(true)
+        allow(workout_offering).to receive(:user_agent_allowed?).and_return(true)
+
+        expect(ActivityLog).to receive(:create).with(hash_including(
+          user: user,
+          exercise: exercise,
+          workout_offering: workout_offering,
+          workout_score: workout_score,
+          activity: 'practice_view',
+          ip_address: '192.168.1.5'
+        ))
+
+        request.env['REMOTE_ADDR'] = '192.168.1.5'
+        get :practice, params: { id: '1', workout_offering_id: '201' }
+        expect(response.status).to eq(200)
+      end
+
+      context "when instructor/staff reviews student work" do
+        let(:instructor) { FactoryBot.build_stubbed(:user, id: 99) }
+        let(:student) { user }
+
+        before do
+          allow(controller).to receive(:current_user).and_return(instructor)
+          allow(course_offering).to receive(:is_staff?).with(instructor).and_return(true)
+          allow(User).to receive(:find).with('10').and_return(student)
+          allow(workout_offering).to receive(:score_for).with(student).and_return(workout_score)
+        end
+
+        it "does not apply IP filtering or user-agent filtering and does not create an ActivityLog" do
+          expect(workout_offering).not_to receive(:ip_allowed?)
+          expect(workout_offering).not_to receive(:user_agent_allowed?)
+          expect(ActivityLog).not_to receive(:create)
+
+          request.env['REMOTE_ADDR'] = '10.0.0.1'
+          request.env['HTTP_USER_AGENT'] = 'DisallowedBrowser/1.0'
+
+          get :practice, params: {
+            id: '1',
+            workout_offering_id: '201',
+            review_user_id: '10'
+          }
+
+          expect(response.status).to eq(200)
+          expect(controller.instance_variable_get(:@student_user)).to eq(student)
+          expect(controller.instance_variable_get(:@is_staff_review)).to be true
+        end
+
+        it "blocks unauthorized non-staff user from reviewing another student" do
+          unauthorized_student = FactoryBot.build_stubbed(:user, id: 88)
+          allow(controller).to receive(:current_user).and_return(unauthorized_student)
+          allow(course_offering).to receive(:is_staff?).with(unauthorized_student).and_return(false)
+
+          expect(ActivityLog).not_to receive(:create)
+
+          get :practice, params: {
+            id: '1',
+            workout_offering_id: '201',
+            review_user_id: '10'
+          }
+
+          expect(response).to redirect_to(root_path)
+          expect(flash[:alert]).to eq('You are not authorized to review other users.')
+        end
       end
     end
 
