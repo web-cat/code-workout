@@ -530,7 +530,12 @@ class WorkoutsController < ApplicationController
       @workout = Workout.find(params[:id])
     end
 
-    if cannot? :edit, @workout
+    if @workout_offering
+      if cannot?(:manage, @workout_offering) && cannot?(:edit, @workout)
+        redirect_to root_path,
+          notice: 'You are not authorized to edit this workout.' and return
+      end
+    elsif cannot? :edit, @workout
       redirect_to root_path,
         notice: 'You are not authorized to edit this workout.' and return
     end
@@ -551,6 +556,9 @@ class WorkoutsController < ApplicationController
 
       @workout_offerings = current_user.managed_workout_offerings_in_term(
         @workout, @course, @term).to_a.flatten
+      if @workout_offering && !@workout_offerings.include?(@workout_offering)
+        @workout_offerings << @workout_offering
+      end
 
       course_offerings = current_user.managed_course_offerings(
         course: @course, term: @term)
@@ -1266,7 +1274,14 @@ class WorkoutsController < ApplicationController
 
   # -------------------------------------------------------------
   def update
-    if cannot? :update, @workout
+    can_update = !cannot?(:update, @workout)
+    can_manage_offerings = !can_update && params[:course_id].present? && begin
+      course = Course.find_with_id_or_slug(params[:course_id], params[:organization_id]) rescue nil
+      term = Term.find(params[:term_id]) rescue nil
+      (course && term && current_user) ? current_user.managed_course_offerings(course: course, term: term).any? : false
+    end
+
+    if !can_update && !can_manage_offerings
       redirect_to root_path,
         notice: 'Unauthorized to update workout' and return
     end
@@ -1283,7 +1298,9 @@ class WorkoutsController < ApplicationController
       # no course, this workout needs to manage its own LTI ties
       workout_params[:lms_assignment_id] = params[:lms_assignment_id]
     end
-    @workout = @workout.update_or_create(workout_params)
+    if can_update
+      @workout = @workout.update_or_create(workout_params)
+    end
 
     if @workout && params[:course_id].present?
       create_or_update_offerings(@workout)
