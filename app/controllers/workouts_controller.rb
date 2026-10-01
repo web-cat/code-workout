@@ -1672,8 +1672,10 @@ class WorkoutsController < ApplicationController
                 students.each do |student_ref|
                   next if student_ref == '<insert email here>'
                   
-                  # Extract email from "Name <email>" or just "email"
-                  email = student_ref.match(/<([^>]+)>/).andand[1] || student_ref.strip
+                  # Extract email from "Name <email>", "Name (email)", or just "email"
+                  email = student_ref.match(/<([^>]+)>/).andand[1] ||
+                          student_ref.match(/\(([^)]+@[^)]+)\)/).andand[1] ||
+                          student_ref.strip
                   student = User.find_by(email: email)
                   if !student
                     # Try name match
