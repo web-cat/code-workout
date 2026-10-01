@@ -38,15 +38,15 @@ jQuery.fn.StudentSearch = (config) ->
           .appendTo(ul)
 
     handle_autocomplete_select: (event, ui) ->
-      full_name = "#{ui.item.first_name} #{ui.item.last_name}"
-      display = if full_name.length > 1 then full_name else ui.item.email
+      full_name = "#{ui.item.first_name || ''} #{ui.item.last_name || ''}".trim()
       id = ui.item.id
+      student_display = if full_name.length > 0 then "#{full_name} <#{ui.item.email}>" else "<#{ui.item.email}>"
       element.trigger
         type: 'studentSelect'
         course_offering_id: this.course_offering.id
         course_offering_display: this.course_offering.display
         student_name: full_name
-        student_display: "#{full_name} (#{ui.item.email})".trim()
+        student_display: student_display
         student_id: id
 
     init: ->
