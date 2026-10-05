@@ -9,6 +9,7 @@ feedback_poll_url = "/sse/feedback_poll?att_id=#{att_id}&drift_user_id=#{user_id
   "&attempts_exhausted=#{attempts_exhausted}"
 
 if att_id
+  window.clearActiveDrafts?()
   $("#exercisefeedback").show()
   if is_coding
     $("#saved_assurance").html("Your answer has been saved.  You can move on to another exercise if you don't want to wait for more feedback.")
