@@ -1,6 +1,10 @@
 - headers = ['E-mail','First Name','Surname']
 - @course_offering.workouts.each do |wkt|
-  - headers << "#{wkt.name} (#{wkt.id})"
+  - workout_offering = @course_offering.workout_offerings.respond_to?(:find_by) ? @course_offering.workout_offerings.find_by(workout: wkt) : @course_offering.workout_offerings.find { |wo| (wo.respond_to?(:workout_id) && wo.workout_id == wkt.id) || (wo.respond_to?(:workout) && wo.workout == wkt) }
+  - if workout_offering&.lti_assignment_id.present?
+    - headers << "#{wkt.name} (#{wkt.id}, #{workout_offering.lti_assignment_id})"
+  - else
+    - headers << "#{wkt.name} (#{wkt.id})"
 - headers<<'Total'
 = CSV.generate_line(headers).strip()
 - @course_enrolled.each do |ce|
