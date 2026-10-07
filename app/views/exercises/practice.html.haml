@@ -124,7 +124,10 @@
             input_html: { class: 'code', readonly: true,
               value: (prior_answer.andand.specific.andand.answer || prompt.prepare_starter_code),
               data: { lang: 'text/x-' + (@exercise.language + (@exercise.language == 'C++'?'src':'')|| 'java').downcase,
-              starter_code: prompt.prepare_starter_code } }
+              starter_code: prompt.prepare_starter_code,
+              exercise_id: @exercise.id,
+              workout_score_id: @workout_score.andand.id,
+              user_id: current_user.andand.id } }
           - else
             %pre{ data: { lang: 'text/x-java' } }
               = prior_answer.andand.specific.andand.answer || prompt.prepare_starter_code
