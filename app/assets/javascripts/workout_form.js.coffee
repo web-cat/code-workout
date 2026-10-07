@@ -280,6 +280,7 @@ handle_submit = ->
   $('.policy-checkbox').each ->
     attr = $(this).attr('data-attribute')
     policy[attr] = $(this).is(':checked') if attr
+    return
   fd.append 'policy', JSON.stringify policy
   
   fd.append 'exercises', JSON.stringify get_exercises()

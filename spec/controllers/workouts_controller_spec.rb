@@ -553,6 +553,54 @@ describe WorkoutsController do
 
       controller.send(:create_or_update_offerings, workout)
     end
+
+    it "parses student extensions with angle brackets or parentheses in YAML" do
+      co1 = FactoryBot.build_stubbed(:course_offering, id: 101, label: 'Section A', course: course, term: term)
+      wo1 = FactoryBot.build_stubbed(:workout_offering, id: 201, course_offering: co1, workout: workout)
+      allow(co1).to receive(:display_name_with_term).and_return('Section A')
+      allow(co1).to receive(:display_name_with_org_and_term).and_return('Section A')
+      allow(co1).to receive(:display_name).and_return('Section A')
+      allow(user).to receive(:managed_course_offerings).and_return([co1])
+      allow(workout).to receive(:add_workout_offerings).and_return([wo1])
+      allow(workout).to receive_message_chain(:workout_offerings, :joins, :where).and_return([wo1])
+
+      student1 = FactoryBot.build_stubbed(:user, email: 'student1@example.edu')
+      student2 = FactoryBot.build_stubbed(:user, email: 'student2@example.edu')
+      allow(User).to receive(:find_by).with(email: 'student1@example.edu').and_return(student1)
+      allow(User).to receive(:find_by).with(email: 'student2@example.edu').and_return(student2)
+      allow(co1).to receive(:is_enrolled?).with(student1).and_return(true)
+      allow(co1).to receive(:is_enrolled?).with(student2).and_return(true)
+
+      yaml_input = <<~YAML
+        sections:
+          - section: Section A
+            due: 2026-09-15 11:59 PM
+        extensions:
+          - due: 2026-09-20 11:59 PM
+            students:
+              - Alice Smith <student1@example.edu>
+              - Bob Jones (student2@example.edu)
+      YAML
+
+      controller.params = ActionController::Parameters.new({
+        date_yaml: yaml_input,
+        course_id: "itsc2214",
+        organization_id: "uncc",
+        term_id: "fall-2026"
+      })
+
+      expect(StudentExtension).to receive(:create!).with(hash_including(
+        user: student1,
+        workout_offering: wo1
+      ))
+      expect(StudentExtension).to receive(:create!).with(hash_including(
+        user: student2,
+        workout_offering: wo1
+      ))
+
+      controller.send(:create_or_update_offerings, workout)
+    end
+
     it "parses top-level and per-section browsers requirements from YAML" do
       co1 = FactoryBot.build_stubbed(:course_offering, id: 101, label: 'Section A', course: course, term: term)
       co2 = FactoryBot.build_stubbed(:course_offering, id: 102, label: 'Section B', course: course, term: term)
@@ -1492,6 +1540,59 @@ describe WorkoutsController do
       data = YAML.safe_load(yaml)
 
       expect(data['extensions'].first['students']).to include("John Doe <jdoe@vt.edu>")
+    end
+  end
+
+  describe "GET #edit" do
+    let(:user) { FactoryBot.build_stubbed(:user) }
+    let(:organization) { FactoryBot.build_stubbed(:organization, slug: 'vt') }
+    let(:course) { FactoryBot.build_stubbed(:course, slug: 'cs1114', organization: organization) }
+    let(:term) { FactoryBot.build_stubbed(:term, slug: 'fall-2026') }
+    let(:course_offering) { FactoryBot.build_stubbed(:course_offering, id: 10, course: course, term: term) }
+    let(:workout) { FactoryBot.build_stubbed(:workout, id: 42, name: 'Recursion Practice') }
+    let(:workout_offering) { FactoryBot.build_stubbed(:workout_offering, id: 100, workout: workout, course_offering: course_offering) }
+
+    before do
+      allow(controller).to receive(:current_user).and_return(user)
+      allow(WorkoutOffering).to receive(:find).with('100').and_return(workout_offering)
+      allow(Course).to receive(:find_with_id_or_slug).and_return(course)
+      allow(Term).to receive(:find).and_return(term)
+      allow(Organization).to receive(:find).and_return(organization)
+      allow(workout).to receive(:exercise_workouts).and_return([])
+      allow(user).to receive(:managed_workout_offerings_in_term).and_return([workout_offering])
+      allow(user).to receive(:managed_course_offerings).and_return([course_offering])
+    end
+
+    it "allows instructors who can manage the workout offering to edit even if they cannot edit the workout" do
+      allow(controller).to receive(:cannot?).with(:manage, workout_offering).and_return(false)
+      allow(controller).to receive(:cannot?).with(:edit, workout).and_return(true)
+      allow(controller).to receive(:can?).with(:edit, workout).and_return(false)
+
+      get :edit, params: {
+        organization_id: 'vt',
+        course_id: 'cs1114',
+        term_id: 'fall-2026',
+        workout_offering_id: '100'
+      }
+
+      expect(response).to be_successful
+      expect(controller.instance_variable_get(:@can_update)).to be false
+    end
+
+    it "redirects unauthorized users when they cannot manage the workout offering and cannot edit the workout" do
+      allow(controller).to receive(:cannot?).with(:manage, workout_offering).and_return(true)
+      allow(controller).to receive(:cannot?).with(:edit, workout).and_return(true)
+      allow(controller).to receive(:can?).with(:edit, workout).and_return(false)
+
+      get :edit, params: {
+        organization_id: 'vt',
+        course_id: 'cs1114',
+        term_id: 'fall-2026',
+        workout_offering_id: '100'
+      }
+
+      expect(response).to redirect_to(root_path)
+      expect(flash[:notice]).to eq('You are not authorized to edit this workout.')
     end
   end
 end

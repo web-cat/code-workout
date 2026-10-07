@@ -118,4 +118,50 @@ RSpec.describe User, type: :model do
       expect(User.test_student_launch?(nil)).to be false
     end
   end
+
+  describe '#managed_course_offerings' do
+    let(:user) { FactoryBot.build_stubbed(:user) }
+    let(:course) { FactoryBot.build_stubbed(:course, id: 10) }
+    let(:term) { FactoryBot.build_stubbed(:term, id: 20) }
+
+    it 'includes :course_role in joins when course and term are provided' do
+      relation = double('EnrollmentsRelation')
+      allow(user).to receive(:course_enrollments).and_return(relation)
+      joined_relation = double('JoinedRelation')
+      allow(relation).to receive(:joins).with(:course_role, :course_offering).and_return(joined_relation)
+      where_relation = double('WhereRelation')
+      allow(joined_relation).to receive(:where).with(
+        'course_roles.can_manage_course = true and
+          course_offerings.course_id = ? and course_offerings.term_id = ?',
+        10, 20
+      ).and_return(where_relation)
+      allow(where_relation).to receive(:map).and_return([])
+
+      result = user.managed_course_offerings(course: course, term: term)
+      expect(result).to eq([])
+    end
+  end
+
+  describe '#managed_workout_offerings_in_term' do
+    let(:user) { FactoryBot.build_stubbed(:user) }
+    let(:course) { FactoryBot.build_stubbed(:course, id: 10) }
+    let(:term) { FactoryBot.build_stubbed(:term, id: 20) }
+    let(:workout) { FactoryBot.build_stubbed(:workout, id: 30) }
+
+    it 'includes :course_role in joins when term is present' do
+      relation = double('EnrollmentsRelation')
+      allow(user).to receive(:course_enrollments).and_return(relation)
+      joined_relation = double('JoinedRelation')
+      allow(relation).to receive(:joins).with(:course_role, course_offering: :workout_offerings).and_return(joined_relation)
+      where_relation = double('WhereRelation')
+      allow(joined_relation).to receive(:where).with(
+        course_roles: { can_manage_course: true },
+        course_offerings: { course: course, term: term }
+      ).and_return(where_relation)
+      allow(where_relation).to receive(:map).and_return([])
+
+      result = user.managed_workout_offerings_in_term(workout, course, term)
+      expect(result).to eq([])
+    end
+  end
 end

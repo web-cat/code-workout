@@ -1,6 +1,6 @@
 - headers = ['E-mail','First Name','Surname']
 - @course_offering.workouts.each do |wkt|
-  - headers<<wkt.name
+  - headers << "#{wkt.name} (#{wkt.id})"
 - headers<<'Total'
 = CSV.generate_line(headers).strip()
 - @course_enrolled.each do |ce|

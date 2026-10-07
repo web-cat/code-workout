@@ -237,7 +237,7 @@ class User < ApplicationRecord
           course_offerings.course_id = ?', course.id)
         .map(&:course_offering)
     else
-      course_enrollments.joins(:course_offering)
+      course_enrollments.joins(:course_role, :course_offering)
         .where('course_roles.can_manage_course = true and
           course_offerings.course_id = ? and course_offerings.term_id = ?',
           course.id, term.id)
@@ -273,19 +273,19 @@ class User < ApplicationRecord
   def managed_workout_offerings_in_term(workout, course, term)
     if !term.nil?
       enrollments = course_enrollments.
-        joins(course_offering: :workout_offerings).
+        joins(:course_role, course_offering: :workout_offerings).
         where(course_roles:
           { can_manage_course: true }, course_offerings:
             { course: course, term: term }
         )
-      else
-        enrollments = course_enrollments.
-          joins(course_offering: :workout_offerings).
-          where(course_roles:
-            { can_manage_course: true }, course_offerings:
-              { course: course }
-            )
-      end
+    else
+      enrollments = course_enrollments.
+        joins(:course_role, course_offering: :workout_offerings).
+        where(course_roles:
+          { can_manage_course: true }, course_offerings:
+            { course: course }
+          )
+    end
 
       enrollments.map { |e|
         if workout.kind_of?(String)
