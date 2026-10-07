@@ -31,47 +31,71 @@
 
       // Helper function to handle copy logic
       var doCopy = function(cm) {
-        var selectedText = cm.getSelection();
-        if (selectedText) {
-          internalClipboard = selectedText;
-          console.log("Copied to internal clipboard:", internalClipboard);
+        try {
+          var selectedText = cm.getSelection();
+          if (selectedText) {
+            internalClipboard = selectedText;
+            console.log("Copied to internal clipboard:", internalClipboard);
+          }
+        } catch (err) {
+          console.error("Error copying in CodeMirror:", err);
         }
       };
 
       // Helper function to handle cut logic
       var doCut = function(cm) {
-        var selectedText = cm.getSelection();
-        if (selectedText) {
-          internalClipboard = selectedText;
-          if (!cm.getOption("readOnly")) {
-            cm.replaceSelection(''); // Deletes the selected text
+        try {
+          var selectedText = cm.getSelection();
+          if (selectedText) {
+            internalClipboard = selectedText;
+            if (!cm.getOption("readOnly")) {
+              cm.replaceSelection(''); // Deletes the selected text
+            }
+            console.log("Cut to internal clipboard:", internalClipboard);
           }
-          console.log("Cut to internal clipboard:", internalClipboard);
+        } catch (err) {
+          console.error("Error cutting in CodeMirror:", err);
         }
       };
 
       // Helper function to handle paste logic
       var doPaste = function(cm) {
-        if (internalClipboard) {
-          cm.replaceSelection(internalClipboard);
-          console.log("Pasted from internal clipboard:", internalClipboard);
+        try {
+          if (internalClipboard) {
+            cm.replaceSelection(internalClipboard);
+            console.log("Pasted from internal clipboard:", internalClipboard);
+          }
+        } catch (err) {
+          console.error("Error pasting in CodeMirror:", err);
         }
       };
 
       // Handle copy, cut, and paste events triggered by the browser (e.g., context menu)
       cm.on('copy', function(cm, e) {
-        e.preventDefault();
-        doCopy(cm);
+        try {
+          if (e && e.preventDefault) e.preventDefault();
+          doCopy(cm);
+        } catch (err) {
+          console.error("Error in CodeMirror copy listener:", err);
+        }
       });
 
       cm.on('cut', function(cm, e) {
-        e.preventDefault();
-        doCut(cm);
+        try {
+          if (e && e.preventDefault) e.preventDefault();
+          doCut(cm);
+        } catch (err) {
+          console.error("Error in CodeMirror cut listener:", err);
+        }
       });
 
       cm.on('paste', function(cm, e) {
-        e.preventDefault();
-        doPaste(cm);
+        try {
+          if (e && e.preventDefault) e.preventDefault();
+          doPaste(cm);
+        } catch (err) {
+          console.error("Error in CodeMirror paste listener:", err);
+        }
       });
 
       // Handle keyboard shortcuts explicitly via extraKeys to ensure they are captured
