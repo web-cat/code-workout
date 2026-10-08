@@ -391,9 +391,9 @@ class CourseOfferingsController < ApplicationController
                          sort_by{|ce| [ce.user.last_name.to_s.downcase, ce.user.first_name.to_s.downcase, ce.user.email]}
     respond_to do |format|
       format.csv do
-        headers['Content-Disposition'] =
-          "attachment; filename=\"#{@course_offering.course.number}-" \
-          "#{@course_offering.label}-Gradebook.csv\""
+        @filename = "#{@course_offering.course.number}-" \
+          "#{@course_offering.label}-Gradebook.csv"
+        headers['Content-Disposition'] = "attachment; filename=\"#{@filename}\""
         headers['Content-Type'] ||= 'text-csv'
       end
     end

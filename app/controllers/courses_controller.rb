@@ -336,8 +336,9 @@ class CoursesController < ApplicationController
     respond_to do |format|
       format.html
       format.csv do
+        @filename = "#{@course.name} course gradebook.csv"
         headers['Content-Disposition'] =
-          "attachment; filename=\"#{@course.name} course gradebook.csv\""
+          "attachment; filename=\"#{@filename}\""
         headers['Content-Type'] ||= 'text-csv'
       end
     end
