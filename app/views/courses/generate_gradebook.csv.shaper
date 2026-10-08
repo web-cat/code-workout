@@ -1,0 +1,71 @@
+csv.config.write_headers = true
+
+workout_columns = {}
+@course.course_offerings.each do |off|
+  off.workouts.each do |wkt|
+    next if workout_columns.key?(wkt.id)
+
+    workout_offering = off.workout_offerings.respond_to?(:find_by) ?
+      off.workout_offerings.find_by(workout: wkt) :
+      off.workout_offerings.find { |wo| (wo.respond_to?(:workout_id) && wo.workout_id == wkt.id) || (wo.respond_to?(:workout) && wo.workout == wkt) }
+
+    label = if workout_offering&.lti_assignment_id.present?
+      "#{wkt.name} (#{wkt.id}, #{workout_offering.lti_assignment_id})"
+    else
+      "#{wkt.name} (#{wkt.id})"
+    end
+
+    workout_columns[wkt.id] = {
+      col_id: :"workout_#{wkt.id}",
+      label: label,
+      workout: wkt
+    }
+  end
+end
+
+csv.headers do |header|
+  header.columns :offering_id, :offering_name, :first_name, :last_name, *workout_columns.values.map { |wc| wc[:col_id] }, :total
+  header.mappings(
+    {
+      offering_id: 'Course Offering Id',
+      offering_name: 'Course Offering',
+      first_name: 'First Name',
+      last_name: 'Second Name'
+    }.merge(workout_columns.values.each_with_object({}) { |wc, h| h[wc[:col_id]] = wc[:label] })
+     .merge(total: 'Total')
+  )
+end
+
+student_role = CourseRole.find_by(name: 'Student')
+student_role_id = student_role&.id
+
+@course.course_offerings.each do |off|
+  enrollments = CourseEnrollment.where(course_offering_id: off.id)
+  student_enrollments = enrollments.select { |ce| ce.course_role_id == student_role_id }
+
+  student_enrollments.each do |ce|
+    csv.row do |row|
+      user = ce.respond_to?(:user) && ce.user ? ce.user : User.find(ce.user_id)
+      row.cell :offering_id, off.id.to_s
+      row.cell :offering_name, off.name
+      row.cell :first_name, user.first_name
+      row.cell :last_name, user.last_name
+      grand_total = 0.0
+      workout_columns.each do |wkt_id, wc|
+        wkt = wc[:workout]
+        workout_offering = off.workout_offerings.respond_to?(:find_by) ?
+          off.workout_offerings.find_by(workout: wkt) :
+          off.workout_offerings.find { |wo| (wo.respond_to?(:workout_id) && wo.workout_id == wkt.id) || (wo.respond_to?(:workout) && wo.workout == wkt) }
+        workout_score = workout_offering ? WorkoutScore.find_by(user_id: ce.user_id, workout: wkt, workout_offering: workout_offering) : nil
+        if workout_score
+          tot = workout_score.score
+          row.cell wc[:col_id], tot
+          grand_total += tot
+        else
+          row.cell wc[:col_id], 'Not attempted'
+        end
+      end
+      row.cell :total, grand_total.round(2).to_s
+    end
+  end
+end

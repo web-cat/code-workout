@@ -1,0 +1,62 @@
+csv.config.write_headers = true
+
+workout_columns = {}
+@course_offering.workouts.each do |wkt|
+  workout_offering = @course_offering.workout_offerings.respond_to?(:find_by) ?
+    @course_offering.workout_offerings.find_by(workout: wkt) :
+    @course_offering.workout_offerings.find { |wo| (wo.respond_to?(:workout_id) && wo.workout_id == wkt.id) || (wo.respond_to?(:workout) && wo.workout == wkt) }
+
+  label = if workout_offering&.lti_assignment_id.present?
+    "#{wkt.name} (#{wkt.id}, #{workout_offering.lti_assignment_id})"
+  else
+    "#{wkt.name} (#{wkt.id})"
+  end
+
+  workout_columns[wkt.id] = {
+    col_id: :"workout_#{wkt.id}",
+    label: label,
+    workout: wkt,
+    workout_offering: workout_offering
+  }
+end
+
+csv.headers do |header|
+  header.columns :email, :first_name, :last_name, *workout_columns.values.map { |wc| wc[:col_id] }, :total
+  header.mappings(
+    {
+      email: 'E-mail',
+      first_name: 'First Name',
+      last_name: 'Surname'
+    }.merge(workout_columns.values.each_with_object({}) { |wc, h| h[wc[:col_id]] = wc[:label] })
+     .merge(total: 'Total')
+  )
+end
+
+student_role = CourseRole.find_by(name: 'Student')
+student_role_id = student_role&.id
+
+student_enrollments = (@course_enrolled || []).select do |ce|
+  ce.course_role_id == student_role_id
+end
+
+csv.rows student_enrollments do |csv, ce|
+  student = ce.respond_to?(:user) && ce.user ? ce.user : User.find(ce.user_id)
+  csv.cell :email, student.email
+  csv.cell :first_name, (student.first_name.to_s.length > 0 ? student.first_name : nil)
+  csv.cell :last_name, (student.last_name.to_s.length > 0 ? student.last_name : nil)
+
+  grand_total = 0.00
+  workout_columns.each do |_wkt_id, wc|
+    wkt = wc[:workout]
+    workout_offering = wc[:workout_offering]
+    if workout_score = WorkoutScore.find_by(user_id: ce.user_id, workout: wkt, workout_offering: workout_offering)
+      tot = workout_score.score.round(2)
+      csv.cell wc[:col_id], tot
+      grand_total += tot
+    else
+      csv.cell wc[:col_id], ''
+    end
+  end
+
+  csv.cell :total, grand_total.round(2).to_s
+end
