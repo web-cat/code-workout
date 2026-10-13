@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_09_09_180000) do
+ActiveRecord::Schema.define(version: 2026_10_13_175800) do
 
   create_table "active_admin_comments", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
     t.string "namespace"
@@ -38,9 +38,10 @@ ActiveRecord::Schema.define(version: 2026_09_09_180000) do
     t.integer "lms_instance_id"
     t.boolean "lti_launch", default: false
     t.integer "workout_score_id"
-    t.text "user_agent"
+    t.bigint "user_agent_id"
     t.index ["exercise_id"], name: "index_activity_logs_on_exercise_id"
     t.index ["lms_instance_id"], name: "index_activity_logs_on_lms_instance_id"
+    t.index ["user_agent_id"], name: "index_activity_logs_on_user_agent_id"
     t.index ["user_id"], name: "index_activity_logs_on_user_id"
     t.index ["workout_id"], name: "index_activity_logs_on_workout_id"
     t.index ["workout_offering_id"], name: "index_activity_logs_on_workout_offering_id"
@@ -65,9 +66,11 @@ ActiveRecord::Schema.define(version: 2026_09_09_180000) do
     t.string "ip_address"
     t.integer "lms_instance_id"
     t.boolean "lti_launch", default: false
+    t.bigint "user_agent_id"
     t.index ["active_score_id"], name: "index_attempts_on_active_score_id"
     t.index ["exercise_version_id"], name: "index_attempts_on_exercise_version_id"
     t.index ["lms_instance_id"], name: "index_attempts_on_lms_instance_id"
+    t.index ["user_agent_id"], name: "index_attempts_on_user_agent_id"
     t.index ["user_id", "exercise_version_id"], name: "idx_attempts_on_user_exercise_version"
     t.index ["user_id", "workout_score_id", "exercise_version_id", "updated_at"], name: "idx_attempts_on_user_ws_ver_updated"
     t.index ["user_id"], name: "index_attempts_on_user_id"
@@ -190,12 +193,13 @@ ActiveRecord::Schema.define(version: 2026_09_09_180000) do
     t.text "target"
     t.text "referrer"
     t.text "params"
-    t.text "user_agent"
     t.datetime "created_at"
     t.datetime "updated_at"
     t.text "status"
+    t.bigint "user_agent_id"
     t.index ["class_name"], name: "index_errors_on_class_name", length: 1024
     t.index ["created_at"], name: "index_errors_on_created_at"
+    t.index ["user_agent_id"], name: "index_errors_on_user_agent_id"
   end
 
   create_table "exercise_collections", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
@@ -605,6 +609,25 @@ ActiveRecord::Schema.define(version: 2026_09_09_180000) do
     t.datetime "updated_at"
   end
 
+  create_table "user_agents", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
+    t.text "raw_user_agent", null: false
+    t.string "user_agent_hash", limit: 64, null: false
+    t.string "browser_family"
+    t.string "browser_version"
+    t.string "os_family"
+    t.boolean "is_lockdown", default: false, null: false
+    t.boolean "is_seb", default: false, null: false
+    t.boolean "is_suspicious", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["browser_family"], name: "index_user_agents_on_browser_family"
+    t.index ["is_lockdown"], name: "index_user_agents_on_is_lockdown"
+    t.index ["is_seb"], name: "index_user_agents_on_is_seb"
+    t.index ["is_suspicious"], name: "index_user_agents_on_is_suspicious"
+    t.index ["os_family"], name: "index_user_agents_on_os_family"
+    t.index ["user_agent_hash"], name: "index_user_agents_on_user_agent_hash", unique: true
+  end
+
   create_table "user_groups", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
     t.string "name"
     t.datetime "created_at"
@@ -734,7 +757,8 @@ ActiveRecord::Schema.define(version: 2026_09_09_180000) do
     t.integer "lti_workout_id"
     t.datetime "started_at"
     t.string "last_ip_address"
-    t.text "last_user_agent"
+    t.bigint "last_user_agent_id"
+    t.index ["last_user_agent_id"], name: "index_workout_scores_on_last_user_agent_id"
     t.index ["lti_workout_id"], name: "index_workout_scores_on_lti_workout_id"
     t.index ["user_id", "workout_id", "workout_offering_id"], name: "idx_ws_on_user_workout_workout_offering"
     t.index ["user_id"], name: "index_workout_scores_on_user_id"
@@ -758,10 +782,12 @@ ActiveRecord::Schema.define(version: 2026_09_09_180000) do
   end
 
   add_foreign_key "activity_logs", "exercises"
+  add_foreign_key "activity_logs", "user_agents"
   add_foreign_key "activity_logs", "users"
   add_foreign_key "activity_logs", "workout_offerings"
   add_foreign_key "activity_logs", "workouts"
   add_foreign_key "attempts", "exercise_versions", name: "attempts_exercise_version_id_fk"
+  add_foreign_key "attempts", "user_agents"
   add_foreign_key "attempts", "users", name: "attempts_user_id_fk"
   add_foreign_key "attempts", "workout_scores", column: "active_score_id", name: "attempts_active_score_id_fk"
   add_foreign_key "attempts", "workout_scores", name: "attempts_workout_score_id_fk"
@@ -778,6 +804,7 @@ ActiveRecord::Schema.define(version: 2026_09_09_180000) do
   add_foreign_key "course_offerings", "courses", name: "course_offerings_course_id_fk"
   add_foreign_key "course_offerings", "terms", name: "course_offerings_term_id_fk"
   add_foreign_key "courses", "organizations", name: "courses_organization_id_fk"
+  add_foreign_key "errors", "user_agents"
   add_foreign_key "exercise_owners", "users", column: "owner_id", name: "exercise_owners_owner_id_fk"
   add_foreign_key "exercise_versions", "irt_data", column: "irt_data_id", name: "exercise_versions_irt_data_id_fk"
   add_foreign_key "exercise_versions", "stems", name: "exercise_versions_stem_id_fk"
@@ -811,6 +838,7 @@ ActiveRecord::Schema.define(version: 2026_09_09_180000) do
   add_foreign_key "workout_owners", "users", column: "owner_id", name: "workout_owners_owner_id_fk"
   add_foreign_key "workout_owners", "workouts", name: "workout_owners_workout_id_fk"
   add_foreign_key "workout_scores", "lti_workouts"
+  add_foreign_key "workout_scores", "user_agents", column: "last_user_agent_id"
   add_foreign_key "workout_scores", "users", name: "workout_scores_user_id_fk"
   add_foreign_key "workout_scores", "workout_offerings", name: "workout_scores_workout_offering_id_fk"
   add_foreign_key "workout_scores", "workouts", name: "workout_scores_workout_id_fk"

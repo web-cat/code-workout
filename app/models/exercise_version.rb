@@ -275,10 +275,17 @@ class ExerciseVersion < ApplicationRecord
       exercise_version: self,
       submit_time: Time.zone.now,
       submit_num: num,
-      ip_address: args[:ip_address]
+      ip_address: args[:ip_address],
+      lms_instance_id: args[:lms_instance_id],
+      lti_launch: args[:lti_launch]
     )
     if args[:workout_score]
       attempt.workout_score = args[:workout_score]
+    end
+    if args[:user_agent]
+      attempt.user_agent = args[:user_agent]
+    elsif args[:user_agent_id]
+      attempt.user_agent_id = args[:user_agent_id]
     end
     attempt
   end

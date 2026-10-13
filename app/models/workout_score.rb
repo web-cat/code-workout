@@ -89,6 +89,20 @@ class WorkoutScore < ApplicationRecord
   belongs_to :workout_offering, inverse_of: :workout_scores
   belongs_to :user, inverse_of: :workout_scores
   belongs_to :lti_workout, inverse_of: :workout_scores
+  belongs_to :last_user_agent, class_name: 'UserAgent', foreign_key: 'last_user_agent_id', optional: true
+
+  # Virtual setter to transparently support assigning raw string user agents
+  def last_user_agent=(val)
+    if val.is_a?(UserAgent) || val.nil?
+      super(val)
+    else
+      super(UserAgent.find_or_create_by_raw(val))
+    end
+  end
+
+  def raw_last_user_agent
+    last_user_agent&.raw_user_agent
+  end
   has_many :attempts,
     -> { order('submit_time desc') },
     inverse_of: :workout_score,

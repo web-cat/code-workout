@@ -177,7 +177,7 @@ RSpec.describe WorkoutOfferingsController, type: :controller do
       allow(section1).to receive(:is_staff?).with(user).and_return(false)
     end
 
-    it "logs a successful lti_launch in ActivityLog" do
+    it "logs a successful lti_launch in ActivityLog including user_agent" do
       expect(ActivityLog).to receive(:create).with(
         hash_including(
           user: user,
@@ -185,10 +185,12 @@ RSpec.describe WorkoutOfferingsController, type: :controller do
           workout_offering: workout_offering,
           workout_score: workout_score,
           activity: 'lti_launch',
+          user_agent: 'CustomTestBrowser/1.0',
           lti_launch: true
         )
       )
 
+      request.env['HTTP_USER_AGENT'] = 'CustomTestBrowser/1.0'
       get :practice, params: {
         organization_id: 'vt',
         course_id: 'cs1114',
@@ -285,7 +287,9 @@ RSpec.describe WorkoutOfferingsController, type: :controller do
         expect(response.body).to include('Back to Review')
         expect(response.body).to include('/courses/vt/cs1114/fall2026/review/')
         expect(response.body).not_to include('<th>LTI?</th>')
+        expect(response.body).not_to include('<th>Browser Agent</th>')
         expect(response.body).to include('<span class=\'badge\'>LTI</span>')
+        expect(response.body).to include("1.2.3.4\n<br>\n<small>Mozilla/5.0</small>").or include("1.2.3.4&#x000A;<br>&#x000A;<small>Mozilla/5.0</small>")
       end
 
       it "renders code prompt answers in <pre> tags and MC answers as 'choice: A' under score" do

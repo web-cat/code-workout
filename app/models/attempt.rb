@@ -84,6 +84,20 @@ class Attempt < ApplicationRecord
   belongs_to :active_score, class_name: 'WorkoutScore',
     foreign_key: 'active_score_id', inverse_of: :scored_attempts
   has_and_belongs_to_many :tag_user_scores
+  belongs_to :user_agent, optional: true
+
+  # Virtual setter to transparently support assigning raw string user agents
+  def user_agent=(val)
+    if val.is_a?(UserAgent) || val.nil?
+      super(val)
+    else
+      super(UserAgent.find_or_create_by_raw(val))
+    end
+  end
+
+  def raw_user_agent
+    user_agent&.raw_user_agent
+  end
 
 
   #~ Validation ...............................................................

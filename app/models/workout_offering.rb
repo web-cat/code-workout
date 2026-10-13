@@ -208,16 +208,22 @@ class WorkoutOffering < ApplicationRecord
     return true if user && (user.global_role.andand.is_admin? || course_offering.andand.is_staff?(user))
 
     ws = workout_score || (user ? score_for(user) : nil)
-    if ws && ws.last_user_agent.present? && ws.last_user_agent == client_user_agent.to_s.strip
+    clean_ua = client_user_agent.to_s.strip
+    if ws && ws.last_user_agent.present? && ws.last_user_agent.to_s == clean_ua
       return true
     end
 
     effective_agents = allowed_user_agents_for(user)
     is_allowed = UserAgentAccessFilter.allowed?(effective_agents, client_user_agent)
 
-    if is_allowed && ws && ws.respond_to?(:persisted?) && ws.persisted? && ws.last_user_agent != client_user_agent.to_s.strip
+    if is_allowed && ws && ws.respond_to?(:persisted?) && ws.persisted? && ws.last_user_agent.to_s != clean_ua
       begin
-        ws.update_columns(last_user_agent: client_user_agent.to_s.strip)
+        ua_record = UserAgent.find_or_create_by_raw(clean_ua)
+        if ws.respond_to?(:last_user_agent_id)
+          ws.update_columns(last_user_agent_id: ua_record&.id)
+        else
+          ws.update_columns(last_user_agent: clean_ua)
+        end
       rescue StandardError => e
         # Ignore database/stubbed model errors in test or readonly contexts
       end

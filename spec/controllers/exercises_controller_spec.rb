@@ -193,7 +193,7 @@ describe ExercisesController do
         expect(controller.instance_variable_get(:@message)).to include("requires a specific browser")
       end
 
-      it "logs practice_view in ActivityLog when student accesses practice and is allowed" do
+      it "logs practice_view in ActivityLog with user_agent when student accesses practice and is allowed" do
         allow(workout_offering).to receive(:ip_allowed?).and_return(true)
         allow(workout_offering).to receive(:user_agent_allowed?).and_return(true)
 
@@ -203,10 +203,12 @@ describe ExercisesController do
           workout_offering: workout_offering,
           workout_score: workout_score,
           activity: 'practice_view',
-          ip_address: '192.168.1.5'
+          ip_address: '192.168.1.5',
+          user_agent: 'CustomTestBrowser/1.0'
         ))
 
         request.env['REMOTE_ADDR'] = '192.168.1.5'
+        request.env['HTTP_USER_AGENT'] = 'CustomTestBrowser/1.0'
         get :practice, params: { id: '1', workout_offering_id: '201' }
         expect(response.status).to eq(200)
       end
