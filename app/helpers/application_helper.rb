@@ -324,4 +324,47 @@ module ApplicationHelper
     target != 'window'
   end
 
+
+  # -------------------------------------------------------------
+  # Returns the letter (A, B, C, ...) corresponding to a Choice.
+  def choice_letter(choice, prompt = nil)
+    return '' unless choice
+
+    prompt ||= choice.multiple_choice_prompt if choice.respond_to?(:multiple_choice_prompt)
+    if prompt && prompt.respond_to?(:choices) && prompt.choices.present?
+      idx = prompt.choices.index { |c| c.id == choice.id }
+      return ('A'.ord + idx).chr if idx
+    end
+
+    if choice.respond_to?(:position) && choice.position.present?
+      pos = choice.position
+      return ('A'.ord + pos - 1).chr if pos > 0
+      return 'A' if pos == 0
+    end
+
+    choice.respond_to?(:answer) ? choice.answer.to_s : choice.to_s
+  end
+
+
+  # -------------------------------------------------------------
+  # Formats a multiple-choice prompt answer display string (e.g. "choice: A").
+  def mc_answer_display(answer, prompt = nil)
+    prompt ||= answer.prompt.specific if answer.respond_to?(:prompt) && answer.prompt.respond_to?(:specific)
+
+    choices = []
+    if answer.respond_to?(:choices)
+      choices = answer.choices
+    elsif answer.respond_to?(:specific) && answer.specific.respond_to?(:choices)
+      choices = answer.specific.choices
+    end
+
+    letters = choices.map { |c| choice_letter(c, prompt) }.reject(&:blank?)
+    if letters.present?
+      "choice: #{letters.join(', ')}"
+    else
+      "choice: (none)"
+    end
+  end
+
 end
+
