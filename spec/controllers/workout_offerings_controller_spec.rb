@@ -272,7 +272,7 @@ RSpec.describe WorkoutOfferingsController, type: :controller do
         allow(instructor).to receive_message_chain(:global_role, :can_edit_system_configuration?).and_return(false)
       end
 
-      it "renders the activity_log template with the review link" do
+      it "renders the activity_log template with the review link, without LTI column, and with LTI badge" do
         get :activity_log, params: {
           organization_id: 'vt',
           course_id: 'cs1114',
@@ -284,6 +284,58 @@ RSpec.describe WorkoutOfferingsController, type: :controller do
         expect(response.status).to eq(200)
         expect(response.body).to include('Back to Review')
         expect(response.body).to include('/courses/vt/cs1114/fall2026/review/')
+        expect(response.body).not_to include('<th>LTI?</th>')
+        expect(response.body).to include('<span class=\'badge\'>LTI</span>')
+      end
+
+      it "renders code prompt answers in <pre> tags and MC answers as 'choice: A' under score" do
+        exercise = double('Exercise', id: 42)
+        ex_version = double('ExerciseVersion', exercise: exercise)
+
+        coding_answer = double('CodingPromptAnswer', answer: "def foo\n  42\nend")
+        pa_coding = double('PromptAnswer', specific: coding_answer)
+        attempt_coding = double('Attempt',
+          id: 501,
+          submit_time: Time.zone.parse('2026-09-01 10:05:00'),
+          score: 10.0,
+          ip_address: '1.2.3.4',
+          lti_launch: false,
+          prompt_answers: [pa_coding],
+          exercise_version: ex_version
+        )
+
+        choice_a = double('Choice', id: 1, multiple_choice_prompt: nil, position: 1)
+        mc_answer = double('MultipleChoicePromptAnswer', prompt: nil, choices: [choice_a])
+        pa_mc = double('PromptAnswer', specific: mc_answer, prompt: nil)
+        attempt_mc = double('Attempt',
+          id: 502,
+          submit_time: Time.zone.parse('2026-09-01 10:10:00'),
+          score: 5.0,
+          ip_address: '1.2.3.4',
+          lti_launch: true,
+          prompt_answers: [pa_mc],
+          exercise_version: ex_version
+        )
+
+        allow(Attempt).to receive(:where).with(workout_score: workout_score).and_return([attempt_coding, attempt_mc])
+
+        get :activity_log, params: {
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          id: '201',
+          workout_score_id: '301'
+        }
+
+        expect(response.status).to eq(200)
+        expect(response.body).to include('<pre>def foo&#x000A;  42&#x000A;end</pre>').or include("<pre>def foo\n  42\nend</pre>")
+        expect(response.body).to include('choice: A')
+        expect(response.body).to include(
+          "<a class=\"btn btn-default btn-xs\" href=\"/courses/vt/cs1114/fall2026/201/review/#{student.id}/42?attempt_id=501\">View</a>"
+        )
+        expect(response.body).to include(
+          "<a class=\"btn btn-default btn-xs\" href=\"/courses/vt/cs1114/fall2026/201/review/#{student.id}/42?attempt_id=502\">View</a>"
+        )
       end
     end
   end
