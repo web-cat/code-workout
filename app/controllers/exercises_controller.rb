@@ -892,6 +892,7 @@ class ExercisesController < ApplicationController
         workout_score: @workout_score,
         activity: 'practice_view',
         ip_address: request.remote_ip,
+        user_agent: request.user_agent,
         lms_instance_id: lti_context.andand[:lms_instance_id],
         lti_launch: lti_context.present?
       )
@@ -1085,7 +1086,8 @@ class ExercisesController < ApplicationController
       workout_score: @workout_score,
       ip_address: request.remote_ip,
       lms_instance_id: lti_context.andand[:lms_instance_id],
-      lti_launch: lti_context.present?)
+      lti_launch: lti_context.present?,
+      user_agent: request.user_agent)
 
     @attempt.save!
 

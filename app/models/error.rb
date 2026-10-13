@@ -29,4 +29,18 @@
 #
 class Error < ApplicationRecord
 #  belongs_to :usable, polymorphic: true
+  belongs_to :user_agent, optional: true
+
+  # Virtual setter to transparently support assigning raw string user agents
+  def user_agent=(val)
+    if val.is_a?(UserAgent) || val.nil?
+      super(val)
+    else
+      super(UserAgent.find_or_create_by_raw(val))
+    end
+  end
+
+  def raw_user_agent
+    user_agent&.raw_user_agent
+  end
 end

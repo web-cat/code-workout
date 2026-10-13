@@ -15,7 +15,6 @@
           %th Event Type
           %th Activity
           %th IP Address
-          %th Browser Agent
           %th Details
       %tbody
         - @events.each do |event|
@@ -29,10 +28,11 @@
               - if event[:lti]
                 &nbsp;
                 %span.badge LTI
-            %td= event[:ip]
             %td
+              = event[:ip]
               - if event[:user_agent].present?
-                %small= truncate(event[:user_agent], length: 60)
+                %br
+                %small{ title: user_agent_raw(event[:user_agent]) }= user_agent_display(event[:user_agent])
             %td
               - if event[:type] == 'attempt'
                 Score: #{event[:score]}

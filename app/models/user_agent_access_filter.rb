@@ -1,4 +1,21 @@
 module UserAgentAccessFilter
+  LOCKDOWN_PATTERN = '/\b(LockDown(\s+Browser)?|CLDB|CMAC|LDB|Respondus)\b/i'.freeze
+  SEB_PATTERN      = '/\b(SEB|SafeExamBrowser|Safe\s+Exam\s+Browser)\b/i'.freeze
+
+  ALIASES = {
+    'lockdown'                   => LOCKDOWN_PATTERN,
+    'lockdown browser'           => LOCKDOWN_PATTERN,
+    'lockdownbrowser'            => LOCKDOWN_PATTERN,
+    'ldb'                        => LOCKDOWN_PATTERN,
+    'cldb'                       => LOCKDOWN_PATTERN,
+    'cmac'                       => LOCKDOWN_PATTERN,
+    'respondus'                  => LOCKDOWN_PATTERN,
+    'respondus lockdown browser' => LOCKDOWN_PATTERN,
+    'seb'                        => SEB_PATTERN,
+    'safe exam browser'          => SEB_PATTERN,
+    'safeexambrowser'            => SEB_PATTERN
+  }.freeze
+
   class << self
     # Determines if client_user_agent satisfies the given allowed_rule.
     #
@@ -10,9 +27,11 @@ module UserAgentAccessFilter
     #     e.g. "LockDown Browser, SEB" or ["LockDown Browser", "Secure Exam Browser"]
     #
     # Patterns supported per token:
+    # - Known aliases: 'lockdown', 'lockdown browser', 'LDB', 'ldb', 'SEB', 'seb', 'safe exam browser'
+    #   (automatically expanded to regular expressions with word boundary markers matching all known variants)
     # - 'any', 'all', '*', 'unrestricted': returns true
     # - 'none': blocks
-    # - Substring matching (case-insensitive): e.g. "LockDown Browser", "SEB", "Respondus"
+    # - Substring matching (case-insensitive): e.g. "Safari", "Chrome"
     # - Wildcard / glob patterns: e.g. "*LockDown*", "*SEB*"
     # - Regular expressions: e.g. "/lockdown.*browser/i"
     def allowed?(allowed_rule, client_user_agent)
@@ -41,10 +60,17 @@ module UserAgentAccessFilter
       if rule.is_a?(Array)
         rule.flat_map { |r| extract_tokens(r) }
       elsif rule.is_a?(String)
-        rule.split(/[\r\n,;]+/).map(&:strip).reject(&:blank?)
+        rule.split(/[\r\n,;]+/).map(&:strip).reject(&:blank?).map { |t| expand_alias(t) }
       else
         []
       end
+    end
+
+    def expand_alias(token)
+      return token if token.blank?
+
+      normalized = token.to_s.strip.downcase.gsub(/[-_]+/, ' ').gsub(/\s+/, ' ')
+      ALIASES[normalized] || ALIASES[normalized.delete(' ')] || token
     end
 
     private
@@ -58,8 +84,10 @@ module UserAgentAccessFilter
     end
 
     def match_token?(token, client_user_agent)
-      t = token.to_s.strip
       agent = client_user_agent.to_s.strip
+      return true if token.is_a?(Regexp) && agent =~ token
+
+      t = token.to_s.strip
 
       # Check for regex format /pattern/flags
       if t =~ %r{\A/(.+)/([imx]*)\z}

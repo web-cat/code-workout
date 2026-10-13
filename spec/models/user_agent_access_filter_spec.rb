@@ -97,5 +97,54 @@ RSpec.describe UserAgentAccessFilter do
         expect(described_class.allowed?("LockDown Browser", "   ")).to be false
       end
     end
+
+    context "with alias expansion and word boundary patterns" do
+      let(:cldb_ua) { "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 CLDB/2.1.2.04" }
+      let(:cmac_ua) { "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 CMAC/2.1.2.04" }
+      let(:safe_exam_browser_ua) { "Mozilla/5.0 (Windows NT 10.0; Win64; x64) SafeExamBrowser/3.1" }
+      let(:false_positive_ua) { "Mozilla/5.0 (Linux; Android 10; Rosebud Build/a1seb2)" }
+
+      it "expands lockdown aliases ('lockdown', 'lockdown browser', 'LDB', 'ldb') to match modern and classic LockDown agents" do
+        %w[lockdown lockdown\ browser LDB ldb cldb cmac respondus].each do |alias_token|
+          expect(described_class.allowed?(alias_token, cldb_ua)).to be(true), "Failed for alias #{alias_token} on Windows CLDB"
+          expect(described_class.allowed?(alias_token, cmac_ua)).to be(true), "Failed for alias #{alias_token} on Mac CMAC"
+          expect(described_class.allowed?(alias_token, lockdown_ua)).to be(true), "Failed for alias #{alias_token} on classic LockDown"
+          expect(described_class.allowed?(alias_token, chrome_ua)).to be(false), "Allowed standard Chrome for alias #{alias_token}"
+        end
+      end
+
+      it "expands SEB aliases ('SEB', 'seb', 'safe exam browser') to match Safe Exam Browser agents" do
+        ['SEB', 'seb', 'safe exam browser', 'Safe Exam Browser', 'safeexambrowser', 'safe-exam-browser'].each do |alias_token|
+          expect(described_class.allowed?(alias_token, seb_ua)).to be(true), "Failed for alias #{alias_token} on SEB/3.2.0"
+          expect(described_class.allowed?(alias_token, safe_exam_browser_ua)).to be(true), "Failed for alias #{alias_token} on SafeExamBrowser/3.1"
+          expect(described_class.allowed?(alias_token, chrome_ua)).to be(false), "Allowed standard Chrome for alias #{alias_token}"
+        end
+      end
+
+      it "enforces word boundaries to prevent matching 'seb' within unrelated words or build identifiers" do
+        expect(described_class.allowed?("seb", false_positive_ua)).to be false
+        expect(described_class.allowed?("SEB", false_positive_ua)).to be false
+      end
+    end
+  end
+
+  describe ".expand_alias" do
+    it "expands LockDown aliases to the LOCKDOWN_PATTERN regex" do
+      %w[lockdown lockdown\ browser LockDown\ Browser LDB ldb CLDB cldb CMAC cmac respondus].each do |alias_token|
+        expect(described_class.expand_alias(alias_token)).to eq(described_class::LOCKDOWN_PATTERN)
+      end
+    end
+
+    it "expands Safe Exam Browser aliases to the SEB_PATTERN regex" do
+      ['SEB', 'seb', 'safe exam browser', 'Safe Exam Browser', 'SafeExamBrowser', 'safe-exam-browser'].each do |alias_token|
+        expect(described_class.expand_alias(alias_token)).to eq(described_class::SEB_PATTERN)
+      end
+    end
+
+    it "leaves non-alias tokens unchanged" do
+      expect(described_class.expand_alias("Chrome")).to eq("Chrome")
+      expect(described_class.expand_alias("Firefox/120")).to eq("Firefox/120")
+      expect(described_class.expand_alias("/custom.*regex/i")).to eq("/custom.*regex/i")
+    end
   end
 end
