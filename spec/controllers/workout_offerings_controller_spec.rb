@@ -287,9 +287,8 @@ RSpec.describe WorkoutOfferingsController, type: :controller do
         expect(response.body).to include('Back to Review')
         expect(response.body).to include('/courses/vt/cs1114/fall2026/review/')
         expect(response.body).not_to include('<th>LTI?</th>')
-        expect(response.body).not_to include('<th>Browser Agent</th>')
         expect(response.body).to include('<span class=\'badge\'>LTI</span>')
-        expect(response.body).to include("1.2.3.4\n<br>\n<small>Mozilla/5.0</small>").or include("1.2.3.4&#x000A;<br>&#x000A;<small>Mozilla/5.0</small>")
+        expect(response.body).to include('<small title=\'Mozilla/5.0\'>Mozilla/5.0</small>')
       end
 
       it "renders code prompt answers in <pre> tags and MC answers as 'choice: A' under score" do

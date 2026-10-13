@@ -366,5 +366,33 @@ module ApplicationHelper
     end
   end
 
+
+  # -------------------------------------------------------------
+  # Returns the friendly display_name of a user agent (or UserAgent record).
+  def user_agent_display(ua)
+    return '' if ua.blank?
+
+    if ua.respond_to?(:display_name)
+      ua.display_name
+    elsif ua.is_a?(String)
+      UserAgent.find_or_create_by_raw(ua)&.display_name || ua
+    else
+      ua.to_s
+    end
+  end
+
+
+  # -------------------------------------------------------------
+  # Returns the raw original user agent string for tooltips/titles.
+  def user_agent_raw(ua)
+    return '' if ua.blank?
+
+    if ua.respond_to?(:raw_user_agent)
+      ua.raw_user_agent
+    else
+      ua.to_s
+    end
+  end
+
 end
 

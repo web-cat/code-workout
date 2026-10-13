@@ -79,5 +79,39 @@ describe ApplicationHelper, type: :helper do
       expect(helper.mc_answer_display(answer)).to eq('choice: (none)')
     end
   end
+
+  describe "#user_agent_display" do
+    it "returns empty string for nil or blank" do
+      expect(helper.user_agent_display(nil)).to eq('')
+      expect(helper.user_agent_display('')).to eq('')
+    end
+
+    it "returns display_name if object responds to display_name" do
+      ua = double('UserAgent', display_name: 'LockDown Browser 2.1 (Windows)')
+      expect(helper.user_agent_display(ua)).to eq('LockDown Browser 2.1 (Windows)')
+    end
+
+    it "resolves display_name from raw user agent string" do
+      raw = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      result = helper.user_agent_display(raw)
+      expect(result).to include('Chrome')
+    end
+  end
+
+  describe "#user_agent_raw" do
+    it "returns empty string for nil or blank" do
+      expect(helper.user_agent_raw(nil)).to eq('')
+      expect(helper.user_agent_raw('')).to eq('')
+    end
+
+    it "returns raw_user_agent if object responds to raw_user_agent" do
+      ua = double('UserAgent', raw_user_agent: 'Custom Raw UA')
+      expect(helper.user_agent_raw(ua)).to eq('Custom Raw UA')
+    end
+
+    it "returns to_s for raw strings" do
+      expect(helper.user_agent_raw('Just a string')).to eq('Just a string')
+    end
+  end
 end
 

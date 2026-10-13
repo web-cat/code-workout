@@ -32,7 +32,7 @@
               = event[:ip]
               - if event[:user_agent].present?
                 %br
-                %small= truncate(event[:user_agent].to_s, length: 60)
+                %small{ title: user_agent_raw(event[:user_agent]) }= user_agent_display(event[:user_agent])
             %td
               - if event[:type] == 'attempt'
                 Score: #{event[:score]}
