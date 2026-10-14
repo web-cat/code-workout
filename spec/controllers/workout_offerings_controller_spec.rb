@@ -340,6 +340,42 @@ RSpec.describe WorkoutOfferingsController, type: :controller do
           "<a class=\"btn btn-default btn-xs\" href=\"/courses/vt/cs1114/fall2026/201/review/#{student.id}/42?attempt_id=502\">View</a>"
         )
       end
+
+      it "renders error alert for coding prompt answers when error is present" do
+        exercise = double('Exercise', id: 42)
+        ex_version = double('ExerciseVersion', exercise: exercise)
+
+        coding_answer_with_error = double('CodingPromptAnswer',
+          answer: "def foo\n  syntax error here",
+          error: "SyntaxError: unexpected token\n  at line 2"
+        )
+        pa_error = double('PromptAnswer', specific: coding_answer_with_error)
+        attempt_error = double('Attempt',
+          id: 503,
+          submit_time: Time.zone.parse('2026-09-01 10:15:00'),
+          score: 0.0,
+          ip_address: '1.2.3.4',
+          lti_launch: false,
+          prompt_answers: [pa_error],
+          exercise_version: ex_version
+        )
+
+        allow(Attempt).to receive(:where).with(workout_score: workout_score).and_return([attempt_error])
+
+        get :activity_log, params: {
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          id: '201',
+          workout_score_id: '301'
+        }
+
+        expect(response.status).to eq(200)
+        expect(response.body).to include("<div class='alert alert-danger' role='alert'>").or include('<div class="alert alert-danger" role="alert">')
+        expect(response.body).to include('SyntaxError: unexpected token')
+        expect(response.body).to include('<br>')
+        expect(response.body).to include('at line 2')
+      end
     end
   end
 
