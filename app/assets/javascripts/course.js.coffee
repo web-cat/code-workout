@@ -88,6 +88,14 @@ $(document).on 'input search', '.gradebook-filter-student, .gradebook-filter-ass
   $section = $(this).closest('.gradebook-section')
   applyGradebookFilters($section)
 
+$(document).on 'click', '.gradebook-clear-input', ->
+  $inputGroup = $(this).closest('.input-group')
+  $input = $inputGroup.find('input')
+  $input.val('')
+  $section = $(this).closest('.gradebook-section')
+  applyGradebookFilters($section)
+  $input.focus()
+
 $(document).on 'click', '.gradebook-filter-reset', ->
   $section = $(this).closest('.gradebook-section')
   $section.find('.gradebook-filter-student').val('')
