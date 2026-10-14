@@ -620,19 +620,25 @@ ul.ui-autocomplete {
   }
 
   .gradebook-filters {
-    .form-inline {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
 
-    .form-group {
-      margin-bottom: 0;
+    .gradebook-filter-group {
+      margin: 0;
+      display: inline-block;
+      vertical-align: middle;
+
+      /* Prevent Bootstrap 3 clearfix pseudo-elements from becoming phantom flex items */
+      &:before,
+      &:after {
+        display: none;
+      }
     }
 
     .input-group {
-      width: 220px;
+      width: 240px;
     }
 
     .input-group-addon {
@@ -649,8 +655,17 @@ ul.ui-autocomplete {
       }
     }
 
-    .gradebook-filter-reset {
-      margin-left: 2px;
+    .gradebook-clear-input {
+      color: #888;
+      background-color: #fafafa;
+      border-color: #ccc;
+
+      &:hover,
+      &:focus {
+        color: #333;
+        background-color: #ebebeb;
+        border-color: #adadad;
+      }
     }
   }
 }

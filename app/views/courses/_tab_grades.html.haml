@@ -16,30 +16,36 @@
             course_offering_gradebook_path(offering, format: :csv),
             class: 'btn btn-default'
         .gradebook-filters
-          .form-inline
-            .form-group
-              %label.sr-only{ for: "filter-student-#{offering.id}" } Filter by student
-              .input-group.input-group-sm
-                %span.input-group-addon
-                  %i.fa.fa-user
-                %input.form-control.gradebook-filter-student{ id: "filter-student-#{offering.id}",
-                  type: 'search',
-                  placeholder: 'Filter by student...',
-                  autocomplete: 'off',
-                  data: { offering_id: offering.id } }
-            .form-group
-              %label.sr-only{ for: "filter-assignment-#{offering.id}" } Filter by assignment
-              .input-group.input-group-sm
-                %span.input-group-addon
-                  %i.fa.fa-book
-                %input.form-control.gradebook-filter-assignment{ id: "filter-assignment-#{offering.id}",
-                  type: 'search',
-                  placeholder: 'Filter by assignment...',
-                  autocomplete: 'off',
-                  data: { offering_id: offering.id } }
-            %button.btn.btn-sm.btn-default.gradebook-filter-reset{ type: 'button', title: 'Clear filters' }
-              %i.fa.fa-times
-              Clear
+          .form-group.gradebook-filter-group
+            %label.sr-only{ for: "filter-student-#{offering.id}" } Filter by student
+            .input-group.input-group-sm
+              %span.input-group-addon
+                %i.fa.fa-user
+              %input.form-control.gradebook-filter-student{ id: "filter-student-#{offering.id}",
+                type: 'text',
+                placeholder: 'Filter by student...',
+                autocomplete: 'off',
+                data: { offering_id: offering.id } }
+              %span.input-group-btn
+                %button.btn.btn-default.gradebook-clear-input.gradebook-clear-student{ type: 'button',
+                  title: 'Clear student filter',
+                  aria: { label: 'Clear student filter' } }
+                  %i.fa.fa-times
+          .form-group.gradebook-filter-group
+            %label.sr-only{ for: "filter-assignment-#{offering.id}" } Filter by assignment
+            .input-group.input-group-sm
+              %span.input-group-addon
+                %i.fa.fa-book
+              %input.form-control.gradebook-filter-assignment{ id: "filter-assignment-#{offering.id}",
+                type: 'text',
+                placeholder: 'Filter by assignment...',
+                autocomplete: 'off',
+                data: { offering_id: offering.id } }
+              %span.input-group-btn
+                %button.btn.btn-default.gradebook-clear-input.gradebook-clear-assignment{ type: 'button',
+                  title: 'Clear assignment filter',
+                  aria: { label: 'Clear assignment filter' } }
+                  %i.fa.fa-times
       .gradebook-table-wrapper
         %table.table.table-striped.gradebook-table
           %thead
