@@ -52,6 +52,53 @@ request_remove_enrollment = (id, row) ->
       row.fadeOut()
 
 ##########################
+#    GRADEBOOK FILTERS   #
+##########################
+
+applyGradebookFilters = ($section) ->
+  studentQuery = ($section.find('.gradebook-filter-student').val() || '').toLowerCase().trim()
+  assignmentQuery = ($section.find('.gradebook-filter-assignment').val() || '').toLowerCase().trim()
+  $table = $section.find('.gradebook-table')
+
+  # Filter student rows
+  $table.find('tbody tr').each ->
+    $row = $(this)
+    $studentCell = $row.find('.col-student')
+    studentName = ($studentCell.data('student-name') || '').toLowerCase()
+    studentEmail = ($studentCell.data('student-email') || '').toLowerCase()
+    studentText = $studentCell.text().toLowerCase()
+
+    matchesStudent = !studentQuery ||
+      studentName.indexOf(studentQuery) != -1 ||
+      studentEmail.indexOf(studentQuery) != -1 ||
+      studentText.indexOf(studentQuery) != -1
+
+    $row.toggle(matchesStudent)
+
+  # Filter assignment columns
+  $table.find('thead th.col-workout').each ->
+    $th = $(this)
+    workoutName = ($th.data('workout-name') || $th.text()).toLowerCase()
+    wktoId = $th.data('wkto-id')
+    matchesAssignment = !assignmentQuery || workoutName.indexOf(assignmentQuery) != -1
+
+    $table.find(".col-wkto-#{wktoId}").toggle(matchesAssignment)
+
+$(document).on 'input search', '.gradebook-filter-student, .gradebook-filter-assignment', ->
+  $section = $(this).closest('.gradebook-section')
+  applyGradebookFilters($section)
+
+$(document).on 'click', '.gradebook-filter-reset', ->
+  $section = $(this).closest('.gradebook-section')
+  $section.find('.gradebook-filter-student').val('')
+  $section.find('.gradebook-filter-assignment').val('')
+  applyGradebookFilters($section)
+
+$(document).on 'keydown', '.gradebook-filter-student, .gradebook-filter-assignment', (e) ->
+  if e.which == 13
+    e.preventDefault()
+
+##########################
 #    PRIVILEGED USERS    #
 ##########################
 
