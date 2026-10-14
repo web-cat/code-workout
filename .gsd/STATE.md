@@ -1,17 +1,40 @@
-## Current Session
-All Waves (Phases 1-8) Complete:
-- IP Access Restrictions (Phases 1-4) Completed and Verified.
-- Browser Agent Requirements (Phases 5-8) Completed and Verified:
-  - Phase 5: Migration adding `allowed_user_agents` to `workout_offerings` & `student_extensions`, `last_user_agent` to `workout_scores`, and `user_agent` to `activity_logs`. Implemented `UserAgentAccessFilter` and `WorkoutOffering#user_agent_allowed?` with enrollment-context course staff bypass, admin bypass, and fast-path caching.
-  - Phase 6: Deadlines YAML parsing and serialization updated in `WorkoutsController` supporting top-level, per-section, and extension `browsers:`. Help guide updated.
-  - Phase 7: Access enforcement on workout show, exercise practice, and attempt evaluation. Activity logging (`workout_view_user_agent_blocked`, `practice_view_user_agent_blocked`, `attempt_user_agent_blocked`) with client `user_agent` recorded and displayed in instructor activity log table.
-  - Phase 8: Full test suite passing (107 examples, 0 failures across all affected models and controllers).
+## Current Session: Workouts Tab Sorting & Dynamic Filtering (Complete)
 
-## Verification Evidence
-- `spec/models/user_agent_access_filter_spec.rb` (12 examples, 0 failures)
-- `spec/models/workout_offering_spec.rb` (22 examples, 0 failures)
-- `spec/models/ip_access_filter_spec.rb` (13 examples, 0 failures)
-- `spec/controllers/workout_offerings_controller_spec.rb` (13 examples, 0 failures)
-- `spec/controllers/workouts_controller_spec.rb` (37 examples, 0 failures)
-- `spec/controllers/exercises_controller_spec.rb` (10 examples, 0 failures)
-- Total: 107 examples, 0 failures across all 6 test suites.
+### Implementation Summary
+1. **Default Ordering by Due Date:**
+   - Implemented in `CoursesHelper#course_workout_items` ([`app/helpers/courses_helper.rb`](file:///Users/edwards/git/code-workout/app/helpers/courses_helper.rb)):
+     - Computes earliest due date (`soft_deadline || hard_deadline`, with student extension override for students).
+     - Workouts without due dates sort to the end.
+     - Secondary tie-break is alphabetical by workout name.
+     - Automatically aggregates `min_from` (opening date), `max_closed` (closed date), and `due_date` across all offerings for a workout.
+2. **Sorting Control:**
+   - Added `#workout-sort-select` popup control at the top of the workouts tab with options:
+     - Due date (earliest first, default)
+     - Opening date (earliest first)
+     - Alphabetical (A-Z)
+     - Due date (descending)
+     - Opening date (descending)
+     - Alphabetical (descending)
+   - Dynamic client-side DOM reordering implemented in `applyWorkoutSort()` ([`app/assets/javascripts/course.js.coffee`](file:///Users/edwards/git/code-workout/app/assets/javascripts/course.js.coffee)).
+3. **Dynamic Name Filter:**
+   - Filter input `#workout-filter-name` with search icon and clear button `.workout-clear-name` matching the grades tab student filter pattern.
+   - Real-time case-insensitive filtering with Enter key submission prevention and Esc/clear button reset.
+4. **State Filters Popup List:**
+   - Bootstrap dropdown `#workout-state-filter-btn` with multi-select checkboxes for inclusion/exclusion:
+     - `open`: Current date is within available from/until dates (`min_from` .. `max_closed`).
+     - `past_due`: Current date is after due date.
+     - `past`: Current date is after max closed date.
+     - `future`: Current date is before min from date.
+     - `published` / `unpublished`: Offering publication status (for instructors).
+   - Keeps popup open on checkbox toggle (`e.stopPropagation()`).
+   - Includes "Reset state filters" link to quickly clear state filters.
+   - Button text dynamically reflects active selection (e.g., "State: All", "State: Open", "State: Open, Past due", "State: (3 selected)").
+5. **Modern Responsive Grid Layout:**
+   - Replaced brittle static `in_groups_of(2, false)` + `.clearfix` with a responsive flex container (`.workouts-list` + `.workout-card`) in [`app/assets/stylesheets/custom.scss`](file:///Users/edwards/git/code-workout/app/assets/stylesheets/custom.scss).
+   - Eliminates layout breaks when items are filtered or dynamically reordered.
+   - Shows informative alert `.workout-no-matches` when filters yield no results.
+
+### Verification Evidence
+- `spec/helpers/courses_helper_spec.rb`: 5 examples, 0 failures.
+- `spec/views/courses/_tab_workouts.html.haml_spec.rb`: 3 examples, 0 failures.
+- Total: 8 examples, 0 failures across helper and view specs.
