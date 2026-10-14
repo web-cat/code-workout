@@ -45,6 +45,12 @@
                     - specific = prompt_answer.respond_to?(:specific) && prompt_answer.specific.present? ? prompt_answer.specific : prompt_answer
                     - if specific.is_a?(CodingPromptAnswer) || specific.is_a?(ParsonsPromptAnswer) || (specific.respond_to?(:answer) && !specific.respond_to?(:choices))
                       %pre= specific.answer
+                      - if specific.respond_to?(:error) && !specific.error.blank?
+                        .alert.alert-danger{ role: 'alert' }
+                          - specific.error.lines.each_with_index do |line, i|
+                            - if i > 0
+                              %br
+                            = line
                     - elsif specific.is_a?(MultipleChoicePromptAnswer) || specific.respond_to?(:choices)
                       %div= mc_answer_display(prompt_answer)
               - elsif event[:type] == 'activity' && event[:activity] == 'practice_view'
