@@ -3,59 +3,89 @@
   -#= button_to 'Download grades (all sections)',
     -# course_gradebook_path(@course, format: :csv)
 - course_offerings.each do |offering|
-  -if course_offerings.size > 1
-    %h2= offering.display_name
-  - workout_offerings = offering.workout_offerings
-  - if is_student
-    - workout_offerings = workout_offerings.select{ |i| i.can_be_seen_by? current_user }
-  - if can? :generate_gradebook, offering
-    = button_to 'Download section grades',
-      course_offering_gradebook_path(offering, format: :csv)
-    .gradebook-table-wrapper
-      %table.table.table-striped.gradebook-table
+  .gradebook-section{ id: "gradebook-section-#{offering.id}" }
+    - if course_offerings.size > 1
+      %h2= offering.display_name
+    - workout_offerings = offering.workout_offerings
+    - if is_student
+      - workout_offerings = workout_offerings.select{ |i| i.can_be_seen_by? current_user }
+    - if can? :generate_gradebook, offering
+      .gradebook-toolbar
+        .gradebook-download
+          = button_to 'Download section grades',
+            course_offering_gradebook_path(offering, format: :csv),
+            class: 'btn btn-default'
+        .gradebook-filters
+          .form-inline
+            .form-group
+              %label.sr-only{ for: "filter-student-#{offering.id}" } Filter by student
+              .input-group.input-group-sm
+                %span.input-group-addon
+                  %i.fa.fa-user
+                %input.form-control.gradebook-filter-student{ id: "filter-student-#{offering.id}",
+                  type: 'search',
+                  placeholder: 'Filter by student...',
+                  autocomplete: 'off',
+                  data: { offering_id: offering.id } }
+            .form-group
+              %label.sr-only{ for: "filter-assignment-#{offering.id}" } Filter by assignment
+              .input-group.input-group-sm
+                %span.input-group-addon
+                  %i.fa.fa-book
+                %input.form-control.gradebook-filter-assignment{ id: "filter-assignment-#{offering.id}",
+                  type: 'search',
+                  placeholder: 'Filter by assignment...',
+                  autocomplete: 'off',
+                  data: { offering_id: offering.id } }
+            %button.btn.btn-sm.btn-default.gradebook-filter-reset{ type: 'button', title: 'Clear filters' }
+              %i.fa.fa-times
+              Clear
+      .gradebook-table-wrapper
+        %table.table.table-striped.gradebook-table
+          %thead
+            %tr
+              %th.col-student Name
+              - workout_offerings.each do |wkto|
+                %th.col-workout{ class: "col-wkto-#{wkto.id}", data: { workout_name: wkto.workout.name, wkto_id: wkto.id } }= wkto.workout.name
+              %th.col-total Total
+          %tbody
+            - offering.students.each do |student|
+              %tr
+                %td.col-student{ data: { student_name: student.display_name, student_email: student.email } }
+                  = student.display_name
+                  - if !student.last_name.blank? || !student.first_name.blank?
+                    %br
+                    = surround '(', ')' do
+                      = student.email
+                - grand_total = 0.0
+                - workout_offerings.each do |wkto|
+                  - workout_score = @workout_scores_by_offering_and_user ? @workout_scores_by_offering_and_user[[wkto.id, student.id]]&.first : wkto.score_for(student)
+                  - score = workout_score.andand.score
+                  - if score
+                    %td.col-workout{ class: "col-wkto-#{wkto.id}" }
+                      = link_to score.to_s,
+                        organization_workout_offering_review_path(id: wkto.id,
+                        course_id: (@course || wkto.course_offering.course).slug,
+                        term_id: (@term || wkto.course_offering.term).slug,
+                        organization_id: (@organization || wkto.course_offering.course.organization).slug,
+                        review_user_id: student.id)
+                    - grand_total += score
+                  - else
+                    %td.col-workout{ class: "col-wkto-#{wkto.id}" } -/-
+                %td.col-total= grand_total.round(2)
+    - else
+      %table.table.table-striped
         %thead
           %tr
-            %th.col-student Name
-            - workout_offerings.each do |wkto|
-              %th= wkto.workout.name
-            %th Total
+            %th Workout
+            %th Score
         %tbody
-          - offering.students.each do |student|
+          - workout_offerings.each do |wkto|
             %tr
-              %td.col-student
-                = student.display_name
-                - if !student.last_name.blank? || !student.first_name.blank?
-                  %br
-                  = surround '(', ')' do
-                    = student.email
-              - grand_total = 0.0
-              - workout_offerings.each do |wkto|
-                - workout_score = @workout_scores_by_offering_and_user ? @workout_scores_by_offering_and_user[[wkto.id, student.id]]&.first : wkto.score_for(student)
-                - score = workout_score.andand.score
-                - if score
-                  %td= link_to score.to_s,
-                    organization_workout_offering_review_path(id: wkto.id,
-                    course_id: (@course || wkto.course_offering.course).slug,
-                    term_id: (@term || wkto.course_offering.term).slug,
-                    organization_id: (@organization || wkto.course_offering.course.organization).slug,
-                    review_user_id: student.id)
-                  - grand_total += score
-                - else
-                  %td -/-
-              %td= grand_total.round(2)
-  - else
-    %table.table.table-striped
-      %thead
-        %tr
-          %th Workout
-          %th Score
-      %tbody
-        - workout_offerings.each do |wkto|
-          %tr
-            %td= wkto.workout.name
-            - workout_score = @workout_scores_by_offering_id ? @workout_scores_by_offering_id[wkto.id]&.first : wkto.score_for(current_user)
-            - score = workout_score.andand.score
-            - if score && workout_score.show_score?
-              %td= score
-            - else
-              %td.textblur -/-
+              %td= wkto.workout.name
+              - workout_score = @workout_scores_by_offering_id ? @workout_scores_by_offering_id[wkto.id]&.first : wkto.score_for(current_user)
+              - score = workout_score.andand.score
+              - if score && workout_score.show_score?
+                %td= score
+              - else
+                %td.textblur -/-

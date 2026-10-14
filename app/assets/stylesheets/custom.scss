@@ -597,12 +597,70 @@ ul.ui-autocomplete {
 }
 
 /* Sticky Gradebook Table */
+.gradebook-section {
+  margin-bottom: 30px;
+}
+
+.gradebook-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 15px;
+  margin-bottom: 10px;
+
+  .gradebook-download {
+    margin: 0;
+
+    form {
+      display: inline-block;
+      margin: 0;
+    }
+  }
+
+  .gradebook-filters {
+    .form-inline {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .form-group {
+      margin-bottom: 0;
+    }
+
+    .input-group {
+      width: 220px;
+    }
+
+    .input-group-addon {
+      background-color: #f7f7f7;
+      color: #666;
+      border-color: #ccc;
+    }
+
+    .form-control {
+      border-color: #ccc;
+
+      &:focus {
+        border-color: #66afe9;
+      }
+    }
+
+    .gradebook-filter-reset {
+      margin-left: 2px;
+    }
+  }
+}
+
 .gradebook-table-wrapper {
   max-width: 100%;
   max-height: 70vh;
   overflow: auto;
   position: relative;
-  margin-top: 15px;
+  margin-top: 5px;
   margin-bottom: 20px;
   border: 1px solid #ddd;
 }
