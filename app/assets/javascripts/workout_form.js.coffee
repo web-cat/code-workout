@@ -275,6 +275,8 @@ handle_submit = ->
   fd.append 'description', $('#description').val()
   fd.append 'time_limit', $('#time-limit').val()
   fd.append 'attempt_limit', $('#attempt-limit').val()
+  fd.append 'workout_attempt_limit', $('#workout-attempt-limit').val()
+  fd.append 'score_to_keep', $('#score-to-keep').val()
   
   policy = {}
   $('.policy-checkbox').each ->

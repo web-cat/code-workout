@@ -225,7 +225,14 @@ class WorkoutsController < ApplicationController
       :exercise_owners
     )
 
-    @workout_score = @workout.score_for(current_user, @workout_offering)
+    if @workout_offering.respond_to?(:scores_for)
+      @past_scores = @workout_offering.scores_for(current_user)
+      @active_score = @workout_offering.active_score_for(current_user)
+      @can_retake = @workout_offering.can_start_new_attempt?(current_user)
+      @effective_score = @workout_offering.effective_score_for(current_user)
+      @workout_score = @active_score || @workout_offering.kept_workout_score_for(current_user) || @workout_offering.latest_score_for(current_user)
+    end
+    @workout_score ||= @workout.score_for(current_user, @workout_offering)
 
     if @workout_offering && !@workout_offering.ip_allowed?(request.remote_ip, current_user, @workout_score)
       if current_user
@@ -385,6 +392,8 @@ class WorkoutsController < ApplicationController
     @lms_instance_id = params[:lms_instance_id]
     @suggested_name = params[:suggested_name]
     @policy = WorkoutPolicy.new
+    @workout_attempt_limit = 1
+    @score_to_keep = 'highest'
 
     if params[:notice]
       flash.now[:notice] = params[:notice]
@@ -552,6 +561,8 @@ class WorkoutsController < ApplicationController
       @attempt_limit = @workout_offering.andand.attempt_limit
       @published = @workout_offering.andand.published
       @most_recent = @workout_offering.andand.most_recent
+      @workout_attempt_limit = @workout_offering.andand.workout_attempt_limit
+      @score_to_keep = @workout_offering.andand.score_to_keep || 'highest'
       @policy = @workout_offering.andand.workout_policy || @workout.workout_policy || WorkoutPolicy.new
 
       @workout_offerings = current_user.managed_workout_offerings_in_term(
