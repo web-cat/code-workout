@@ -21,14 +21,14 @@
 - [x] Write controller specs for multi-attempt actions
 
 ## Wave 4: Views & User Interface
-- [ ] Update `app/views/workouts/show.html.haml` with attempt summary, attempt history table, kept score indicator, and "Resume" / "Take Workout Again" buttons
-- [ ] Update `app/views/workouts/review.html.haml` with attempt selector tabs/dropdown
-- [ ] Update `app/views/exercises/practice.html.haml` with attempt counter and hidden `workout_score_id` binding
-- [ ] Update `app/views/courses/_tab_grades.html.haml` to display effective score and attempt count
-- [ ] Update gradebook CSV exporters (`course_offerings` and `courses`) to use `effective_score_for`
-- [ ] Update `app/views/workouts/_form.html.haml` to include workout attempt limit and score to keep inputs
+- [x] Update `app/views/workouts/show.html.haml` with attempt summary, attempt history table, kept score indicator, and "Resume" / "Take Workout Again" buttons
+- [x] Update `app/views/workouts/review.html.haml` with attempt selector tabs/dropdown
+- [x] Update `app/views/exercises/practice.html.haml` with attempt counter and hidden `workout_score_id` binding
+- [x] Update `app/views/courses/_tab_grades.html.haml` to display effective score and attempt count
+- [x] Update gradebook CSV exporters (`course_offerings` and `courses`) to use `effective_score_for`
+- [x] Update `app/views/workouts/_form.html.haml` to include workout attempt limit and score to keep inputs
 
 ## Wave 5: End-to-End Verification & Documentation
-- [ ] Run full test suite for models, controllers, and views
-- [ ] Create walkthrough artifact documenting changes and empirical test results
-- [ ] Update `.gsd/STATE.md` with final summary
+- [x] Run full test suite for models, controllers, and views
+- [x] Create walkthrough artifact documenting changes and empirical test results
+- [x] Update `.gsd/STATE.md` with final summary
