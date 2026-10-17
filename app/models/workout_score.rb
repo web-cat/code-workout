@@ -120,6 +120,19 @@ class WorkoutScore < ApplicationRecord
   validates :workout, presence: true
   validates :user, presence: true
 
+  before_create :set_attempt_number
+
+  def set_attempt_number
+    return if workout_offering_id.blank? || user_id.blank?
+    existing_count = WorkoutScore.where(workout_offering_id: workout_offering_id, user_id: user_id).count
+    if existing_count > 0 && (attempt_number.nil? || attempt_number <= 1)
+      existing_max = WorkoutScore.where(workout_offering_id: workout_offering_id, user_id: user_id).maximum(:attempt_number) || existing_count
+      self.attempt_number = existing_max + 1
+    else
+      self.attempt_number ||= 1
+    end
+  end
+
   #~ Instance methods .........................................................
 
   # -------------------------------------------------------------
@@ -521,18 +534,20 @@ class WorkoutScore < ApplicationRecord
   # -------------------------------------------------------------
   def update_lti
     if self.workout_offering
+      effective_score = self.workout_offering.effective_score_for(self.user)
       lms_instance = self.workout_offering.course_offering.lms_instance
     elsif self.lti_workout
+      effective_score = self.score
       lms_instance = self.lti_workout.lms_instance
     end
 
-    if lms_instance && self.lis_outcome_service_url && self.lis_result_sourcedid
+    if lms_instance && self.lis_outcome_service_url && self.lis_result_sourcedid && effective_score
       total_points = ExerciseWorkout.where(workout_id: self.workout_id).sum(:points)
       key = lms_instance.consumer_key
       secret = lms_instance.consumer_secret
 
       begin
-        result = total_points > 0 ? self.score / total_points : 0
+        result = total_points > 0 ? (effective_score / total_points) : 0
         tp = IMS::LTI::ToolProvider.new(key, secret, {
           "lis_outcome_service_url" => "#{self.lis_outcome_service_url}",
           "lis_result_sourcedid" => "#{self.lis_result_sourcedid}"

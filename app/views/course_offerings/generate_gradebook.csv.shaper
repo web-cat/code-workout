@@ -49,8 +49,12 @@ csv.rows student_enrollments do |csv, ce|
   workout_columns.each do |_wkt_id, wc|
     wkt = wc[:workout]
     workout_offering = wc[:workout_offering]
-    if workout_score = WorkoutScore.find_by(user_id: ce.user_id, workout: wkt, workout_offering: workout_offering)
-      tot = workout_score.score.round(2)
+    tot = if workout_offering
+            workout_offering.effective_score_for(student)
+          elsif workout_score = WorkoutScore.find_by(user_id: ce.user_id, workout: wkt)
+            workout_score.score.round(2)
+          end
+    if tot
       csv.cell wc[:col_id], tot
       grand_total += tot
     else

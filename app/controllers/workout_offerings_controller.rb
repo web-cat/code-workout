@@ -2,9 +2,9 @@ class WorkoutOfferingsController < ApplicationController
   # Isn't this handled by authorize_resource already?
   # skip_before_action :authenticate_user!, :only => :practice
 
-  before_action :resolve_section_offering, only: [:show, :practice, :review]
+  before_action :resolve_section_offering, only: [:show, :practice, :review, :start_attempt]
   load_and_authorize_resource
-  skip_authorize_resource :only => [:practice, :activity_log, :error]
+  skip_authorize_resource :only => [:practice, :activity_log, :error, :start_attempt]
   skip_load_resource :only => [:error]
 
   #~ Action methods ...........................................................
@@ -33,7 +33,11 @@ class WorkoutOfferingsController < ApplicationController
         :languages,
         current_version: :prompts
       ) : []
-      @workout_score = @workout_offering.score_for(current_user)
+      @past_scores = @workout_offering.scores_for(current_user)
+      @active_score = @workout_offering.active_score_for(current_user)
+      @can_retake = @workout_offering.can_start_new_attempt?(current_user)
+      @effective_score = @workout_offering.effective_score_for(current_user)
+      @workout_score = @active_score || @workout_offering.kept_workout_score_for(current_user) || @workout_offering.latest_score_for(current_user)
 
       if !@workout_offering.ip_allowed?(request.remote_ip, current_user, @workout_score)
         if current_user
@@ -114,13 +118,64 @@ class WorkoutOfferingsController < ApplicationController
         current_version: :prompts
       ) : []
       review_user = params[:review_user_id] ? User.find_by(id: params[:review_user_id]) : current_user
-      @workout_score = @workout_offering.score_for(review_user)
+      @all_scores = @workout_offering.scores_for(review_user)
+      if params[:workout_score_id].present?
+        @workout_score = @all_scores.find { |s| s.id.to_s == params[:workout_score_id].to_s }
+      elsif params[:attempt_number].present?
+        @workout_score = @all_scores.find { |s| s.attempt_number.to_s == params[:attempt_number].to_s }
+      end
+      @workout_score ||= @workout_offering.kept_workout_score_for(review_user) || @workout_offering.latest_score_for(review_user)
 
       if @workout_score
         @scoring_attempts_by_version_id = @workout_score.scored_attempts.group_by(&:exercise_version_id)
       end
     end
     render 'workouts/review'
+  end
+
+
+  # --------------------------------------------------------------
+  def start_attempt
+    @workout_offering ||= WorkoutOffering.find_by(id: params[:id])
+    unless @workout_offering
+      redirect_to root_path, alert: 'Workout offering not found.' and return
+    end
+
+    if @workout_offering.can_start_new_attempt?(current_user)
+      new_score = @workout_offering.active_score_for(current_user)
+      if new_score.nil?
+        next_num = @workout_offering.attempts_taken_for(current_user) + 1
+        new_score = WorkoutScore.create!(
+          user: current_user,
+          workout_offering: @workout_offering,
+          workout: @workout_offering.workout,
+          attempt_number: next_num,
+          score: 0,
+          exercises_completed: 0,
+          exercises_remaining: @workout_offering.workout.exercises.count,
+          started_at: Time.zone.now,
+          lis_outcome_service_url: params[:lis_outcome_service_url] || session[:lis_outcome_service_url],
+          lis_result_sourcedid: params[:lis_result_sourcedid] || session[:lis_result_sourcedid]
+        )
+      end
+
+      first_ex = @workout_offering.workout.first_exercise
+      redirect_to organization_workout_offering_exercise_path(
+        organization_id: @workout_offering.course_offering.course.organization.slug,
+        course_id: @workout_offering.course_offering.course.slug,
+        term_id: @workout_offering.course_offering.term.slug,
+        workout_offering_id: @workout_offering.id,
+        workout_score_id: new_score.id,
+        id: first_ex.id
+      )
+    else
+      redirect_to organization_workout_offering_path(
+        organization_id: @workout_offering.course_offering.course.organization.slug,
+        course_id: @workout_offering.course_offering.course.slug,
+        term_id: @workout_offering.course_offering.term.slug,
+        id: @workout_offering.id
+      ), alert: 'You cannot start a new attempt at this time.'
+    end
   end
 
 
@@ -248,31 +303,73 @@ class WorkoutOfferingsController < ApplicationController
       end
 
       if current_user
-        @workout_score = @workout_offering.score_for(current_user)
-        if @workout_score.nil? && @workout_offering.can_be_practiced_by?(current_user)
-          @workout_score = WorkoutScore.new(
-            score: 0,
-            exercises_completed: 0,
-            exercises_remaining: @workout_offering.workout.exercises.length,
-            user: current_user,
-            workout_offering: @workout_offering,
-            workout: @workout_offering.workout,
-          )
-          @workout_score.lis_outcome_service_url = lis_outcome_service_url
-          @workout_score.lis_result_sourcedid = lis_result_sourcedid
-          @workout_score.save!
+        @workout_score = params[:workout_score_id].present? ? WorkoutScore.find_by(id: params[:workout_score_id]) : nil
+        @workout_score ||= @workout_offering.active_score_for(current_user) || @workout_offering.score_for(current_user)
+
+        if @workout_score.nil?
+          if @workout_offering.attempts_taken_for(current_user) == 0 && @workout_offering.can_be_practiced_by?(current_user)
+            @workout_score = WorkoutScore.new(
+              score: 0,
+              exercises_completed: 0,
+              exercises_remaining: @workout_offering.workout.exercises.length,
+              user: current_user,
+              workout_offering: @workout_offering,
+              workout: @workout_offering.workout,
+              attempt_number: 1,
+              started_at: Time.zone.now
+            )
+            @workout_score.lis_outcome_service_url = lis_outcome_service_url
+            @workout_score.lis_result_sourcedid = lis_result_sourcedid
+            @workout_score.save!
+          elsif @workout_offering.can_start_new_attempt?(current_user)
+            if params[:new_attempt] == '1'
+              next_num = @workout_offering.attempts_taken_for(current_user) + 1
+              @workout_score = WorkoutScore.new(
+                score: 0,
+                exercises_completed: 0,
+                exercises_remaining: @workout_offering.workout.exercises.length,
+                user: current_user,
+                workout_offering: @workout_offering,
+                workout: @workout_offering.workout,
+                attempt_number: next_num,
+                started_at: Time.zone.now
+              )
+              @workout_score.lis_outcome_service_url = lis_outcome_service_url
+              @workout_score.lis_result_sourcedid = lis_result_sourcedid
+              @workout_score.save!
+            else
+              redirect_to organization_workout_offering_path(
+                organization_id: @workout_offering.course_offering.course.organization.slug,
+                course_id: @workout_offering.course_offering.course.slug,
+                term_id: @workout_offering.course_offering.term.slug,
+                id: @workout_offering.id) and return
+            end
+          else
+            redirect_to organization_workout_offering_path(
+              organization_id: @workout_offering.course_offering.course.organization.slug,
+              course_id: @workout_offering.course_offering.course.slug,
+              term_id: @workout_offering.course_offering.term.slug,
+              id: @workout_offering.id),
+              notice: "You have completed all allowed attempts or the deadline has passed for this workout." and return
+          end
         end
-        if @workout_score.andand.closed? &&
-          @workout_score.andand.workout_offering.andand.workout_policy.
-          andand.no_review_before_close &&
-          !@workout_score.andand.workout_offering.andand.shutdown?
-          redirect_to organization_workout_offering_path(
-            organization_id:
-              @workout_offering.course_offering.course.organization.slug,
-            course_id: @workout_offering.course_offering.course.slug,
-            term_id: @workout_offering.course_offering.term.slug,
-            id: @workout_offering.id),
-            notice: "The time limit has passed for this workout." and return
+
+        if @workout_score.andand.closed?
+          if @workout_offering.can_start_new_attempt?(current_user)
+            redirect_to organization_workout_offering_path(
+              organization_id: @workout_offering.course_offering.course.organization.slug,
+              course_id: @workout_offering.course_offering.course.slug,
+              term_id: @workout_offering.course_offering.term.slug,
+              id: @workout_offering.id),
+              notice: "Your previous attempt has closed. You may start a new attempt." and return
+          else
+            redirect_to organization_workout_offering_path(
+              organization_id: @workout_offering.course_offering.course.organization.slug,
+              course_id: @workout_offering.course_offering.course.slug,
+              term_id: @workout_offering.course_offering.term.slug,
+              id: @workout_offering.id),
+              notice: "The time limit has passed for this workout." and return
+          end
         end
 
         if @lti_launch.present?
@@ -307,6 +404,7 @@ class WorkoutOfferingsController < ApplicationController
         course_id: @workout_offering.course_offering.course.slug,
         term_id: @workout_offering.course_offering.term.slug,
         workout_offering_id: @workout_offering.id,
+        workout_score_id: @workout_score.andand.id,
         lis_result_sourcedid: lis_result_sourcedid,
         lis_outcome_service_url: lis_outcome_service_url,
         lti_launch: @lti_launch,

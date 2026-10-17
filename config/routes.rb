@@ -394,6 +394,7 @@ Rails.application.routes.draw do
 
   get '/request_extension' => 'workout_offerings#request_extension'
   post '/add_extension' => 'workout_offerings#add_extension'
+  post '/workout_offerings/:id/start_attempt' => 'workout_offerings#start_attempt', as: :start_attempt_workout_offering
 
   # All of the routes anchored at /gym
   scope :gym do
@@ -481,6 +482,7 @@ Rails.application.routes.draw do
     get ':course_id/:term_id/workouts/:id' => 'workouts#course_workout_show', as: :course_workout
     get ':course_id/:term_id/:workout_offering_id/edit_workout' => 'workouts#edit', as: :edit_workout
     get ':course_id/:term_id/:id/practice(/:exercise_id)' => 'workout_offerings#practice', as: :workout_offering_practice
+    post ':course_id/:term_id/:id/start_attempt' => 'workout_offerings#start_attempt', as: :workout_offering_start_attempt
     get ':course_id/:term_id/find_offering/:workout_name' => 'workouts#find_offering', as: :find_workout_offering
     get ':course_id/:term_id/:id/error' => 'workout_offerings#error', as: :workout_offering_error
     get ':course_id/:term_id/:id/activity_log' => 'workout_offerings#activity_log', as: :workout_offering_activity_log

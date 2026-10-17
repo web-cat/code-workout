@@ -56,9 +56,8 @@ student_role_id = student_role&.id
         workout_offering = off.workout_offerings.respond_to?(:find_by) ?
           off.workout_offerings.find_by(workout: wkt) :
           off.workout_offerings.find { |wo| (wo.respond_to?(:workout_id) && wo.workout_id == wkt.id) || (wo.respond_to?(:workout) && wo.workout == wkt) }
-        workout_score = workout_offering ? WorkoutScore.find_by(user_id: ce.user_id, workout: wkt, workout_offering: workout_offering) : nil
-        if workout_score
-          tot = workout_score.score
+        tot = workout_offering ? workout_offering.effective_score_for(user) : nil
+        if tot
           row.cell wc[:col_id], tot
           grand_total += tot
         else

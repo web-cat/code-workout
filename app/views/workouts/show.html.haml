@@ -1,7 +1,10 @@
 - course_offering ||= @workout_offering.andand.course_offering
-- workout_score ||= @workout_score || @workout.score_for(current_user, @workout_offering)
+- workout_score ||= @workout_score || (@workout_offering ? (@active_score || @workout_offering.kept_workout_score_for(current_user) || @workout_offering.latest_score_for(current_user)) : @workout.score_for(current_user, @workout_offering))
 - is_staff = @is_staff.nil? ? (course_offering && course_offering.is_staff?(current_user)) : @is_staff
 - manages_course = @manages_course.nil? ? (current_user ? (current_user.global_role.is_admin? || course_offering.andand.is_manager?(current_user)) : false) : @manages_course
+- past_scores = @past_scores || (@workout_offering ? @workout_offering.scores_for(current_user) : [])
+- active_score = @active_score || (@workout_offering ? @workout_offering.active_score_for(current_user) : nil)
+- can_retake = @can_retake.nil? ? (@workout_offering ? @workout_offering.can_start_new_attempt?(current_user) : false) : @can_retake
 = render partial: 'layouts/breadcrumb'
 - time_limit = (@workout_offering ? @workout_offering.time_limit_for(current_user) : nil)
 
@@ -50,10 +53,18 @@
     - elsif @workout_offering.hard_deadline
       Until:
       = l user_time(current_user, @workout_offering.hard_deadline)
-    &nbsp;&nbsp;&nbsp;Score:
+    - if time_limit
+      &nbsp;&nbsp;&nbsp;Time Limit:
+      = "#{n_to_s(time_limit)} minutes"
+    &nbsp;&nbsp;&nbsp;Allowed Attempts:
+    - allowed_att = @workout_offering.attempts_allowed_for(current_user)
+    = (allowed_att.nil? || allowed_att <= 0) ? 'Unlimited' : allowed_att
+    &nbsp;&nbsp;&nbsp;Scoring:
+    = @workout_offering.score_to_keep == 'latest' ? 'Latest attempt' : 'Highest attempt'
+    &nbsp;&nbsp;&nbsp;Recorded Score:
     - if workout_score
       - if workout_score.show_score?
-        = workout_score.score
+        = @workout_offering.effective_score_for(current_user)
       - else
         hidden
     - else
@@ -67,31 +78,47 @@
 - if @workout.description
   %p= markdown(@workout.description)
 
-.col-md-4
+.col-md-6
   .btn-group
-    - if @workout_offering && (@workout_offering.can_be_seen_by?(current_user) && |
-      (workout_score.nil? || !workout_score.closed?) || manages_course)           |
-      - button_text = nil
-      - if @workout_offering.can_be_practiced_by? current_user
-        - if workout_score
-          - button_text = 'Continue Workout'
+    - if @workout_offering
+      - if active_score && !active_score.closed?
+        = link_to "Continue Workout (Attempt #{active_score.attempt_number})", |
+          organization_workout_offering_practice_path(organization_id:        |
+          @workout_offering.course_offering.course.organization.slug,         |
+          course_id: @workout_offering.course_offering.course.slug,           |
+          term_id: @workout_offering.course_offering.term.slug,               |
+          id: @workout_offering.id,                                          |
+          workout_score_id: active_score.id),                                |
+          class: 'btn btn-primary'
+      - elsif can_retake
+        - if past_scores.blank? || past_scores.empty?
+          = link_to 'Start Workout',                                          |
+            organization_workout_offering_practice_path(organization_id:      |
+            @workout_offering.course_offering.course.organization.slug,       |
+            course_id: @workout_offering.course_offering.course.slug,         |
+            term_id: @workout_offering.course_offering.term.slug,             |
+            id: @workout_offering.id),                                        |
+            class: 'btn btn-primary'
         - else
-          - button_text = 'Start Workout'
+          = button_to "Take Workout Again (Attempt #{past_scores.size + 1})", |
+            start_attempt_workout_offering_path(@workout_offering),           |
+            method: :post,                                                    |
+            class: 'btn btn-primary'
+      - elsif manages_course || (@workout_offering.can_be_seen_by?(current_user) && !@workout_offering.andand.workout_policy.andand.no_review_before_close)
+        - review_score = @workout_offering.kept_workout_score_for(current_user) || @workout_offering.latest_score_for(current_user)
+        = link_to 'Review Workout',                                           |
+          organization_workout_offering_review_path(organization_id:         |
+          @workout_offering.course_offering.course.organization.slug,        |
+          course_id: @workout_offering.course_offering.course.slug,          |
+          term_id: @workout_offering.course_offering.term.slug,              |
+          id: @workout_offering.id,                                          |
+          review_user_id: current_user.id,                                   |
+          workout_score_id: review_score.andand.id),                          |
+          class: 'btn btn-primary'
       - elsif !manages_course && @workout_offering.andand.workout_policy.andand.no_review_before_close
         %p
-          You can review your work on this workout once everyone has
-          completed it.
-      - else
-        - button_text = 'Review Workout'
-      - if button_text
-        = link_to button_text,                                              |
-          organization_workout_offering_practice_path(organization_id:      |
-          @workout_offering.course_offering.course.organization.slug,       |
-          course_id: @workout_offering.course_offering.course.slug,         |
-          term_id: @workout_offering.course_offering.term.slug,             |
-          id: @workout_offering.id),                                        |
-          class: 'btn btn-primary'
-    - elsif @workout_offering.nil?
+          You can review your work on this workout once everyone has completed it.
+    - else
       = link_to 'Start Workout', practice_workout_path(params[:id]), |
         class: 'btn btn-primary'
     - if manages_course || (current_user && (current_user == @workout.creator || @workout.owners.exists?(current_user.id)))
@@ -106,6 +133,47 @@
         = link_to 'Edit Workout',
           edit_workout_path(id: @workout.id),
           class: 'btn btn-default'
+%br
+%br
+
+- if @workout_offering && past_scores.present? && past_scores.any?
+  %h3 Attempt History
+  - kept_score = @workout_offering.kept_workout_score_for(current_user)
+  %table.table.table-striped.table-bordered{ style: 'width: auto; min-width: 60%;' }
+    %thead
+      %tr
+        %th Attempt
+        %th Started
+        %th Status
+        %th Score
+        %th Action
+    %tbody
+      - past_scores.each do |score|
+        - is_kept = (kept_score && kept_score.id == score.id)
+        %tr
+          %td
+            = "Attempt #{score.attempt_number}"
+            - if is_kept
+              %span.label.label-success{ style: 'margin-left: 8px;' } Kept Score
+          %td
+            = score.started_at ? l(user_time(current_user, score.started_at)) : '-'
+          %td
+            - if score.closed?
+              = "Submitted #{l(user_time(current_user, score.updated_at))}"
+            - else
+              %span.label.label-info In Progress
+          %td
+            - if score.show_score?
+              = "#{score.score} / #{@workout.total_points}"
+            - else
+              hidden
+          %td
+            - if !score.closed?
+              = link_to 'Resume', organization_workout_offering_practice_path(organization_id: @workout_offering.course_offering.course.organization.slug, course_id: @workout_offering.course_offering.course.slug, term_id: @workout_offering.course_offering.term.slug, id: @workout_offering.id, workout_score_id: score.id), class: 'btn btn-xs btn-primary'
+            - elsif manages_course || (@workout_offering.can_be_seen_by?(current_user) && !@workout_offering.andand.workout_policy.andand.no_review_before_close)
+              = link_to 'Review', organization_workout_offering_review_path(organization_id: @workout_offering.course_offering.course.organization.slug, course_id: @workout_offering.course_offering.course.slug, term_id: @workout_offering.course_offering.term.slug, id: @workout_offering.id, review_user_id: current_user.id, workout_score_id: score.id), class: 'btn btn-xs btn-default'
+            - else
+              \-
 %br
 
 %h2 Exercises

@@ -1595,4 +1595,34 @@ describe WorkoutsController do
       expect(flash[:notice]).to eq('You are not authorized to edit this workout.')
     end
   end
+
+  describe "multiple attempts YAML serialization" do
+    let(:user) { FactoryBot.build_stubbed(:user) }
+    let(:course) { FactoryBot.build_stubbed(:course, slug: 'cs1114') }
+    let(:term) { FactoryBot.build_stubbed(:term, slug: 'fall2026') }
+    let(:co1) { FactoryBot.build_stubbed(:course_offering, id: 10, label: 'Section 1', course: course, term: term) }
+    let(:workout) { FactoryBot.build_stubbed(:workout, id: 5) }
+
+    before do
+      allow(controller).to receive(:current_user).and_return(user)
+    end
+
+    it "serializes workout_attempts and score_to_keep in YAML" do
+      wo1 = double('WorkoutOffering',
+        course_offering: co1,
+        soft_deadline: 1.day.from_now,
+        opening_date: 1.day.ago,
+        hard_deadline: 2.days.from_now,
+        allowed_ips: nil,
+        allowed_user_agents: nil,
+        lms_assignment_url: nil,
+        workout_attempt_limit: 3,
+        score_to_keep: 'latest'
+      )
+
+      yaml_output = controller.send(:serialize_workout_offerings_to_yaml, [wo1], [])
+      expect(yaml_output).to include('workout_attempts: 3')
+      expect(yaml_output).to include('score_to_keep: latest')
+    end
+  end
 end
