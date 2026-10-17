@@ -13,12 +13,12 @@
 - [x] Write unit specs in `spec/models/workout_offering_spec.rb` and `spec/models/workout_score_spec.rb`
 
 ## Wave 3: Routing, Deadlines YAML & Controllers
-- [ ] Add `post :start_attempt` route for `workout_offerings` (both standalone and org-scoped)
-- [ ] Update `WorkoutsController#create_or_update_offerings` and `serialize_workout_offerings_to_yaml` to parse and serialize `workout_attempts` and `score_to_keep`
-- [ ] Implement `WorkoutOfferingsController#start_attempt`
-- [ ] Refactor `WorkoutOfferingsController#practice`, `show`, and `review` to support multiple attempts and attempt selection
-- [ ] Fix `ExercisesController#practice` and `evaluate` to accept and bind to `params[:workout_score_id]` instead of defaulting to Attempt 1
-- [ ] Write controller specs for multi-attempt actions
+- [x] Add `post :start_attempt` route for `workout_offerings` (both standalone and org-scoped)
+- [x] Update `WorkoutsController#create_or_update_offerings` and `serialize_workout_offerings_to_yaml` to parse and serialize `workout_attempts` and `score_to_keep`
+- [x] Implement `WorkoutOfferingsController#start_attempt`
+- [x] Refactor `WorkoutOfferingsController#practice`, `show`, and `review` to support multiple attempts and attempt selection
+- [x] Fix `ExercisesController#practice` and `evaluate` to accept and bind to `params[:workout_score_id]` instead of defaulting to Attempt 1
+- [x] Write controller specs for multi-attempt actions
 
 ## Wave 4: Views & User Interface
 - [ ] Update `app/views/workouts/show.html.haml` with attempt summary, attempt history table, kept score indicator, and "Resume" / "Take Workout Again" buttons

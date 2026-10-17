@@ -536,5 +536,62 @@ RSpec.describe WorkoutOfferingsController, type: :controller do
         expect(controller.instance_variable_get(:@message)).to eq('Custom network location error')
       end
     end
+
+    describe "POST #start_attempt" do
+      let(:first_exercise) { FactoryBot.build_stubbed(:exercise, id: 55) }
+
+      before do
+        allow(workout).to receive(:first_exercise).and_return(first_exercise)
+        allow(workout.exercises).to receive(:count).and_return(3)
+      end
+
+      it "creates a subsequent WorkoutScore with incremented attempt_number and redirects to first exercise" do
+        allow(workout_offering).to receive(:can_start_new_attempt?).with(student).and_return(true)
+        allow(workout_offering).to receive(:active_score_for).with(student).and_return(nil)
+        allow(workout_offering).to receive(:attempts_taken_for).with(student).and_return(1)
+
+        expect(WorkoutScore).to receive(:create!).with(hash_including(
+          user: student,
+          workout_offering: workout_offering,
+          workout: workout,
+          attempt_number: 2
+        )).and_return(double('WorkoutScore', id: 302))
+
+        post :start_attempt, params: {
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          id: '201'
+        }
+
+        expect(response).to redirect_to(organization_workout_offering_exercise_path(
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          workout_offering_id: '201',
+          workout_score_id: 302,
+          id: 55
+        ))
+      end
+
+      it "redirects to workout offering path with alert if can_start_new_attempt? is false" do
+        allow(workout_offering).to receive(:can_start_new_attempt?).with(student).and_return(false)
+
+        post :start_attempt, params: {
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          id: '201'
+        }
+
+        expect(response).to redirect_to(organization_workout_offering_path(
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          id: '201'
+        ))
+        expect(flash[:alert]).to include('cannot start a new attempt')
+      end
+    end
   end
 end

@@ -421,6 +421,19 @@ class Workout < ApplicationRecord
       workout_offering.attempt_limit = common[:attempt_limit]
       workout_offering.published = common[:published]
 
+      if offering.key?('workout_attempt_limit') || offering.key?('workout_attempts') || offering.key?('attempts')
+        val = offering['workout_attempt_limit'] || offering['workout_attempts'] || offering['attempts']
+        workout_offering.workout_attempt_limit = val.present? ? val.to_i : nil
+      elsif common.key?(:workout_attempt_limit)
+        workout_offering.workout_attempt_limit = common[:workout_attempt_limit]
+      end
+
+      if offering.key?('score_to_keep')
+        workout_offering.score_to_keep = offering['score_to_keep']
+      elsif common.key?(:score_to_keep)
+        workout_offering.score_to_keep = common[:score_to_keep]
+      end
+
       # update workout scores so they follow the new policy
       if common[:most_recent].to_b != workout_offering.most_recent
         workout_offering.most_recent = common[:most_recent]

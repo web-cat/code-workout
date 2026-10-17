@@ -664,8 +664,11 @@ class ExercisesController < ApplicationController
     end
 
     @attempt = nil
-    @workout_score = params[:workout_score_id] ? WorkoutScore.find(params[:workout_score_id]) : (
-      @workout_offering ? @workout_offering.score_for(@student_user) : (
+    @workout_score = if params[:workout_score_id].present?
+      WorkoutScore.find_by(id: params[:workout_score_id]) || (WorkoutScore.find(params[:workout_score_id]) rescue nil)
+    end
+    @workout_score ||= (
+      @workout_offering ? (@workout_offering.active_score_for(@student_user) || @workout_offering.score_for(@student_user)) : (
           @workout ? @workout.score_for(@student_user, @workout_offering) : nil
     ))
 
@@ -675,7 +678,7 @@ class ExercisesController < ApplicationController
     end
 
     if !@workout_score && @student_user && @workout_offering
-      @workout_score = @workout_offering.score_for(@student_user)
+      @workout_score = @workout_offering.active_score_for(@student_user) || @workout_offering.score_for(@student_user)
     end
 
     if !@is_staff_review && @workout_offering && !@workout_offering.ip_allowed?(request.remote_ip, @student_user, @workout_score)
@@ -952,12 +955,18 @@ class ExercisesController < ApplicationController
 
     @workout_score = nil
 
-    if @workout_offering
-      @workout_score = @workout_offering.score_for(@student_drift_user)
-    elsif @workout
-      @workout_score = @workout.score_for(@student_drift_user, nil,
-                                          params[:lis_outcome_service_url],
-                                          params[:lis_result_sourcedid])
+    if params[:workout_score_id].present?
+      @workout_score = WorkoutScore.find_by(id: params[:workout_score_id])
+    end
+
+    if !@workout_score
+      if @workout_offering
+        @workout_score = @workout_offering.active_score_for(@student_drift_user) || @workout_offering.score_for(@student_drift_user)
+      elsif @workout
+        @workout_score = @workout.score_for(@student_drift_user, nil,
+                                            params[:lis_outcome_service_url],
+                                            params[:lis_result_sourcedid])
+      end
     end
 
     if @workout_score

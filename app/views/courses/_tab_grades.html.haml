@@ -65,7 +65,11 @@
                       = student.email
                 - grand_total = 0.0
                 - workout_offerings.each do |wkto|
-                  - workout_score = @workout_scores_by_offering_and_user ? @workout_scores_by_offering_and_user[[wkto.id, student.id]]&.first : wkto.score_for(student)
+                  - user_scores = @workout_scores_by_offering_and_user ? @workout_scores_by_offering_and_user[[wkto.id, student.id]] : nil
+                  - workout_score = if user_scores
+                    - wkto.latest? ? user_scores.sort_by { |s| s.attempt_number || 1 }.last : user_scores.max_by(&:score)
+                  - else
+                    - wkto.score_for(student)
                   - score = workout_score.andand.score
                   - if score
                     %td.col-workout{ class: "col-wkto-#{wkto.id}" }
@@ -74,7 +78,10 @@
                         course_id: (@course || wkto.course_offering.course).slug,
                         term_id: (@term || wkto.course_offering.term).slug,
                         organization_id: (@organization || wkto.course_offering.course.organization).slug,
-                        review_user_id: student.id)
+                        review_user_id: student.id,
+                        workout_score_id: workout_score.id)
+                      - if user_scores && user_scores.size > 1
+                        %small.text-muted= "(att. #{workout_score.attempt_number}/#{user_scores.size})"
                     - grand_total += score
                   - else
                     %td.col-workout{ class: "col-wkto-#{wkto.id}" } -/-
@@ -89,9 +96,16 @@
           - workout_offerings.each do |wkto|
             %tr
               %td= wkto.workout.name
-              - workout_score = @workout_scores_by_offering_id ? @workout_scores_by_offering_id[wkto.id]&.first : wkto.score_for(current_user)
+              - user_scores = @workout_scores_by_offering_id ? @workout_scores_by_offering_id[wkto.id] : nil
+              - workout_score = if user_scores
+                - wkto.latest? ? user_scores.sort_by { |s| s.attempt_number || 1 }.last : user_scores.max_by(&:score)
+              - else
+                - wkto.score_for(current_user)
               - score = workout_score.andand.score
               - if score && workout_score.show_score?
-                %td= score
+                %td
+                  = score
+                  - if user_scores && user_scores.size > 1
+                    %small.text-muted= "(att. #{workout_score.attempt_number}/#{user_scores.size})"
               - else
                 %td.textblur -/-
