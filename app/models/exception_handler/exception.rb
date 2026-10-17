@@ -45,10 +45,19 @@ module ExceptionHandler
         ExceptionHandler.config.db
       end
 
+      include ErrorAggregation
+
       def initialize(attributes = {})
         super
+        return unless attributes.is_a?(Hash) && attributes[:request]
+
         ATTRS.each do |type|
-          self[type] = eval type.to_s
+          val = eval(type.to_s)
+          if respond_to?("#{type}=")
+            send("#{type}=", val)
+          else
+            self[type] = val
+          end
         end
       end
     else
@@ -73,11 +82,11 @@ module ExceptionHandler
     validate :ignore_unsolicited_client_errors
 
     def exception
-      request.env['action_dispatch.exception']
+      request ? request.env['action_dispatch.exception'] : nil
     end
 
     def klass
-      exception.class
+      exception ? exception.class : nil
     end
 
     def description
@@ -87,40 +96,78 @@ module ExceptionHandler
     end
 
     def class_name
-      exception ? exception.class.name : ''
+      if request.blank? && respond_to?(:has_attribute?) && has_attribute?(:class_name) && self[:class_name].present?
+        self[:class_name]
+      else
+        exception ? exception.class.name : (respond_to?(:has_attribute?) && has_attribute?(:class_name) ? (self[:class_name] || '') : '')
+      end
     end
 
     def message
-      exception ? exception.message : Rack::Utils::HTTP_STATUS_CODES[status]
+      if request.blank? && respond_to?(:has_attribute?) && has_attribute?(:message) && self[:message].present?
+        self[:message]
+      else
+        exception ? exception.message : (respond_to?(:has_attribute?) && has_attribute?(:message) && self[:message].present? ? self[:message] : Rack::Utils::HTTP_STATUS_CODES[status])
+      end
     end
 
     def trace
-      exception.andand.backtrace ? exception.backtrace.join("\n") : ''
+      if request.blank? && respond_to?(:has_attribute?) && has_attribute?(:trace) && self[:trace].present?
+        self[:trace]
+      else
+        exception.andand.backtrace ? exception.backtrace.join("\n") : (respond_to?(:has_attribute?) && has_attribute?(:trace) ? (self[:trace] || '') : '')
+      end
     end
 
     def target
-      request.url
+      if request.blank? && respond_to?(:has_attribute?) && has_attribute?(:target) && self[:target].present?
+        self[:target]
+      else
+        request ? request.url : (respond_to?(:has_attribute?) && has_attribute?(:target) ? (self[:target] || '') : '')
+      end
     end
 
     # Support both referer and referrer
     def referer
-      request.referer
+      referrer
     end
 
     def referrer
-      request.referer
+      if request.blank? && respond_to?(:has_attribute?) && has_attribute?(:referrer) && self[:referrer].present?
+        self[:referrer]
+      else
+        request ? request.referer : (respond_to?(:has_attribute?) && has_attribute?(:referrer) ? (self[:referrer] || '') : '')
+      end
     end
 
     def params
-      request.params.inspect
+      if request.blank? && respond_to?(:has_attribute?) && has_attribute?(:params) && self[:params].present?
+        self[:params]
+      else
+        request ? request.params.inspect : (respond_to?(:has_attribute?) && has_attribute?(:params) ? (self[:params] || '') : '')
+      end
     end
 
     def user_agent
-      request.user_agent
+      if ExceptionHandler.config.try(:db)
+        if (respond_to?(:association) && association(:user_agent).loaded?) || (respond_to?(:user_agent_id) && user_agent_id.present?)
+          super
+        elsif request.respond_to?(:user_agent)
+          request.user_agent
+        else
+          super
+        end
+      else
+        @user_agent || (request.respond_to?(:user_agent) ? request.user_agent : nil)
+      end
     end
 
     def status
-      exception ? ActionDispatch::ExceptionWrapper.new(request.env, exception).try(:status_code) : request.env['PATH_INFO'][1..-1].to_i
+      if request.blank? && respond_to?(:has_attribute?) && has_attribute?(:status) && self[:status].present?
+        self[:status]
+      else
+        exception ? ActionDispatch::ExceptionWrapper.new(request.env, exception).try(:status_code) : (request ? request.env['PATH_INFO'][1..-1].to_i : (respond_to?(:has_attribute?) && has_attribute?(:status) ? self[:status] : 500))
+      end
     end
 
     def response

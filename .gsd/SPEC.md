@@ -1,170 +1,79 @@
-# IP Access Restrictions for Workout Offerings Spec
+# Error Table Deduplication & Aggregation Spec
 
 ## Overview
-Add support for IP access restrictions to workout offerings in CodeWorkout. Instructors can specify allowed IP addresses, subnet masks (CIDR), and wildcard patterns in the deadlines YAML on the workout edit form, either globally for all offerings or on a per-offering basis. Individual student extensions can override offering IP restrictions or completely remove restrictions (`ips: any`). Restrictions are strictly enforced when viewing a workout show page, loading an exercise practice page, and submitting an attempt.
+Refactor run-time error tracking in CodeWorkout to aggregate identical exceptions into a single row in the `errors` table using deterministic SHA-256 fingerprinting, an occurrence counter (`count`), and a timestamp (`last_seen_at`). This replaces the unbounded row-per-occurrence pattern that causes table bloat, alert fatigue, and triage difficulties, while enabling instant prioritization by error frequency in the ActiveAdmin dashboard.
 
 ---
 
 ## 1. Functional Requirements
 
-### 1.1 IP Format & Pattern Support (`IpAccessFilter`)
-The system must support the most widely used network location specification schemes:
-- **Individual IP addresses**: Both IPv4 (`192.168.1.50`, `127.0.0.1`) and IPv6 (`::1`, `2001:db8::1`).
-- **CIDR Subnet Masks**: `192.168.1.0/24`, `10.0.0.0/8`, `2001:db8::/32`.
-- **Netmask Notation**: `192.168.1.0/255.255.255.0`.
-- **Wildcard / Glob Patterns**: `192.168.1.*`, `128.173.*.*`, `198.82.*`.
-- **Delimited Lists**: Comma, space, semicolon, or newline-delimited strings, or YAML array format.
-- **Special Keywords**:
-  - `any`, `all`, `*`, `unrestricted`: Allows all IPs (no restriction).
-  - `none`: Blocks all IPs.
-  - `nil` / blank: Unrestricted.
-- Resilient to whitespace and malformed inputs (fails closed/logs warning without 500 error).
+### 1.1 Schema Changes & Data Backfill
+1. **New Columns on `errors` table**:
+   - `fingerprint`: `varchar(64)`, indexed.
+   - `count`: `integer`, `default: 1`, `null: false`, indexed.
+   - `last_seen_at`: `datetime`.
+2. **Safe Migration Backfill**:
+   - For all existing rows in `errors`:
+     - Compute the SHA-256 fingerprint from `class_name`, normalized `message`, and top 3 lines of `trace`.
+     - Group existing records by fingerprint.
+     - For each group with duplicate rows:
+       - Retain the primary record (earliest created).
+       - Update the primary record's `count` to the group size.
+       - Update `last_seen_at` to the group's maximum `updated_at || created_at`.
+       - Delete the duplicate records.
+     - For unique records, set `count = 1`, `fingerprint = <computed>`, and `last_seen_at = updated_at || created_at`.
+   - Migration must be fully reversible (`down` method restores previous schema state).
+   - Use Ruby's `Digest::SHA256` to prevent database-level collation mismatch issues (such as MariaDB 11 `SHA2` collation mismatch).
 
-### 1.2 Deadlines YAML Specification (Workout Edit Form)
-Instructors manage IP restrictions directly within the Offerings and Extensions YAML:
-- **All Offerings (Top-Level Default)**:
-  ```yaml
-  ips: 128.173.*.*, 198.82.0.0/16
-  sections:
-    - section: CS 101 Section A
-      due: 2026-09-15 11:59 PM
-  ```
-  Aliases supported: `ips`, `allowed_ips`, `ip_restrictions`.
-- **Per-Offering Override**:
-  ```yaml
-  sections:
-    - section: CS 101 Section A
-      due: 2026-09-15 11:59 PM
-      ips: 192.168.1.0/24
-  ```
-- **Student Extension Overrides**:
-  ```yaml
-  extensions:
-    - due: 2026-09-20 11:59 PM
-      ips: any   # completely removes IP restrictions for these students
-      students:
-        - Alice Smith <asmith@example.edu>
-  ```
-  Extensions can specify custom IP rules or `any` to allow access from any network location.
-- **YAML Round-Trip Serialization**:
-  When editing a workout, `serialize_workout_offerings_to_yaml` must preserve and render `ips:` cleanly (at top-level when uniform, or per-section when divergent, and in extension groups).
+### 1.2 Model & Exception Handler Integration (`ExceptionHandler::Exception` and `Error`)
+1. **User Agent Attribute Compatibility Fix**:
+   - Resolve `ActiveModel::MissingAttributeError: can't write unknown attribute user_agent` in `ExceptionHandler::Exception`:
+     - Associate `belongs_to :user_agent, optional: true`.
+     - Add transparent virtual setter `def user_agent=(val)` matching `Error` model.
+     - Update initialization from `self[type] = eval type.to_s` to `send("#{type}=", eval(type.to_s))` to properly route virtual attributes.
+2. **Deterministic Fingerprint Generator**:
+   - Method `generate_fingerprint` in `ExceptionHandler::Exception` and `Error`:
+     - Strips dynamic hex memory addresses (`0x[0-9a-fA-F]+`) from `message`.
+     - Truncates trace to the top 3 lines (ignoring variable deep stack frames).
+     - Returns `Digest::SHA256.hexdigest("#{class_name}:#{sanitized_msg}:#{top_trace}")`.
+3. **Deduplication Callback (`before_save :aggregate_duplicate_errors`)**:
+   - Populates `fingerprint ||= generate_fingerprint`.
+   - Populates `last_seen_at ||= Time.current`.
+   - Checks if an existing record with the same fingerprint exists in `errors`:
+     - If an existing record exists (with `id != self.id`):
+       - Updates the existing record in-place:
+         - `count: existing.count + 1`
+         - `last_seen_at: Time.current`
+         - Updates latest request context: `target`, `referrer`, `params`, `user_agent_id`
+       - Executes `throw :abort` to stop saving the new record, preventing duplicate insertion.
+     - If no existing record exists:
+       - Ensures `self.count ||= 1`.
 
-### 1.3 Enforcement Points, Diagnostics & Activity Logging
-Enforcement is evaluated via `workout_offering.ip_allowed?(request.remote_ip, user)`:
-1. **Workout Show Page** (`WorkoutOfferingsController#show`, `WorkoutsController#show`, `course_workout_show`):
-   - If IP is not permitted, log an `ActivityLog` entry (`activity: 'workout_view_ip_blocked'`).
-   - Display diagnostic: `"This workout cannot be accessed from your network location (#{request.remote_ip})."`
-   - Renders `workout_offerings/error.html.haml` (or `lti/error.html.haml` if LTI launch).
-2. **Exercise Practice Page Load** (`WorkoutOfferingsController#practice`, `ExercisesController#practice`):
-   - If IP is not permitted, log an `ActivityLog` entry (`activity: 'practice_view_ip_blocked'`).
-   - Intercept before rendering practice view or creating initial score.
-   - Render diagnostic error page.
-3. **Attempt Submission** (`ExercisesController#evaluate`):
-   - If IP is not permitted, log an `ActivityLog` entry (`activity: 'attempt_ip_blocked'`).
-   - Intercept before creating attempt, evaluating code, or scoring.
-   - Redirect to the workout offering error page.
-   - Supports JS redirect (`window.location = ...`) for AJAX submissions, HTML redirect, and JSON error response.
-4. **Staff/Admin Exemption**:
-   - Course staff (`course_offering.is_staff?(user)`) and admins (`user.global_role.is_admin?`) bypass IP checks.
+### 1.3 ActiveAdmin Dashboard Updates (`app/admin/error.rb`)
+1. **Default Sort Order**:
+   - Configure default ordering to `:count_desc` so the most frequent errors appear at the top.
+2. **Index Columns**:
+   - `:count` (sortable by `:count`, styled for visibility).
+   - `:class_name` (sortable).
+   - `:message` (truncated with link to show page).
+   - `Last URL` (`:target`).
+   - `:last_seen_at` (sortable).
+   - `:created_at` (sortable, labeled "First seen").
+3. **Show Page & Filters**:
+   - Display `count`, `fingerprint`, and `last_seen_at`.
+   - Add filters for `class_name`, `count`, `last_seen_at`, and `created_at`.
 
 ---
 
-## 2. Database Schema Changes
-- Add `allowed_ips` (`text`, nullable) to `workout_offerings`.
-- Add `allowed_ips` (`text`, nullable) to `student_extensions`.
-- Add `last_ip_address` (`string`, nullable) to `workout_scores` for fast-path IP validation caching.
-- Migration: `db/migrate/20260902153000_add_allowed_ips_to_workout_offerings_and_student_extensions.rb`.
-
----
-
-## 3. Verification & Testing
-- Model unit tests for `IpAccessFilter` covering all IP pattern variations.
-- Unit tests for `WorkoutOffering#ip_allowed?` and `StudentExtension#allowed_ips` overrides.
-- Controller integration tests for `WorkoutOfferingsController`, `ExercisesController#practice`, `ExercisesController#evaluate`, and `WorkoutsController` YAML round-trips.
-- Verification that staff/admin can access regardless of IP.
-- Verification that student extension with `ips: any` grants access to previously restricted IP.
-
----
-
-# Browser Agent Requirements for Workout Offerings Spec
-
-## 4. Overview
-Add support for optional browser agent requirements (e.g. requiring the use of LockDown Browser, Secure Exam Browser, etc., by confirming their user agent markers) to workout offerings in CodeWorkout. Instructors can specify allowed/required browsers (markers, substrings, patterns, or regex) in the deadlines YAML on the workout edit form, globally for all offerings or per-offering. Individual student extensions can override offering browser restrictions or completely remove restrictions (`browsers: any`). Restrictions are strictly enforced when viewing a workout show page, loading an exercise practice page, and submitting an attempt.
-
----
-
-## 5. Functional Requirements
-
-### 5.1 Browser Agent Format & Pattern Support (`UserAgentAccessFilter`)
-- **Keywords**:
-  - `any`, `all`, `*`, `unrestricted`: Allows all user agents (no restriction).
-  - `none`: Blocks all browsers.
-  - `nil` / blank: Unrestricted.
-- **Substring Matching**: Case-insensitive substring match (e.g. `LockDown Browser`, `SEB`, `Respondus`, `SecureExamBrowser`).
-- **Wildcard / Glob Matching**: Wildcard expressions like `*LockDown*`, `*SEB*` via `File.fnmatch?`.
-- **Regex Matching**: Expressions enclosed in `/.../`.
-- **Delimited Lists**: Comma, semicolon, newline, or array formats.
-
-### 5.2 Deadlines YAML Specification (Workout Edit Form)
-- **All Offerings (Top-Level Default)**:
-  ```yaml
-  browsers: LockDown Browser, SEB
-  sections:
-    - section: CS 101 Section A
-      due: 2026-09-15 11:59 PM
-  ```
-  Aliases supported: `browsers`, `user_agents`, `allowed_user_agents`.
-- **Per-Offering Override**:
-  ```yaml
-  sections:
-    - section: CS 101 Section A
-      due: 2026-09-15 11:59 PM
-      browsers: SEB
-  ```
-- **Student Extension Overrides**:
-  ```yaml
-  extensions:
-    - due: 2026-09-20 11:59 PM
-      browsers: any   # completely removes browser requirements for these students
-      students:
-        - Alice Smith <asmith@example.edu>
-  ```
-- **YAML Round-Trip Serialization**:
-  - Uses `browsers:` as standard key.
-  - Output at top-level when all offerings share identical non-blank rules.
-  - Output per-section when rules differ.
-  - Output under extensions when extensions define custom browser rules.
-
-### 5.3 Enforcement Points, Diagnostics & Activity Logging
-Enforcement is evaluated via `workout_offering.user_agent_allowed?(request.user_agent, user, workout_score)`:
-1. **Workout Show Page** (`WorkoutOfferingsController#show`, `WorkoutsController#show`):
-   - If user agent is not allowed:
-     - Log `workout_view_user_agent_blocked` to `ActivityLog`.
-     - Display diagnostic: `"This workout requires a specific browser (such as LockDown Browser or Secure Exam Browser) and cannot be accessed from your current browser."`
-     - Render `workout_offerings/error.html.haml` (or `lti/error.html.haml`).
-2. **Exercise Practice Page Load** (`WorkoutOfferingsController#practice`, `ExercisesController#practice`):
-   - If user agent is not allowed:
-     - Log `practice_view_user_agent_blocked` to `ActivityLog`.
-     - Render diagnostic error page.
-3. **Attempt Submission** (`ExercisesController#evaluate`):
-   - If user agent is not allowed:
-     - Log `attempt_user_agent_blocked` to `ActivityLog`.
-     - Abort attempt evaluation (no attempt created, no scoring changes).
-     - Redirect to the workout offering error page (HTML/JS/JSON).
-4. **Staff/Admin Exemption**:
-   - Course staff within the course offering context (`course_offering.is_staff?(user)`) and global administrators (`user.global_role.is_admin?`) bypass restrictions. Other global roles (e.g. global instructors not enrolled in the course offering) are not exempt.
-5. **Fast-Path Caching**:
-   - `workout_score.last_user_agent` short-circuits evaluation when matching the request user agent.
-
----
-
-## 6. Database Schema Changes
-- Add `allowed_user_agents` (`text`, nullable) to `workout_offerings`.
-- Add `allowed_user_agents` (`text`, nullable) to `student_extensions`.
-- Add `last_user_agent` (`text`, nullable) to `workout_scores`.
-- Add `user_agent` (`text`, nullable) to `activity_logs`.
-- Migration: `db/migrate/20260902200000_add_allowed_user_agents_to_workout_offerings_and_student_extensions.rb`.
-
----
-
-## Status: FINALIZED
+## 2. Verification Criteria
+1. **Existing Specs Pass**: All 19 examples in `spec/models/exception_handler_spec.rb` pass without `MissingAttributeError`.
+2. **New Specs Pass**:
+   - Identical exceptions generate the identical fingerprint.
+   - Exceptions with different memory addresses generate the same fingerprint.
+   - Saving a duplicate exception does not increase total error count in the database.
+   - Duplicate exception increases `count` by 1 and updates `last_seen_at`.
+   - ActiveAdmin configuration loads and functions correctly.
+3. **Migration Verification**:
+   - `rvm 2.7.0 do bundle exec rake db:migrate` succeeds.
+   - `schema.rb` reflects new columns and indexes.
+   - Rollback and re-migration execute cleanly.

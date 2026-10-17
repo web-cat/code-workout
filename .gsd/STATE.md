@@ -1,40 +1,45 @@
-## Current Session: Workouts Tab Sorting & Dynamic Filtering (Complete)
+# Current Session: Error Table Deduplication & Aggregation (Complete)
+
+## Status: All Waves Implemented & Verified
 
 ### Implementation Summary
-1. **Default Ordering by Due Date:**
-   - Implemented in `CoursesHelper#course_workout_items` ([`app/helpers/courses_helper.rb`](file:///Users/edwards/git/code-workout/app/helpers/courses_helper.rb)):
-     - Computes earliest due date (`soft_deadline || hard_deadline`, with student extension override for students).
-     - Workouts without due dates sort to the end.
-     - Secondary tie-break is alphabetical by workout name.
-     - Automatically aggregates `min_from` (opening date), `max_closed` (closed date), and `due_date` across all offerings for a workout.
-2. **Sorting Control:**
-   - Added `#workout-sort-select` popup control at the top of the workouts tab with options:
-     - Due date (earliest first, default)
-     - Opening date (earliest first)
-     - Alphabetical (A-Z)
-     - Due date (descending)
-     - Opening date (descending)
-     - Alphabetical (descending)
-   - Dynamic client-side DOM reordering implemented in `applyWorkoutSort()` ([`app/assets/javascripts/course.js.coffee`](file:///Users/edwards/git/code-workout/app/assets/javascripts/course.js.coffee)).
-3. **Dynamic Name Filter:**
-   - Filter input `#workout-filter-name` with search icon and clear button `.workout-clear-name` matching the grades tab student filter pattern.
-   - Real-time case-insensitive filtering with Enter key submission prevention and Esc/clear button reset.
-4. **State Filters Popup List:**
-   - Bootstrap dropdown `#workout-state-filter-btn` with multi-select checkboxes for inclusion/exclusion:
-     - `open`: Current date is within available from/until dates (`min_from` .. `max_closed`).
-     - `past_due`: Current date is after due date.
-     - `past`: Current date is after max closed date.
-     - `future`: Current date is before min from date.
-     - `published` / `unpublished`: Offering publication status (for instructors).
-   - Keeps popup open on checkbox toggle (`e.stopPropagation()`).
-   - Includes "Reset state filters" link to quickly clear state filters.
-   - Button text dynamically reflects active selection (e.g., "State: All", "State: Open", "State: Open, Past due", "State: (3 selected)").
-5. **Modern Responsive Grid Layout:**
-   - Replaced brittle static `in_groups_of(2, false)` + `.clearfix` with a responsive flex container (`.workouts-list` + `.workout-card`) in [`app/assets/stylesheets/custom.scss`](file:///Users/edwards/git/code-workout/app/assets/stylesheets/custom.scss).
-   - Eliminates layout breaks when items are filtered or dynamically reordered.
-   - Shows informative alert `.workout-no-matches` when filters yield no results.
+1. **Wave 1: Database Migration & Backfill**
+   - Migration `db/migrate/20261017120000_add_fingerprint_and_count_to_errors.rb`:
+     - Added `fingerprint` (`varchar(64)` indexed), `count` (`integer, default: 1, null: false` indexed), and `last_seen_at` (`datetime`) to `errors` table.
+     - Safely backfilled all existing error records using Ruby's `Digest::SHA256` (avoiding MariaDB collation mismatch issues), grouped duplicates, updated primary records with total counts and maximum timestamps, and removed duplicate rows.
+     - Tested reversible rollback (`down`) and re-migration (`up`) cleanly.
+2. **Wave 2: Model Deduplication & Bugfix**
+   - Fixed `ActiveModel::MissingAttributeError: can't write unknown attribute user_agent` in `ExceptionHandler::Exception`:
+     - Added `include ErrorAggregation` when backed by DB.
+     - Replaced raw hash assignment `self[type] = ...` with dynamic attribute routing `send("#{type}=", ...)`.
+     - Provided fallback methods for `class_name`, `message`, `trace`, `target`, `referrer`, `params`, `user_agent`, and `status` so records loaded from database without a request object do not crash on `request.<method>`.
+   - Created `app/models/concerns/error_aggregation.rb`:
+     - Added `generate_fingerprint` normalizes dynamic hexadecimal memory addresses (e.g. `0x00007fa12345`) and captures the top 3 backtrace lines.
+     - Implemented `before_save :aggregate_duplicate_errors` with thread-isolated connection execution to ensure the frequency increment and latest context updates commit before `throw :abort` halts duplicate insertion.
+   - Updated `app/models/error.rb` to include `ErrorAggregation`.
+3. **Wave 3: ActiveAdmin Dashboard Updates**
+   - Updated `app/admin/error.rb`:
+     - Default ordering: `count_desc` so highest-frequency bugs appear at the top.
+     - Index table displays `:count`, `:class_name`, `:message` (truncated with link), `Last URL` (`:target`), `:last_seen_at`, and `First Seen` (`:created_at`).
+     - Enhanced `show` view with `count`, `fingerprint`, `last_seen_at`, formatted user agent string, and `<pre>` backtrace display.
+     - Added filters for `class_name`, `count`, `last_seen_at`, and `created_at`.
+4. **Wave 4: Automated Testing & Spec Coverage**
+   - Added unit tests in `spec/models/error_spec.rb`:
+     - 64-char fingerprint generation and hex address normalization.
+     - First occurrence creation with `count = 1` and `last_seen_at`.
+     - Duplicate occurrence aggregation: aborts insert, increments `count`, updates `last_seen_at` and request context.
+     - User agent association handling.
+   - Added unit tests in `spec/models/exception_handler_spec.rb`:
+     - Tested fingerprint generation on real caught exception objects.
+     - Tested duplicate occurrence deduplication via `ExceptionHandler::Exception#save`.
+     - Tested reading attributes from DB without a request object.
+5. **Wave 5: End-to-End Verification**
+   - Ran complete spec suite across `error_spec.rb`, `exception_handler_spec.rb`, `user_agent_spec.rb`, `activity_log_spec.rb`, and `exceptions_controller_spec.rb`: 61 examples, 0 failures.
 
 ### Verification Evidence
-- `spec/helpers/courses_helper_spec.rb`: 5 examples, 0 failures.
-- `spec/views/courses/_tab_workouts.html.haml_spec.rb`: 3 examples, 0 failures.
-- Total: 8 examples, 0 failures across helper and view specs.
+- `spec/models/error_spec.rb`: 8 examples, 0 failures.
+- `spec/models/exception_handler_spec.rb`: 23 examples, 0 failures.
+- `spec/controllers/exception_handler/exceptions_controller_spec.rb`: 3 examples, 0 failures.
+- `spec/models/user_agent_spec.rb`: 14 examples, 0 failures.
+- `spec/models/activity_log_spec.rb`: 13 examples, 0 failures.
+- Total: 61 examples, 0 failures.
