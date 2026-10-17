@@ -1,60 +1,34 @@
-# IP Access Restrictions Roadmap
+# Multiple Workout Attempts Roadmap
 
-## Phase 1: Database & IP Filtering Core (Wave 1)
-- [x] Create migration adding `allowed_ips` to `workout_offerings` and `student_extensions`, and `last_ip_address` to `workout_scores`
-- [x] Run migration using `rvm 2.7.0 do bundle exec rake db:migrate`
-- [x] Implement `IpAccessFilter` supporting single IPs, CIDR, wildcards, lists, and `any`/`none`
-- [x] Write unit specs for `IpAccessFilter`
-- [x] Add `allowed_ips_for(user)` and `ip_allowed?(client_ip, user, workout_score)` to `WorkoutOffering`
-- [x] Add `allowed_ips` handling to `StudentExtension`
-- [x] Write unit specs for `WorkoutOffering#ip_allowed?` and student extension overrides, including `last_ip_address` short-circuiting
+## Wave 1: Database Migration & Schema
+- [ ] Create migration adding `workout_attempt_limit` and `score_to_keep` to `workout_offerings`, `workout_attempt_limit` to `student_extensions`, and `attempt_number` to `workout_scores` with compound index
+- [ ] Run migration using `rvm 2.7.0 do bundle exec rake db:migrate`
+- [ ] Verify `db/schema.rb` and existing record defaults
 
-## Phase 2: Deadlines YAML Parsing & Serialization (Wave 2)
-- [x] Update `WorkoutsController#create_or_update_offerings` to parse top-level, per-section, and extension `ips`
-- [x] Update `Workout#add_workout_offerings` to assign `allowed_ips`
-- [x] Update `WorkoutsController#serialize_workout_offerings_to_yaml` to serialize `ips`
-- [x] Update help documentation in `app/views/help/specifying_due_dates.html.haml`
-- [x] Add controller specs for YAML parsing and serialization with IP restrictions
+## Wave 2: Models & Core Logic
+- [ ] Add `score_to_keep` enum and multi-attempt helper methods to `WorkoutOffering` (`scores_for`, `active_score_for`, `latest_score_for`, `attempts_allowed_for`, `attempts_taken_for`, `attempts_left_for`, `can_start_new_attempt?`, `effective_score_for`, `kept_workout_score_for`)
+- [ ] Refactor `WorkoutOffering#can_be_practiced_by?` and `can_be_seen_by?` to allow multiple attempts
+- [ ] Update `WorkoutScore`: auto-populate `attempt_number` and update `update_lti` to post `effective_score_for`
+- [ ] Update `StudentExtension` to support `workout_attempt_limit`
+- [ ] Write unit specs in `spec/models/workout_offering_spec.rb` and `spec/models/workout_score_spec.rb`
 
-## Phase 3: Access Enforcement, Diagnostics & Activity Logging (Wave 3)
-- [x] Add `:error` action and route for workout offerings (`workout_offerings#error`)
-- [x] Create error diagnostic view `app/views/workout_offerings/error.html.haml`
-- [x] Enforce IP restrictions in `WorkoutOfferingsController#show` and log `workout_view_ip_blocked` in ActivityLog
-- [x] Enforce IP restrictions in `WorkoutOfferingsController#practice` and log `practice_view_ip_blocked` in ActivityLog
-- [x] Enforce IP restrictions in `WorkoutsController#show` and log `workout_view_ip_blocked`
-- [x] Enforce IP restrictions in `ExercisesController#practice` and log `practice_view_ip_blocked`
-- [x] Enforce IP restrictions in `ExercisesController#evaluate` and log `attempt_ip_blocked`, aborting evaluation and redirecting to error page
-- [x] Add controller specs for IP restriction enforcement across all actions
+## Wave 3: Routing, Deadlines YAML & Controllers
+- [ ] Add `post :start_attempt` route for `workout_offerings` (both standalone and org-scoped)
+- [ ] Update `WorkoutsController#create_or_update_offerings` and `serialize_workout_offerings_to_yaml` to parse and serialize `workout_attempts` and `score_to_keep`
+- [ ] Implement `WorkoutOfferingsController#start_attempt`
+- [ ] Refactor `WorkoutOfferingsController#practice`, `show`, and `review` to support multiple attempts and attempt selection
+- [ ] Fix `ExercisesController#practice` and `evaluate` to accept and bind to `params[:workout_score_id]` instead of defaulting to Attempt 1
+- [ ] Write controller specs for multi-attempt actions
 
-## Phase 4: Final Verification & Documentation (Wave 4)
-- [x] Run full test suites
-- [x] Create walkthrough artifact documenting changes and verification evidence
+## Wave 4: Views & User Interface
+- [ ] Update `app/views/workouts/show.html.haml` with attempt summary, attempt history table, kept score indicator, and "Resume" / "Take Workout Again" buttons
+- [ ] Update `app/views/workouts/review.html.haml` with attempt selector tabs/dropdown
+- [ ] Update `app/views/exercises/practice.html.haml` with attempt counter and hidden `workout_score_id` binding
+- [ ] Update `app/views/courses/_tab_grades.html.haml` to display effective score and attempt count
+- [ ] Update gradebook CSV exporters (`course_offerings` and `courses`) to use `effective_score_for`
+- [ ] Update `app/views/workouts/_form.html.haml` to include workout attempt limit and score to keep inputs
 
-# Browser Agent Requirements Roadmap
-
-## Phase 5: Database & UserAgentAccessFilter Core (Wave 5)
-- [x] Create migration adding `allowed_user_agents` to `workout_offerings` and `student_extensions`, `last_user_agent` to `workout_scores`, and `user_agent` to `activity_logs`
-- [x] Run migration using `rvm 2.7.0 do bundle exec rake db:migrate`
-- [x] Implement `UserAgentAccessFilter` supporting substrings, wildcards, regex, and keywords (`any`/`none`)
-- [x] Write unit specs for `UserAgentAccessFilter`
-- [x] Add `allowed_user_agents_for(user)` and `user_agent_allowed?(user_agent, user, workout_score)` to `WorkoutOffering` (with course staff enrollment and admin bypass, plus `last_user_agent` fast-path caching)
-- [x] Add `allowed_user_agents` handling to `StudentExtension` and `Workout#add_workout_offerings`
-- [x] Write unit specs for `WorkoutOffering#user_agent_allowed?`
-
-## Phase 6: Deadlines YAML Parsing & Serialization (Wave 6)
-- [x] Update `WorkoutsController#create_or_update_offerings` to parse `browsers:` / `user_agents:`
-- [x] Update `WorkoutsController#serialize_workout_offerings_to_yaml` to serialize `browsers:`
-- [x] Update help documentation in `app/views/help/specifying_due_dates.html.haml`
-- [x] Add controller specs for YAML parsing and serialization of browser requirements
-
-## Phase 7: Access Enforcement, Diagnostics & Activity Logging (Wave 7)
-- [x] Enforce user agent restrictions in `WorkoutOfferingsController#show` and `WorkoutsController#show`
-- [x] Enforce user agent restrictions in `WorkoutOfferingsController#practice` and `ExercisesController#practice`
-- [x] Enforce user agent restrictions in `ExercisesController#evaluate` and redirect to error page
-- [x] Store `user_agent` in `ActivityLog` entries and log blocked events (`workout_view_user_agent_blocked`, `practice_view_user_agent_blocked`, `attempt_user_agent_blocked`)
-- [x] Update `app/views/workout_offerings/activity_log.html.haml` with browser blocked descriptions
-- [x] Add controller specs for browser access enforcement and activity logging
-
-## Phase 8: Final Verification & Integration (Wave 8)
-- [x] Run full test suite across all models and controllers
-- [x] Update walkthrough artifact with browser agent verification results
+## Wave 5: End-to-End Verification & Documentation
+- [ ] Run full test suite for models, controllers, and views
+- [ ] Create walkthrough artifact documenting changes and empirical test results
+- [ ] Update `.gsd/STATE.md` with final summary
