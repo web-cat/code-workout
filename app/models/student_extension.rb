@@ -59,6 +59,10 @@ class StudentExtension < ApplicationRecord
     if opts.key?('allowed_user_agents') || opts.key?('user_agents') || opts.key?('browsers')
       student_extension.allowed_user_agents = opts['allowed_user_agents'] || opts['user_agents'] || opts['browsers']
     end
+    if opts.key?('workout_attempt_limit') || opts.key?('workout_attempts') || opts.key?('attempts')
+      val = opts['workout_attempt_limit'] || opts['workout_attempts'] || opts['attempts']
+      student_extension.workout_attempt_limit = val.present? ? val.to_i : nil
+    end
     student_extension.save!
   end
 end

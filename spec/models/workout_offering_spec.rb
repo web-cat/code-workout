@@ -18,7 +18,7 @@ describe WorkoutOffering, type: :model do
     before do
       allow(course_offering).to receive(:is_enrolled?).with(user).and_return(true)
       allow(course_offering).to receive(:is_staff?).with(user).and_return(false)
-      allow(workout_offering).to receive(:workout_scores).and_return(double(where: double(last: nil), loaded?: false))
+      allow(workout_offering).to receive(:workout_scores).and_return(double(where: double(last: nil, order: []), loaded?: false))
     end
 
     it "returns true when within open dates and hard deadline" do
@@ -289,6 +289,97 @@ describe WorkoutOffering, type: :model do
       expect(assoc).not_to be_nil
       expect(assoc.macro).to eq(:has_many)
       expect(assoc.options[:dependent]).to eq(:destroy)
+    end
+  end
+
+  describe "multiple attempts support" do
+    let(:user) { FactoryBot.build_stubbed(:user, id: 1) }
+    let(:workout) { FactoryBot.build_stubbed(:workout, id: 5) }
+    let(:course_offering) { FactoryBot.build_stubbed(:course_offering, id: 10) }
+    let(:workout_offering) do
+      FactoryBot.build_stubbed(
+        :workout_offering,
+        id: 20,
+        workout: workout,
+        course_offering: course_offering,
+        workout_attempt_limit: 2,
+        score_to_keep: :highest,
+        published: true,
+        opening_date: 1.day.ago,
+        hard_deadline: 2.days.from_now
+      )
+    end
+
+    before do
+      allow(course_offering).to receive(:is_enrolled?).with(user).and_return(true)
+      allow(course_offering).to receive(:is_staff?).with(user).and_return(false)
+      allow(workout_offering).to receive(:student_extensions).and_return([])
+    end
+
+    describe "#attempts_allowed_for" do
+      it "returns the offering's workout_attempt_limit by default" do
+        expect(workout_offering.attempts_allowed_for(user)).to eq(2)
+      end
+
+      it "overrides with student_extension workout_attempt_limit when present" do
+        ext = FactoryBot.build_stubbed(:student_extension, user: user, workout_offering: workout_offering, workout_attempt_limit: 5)
+        allow(workout_offering).to receive(:student_extensions).and_return([ext])
+        expect(workout_offering.attempts_allowed_for(user)).to eq(5)
+      end
+    end
+
+    describe "#effective_score_for and #kept_workout_score_for" do
+      let(:ws1) { double('WorkoutScore', id: 101, user_id: 1, workout_id: 5, attempt_number: 1, score: 75.0, closed?: true) }
+      let(:ws2) { double('WorkoutScore', id: 102, user_id: 1, workout_id: 5, attempt_number: 2, score: 95.0, closed?: true) }
+
+      before do
+        allow(workout_offering).to receive(:workout_scores).and_return([ws1, ws2])
+      end
+
+      it "keeps the highest score when score_to_keep is highest" do
+        workout_offering.score_to_keep = :highest
+        expect(workout_offering.effective_score_for(user)).to eq(95.0)
+        expect(workout_offering.kept_workout_score_for(user)).to eq(ws2)
+      end
+
+      it "keeps the latest attempt score when score_to_keep is latest" do
+        workout_offering.score_to_keep = :latest
+        ws1_high = double('WorkoutScore', id: 101, user_id: 1, workout_id: 5, attempt_number: 1, score: 98.0, closed?: true)
+        ws2_low = double('WorkoutScore', id: 102, user_id: 1, workout_id: 5, attempt_number: 2, score: 82.0, closed?: true)
+        allow(workout_offering).to receive(:workout_scores).and_return([ws1_high, ws2_low])
+
+        expect(workout_offering.effective_score_for(user)).to eq(82.0)
+        expect(workout_offering.kept_workout_score_for(user)).to eq(ws2_low)
+      end
+    end
+
+    describe "#can_start_new_attempt?" do
+      it "returns true when user has remaining attempts and no active open score" do
+        ws1 = double('WorkoutScore', id: 101, user_id: 1, workout_id: 5, attempt_number: 1, score: 70.0, closed?: true)
+        allow(workout_offering).to receive(:workout_scores).and_return([ws1])
+        expect(workout_offering.can_start_new_attempt?(user)).to be true
+      end
+
+      it "returns false when an active unclosed attempt is in progress" do
+        ws1 = double('WorkoutScore', id: 101, user_id: 1, workout_id: 5, attempt_number: 1, score: 70.0, closed?: false)
+        allow(workout_offering).to receive(:workout_scores).and_return([ws1])
+        expect(workout_offering.can_start_new_attempt?(user)).to be false
+      end
+
+      it "returns false when all allowed attempts are exhausted" do
+        ws1 = double('WorkoutScore', id: 101, user_id: 1, workout_id: 5, attempt_number: 1, score: 70.0, closed?: true)
+        ws2 = double('WorkoutScore', id: 102, user_id: 1, workout_id: 5, attempt_number: 2, score: 85.0, closed?: true)
+        allow(workout_offering).to receive(:workout_scores).and_return([ws1, ws2])
+        expect(workout_offering.can_start_new_attempt?(user)).to be false
+      end
+
+      it "returns true when workout_attempt_limit is nil (unlimited attempts)" do
+        workout_offering.workout_attempt_limit = nil
+        ws1 = double('WorkoutScore', id: 101, user_id: 1, workout_id: 5, attempt_number: 1, score: 70.0, closed?: true)
+        ws2 = double('WorkoutScore', id: 102, user_id: 1, workout_id: 5, attempt_number: 2, score: 85.0, closed?: true)
+        allow(workout_offering).to receive(:workout_scores).and_return([ws1, ws2])
+        expect(workout_offering.can_start_new_attempt?(user)).to be true
+      end
     end
   end
 end

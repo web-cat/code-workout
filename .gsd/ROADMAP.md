@@ -1,16 +1,16 @@
 # Multiple Workout Attempts Roadmap
 
 ## Wave 1: Database Migration & Schema
-- [ ] Create migration adding `workout_attempt_limit` and `score_to_keep` to `workout_offerings`, `workout_attempt_limit` to `student_extensions`, and `attempt_number` to `workout_scores` with compound index
-- [ ] Run migration using `rvm 2.7.0 do bundle exec rake db:migrate`
-- [ ] Verify `db/schema.rb` and existing record defaults
+- [x] Create migration adding `workout_attempt_limit` and `score_to_keep` to `workout_offerings`, `workout_attempt_limit` to `student_extensions`, and `attempt_number` to `workout_scores` with compound index
+- [x] Run migration using `rvm 2.7.0 do bundle exec rake db:migrate`
+- [x] Verify `db/schema.rb` and existing record defaults
 
 ## Wave 2: Models & Core Logic
-- [ ] Add `score_to_keep` enum and multi-attempt helper methods to `WorkoutOffering` (`scores_for`, `active_score_for`, `latest_score_for`, `attempts_allowed_for`, `attempts_taken_for`, `attempts_left_for`, `can_start_new_attempt?`, `effective_score_for`, `kept_workout_score_for`)
-- [ ] Refactor `WorkoutOffering#can_be_practiced_by?` and `can_be_seen_by?` to allow multiple attempts
-- [ ] Update `WorkoutScore`: auto-populate `attempt_number` and update `update_lti` to post `effective_score_for`
-- [ ] Update `StudentExtension` to support `workout_attempt_limit`
-- [ ] Write unit specs in `spec/models/workout_offering_spec.rb` and `spec/models/workout_score_spec.rb`
+- [x] Add `score_to_keep` enum and multi-attempt helper methods to `WorkoutOffering` (`scores_for`, `active_score_for`, `latest_score_for`, `attempts_allowed_for`, `attempts_taken_for`, `attempts_left_for`, `can_start_new_attempt?`, `effective_score_for`, `kept_workout_score_for`)
+- [x] Refactor `WorkoutOffering#can_be_practiced_by?` and `can_be_seen_by?` to allow multiple attempts
+- [x] Update `WorkoutScore`: auto-populate `attempt_number` and update `update_lti` to post `effective_score_for`
+- [x] Update `StudentExtension` to support `workout_attempt_limit`
+- [x] Write unit specs in `spec/models/workout_offering_spec.rb` and `spec/models/workout_score_spec.rb`
 
 ## Wave 3: Routing, Deadlines YAML & Controllers
 - [ ] Add `post :start_attempt` route for `workout_offerings` (both standalone and org-scoped)
