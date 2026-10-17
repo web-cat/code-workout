@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_10_17_120000) do
+ActiveRecord::Schema.define(version: 2026_10_17_131500) do
 
   create_table "active_admin_comments", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
     t.string "namespace"
@@ -700,7 +700,6 @@ ActiveRecord::Schema.define(version: 2026_10_17_120000) do
     t.datetime "hard_deadline"
     t.boolean "published", default: true, null: false
     t.integer "time_limit"
-    t.integer "workout_policy_id"
     t.integer "continue_from_workout_id"
     t.string "lms_assignment_id"
     t.boolean "most_recent", default: true
@@ -713,6 +712,8 @@ ActiveRecord::Schema.define(version: 2026_10_17_120000) do
     t.text "allowed_user_agents"
     t.integer "workout_attempt_limit", default: 1
     t.boolean "score_to_keep", default: false, null: false
+    t.bigint "policy_values", default: 0, null: false
+    t.bigint "policy_mask", default: 0, null: false
     t.index ["continue_from_workout_id"], name: "workout_offerings_continue_from_workout_id_fk"
     t.index ["course_offering_id"], name: "index_workout_offerings_on_course_offering_id"
     t.index ["lms_assignment_id"], name: "index_workout_offerings_on_lms_assignment_id"
@@ -721,7 +722,6 @@ ActiveRecord::Schema.define(version: 2026_10_17_120000) do
     t.index ["lms_instance_id"], name: "index_workout_offerings_on_lms_instance_id"
     t.index ["lti_assignment_id"], name: "index_workout_offerings_on_lti_assignment_id"
     t.index ["workout_id"], name: "index_workout_offerings_on_workout_id"
-    t.index ["workout_policy_id"], name: "index_workout_offerings_on_workout_policy_id"
   end
 
   create_table "workout_owners", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
@@ -729,23 +729,6 @@ ActiveRecord::Schema.define(version: 2026_10_17_120000) do
     t.integer "owner_id", null: false
     t.index ["owner_id"], name: "workout_owners_owner_id_fk"
     t.index ["workout_id", "owner_id"], name: "index_workout_owners_on_workout_id_and_owner_id", unique: true
-  end
-
-  create_table "workout_policies", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
-    t.boolean "hide_thumbnails_before_start", default: false, null: false
-    t.boolean "hide_feedback_before_finish", default: false, null: false
-    t.boolean "hide_compilation_feedback_before_finish", default: false, null: false
-    t.boolean "no_review_before_close", default: false, null: false
-    t.boolean "hide_feedback_in_review_before_close", default: false, null: false
-    t.boolean "hide_thumbnails_in_review_before_close", default: false, null: false
-    t.boolean "no_hints", default: false, null: false
-    t.boolean "no_faq", default: false, null: false
-    t.datetime "created_at"
-    t.datetime "updated_at"
-    t.boolean "invisible_before_review", default: false, null: false
-    t.boolean "hide_score_before_finish", default: false, null: false
-    t.boolean "hide_score_in_review_before_close", default: false, null: false
-    t.boolean "see_answers", default: true, null: false
   end
 
   create_table "workout_scores", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
@@ -843,7 +826,6 @@ ActiveRecord::Schema.define(version: 2026_10_17_120000) do
   add_foreign_key "workout_offerings", "course_offerings", name: "workout_offerings_course_offering_id_fk"
   add_foreign_key "workout_offerings", "lms_instances"
   add_foreign_key "workout_offerings", "workout_offerings", column: "continue_from_workout_id", name: "workout_offerings_continue_from_workout_id_fk"
-  add_foreign_key "workout_offerings", "workout_policies", name: "workout_offerings_workout_policy_id_fk"
   add_foreign_key "workout_offerings", "workouts", name: "workout_offerings_workout_id_fk"
   add_foreign_key "workout_owners", "users", column: "owner_id", name: "workout_owners_owner_id_fk"
   add_foreign_key "workout_owners", "workouts", name: "workout_owners_workout_id_fk"

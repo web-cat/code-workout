@@ -34,7 +34,6 @@ class CoursesController < ApplicationController
           :term,
           course_enrollments: [:user, :course_role],
           workout_offerings: [
-            :workout_policy,
             :student_extensions,
             workout: :exercise_workouts
           ]
@@ -156,7 +155,6 @@ class CoursesController < ApplicationController
             :term,
             course_enrollments: [:user, :course_role],
             workout_offerings: [
-              :workout_policy,
               :student_extensions,
               workout: :exercise_workouts
             ]
@@ -182,7 +180,6 @@ class CoursesController < ApplicationController
             :term,
             course_enrollments: [:user, :course_role],
             workout_offerings: [
-              :workout_policy,
               workout: :exercise_workouts
             ]
           )

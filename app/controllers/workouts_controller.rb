@@ -1523,7 +1523,9 @@ class WorkoutsController < ApplicationController
       policy.update(policy_params)
 
       # Ensure all existing offerings use this policy
-      workout.workout_offerings.update_all(workout_policy_id: policy.id)
+      values = policy.respond_to?(:values) ? policy.values : 0
+      mask = policy.respond_to?(:mask) ? policy.mask : 0
+      workout.workout_offerings.update_all(policy_values: values, policy_mask: mask)
       common[:workout_policy] = policy
       common[:time_limit] = params[:time_limit]
       common[:attempt_limit] = params[:attempt_limit]

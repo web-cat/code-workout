@@ -418,7 +418,7 @@ describe WorkoutsController do
       allow(Term).to receive(:find).with('fall-2026').and_return(term)
       allow(Course).to receive(:find_with_id_or_slug).and_return(course)
       allow(workout).to receive(:workout_policy).and_return(nil)
-      allow(WorkoutPolicy).to receive(:create!).and_return(double("WorkoutPolicy", id: 1, update: true))
+      allow(WorkoutPolicy).to receive(:create!).and_return(WorkoutPolicy.new)
       allow(workout).to receive_message_chain(:workout_offerings, :update_all).and_return(true)
       allow(workout).to receive_message_chain(:workout_offerings, :joins, :where).and_return([])
       allow(workout).to receive(:add_workout_offerings).and_return([])

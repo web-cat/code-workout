@@ -516,7 +516,6 @@ class WorkoutOfferingsController < ApplicationController
       return unless params[:id].present?
 
       @workout_offering = WorkoutOffering.includes(
-        :workout_policy,
         :student_extensions,
         workout: [
           :tags,

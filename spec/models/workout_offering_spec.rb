@@ -382,4 +382,40 @@ describe WorkoutOffering, type: :model do
       end
     end
   end
+
+  describe "workout_policy dual-bitmask integration" do
+    let(:offering) { WorkoutOffering.new(policy_values: 2048, policy_mask: 4095) }
+
+    it "exposes policy attributes through workout_policy value object" do
+      expect(offering.workout_policy.see_answers).to be true
+      expect(offering.workout_policy.invisible_before_review).to be false
+      expect(offering.show_feedback?).to be true
+    end
+
+    it "syncs mutations on workout_policy back to policy_values and policy_mask" do
+      offering.workout_policy.hide_feedback_before_finish = true
+      offering.workout_policy.see_answers = false
+      offering.send(:sync_workout_policy)
+
+      expect(offering.policy_values & WorkoutPolicy::FLAGS[:hide_feedback_before_finish]).not_to eq(0)
+      expect(offering.policy_values & WorkoutPolicy::FLAGS[:see_answers]).to eq(0)
+      expect(offering.show_feedback?).to be false
+    end
+
+    it "supports assigning a WorkoutPolicy instance directly" do
+      new_policy = WorkoutPolicy.new
+      new_policy.invisible_before_review = true
+      offering.workout_policy = new_policy
+
+      expect(offering.policy_values).to eq(new_policy.values)
+      expect(offering.policy_mask).to eq(new_policy.mask)
+      expect(offering.workout_policy.invisible_before_review).to be true
+    end
+
+    it "correctly filters invisible_before_review in visible_to_students SQL scope" do
+      vis_sql = WorkoutOffering.visible_to_students.to_sql
+      expect(vis_sql).to include("policy_mask & 128")
+      expect(vis_sql).to include("policy_values & 128")
+    end
+  end
 end

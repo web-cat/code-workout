@@ -56,7 +56,6 @@ class WorkoutOffering < ApplicationRecord
   #~ Relationships ............................................................
 
   belongs_to :workout, inverse_of: :workout_offerings
-  belongs_to :workout_policy, inverse_of: :workout_offerings
   belongs_to :continue_from_workout, foreign_key: 'continue_from_workout_id',
     class_name: 'WorkoutOffering'
   belongs_to :course_offering, inverse_of: :workout_offerings
@@ -68,14 +67,14 @@ class WorkoutOffering < ApplicationRecord
   has_many :lti_workouts
 
   scope :visible_to_students, -> {
-    left_outer_joins(:workout_policy).where(published: true)
-    .where('workout_policy_id IS NULL OR workout_policies.invisible_before_review = ?', false)
+    where(published: true)
+    .where('((workout_offerings.policy_mask & 128) = 0) OR ((workout_offerings.policy_values & 128) = 0)')
     .where('opening_date IS NULL OR opening_date <= ?', Time.zone.now)
   }
 
   enum score_to_keep: { highest: false, latest: true }
 
-  before_validation :ensure_workout_policy
+  before_validation :sync_workout_policy
 
 
   #~ Validation ...............................................................
@@ -493,12 +492,40 @@ class WorkoutOffering < ApplicationRecord
   end
 
 
+  def workout_policy
+    @workout_policy ||= WorkoutPolicy.new(
+      policy_values || WorkoutPolicy::DEFAULT_VALUES,
+      policy_mask || WorkoutPolicy::DEFAULT_MASK
+    )
+  end
+
+  def workout_policy=(policy)
+    if policy.is_a?(WorkoutPolicy)
+      self.policy_values = policy.values
+      self.policy_mask = policy.mask
+      @workout_policy = policy.dup
+    elsif policy.is_a?(Hash)
+      self.workout_policy.update(policy)
+      self.policy_values = self.workout_policy.values
+      self.policy_mask = self.workout_policy.mask
+    end
+  end
+
+  def reload(*)
+    @workout_policy = nil
+    super
+  end
+
   #~ Private instance methods .................................................
   private
 
-  def ensure_workout_policy
-    if self.workout && self.workout_policy.nil?
-      self.workout_policy = self.workout.workout_policy || WorkoutPolicy.create!
+  def sync_workout_policy
+    if @workout_policy
+      self.policy_values = @workout_policy.values
+      self.policy_mask = @workout_policy.mask
+    else
+      self.policy_values ||= WorkoutPolicy::DEFAULT_VALUES
+      self.policy_mask ||= WorkoutPolicy::DEFAULT_MASK
     end
   end
 end
