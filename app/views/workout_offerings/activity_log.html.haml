@@ -15,8 +15,6 @@
           %th Event Type
           %th Activity
           %th IP Address
-          %th Browser Agent
-          %th LTI?
           %th Details
       %tbody
         - @events.each do |event|
@@ -25,22 +23,36 @@
             %td
               %span.label{ class: event_type_label_class(event[:type]) }
                 = event[:type].capitalize
-            %td= event[:activity] == 'lti_launch' ? 'LTI launch' : event[:activity].humanize
-            %td= event[:ip]
             %td
-              - if event[:user_agent].present?
-                %small= truncate(event[:user_agent], length: 60)
-            %td
+              = event[:activity] == 'lti_launch' ? 'LTI launch' : event[:activity].humanize
               - if event[:lti]
-                %span.glyphicon.glyphicon-ok.text-success
-              - else
-                %span.glyphicon.glyphicon-remove.text-muted
+                &nbsp;
+                %span.badge LTI
+            %td
+              = event[:ip]
+              - if event[:user_agent].present?
+                %br
+                %small{ title: user_agent_raw(event[:user_agent]) }= user_agent_display(event[:user_agent])
             %td
               - if event[:type] == 'attempt'
                 Score: #{event[:score]}
-                - if @exercise
+                - ex = @exercise || (event[:details].respond_to?(:exercise_version) && event[:details].exercise_version.andand.exercise) || (event[:details].respond_to?(:exercise) && event[:details].exercise)
+                - if ex
                   &nbsp;
-                  = link_to 'View', organization_workout_offering_exercise_review_path(workout_offering_id: @workout_offering.id, review_user_id: @student.id, id: @exercise.id, attempt_id: event[:details].id, organization_id: @course_offering.course.organization.slug, course_id: @course_offering.course.slug, term_id: @course_offering.term.slug), class: 'btn btn-default btn-xs'
+                  = link_to 'View', organization_workout_offering_exercise_review_path(workout_offering_id: @workout_offering.id, review_user_id: @student.id, id: ex.id, attempt_id: event[:details].id, organization_id: @course_offering.course.organization.slug, course_id: @course_offering.course.slug, term_id: @course_offering.term.slug), class: 'btn btn-default btn-xs'
+                - if event[:details].respond_to?(:prompt_answers)
+                  - event[:details].prompt_answers.each do |prompt_answer|
+                    - specific = prompt_answer.respond_to?(:specific) && prompt_answer.specific.present? ? prompt_answer.specific : prompt_answer
+                    - if specific.is_a?(CodingPromptAnswer) || specific.is_a?(ParsonsPromptAnswer) || (specific.respond_to?(:answer) && !specific.respond_to?(:choices))
+                      %pre= specific.answer
+                      - if specific.respond_to?(:error) && !specific.error.blank?
+                        .alert.alert-danger{ role: 'alert' }
+                          - specific.error.lines.each_with_index do |line, i|
+                            - if i > 0
+                              %br
+                            = line
+                    - elsif specific.is_a?(MultipleChoicePromptAnswer) || specific.respond_to?(:choices)
+                      %div= mc_answer_display(prompt_answer)
               - elsif event[:type] == 'activity' && event[:activity] == 'practice_view'
                 Viewed practice page
               - elsif event[:type] == 'activity' && event[:activity] == 'workout_view'

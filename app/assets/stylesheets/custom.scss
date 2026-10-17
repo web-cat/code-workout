@@ -595,3 +595,292 @@ ul.ui-autocomplete {
   max-height: 5em;
   height: auto;
 }
+
+/* Sticky Gradebook Table */
+.gradebook-section {
+  margin-bottom: 30px;
+}
+
+.gradebook-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 15px;
+  margin-bottom: 10px;
+
+  .gradebook-download {
+    margin: 0;
+
+    form {
+      display: inline-block;
+      margin: 0;
+    }
+  }
+
+  .gradebook-filters {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+
+    .gradebook-filter-group {
+      margin: 0;
+      display: inline-block;
+      vertical-align: middle;
+
+      /* Prevent Bootstrap 3 clearfix pseudo-elements from becoming phantom flex items */
+      &:before,
+      &:after {
+        display: none;
+      }
+    }
+
+    .input-group {
+      width: 240px;
+    }
+
+    .input-group-addon {
+      background-color: #f7f7f7;
+      color: #666;
+      border-color: #ccc;
+    }
+
+    .form-control {
+      border-color: #ccc;
+
+      &:focus {
+        border-color: #66afe9;
+      }
+    }
+
+    .gradebook-clear-input {
+      color: #888;
+      background-color: #fafafa;
+      border-color: #ccc;
+
+      &:hover,
+      &:focus {
+        color: #333;
+        background-color: #ebebeb;
+        border-color: #adadad;
+      }
+    }
+  }
+}
+
+.gradebook-table-wrapper {
+  max-width: 100%;
+  max-height: 70vh;
+  overflow: auto;
+  position: relative;
+  margin-top: 5px;
+  margin-bottom: 20px;
+  border: 1px solid #ddd;
+}
+
+.gradebook-table {
+  margin-bottom: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+
+  th, td {
+    white-space: nowrap;
+    padding: 8px 12px;
+  }
+
+  /* Sticky top headers */
+  thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background-color: #f5f5f5;
+    border-bottom: 2px solid #ddd;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
+
+  /* Sticky left student name column */
+  .col-student {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    min-width: 180px;
+    max-width: 260px;
+    background-color: #fff;
+    border-right: 2px solid #ddd;
+    box-shadow: 1px 0 2px rgba(0, 0, 0, 0.05);
+  }
+
+  /* Sticky top-left intersection (Name header) */
+  thead th.col-student {
+    top: 0;
+    left: 0;
+    z-index: 3;
+    background-color: #f5f5f5;
+    box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.05);
+  }
+
+  /* Row backgrounds for the sticky column to maintain zebra striping */
+  tbody tr:nth-of-type(odd) td.col-student {
+    background-color: #f9f9f9;
+  }
+
+  tbody tr:nth-of-type(even) td.col-student {
+    background-color: #ffffff;
+  }
+}
+
+/* ==========================================================================
+   Workouts Tab Toolbar, Filtering, & Responsive Grid
+   ========================================================================== */
+
+.workouts-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e5e5e5;
+
+  .workouts-filters {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .workout-filter-group {
+    margin: 0;
+    display: inline-block;
+    vertical-align: middle;
+
+    &:before,
+    &:after {
+      display: none;
+    }
+
+    .input-group {
+      width: 210px;
+    }
+
+    .input-group-addon {
+      background-color: #f7f7f7;
+      color: #666;
+      border-color: #ccc;
+    }
+
+    .form-control {
+      border-color: #ccc;
+
+      &:focus {
+        border-color: #66afe9;
+      }
+    }
+
+    .workout-clear-name {
+      color: #888;
+      background-color: #fafafa;
+      border-color: #ccc;
+
+      &:hover {
+        color: #333;
+        background-color: #eee;
+      }
+    }
+  }
+
+  .workout-state-dropdown {
+    .dropdown-toggle {
+      background-color: #fff;
+      border-color: #ccc;
+      color: #333;
+
+      .caret {
+        margin-left: 6px;
+      }
+    }
+
+    .workout-state-menu {
+      min-width: 190px;
+      padding: 6px 0;
+
+      .dropdown-header {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: #888;
+        padding: 4px 15px;
+      }
+
+      .workout-state-option {
+        display: flex;
+        align-items: center;
+        padding: 4px 15px;
+        color: #333;
+        cursor: pointer;
+        text-decoration: none;
+
+        &:hover {
+          background-color: #f5f5f5;
+        }
+
+        .workout-state-checkbox {
+          margin: 0 8px 0 0;
+          cursor: pointer;
+        }
+      }
+
+      .workout-state-reset {
+        display: block;
+        padding: 4px 15px;
+        color: #337ab7;
+        font-size: 12px;
+        text-decoration: none;
+
+        &:hover {
+          background-color: #f5f5f5;
+          text-decoration: underline;
+        }
+
+        i {
+          margin-right: 4px;
+        }
+      }
+    }
+  }
+
+  .workouts-actions {
+    margin-left: auto;
+  }
+}
+
+.workouts-list {
+  display: flex;
+  flex-wrap: wrap;
+  margin-left: -10px;
+  margin-right: -10px;
+
+  .workout-card {
+    width: 50%;
+    padding-left: 10px;
+    padding-right: 10px;
+    margin-bottom: 20px;
+    box-sizing: border-box;
+
+    .thumbnail.lg {
+      width: 100%;
+      margin: 0;
+      float: none;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .workout-card {
+      width: 100%;
+    }
+  }
+}
+

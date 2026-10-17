@@ -1,13 +1,100 @@
-- if is_student
-  - course_offerings.each do |offering|
-    - offering.workout_offerings.select{ |i| i.can_be_seen_by? current_user }.in_groups_of(2, false) do |row|
-      = render row, locals: { uid: current_user.id, course: (@course || course), term: (@term || term), organization: (@organization || organization) }
-      .clearfix
+- workout_items = course_workout_items(course_offerings, current_user, is_student)
+
+.workouts-toolbar
+  .workouts-filters
+    .form-group.workout-filter-group
+      %label.sr-only{ for: 'workout-filter-name' } Filter by workout name
+      .input-group.input-group-sm
+        %span.input-group-addon
+          %i.fa.fa-search
+        %input.form-control.workout-filter-name{ id: 'workout-filter-name',
+          type: 'text',
+          placeholder: 'Filter by workout name...',
+          autocomplete: 'off' }
+        %span.input-group-btn
+          %button.btn.btn-default.workout-clear-name{ type: 'button',
+            title: 'Clear name filter',
+            aria: { label: 'Clear name filter' } }
+            %i.fa.fa-times
+
+    .form-group.workout-filter-group.dropdown.workout-state-dropdown
+      %button.btn.btn-default.btn-sm.dropdown-toggle{ type: 'button',
+        id: 'workout-state-filter-btn',
+        data: { toggle: 'dropdown' },
+        aria: { haspopup: 'true', expanded: 'false' } }
+        %i.fa.fa-filter
+        %span.workout-state-btn-text State: All
+        %span.caret
+      %ul.dropdown-menu.workout-state-menu{ aria: { labelledby: 'workout-state-filter-btn' } }
+        %li.dropdown-header Schedule
+        %li
+          %a.workout-state-option{ href: '#', data: { state: 'open' } }
+            %input.workout-state-checkbox{ type: 'checkbox', value: 'open' }
+            Open
+        %li
+          %a.workout-state-option{ href: '#', data: { state: 'past_due' } }
+            %input.workout-state-checkbox{ type: 'checkbox', value: 'past_due' }
+            Past due
+        %li
+          %a.workout-state-option{ href: '#', data: { state: 'past' } }
+            %input.workout-state-checkbox{ type: 'checkbox', value: 'past' }
+            Past
+        %li
+          %a.workout-state-option{ href: '#', data: { state: 'future' } }
+            %input.workout-state-checkbox{ type: 'checkbox', value: 'future' }
+            Future
+        - if !is_student
+          %li.divider
+          %li.dropdown-header Publication
+          %li
+            %a.workout-state-option{ href: '#', data: { state: 'published' } }
+              %input.workout-state-checkbox{ type: 'checkbox', value: 'published' }
+              Published
+          %li
+            %a.workout-state-option{ href: '#', data: { state: 'unpublished' } }
+              %input.workout-state-checkbox{ type: 'checkbox', value: 'unpublished' }
+              Not published
+        %li.divider
+        %li
+          %a.workout-state-reset{ href: '#' }
+            %i.fa.fa-undo
+            Reset state filters
+
+    .form-group.workout-filter-group
+      %label.sr-only{ for: 'workout-sort-select' } Sort workouts
+      .input-group.input-group-sm
+        %span.input-group-addon
+          %i.fa.fa-sort
+        %select.form-control.workout-sort-select{ id: 'workout-sort-select' }
+          %option{ value: 'due-asc', selected: true } Sort: Due date
+          %option{ value: 'open-asc' } Sort: Opening date
+          %option{ value: 'name-asc' } Sort: Alphabetical
+          %option{ value: 'due-desc' } Sort: Due date (descending)
+          %option{ value: 'open-desc' } Sort: Opening date (descending)
+          %option{ value: 'name-desc' } Sort: Alphabetical (descending)
+
+  - if !is_student
+    .workouts-actions
+      = link_to organization_new_or_existing_workout_path(organization_id: organization.slug,
+        course_id: course.slug,
+        term_id: term.slug), class: 'btn btn-primary btn-sm' do
+        %i.fa.fa-plus
+        Add Workout
+
+.workout-no-matches.alert.alert-info{ style: 'display: none; margin-top: 15px;' }
+  %i.fa.fa-info-circle
+  No workouts match the current filters.
+
+- if workout_items.blank?
+  %p No workouts available for this course.
 - else
-  - course_offerings.flat_map(&:workout_offerings).uniq{ |wo| wo.workout }.in_groups_of(2, false) do |row|
-    = render row, locals: { uid: current_user.id, course: (@course || course), term: (@term || term), organization: (@organization || organization) }
-    .clearfix
-- if !is_student
-  = link_to 'Add Workout', organization_new_or_existing_workout_path(organization_id: organization.slug,
-    course_id: course.slug,
-    term_id: term.slug), class: 'btn btn-default'
+  .workouts-list
+    - workout_items.each do |item|
+      .workout-card{ id: "workout-card-#{item[:workout].id}", data: item[:data] }
+        = render item[:offering], locals: { uid: current_user.id, course: (@course || course), term: (@term || term), organization: (@organization || organization) }
+
+- if !is_student && workout_items.any?
+  .clearfix{ style: 'margin-top: 15px;' }
+    = link_to 'Add Workout', organization_new_or_existing_workout_path(organization_id: organization.slug,
+      course_id: course.slug,
+      term_id: term.slug), class: 'btn btn-default'

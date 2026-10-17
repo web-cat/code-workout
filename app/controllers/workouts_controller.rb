@@ -1390,6 +1390,7 @@ class WorkoutsController < ApplicationController
             workout_score: (@workout_score.is_a?(WorkoutScore) ? @workout_score : nil),
             activity: 'lti_launch',
             ip_address: request.remote_ip,
+            user_agent: request.user_agent,
             lms_instance_id: lti_context.andand[:lms_instance_id] || session[:lms_instance_id] || @lti_workout.andand.lms_instance_id,
             lti_launch: true
           )
