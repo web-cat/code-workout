@@ -181,6 +181,31 @@ describe WorkoutsController do
       expect(response.status).to eq(200)
       expect(controller.instance_variable_get(:@course_offerings)).to eq([mock_course_offering])
     end
+
+    it "populates @workout_attempt_limit, @score_to_keep, and @most_recent from workout_offering" do
+      wo = double("WorkoutOffering",
+        time_limit: 45,
+        attempt_limit: 3,
+        published: true,
+        most_recent: false,
+        workout_attempt_limit: 2,
+        score_to_keep: 'latest',
+        workout_policy: nil
+      )
+      allow(mock_workout).to receive(:workout_offerings).and_return([wo])
+
+      get :clone, params: {
+        id: '100',
+        organization_id: 'vt',
+        course_id: 'cs1114',
+        term_id: 'fall2026'
+      }
+
+      expect(response.status).to eq(200)
+      expect(controller.instance_variable_get(:@workout_attempt_limit)).to eq(2)
+      expect(controller.instance_variable_get(:@score_to_keep)).to eq('latest')
+      expect(controller.instance_variable_get(:@most_recent)).to eq(false)
+    end
   end
 
   describe "GET #show" do
@@ -299,6 +324,44 @@ describe WorkoutsController do
 
         expect(response.status).to eq(200)
         expect(controller.instance_variable_get(:@message)).to include("requires a specific browser")
+      end
+    end
+
+    context "when student query param is used" do
+      let(:mock_offering) { double("WorkoutOffering", id: 201) }
+      let(:user) { FactoryBot.build_stubbed(:user) }
+      let(:course_offering) { double("CourseOffering") }
+
+      before do
+        allow(controller).to receive(:current_user).and_return(user)
+        allow(mock_offering).to receive(:course_offering).and_return(course_offering)
+        allow(mock_offering).to receive(:ip_allowed?).and_return(true)
+        allow(mock_offering).to receive(:user_agent_allowed?).and_return(true)
+        allow(mock_offering).to receive(:scores_for).and_return([])
+        allow(mock_offering).to receive(:active_score_for).and_return(nil)
+        allow(mock_offering).to receive(:can_start_new_attempt?).and_return(true)
+        allow(mock_offering).to receive(:effective_score_for).and_return(0)
+        allow(mock_offering).to receive(:kept_workout_score_for).and_return(nil)
+        allow(mock_offering).to receive(:latest_score_for).and_return(nil)
+        controller.instance_variable_set(:@workout_offering, mock_offering)
+      end
+
+      it "sets @as_student to true when user is staff and student=true" do
+        allow(course_offering).to receive(:is_staff?).with(user).and_return(true)
+
+        get :show, params: { id: 1, student: 'true' }
+
+        expect(controller.instance_variable_get(:@can_view_as_student)).to be true
+        expect(controller.instance_variable_get(:@as_student)).to be true
+      end
+
+      it "does not allow non-staff to set @as_student" do
+        allow(course_offering).to receive(:is_staff?).with(user).and_return(false)
+
+        get :show, params: { id: 1, student: 'true' }
+
+        expect(controller.instance_variable_get(:@can_view_as_student)).to be false
+        expect(controller.instance_variable_get(:@as_student)).to be false
       end
     end
   end
@@ -875,6 +938,83 @@ describe WorkoutsController do
       controller.send(:create_or_update_offerings, workout)
 
       expect(workout.errors).to be_empty
+    end
+
+    it "correctly normalizes string parameters for most_recent, workout_attempt_limit, and score_to_keep" do
+      allow(workout).to receive(:workout_policy).and_return(nil)
+      allow(WorkoutPolicy).to receive(:create!).and_return(double('WorkoutPolicy', update: true, values: 0, mask: 0))
+      allow(workout.workout_offerings).to receive(:update_all).and_return(true)
+
+      co1 = FactoryBot.build_stubbed(:course_offering, id: 101, label: 'Section A', course: course, term: term)
+      allow(co1).to receive(:display_name_with_term).and_return('Section A')
+      allow(user).to receive(:managed_course_offerings).and_return([co1])
+
+      captured_common = nil
+      allow(workout).to receive(:add_workout_offerings) do |hash, common|
+        captured_common = common
+        []
+      end
+
+      yaml_input = <<~YAML
+        sections:
+          - section: Section A
+            due: 2026-09-15 11:59 PM
+      YAML
+
+      controller.params = ActionController::Parameters.new({
+        date_yaml: yaml_input,
+        course_id: "itsc2214",
+        organization_id: "uncc",
+        term_id: "fall-2026",
+        most_recent: 'false',
+        workout_attempt_limit: '3',
+        score_to_keep: 'latest'
+      })
+
+      controller.send(:create_or_update_offerings, workout)
+
+      expect(captured_common[:most_recent]).to eq(false)
+      expect(captured_common[:workout_attempt_limit]).to eq(3)
+      expect(captured_common[:score_to_keep]).to eq('latest')
+    end
+
+    it "does not pass nil score_to_keep or workout_attempt_limit when section YAML omits them" do
+      allow(workout).to receive(:workout_policy).and_return(nil)
+      allow(WorkoutPolicy).to receive(:create!).and_return(double('WorkoutPolicy', update: true, values: 0, mask: 0))
+      allow(workout.workout_offerings).to receive(:update_all).and_return(true)
+
+      co1 = FactoryBot.build_stubbed(:course_offering, id: 101, label: 'Section A', course: course, term: term)
+      allow(co1).to receive(:display_name_with_term).and_return('Section A')
+      allow(user).to receive(:managed_course_offerings).and_return([co1])
+
+      captured_hash = nil
+      captured_common = nil
+      allow(workout).to receive(:add_workout_offerings) do |hash, common|
+        captured_hash = hash
+        captured_common = common
+        []
+      end
+
+      yaml_input = <<~YAML
+        sections:
+          - section: Section A
+            due: 2026-09-15 11:59 PM
+      YAML
+
+      controller.params = ActionController::Parameters.new({
+        date_yaml: yaml_input,
+        course_id: "itsc2214",
+        organization_id: "uncc",
+        term_id: "fall-2026",
+        workout_attempt_limit: '1'
+      })
+
+      controller.send(:create_or_update_offerings, workout)
+
+      expect(captured_hash['101']).not_to have_key('score_to_keep')
+      expect(captured_hash['101']).not_to have_key('workout_attempt_limit')
+      expect(captured_common[:workout_attempt_limit]).to eq(1)
+      expect(captured_common[:score_to_keep]).to eq(:highest)
     end
   end
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2026_10_17_131500) do
+ActiveRecord::Schema.define(version: 2026_10_17_220500) do
 
   create_table "active_admin_comments", id: :integer, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci", force: :cascade do |t|
     t.string "namespace"
@@ -711,7 +711,7 @@ ActiveRecord::Schema.define(version: 2026_10_17_131500) do
     t.text "allowed_ips"
     t.text "allowed_user_agents"
     t.integer "workout_attempt_limit", default: 1
-    t.boolean "score_to_keep", default: false, null: false
+    t.boolean "score_to_keep"
     t.bigint "policy_values", default: 0, null: false
     t.bigint "policy_mask", default: 0, null: false
     t.index ["continue_from_workout_id"], name: "workout_offerings_continue_from_workout_id_fk"

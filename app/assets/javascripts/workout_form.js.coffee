@@ -129,6 +129,12 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
       $('.empty-msg').css 'display', 'block'
       $('#ex-list').css 'display', 'none'
 
+  $('#allow-multiple-attempts').on 'change', ->
+    if $(this).is(':checked')
+      $('#multiple-attempts-panel').slideDown()
+    else
+      $('#multiple-attempts-panel').slideUp()
+
   $('#btn-submit-wo').click ->
     handle_submit()
 
@@ -275,7 +281,13 @@ handle_submit = ->
   fd.append 'description', $('#description').val()
   fd.append 'time_limit', $('#time-limit').val()
   fd.append 'attempt_limit', $('#attempt-limit').val()
-  fd.append 'workout_attempt_limit', $('#workout-attempt-limit').val()
+  if $('#allow-multiple-attempts').length > 0
+    if $('#allow-multiple-attempts').is(':checked')
+      fd.append 'workout_attempt_limit', $('#workout-attempt-limit').val()
+    else
+      fd.append 'workout_attempt_limit', '1'
+  else
+    fd.append 'workout_attempt_limit', $('#workout-attempt-limit').val()
   fd.append 'score_to_keep', $('#score-to-keep').val()
   
   policy = {}
@@ -291,7 +303,12 @@ handle_submit = ->
   
   fd.append 'is_public', $('#is-public').is ':checked'
   fd.append 'published', $('#published').is ':checked'
-  fd.append 'most_recent', $('#most_recent').is ':checked'
+  
+  most_recent_el = $('#most-recent, #most_recent')
+  if most_recent_el.is('select')
+    fd.append 'most_recent', most_recent_el.val()
+  else
+    fd.append 'most_recent', most_recent_el.is(':checked')
   
   fd.append 'term_id', window.codeworkout.term_id
   fd.append 'organization_id', window.codeworkout.organization_id

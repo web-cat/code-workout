@@ -428,14 +428,14 @@ class Workout < ApplicationRecord
       end
 
       if offering.key?('score_to_keep')
-        workout_offering.score_to_keep = offering['score_to_keep']
+        workout_offering.score_to_keep = offering['score_to_keep'].presence
       elsif common.key?(:score_to_keep)
-        workout_offering.score_to_keep = common[:score_to_keep]
+        workout_offering.score_to_keep = common[:score_to_keep].presence
       end
 
       # update workout scores so they follow the new policy
-      if common[:most_recent].to_b != workout_offering.most_recent
-        workout_offering.most_recent = common[:most_recent]
+      if !common[:most_recent].nil? && common[:most_recent].to_b != workout_offering.most_recent
+        workout_offering.most_recent = common[:most_recent].to_b
         workout_offering.save!
         workout_offering.rescore_all
       end

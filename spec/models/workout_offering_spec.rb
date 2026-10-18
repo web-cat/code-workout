@@ -351,6 +351,13 @@ describe WorkoutOffering, type: :model do
         expect(workout_offering.effective_score_for(user)).to eq(82.0)
         expect(workout_offering.kept_workout_score_for(user)).to eq(ws2_low)
       end
+
+      it "falls back to highest when score_to_keep is nil" do
+        workout_offering.score_to_keep = nil
+        expect(workout_offering.effective_score_to_keep).to eq('highest')
+        expect(workout_offering.effective_score_for(user)).to eq(95.0)
+        expect(workout_offering.kept_workout_score_for(user)).to eq(ws2)
+      end
     end
 
     describe "#can_start_new_attempt?" do
@@ -378,6 +385,23 @@ describe WorkoutOffering, type: :model do
         ws1 = double('WorkoutScore', id: 101, user_id: 1, workout_id: 5, attempt_number: 1, score: 70.0, closed?: true)
         ws2 = double('WorkoutScore', id: 102, user_id: 1, workout_id: 5, attempt_number: 2, score: 85.0, closed?: true)
         allow(workout_offering).to receive(:workout_scores).and_return([ws1, ws2])
+        expect(workout_offering.can_start_new_attempt?(user)).to be true
+      end
+
+      it "enforces attempt limits for course staff members" do
+        allow(workout_offering.course_offering).to receive(:is_staff?).with(user).and_return(true)
+        workout_offering.workout_attempt_limit = 1
+        ws1 = double('WorkoutScore', id: 101, user_id: 1, workout_id: 5, attempt_number: 1, score: 70.0, closed?: true)
+        allow(workout_offering).to receive(:workout_scores).and_return([ws1])
+        expect(workout_offering.can_start_new_attempt?(user)).to be false
+      end
+
+      it "allows course staff members to start attempt 1 even if not enrolled or unpublished" do
+        allow(workout_offering.course_offering).to receive(:is_staff?).with(user).and_return(true)
+        allow(workout_offering.course_offering).to receive(:is_enrolled?).with(user).and_return(false)
+        workout_offering.published = false
+        workout_offering.workout_attempt_limit = 1
+        allow(workout_offering).to receive(:workout_scores).and_return([])
         expect(workout_offering.can_start_new_attempt?(user)).to be true
       end
     end

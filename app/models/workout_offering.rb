@@ -123,12 +123,20 @@ class WorkoutOffering < ApplicationRecord
 
 
   # -----------------------------------------------------------------
+  # Effective score_to_keep, resolving series inheritance or defaulting to 'highest'
+  def effective_score_to_keep
+    # When WorkoutSeries is present: series_resolver.resolve_base_setting(:score_to_keep)
+    score_to_keep || 'highest'
+  end
+
+
+  # -----------------------------------------------------------------
   # Kept workout score for a user based on scoring policy (highest vs latest)
   def kept_workout_score_for(user)
     scores = scores_for(user).select { |s| s.score.present? }
     return nil if scores.empty?
 
-    if latest? || score_to_keep.to_s == 'latest'
+    if latest? || effective_score_to_keep.to_s == 'latest'
       scores.last
     else # 'highest' (default)
       scores.max_by(&:score)
@@ -178,18 +186,18 @@ class WorkoutOffering < ApplicationRecord
   # -----------------------------------------------------------------
   # Can the user start a NEW attempt?
   def can_start_new_attempt?(user)
-    return false unless user && course_offering.is_enrolled?(user)
-    return true if course_offering.is_staff?(user)
+    return false unless user && (course_offering.is_enrolled?(user) || course_offering.is_staff?(user))
 
+    is_staff = course_offering.is_staff?(user)
     now = Time.zone.now
     opens = opening_date_for(user)
     deadline = hard_deadline_for(user)
 
-    is_open = (opens.nil? || opens <= now) && (deadline.nil? || now <= deadline)
+    is_open = is_staff || ((opens.nil? || opens <= now) && (deadline.nil? || now <= deadline))
     has_attempts_remaining = attempts_left_for(user) > 0
     no_active_attempt = active_score_for(user).nil?
 
-    is_open && has_attempts_remaining && no_active_attempt && published
+    is_open && has_attempts_remaining && no_active_attempt && (is_staff || published)
   end
 
 

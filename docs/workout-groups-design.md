@@ -107,7 +107,7 @@ University courses must regularly support students with **disability accommodati
 |  - policy_mask: bigint (tri-state override mask; 0 = inherit, 1 = set)    |
 |  - allowed_ips: text                                                     |
 |  - allowed_user_agents: text                                             |
-|  - published: boolean (nil = inherit, true/false = explicit)             |
+|  - published: boolean (series gate: true = open, false = closed draft)    |
 +--------------------+-------------------------------+---------------------+
                      | 1                             | 1
                      | has_many                      | has_many
@@ -305,7 +305,7 @@ class CreateWorkoutSeries < ActiveRecord::Migration[6.0]
       t.bigint     :policy_mask, default: 0, null: false # 0 = inherit all from parent
       t.text       :allowed_ips
       t.text       :allowed_user_agents
-      t.boolean    :published, default: nil # nil = inherit, true/false = explicit
+      t.boolean    :published, default: true, null: false # Master series gate (true = open, false = closed draft)
 
       t.timestamps
     end
@@ -845,6 +845,79 @@ The database table `workout_policies` is dropped, but the Ruby class `WorkoutPol
 
 ---
 
+### 5.4 Workout Series Publishing: The Gated Visibility Pattern & Cascading Bulk Actions
+
+Managing the visibility of assignments across an academic semester presents two essential requirements that can easily conflict:
+1. **Single-Action Publishing**: The ability for teaching staff to stage an entire unit, module, or lab series privately and publish it in one click when the semester reaches that point.
+2. **Selective Hold-Backs (Drafts)**: The ability to keep a specific assignment (such as a surprise pop quiz or an upcoming exam) hidden as an unpublished draft, even when the surrounding parent series is already live.
+
+To address both needs without mutating hundreds of database rows or forcing instructors to manually toggle every individual workout, CodeWorkout implements **Strategy 1: The Two-Level Module Gate Pattern** (the architectural standard used by Canvas and modern LMSs), augmented with **Strategy 2: Cascading Bulk Action UI Controls**.
+
+#### 5.4.1 The Two-Level Module Gate Architecture (Strategy 1)
+Both `WorkoutSeries` and `WorkoutOffering` maintain a dedicated `published: boolean` database column:
+- **`WorkoutSeries#published` (Master Gate)**: Controls whether the series container as a whole is open to students. When `false`, the entire container and all its contents are hidden from student view regardless of member settings.
+- **`WorkoutOffering#published` (Item Readiness)**: Controls whether the individual workout offering is finalized and approved for students.
+
+**Compound Visibility Rule**:
+An individual workout offering is visible to students on their course page if and only if **both** the workout offering is published AND its parent series (and all ancestor series up to the root) is published:
+
+$$\text{Visible to Students} \iff \text{workout\_offering.published} \land (\text{series.nil?} \lor \text{series.published?})$$
+
+```ruby
+# In WorkoutOffering:
+scope :visible_to_students, -> {
+  left_outer_joins(:workout_series_offering => :workout_series)
+    .where(published: true)
+    .where('workout_series.id IS NULL OR workout_series.published = TRUE')
+    .where('((workout_offerings.policy_mask & 128) = 0) OR ((workout_offerings.policy_values & 128) = 0)')
+    .where('opening_date IS NULL OR opening_date <= ?', Time.zone.now)
+}
+```
+
+#### 5.4.2 State Matrix: Series Master Gate vs. Workout Item State
+
+| Series Gate (`series.published`) | Workout State (`offering.published`) | Visible to Students? | Pedagogical & Workflow Meaning |
+| :---: | :---: | :---: | :--- |
+| **`false`** (Closed Gate) | `true` (Ready) | **NO** | **Staged in Draft Series**: The assignment is ready and pre-published, but kept private because the entire series module is still under construction. |
+| **`false`** (Closed Gate) | `false` (Draft) | **NO** | **Unpublished Draft**: Neither the series nor the workout is ready. |
+| **`true`** (Open Gate) | **`true`** (Ready) | **YES** | **Live & Visible**: Both gate and assignment are open. Available to students on the course dashboard. |
+| **`true`** (Open Gate) | **`false`** (Draft) | **NO** | **Selective Hold-Back**: The series is live, but this specific workout is deliberately withheld as an instructor draft. |
+
+#### 5.4.3 UI Workflow: Cascading Bulk Action Support (Strategy 2)
+To provide maximum flexibility and speed, the Series Management UI introduces **publishing action modals** that give instructors the choice between Gate-Only and Cascading Bulk actions:
+
+1. **Publishing a Series**:
+   When an instructor clicks the "Publish" toggle on a `WorkoutSeries`, a confirmation dialog appears:
+   - **Option A: "Publish Series Gate Only" (Default / Recommended)**:
+     - Sets `workout_series.published = true`.
+     - Opens the master gate: all member workouts that were pre-staged with `published: true` instantly become live in **one single action**.
+     - Any workouts intentionally marked `published: false` remain safely hidden drafts.
+   - **Option B: "Publish Series and All Member Workouts" (Cascading Bulk Action)**:
+     - Opens the series gate (`workout_series.update!(published: true)`).
+     - Executes an atomic SQL batch update setting `published = true` across all descendant sub-series and member offerings in that branch:
+       ```ruby
+       WorkoutSeries.transaction do
+         @series.update!(published: true)
+         @series.descendants.update_all(published: true)
+         @series.all_workout_offerings.update_all(published: true)
+       end
+       ```
+2. **Unpublishing a Series**:
+   - **Option A: "Unpublish Series Gate Only" (Default)**:
+     - Closes the series gate (`published: false`), instantly hiding the entire branch from students.
+     - Preserves each individual workout's `published` state, ensuring that re-opening the gate in the future restores the exact prior visibility without reconfiguration.
+   - **Option B: "Unpublish Series and All Member Workouts" (Cascading Bulk Unpublish)**:
+     - Closes the series gate and recursively resets every descendant offering to `published: false`.
+
+#### 5.4.4 Visual Status Badges in the Instructor Dashboard
+In the series hierarchy manager, each workout offering displays an unambiguous status indicator:
+- 🟢 **Live**: Series gate is open, offering is published (`published: true`).
+- ⚪ **Staged (Gated)**: Offering is ready (`published: true`), but waiting on parent series gate (`series.published: false`).
+- 🟡 **Withheld Draft**: Series gate is open, but this workout is specifically held back (`published: false`).
+- ⚫ **Full Draft**: Both series gate and workout are unpublished.
+
+---
+
 ## 6. Multi-Section Semester Management for Teaching Teams
 
 ### 6.1 Unified Multi-Offering Coordination
@@ -942,9 +1015,14 @@ sections:
      - Add a student extension once (e.g. "Jane Doe - 1.5x time multiplier, IP unrestricted").
      - Scope selector: "Whole Course", a specific "Workout Series", or an individual "Workout".
 3. **Bulk Actions**:
-   - *"Apply to All Sections in Fall 2026"*.
-   - *"Emergency Schedule Shift"*: Shift all deadlines in this series branch by $+X$ hours/days across all managed sections.
-   - *"Publish Series Branch"*: Recursively publish all nested sub-series and member workouts.
+   - *"Apply to All Sections in Fall 2026"*: Synchronize hierarchy modifications and policy settings across all managed course offerings for the semester.
+   - *"Emergency Schedule Shift"*: Shift all opening dates and deadlines in this series branch by $+X$ hours/days across all managed sections.
+4. **Series Gate & Publishing Controls**:
+   - One-click toggle on any series node to open or close the **master series gate**.
+   - **Publishing Modal**: Prompts the instructor with the option to:
+     - **Open Gate Only** (instant single action: member workouts marked `published: true` go live; drafts stay withheld).
+     - **Cascade Publish** (executes bulk `update_all(published: true)` down the branch).
+   - **Visual Gate Indicators**: Clear status pills next to every workout offering (`Live`, `Staged / Gated`, `Withheld Draft`, `Unpublished`).
 
 ### 7.2 Student Experience
 

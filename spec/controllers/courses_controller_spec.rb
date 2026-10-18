@@ -43,6 +43,50 @@ describe CoursesController do
       expect(controller.instance_variable_get(:@term)).to eq(term)
       expect(controller.instance_variable_get(:@workout_scores_by_offering_id)).to be_a(Hash)
     end
+
+    it "sets @as_student to true when course staff passes student=true" do
+      allow(Organization).to receive(:find).and_return(organization)
+      allow(Course).to receive(:find_with_id_or_slug).and_return(course)
+      allow(controller).to receive(:authorize!).and_return(true)
+      allow(Term).to receive(:find).with('2').and_return(term)
+      allow(controller).to receive(:current_user).and_return(user)
+
+      course_offering = FactoryBot.build_stubbed(:course_offering, id: 100, course: course, term: term)
+      relation = double('CourseOfferingsRelation', any?: true, first: course_offering, present?: true, respond_to?: true)
+      allow(user).to receive(:course_offerings_for_term).with(term, course).and_return(relation)
+      allow(relation).to receive(:includes).and_return([course_offering])
+      allow(course_offering).to receive(:is_staff?).with(user).and_return(true)
+      allow(course_offering).to receive(:is_instructor?).with(user).and_return(true)
+      allow(course_offering).to receive(:workout_offering_ids).and_return([])
+
+      get :show, params: { organization_id: 'vt', id: 'cs1114', term_id: '2', student: 'true' }, session: valid_session
+
+      expect(controller.instance_variable_get(:@can_view_as_student)).to be true
+      expect(controller.instance_variable_get(:@as_student)).to be true
+      expect(controller.instance_variable_get(:@is_instructor)).to be false
+      expect(controller.instance_variable_get(:@is_student)).to be true
+    end
+
+    it "does not allow non-staff student to enable @as_student" do
+      allow(Organization).to receive(:find).and_return(organization)
+      allow(Course).to receive(:find_with_id_or_slug).and_return(course)
+      allow(controller).to receive(:authorize!).and_return(true)
+      allow(Term).to receive(:find).with('2').and_return(term)
+      allow(controller).to receive(:current_user).and_return(user)
+
+      course_offering = FactoryBot.build_stubbed(:course_offering, id: 100, course: course, term: term)
+      relation = double('CourseOfferingsRelation', any?: true, first: course_offering, present?: true, respond_to?: true)
+      allow(user).to receive(:course_offerings_for_term).with(term, course).and_return(relation)
+      allow(relation).to receive(:includes).and_return([course_offering])
+      allow(course_offering).to receive(:is_staff?).with(user).and_return(false)
+      allow(course_offering).to receive(:is_instructor?).with(user).and_return(false)
+      allow(course_offering).to receive(:workout_offering_ids).and_return([])
+
+      get :show, params: { organization_id: 'vt', id: 'cs1114', term_id: '2', student: 'true' }, session: valid_session
+
+      expect(controller.instance_variable_get(:@can_view_as_student)).to be false
+      expect(controller.instance_variable_get(:@as_student)).to be false
+    end
   end
 
   describe "GET tab_content" do

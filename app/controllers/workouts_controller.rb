@@ -225,6 +225,11 @@ class WorkoutsController < ApplicationController
       :exercise_owners
     )
 
+    is_course_staff = current_user.andand.global_role.andand.is_admin? ||
+      (@workout_offering.respond_to?(:course_offering) && @workout_offering.course_offering.andand.is_staff?(current_user))
+    @can_view_as_student = is_course_staff
+    @as_student = @can_view_as_student && params[:student].to_b
+
     if @workout_offering.respond_to?(:scores_for)
       @past_scores = @workout_offering.scores_for(current_user)
       @active_score = @workout_offering.active_score_for(current_user)
@@ -653,6 +658,9 @@ class WorkoutsController < ApplicationController
       @exercises.push(ex_data)
     end
 
+    @workout_attempt_limit = 1
+    @score_to_keep = 'highest'
+
     if params[:course_id]
       @course = Course.find_with_id_or_slug(
         params[:course_id],
@@ -663,6 +671,10 @@ class WorkoutsController < ApplicationController
       @workout_offering = @workout.workout_offerings.first
       @time_limit = @workout_offering.andand.time_limit
       @attempt_limit = @workout_offering.andand.attempt_limit
+      @published = @workout_offering.andand.published
+      @most_recent = @workout_offering.andand.most_recent
+      @workout_attempt_limit = @workout_offering.andand.workout_attempt_limit
+      @score_to_keep = @workout_offering.andand.score_to_keep || 'highest'
       @policy = (@workout_offering.andand.workout_policy || @policy).dup
       @organization = Organization.find params[:organization_id]
       all_managed = current_user.andand.managed_course_offerings(course: @course, term: @term) || []
@@ -1532,7 +1544,7 @@ class WorkoutsController < ApplicationController
       common[:workout_attempt_limit] = params[:workout_attempt_limit].present? ? params[:workout_attempt_limit].to_i : (params[:workout_attempt_limit] == '' ? nil : 1)
       common[:score_to_keep] = params[:score_to_keep].presence || :highest
       common[:published] = params[:published]
-      common[:most_recent] = params[:most_recent]
+      common[:most_recent] = params.key?(:most_recent) ? !params[:most_recent].in?([false, 'false', 0, '0']) : true
       common[:lms_assignment_id] = params[:lms_assignment_id]
       common[:lti_assignment_id] = params[:lti_assignment_id]
       common[:resource_link_id] = params[:resource_link_id] || session[:lti_payload]&.[]('resource_link_id')
@@ -1629,17 +1641,22 @@ class WorkoutsController < ApplicationController
                   section_attempts = s['workout_attempts'] || s['workout_attempt_limit'] || s['attempts']
                   section_score_to_keep = s['score_to_keep']
 
-                  new_offerings_data[co.id.to_s] = {
+                  offering_hash = {
                     'opening_date' => from.andand.to_i.andand.*(1000), # millisecond timestamp for add_workout_offerings
                     'soft_deadline' => due.andand.to_i.andand.*(1000),
                     'hard_deadline' => until_date.andand.to_i.andand.*(1000),
                     'allowed_ips' => allowed_ips,
                     'allowed_user_agents' => allowed_user_agents,
                     'lms_assignment_url' => lms_assignment_url,
-                    'workout_attempt_limit' => section_attempts.present? ? section_attempts.to_i : nil,
-                    'score_to_keep' => section_score_to_keep.presence,
                     'extensions' => []
                   }
+                  if section_attempts.present?
+                    offering_hash['workout_attempt_limit'] = section_attempts.to_i
+                  end
+                  if section_score_to_keep.present?
+                    offering_hash['score_to_keep'] = section_score_to_keep
+                  end
+                  new_offerings_data[co.id.to_s] = offering_hash
                 else
                   workout.errors.add(:base, "Course offering with label '#{label_str}' not found or not managed by you.")
                 end

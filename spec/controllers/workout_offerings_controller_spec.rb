@@ -594,4 +594,42 @@ RSpec.describe WorkoutOfferingsController, type: :controller do
       end
     end
   end
+
+  describe "GET #review" do
+    let(:organization) { FactoryBot.build_stubbed(:organization, slug: 'vt') }
+    let(:course) { FactoryBot.build_stubbed(:course, slug: 'cs1114', organization: organization) }
+    let(:term) { FactoryBot.build_stubbed(:term, slug: 'fall2026') }
+    let(:workout) { FactoryBot.build_stubbed(:workout, id: 10, name: 'Practice Workout') }
+    let(:course_offering) { FactoryBot.build_stubbed(:course_offering, id: 101, course: course, term: term) }
+    let(:workout_offering) { FactoryBot.build_stubbed(:workout_offering, id: 201, workout: workout, course_offering: course_offering) }
+    let(:student) { FactoryBot.build_stubbed(:user) }
+    let(:score1) { double('WorkoutScore', id: 301, attempt_number: 1, closed?: true, completed?: true, score: 10, started_at: Time.zone.now, updated_at: Time.zone.now, show_score?: true, scored_attempts: []) }
+    let(:score2) { double('WorkoutScore', id: 302, attempt_number: 2, closed?: true, completed?: true, score: 20, started_at: Time.zone.now, updated_at: Time.zone.now, show_score?: true, scored_attempts: []) }
+
+    before do
+      allow(controller).to receive(:current_user).and_return(student)
+      allow(controller).to receive(:authorize!).and_return(true)
+      allow(User).to receive(:find_by).and_return(student)
+      allow(WorkoutOffering).to receive(:find).with('201').and_return(workout_offering)
+      allow(WorkoutOffering).to receive(:find_by).with(id: '201').and_return(workout_offering)
+      allow(workout_offering).to receive(:scores_for).with(student).and_return([score1, score2])
+      allow(workout_offering).to receive(:kept_workout_score_for).with(student).and_return(score2)
+      allow(workout_offering).to receive(:latest_score_for).with(student).and_return(score2)
+    end
+
+    it "loads all scores and selects the requested attempt" do
+      get :review, params: {
+        organization_id: 'vt',
+        course_id: 'cs1114',
+        term_id: 'fall2026',
+        id: '201',
+        review_user_id: student.id,
+        workout_score_id: 301
+      }
+
+      expect(response.status).to eq(200)
+      expect(controller.instance_variable_get(:@all_scores)).to eq([score1, score2])
+      expect(controller.instance_variable_get(:@workout_score)).to eq(score1)
+    end
+  end
 end

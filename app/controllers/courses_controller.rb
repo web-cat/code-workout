@@ -41,9 +41,14 @@ class CoursesController < ApplicationController
       end
       @course_offering = @course_offerings.andand.first
       if current_user
-        @is_instructor = current_user.global_role.is_admin? ||
-          @course_offerings.any? { |co| co.is_instructor? current_user }
-        @is_student = !@is_instructor
+        is_course_staff = current_user.global_role.is_admin? ||
+          @course_offerings.any? { |co| co.is_staff? current_user }
+        @can_view_as_student = is_course_staff
+        @as_student = @can_view_as_student && params[:student].to_b
+
+        @is_instructor = !@as_student && (current_user.global_role.is_admin? ||
+          @course_offerings.any? { |co| co.is_instructor? current_user })
+        @is_student = @as_student || !@is_instructor
 
         if @course_offerings.present?
           workout_offering_ids = @course_offerings.flat_map(&:workout_offering_ids).uniq

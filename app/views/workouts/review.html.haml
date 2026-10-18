@@ -5,6 +5,9 @@
 - workout_score ||= @workout_score || (params[:workout_score_id].present? ? all_scores.find { |s| s.id.to_s == params[:workout_score_id].to_s } : nil)
 - workout_score ||= @workout_offering ? (@workout_offering.kept_workout_score_for(review_user) || @workout_offering.latest_score_for(review_user)) : @workout.score_for(review_user, @workout_offering)
 - kept_score = @workout_offering ? @workout_offering.kept_workout_score_for(review_user) : nil
+- is_admin = current_user ? current_user.global_role.is_admin? : false
+- is_staff = is_admin || (course_offering && course_offering.is_staff?(current_user))
+- manages_course = is_admin || (course_offering && course_offering.is_manager?(current_user))
 = render partial: 'layouts/breadcrumb'
 
 %h1= @workout.name
@@ -15,72 +18,40 @@
     - @workout.tags.each do |t|
       =link_to t.name, exercises_search_path(search: t.name), class: 'tag'
 
-- if all_scores && all_scores.size > 1 && course_offering
-  %div{ style: 'margin-bottom: 20px;' }
-    %strong Attempts:
-    %ul.nav.nav-pills{ style: 'margin-top: 5px;' }
-      - all_scores.each do |score|
-        - is_active = (workout_score && workout_score.id == score.id)
-        - is_kept = (kept_score && kept_score.id == score.id)
-        %li{ class: ('active' if is_active) }
-          = link_to organization_workout_offering_review_path(organization_id: course_offering.course.organization.slug, course_id: course_offering.course.slug, term_id: course_offering.term.slug, id: @workout_offering.id, review_user_id: review_user.id, workout_score_id: score.id) do
-            = "Attempt #{score.attempt_number}"
-            - if is_kept
-              %span.badge{ style: 'background-color: #5cb85c; margin-left: 4px;' } Kept
-
-- if course_offering && course_offering.is_staff?(review_user)
-  %table.table.table-striped{ style: 'width: auto' }
-    %thead
-      %tr
-        %th Course
-        %th From
-        %th Due
-        %th Until
-        %th Time Limit
-    %tbody
-      - @workout.workout_offerings.each do |woff|
-        %tr
-          %td= woff.course_offering.display_name
-          %td
-            - if woff.opening_date
-              = l user_time(current_user, woff.opening_date)
-          %td= l user_time(current_user, woff.soft_deadline)
-          %td= l user_time(current_user, woff.hard_deadline)
-- elsif @workout_offering
+- if @workout_offering
   %p
     - if review_user.id != current_user.id
-      Student:
-      = "#{review_user.display_name}."
-    - if workout_score
-      &nbsp;&nbsp;&nbsp;Viewing Attempt:
-      %strong= "#{workout_score.attempt_number}"
-      - allowed = @workout_offering.attempts_allowed_for(review_user)
-      = "of #{allowed && allowed > 0 ? allowed : 'Unlimited'}"
-      - if kept_score && kept_score.id == workout_score.id
-        %span.label.label-success{ style: 'margin-left: 5px;' } Kept Score
-      &nbsp;&nbsp;&nbsp;Scoring Policy:
-      = @workout_offering.score_to_keep == 'latest' ? 'Latest attempt' : 'Highest attempt'
-    - if workout_score.andand.last_attempted_at
-      &nbsp;&nbsp;&nbsp;Last Attempted:
-      = l user_time(current_user, workout_score.last_attempted_at)
-    - elsif @workout_offering.hard_deadline
-      Due:
-      = l user_time(current_user, @workout_offering.hard_deadline)
-    &nbsp;&nbsp;&nbsp;Score:
-    - if workout_score
-      - if workout_score.show_score? || (review_user && course_offering.andand.is_staff?(review_user))
-        = workout_score.score
-      - else
-        hidden
-    - else
-      0
-    = '/'
-    = @workout.total_points
-    - if current_user.global_role.is_admin? || course_offering.andand.is_staff?(current_user)
-      - if workout_score
-        &nbsp;&nbsp;&nbsp;
-        = link_to 'View Activity Log', organization_workout_offering_activity_log_path(id: @workout_offering.id, workout_score_id: workout_score.id, organization_id: course_offering.course.organization.slug, course_id: course_offering.course.slug, term_id: course_offering.term.slug), class: 'btn btn-info btn-sm'
--else
+      = (course_offering && course_offering.is_staff?(review_user)) ? 'User:' : 'Student:'
+      = review_user.display_name
+      - if !is_staff || !all_scores.present?
+        - if workout_score
+          - allowed = @workout_offering.attempts_allowed_for(review_user)
+          - multiple_allowed = allowed.nil? || allowed > 1 || allowed == 0
+          - if multiple_allowed && all_scores && all_scores.size > 1
+            &nbsp;&nbsp;&nbsp;Viewing Attempt:
+            %strong= "#{workout_score.attempt_number}"
+            = "of #{allowed && allowed > 0 ? allowed : 'Unlimited'}"
+            - if kept_score && kept_score.id == workout_score.id
+              %span.label.label-success{ style: 'margin-left: 5px;' } Score
+            &nbsp;&nbsp;&nbsp;Scoring Policy:
+            = @workout_offering.score_to_keep == 'latest' ? 'Latest attempt' : 'Highest attempt'
+        - if workout_score.andand.last_attempted_at
+          &nbsp;&nbsp;&nbsp;Last Attempted:
+          = l user_time(current_user, workout_score.last_attempted_at)
+        - elsif @workout_offering.hard_deadline
+          Due:
+          = l user_time(current_user, @workout_offering.hard_deadline)
+        &nbsp;&nbsp;&nbsp;Score:
+        - if workout_score
+          - if workout_score.show_score? || is_staff || (review_user && course_offering.andand.is_staff?(review_user))
+            = workout_score.score
+          - else
+          hidden
+        - else
+          0
+        = '/'
+        = @workout.total_points
+- else
   %p.due
     Score: 0 /
     = @workout.total_points
@@ -89,13 +60,19 @@
 -# if score_pct == 100 && wscore.score < workout.total_points
 -#  - score_pct = 99
 
-- if @workout.description
-  %p= markdown(@workout.description)
-
+- if @workout_offering && (all_scores.present? || is_staff)
+  = render partial: 'workouts/attempt_history',
+    locals: { scores: all_scores,
+      workout: @workout,
+      workout_offering: @workout_offering,
+      course_offering: course_offering,
+      review_user: review_user,
+      current_score: workout_score,
+      is_staff: is_staff,
+      is_admin: is_admin,
+      manages_course: manages_course }
 
 %h2 Exercises
-
-- manages_course = current_user.global_role.is_admin? || course_offering.andand.is_manager?(current_user)
 
 - if !manages_course && workout_score.nil? && @workout_offering.andand.workout_policy.andand.hide_thumbnails_before_start
   .alert.alert-warning You must begin this workout before you can see its exercises.
