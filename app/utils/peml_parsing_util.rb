@@ -3,6 +3,15 @@ require 'dottie/ext'
 require 'net/http'
 require 'uri'
 
+module CodeWorkoutPemlFilters
+  def python_string_literal(input)
+    val = input.to_s
+    escaped = val.gsub(/\\(?![nrt\\"])/, '\\\\\\\\').gsub('"', '\\"')
+    "\"#{escaped}\""
+  end
+end
+Liquid::Template.register_filter(CodeWorkoutPemlFilters)
+
 class PemlParsingUtil
   def parse (text_representation, error_msgs)
     parse_result = Peml.parse(PARSER_PARAMS.merge({
@@ -341,6 +350,42 @@ class PemlParsingUtil
         }
       },
       'python' => {
+        'pattern' => {
+      
+          'test_class_extends' => '(pythy.TestCase)',
+
+          'default_imports' => "import pythy\n",
+
+          # Nothing to set up: each test runs the file itself (see
+          # 'test_method' below).
+          'setup' => <<-PYTHON_SETUP,
+def setUp(self):
+        pass
+          PYTHON_SETUP
+
+          'stdin_template' => '{{stdin | python_string_literal}}',
+          'stdout_template' => '{{stdout | python_string_literal}}',
+
+
+          'test_method' => <<-PYTHON_TEST_METHOD
+# {% include 'description_annotation' %}
+    def test_{{for_idx}}(self):
+        self.mylocals, self.output = self.runFile(
+            '{% include 'class_name' %}.py'{% if stdin %},
+            {% include 'stdin_template' %}{% endif %})
+        {% if expected %}
+        try:
+            self.subject = self.mylocals['{% include 'class_name' %}']()
+        except Exception:
+            self.subject = None
+        self.assertEqual({% include 'expected_template' %}, {% include 'actual' %}{% include 'opt_negative_feedback' %})
+        {% endif %}
+        {% if stdout %}
+        self.assertEqual({% include 'stdout_template' %}, self.output{% include 'opt_negative_feedback' %})
+        {% endif %}
+        pass
+          PYTHON_TEST_METHOD
+        }
       },
       'ruby' => {
       },
