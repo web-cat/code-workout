@@ -3,6 +3,8 @@
 require 'spec_helper'
 
 RSpec.describe ExceptionHandler::Exception, type: :model do
+  self.use_transactional_tests = false
+
   let(:host) { 'codeworkout.org' }
 
   def build_exception(raised_exception, path_info: '/404', referrer: nil, host: 'codeworkout.org')
@@ -186,6 +188,83 @@ RSpec.describe ExceptionHandler::Exception, type: :model do
     it 'is valid when a 500 error has an external referrer' do
       record = build_exception(server_error, path_info: '/500', referrer: 'https://external-site.com')
       expect(record).to be_valid
+    end
+  end
+
+  describe 'fingerprinting and duplicate aggregation' do
+    let(:sample_ua) { "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" }
+
+    before(:each) do
+      UserAgent.clear_memory_cache!
+      Error.delete_all
+      UserAgent.delete_all
+    end
+
+    after(:each) do
+      UserAgent.clear_memory_cache!
+      Error.delete_all
+      UserAgent.delete_all
+    end
+
+    def build_runtime_error(msg, path: '/gym/exercises/1', ua: sample_ua)
+      err = RuntimeError.new(msg)
+      err.set_backtrace([
+        "app/controllers/exercises_controller.rb:50:in `show'",
+        "app/models/exercise.rb:25:in `find'",
+        "config/routes.rb:10:in `block in <top>'"
+      ])
+      req = ActionDispatch::TestRequest.create
+      req.env['action_dispatch.exception'] = err
+      req.env['PATH_INFO'] = path
+      req.env['HTTP_USER_AGENT'] = ua
+      req.host = host
+      ExceptionHandler::Exception.new(request: req)
+    end
+
+    it 'generates a deterministic 64-char fingerprint that ignores memory addresses' do
+      e1 = build_runtime_error('Error in #<Exercise:0x00007fa12345>')
+      e2 = build_runtime_error('Error in #<Exercise:0x00007fa98765>')
+      expect(e1.generate_fingerprint).to match(/\A[0-9a-f]{64}\z/)
+      expect(e1.generate_fingerprint).to eq(e2.generate_fingerprint)
+    end
+
+    it 'saves the first occurrence with count = 1 and last_seen_at' do
+      record = build_runtime_error('First occurrence')
+      expect(record.save).to be_truthy
+      expect(record.count).to eq(1)
+      expect(record.fingerprint).to be_present
+      expect(record.last_seen_at).to be_present
+      expect(record.user_agent).to be_a(UserAgent)
+      expect(record.raw_user_agent).to eq(sample_ua)
+    end
+
+    it 'deduplicates subsequent occurrences without creating new DB rows and increments count' do
+      e1 = build_runtime_error('Duplicate occurrence #<Object:0x1111>')
+      expect(e1.save).to be_truthy
+      initial_id = e1.id
+
+      e2 = build_runtime_error('Duplicate occurrence #<Object:0x2222>', path: '/gym/exercises/2', ua: 'Firefox/115.0')
+      expect(e2.save).to be false # aborted via throw :abort
+
+      expect(Error.count).to eq(1)
+      persisted = Error.find(initial_id)
+      expect(persisted.count).to eq(2)
+      expect(persisted.target).to include('/gym/exercises/2')
+      expect(persisted.user_agent.browser_family).to eq('Firefox')
+    end
+
+    it 'can read attributes from database without error when request is nil' do
+      record = build_runtime_error('DB read test')
+      record.save!
+
+      loaded = ExceptionHandler::Exception.find(record.id)
+      expect(loaded.class_name).to eq('RuntimeError')
+      expect(loaded.message).to eq('DB read test')
+      expect(loaded.target).to include('/gym/exercises/1')
+      expect(loaded.count).to eq(1)
+      expect(loaded.fingerprint).to be_present
+      expect(loaded.user_agent).to be_a(UserAgent)
+      expect(loaded.raw_user_agent).to eq(sample_ua)
     end
   end
 end
