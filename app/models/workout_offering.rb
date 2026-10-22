@@ -493,10 +493,17 @@ class WorkoutOffering < ApplicationRecord
 
 
   def workout_policy
-    @workout_policy ||= WorkoutPolicy.new(
-      policy_values || WorkoutPolicy::DEFAULT_VALUES,
-      policy_mask || WorkoutPolicy::DEFAULT_MASK
-    )
+    @workout_policy ||= begin
+      if (policy_mask.nil? || policy_mask == 0) && workout && workout.workout_offerings.where.not(id: id).any?
+        source = workout.workout_policy
+        WorkoutPolicy.new(source.values, source.mask)
+      else
+        WorkoutPolicy.new(
+          policy_values || WorkoutPolicy::DEFAULT_VALUES,
+          policy_mask || WorkoutPolicy::DEFAULT_MASK
+        )
+      end
+    end
   end
 
   def workout_policy=(policy)
@@ -523,6 +530,10 @@ class WorkoutOffering < ApplicationRecord
     if @workout_policy
       self.policy_values = @workout_policy.values
       self.policy_mask = @workout_policy.mask
+    elsif (self.policy_mask.nil? || self.policy_mask == 0) && self.workout && self.workout.workout_offerings.where.not(id: id).any?
+      source = self.workout.workout_policy
+      self.policy_values = source.values
+      self.policy_mask = source.mask
     else
       self.policy_values ||= WorkoutPolicy::DEFAULT_VALUES
       self.policy_mask ||= WorkoutPolicy::DEFAULT_MASK
