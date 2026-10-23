@@ -46,6 +46,7 @@ class Workout < ApplicationRecord
 	has_many :exercise_workouts,
 	  -> { includes(:exercise).order('position ASC') },
 	  inverse_of: :workout, dependent: :destroy
+  has_many :exercises, through: :exercise_workouts
   has_many :legacy_exercises, through: :exercise_workouts, source: :exercise
   has_many :exercise_pools,
     -> { order('exercise_pools.position ASC') },
@@ -66,17 +67,6 @@ class Workout < ApplicationRecord
   accepts_nested_attributes_for :exercise_workouts
   accepts_nested_attributes_for :exercise_pools, allow_destroy: true
   accepts_nested_attributes_for :workout_offerings
-
-  # -------------------------------------------------------------
-  # Returns candidate exercises for this workout, prioritizing exercise_pools
-  # when present, and falling back to legacy exercise_workouts.
-  def exercises
-    if (exercise_pools.loaded? ? exercise_pools.any? : exercise_pools.exists?)
-      pooled_exercises
-    else
-      legacy_exercises
-    end
-  end
 
   # -------------------------------------------------------------
   # Setter for exercises to maintain backwards compatibility with existing
