@@ -32,12 +32,17 @@
   .ex-area.form-group
     = label_tag :ex_list, 'Exercises *', class: 'control-label col-xs-2'
     .col-lg-7.col-md-6.col-xs-7
-      - ex_any = @workout.andand.exercise_workouts.any?
+      - ex_any = @workout.andand.exercise_workouts.any? || @workout.andand.exercise_pools.any?
       .empty-msg.alert-msg{ style: "display: #{ex_any ? 'none;' : 'block;'}" }
-        Use the menu on the left to search for exercises.
+        Use the menu on the left to search for exercises, or add a question pool below.
+
+      .btn-toolbar#pool-toolbar{ style: 'margin-bottom: 10px;' }
+        %button.btn.btn-default.btn-sm#btn-add-pool{ type: 'button' }
+          %i.fa.fa-random
+          Add Question Pool
 
       %ul.list-group#ex-list{ style: "display: #{ex_any ? 'block;' : 'none;'}",
-        data: { exercises: "#{@exercises.to_json}" } }
+        data: { exercises: "#{@exercises.to_json}", pools: "#{@pools.to_json}" } }
 
   .form-group
     = label_tag :policy, 'Policy Options', class: 'control-label col-xs-2'

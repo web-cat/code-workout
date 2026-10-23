@@ -1,11 +1,11 @@
 <script id='exercise-template' type='text/html'>
-  <li class='list-group-item' data-id='{{id}}' data-exercise-workout-id='{{exercise_workout_id}}'>
+  <li class='list-group-item single-slot' data-id='{{id}}' data-exercise-workout-id='{{exercise_workout_id}}'>
     <div class='row'>
       <div class='col-xs-1'>
-        <i class='handle fa fa-bars'></i>
+        <i class='handle fa fa-bars' title='Drag to reorder'></i>
       </div>
       <div class='col-xs-4'>
-        {{name}}
+        <span class='exercise-name'>{{name}}</span>
       </div>
       <div class='col-xs-2'>
         Points
@@ -13,8 +13,79 @@
       <div class='col-xs-2'>
         <input class='text10 points form-control input-sm' placeholder='e.g 5' type='number' min='0' value='{{points}}' />
       </div>
-      <div class='col-xs-1 col-xs-offset-1'>
-        <i class='action delete-ex fa fa-times'></i>
+      <div class='col-xs-2 text-right'>
+        <button type='button' class='btn btn-xs btn-default convert-to-pool' title='Convert this single exercise into a question pool'>
+          <i class='fa fa-random'></i> Pool
+        </button>
+        <i class='action delete-ex fa fa-times text-danger' title='Remove exercise' style='cursor: pointer; margin-left: 10px;'></i>
+      </div>
+    </div>
+  </li>
+</script>
+
+<script id='pool-slot-template' type='text/html'>
+  <li class='list-group-item pool-slot panel panel-info' data-pool-id='{{id}}' style='padding: 0; margin-bottom: 12px; background: #fff;'>
+    <div class='panel-heading' style='padding: 8px 12px;'>
+      <div class='row' style='display: flex; align-items: center;'>
+        <div class='col-xs-1'>
+          <i class='handle fa fa-bars' title='Drag to reorder slot'></i>
+        </div>
+        <div class='col-xs-3'>
+          <strong><i class='fa fa-random text-primary'></i> Question Pool</strong>
+        </div>
+        <div class='col-xs-3'>
+          <label style='font-weight: normal; margin-bottom: 0;'>Draw</label>
+          <input class='text10 select-count form-control input-sm' type='number' min='1' value='{{select_count}}' style='display: inline-block; width: 55px; margin: 0 4px;' />
+          <span class='pool-size-label text-muted'>of {{candidate_count}}</span>
+        </div>
+        <div class='col-xs-3'>
+          <label style='font-weight: normal; margin-bottom: 0;'>Points each</label>
+          <input class='text10 pool-points form-control input-sm' type='number' min='0' value='{{points}}' style='display: inline-block; width: 60px; margin-left: 4px;' />
+        </div>
+        <div class='col-xs-2 text-right'>
+          <button type='button' class='btn btn-xs btn-default add-candidate-btn' title='Add exercises to this pool'>
+            <i class='fa fa-plus'></i> Add
+          </button>
+          <i class='action delete-slot fa fa-times text-danger' title='Remove entire pool' style='cursor: pointer; margin-left: 8px;'></i>
+        </div>
+      </div>
+    </div>
+    <div class='panel-body' style='padding: 10px;'>
+      <ul class='list-group pool-candidates' style='margin-bottom: 0; min-height: 40px; background: #fbfbfb; border: 1px dashed #bbb; border-radius: 4px; padding: 6px;'>
+        {{#exercises}}
+          <li class='list-group-item candidate-item' data-id='{{id}}' style='margin-bottom: 4px;'>
+            <div class='row'>
+              <div class='col-xs-1'>
+                <i class='candidate-handle fa fa-bars text-muted'></i>
+              </div>
+              <div class='col-xs-10'>
+                <span class='candidate-name'>{{name}}</span>
+              </div>
+              <div class='col-xs-1 text-right'>
+                <i class='action delete-candidate fa fa-times text-muted' title='Remove from pool' style='cursor: pointer;'></i>
+              </div>
+            </div>
+          </li>
+        {{/exercises}}
+      </ul>
+      <div class='empty-candidates-msg text-muted' style='text-align: center; font-size: 12px; margin-top: 5px; {{#has_candidates}}display: none;{{/has_candidates}}'>
+        Search and add exercises, or drag them here to add to this pool.
+      </div>
+    </div>
+  </li>
+</script>
+
+<script id='pool-candidate-template' type='text/html'>
+  <li class='list-group-item candidate-item' data-id='{{id}}' style='margin-bottom: 4px;'>
+    <div class='row'>
+      <div class='col-xs-1'>
+        <i class='candidate-handle fa fa-bars text-muted'></i>
+      </div>
+      <div class='col-xs-10'>
+        <span class='candidate-name'>{{name}}</span>
+      </div>
+      <div class='col-xs-1 text-right'>
+        <i class='action delete-candidate fa fa-times text-muted' title='Remove from pool' style='cursor: pointer;'></i>
       </div>
     </div>
   </li>

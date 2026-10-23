@@ -113,6 +113,11 @@ class WorkoutScore < ApplicationRecord
     foreign_key: 'active_score_id',
     inverse_of: :active_score,
     dependent: :nullify
+  has_many :workout_score_exercises,
+    -> { order('workout_score_exercises.position ASC') },
+    inverse_of: :workout_score,
+    dependent: :destroy
+  has_many :exercises, through: :workout_score_exercises
 
 
   #~ Validation ...............................................................
@@ -121,6 +126,7 @@ class WorkoutScore < ApplicationRecord
   validates :user, presence: true
 
   before_create :set_attempt_number
+  after_create :generate_attempt_exercises!
 
   def set_attempt_number
     return if workout_offering_id.blank? || user_id.blank?
@@ -134,6 +140,136 @@ class WorkoutScore < ApplicationRecord
   end
 
   #~ Instance methods .........................................................
+
+  # -------------------------------------------------------------
+  # Returns the total number of exercises in this attempt
+  def total_exercises
+    if workout_score_exercises.any?
+      workout_score_exercises.count
+    elsif workout
+      workout.exercises.length
+    else
+      0
+    end
+  end
+
+
+  # -------------------------------------------------------------
+  # Total points allocated across exercises in this attempt
+  def total_points
+    if workout_score_exercises.any?
+      workout_score_exercises.sum(:points).to_f
+    elsif workout
+      workout.total_points
+    else
+      0.0
+    end
+  end
+
+
+  # -------------------------------------------------------------
+  def points_for(exercise)
+    return nil unless exercise
+    if workout_score_exercises.any?
+      workout_score_exercises.find_by(exercise: exercise)&.points
+    elsif workout && workout.exercise_workouts.loaded?
+      workout.exercise_workouts.find { |ew| ew.exercise_id == exercise.id }&.points || 1.0
+    elsif workout
+      workout.exercise_workouts.find_by(exercise: exercise)&.points || 1.0
+    else
+      1.0
+    end
+  end
+
+
+  # -------------------------------------------------------------
+  # Samples exercises for this attempt from the workout's exercise_pools,
+  # persisting them into workout_score_exercises with position and points.
+  # If this user has prior attempts on this workout, anti-duplication logic
+  # prioritizes fresh candidate exercises the student hasn't seen yet.
+  def generate_attempt_exercises!
+    return workout_score_exercises if workout_score_exercises.any?
+    return [] unless workout
+
+    pools = workout.exercise_pools.order(:position, :id)
+
+    # If no exercise_pools exist, fallback to legacy exercise_workouts
+    if pools.empty? && workout.exercise_workouts.any?
+      workout.exercise_workouts.order(:position, :id).each_with_index do |ew, idx|
+        workout_score_exercises.create!(
+          exercise_id: ew.exercise_id,
+          exercise_pool_id: nil,
+          position: idx + 1,
+          points: ew.points || 1.0
+        )
+      end
+      if persisted?
+        self.update_columns(
+          exercises_remaining: workout_score_exercises.count,
+          exercises_completed: 0
+        )
+      end
+      return workout_score_exercises
+    end
+
+    # Prior attempts for this user and workout
+    prior_seen_by_pool = {}
+    if user_id.present?
+      prior_scores = WorkoutScore.where(user_id: user_id, workout_id: workout_id)
+      prior_scores = prior_scores.where.not(id: id) if persisted?
+      if prior_scores.exists?
+        WorkoutScoreExercise.where(workout_score_id: prior_scores.select(:id))
+                            .where.not(exercise_pool_id: nil)
+                            .pluck(:exercise_pool_id, :exercise_id)
+                            .each do |pid, eid|
+          prior_seen_by_pool[pid] ||= []
+          prior_seen_by_pool[pid] << eid unless prior_seen_by_pool[pid].include?(eid)
+        end
+      end
+    end
+
+    current_position = 0
+    pools.each do |pool|
+      candidate_ids = pool.exercise_pool_items.order(:position, :id).pluck(:exercise_id)
+      next if candidate_ids.empty?
+
+      k = [pool.select_count || 1, candidate_ids.size].min
+      seen_ids = prior_seen_by_pool[pool.id] || []
+      fresh_ids = candidate_ids - seen_ids
+
+      chosen_ids = if fresh_ids.size >= k
+        fresh_ids.sample(k)
+      else
+        remaining_needed = k - fresh_ids.size
+        # Pick all fresh items, then fill the remainder from seen items
+        repeat_candidates = (candidate_ids & seen_ids).shuffle
+        fresh_ids + repeat_candidates.take(remaining_needed)
+      end
+
+      chosen_ids.each do |ex_id|
+        current_position += 1
+        workout_score_exercises.create!(
+          exercise_id: ex_id,
+          exercise_pool_id: pool.id,
+          position: current_position,
+          points: pool.points || 1.0
+        )
+      end
+    end
+
+    if persisted?
+      self.update_columns(
+        exercises_remaining: workout_score_exercises.count,
+        exercises_completed: 0
+      )
+    else
+      self.exercises_remaining = workout_score_exercises.size
+      self.exercises_completed = 0
+    end
+
+    workout_score_exercises
+  end
+
 
   # -------------------------------------------------------------
   def closed?
@@ -365,7 +501,7 @@ class WorkoutScore < ApplicationRecord
         elsif !scored_for_this.any?
           # update number of exercises completed
           if self.exercises_completed &&
-              self.exercises_completed < self.workout.exercises.length
+              self.exercises_completed < self.total_exercises
             self.exercises_completed += 1
           end
           if self.exercises_remaining && self.exercises_remaining > 0
@@ -423,7 +559,7 @@ class WorkoutScore < ApplicationRecord
       # Clear the total score
       self.score = 0.0
       self.exercises_completed = 0
-      self.exercises_remaining = self.workout.exercises.count
+      self.exercises_remaining = self.total_exercises
       self.save!
 
       # Re-record every attempt, which should correctly set the
@@ -542,7 +678,8 @@ class WorkoutScore < ApplicationRecord
     end
 
     if lms_instance && self.lis_outcome_service_url && self.lis_result_sourcedid && effective_score
-      total_points = ExerciseWorkout.where(workout_id: self.workout_id).sum(:points)
+      total_points = self.total_points
+      total_points = ExerciseWorkout.where(workout_id: self.workout_id).sum(:points) if total_points.to_f <= 0
       key = lms_instance.consumer_key
       secret = lms_instance.consumer_secret
 

@@ -278,6 +278,20 @@ describe WorkoutsController do
         expect(response.status).to eq(200)
         expect(controller.instance_variable_get(:@scoring_attempts_by_version_id)).to be_a(Hash)
       end
+
+      it "assigns @exs from attempt snapshot exercises when attempt has snapshot exercises" do
+        user = FactoryBot.build_stubbed(:user)
+        mock_assigned_exercise = double("Exercise", id: 77, name: "Assigned Ex")
+        wse = double("WorkoutScoreExercise", exercise: mock_assigned_exercise)
+        wse_relation = double("WorkoutScoreExercisesRelation", any?: true)
+        allow(wse_relation).to receive(:includes).and_return([wse])
+        allow(controller).to receive(:current_user).and_return(user)
+        allow(mock_score).to receive(:workout_score_exercises).and_return(wse_relation)
+
+        get :show, params: { id: 1 }
+        expect(response.status).to eq(200)
+        expect(controller.instance_variable_get(:@exs)).to eq([mock_assigned_exercise])
+      end
     end
 
     context "when workout_offering is present and IP restrictions apply" do
@@ -427,6 +441,50 @@ describe WorkoutsController do
     end
   end
 
+  describe "POST #create" do
+    let(:workout) { FactoryBot.build_stubbed(:workout, id: 45) }
+    let(:user) { FactoryBot.build_stubbed(:user) }
+
+    before do
+      allow(controller).to receive(:current_user).and_return(user)
+      allow(controller).to receive(:cannot?).and_return(false)
+      allow(Workout).to receive(:new).and_return(workout)
+      allow(workout).to receive(:update_or_create).and_return(workout)
+      allow(controller).to receive(:create_or_update_offerings).and_return(true)
+    end
+
+    it "creates a workout and passes pools parameter to update_or_create" do
+      pools_json = [{ position: 1, select_count: 1, points: 5.0, exercise_ids: [1, 2] }].to_json
+
+      expect(workout).to receive(:update_or_create).with(hash_including(
+        pools: pools_json
+      )).and_return(workout)
+
+      post :create, params: {
+        name: 'New Pooled Workout',
+        pools: pools_json,
+        course_id: 'cs1114',
+        organization_id: 'vt',
+        term_id: 'fall2026'
+      }, format: :json
+
+      expect(response.status).to eq(200)
+      json = JSON.parse(response.body)
+      expect(json['url']).to eq('/courses/vt/cs1114/fall2026/workouts/45')
+    end
+
+    it "redirects to practice_workout_path when no course_id is present" do
+      post :create, params: {
+        name: 'Gym Workout',
+        pools: [{ position: 1, select_count: 1, points: 5.0, exercise_ids: [1] }].to_json
+      }, format: :json
+
+      expect(response.status).to eq(200)
+      json = JSON.parse(response.body)
+      expect(json['url']).to eq('/gym/workouts/45/practice')
+    end
+  end
+
   describe "PATCH #update" do
     let(:workout) { FactoryBot.build_stubbed(:workout, id: 30) }
     let(:user) { FactoryBot.build_stubbed(:user) }
@@ -437,6 +495,24 @@ describe WorkoutsController do
       allow(Workout).to receive_message_chain(:includes, :find).and_return(workout)
       allow(workout).to receive(:update_or_create).and_return(workout)
       allow(controller).to receive(:create_or_update_offerings).and_return(true)
+    end
+
+    it "passes pools parameter to update_or_create" do
+      pools_json = [{ position: 1, select_count: 1, points: 5.0, exercise_ids: [10] }].to_json
+
+      expect(workout).to receive(:update_or_create).with(hash_including(
+        pools: pools_json
+      )).and_return(workout)
+
+      patch :update, params: {
+        id: '30',
+        pools: pools_json,
+        course_id: 'cs1114',
+        organization_id: 'vt',
+        term_id: 'fall2026'
+      }, format: :json
+
+      expect(response.status).to eq(200)
     end
 
     it "returns the organization_course_workout_path JSON url when course_id is present" do
@@ -1763,6 +1839,34 @@ describe WorkoutsController do
       yaml_output = controller.send(:serialize_workout_offerings_to_yaml, [wo1], [])
       expect(yaml_output).to include('workout_attempts: 3')
       expect(yaml_output).to include('score_to_keep: latest')
+    end
+  end
+
+  describe "GET #practice" do
+    let(:user) { FactoryBot.build_stubbed(:user) }
+    let(:workout) { FactoryBot.build_stubbed(:workout, id: 5) }
+    let(:exercise) { FactoryBot.build_stubbed(:exercise, id: 42) }
+    let(:workout_score) { FactoryBot.build_stubbed(:workout_score, id: 99, workout: workout, user: user) }
+
+    before do
+      allow(controller).to receive(:current_user).and_return(user)
+      allow(controller).to receive(:authorize!).and_return(true)
+      allow(Workout).to receive(:find_by).with(id: '5').and_return(workout)
+      allow(Workout).to receive(:find).with('5').and_return(workout)
+    end
+
+    it "redirects to the first exercise for the user's attempt score" do
+      allow(workout).to receive(:score_for).with(user, nil, nil, nil).and_return(workout_score)
+      expect(workout).to receive(:first_exercise).with(workout_score).and_return(exercise)
+
+      get :practice, params: { id: '5' }
+
+      expect(response).to redirect_to(exercise_practice_path(
+        exercise,
+        workout_id: 5,
+        lti_launch: nil,
+        workout_score_id: 99
+      ))
     end
   end
 end

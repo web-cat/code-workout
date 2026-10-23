@@ -52,12 +52,8 @@ class SseController < ApplicationController
       if @workout_score
         @workout = @workout_score.workout
         @workout_offering = @workout_score.workout_offering
-        if @workout && @exercise
-          pts = @workout.exercise_workouts.loaded? ?
-            @workout.exercise_workouts.find { |ew| ew.exercise_id == @exercise.id }&.points :
-            @workout.exercise_workouts.where(exercise: @exercise).first&.points
+          pts = @workout_score.points_for(@exercise)
           @max_points = pts if pts
-        end
       end
     end
 

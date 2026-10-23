@@ -216,15 +216,6 @@ class WorkoutsController < ApplicationController
           Have a look at these popular workouts instead.'
       } and return
     end
-    @exs = @workout.exercises.includes(
-      { current_version: :prompts },
-      :tags,
-      :languages,
-      :styles,
-      :exercise_collection,
-      :exercise_owners
-    )
-
     is_course_staff = current_user.andand.global_role.andand.is_admin? ||
       (@workout_offering.respond_to?(:course_offering) && @workout_offering.course_offering.andand.is_staff?(current_user))
     @can_view_as_student = is_course_staff
@@ -238,6 +229,28 @@ class WorkoutsController < ApplicationController
       @workout_score = @active_score || @workout_offering.kept_workout_score_for(current_user) || @workout_offering.latest_score_for(current_user)
     end
     @workout_score ||= @workout.score_for(current_user, @workout_offering)
+
+    @exs = if (!is_course_staff || @as_student) && @workout_score && @workout_score.respond_to?(:workout_score_exercises) && @workout_score.workout_score_exercises.any?
+      @workout_score.workout_score_exercises.includes(
+        exercise: [
+          { current_version: :prompts },
+          :tags,
+          :languages,
+          :styles,
+          :exercise_collection,
+          :exercise_owners
+        ]
+      ).map(&:exercise)
+    else
+      @workout.exercises.includes(
+        { current_version: :prompts },
+        :tags,
+        :languages,
+        :styles,
+        :exercise_collection,
+        :exercise_owners
+      )
+    end
 
     if @workout_offering && !@workout_offering.ip_allowed?(request.remote_ip, current_user, @workout_score)
       if current_user
@@ -324,7 +337,21 @@ class WorkoutsController < ApplicationController
 
   # -------------------------------------------------------------
   def review
-    @exs = @workout.exercises
+    @workout_score ||= params[:workout_score_id] ? WorkoutScore.find_by(id: params[:workout_score_id]) : @workout.score_for(current_user)
+    @exs = if @workout_score && @workout_score.workout_score_exercises.any?
+      @workout_score.workout_score_exercises.includes(
+        exercise: [
+          { current_version: :prompts },
+          :tags,
+          :languages,
+          :styles,
+          :exercise_collection,
+          :exercise_owners
+        ]
+      ).map(&:exercise)
+    else
+      @workout.exercises
+    end
   end
 
 
@@ -399,6 +426,9 @@ class WorkoutsController < ApplicationController
     @policy = WorkoutPolicy.new
     @workout_attempt_limit = 1
     @score_to_keep = 'highest'
+
+    @exercises = []
+    @pools = []
 
     if params[:notice]
       flash.now[:notice] = params[:notice]
@@ -596,16 +626,8 @@ class WorkoutsController < ApplicationController
 
     @can_update = can? :edit, @workout
 
-    # exercises for the workout, to populate the form
-    @exercises = []
-    @workout.exercise_workouts.each do |ex|
-      ex_data = {}
-      ex_data[:name] = ex.exercise.name
-      ex_data[:points] = ex.points
-      ex_data[:id] = ex.exercise_id
-      ex_data[:exercise_workout_id] = ex.id
-      @exercises.push(ex_data)
-    end
+    # exercises and pools for the workout, to populate the form
+    populate_pools_and_exercises_for_form
 
     render layout: 'two_columns'
   end
@@ -648,15 +670,7 @@ class WorkoutsController < ApplicationController
 
     @suggested_name = params[:suggested_name]
     @policy = (@workout.workout_policy || WorkoutPolicy.new).dup
-    @exercises = []
-    @workout.exercise_workouts.each do |ex|
-      ex_data = {}
-      ex_data[:name] = ex.exercise.name
-      ex_data[:points] = ex.points
-      ex_data[:id] = ex.exercise_id
-      ex_data[:exercise_workout_id] = ex.id
-      @exercises.push(ex_data)
-    end
+    populate_pools_and_exercises_for_form
 
     @workout_attempt_limit = 1
     @score_to_keep = 'highest'
@@ -712,7 +726,8 @@ class WorkoutsController < ApplicationController
       description: params[:description],
       is_public: params[:is_public],
       removed_exercises: params[:removed_exercises],
-      exercises: params[:exercises]
+      exercises: params[:exercises],
+      pools: params[:pools]
     }
 
     course = params[:course_id]
@@ -1314,7 +1329,8 @@ class WorkoutsController < ApplicationController
       description: params[:description],
       is_public: params[:is_public],
       removed_exercises: params[:removed_exercises],
-      exercises: params[:exercises]
+      exercises: params[:exercises],
+      pools: params[:pools]
     }
 
     if params[:course_id].blank?
@@ -1420,7 +1436,7 @@ class WorkoutsController < ApplicationController
         end
       end
       redirect_to exercise_practice_path(
-        @workout.first_exercise,
+        @workout.first_exercise(@workout_score),
         workout_id: @workout.id,
         lti_launch: @lti_launch,
         workout_score_id: @workout_score.andand.id
@@ -2127,6 +2143,40 @@ class WorkoutsController < ApplicationController
         :workout_offerings_attributes,
         :date_yaml
       )
+    end
+
+    def populate_pools_and_exercises_for_form
+      @exercises = []
+      if @workout.respond_to?(:exercise_workouts)
+        @workout.exercise_workouts.each do |ex|
+          ex_data = {}
+          ex_data[:name] = ex.exercise.name
+          ex_data[:points] = ex.points
+          ex_data[:id] = ex.exercise_id
+          ex_data[:exercise_workout_id] = ex.id
+          @exercises.push(ex_data)
+        end
+      end
+
+      @pools = []
+      if @workout.respond_to?(:exercise_pools)
+        @workout.exercise_pools.order(:position).each do |pool|
+          items = pool.exercise_pool_items.order(:position).includes(:exercise).map do |item|
+            {
+              id: item.exercise_id,
+              name: item.exercise.name,
+              exercise_pool_item_id: item.id
+            }
+          end
+          @pools.push({
+            id: pool.id,
+            position: pool.position,
+            select_count: pool.select_count || 1,
+            points: pool.points || 1.0,
+            exercises: items
+          })
+        end
+      end
     end
 
 end

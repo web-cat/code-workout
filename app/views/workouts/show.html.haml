@@ -189,6 +189,31 @@
   .alert.alert-warning You must begin this workout before you can see its exercises.
 - elsif !manages_course && workout_score.andand.closed? && !@workout_offering.andand.shutdown? && (@workout_offering.andand.workout_policy.andand.no_review_before_close || @workout_offering.andand.workout_policy.andand.hide_thumbnails_in_review_before_close)
   .alert.alert-warning Results will be visible after the assignment closes.
+- elsif is_staff && !as_student && @workout.exercise_pools.any?
+  .workout-pools
+    - @workout.exercise_pools.order(:position).each do |pool|
+      .panel.panel-default.workout-pool-panel{ style: 'margin-bottom: 20px;' }
+        .panel-heading
+          %h4.panel-title
+            %strong= "Slot #{pool.position}:"
+            - if pool.exercise_pool_items.count > 1
+              %span.label.label-info= "Pool (Draw #{pool.select_count} of #{pool.exercise_pool_items.count})"
+            - else
+              %span.label.label-default Single Exercise
+            %span.pull-right.text-muted
+              = "#{pool.points} pts each (#{pool.total_points} pts slot total)"
+        .panel-body
+          - pool_exs = pool.exercise_pool_items.order(:position).includes(exercise: [{ current_version: :prompts }, :tags, :languages, :styles, :exercise_collection, :exercise_owners]).map(&:exercise)
+          - pool_exs.in_groups_of(2, false) do |row|
+            = render row,
+              user: current_user,
+              workout_offering: @workout_offering,
+              workout_score: nil,
+              workout: @workout,
+              manages_course: manages_course,
+              start_workout: false,
+              review: false
+            .clearfix
 - elsif @exs.empty?
   .alert.alert-warning No exercises in this workout
 - else

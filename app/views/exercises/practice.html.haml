@@ -251,9 +251,9 @@
           -else
             %div.btn.btn-default{id: "visualize", disabled: true, data: {workout: 'null', workout_offering: 'null', lti_launch: @lti_launch}} Visualize
 
-        - if @workout_offering && params[:review_user_id].nil? && @workout_offering.workout.exercise_workouts.size > 1
+        - if @workout_offering && params[:review_user_id].nil? && (@workout_score ? @workout_score.total_exercises > 1 : @workout_offering.workout.exercises.size > 1)
           = button_link 'Next exercise',
-            organization_workout_offering_practice_path(exercise_id: @workout_offering.workout.next_exercise(@exercise),
+            organization_workout_offering_practice_path(exercise_id: @workout_offering.workout.next_exercise(@exercise, @workout_score),
             organization_id: @workout_offering.course_offering.course.organization.slug,
             course_id: @workout_offering.course_offering.course.slug,
             term_id: @workout_offering.course_offering.term.slug,
@@ -261,9 +261,9 @@
             workout_score_id: @workout_score.andand.id,
             lti_launch: @lti_launch),
             class: 'btn btn-default btn-next', id: 'nextbtn'
-        - elsif @workout && params[:review_user_id].nil? && @workout.exercise_workouts.size > 1
+        - elsif @workout && params[:review_user_id].nil? && (@workout_score ? @workout_score.total_exercises > 1 : @workout.exercises.size > 1)
           = button_link 'Next exercise',
-            exercise_practice_path(@workout.next_exercise(@exercise),
+            exercise_practice_path(@workout.next_exercise(@exercise, @workout_score),
             workout_id: @workout.id, workout_score_id: @workout_score.andand.id,
             lti_launch: @lti_launch),
             class: 'btn btn-info btn-next', id: 'nextbtn'

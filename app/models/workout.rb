@@ -46,7 +46,12 @@ class Workout < ApplicationRecord
 	has_many :exercise_workouts,
 	  -> { includes(:exercise).order('position ASC') },
 	  inverse_of: :workout, dependent: :destroy
-  has_many :exercises, through: :exercise_workouts
+  has_many :legacy_exercises, through: :exercise_workouts, source: :exercise
+  has_many :exercise_pools,
+    -> { order('exercise_pools.position ASC') },
+    inverse_of: :workout, dependent: :destroy
+  has_many :exercise_pool_items, through: :exercise_pools
+  has_many :pooled_exercises, -> { distinct }, through: :exercise_pool_items, source: :exercise
 	has_many :workout_scores, inverse_of: :workout, dependent: :destroy
   has_many :users, through: :workout_scores
   has_many :attempts
@@ -59,7 +64,34 @@ class Workout < ApplicationRecord
   has_many :lti_workouts
 
   accepts_nested_attributes_for :exercise_workouts
+  accepts_nested_attributes_for :exercise_pools, allow_destroy: true
   accepts_nested_attributes_for :workout_offerings
+
+  # -------------------------------------------------------------
+  # Returns candidate exercises for this workout, prioritizing exercise_pools
+  # when present, and falling back to legacy exercise_workouts.
+  def exercises
+    if (exercise_pools.loaded? ? exercise_pools.any? : exercise_pools.exists?)
+      pooled_exercises
+    else
+      legacy_exercises
+    end
+  end
+
+  # -------------------------------------------------------------
+  # Setter for exercises to maintain backwards compatibility with existing
+  # factories and assignment patterns, syncing both exercise_workouts and exercise_pools.
+  def exercises=(new_exercises)
+    new_exercises = Array(new_exercises).compact
+    self.exercise_workouts = new_exercises.each_with_index.map do |ex, idx|
+      ExerciseWorkout.new(workout: self, exercise: ex, position: idx + 1, points: 1.0)
+    end
+    self.exercise_pools = new_exercises.each_with_index.map do |ex, idx|
+      pool = ExercisePool.new(workout: self, position: idx + 1, select_count: 1, points: 1.0)
+      pool.exercise_pool_items.build(exercise: ex, position: 1)
+      pool
+    end
+  end
 
   # -------------------------------------------------------------
   # Returns the workout policy of the first offering of this workout, or the default.
@@ -236,10 +268,10 @@ class Workout < ApplicationRecord
 
   # -------------------------------------------------------------
   # return the totals points of the exercises in the current workout.
-  # FIXME: Why isn't this a property of the workout?  The exercises
-  # themselves don't record absolute points at all!
   def total_points
-    if exercise_workouts.loaded?
+    if (exercise_pools.loaded? ? exercise_pools.any? : exercise_pools.exists?)
+      exercise_pools.sum { |pool| (pool.select_count || 1) * (pool.points || 0.0) }.to_f
+    elsif exercise_workouts.loaded?
       exercise_workouts.map { |ew| ew.points || 0 }.sum.to_f
     else
       exercise_workouts.pluck(:points).compact.sum.to_f
@@ -256,7 +288,11 @@ class Workout < ApplicationRecord
 
   # -------------------------------------------------------------
   def contains?(exercise)
-    self.exercise_workouts.where(exercise: exercise).any?
+    if (exercise_pools.loaded? ? exercise_pools.any? : exercise_pools.exists?)
+      exercise_pool_items.where(exercise: exercise).any?
+    else
+      self.exercise_workouts.where(exercise: exercise).any?
+    end
   end
 
 
@@ -286,8 +322,17 @@ class Workout < ApplicationRecord
 
 
    # ------------------------------------------------------------
-  def first_exercise
-    exercise_workouts.first.exercise
+  def first_exercise(workout_score = nil)
+    if workout_score && workout_score.workout_score_exercises.any?
+      return workout_score.workout_score_exercises.order(:position).first&.exercise
+    end
+
+    if (exercise_pools.loaded? ? exercise_pools.any? : exercise_pools.exists?)
+      first_pool = exercise_pools.order(:position).first
+      first_pool&.exercises&.first || exercise_workouts.first&.exercise
+    else
+      exercise_workouts.first&.exercise
+    end
   end
 
   # ------------------------------------------------------------
@@ -296,8 +341,30 @@ class Workout < ApplicationRecord
   # is `nil`. Return the first exercise if the current exercise
   # does not belong to this workout.
   #
-  # @param ex   The current exercise in the workout.
-  def next_exercise(ex)
+  # @param ex            The current exercise in the workout.
+  # @param workout_score Optional attempt snapshot to navigate within
+  def next_exercise(ex, workout_score = nil)
+    if workout_score && workout_score.workout_score_exercises.any?
+      wse = workout_score.workout_score_exercises.find_by(exercise: ex)
+      if wse
+        next_wse = workout_score.workout_score_exercises.where('position > ?', wse.position).order(:position).first
+        return next_wse.exercise if next_wse
+      end
+      return first_exercise(workout_score)
+    end
+
+    if (exercise_pools.loaded? ? exercise_pools.any? : exercise_pools.exists?)
+      current_item = ExercisePoolItem.joins(:exercise_pool).where(exercise_pools: { workout_id: id }, exercise_id: ex&.id).first
+      if current_item
+        current_pool = current_item.exercise_pool
+        next_in_pool = current_pool.exercise_pool_items.where('position > ?', current_item.position).order(:position).first
+        return next_in_pool.exercise if next_in_pool
+
+        next_pool = exercise_pools.where('position > ?', current_pool.position).order(:position).first
+        return next_pool.exercises.first if next_pool && next_pool.exercises.any?
+      end
+    end
+
     ew = nil
     if ex
       ew = exercise_workouts.where(exercise: ex).first
@@ -364,13 +431,23 @@ class Workout < ApplicationRecord
   # Save this workout with the specified params. Remove any
   # exercises that have been marked for removal.
   # @param params   A hash of workout params for this workout
+  # -------------------------------------------------------------
+  # Save this workout with the specified params. Accepts either `pools`
+  # (array of pool slot definitions) or legacy `exercises` (array of exercises).
+  # @param params   A hash of workout params for this workout
   def update_or_create(params)
-      self.name = params[:name]
-      self.description = params[:description]
-      self.is_public = params[:is_public]
+    self.name = params[:name]
+    self.description = params[:description]
+    self.is_public = params[:is_public]
 
+    was_new_record = new_record?
+
+    # 1. Save parent record first so foreign keys are valid for child records
+    return false unless self.save
+
+    begin
+      # 2. Handle LTI workout associations if provided
       if params[:lms_assignment_id].present?
-        # if we don't have an lti workout, create it
         lti_workout = LtiWorkout.find_by(lms_assignment_id: params[:lms_assignment_id])
         if !lti_workout
           lti_workout = LtiWorkout.create(
@@ -381,25 +458,108 @@ class Workout < ApplicationRecord
         end
       end
 
-      removed_exercises = JSON.parse params[:removed_exercises]
-      removed_exercises.each do |exercise_workout_id|
-        self.exercise_workouts.destroy exercise_workout_id
-      end
-      exercises = JSON.parse params[:exercises]
-      exercises.each_with_index do |ex, index|
-        exercise = Exercise.find ex['id']
-        exercise_workout =
-          ExerciseWorkout.find_by workout: self, exercise: exercise
-        if exercise_workout.blank?
-          exercise_workout =
-            ExerciseWorkout.new workout: self, exercise: exercise
+      # 3. Synchronize exercise pools or legacy exercises
+      if params[:pools].present?
+        raw_pools = params[:pools].is_a?(String) ? JSON.parse(params[:pools]) : params[:pools]
+        reconcile_exercise_pools!(raw_pools)
+      elsif params[:exercises].present?
+        removed_exercises = params[:removed_exercises].present? ? (params[:removed_exercises].is_a?(String) ? JSON.parse(params[:removed_exercises]) : params[:removed_exercises]) : []
+        removed_exercises.each do |exercise_workout_id|
+          self.exercise_workouts.destroy(exercise_workout_id) rescue nil
         end
-        exercise_workout.set_list_position(index+1)
-        exercise_workout.points = ex['points']
-        exercise_workout.save!
+
+        raw_exercises = params[:exercises].is_a?(String) ? JSON.parse(params[:exercises]) : params[:exercises]
+        legacy_pools = raw_exercises.each_with_index.map do |ex, idx|
+          {
+            'position' => idx + 1,
+            'select_count' => 1,
+            'points' => ex['points'] || 1.0,
+            'exercise_ids' => [ex['id']]
+          }
+        end
+        reconcile_exercise_pools!(legacy_pools)
       end
 
-      return self.save ? self : false
+      return self
+    rescue => e
+      logger.error "Workout#update_or_create failed: #{e.message}\n#{e.backtrace.join("\n")}" if respond_to?(:logger) && logger
+      destroy if was_new_record && persisted?
+      return false
+    end
+  end
+
+  # -------------------------------------------------------------
+  # Synchronizes ExercisePool and ExercisePoolItem records for this workout.
+  def reconcile_exercise_pools!(pools_data)
+    pools_data = Array(pools_data)
+    current_pools = self.exercise_pools.to_a
+    submitted_pool_ids = []
+
+    pools_data.each_with_index do |pool_hash, idx|
+      pool_id = pool_hash['id'].presence
+      pool = if pool_id
+        current_pools.find { |p| p.id.to_s == pool_id.to_s } || self.exercise_pools.build
+      else
+        self.exercise_pools.build
+      end
+
+      pool.position = pool_hash['position'].presence || (idx + 1)
+      raw_k = pool_hash['select_count'] || pool_hash['k'] || 1
+      pool.select_count = [raw_k.to_i, 1].max
+      pool.points = pool_hash['points'].presence || 1.0
+      pool.save!
+      submitted_pool_ids << pool.id
+
+      # Synchronize items
+      raw_ids = pool_hash['exercise_ids'] || (pool_hash['exercises'] ? pool_hash['exercises'].map { |e| e['id'] } : [])
+      candidate_ids = Array(raw_ids).reject(&:blank?).map(&:to_i).uniq
+
+      # Remove items not in candidate_ids
+      pool.exercise_pool_items.where.not(exercise_id: candidate_ids).destroy_all
+
+      candidate_ids.each_with_index do |ex_id, item_idx|
+        item = pool.exercise_pool_items.find_or_initialize_by(exercise_id: ex_id)
+        item.position = item_idx + 1
+        item.save!
+      end
+
+      # Ensure select_count does not exceed candidate count if items exist
+      if candidate_ids.any? && pool.select_count > candidate_ids.size
+        pool.update_column(:select_count, candidate_ids.size)
+      end
+    end
+
+    # Destroy pools belonging to this workout that were removed
+    self.exercise_pools.where.not(id: submitted_pool_ids).destroy_all
+
+    # Synchronize legacy exercise_workouts for compatibility
+    sync_exercise_workouts_from_pools!
+  end
+
+  # -------------------------------------------------------------
+  # Keeps legacy exercise_workouts in sync with the current exercise_pools.
+  def sync_exercise_workouts_from_pools!
+    seen_ex_ids = []
+    ew_position = 0
+
+    exercise_pools.order(:position).each do |pool|
+      pool.exercise_pool_items.order(:position).each do |item|
+        next if seen_ex_ids.include?(item.exercise_id)
+        seen_ex_ids << item.exercise_id
+        ew_position += 1
+
+        ew = exercise_workouts.find_or_initialize_by(exercise_id: item.exercise_id)
+        ew.position = ew_position
+        ew.points = pool.points
+        ew.save!
+      end
+    end
+
+    if seen_ex_ids.any?
+      exercise_workouts.where.not(exercise_id: seen_ex_ids).destroy_all
+    else
+      exercise_workouts.destroy_all
+    end
   end
 
   # ----------------------------------------------------------------------------

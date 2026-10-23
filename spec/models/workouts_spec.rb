@@ -130,4 +130,131 @@ describe Workout, type: :model do
       expect(wo.lms_assignment_url).to eq('https://canvas.vt.edu/courses/1/assignments/20')
     end
   end
+
+  describe "exercise pool integration" do
+    let(:workout) { FactoryBot.create(:workout) }
+    let(:ex1) { FactoryBot.create(:coding_exercise, name: 'Ex 1') }
+    let(:ex2) { FactoryBot.create(:coding_exercise, name: 'Ex 2') }
+    let(:ex3) { FactoryBot.create(:coding_exercise, name: 'Ex 3') }
+
+    it "computes total_points across pools as sum of (select_count * points)" do
+      p1 = ExercisePool.create!(workout: workout, select_count: 1, points: 10.0, position: 1)
+      p2 = ExercisePool.create!(workout: workout, select_count: 2, points: 15.0, position: 2)
+
+      expect(workout.total_points).to eq(40.0)
+    end
+
+    it "falls back to exercise_workouts for total_points when no pools exist" do
+      w = FactoryBot.create(:workout)
+      FactoryBot.create(:exercise_workout, workout: w, points: 5.0)
+      FactoryBot.create(:exercise_workout, workout: w, points: 12.0)
+
+      expect(w.total_points).to eq(17.0)
+    end
+
+    it "reports contains?(exercise) for pooled candidate exercises" do
+      pool = ExercisePool.create!(workout: workout, select_count: 1, points: 5.0, position: 1)
+      ExercisePoolItem.create!(exercise_pool: pool, exercise: ex1)
+
+      expect(workout.contains?(ex1)).to be true
+      expect(workout.contains?(ex2)).to be false
+    end
+
+    it "returns first_exercise and next_exercise from pools when no attempt score is provided" do
+      p1 = ExercisePool.create!(workout: workout, select_count: 1, points: 5.0, position: 1)
+      ExercisePoolItem.create!(exercise_pool: p1, exercise: ex1)
+      p2 = ExercisePool.create!(workout: workout, select_count: 1, points: 5.0, position: 2)
+      ExercisePoolItem.create!(exercise_pool: p2, exercise: ex2)
+
+      expect(workout.first_exercise).to eq(ex1)
+      expect(workout.next_exercise(ex1)).to eq(ex2)
+    end
+
+    describe "#update_or_create with pools" do
+      it "creates exercise pools and candidate items from pools JSON" do
+        pools_data = [
+          {
+            position: 1,
+            select_count: 1,
+            points: 5.0,
+            exercise_ids: [ex1.id]
+          },
+          {
+            position: 2,
+            select_count: 1,
+            points: 10.0,
+            exercise_ids: [ex2.id, ex3.id]
+          }
+        ]
+
+        w = Workout.new(name: 'Pooled Workout', creator: workout.creator)
+        w.update_or_create(
+          name: 'Pooled Workout',
+          pools: pools_data.to_json
+        )
+
+        expect(w.persisted?).to be true
+        expect(w.exercise_pools.count).to eq(2)
+        
+        first_pool = w.exercise_pools.find_by(position: 1)
+        expect(first_pool.select_count).to eq(1)
+        expect(first_pool.points).to eq(5.0)
+        expect(first_pool.exercises).to eq([ex1])
+
+        second_pool = w.exercise_pools.find_by(position: 2)
+        expect(second_pool.select_count).to eq(1)
+        expect(second_pool.points).to eq(10.0)
+        expect(second_pool.exercises).to match_array([ex2, ex3])
+
+        # Verifies synchronization to exercise_workouts
+        expect(w.exercise_workouts.count).to eq(3)
+        expect(w.exercise_workouts.map(&:exercise_id)).to match_array([ex1.id, ex2.id, ex3.id])
+      end
+
+      it "updates existing pools and reconciles removed candidate exercises" do
+        p1 = ExercisePool.create!(workout: workout, select_count: 1, points: 5.0, position: 1)
+        ExercisePoolItem.create!(exercise_pool: p1, exercise: ex1)
+        ExercisePoolItem.create!(exercise_pool: p1, exercise: ex2)
+
+        pools_data = [
+          {
+            id: p1.id,
+            position: 1,
+            select_count: 2,
+            points: 8.0,
+            exercise_ids: [ex2.id, ex3.id] # ex1 removed, ex3 added
+          }
+        ]
+
+        workout.update_or_create(
+          name: workout.name,
+          pools: pools_data.to_json
+        )
+
+        p1.reload
+        expect(p1.select_count).to eq(2)
+        expect(p1.points).to eq(8.0)
+        expect(p1.exercises).to match_array([ex2, ex3])
+        expect(p1.exercises).not_to include(ex1)
+      end
+
+      it "falls back to creating 1-of-1 pools when only legacy exercises parameter is supplied" do
+        w = Workout.new(name: 'Legacy Workout', creator: workout.creator)
+        exercises_data = [
+          { id: ex1.id, points: 4.0 },
+          { id: ex2.id, points: 7.0 }
+        ]
+
+        w.update_or_create(
+          name: 'Legacy Workout',
+          exercises: exercises_data.to_json
+        )
+
+        expect(w.exercise_pools.count).to eq(2)
+        expect(w.exercise_pools.map(&:points)).to match_array([4.0, 7.0])
+        expect(w.exercise_pools.all? { |p| p.select_count == 1 }).to be true
+      end
+    end
+  end
 end
+

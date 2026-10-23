@@ -84,3 +84,42 @@
 - [x] Test exception handling in Rails environment
 - [x] Update `.gsd/STATE.md` with execution summary and verification evidence
 - [x] Create walkthrough artifact documenting changes
+
+---
+
+# 3. Randomized Exercise Pools in Workouts Roadmap
+
+## Wave 1: Database Schema & Migrations
+- [x] Create type-agnostic migration for `exercise_pools` (`workout_id`, `name`, `position`, `select_count`, `points`, timestamps)
+- [x] Create type-agnostic migration for `exercise_pool_items` (`exercise_pool_id`, `exercise_id`, `position`, timestamps)
+- [x] Create type-agnostic migration for `workout_score_exercises` (`workout_score_id`, `exercise_id`, `exercise_pool_id`, `position`, `points`, timestamps)
+- [x] Add backfill logic to seamlessly migrate existing `exercise_workouts` into 1-item `exercise_pools` ($k=1$)
+- [x] Run migration using `rvm 2.7.0 do bundle exec rake db:migrate` and verify `db/schema.rb`
+
+## Wave 2: Models, Associations & Sampling Logic
+- [x] Implement `ExercisePool` model with `acts_as_list scope: :workout`, validations, and associations
+- [x] Implement `ExercisePoolItem` join model with uniqueness validation
+- [x] Implement `WorkoutScoreExercise` snapshot model with validations and associations
+- [x] Update `Workout` model: `has_many :exercise_pools`, `has_many :exercises, through: :exercise_pools`, `total_points`, `first_exercise(score)`, and `next_exercise(ex, score)`
+- [x] Implement `WorkoutScore#generate_attempt_exercises!` with anti-duplication sampling algorithm prioritizing unseen candidate exercises across multiple attempts
+- [x] Write unit specs in `spec/models/exercise_pool_spec.rb`, `spec/models/workout_score_exercise_spec.rb`, and update `spec/models/workout_score_spec.rb`
+
+## Wave 3: Practice Flow & Controllers Integration
+- [x] Update `WorkoutOfferingsController#practice` and `WorkoutsController#practice` to initialize and snapshot attempt exercises on `WorkoutScore` creation
+- [x] Update `ExercisesController#practice` and `evaluate` to read `@max_points` from `workout_score.workout_score_exercises` and navigate sequentially through attempt exercises
+- [x] Update `WorkoutScore#rescore` and completion hooks to accurately reflect the attempt-specific exercise count and score
+- [x] Write controller specs verifying end-to-end attempt generation, sequential navigation, and grading isolation
+
+## Wave 4: Authoring UI & Workout Form Updates
+- [x] Update `WorkoutsController#create` and `Workout#update_or_create` to accept and persist slot/pool definitions
+- [x] Update `app/views/workouts/_form.html.haml` and `workout_form.js.coffee` to support creating pool slots, configuring $k$, setting uniform points, and dragging candidate exercises
+- [x] Update `app/views/workouts/show.html.haml` to display pool groupings in staff view and assigned exercises in student view
+- [x] Update `app/views/workouts/review.html.haml` to render student attempt snapshots
+- [x] Write request/controller specs for workout creation and editing with exercise pools
+
+## Wave 5: End-to-End Verification & Documentation
+- [x] Run full test suite (`rvm 2.7.0 do bundle exec rspec`)
+- [x] Verify edge cases (single exercise slots, retakes with $k \le N$, pool exhaustion, grading passback)
+- [x] Update `.gsd/STATE.md` with execution summary and verification evidence
+- [x] Create walkthrough artifact documenting changes
+

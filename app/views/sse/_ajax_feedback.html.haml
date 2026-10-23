@@ -2,7 +2,7 @@
 - show_score = !@attempt.workout_score || @attempt.workout_score.show_score?
 - @workout ||= @attempt.workout_score.andand.workout
 - if @workout && show_score
-  - pts = @max_points || (@workout.exercise_workouts.loaded? ? @workout.exercise_workouts.find { |ew| ew.exercise_id == @exercise.id }&.points : @workout.exercise_workouts.find_by(exercise: @exercise)&.points) || @exercise.andand.experience
+  - pts = @max_points || @attempt.workout_score&.points_for(@exercise) || (@workout.exercise_workouts.loaded? ? @workout.exercise_workouts.find { |ew| ew.exercise_id == @exercise.id }&.points : @workout.exercise_workouts.find_by(exercise: @exercise)&.points) || @exercise.andand.experience
   - score = @attempt.score
   - score_pct = (pts && pts > 0) ? score * 100.0 / pts : 0
   .summary

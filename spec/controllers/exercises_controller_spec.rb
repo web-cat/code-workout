@@ -113,6 +113,34 @@ describe ExercisesController do
       expect(controller.instance_variable_get(:@scoring_attempts_by_version_id)).to be_a(Hash)
       expect(controller.instance_variable_get(:@scoring_attempts_by_version_id)[101]).to eq([attempt])
     end
+
+    it "populates @workout_exercises from attempt workout_score_exercises and sets @max_points from score" do
+      allow(Workout).to receive(:find).with('5').and_return(workout)
+      allow(WorkoutScore).to receive_message_chain(:includes, :find).and_return(workout_score)
+      allow(WorkoutScore).to receive(:find).with('7').and_return(workout_score)
+      allow(workout_score).to receive(:attempts_left_for_exercise_version).and_return(nil)
+      allow(workout_score).to receive(:previous_attempt_for).and_return(nil)
+      allow(workout_score).to receive(:scored_attempts).and_return([])
+
+      wse = double('WorkoutScoreExercise', exercise: exercise, points: 5.0)
+      wse_relation = double('WseRelation', any?: true, size: 1)
+      allow(workout_score).to receive(:workout_score_exercises).and_return(wse_relation)
+      allow(wse_relation).to receive(:includes).with(
+        exercise: [
+          { current_version: :prompts },
+          :tags,
+          :languages,
+          :exercise_workouts
+        ]
+      ).and_return([wse])
+      allow(workout_score).to receive(:points_for).with(exercise).and_return(5.0)
+
+      get :practice, params: { id: '1', workout_id: '5', workout_score_id: '7' }
+
+      expect(response.status).to eq(200)
+      expect(controller.instance_variable_get(:@workout_exercises)).to eq([exercise])
+      expect(controller.instance_variable_get(:@max_points)).to eq(5.0)
+    end
   end
 
   describe "IP access restrictions enforcement" do
@@ -344,6 +372,98 @@ describe ExercisesController do
         expect(response.body).to include("You have exhausted all attempts for this exercise")
         expect(response.body).to include("$(\".btn-submit\").prop('disabled', true)")
       end
+    end
+  end
+
+  describe "Randomized exercise pool evaluation and navigation" do
+    let(:organization) { FactoryBot.build_stubbed(:organization, slug: 'vt') }
+    let(:course) { FactoryBot.build_stubbed(:course, slug: 'cs1114', organization: organization) }
+    let(:term) { FactoryBot.build_stubbed(:term, slug: 'fall2026') }
+    let(:course_offering) { FactoryBot.build_stubbed(:course_offering, id: 101, course: course, term: term, label: 'Section 1') }
+    let(:user) { FactoryBot.build_stubbed(:user, id: 10) }
+    let(:exercise_version) { FactoryBot.build_stubbed(:exercise_version, id: 101) }
+    let(:exercise) { FactoryBot.build_stubbed(:exercise, id: 1, current_version: exercise_version, current_version_id: 101) }
+    let(:next_exercise) { FactoryBot.build_stubbed(:exercise, id: 2) }
+    let(:workout) { FactoryBot.build_stubbed(:workout, id: 5) }
+    let(:workout_offering) do
+      FactoryBot.build_stubbed(
+        :workout_offering,
+        id: 201,
+        workout: workout,
+        course_offering: course_offering
+      )
+    end
+    let(:workout_score) { FactoryBot.build_stubbed(:workout_score, id: 7, workout: workout, user: user, workout_offering: workout_offering) }
+
+    before do
+      allow(controller).to receive(:current_user).and_return(user)
+      allow(Exercise).to receive(:find).with('1').and_return(exercise)
+      allow(Exercise).to receive(:find_by).with(id: '1').and_return(exercise)
+      allow(ExerciseVersion).to receive(:find_by).with(id: '101').and_return(exercise_version)
+      allow(exercise_version).to receive(:exercise).and_return(exercise)
+      allow(exercise_version).to receive(:image_processing).and_return(true)
+      allow(exercise_version).to receive(:file_processing).and_return([])
+      allow(controller).to receive(:authorize!).and_return(true)
+      allow(ActivityLog).to receive(:create).and_return(true)
+      allow(WorkoutOffering).to receive(:find_by).with(id: '201').and_return(workout_offering)
+      allow(workout_offering).to receive(:ip_allowed?).and_return(true)
+      allow(workout_offering).to receive(:user_agent_allowed?).and_return(true)
+      allow(workout_offering).to receive(:can_be_practiced_by?).and_return(true)
+      allow(workout_offering).to receive(:contains?).and_return(true)
+      allow(workout).to receive(:contains?).and_return(true)
+      allow(WorkoutScore).to receive(:find_by).with(id: '7').and_return(workout_score)
+      allow(workout_offering).to receive(:active_score_for).and_return(workout_score)
+      allow(workout_offering).to receive(:score_for).and_return(workout_score)
+      allow(WorkoutScore).to receive_message_chain(:includes, :find).and_return(workout_score)
+      allow(workout_score).to receive(:closed?).and_return(false)
+      allow(workout_score).to receive(:attempts_left_for_exercise_version).and_return(nil)
+      allow_any_instance_of(MultipleChoicePromptAnswer).to receive(:save!).and_return(true)
+    end
+
+    it "scores attempt using workout_score points_for and navigates next_exercise with workout_score" do
+      attempt = double('Attempt', id: 50, submit_num: 1)
+      allow(exercise_version).to receive(:new_attempt).and_return(attempt)
+      allow(attempt).to receive(:save!).and_return(true)
+      allow(exercise_version).to receive(:is_mcq?).and_return(true)
+
+      allow(workout_score).to receive(:points_for).with(exercise).and_return(8.0)
+      choice = FactoryBot.build_stubbed(:choice, id: 3, answer: 'Answer')
+      allow(Choice).to receive(:find).and_return(choice)
+      allow(controller).to receive(:markdown).and_return('Answer')
+      prompt_specific = double('PromptSpecific')
+      prompt = double('Prompt', specific: prompt_specific)
+      allow(exercise_version).to receive(:prompts).and_return([prompt])
+      prompt_answer = double('PromptAnswer')
+      allow(prompt_specific).to receive(:new_answer).and_return(prompt_answer)
+      allow(prompt_answer).to receive(:attempt=)
+      allow(prompt_answer).to receive(:prompt=)
+      allow(prompt_answer).to receive(:choices=)
+      allow(prompt_answer).to receive(:save!)
+
+      allow(exercise_version).to receive(:score).and_return(1.0)
+      allow(exercise_version).to receive(:max_mcq_score).and_return(1.0)
+      allow(exercise_version).to receive(:mcq_experience_on).and_return(10)
+      allow(attempt).to receive(:score=)
+      allow(attempt).to receive(:feedback_ready=)
+      allow(attempt).to receive(:experience_earned=)
+      allow(attempt).to receive(:score).and_return(8.0)
+      allow(workout_score).to receive(:record_attempt)
+      allow(workout_score).to receive(:show_feedback?).and_return(true)
+
+      expect(workout).to receive(:next_exercise).with(exercise, workout_score).and_return(next_exercise)
+
+      patch :evaluate, params: {
+        id: '1',
+        workout_offering_id: '201',
+        workout_score_id: '7',
+        exercise_version_id: '101',
+        exercise_version: { choice: { id: '3' } }
+      }, format: :js
+
+      expect(response.status).to eq(200)
+      expect(controller.instance_variable_get(:@max_points)).to eq(8.0)
+      expect(response.body).to include("/practice/2")
+      expect(response.body).to include("workout_score_id=7")
     end
   end
 end
