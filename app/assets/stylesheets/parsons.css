@@ -1,3 +1,6 @@
+/*!***********************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js!./src/css/parsons.css ***!
+  \***********************************************************************/
 :root {
     --parsonsBorderColor: #cccccc;
     --parsonsCorrectBorderColor: #5cb85c;
@@ -276,6 +279,17 @@
     background-color: #ffbaba;
     border: 1px solid red;
 }
+/* Toggle buttons cycle through a fixed set of values; prettyPrint()
+   recurses into them and syntax-highlights their text like any other
+   code token, so different values can render in different colors
+   (e.g. an identifier in black vs an operator in another color)
+   depending on what the text happens to look like. That inconsistently
+   hints at which option is "different", so force one flat color
+   regardless of what prettify assigns the button's contents. */
+.parsons button,
+.parsons button * {
+    color: #000 !important;
+}
 .parsons .paired {
     position: absolute;
     -moz-border-radius: 10px;
@@ -443,6 +457,9 @@
     box-sizing: border-box;
 }
 
+/*!************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js!./src/css/prettify.css ***!
+  \************************************************************************/
 body:not(.pretext) {
     .str{color:#080}.kwd{color:#008}.com{color:#800}.typ{color:#606}.lit{color:#066}.pun{color:#660}.pln{color:#000}.tag{color:#008}.atn{color:#606}.atv{color:#080}.dec{color:#606}pre.prettyprint{padding:2px;border:1px solid #888}@media print{.str{color:#060}.kwd{color:#006;font-weight:bold}.com{color:#600;font-style:italic}.typ{color:#404;font-weight:bold}.lit{color:#044}.pun{color:#440}.pln{color:#000}.tag{color:#006;font-weight:bold}.atn{color:#404}.atv{color:#060}}
 }
