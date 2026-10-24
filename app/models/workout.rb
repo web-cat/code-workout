@@ -272,7 +272,11 @@ class Workout < ApplicationRecord
   # -------------------------------------------------------------
   # Simple method to return the number of exercises a workout has
   def num_exercises
-    self.exercises.length
+    if (exercise_pools.loaded? ? exercise_pools.any? : exercise_pools.exists?)
+      exercise_pools.sum { |pool| pool.select_count || 1 }
+    else
+      self.exercises.length
+    end
   end
 
 

@@ -1,0 +1,25 @@
+%article.exercise.thumbnail.lg.pool-placeholder{ style: 'border: 2px dashed #9acfea; background-color: #f7fbff;' }
+  .title
+    %span.fa-stack
+      %i.fa.fa-square.fa-stack-2x{ style: 'color: #337ab7;' }
+      %i.fa.fa-random.fa-stack-1x.fa-inverse
+    - if local_assigns[:draw_index] && pool.select_count > 1
+      = "Slot #{pool.position}.#{draw_index}: Exercise Pool"
+    - else
+      = "Slot #{pool.position}: Exercise Pool"
+  .summary
+    %span.badge.badge-info{ style: 'margin-top: 12px; margin-right: 12px; font-size: 13px;' }
+      = "#{pool.points.to_i == pool.points ? pool.points.to_i : pool.points} pts"
+  .body
+    .text
+      %p{ style: 'color: #555; margin-top: 8px;' }
+        - count = pool.exercise_pool_items.count
+        - if pool.select_count == 1
+          1 of #{count} exercises will be randomly selected when you start this workout.
+        - else
+          1 of #{count} exercises will be randomly selected for this slot when you start.
+  .info
+    .taglist
+      %span.label.label-info
+        %i.fa.fa-random
+        Randomized Pool

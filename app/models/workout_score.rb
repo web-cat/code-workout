@@ -147,7 +147,7 @@ class WorkoutScore < ApplicationRecord
     if workout_score_exercises.any?
       workout_score_exercises.count
     elsif workout
-      workout.exercises.length
+      workout.num_exercises
     else
       0
     end

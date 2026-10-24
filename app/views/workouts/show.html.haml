@@ -191,40 +191,77 @@
   .alert.alert-warning Results will be visible after the assignment closes.
 - elsif is_staff && !as_student && @workout.exercise_pools.any?
   .workout-pools
-    - @workout.exercise_pools.order(:position).each do |pool|
-      .panel.panel-default.workout-pool-panel{ style: 'margin-bottom: 20px;' }
-        .panel-heading
-          %h4.panel-title
-            %strong= "Slot #{pool.position}:"
-            - if pool.exercise_pool_items.count > 1
-              %span.label.label-info= "Pool (Draw #{pool.select_count} of #{pool.exercise_pool_items.count})"
-            - else
-              %span.label.label-default Single Exercise
-            %span.pull-right.text-muted
-              = "#{pool.points} pts each (#{pool.total_points} pts slot total)"
-        .panel-body
-          - pool_exs = pool.exercise_pool_items.order(:position).includes(exercise: [{ current_version: :prompts }, :tags, :languages, :styles, :exercise_collection, :exercise_owners]).map(&:exercise)
-          - pool_exs.in_groups_of(2, false) do |row|
-            = render row,
-              user: current_user,
-              workout_offering: @workout_offering,
-              workout_score: nil,
-              workout: @workout,
-              manages_course: manages_course,
-              start_workout: false,
-              review: false
-            .clearfix
+    - @workout.exercise_pools.order(:position).chunk { |p| !p.single_exercise? }.each do |is_pool, group|
+      - if is_pool
+        - group.each do |pool|
+          .panel.panel-default.workout-pool-panel{ style: 'margin-bottom: 20px;' }
+            .panel-heading
+              %h4.panel-title
+                %strong= "Slot #{pool.position}:"
+                %span.label.label-info= "Pool (Draw #{pool.select_count} of #{pool.exercise_pool_items.count})"
+                %span.pull-right.text-muted
+                  = "#{pool.points} pts each (#{pool.total_points} pts slot total)"
+            .panel-body
+              - pool_exs = pool.exercise_pool_items.order(:position).includes(exercise: [{ current_version: :prompts }, :tags, :languages, :styles, :exercise_collection, :exercise_owners]).map(&:exercise)
+              - pool_exs.in_groups_of(2, false) do |row|
+                = render row,
+                  user: current_user,
+                  workout_offering: @workout_offering,
+                  workout_score: nil,
+                  workout: @workout,
+                  manages_course: manages_course,
+                  start_workout: false,
+                  review: false
+                .clearfix
+      - else
+        - single_exs = group.map { |p| p.exercise_pool_items.includes(exercise: [{ current_version: :prompts }, :tags, :languages, :styles, :exercise_collection, :exercise_owners]).first&.exercise }.compact
+        - single_exs.in_groups_of(2, false) do |row|
+          = render row,
+            user: current_user,
+            workout_offering: @workout_offering,
+            workout_score: nil,
+            workout: @workout,
+            manages_course: manages_course,
+            start_workout: false,
+            review: false
+          .clearfix
 - elsif @exs.empty?
   .alert.alert-warning No exercises in this workout
 - else
   - user = current_user
-  - @exs.in_groups_of(2, false) do |row|
-    = render row,
-      user: user,
-      workout_offering: @workout_offering,
-      workout_score: workout_score,
-      workout: @workout,
-      manages_course: manages_course,
-      start_workout: true,
-      review: false
-    .clearfix
+  - has_active_attempt = workout_score.present? && workout_score.respond_to?(:workout_score_exercises) && workout_score.workout_score_exercises.any?
+  - if !has_active_attempt && @workout.exercise_pools.any? { |p| !p.single_exercise? }
+    - slot_items = []
+    - @workout.exercise_pools.order(:position).each do |pool|
+      - if !pool.single_exercise?
+        - (1..pool.select_count).each do |draw_idx|
+          - slot_items << { type: :pool, pool: pool, draw_index: (pool.select_count > 1 ? draw_idx : nil) }
+      - else
+        - single_ex = pool.exercise_pool_items.includes(exercise: [{ current_version: :prompts }, :tags, :languages, :styles, :exercise_collection, :exercise_owners]).first&.exercise
+        - slot_items << { type: :exercise, exercise: single_ex } if single_ex
+    - slot_items.in_groups_of(2, false) do |row|
+      - row.each do |item|
+        - if item[:type] == :pool
+          = render partial: 'workouts/pool_placeholder', locals: { pool: item[:pool], draw_index: item[:draw_index] }
+        - else
+          = render item[:exercise],
+            user: user,
+            workout_offering: @workout_offering,
+            workout_score: workout_score,
+            workout: @workout,
+            manages_course: manages_course,
+            start_workout: true,
+            review: false
+      .clearfix
+  - else
+    - current_attempt_exs = (has_active_attempt && workout_score.workout_score_exercises.any?) ? workout_score.workout_score_exercises.includes(exercise: [{ current_version: :prompts }, :tags, :languages, :styles, :exercise_collection, :exercise_owners]).map(&:exercise) : @exs
+    - current_attempt_exs.in_groups_of(2, false) do |row|
+      = render row,
+        user: user,
+        workout_offering: @workout_offering,
+        workout_score: workout_score,
+        workout: @workout,
+        manages_course: manages_course,
+        start_workout: true,
+        review: false
+      .clearfix

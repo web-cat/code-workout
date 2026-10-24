@@ -13,39 +13,32 @@
       <div class='col-xs-2'>
         <input class='text10 points form-control input-sm' placeholder='e.g 5' type='number' min='0' value='{{points}}' />
       </div>
-      <div class='col-xs-2 text-right'>
-        <button type='button' class='btn btn-xs btn-default convert-to-pool' title='Convert this single exercise into a question pool'>
-          <i class='fa fa-random'></i> Pool
-        </button>
-        <i class='action delete-ex fa fa-times text-danger' title='Remove exercise' style='cursor: pointer; margin-left: 10px;'></i>
+      <div class='col-xs-3 text-right'>
+        <i class='action delete-ex fa fa-times text-danger' title='Remove exercise' style='cursor: pointer; margin-right: 8px;'></i>
       </div>
     </div>
   </li>
 </script>
 
 <script id='pool-slot-template' type='text/html'>
-  <li class='list-group-item pool-slot panel panel-info' data-pool-id='{{id}}' style='padding: 0; margin-bottom: 12px; background: #fff;'>
+  <li class='list-group-item pool-slot panel panel-info' data-pool-id='{{id}}' style='padding: 0; margin-bottom: 0; background: #fff;'>
     <div class='panel-heading' style='padding: 8px 12px;'>
       <div class='row' style='display: flex; align-items: center;'>
         <div class='col-xs-1'>
           <i class='handle fa fa-bars' title='Drag to reorder slot'></i>
         </div>
         <div class='col-xs-3'>
-          <strong><i class='fa fa-random text-primary'></i> Question Pool</strong>
+          <strong><i class='fa fa-random text-primary'></i> Exercise Pool</strong>
         </div>
         <div class='col-xs-3'>
-          <label style='font-weight: normal; margin-bottom: 0;'>Draw</label>
-          <input class='text10 select-count form-control input-sm' type='number' min='1' value='{{select_count}}' style='display: inline-block; width: 55px; margin: 0 4px;' />
-          <span class='pool-size-label text-muted'>of {{candidate_count}}</span>
+          <label style='font-weight: normal; margin-left: 4px; margin-bottom: 0;'>Draw</label><br/>
+          <input class='text10 select-count form-control input-sm' type='number' min='1' value='{{select_count}}' style='display: inline-block; width: 60px; margin-left: 4px;' />
         </div>
         <div class='col-xs-3'>
-          <label style='font-weight: normal; margin-bottom: 0;'>Points each</label>
+          <label style='font-weight: normal; margin-left: 4px; margin-bottom: 0;'>Points each</label><br/>
           <input class='text10 pool-points form-control input-sm' type='number' min='0' value='{{points}}' style='display: inline-block; width: 60px; margin-left: 4px;' />
         </div>
         <div class='col-xs-2 text-right'>
-          <button type='button' class='btn btn-xs btn-default add-candidate-btn' title='Add exercises to this pool'>
-            <i class='fa fa-plus'></i> Add
-          </button>
           <i class='action delete-slot fa fa-times text-danger' title='Remove entire pool' style='cursor: pointer; margin-left: 8px;'></i>
         </div>
       </div>
@@ -69,7 +62,7 @@
         {{/exercises}}
       </ul>
       <div class='empty-candidates-msg text-muted' style='text-align: center; font-size: 12px; margin-top: 5px; {{#has_candidates}}display: none;{{/has_candidates}}'>
-        Search and add exercises, or drag them here to add to this pool.
+        Drag exercises here from the workout list to add to this pool.
       </div>
     </div>
   </li>

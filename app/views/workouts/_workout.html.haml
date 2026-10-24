@@ -69,7 +69,7 @@
             organization_id: workout_offering.course_offering.course.organization.slug }.merge(student_param))
       - else
         = link_to workout.name, workout_path({ id: workout[:id] }.merge(student_param))
-    %span.badge.badge-info= (workout.respond_to?(:exercise_workouts) && workout.exercise_workouts.loaded?) ? workout.exercise_workouts.size.to_s : workout.exercises.size.to_s
+    %span.badge.badge-info= workout.num_exercises.to_s
 
   .summary
     - course_id = course.andand.slug

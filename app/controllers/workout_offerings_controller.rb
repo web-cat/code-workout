@@ -27,17 +27,30 @@ class WorkoutOfferingsController < ApplicationController
       @user_course_role = @course_offering.andand.role_for_user(current_user)
       @is_staff = current_user.andand.global_role.andand.is_admin? || @user_course_role.andand.is_staff?
       @manages_course = current_user.andand.global_role.andand.is_admin? || @user_course_role.andand.can_manage_course?
-      @exs = @workout ? @workout.exercises.includes(
-        :tags,
-        :taggings,
-        :languages,
-        current_version: :prompts
-      ) : []
       @past_scores = @workout_offering.scores_for(current_user)
       @active_score = @workout_offering.active_score_for(current_user)
       @can_retake = @workout_offering.can_start_new_attempt?(current_user)
       @effective_score = @workout_offering.effective_score_for(current_user)
       @workout_score = @active_score || @workout_offering.kept_workout_score_for(current_user) || @workout_offering.latest_score_for(current_user)
+      @exs = if @workout_score && @workout_score.respond_to?(:workout_score_exercises) && @workout_score.workout_score_exercises.any?
+        @workout_score.workout_score_exercises.includes(
+          exercise: [
+            :tags,
+            :taggings,
+            :languages,
+            current_version: :prompts
+          ]
+        ).map(&:exercise)
+      elsif @workout
+        @workout.exercises.includes(
+          :tags,
+          :taggings,
+          :languages,
+          current_version: :prompts
+        )
+      else
+        []
+      end
 
       if !@workout_offering.ip_allowed?(request.remote_ip, current_user, @workout_score)
         if current_user

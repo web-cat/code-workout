@@ -144,6 +144,17 @@ describe Workout, type: :model do
       expect(workout.total_points).to eq(40.0)
     end
 
+    it "computes num_exercises across pools as sum of select_count" do
+      ExercisePool.create!(workout: workout, select_count: 1, points: 10.0, position: 1)
+      p2 = ExercisePool.create!(workout: workout, select_count: 2, points: 15.0, position: 2)
+      ExercisePoolItem.create!(exercise_pool: p2, exercise: ex1)
+      ExercisePoolItem.create!(exercise_pool: p2, exercise: ex2)
+      ExercisePoolItem.create!(exercise_pool: p2, exercise: ex3)
+
+      # 3 candidate items in p2, but select_count is 2, so total num_exercises = 1 + 2 = 3
+      expect(workout.num_exercises).to eq(3)
+    end
+
     it "falls back to exercise_workouts for total_points when no pools exist" do
       w = FactoryBot.create(:workout)
       FactoryBot.create(:exercise_workout, workout: w, points: 5.0)
