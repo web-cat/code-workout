@@ -756,11 +756,9 @@ class ExercisesController < ApplicationController
     end
 
     @workout ||= @workout_score ? @workout_score.workout : nil
-    manages_course = current_user.andand.global_role.andand.is_admin? ||
-      @workout_offering.andand.course_offering.andand.is_manager?(current_user)
 
     policy = @workout_offering.andand.workout_policy
-    if !manages_course && @workout_score.andand.closed? &&
+    if !is_staff && @workout_score.andand.closed? &&
       (policy.andand.see_answers == false ||
        (policy.andand.no_review_before_close && !@workout_offering.andand.shutdown?))
       path = root_path
