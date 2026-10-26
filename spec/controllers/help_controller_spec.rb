@@ -14,4 +14,15 @@ describe HelpController, type: :controller do
       expect(response.body).to include('lms_assignment_url')
     end
   end
+
+  describe 'GET #exercise_pools' do
+    it 'renders the exercise_pools template successfully' do
+      get :exercise_pools
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include('Instructor Guide: Randomized Exercise Pools')
+      expect(response.body).to include('Add Exercise Pool')
+      expect(response.body).to include('Draw')
+      expect(response.body).to include('Points each')
+    end
+  end
 end

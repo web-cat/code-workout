@@ -1,0 +1,148 @@
+%h1 Instructor Guide: Randomized Exercise Pools
+%p.lead
+  Randomized Exercise Pools allow you to create dynamic workouts and assessments where each student receives a randomly sampled subset of exercises from a pool of candidate problems.
+
+%hr
+
+%h2 1. What Are Exercise Pools?
+%p
+  In a traditional workout, every student receives the exact same fixed list of exercises in the exact same order.
+%p
+  An 
+  %b Exercise Pool
+  replaces a single fixed question slot with a 
+  %i candidate pool.
+  Instead of assigning one specific exercise, you provide a set of 
+  %b N candidate exercises
+  and specify how many exercises to 
+  %b Draw (k)
+  for each student attempt:
+%ul
+  %li
+    %b 1-of-N Pool (Draw 1):
+    CodeWorkout picks 1 exercise at random from your candidate list for each student attempt (e.g., draw 1 of 3 array recursion problems).
+  %li
+    %b k-of-N Pool (Draw k):
+    CodeWorkout picks 
+    %i k
+    distinct exercises at random from your candidate list (e.g., draw 2 of 5 string manipulation problems).
+  %li
+    %b Equal Weighting:
+    Every exercise in a pool slot awards the specified 
+    %i "Points each"
+    value. Total points for the slot = 
+    %code k &times; points_each
+    , ensuring every student's workout has the exact same total point value.
+
+%h2 2. Key Educational Benefits
+%ul
+  %li
+    %b Academic Integrity & Assessment Variance:
+    In exams or quizzes, students seated next to each other receive different variations of a question concept, minimizing direct answer copying while testing the same underlying learning outcomes.
+  %li
+    %b Intelligent Multi-Attempt Retakes (Anti-Duplication):
+    When workouts permit multiple attempts, CodeWorkout tracks which exercises a student has already encountered. On subsequent attempts, the sampling algorithm automatically prioritizes 
+    %i unseen
+    candidates from the pool before recycling previously attempted questions.
+  %li
+    %b Flexible Workouts:
+    You can freely combine fixed exercises and exercise pools in the same workout (for example, Question 1 fixed warmup, Question 2 randomized pool, Question 3 fixed synthesis question).
+
+%h2 3. Creating & Editing Pools in the Workout Form
+%p
+  Configuring pools is fully visual and integrated into the workout edit page:
+
+%h3 Step 1: Add an Exercise Pool Slot
+%p
+  Below your exercise list in the workout editor, click the 
+  %span.label.label-default
+    %i.fa.fa-random
+    Add Exercise Pool
+  button. This inserts an empty exercise pool container into your workout.
+
+%h3 Step 2: Position the Pool
+%p
+  Each pool container has a drag handle (
+  %i.fa.fa-bars
+  ) on the left of its header. You can drag and drop the pool slot anywhere in the workout sequence—at the beginning, between fixed exercises, or at the end.
+
+%h3 Step 3: Populate Candidate Exercises
+%p
+  You can add exercises to your pool in several ways:
+%ul
+  %li
+    %b Search and Drag:
+    Open the exercise search menu on the left side of the screen. Search for exercises and add them to your workout. Once an exercise is in your workout list, simply drag it by its handle into the dashed candidate box inside the exercise pool.
+  %li
+    %b Reordering Candidates:
+    Within a pool, candidate exercises can be reordered by dragging their handles.
+  %li
+    %b Moving Exercises Between Pools:
+    You can drag candidate items from one pool directly into another pool, or drag a candidate out of a pool back into the main workout list as a standalone fixed exercise.
+
+%h3 Step 4: Configure Draw Count and Points
+%p
+  In the pool slot header, configure two key parameters:
+%ul
+  %li
+    %b Draw:
+    The number of exercises (
+    %i k
+    ) that CodeWorkout should select for each student attempt. (Defaults to 1; must be &ge; 1 and &le; the number of candidate exercises).
+  %li
+    %b Points each:
+    The points awarded for successfully completing each drawn exercise from this pool. For example, if Draw is set to 
+    %code 2
+    and Points each is 
+    %code 5.0
+    , the pool slot contributes 
+    %code 10.0
+    total points to the workout.
+
+%h3 Step 5: Removing Candidates or Deleting Pools
+%ul
+  %li
+    To remove a single candidate exercise from a pool, click the gray 
+    %i.fa.fa-times
+    icon next to that candidate.
+  %li
+    To remove an entire pool slot and all its candidates from the workout, click the red 
+    %i.fa.fa-times
+    icon in the upper-right corner of the pool header.
+
+%h2 4. Student Practice & Review Experience
+%ul
+  %li
+    %b Attempt Snapshotting:
+    When a student clicks 
+    %i "Practice"
+    or starts a workout attempt, CodeWorkout samples the required exercises from each pool and freezes the selection for that specific attempt.
+  %li
+    %b Consistent Navigation:
+    The student navigates through their sampled exercises with Next/Previous buttons and exercise thumbnails just like any standard workout.
+  %li
+    %b Reviewing Past Attempts:
+    When reviewing a closed attempt, students and instructors see the exact exercises that were sampled for that attempt, along with the student's submitted code, compiler feedback, and test scores.
+
+%h2 5. Best Practices & Tips for Instructors
+%ul
+  %li
+    %b Match Candidate Difficulty:
+    Ensure all candidate exercises in the same pool test comparable concepts and have similar difficulty levels so that no student receives an unfairly hard or easy version.
+  %li
+    %b Sizing Candidate Pools for Multiple Attempts:
+    If your workout allows 
+    %code M
+    attempts and draws 
+    %code k
+    exercises per attempt, providing at least 
+    %code M &times; k
+    candidates guarantees that students will see brand-new, unseen questions on every single attempt.
+  %li
+    %b Candidate Count Check:
+    Always ensure the number of candidate exercises in a pool is greater than or equal to the 
+    %b Draw
+    count. If a pool has fewer candidates than the Draw count, CodeWorkout will automatically clamp the draw count to the available candidates.
+  %li
+    %b Preserving Order Across Edits:
+    Exercise pools retain their assigned position and configuration seamlessly across edits, so you can adjust workout instructions, policies, or due dates at any time without disturbing the exercise sequence.

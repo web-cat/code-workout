@@ -555,10 +555,11 @@ Rails.application.routes.draw do
   end
 
   get 'help' => 'help#index'
-  get 'help/exercise_format' => 'help#exercise_format'
-  get 'help/exercise_peml_format' => 'help#exercise_peml_format'
-  get 'help/lti_configuration' => 'help#lti_configuration'
-  get 'help/specifying_due_dates' => 'help#specifying_due_dates'
+  get 'help/exercise_format' => 'help#exercise_format', as: :help_exercise_format
+  get 'help/exercise_peml_format' => 'help#exercise_peml_format', as: :help_exercise_peml_format
+  get 'help/lti_configuration' => 'help#lti_configuration', as: :help_lti_configuration
+  get 'help/specifying_due_dates' => 'help#specifying_due_dates', as: :help_specifying_due_dates
+  get 'help/exercise_pools' => 'help#exercise_pools', as: :help_exercise_pools
 
   get 'static_pages/home' => 'static_pages#home'
   get 'static_pages/info' => 'static_pages#info'

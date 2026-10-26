@@ -43,6 +43,9 @@
         %button.btn.btn-default.btn-sm#btn-add-pool{ type: 'button' }
           %i.fa.fa-random
           Add Exercise Pool
+        = link_to help_exercise_pools_path, target: '_blank', class: 'btn btn-link btn-sm', style: 'margin-left: 5px;', title: 'Learn how to use exercise pools' do
+          %i.fa.fa-question-circle
+          Help with pools
 
   .form-group
     = label_tag :policy, 'Policy Options', class: 'control-label col-xs-2'
@@ -130,6 +133,10 @@
             %button.btn.btn-default.btn-sm#select-date-btn{ type: 'button' }
               %i.fa.fa-calendar
               Select Date
+          .btn-group.pull-right
+            = link_to help_specifying_due_dates_path, target: '_blank', class: 'btn btn-default btn-sm', title: 'Help with specifying due dates and extensions' do
+              %i.fa.fa-question-circle
+              Help with due dates
         = text_area_tag :date_yaml, @date_yaml, id: 'date-yaml', class: 'form-control', rows: 15, spellcheck: false, style: 'border-top-left-radius: 0; border-top-right-radius: 0;'
 
   .form-group
