@@ -53,6 +53,78 @@ describe WorkoutScore, type: :model do
     end
   end
 
+  describe "#deadline" do
+    let(:user) { FactoryBot.build_stubbed(:user, id: 1) }
+    let(:workout_offering) { FactoryBot.build_stubbed(:workout_offering, id: 20) }
+    let(:start_time) { Time.zone.parse('2026-10-26 12:00:00') }
+    let(:workout_score) do
+      FactoryBot.build_stubbed(
+        :workout_score,
+        user: user,
+        workout_offering: workout_offering,
+        started_at: start_time
+      )
+    end
+
+    it "returns nil when workout offering is nil" do
+      workout_score.workout_offering = nil
+      expect(workout_score.deadline).to be_nil
+    end
+
+    it "returns nil when untimed" do
+      allow(workout_offering).to receive(:time_limit_for).with(user).and_return(nil)
+      expect(workout_score.deadline).to be_nil
+    end
+
+    it "returns started_at + time_limit when no hard deadline exists" do
+      allow(workout_offering).to receive(:time_limit_for).with(user).and_return(30)
+      allow(workout_offering).to receive(:hard_deadline_for).with(user).and_return(nil)
+      expect(workout_score.deadline).to eq(start_time + 30.minutes)
+    end
+
+    it "returns hard_deadline when hard_deadline is earlier than time limit" do
+      allow(workout_offering).to receive(:time_limit_for).with(user).and_return(30)
+      earlier_deadline = start_time + 15.minutes
+      allow(workout_offering).to receive(:hard_deadline_for).with(user).and_return(earlier_deadline)
+      expect(workout_score.deadline).to eq(earlier_deadline)
+    end
+
+    it "returns time limit deadline when hard_deadline is later" do
+      allow(workout_offering).to receive(:time_limit_for).with(user).and_return(30)
+      later_deadline = start_time + 60.minutes
+      allow(workout_offering).to receive(:hard_deadline_for).with(user).and_return(later_deadline)
+      expect(workout_score.deadline).to eq(start_time + 30.minutes)
+    end
+  end
+
+  describe "#time_remaining" do
+    let(:user) { FactoryBot.build_stubbed(:user, id: 1) }
+    let(:workout_offering) { FactoryBot.build_stubbed(:workout_offering, id: 20) }
+    let(:workout_score) do
+      FactoryBot.build_stubbed(
+        :workout_score,
+        user: user,
+        workout_offering: workout_offering,
+        started_at: Time.zone.now - 10.minutes
+      )
+    end
+
+    it "returns nil when untimed" do
+      allow(workout_score).to receive(:deadline).and_return(nil)
+      expect(workout_score.time_remaining).to be_nil
+    end
+
+    it "returns remaining minutes when deadline is in the future" do
+      allow(workout_score).to receive(:deadline).and_return(Time.zone.now + 20.minutes)
+      expect(workout_score.time_remaining).to be_within(0.1).of(20.0)
+    end
+
+    it "returns 0.0 when deadline has passed" do
+      allow(workout_score).to receive(:deadline).and_return(Time.zone.now - 5.minutes)
+      expect(workout_score.time_remaining).to eq(0.0)
+    end
+  end
+
   describe "last_user_agent association and setter" do
     let(:sample_ua) { "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 CLDB/2.1.2.04" }
     let(:ws) { described_class.new }

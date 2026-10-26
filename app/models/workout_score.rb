@@ -314,30 +314,30 @@ class WorkoutScore < ApplicationRecord
 
 
   # -------------------------------------------------------------
-  def time_remaining
-    if !workout_offering
-      nil
-    end
+  def deadline
+    return nil unless workout_offering && started_at
     time_limit = workout_offering.andand.time_limit_for(user)
+    return nil unless time_limit.present? && time_limit.to_i > 0
 
-    if time_limit.present? && time_limit.to_i > 0
-      now = Time.zone.now
-      remaining = time_limit.to_i - (now - self.started_at) / 60.0
-      hard_deadline = workout_offering.hard_deadline_for(user)
+    user_deadline = started_at + time_limit.to_i.minutes
+    hard_deadline = workout_offering.hard_deadline_for(user)
 
-      if hard_deadline
-        until_deadline = (hard_deadline - now)/60.0
-      end
-
-      # return the lesser of the two possible limits
-      if until_deadline
-        return [remaining, until_deadline].min
-      else
-        return remaining
-      end
+    if hard_deadline
+      [user_deadline, hard_deadline].min
     else
-      nil
+      user_deadline
     end
+  end
+
+
+  # -------------------------------------------------------------
+  def time_remaining
+    dl = deadline
+    return nil unless dl
+
+    now = Time.zone.now
+    remaining = (dl - now) / 60.0
+    remaining > 0 ? remaining : 0.0
   end
 
 

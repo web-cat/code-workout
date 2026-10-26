@@ -1,7 +1,10 @@
 - workout_score ||= nil
-- time_remaining = workout_score.andand.time_remaining
-- if time_remaining && time_remaining > 0
-  .alert.alert-warning.fade.in{ role: 'alert' }
-    You have
-    = n_to_s(time_remaining)
-    minutes left to complete this workout.
+- if workout_score && !workout_score.closed?
+  - dl = workout_score.deadline
+  - if dl && dl > Time.zone.now
+    - deadline_str = dl.strftime('%Y-%m-%dT%H:%M:%S')
+    - server_now_str = Time.zone.now.strftime('%Y-%m-%dT%H:%M:%S')
+    #user-deadline{ style: 'display: none;', data: { deadline: deadline_str, server_now: server_now_str } }
+    #timer.alert.alert-warning.fade.in{ role: 'alert' }
+      Time remaining - ##:##
+    = javascript_include_tag('timeout')
