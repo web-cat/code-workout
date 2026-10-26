@@ -491,7 +491,7 @@ Rails.application.routes.draw do
     get ':course_id/:term_id/:workout_offering_id/review/:review_user_id/:id' => 'exercises#practice', as: :workout_offering_exercise_review
     get ':course_id/:term_id/:id' => 'workout_offerings#show', as: :workout_offering
     get ':course_id/:term_id/review/:review_user_id/:id' => 'workout_offerings#review', as: :workout_offering_review
-    post ':id/:term_id/generate_gradebook/' => 'courses#generate_gradebook', as: :course_gradebook
+    match ':id/:term_id/generate_gradebook/' => 'courses#generate_gradebook', via: [:get, :post], as: :course_gradebook
     get ':id(/:term_id)' => 'courses#show', as: :course
   end
 
@@ -509,7 +509,7 @@ Rails.application.routes.draw do
     delete 'unenroll' => :unenroll, as: :unenroll
     get 'upload_roster' => 'upload_roster#index', as: :upload_roster
     post 'upload_roster/upload' => 'upload_roster#upload', as: :upload_roster_upload
-    post 'generate_gradebook' => :generate_gradebook, as: :gradebook
+    match 'generate_gradebook' => :generate_gradebook, via: [:get, :post], as: :gradebook
     post 'add_workout/:workout_name' => 'course_offerings#add_workout', as: :add_workout
     post 'store_workout/:id' => :store_workout, as: :store_workout
     get '/search_enrolled_users' => :search_enrolled_users, as: :search_enrolled_users

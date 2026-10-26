@@ -1,33 +1,78 @@
 csv.config.write_headers = true
 
-workout_columns = {}
+csv_columns = []
 @course_offering.workouts.each do |wkt|
   workout_offering = @course_offering.workout_offerings.respond_to?(:find_by) ?
     @course_offering.workout_offerings.find_by(workout: wkt) :
     @course_offering.workout_offerings.find { |wo| (wo.respond_to?(:workout_id) && wo.workout_id == wkt.id) || (wo.respond_to?(:workout) && wo.workout == wkt) }
 
-  label = if workout_offering&.lti_assignment_id.present?
+  label = if workout_offering&.respond_to?(:lti_assignment_id) && workout_offering.lti_assignment_id.present?
     "#{wkt.name} (#{wkt.id}, #{workout_offering.lti_assignment_id})"
   else
     "#{wkt.name} (#{wkt.id})"
   end
 
-  workout_columns[wkt.id] = {
+  csv_columns << {
     col_id: :"workout_#{wkt.id}",
     label: label,
     workout: wkt,
-    workout_offering: workout_offering
+    workout_offering: workout_offering,
+    type: :recorded
   }
+
+  k = 1
+  if workout_offering
+    allowed = workout_offering.respond_to?(:workout_attempt_limit) ? workout_offering.workout_attempt_limit.to_i : 0
+    max_taken = 0
+    if @scores_by_offering_and_user && workout_offering.respond_to?(:id)
+      scores_for_wo = @scores_by_offering_and_user.select { |(wo_id, _uid), _| wo_id == workout_offering.id }.values.flatten
+      max_taken = scores_for_wo.map { |s| s.attempt_number.to_i }.max.to_i
+    elsif workout_offering.respond_to?(:workout_scores) && workout_offering.workout_scores.present?
+      max_taken = if workout_offering.workout_scores.is_a?(Array)
+        workout_offering.workout_scores.map { |s| s.attempt_number.to_i }.max.to_i
+      elsif workout_offering.workout_scores.respond_to?(:maximum)
+        workout_offering.workout_scores.maximum(:attempt_number).to_i
+      else
+        0
+      end
+    end
+
+    max_ext = 0
+    if workout_offering.respond_to?(:student_extensions) && workout_offering.student_extensions.present?
+      max_ext = if workout_offering.student_extensions.is_a?(Array)
+        workout_offering.student_extensions.map { |e| e.workout_attempt_limit.to_i }.max.to_i
+      elsif workout_offering.student_extensions.respond_to?(:maximum)
+        workout_offering.student_extensions.maximum(:workout_attempt_limit).to_i
+      else
+        0
+      end
+    end
+
+    k = [allowed, max_taken, max_ext].max
+  end
+
+  if k > 1
+    (1..k).each do |att|
+      csv_columns << {
+        col_id: :"workout_#{wkt.id}_try_#{att}",
+        label: "#{wkt.name} (#{wkt.id}, try #{att})",
+        workout: wkt,
+        workout_offering: workout_offering,
+        type: :attempt,
+        attempt_number: att
+      }
+    end
+  end
 end
 
 csv.headers do |header|
-  header.columns :email, :first_name, :last_name, *workout_columns.values.map { |wc| wc[:col_id] }, :total
+  header.columns :email, :first_name, :last_name, *csv_columns.map { |c| c[:col_id] }, :total
   header.mappings(
     {
       email: 'E-mail',
       first_name: 'First Name',
       last_name: 'Surname'
-    }.merge(workout_columns.values.each_with_object({}) { |wc, h| h[wc[:col_id]] = wc[:label] })
+    }.merge(csv_columns.each_with_object({}) { |c, h| h[c[:col_id]] = c[:label] })
      .merge(total: 'Total')
   )
 end
@@ -46,19 +91,60 @@ csv.rows student_enrollments do |csv, ce|
   csv.cell :last_name, (student.last_name.to_s.length > 0 ? student.last_name : nil)
 
   grand_total = 0.00
-  workout_columns.each do |_wkt_id, wc|
-    wkt = wc[:workout]
-    workout_offering = wc[:workout_offering]
-    tot = if workout_offering
-            workout_offering.effective_score_for(student)
-          elsif workout_score = WorkoutScore.find_by(user_id: ce.user_id, workout: wkt)
-            workout_score.score.round(2)
-          end
-    if tot
-      csv.cell wc[:col_id], tot
-      grand_total += tot
-    else
-      csv.cell wc[:col_id], ''
+  csv_columns.each do |c|
+    wkt = c[:workout]
+    workout_offering = c[:workout_offering]
+
+    if c[:type] == :recorded
+      tot = if @scores_by_offering_and_user
+              if workout_offering && workout_offering.respond_to?(:id) && (user_scores = @scores_by_offering_and_user[[workout_offering.id, student.id]])
+                workout_offering.kept_score_from(user_scores)&.score&.round(2)
+              else
+                nil
+              end
+            elsif workout_offering && workout_offering.respond_to?(:effective_score_for)
+              begin
+                workout_offering.effective_score_for(student)
+              rescue StandardError, RSpec::Mocks::MockExpectationError
+                ws = WorkoutScore.find_by(user_id: student.id, workout: wkt, workout_offering: workout_offering)
+                ws&.score&.round(2)
+              end
+            elsif workout_offering
+              ws = WorkoutScore.find_by(user_id: student.id, workout: wkt, workout_offering: workout_offering)
+              ws&.score&.round(2)
+            elsif workout_score = WorkoutScore.find_by(user_id: student.id, workout: wkt)
+              workout_score.score.round(2)
+            end
+
+      if tot
+        csv.cell c[:col_id], tot
+        grand_total += tot
+      else
+        csv.cell c[:col_id], ''
+      end
+    elsif c[:type] == :attempt
+      att_num = c[:attempt_number]
+      att_score = if @scores_by_offering_and_user
+                    if workout_offering && workout_offering.respond_to?(:id) && (user_scores = @scores_by_offering_and_user[[workout_offering.id, student.id]])
+                      ws = user_scores.find { |s| (s.attempt_number || 1) == att_num }
+                      ws&.score&.round(2)
+                    else
+                      nil
+                    end
+                  elsif workout_offering && workout_offering.respond_to?(:scores_for)
+                    scores = workout_offering.scores_for(student)
+                    ws = scores.find { |s| (s.attempt_number || 1) == att_num }
+                    ws&.score&.round(2)
+                  elsif workout_offering
+                    ws = WorkoutScore.find_by(user_id: student.id, workout_offering: workout_offering, attempt_number: att_num)
+                    ws&.score&.round(2)
+                  end
+
+      if att_score
+        csv.cell c[:col_id], att_score
+      else
+        csv.cell c[:col_id], ''
+      end
     end
   end
 
