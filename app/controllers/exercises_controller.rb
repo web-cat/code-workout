@@ -648,9 +648,9 @@ class ExercisesController < ApplicationController
       current_user.global_role.andand.is_admin? ||
       @workout_offering.andand.course_offering.andand.is_staff?(current_user)
     )
-    @is_staff_review = params[:review_user_id].present? && is_staff
+    @is_staff_review = params[:review_user_id].present? && is_staff && (params[:review_user_id].to_s != current_user.id.to_s)
 
-    if params[:review_user_id].present? && !is_staff
+    if params[:review_user_id].present? && !is_staff && (params[:review_user_id].to_s != current_user.id.to_s)
       redirect_to root_path, alert: 'You are not authorized to review other users.' and return
     end
 
@@ -797,31 +797,30 @@ class ExercisesController < ApplicationController
 
     @msg = nil
     @user_deadline = nil
-    student_review = false
+    @student_review = false
     if @is_staff_review
-      student_review = true
+      @student_review = true
+    elsif @workout_score.andand.closed?
+      @msg = 'The time limit has passed. This assignment is closed and no ' +
+        'longer accepting submissions.'
+      @student_review = true
     elsif @user_time_limit
-      if @workout_score.andand.closed?
-        @msg = 'The time limit has passed. This assignment is closed and no ' +
-          'longer accepting submissions.'
-        student_review = true
-      else
-        start_time = @workout_score ? @workout_score.started_at : Time.zone.now
-        @user_deadline = start_time + @user_time_limit.minutes
-        if @workout_offering.hard_deadline_for(current_user)
-          @user_deadline = [@user_deadline,
-            @workout_offering.hard_deadline_for(current_user)].min
-        end
-        @user_deadline = @user_deadline.to_s
-        @user_deadline = @user_deadline.split(" ")[0] + "T" + @user_deadline.split(" ")[1]
-        @server_now = Time.zone.now.to_s
-        @server_now = @server_now.split(" ")[0] + "T" + @server_now.split(" ")[1]
-        @msg = 'Time remaining - ##:##'
+      start_time = @workout_score ? @workout_score.started_at : Time.zone.now
+      @user_deadline = start_time + @user_time_limit.minutes
+      if @workout_offering.hard_deadline_for(current_user)
+        @user_deadline = [@user_deadline,
+          @workout_offering.hard_deadline_for(current_user)].min
       end
+      @user_deadline = @user_deadline.to_s
+      @user_deadline = @user_deadline.split(" ")[0] + "T" + @user_deadline.split(" ")[1]
+      @server_now = Time.zone.now.to_s
+      @server_now = @server_now.split(" ")[0] + "T" + @server_now.split(" ")[1]
+      @msg = 'Time remaining - ##:##'
     elsif @workout_offering && !@workout_offering.andand.can_be_practiced_by?(current_user)
       @msg = 'This assignment is now closed and no longer accepting submissions.'
-      student_review = true
+      @student_review = true
     end
+    student_review = @student_review
 
     # display the scored attempt if in review mode (for students or instructors)
     if @workout_score

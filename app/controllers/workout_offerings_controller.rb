@@ -476,7 +476,20 @@ class WorkoutOfferingsController < ApplicationController
         end
 
         if @workout_score.andand.closed?
-          if @workout_offering.can_start_new_attempt?(current_user)
+          policy = @workout_offering.workout_policy
+          can_review = (policy.nil? || policy.see_answers != false) &&
+            (!policy.andand.no_review_before_close || @workout_offering.shutdown?)
+          if ex1.present? && can_review
+            redirect_to organization_workout_offering_exercise_path(
+              id: ex1.id,
+              organization_id: @workout_offering.course_offering.course.organization.slug,
+              course_id: @workout_offering.course_offering.course.slug,
+              term_id: @workout_offering.course_offering.term.slug,
+              workout_offering_id: @workout_offering.id,
+              workout_score_id: @workout_score.id,
+              lti_launch: @lti_launch
+            ) and return
+          elsif @workout_offering.can_start_new_attempt?(current_user)
             redirect_to organization_workout_offering_path(
               organization_id: @workout_offering.course_offering.course.organization.slug,
               course_id: @workout_offering.course_offering.course.slug,

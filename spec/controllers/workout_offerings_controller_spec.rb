@@ -596,6 +596,34 @@ RSpec.describe WorkoutOfferingsController, type: :controller do
         ))
         expect(flash[:notice]).to eq('You have completed all allowed attempts for this workout.')
       end
+
+      it "redirects to exercise review path when score is closed, exercise is specified, and review is allowed" do
+        closed_score = double('WorkoutScore', id: 301, closed?: true)
+        exercise = double('Exercise', id: 45)
+        allow(workout_offering).to receive(:ip_allowed?).and_return(true)
+        allow(workout_offering).to receive(:user_agent_allowed?).and_return(true)
+        allow(workout_offering).to receive(:workout_policy).and_return(WorkoutPolicy.new(see_answers: true, no_review_before_close: false))
+        allow(WorkoutScore).to receive(:find_by).with(id: '301').and_return(closed_score)
+        allow(Exercise).to receive(:find_by).with(id: '45').and_return(exercise)
+
+        get :practice, params: {
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          id: '201',
+          exercise_id: '45',
+          workout_score_id: '301'
+        }
+
+        expect(response).to redirect_to(organization_workout_offering_exercise_path(
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          workout_offering_id: '201',
+          id: 45,
+          workout_score_id: 301
+        ))
+      end
     end
 
     describe "GET #error" do

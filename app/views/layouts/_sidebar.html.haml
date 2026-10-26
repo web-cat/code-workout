@@ -5,7 +5,7 @@
   = render partial: 'exercises/find_exercises_to_add'
 - elsif user_signed_in? && (workout_score || workout_offering)
   = render partial: 'workouts/status',
-    locals: { workout_score: workout_score, workout_offering: workout_offering, review: params[:review_user_id].present? }
+    locals: { workout_score: workout_score, workout_offering: workout_offering, review: (params[:review_user_id].present? || @student_review || workout_score.andand.closed?) }
 - elsif user_signed_in? && session[:leaf_exercises]
   = render Exercise.where(id: session[:leaf_exercises]),
     user: user, size: 'sm'

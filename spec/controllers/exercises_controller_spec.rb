@@ -488,4 +488,84 @@ describe ExercisesController do
       expect(response.body).to include("workout_score_id=7")
     end
   end
+
+  describe "Student review of workout attempts" do
+    let(:user) { FactoryBot.build_stubbed(:user, id: 10) }
+    let(:other_user) { FactoryBot.build_stubbed(:user, id: 20) }
+    let(:exercise_version) { FactoryBot.build_stubbed(:exercise_version, id: 101) }
+    let(:exercise) { FactoryBot.build_stubbed(:exercise, id: 1, current_version: exercise_version, current_version_id: 101) }
+    let(:workout) { FactoryBot.build_stubbed(:workout, id: 5) }
+    let(:workout_policy) { WorkoutPolicy.new(see_answers: true, no_review_before_close: false) }
+    let(:course_offering) { FactoryBot.build_stubbed(:course_offering, id: 101) }
+    let(:workout_offering) do
+      FactoryBot.build_stubbed(
+        :workout_offering,
+        id: 201,
+        workout: workout,
+        course_offering: course_offering,
+        workout_policy: workout_policy
+      )
+    end
+    let(:scoring_attempt) { double('Attempt', id: 55, exercise_version_id: 101, user: user) }
+    let(:workout_score) do
+      FactoryBot.build_stubbed(
+        :workout_score,
+        id: 7,
+        workout: workout,
+        workout_offering: workout_offering,
+        user: user
+      )
+    end
+
+    before do
+      allow(workout_score).to receive(:closed?).and_return(true)
+      allow(controller).to receive(:current_user).and_return(user)
+      allow(Exercise).to receive(:find).with('1').and_return(exercise)
+      allow(Exercise).to receive(:find_by).with(id: '1').and_return(exercise)
+      allow(exercise_version).to receive(:exercise).and_return(exercise)
+      allow(exercise_version).to receive(:image_processing).and_return(true)
+      allow(exercise_version).to receive(:file_processing).and_return([])
+      allow(controller).to receive(:authorize!).and_return(true)
+      allow(ActivityLog).to receive(:create).and_return(true)
+      allow(WorkoutOffering).to receive(:find_by).with(id: '201').and_return(workout_offering)
+      allow(WorkoutOffering).to receive(:find).with('201').and_return(workout_offering)
+      allow(workout_offering).to receive(:time_limit_for).and_return(30)
+      allow(workout_offering).to receive(:ip_allowed?).and_return(true)
+      allow(workout_offering).to receive(:user_agent_allowed?).and_return(true)
+      allow(WorkoutScore).to receive(:find_by).with(id: '7').and_return(workout_score)
+      allow(WorkoutScore).to receive_message_chain(:includes, :find).and_return(workout_score)
+      allow(workout_score).to receive(:attempts_left_for_exercise_version).and_return(0)
+      allow(workout_score).to receive(:scoring_attempt_for).with(exercise).and_return(scoring_attempt)
+      allow(workout_score).to receive(:scored_attempts).and_return([scoring_attempt])
+      allow(workout_score).to receive(:workout_score_exercises).and_return(double(any?: false))
+      allow(workout_score).to receive(:points_for).and_return(10.0)
+    end
+
+    it "allows a student to review their own attempt without staff authorization error" do
+      allow(User).to receive(:find).with('10').and_return(user)
+
+      get :practice, params: { id: '1', workout_offering_id: '201', review_user_id: '10', workout_score_id: '7' }
+
+      expect(response.status).to eq(200)
+      expect(controller.instance_variable_get(:@student_review)).to be(true)
+      expect(controller.instance_variable_get(:@attempt)).to eq(scoring_attempt)
+    end
+
+    it "redirects unauthorized student trying to review another user" do
+      allow(User).to receive(:find).with('20').and_return(other_user)
+
+      get :practice, params: { id: '1', workout_offering_id: '201', review_user_id: '20', workout_score_id: '7' }
+
+      expect(response).to redirect_to(root_path)
+      expect(flash[:alert]).to include("You are not authorized to review other users.")
+    end
+
+    it "sets @student_review to true when viewing a closed workout score via exercise practice path" do
+      get :practice, params: { id: '1', workout_offering_id: '201', workout_score_id: '7' }
+
+      expect(response.status).to eq(200)
+      expect(controller.instance_variable_get(:@student_review)).to be(true)
+      expect(controller.instance_variable_get(:@attempt)).to eq(scoring_attempt)
+    end
+  end
 end

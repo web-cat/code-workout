@@ -26,7 +26,7 @@ describe "workouts/show", type: :view do
     allow(view).to receive(:url_for).and_return('/workouts/1')
     stub_template 'layouts/_breadcrumb.html.haml' => ''
     stub_template 'workout_scores/_time_remaining.html.haml' => ''
-    stub_template 'exercises/_exercise.html.haml' => '<div class="exercise-thumbnail">Exercise</div>'
+    stub_template 'exercises/_exercise.html.haml' => '<div class="exercise-thumbnail" data-start-workout="#{local_assigns[:start_workout]}" data-review="#{local_assigns[:review]}">Exercise</div>'
 
     assign(:workout, workout)
     assign(:workout_offering, workout_offering)
@@ -131,6 +131,86 @@ describe "workouts/show", type: :view do
       assign(:exs, [])
       render
       expect(rendered).to include("No exercises in this workout")
+    end
+  end
+
+  context "when attempt state determines thumbnail review vs practice mode" do
+    let(:closed_score) { double("WorkoutScore", id: 10, closed?: true, score: 8, show_score?: true, updated_at: Time.current, attempt_number: 1, workout_score_exercises: []) }
+    let(:active_score) { double("WorkoutScore", id: 11, closed?: false, score: 2, show_score?: true, updated_at: Time.current, attempt_number: 2, workout_score_exercises: []) }
+
+    before do
+      workout_offering.workout_policy = WorkoutPolicy.new(see_answers: true, no_review_before_close: false)
+    end
+
+    it "renders thumbnails with review: true and start_workout: false when previous attempt is closed and review allowed" do
+      assign(:past_scores, [closed_score])
+      assign(:workout_score, closed_score)
+      assign(:active_score, nil)
+      assign(:can_retake, true)
+
+      render
+      expect(rendered).to include('data-start-workout="false"')
+      expect(rendered).to include('data-review="true"')
+    end
+
+    it "renders thumbnails with start_workout: true and review: false when an active attempt exists" do
+      assign(:past_scores, [closed_score])
+      assign(:workout_score, active_score)
+      assign(:active_score, active_score)
+      assign(:can_retake, false)
+
+      render
+      expect(rendered).to include('data-start-workout="true"')
+      expect(rendered).to include('data-review="false"')
+    end
+
+    it "renders thumbnails with start_workout: true and review: false when student has taken no attempts" do
+      assign(:past_scores, [])
+      assign(:workout_score, nil)
+      assign(:active_score, nil)
+      assign(:can_retake, true)
+
+      render
+      expect(rendered).to include('data-start-workout="true"')
+      expect(rendered).to include('data-review="false"')
+    end
+  end
+
+  context "Review Workout button visibility" do
+    let(:closed_score) { double("WorkoutScore", id: 10, closed?: true, score: 8, show_score?: true, started_at: Time.current, last_attempted_at: Time.current, updated_at: Time.current, attempt_number: 1, workout_score_exercises: []) }
+
+    before do
+      workout_offering.workout_policy = WorkoutPolicy.new(see_answers: true, no_review_before_close: false)
+      assign(:past_scores, [closed_score])
+      assign(:workout_score, closed_score)
+      assign(:active_score, nil)
+      assign(:can_retake, false)
+    end
+
+    it "does not display 'Review Workout' button for students" do
+      assign(:is_staff, false)
+      assign(:manages_course, false)
+
+      render
+      expect(rendered).not_to include("Review Workout")
+    end
+
+    it "displays 'Review Workout' button for course staff" do
+      assign(:is_staff, true)
+      assign(:manages_course, true)
+
+      render
+      expect(rendered).to include("Review Workout")
+    end
+
+    it "does not display 'Review Workout' button when staff previews as student" do
+      assign(:is_staff, false)
+      assign(:manages_course, false)
+      assign(:can_view_as_student, true)
+      assign(:as_student, true)
+
+      render
+      expect(rendered).not_to include("Review Workout")
     end
   end
 end
