@@ -1,0 +1,70 @@
+- workout ||= @workout
+- workout_offering ||= @workout_offering
+- course_offering ||= workout_offering.andand.course_offering
+- review_user ||= current_user
+- kept_score = workout_offering ? workout_offering.kept_workout_score_for(review_user) : nil
+- is_admin = current_user ? current_user.global_role.is_admin? : false
+- is_staff = local_assigns[:is_staff].nil? ? (is_admin || (course_offering && course_offering.is_staff?(current_user))) : local_assigns[:is_staff]
+- manages_course = local_assigns[:manages_course].nil? ? (is_admin || (course_offering && course_offering.is_manager?(current_user))) : local_assigns[:manages_course]
+- current_score = local_assigns[:current_score]
+
+%h3 Attempt History
+%table.table.table-striped.table-bordered{ style: 'width: auto; min-width: 60%;' }
+  %thead
+    %tr
+      %th Attempt
+      %th Started
+      %th Last Attempt
+      %th Finished
+      %th Score
+      - if is_staff || is_admin
+        %th Action
+  %tbody
+    - if scores.blank?
+      %tr
+        %td{ colspan: (is_staff || is_admin) ? 6 : 5 } No attempts recorded.
+    - else
+      - scores.each do |score|
+        - is_kept = (kept_score && kept_score.id == score.id)
+        - is_current_review = (current_score && current_score.id == score.id)
+        %tr{ class: ('info' if is_current_review) }
+          %td
+            - if is_current_review
+              %i.fa.fa-arrow-right{ style: 'color: #337ab7; margin-right: 2px;', title: 'Currently reviewing' }
+              &nbsp;
+            = score.attempt_number
+            - if is_kept && (score.show_score? || is_staff || is_admin)
+              %span.label.label-success{ style: 'margin-left: 8px;' } Score
+          %td
+            = score.started_at ? l(user_time(current_user, score.started_at)) : '-'
+          %td
+            = score.last_attempted_at ? l(user_time(current_user, score.last_attempted_at)) : '-'
+          %td
+            - if score.closed?
+              = l(user_time(current_user, score.updated_at))
+            - else
+              %span.label.label-info In Progress
+          %td
+            - if score.show_score? || is_staff || is_admin
+              = "#{score.score} / #{workout.total_points}"
+            - else
+              hidden
+          - if is_staff || is_admin
+            %td
+              - has_action = false
+              - if is_current_review
+                %span.text-muted Reviewing
+                - has_action = true
+              - elsif !score.closed? && review_user == current_user
+                = link_to 'Resume', organization_workout_offering_practice_path(organization_id: workout_offering.course_offering.course.organization.slug, course_id: workout_offering.course_offering.course.slug, term_id: workout_offering.course_offering.term.slug, id: workout_offering.id, workout_score_id: score.id), class: 'btn btn-xs btn-primary'
+                - has_action = true
+              - elsif manages_course || (workout_offering.can_be_seen_by?(current_user) && !workout_offering.andand.workout_policy.andand.no_review_before_close)
+                = link_to 'Review', organization_workout_offering_review_path(organization_id: workout_offering.course_offering.course.organization.slug, course_id: workout_offering.course_offering.course.slug, term_id: workout_offering.course_offering.term.slug, id: workout_offering.id, review_user_id: review_user.id, workout_score_id: score.id), class: 'btn btn-xs btn-default'
+                - has_action = true
+              - if (is_staff || is_admin) && course_offering
+                - if has_action
+                  &nbsp;
+                = link_to 'View Log', organization_workout_offering_activity_log_path(id: workout_offering.id, workout_score_id: score.id, organization_id: course_offering.course.organization.slug, course_id: course_offering.course.slug, term_id: course_offering.term.slug), class: 'btn btn-xs btn-info'
+                - has_action = true
+              - unless has_action
+                \-

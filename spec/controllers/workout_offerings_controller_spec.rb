@@ -404,64 +404,15 @@ RSpec.describe WorkoutOfferingsController, type: :controller do
       allow(course_offering).to receive(:is_enrolled?).with(student).and_return(true)
       allow(workout_offering).to receive(:score_for).with(student).and_return(nil)
       allow(controller).to receive(:authorize!).and_return(true)
+      allow(ActivityLog).to receive(:create).and_return(true)
     end
 
     describe "GET #show" do
-      it "blocks access and logs activity when client IP is not allowed" do
-        allow(workout_offering).to receive(:ip_allowed?).with('10.0.0.1', student, nil).and_return(false)
-
-        expect(ActivityLog).to receive(:create).with(hash_including(
-          user: student,
-          workout_offering: workout_offering,
-          activity: 'workout_view_ip_blocked',
-          ip_address: '10.0.0.1'
-        ))
+      it "permits access to show workout status and review even when client IP or browser is restricted" do
+        allow(workout_offering).to receive(:ip_allowed?).and_return(false)
+        allow(workout_offering).to receive(:user_agent_allowed?).and_return(false)
 
         request.env['REMOTE_ADDR'] = '10.0.0.1'
-        get :show, params: {
-          organization_id: 'vt',
-          course_id: 'cs1114',
-          term_id: 'fall2026',
-          id: '201'
-        }
-
-        expect(response.status).to eq(200)
-        expect(controller.instance_variable_get(:@message)).to include("10.0.0.1")
-      end
-
-      it "permits access and logs workout_view when client IP is allowed" do
-        allow(workout_offering).to receive(:ip_allowed?).with('192.168.1.50', student, nil).and_return(true)
-
-        expect(ActivityLog).to receive(:create).with(hash_including(
-          user: student,
-          workout_offering: workout_offering,
-          activity: 'workout_view',
-          ip_address: '192.168.1.50'
-        ))
-
-        request.env['REMOTE_ADDR'] = '192.168.1.50'
-        get :show, params: {
-          organization_id: 'vt',
-          course_id: 'cs1114',
-          term_id: 'fall2026',
-          id: '201'
-        }
-
-        expect(response.status).to eq(200)
-        expect(controller.instance_variable_get(:@message)).to be_nil
-      end
-
-      it "blocks workout view and logs activity when browser user agent is not allowed" do
-        allow(workout_offering).to receive(:ip_allowed?).and_return(true)
-        allow(workout_offering).to receive(:user_agent_allowed?).with('DisallowedBrowser/1.0', student, nil).and_return(false)
-
-        expect(ActivityLog).to receive(:create).with(hash_including(
-          user: student,
-          workout_offering: workout_offering,
-          activity: 'workout_view_user_agent_blocked',
-          user_agent: 'DisallowedBrowser/1.0'
-        ))
-
         request.env['HTTP_USER_AGENT'] = 'DisallowedBrowser/1.0'
         get :show, params: {
           organization_id: 'vt',
@@ -471,7 +422,7 @@ RSpec.describe WorkoutOfferingsController, type: :controller do
         }
 
         expect(response.status).to eq(200)
-        expect(controller.instance_variable_get(:@message)).to include("requires a specific browser")
+        expect(controller.instance_variable_get(:@message)).to be_nil
       end
     end
 
@@ -520,6 +471,103 @@ RSpec.describe WorkoutOfferingsController, type: :controller do
         expect(response.status).to eq(200)
         expect(controller.instance_variable_get(:@message)).to include("requires a specific browser")
       end
+
+      it "does not create a WorkoutScore when IP is not allowed" do
+        allow(workout_offering).to receive(:ip_allowed?).and_return(false)
+        expect(WorkoutScore).not_to receive(:new)
+        expect(WorkoutScore).not_to receive(:create!)
+
+        get :practice, params: {
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          id: '201'
+        }
+      end
+
+      it "does not create a WorkoutScore when user agent is not allowed" do
+        allow(workout_offering).to receive(:ip_allowed?).and_return(true)
+        allow(workout_offering).to receive(:user_agent_allowed?).and_return(false)
+        expect(WorkoutScore).not_to receive(:new)
+        expect(WorkoutScore).not_to receive(:create!)
+
+        get :practice, params: {
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          id: '201'
+        }
+      end
+
+      it "does not create a WorkoutScore and redirects when opening date has not arrived" do
+        allow(workout_offering).to receive(:ip_allowed?).and_return(true)
+        allow(workout_offering).to receive(:user_agent_allowed?).and_return(true)
+        allow(workout_offering).to receive(:opening_date_for).with(student).and_return(2.days.from_now)
+        expect(WorkoutScore).not_to receive(:new)
+        expect(WorkoutScore).not_to receive(:create!)
+
+        get :practice, params: {
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          id: '201'
+        }
+
+        expect(response).to redirect_to(organization_workout_offering_path(
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          id: '201'
+        ))
+        expect(flash[:notice]).to eq('This workout is not yet open for practice.')
+      end
+
+      it "does not create a WorkoutScore and redirects when hard deadline has passed" do
+        allow(workout_offering).to receive(:ip_allowed?).and_return(true)
+        allow(workout_offering).to receive(:user_agent_allowed?).and_return(true)
+        allow(workout_offering).to receive(:hard_deadline_for).with(student).and_return(2.days.ago)
+        expect(WorkoutScore).not_to receive(:new)
+        expect(WorkoutScore).not_to receive(:create!)
+
+        get :practice, params: {
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          id: '201'
+        }
+
+        expect(response).to redirect_to(organization_workout_offering_path(
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          id: '201'
+        ))
+        expect(flash[:notice]).to eq('The deadline has passed for this workout.')
+      end
+
+      it "does not create a WorkoutScore and redirects when attempts are exhausted" do
+        allow(workout_offering).to receive(:ip_allowed?).and_return(true)
+        allow(workout_offering).to receive(:user_agent_allowed?).and_return(true)
+        allow(workout_offering).to receive(:attempts_taken_for).with(student).and_return(2)
+        allow(workout_offering).to receive(:attempts_left_for).with(student).and_return(0)
+        expect(WorkoutScore).not_to receive(:new)
+        expect(WorkoutScore).not_to receive(:create!)
+
+        get :practice, params: {
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          id: '201'
+        }
+
+        expect(response).to redirect_to(organization_workout_offering_path(
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          id: '201'
+        ))
+        expect(flash[:notice]).to eq('You have completed all allowed attempts for this workout.')
+      end
     end
 
     describe "GET #error" do
@@ -535,6 +583,207 @@ RSpec.describe WorkoutOfferingsController, type: :controller do
         expect(response.status).to eq(200)
         expect(controller.instance_variable_get(:@message)).to eq('Custom network location error')
       end
+    end
+
+    describe "POST #start_attempt" do
+      let(:first_exercise) { FactoryBot.build_stubbed(:exercise, id: 55) }
+
+      before do
+        allow(workout).to receive(:first_exercise).and_return(first_exercise)
+        allow(workout.exercises).to receive(:count).and_return(3)
+        allow(workout_offering).to receive(:ip_allowed?).and_return(true)
+        allow(workout_offering).to receive(:user_agent_allowed?).and_return(true)
+      end
+
+      it "creates a subsequent WorkoutScore with incremented attempt_number and redirects to first exercise" do
+        allow(workout_offering).to receive(:can_start_new_attempt?).with(student).and_return(true)
+        allow(workout_offering).to receive(:active_score_for).with(student).and_return(nil)
+        allow(workout_offering).to receive(:attempts_taken_for).with(student).and_return(1)
+        allow(workout_offering).to receive(:attempts_left_for).with(student).and_return(1)
+
+        expect(WorkoutScore).to receive(:create!).with(hash_including(
+          user: student,
+          workout_offering: workout_offering,
+          workout: workout,
+          attempt_number: 2
+        )).and_return(double('WorkoutScore', id: 302))
+
+        post :start_attempt, params: {
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          id: '201'
+        }
+
+        expect(response).to redirect_to(organization_workout_offering_exercise_path(
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          workout_offering_id: '201',
+          workout_score_id: 302,
+          id: 55
+        ))
+      end
+
+      it "redirects to workout offering path with alert if can_start_new_attempt? is false" do
+        allow(workout_offering).to receive(:can_start_new_attempt?).with(student).and_return(false)
+
+        post :start_attempt, params: {
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          id: '201'
+        }
+
+        expect(response).to redirect_to(organization_workout_offering_path(
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          id: '201'
+        ))
+        expect(flash[:alert]).to include('cannot start a new attempt')
+      end
+
+      it "does not create a WorkoutScore when IP is not allowed" do
+        allow(workout_offering).to receive(:ip_allowed?).and_return(false)
+        expect(WorkoutScore).not_to receive(:new)
+        expect(WorkoutScore).not_to receive(:create!)
+
+        post :start_attempt, params: {
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          id: '201'
+        }
+
+        expect(response.status).to eq(200)
+        expect(controller.instance_variable_get(:@message)).to include("network location")
+      end
+
+      it "does not create a WorkoutScore when user agent is not allowed" do
+        allow(workout_offering).to receive(:ip_allowed?).and_return(true)
+        allow(workout_offering).to receive(:user_agent_allowed?).and_return(false)
+        expect(WorkoutScore).not_to receive(:new)
+        expect(WorkoutScore).not_to receive(:create!)
+
+        post :start_attempt, params: {
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          id: '201'
+        }
+
+        expect(response.status).to eq(200)
+        expect(controller.instance_variable_get(:@message)).to include("requires a specific browser")
+      end
+
+      it "does not create a WorkoutScore and redirects when opening date has not arrived" do
+        allow(workout_offering).to receive(:ip_allowed?).and_return(true)
+        allow(workout_offering).to receive(:user_agent_allowed?).and_return(true)
+        allow(workout_offering).to receive(:opening_date_for).with(student).and_return(2.days.from_now)
+        expect(WorkoutScore).not_to receive(:new)
+        expect(WorkoutScore).not_to receive(:create!)
+
+        post :start_attempt, params: {
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          id: '201'
+        }
+
+        expect(response).to redirect_to(organization_workout_offering_path(
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          id: '201'
+        ))
+        expect(flash[:notice]).to eq('This workout is not yet open for practice.')
+      end
+
+      it "does not create a WorkoutScore and redirects when hard deadline has passed" do
+        allow(workout_offering).to receive(:ip_allowed?).and_return(true)
+        allow(workout_offering).to receive(:user_agent_allowed?).and_return(true)
+        allow(workout_offering).to receive(:hard_deadline_for).with(student).and_return(2.days.ago)
+        expect(WorkoutScore).not_to receive(:new)
+        expect(WorkoutScore).not_to receive(:create!)
+
+        post :start_attempt, params: {
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          id: '201'
+        }
+
+        expect(response).to redirect_to(organization_workout_offering_path(
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          id: '201'
+        ))
+        expect(flash[:notice]).to eq('The deadline has passed for this workout.')
+      end
+
+      it "does not create a WorkoutScore and redirects when attempts are exhausted" do
+        allow(workout_offering).to receive(:ip_allowed?).and_return(true)
+        allow(workout_offering).to receive(:user_agent_allowed?).and_return(true)
+        allow(workout_offering).to receive(:attempts_taken_for).with(student).and_return(1)
+        allow(workout_offering).to receive(:attempts_left_for).with(student).and_return(0)
+        expect(WorkoutScore).not_to receive(:new)
+        expect(WorkoutScore).not_to receive(:create!)
+
+        post :start_attempt, params: {
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          id: '201'
+        }
+
+        expect(response).to redirect_to(organization_workout_offering_path(
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          id: '201'
+        ))
+        expect(flash[:notice]).to eq('You have completed all allowed attempts for this workout.')
+      end
+    end
+  end
+
+  describe "GET #review" do
+    let(:organization) { FactoryBot.build_stubbed(:organization, slug: 'vt') }
+    let(:course) { FactoryBot.build_stubbed(:course, slug: 'cs1114', organization: organization) }
+    let(:term) { FactoryBot.build_stubbed(:term, slug: 'fall2026') }
+    let(:workout) { FactoryBot.build_stubbed(:workout, id: 10, name: 'Practice Workout') }
+    let(:course_offering) { FactoryBot.build_stubbed(:course_offering, id: 101, course: course, term: term) }
+    let(:workout_offering) { FactoryBot.build_stubbed(:workout_offering, id: 201, workout: workout, course_offering: course_offering) }
+    let(:student) { FactoryBot.build_stubbed(:user) }
+    let(:score1) { double('WorkoutScore', id: 301, attempt_number: 1, closed?: true, completed?: true, score: 10, started_at: Time.zone.now, updated_at: Time.zone.now, show_score?: true, scored_attempts: []) }
+    let(:score2) { double('WorkoutScore', id: 302, attempt_number: 2, closed?: true, completed?: true, score: 20, started_at: Time.zone.now, updated_at: Time.zone.now, show_score?: true, scored_attempts: []) }
+
+    before do
+      allow(controller).to receive(:current_user).and_return(student)
+      allow(controller).to receive(:authorize!).and_return(true)
+      allow(User).to receive(:find_by).and_return(student)
+      allow(WorkoutOffering).to receive(:find).with('201').and_return(workout_offering)
+      allow(WorkoutOffering).to receive(:find_by).with(id: '201').and_return(workout_offering)
+      allow(workout_offering).to receive(:scores_for).with(student).and_return([score1, score2])
+      allow(workout_offering).to receive(:kept_workout_score_for).with(student).and_return(score2)
+      allow(workout_offering).to receive(:latest_score_for).with(student).and_return(score2)
+    end
+
+    it "loads all scores and selects the requested attempt" do
+      get :review, params: {
+        organization_id: 'vt',
+        course_id: 'cs1114',
+        term_id: 'fall2026',
+        id: '201',
+        review_user_id: student.id,
+        workout_score_id: 301
+      }
+
+      expect(response.status).to eq(200)
+      expect(controller.instance_variable_get(:@all_scores)).to eq([score1, score2])
+      expect(controller.instance_variable_get(:@workout_score)).to eq(score1)
     end
   end
 end

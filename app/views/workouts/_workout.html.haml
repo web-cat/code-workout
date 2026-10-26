@@ -54,20 +54,21 @@
     - if !show_score
       = workout.name
     - else
+      - student_param = params[:student].present? ? { student: params[:student] } : {}
       - if course && term
         = link_to workout.name,
-            organization_course_workout_path(id: workout.id,
+            organization_course_workout_path({ id: workout.id,
             course_id: course.slug,
             term_id: term.slug,
-            organization_id: course.organization.slug)
+            organization_id: course.organization.slug }.merge(student_param))
       - elsif workout_offering
         = link_to workout.name,
-            organization_workout_offering_path(id: workout_offering.id,
+            organization_workout_offering_path({ id: workout_offering.id,
             course_id: workout_offering.course_offering.course.slug,
             term_id: workout_offering.course_offering.term.slug,
-            organization_id: workout_offering.course_offering.course.organization.slug)
+            organization_id: workout_offering.course_offering.course.organization.slug }.merge(student_param))
       - else
-        = link_to workout.name, workout_path(id: workout[:id])
+        = link_to workout.name, workout_path({ id: workout[:id] }.merge(student_param))
     %span.badge.badge-info= (workout.respond_to?(:exercise_workouts) && workout.exercise_workouts.loaded?) ? workout.exercise_workouts.size.to_s : workout.exercises.size.to_s
 
   .summary

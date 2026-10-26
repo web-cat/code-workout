@@ -80,4 +80,57 @@ describe WorkoutScore, type: :model do
       expect(ws.raw_last_user_agent).to be_nil
     end
   end
+
+  describe "attempt_number sequencing" do
+    let(:ws1) { WorkoutScore.new(user_id: 1, workout_offering_id: 20, workout_id: 5) }
+    let(:ws2) { WorkoutScore.new(user_id: 1, workout_offering_id: 20, workout_id: 5) }
+
+    it "defaults attempt_number to 1 for the first score" do
+      allow(WorkoutScore).to receive_message_chain(:where, :count).and_return(0)
+      ws1.set_attempt_number
+      expect(ws1.attempt_number).to eq(1)
+    end
+
+    it "automatically increments attempt_number for subsequent scores" do
+      allow(WorkoutScore).to receive_message_chain(:where, :count).and_return(1)
+      allow(WorkoutScore).to receive_message_chain(:where, :maximum).and_return(1)
+      ws2.set_attempt_number
+      expect(ws2.attempt_number).to eq(2)
+    end
+  end
+
+  describe "#update_lti" do
+    let(:user) { FactoryBot.build_stubbed(:user, id: 1) }
+    let(:lms_instance) { FactoryBot.build_stubbed(:lms_instance, consumer_key: 'key', consumer_secret: 'secret') }
+    let(:course_offering) { FactoryBot.build_stubbed(:course_offering, lms_instance: lms_instance) }
+    let(:workout_offering) { FactoryBot.build_stubbed(:workout_offering, course_offering: course_offering) }
+    let(:workout_score) do
+      FactoryBot.build_stubbed(
+        :workout_score,
+        user: user,
+        workout_offering: workout_offering,
+        workout_id: 10,
+        score: 40.0,
+        lis_outcome_service_url: 'https://canvas.example.edu/api/grade',
+        lis_result_sourcedid: '12345'
+      )
+    end
+
+    it "posts the offering effective_score_for rather than the attempt score" do
+      allow(workout_offering).to receive(:effective_score_for).with(user).and_return(95.0)
+      allow(ExerciseWorkout).to receive_message_chain(:where, :sum).and_return(100.0)
+
+      tp_mock = double('IMS::LTI::ToolProvider')
+      expect(IMS::LTI::ToolProvider).to receive(:new).with(
+        'key',
+        'secret',
+        hash_including('lis_outcome_service_url' => 'https://canvas.example.edu/api/grade', 'lis_result_sourcedid' => '12345')
+      ).and_return(tp_mock)
+
+      # Expect effective_score (95.0) / total (100.0) = 0.95, not attempt score (40.0)
+      expect(tp_mock).to receive(:post_replace_result!).with(0.95)
+
+      workout_score.update_lti
+    end
+  end
 end

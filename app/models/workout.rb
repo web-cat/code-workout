@@ -62,10 +62,9 @@ class Workout < ApplicationRecord
   accepts_nested_attributes_for :workout_offerings
 
   # -------------------------------------------------------------
-  # Returns the workout policy shared by all offerings of this workout.
-  # If offerings point to different policies, it returns the first one found.
+  # Returns the workout policy of the first offering of this workout, or the default.
   def workout_policy
-    workout_offerings.where.not(workout_policy_id: nil).first.andand.workout_policy
+    workout_offerings.first.andand.workout_policy || WorkoutPolicy.default
   end
 
 
@@ -421,11 +420,40 @@ class Workout < ApplicationRecord
       workout_offering.attempt_limit = common[:attempt_limit]
       workout_offering.published = common[:published]
 
+      if offering.key?('workout_attempt_limit') || offering.key?('workout_attempts') || offering.key?('attempts')
+        val = offering['workout_attempt_limit'] || offering['workout_attempts'] || offering['attempts']
+        workout_offering.workout_attempt_limit = val.present? ? val.to_i : nil
+      elsif common.key?(:workout_attempt_limit)
+        workout_offering.workout_attempt_limit = common[:workout_attempt_limit]
+      end
+
+      if offering.key?('workout_score_to_keep') || offering.key?('score_to_keep')
+        val = offering['workout_score_to_keep'] || offering['score_to_keep']
+        workout_offering.workout_score_to_keep = val.presence
+      elsif common.key?(:workout_score_to_keep) || common.key?(:score_to_keep)
+        val = common[:workout_score_to_keep] || common[:score_to_keep]
+        workout_offering.workout_score_to_keep = val.presence
+      end
+
       # update workout scores so they follow the new policy
-      if common[:most_recent].to_b != workout_offering.most_recent
-        workout_offering.most_recent = common[:most_recent]
-        workout_offering.save!
-        workout_offering.rescore_all
+      offering_exercise_score = if offering.key?('exercise_score_to_keep')
+                                  offering['exercise_score_to_keep']
+                                elsif offering.key?('most_recent')
+                                  offering['most_recent']
+                                elsif common.key?(:exercise_score_to_keep)
+                                  common[:exercise_score_to_keep]
+                                elsif common.key?(:most_recent)
+                                  common[:most_recent]
+                                end
+      if !offering_exercise_score.nil?
+        val = offering_exercise_score.in?([true, 'true', 'latest', :latest]) ? 'latest' : 'highest'
+        if workout_offering.new_record?
+          workout_offering.exercise_score_to_keep = val
+        elsif workout_offering.exercise_score_to_keep != val
+          workout_offering.exercise_score_to_keep = val
+          workout_offering.save!
+          workout_offering.rescore_all
+        end
       end
 
       if offering.key?('lms_assignment_url') || offering.key?('url')

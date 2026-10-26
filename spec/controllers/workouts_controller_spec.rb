@@ -181,6 +181,31 @@ describe WorkoutsController do
       expect(response.status).to eq(200)
       expect(controller.instance_variable_get(:@course_offerings)).to eq([mock_course_offering])
     end
+
+    it "populates @workout_attempt_limit, @workout_score_to_keep, and @exercise_score_to_keep from workout_offering" do
+      wo = double("WorkoutOffering",
+        time_limit: 45,
+        attempt_limit: 3,
+        published: true,
+        exercise_score_to_keep: 'highest',
+        workout_attempt_limit: 2,
+        workout_score_to_keep: 'latest',
+        workout_policy: nil
+      )
+      allow(mock_workout).to receive(:workout_offerings).and_return([wo])
+
+      get :clone, params: {
+        id: '100',
+        organization_id: 'vt',
+        course_id: 'cs1114',
+        term_id: 'fall2026'
+      }
+
+      expect(response.status).to eq(200)
+      expect(controller.instance_variable_get(:@workout_attempt_limit)).to eq(2)
+      expect(controller.instance_variable_get(:@workout_score_to_keep)).to eq('latest')
+      expect(controller.instance_variable_get(:@exercise_score_to_keep)).to eq('highest')
+    end
   end
 
   describe "GET #show" do
@@ -266,39 +291,54 @@ describe WorkoutsController do
         allow(mock_workout).to receive(:score_for).and_return(mock_score)
       end
 
-      it "blocks access and logs workout_view_ip_blocked when IP is disallowed" do
-        allow(mock_offering).to receive(:ip_allowed?).with('10.0.0.1', user, mock_score).and_return(false)
-
-        expect(ActivityLog).to receive(:create).with(hash_including(
-          user: user,
-          workout_offering: mock_offering,
-          activity: 'workout_view_ip_blocked',
-          ip_address: '10.0.0.1'
-        ))
+      it "permits access to show workout status and review even when client IP or browser is restricted" do
+        allow(mock_offering).to receive(:ip_allowed?).and_return(false)
+        allow(mock_offering).to receive(:user_agent_allowed?).and_return(false)
 
         request.env['REMOTE_ADDR'] = '10.0.0.1'
-        get :show, params: { id: 1 }
-
-        expect(response.status).to eq(200)
-        expect(controller.instance_variable_get(:@message)).to include("10.0.0.1")
-      end
-
-      it "blocks access and logs workout_view_user_agent_blocked when browser user agent is disallowed" do
-        allow(mock_offering).to receive(:ip_allowed?).and_return(true)
-        allow(mock_offering).to receive(:user_agent_allowed?).with('DisallowedBrowser/1.0', user, mock_score).and_return(false)
-
-        expect(ActivityLog).to receive(:create).with(hash_including(
-          user: user,
-          workout_offering: mock_offering,
-          activity: 'workout_view_user_agent_blocked',
-          user_agent: 'DisallowedBrowser/1.0'
-        ))
-
         request.env['HTTP_USER_AGENT'] = 'DisallowedBrowser/1.0'
         get :show, params: { id: 1 }
 
         expect(response.status).to eq(200)
-        expect(controller.instance_variable_get(:@message)).to include("requires a specific browser")
+        expect(controller.instance_variable_get(:@message)).to be_nil
+      end
+    end
+
+    context "when student query param is used" do
+      let(:mock_offering) { double("WorkoutOffering", id: 201) }
+      let(:user) { FactoryBot.build_stubbed(:user) }
+      let(:course_offering) { double("CourseOffering") }
+
+      before do
+        allow(controller).to receive(:current_user).and_return(user)
+        allow(mock_offering).to receive(:course_offering).and_return(course_offering)
+        allow(mock_offering).to receive(:ip_allowed?).and_return(true)
+        allow(mock_offering).to receive(:user_agent_allowed?).and_return(true)
+        allow(mock_offering).to receive(:scores_for).and_return([])
+        allow(mock_offering).to receive(:active_score_for).and_return(nil)
+        allow(mock_offering).to receive(:can_start_new_attempt?).and_return(true)
+        allow(mock_offering).to receive(:effective_score_for).and_return(0)
+        allow(mock_offering).to receive(:kept_workout_score_for).and_return(nil)
+        allow(mock_offering).to receive(:latest_score_for).and_return(nil)
+        controller.instance_variable_set(:@workout_offering, mock_offering)
+      end
+
+      it "sets @as_student to true when user is staff and student=true" do
+        allow(course_offering).to receive(:is_staff?).with(user).and_return(true)
+
+        get :show, params: { id: 1, student: 'true' }
+
+        expect(controller.instance_variable_get(:@can_view_as_student)).to be true
+        expect(controller.instance_variable_get(:@as_student)).to be true
+      end
+
+      it "does not allow non-staff to set @as_student" do
+        allow(course_offering).to receive(:is_staff?).with(user).and_return(false)
+
+        get :show, params: { id: 1, student: 'true' }
+
+        expect(controller.instance_variable_get(:@can_view_as_student)).to be false
+        expect(controller.instance_variable_get(:@as_student)).to be false
       end
     end
   end
@@ -418,7 +458,7 @@ describe WorkoutsController do
       allow(Term).to receive(:find).with('fall-2026').and_return(term)
       allow(Course).to receive(:find_with_id_or_slug).and_return(course)
       allow(workout).to receive(:workout_policy).and_return(nil)
-      allow(WorkoutPolicy).to receive(:create!).and_return(double("WorkoutPolicy", id: 1, update: true))
+      allow(WorkoutPolicy).to receive(:create!).and_return(WorkoutPolicy.new)
       allow(workout).to receive_message_chain(:workout_offerings, :update_all).and_return(true)
       allow(workout).to receive_message_chain(:workout_offerings, :joins, :where).and_return([])
       allow(workout).to receive(:add_workout_offerings).and_return([])
@@ -875,6 +915,186 @@ describe WorkoutsController do
       controller.send(:create_or_update_offerings, workout)
 
       expect(workout.errors).to be_empty
+    end
+
+    it "correctly normalizes string parameters for most_recent, workout_attempt_limit, and score_to_keep" do
+      allow(workout).to receive(:workout_policy).and_return(nil)
+      allow(WorkoutPolicy).to receive(:create!).and_return(double('WorkoutPolicy', update: true, values: 0, mask: 0))
+      allow(workout.workout_offerings).to receive(:update_all).and_return(true)
+
+      co1 = FactoryBot.build_stubbed(:course_offering, id: 101, label: 'Section A', course: course, term: term)
+      allow(co1).to receive(:display_name_with_term).and_return('Section A')
+      allow(user).to receive(:managed_course_offerings).and_return([co1])
+
+      captured_common = nil
+      allow(workout).to receive(:add_workout_offerings) do |hash, common|
+        captured_common = common
+        []
+      end
+
+      yaml_input = <<~YAML
+        sections:
+          - section: Section A
+            due: 2026-09-15 11:59 PM
+      YAML
+
+      controller.params = ActionController::Parameters.new({
+        date_yaml: yaml_input,
+        course_id: "itsc2214",
+        organization_id: "uncc",
+        term_id: "fall-2026",
+        exercise_score_to_keep: 'highest',
+        time_limit: '30',
+        workout_attempt_limit: '3',
+        workout_score_to_keep: 'latest'
+      })
+
+      controller.send(:create_or_update_offerings, workout)
+
+      expect(captured_common[:exercise_score_to_keep]).to eq('highest')
+      expect(captured_common[:workout_attempt_limit]).to eq(3)
+      expect(captured_common[:workout_score_to_keep]).to eq('latest')
+    end
+
+    it "adds error to workout and returns nil when multiple attempts are allowed without a time_limit" do
+      allow(workout).to receive(:workout_policy).and_return(nil)
+      allow(WorkoutPolicy).to receive(:create!).and_return(double('WorkoutPolicy', update: true, values: 0, mask: 0))
+      allow(workout.workout_offerings).to receive(:update_all).and_return(true)
+
+      controller.params = ActionController::Parameters.new({
+        date_yaml: '',
+        workout_attempt_limit: '3',
+        time_limit: ''
+      })
+
+      result = controller.send(:create_or_update_offerings, workout)
+
+      expect(result).to be_nil
+      expect(workout.errors[:time_limit]).to include('is required when multiple workout attempts are allowed')
+    end
+
+    it "configures multiple attempts from date_yaml and enforces time limit" do
+      allow(workout).to receive(:workout_policy).and_return(nil)
+      allow(WorkoutPolicy).to receive(:create!).and_return(double('WorkoutPolicy', update: true, values: 0, mask: 0))
+      allow(workout.workout_offerings).to receive(:update_all).and_return(true)
+
+      co1 = FactoryBot.build_stubbed(:course_offering, id: 101, label: 'Section A', course: course, term: term)
+      allow(co1).to receive(:display_name_with_term).and_return('Section A')
+      allow(user).to receive(:managed_course_offerings).and_return([co1])
+
+      captured_hash = nil
+      captured_common = nil
+      allow(workout).to receive(:add_workout_offerings) do |hash, common|
+        captured_hash = hash
+        captured_common = common
+        [double('WorkoutOffering', id: 20)]
+      end
+
+      yaml_input = <<~YAML
+        workout_attempts: 2
+        sections:
+          - section: Section A
+            workout_attempts: 3
+            due: 2026-09-15 11:59 PM
+      YAML
+
+      controller.params = ActionController::Parameters.new({
+        date_yaml: yaml_input,
+        course_id: "itsc2214",
+        organization_id: "uncc",
+        term_id: "fall-2026",
+        time_limit: '45'
+      })
+
+      controller.send(:create_or_update_offerings, workout)
+
+      expect(workout.errors).to be_empty
+      expect(captured_common[:workout_attempt_limit]).to eq(2)
+      expect(captured_hash['101']['workout_attempt_limit']).to eq(3)
+    end
+
+    it "does not pass nil score_to_keep or workout_attempt_limit when section YAML omits them" do
+      allow(workout).to receive(:workout_policy).and_return(nil)
+      allow(WorkoutPolicy).to receive(:create!).and_return(double('WorkoutPolicy', update: true, values: 0, mask: 0))
+      allow(workout.workout_offerings).to receive(:update_all).and_return(true)
+
+      co1 = FactoryBot.build_stubbed(:course_offering, id: 101, label: 'Section A', course: course, term: term)
+      allow(co1).to receive(:display_name_with_term).and_return('Section A')
+      allow(user).to receive(:managed_course_offerings).and_return([co1])
+
+      captured_hash = nil
+      captured_common = nil
+      allow(workout).to receive(:add_workout_offerings) do |hash, common|
+        captured_hash = hash
+        captured_common = common
+        []
+      end
+
+      yaml_input = <<~YAML
+        sections:
+          - section: Section A
+            due: 2026-09-15 11:59 PM
+      YAML
+
+      controller.params = ActionController::Parameters.new({
+        date_yaml: yaml_input,
+        course_id: "itsc2214",
+        organization_id: "uncc",
+        term_id: "fall-2026",
+        workout_attempt_limit: '1'
+      })
+
+      controller.send(:create_or_update_offerings, workout)
+
+      expect(captured_hash['101']).not_to have_key('score_to_keep')
+      expect(captured_hash['101']).not_to have_key('workout_attempt_limit')
+      expect(captured_common[:workout_attempt_limit]).to eq(1)
+      expect(captured_common[:score_to_keep]).to eq(:highest)
+    end
+
+    it "parses workout_score_to_keep and exercise_score_to_keep from date_yaml" do
+      allow(workout).to receive(:workout_policy).and_return(nil)
+      allow(WorkoutPolicy).to receive(:create!).and_return(double('WorkoutPolicy', update: true, values: 0, mask: 0))
+      allow(workout.workout_offerings).to receive(:update_all).and_return(true)
+
+      co1 = FactoryBot.build_stubbed(:course_offering, id: 101, label: 'Section A', course: course, term: term)
+      allow(co1).to receive(:display_name_with_term).and_return('Section A')
+      allow(user).to receive(:managed_course_offerings).and_return([co1])
+
+      captured_hash = nil
+      captured_common = nil
+      allow(workout).to receive(:add_workout_offerings) do |hash, common|
+        captured_hash = hash
+        captured_common = common
+        [double('WorkoutOffering', id: 20)]
+      end
+
+      yaml_input = <<~YAML
+        workout_attempts: 2
+        workout_score_to_keep: latest
+        exercise_score_to_keep: highest
+        sections:
+          - section: Section A
+            due: 2026-09-15 11:59 PM
+            workout_score_to_keep: highest
+            exercise_score_to_keep: latest
+      YAML
+
+      controller.params = ActionController::Parameters.new({
+        date_yaml: yaml_input,
+        course_id: "itsc2214",
+        organization_id: "uncc",
+        term_id: "fall-2026",
+        time_limit: '45'
+      })
+
+      controller.send(:create_or_update_offerings, workout)
+
+      expect(workout.errors).to be_empty
+      expect(captured_common[:score_to_keep]).to eq('latest')
+      expect(captured_common[:most_recent]).to eq(false)
+      expect(captured_hash['101']['score_to_keep']).to eq('highest')
+      expect(captured_hash['101']['most_recent']).to eq(true)
     end
   end
 
@@ -1593,6 +1813,141 @@ describe WorkoutsController do
 
       expect(response).to redirect_to(root_path)
       expect(flash[:notice]).to eq('You are not authorized to edit this workout.')
+    end
+  end
+
+  describe "multiple attempts YAML serialization" do
+    let(:user) { FactoryBot.build_stubbed(:user) }
+    let(:course) { FactoryBot.build_stubbed(:course, slug: 'cs1114') }
+    let(:term) { FactoryBot.build_stubbed(:term, slug: 'fall2026') }
+    let(:co1) { FactoryBot.build_stubbed(:course_offering, id: 10, label: 'Section 1', course: course, term: term) }
+    let(:workout) { FactoryBot.build_stubbed(:workout, id: 5) }
+
+    before do
+      allow(controller).to receive(:current_user).and_return(user)
+    end
+
+    it "serializes workout_attempts, workout_score_to_keep, and exercise_score_to_keep in YAML" do
+      wo1 = double('WorkoutOffering',
+        course_offering: co1,
+        soft_deadline: 1.day.from_now,
+        opening_date: 1.day.ago,
+        hard_deadline: 2.days.from_now,
+        allowed_ips: nil,
+        allowed_user_agents: nil,
+        lms_assignment_url: nil,
+        workout_attempt_limit: 3,
+        workout_score_to_keep: 'latest',
+        exercise_score_to_keep: 'highest'
+      )
+
+      yaml_output = controller.send(:serialize_workout_offerings_to_yaml, [wo1], [])
+      expect(yaml_output).to include('workout_attempts: 3')
+      expect(yaml_output).to include('workout_score_to_keep: latest')
+      expect(yaml_output).to include('exercise_score_to_keep: highest')
+    end
+  end
+
+  describe "GET #practice restriction enforcement" do
+    let(:user) { FactoryBot.build_stubbed(:user) }
+    let(:workout) { FactoryBot.build_stubbed(:workout, id: 5) }
+    let(:exercise) { FactoryBot.build_stubbed(:exercise, id: 10) }
+    let(:course_offering) { FactoryBot.build_stubbed(:course_offering, id: 101) }
+    let(:workout_offering) do
+      FactoryBot.build_stubbed(:workout_offering, id: 201, workout: workout, course_offering: course_offering)
+    end
+
+    before do
+      allow(controller).to receive(:current_user).and_return(user)
+      allow(controller).to receive(:authorize!).and_return(true)
+      allow(Workout).to receive(:find_by).with(id: '5').and_return(workout)
+      allow(workout).to receive(:first_exercise).and_return(exercise)
+      allow(workout).to receive(:exercises).and_return([exercise])
+      allow(workout).to receive(:score_for).and_return(nil)
+      allow(workout).to receive(:workout_offerings).and_return([workout_offering])
+      allow(course_offering).to receive(:is_enrolled?).with(user).and_return(true)
+      allow(course_offering).to receive(:is_staff?).with(user).and_return(false)
+      allow(workout_offering).to receive(:active_score_for).with(user).and_return(nil)
+      allow(workout_offering).to receive(:attempts_taken_for).with(user).and_return(0)
+      allow(workout_offering).to receive(:attempts_left_for).with(user).and_return(1)
+      allow(workout_offering).to receive(:opening_date_for).with(user).and_return(1.day.ago)
+      allow(workout_offering).to receive(:hard_deadline_for).with(user).and_return(1.day.from_now)
+      allow(workout_offering).to receive(:ip_allowed?).and_return(true)
+      allow(workout_offering).to receive(:user_agent_allowed?).and_return(true)
+      allow(ActivityLog).to receive(:create).and_return(true)
+    end
+
+    it "does not create a WorkoutScore when IP is not allowed" do
+      allow(workout_offering).to receive(:ip_allowed?).and_return(false)
+      expect(WorkoutScore).not_to receive(:new)
+      expect(WorkoutScore).not_to receive(:create!)
+
+      get :practice, params: { id: '5' }
+
+      expect(response.status).to eq(200)
+      expect(controller.instance_variable_get(:@message)).to include("network location")
+    end
+
+    it "does not create a WorkoutScore when user agent is not allowed" do
+      allow(workout_offering).to receive(:user_agent_allowed?).and_return(false)
+      expect(WorkoutScore).not_to receive(:new)
+      expect(WorkoutScore).not_to receive(:create!)
+
+      get :practice, params: { id: '5' }
+
+      expect(response.status).to eq(200)
+      expect(controller.instance_variable_get(:@message)).to include("requires a specific browser")
+    end
+
+    it "does not create a WorkoutScore and redirects when workout is not yet open" do
+      allow(workout_offering).to receive(:opening_date_for).with(user).and_return(2.days.from_now)
+      expect(WorkoutScore).not_to receive(:new)
+      expect(WorkoutScore).not_to receive(:create!)
+
+      get :practice, params: { id: '5' }
+
+      expect(response).to redirect_to(workout_path(workout))
+      expect(flash[:notice]).to eq('This workout is not yet open for practice.')
+    end
+
+    it "does not create a WorkoutScore and redirects when hard deadline has passed" do
+      allow(workout_offering).to receive(:hard_deadline_for).with(user).and_return(2.days.ago)
+      expect(WorkoutScore).not_to receive(:new)
+      expect(WorkoutScore).not_to receive(:create!)
+
+      get :practice, params: { id: '5' }
+
+      expect(response).to redirect_to(workout_path(workout))
+      expect(flash[:notice]).to eq('The deadline has passed for this workout.')
+    end
+
+    it "does not create a WorkoutScore and redirects when attempts are exhausted" do
+      allow(workout_offering).to receive(:attempts_taken_for).with(user).and_return(2)
+      allow(workout_offering).to receive(:attempts_left_for).with(user).and_return(0)
+      expect(WorkoutScore).not_to receive(:new)
+      expect(WorkoutScore).not_to receive(:create!)
+
+      get :practice, params: { id: '5' }
+
+      expect(response).to redirect_to(workout_path(workout))
+      expect(flash[:notice]).to eq('You have completed all allowed attempts for this workout.')
+    end
+
+    it "creates a new WorkoutScore with last_ip_address when allowed" do
+      ws = double('WorkoutScore', id: 99, closed?: false, workout_offering: workout_offering, save!: true)
+      allow(WorkoutScore).to receive(:new).with(hash_including(
+        last_ip_address: '0.0.0.0',
+        workout_offering: workout_offering
+      )).and_return(ws)
+
+      get :practice, params: { id: '5' }
+
+      expect(response).to redirect_to(exercise_practice_path(
+        exercise,
+        workout_id: 5,
+        workout_offering_id: 201,
+        workout_score_id: 99
+      ))
     end
   end
 end

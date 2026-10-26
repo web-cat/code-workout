@@ -593,10 +593,12 @@ class User < ApplicationRecord
 
       if self_score
         possible_ws_duplicates[s.id] = self_score.id
+        max_attempt = self.workout_scores.where(workout: s.workout, workout_offering: s.workout_offering).maximum(:attempt_number) || 0
+        s.update(user_id: self.id, attempt_number: max_attempt + 1)
+      else
+        s.update(user_id: self.id)
       end
-
       puts "update workout_score #{s.id}: user_id <= #{self.id}"
-      s.update(user_id: self.id)
     end
     user.workout_scores.reset
     self.workout_scores.reset
@@ -849,14 +851,8 @@ class User < ApplicationRecord
       wo = workout_score.workout_offering
       sister_wo = to.workout_offerings.where(workout: wo.workout).first
       if sister_wo
-        sister_ws = sister_wo.score_for(self)
-        if sister_ws
-          logger.error "Cannot migrate workout score #{workout_score} to " +
-            "workout offering #{wo.id} for user #{self.id}, because of " +
-            "duplicate workout score #{sister_ws}"
-        else
-          workout_score.update(workout_offering: sister_wo)
-        end
+        max_attempt = WorkoutScore.where(workout_offering_id: sister_wo.id, user_id: self.id).maximum(:attempt_number) || 0
+        workout_score.update(workout_offering: sister_wo, attempt_number: max_attempt + 1)
       end
     end
     # Move extensions

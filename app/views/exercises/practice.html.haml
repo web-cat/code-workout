@@ -10,6 +10,11 @@
   .col-md-12
     %h1
       = @exercise.display_name
+      - if @workout_score && @workout_offering
+        %span.badge{ style: 'font-size: 14px; vertical-align: middle; margin-left: 10px;' }
+          - allowed = @workout_offering.attempts_allowed_for(@student_user || current_user)
+          - att_label = (@is_staff_review && @student_user) ? "#{@student_user.display_name}: Attempt #{@workout_score.attempt_number || 1}" : "Attempt #{@workout_score.attempt_number || 1}"
+          = "#{att_label} of #{allowed && allowed > 0 ? allowed : 'Unlimited'}"
       - if current_user.andand.can? :edit, @exercise
         %small
           = link_to "", edit_exercise_path(@exercise), class: 'glyphicon glyphicon-pencil' , "aria-label": "Edit this exercise"
@@ -37,16 +42,18 @@
       %p
       =link_to "#{real_name}", "/uploads/resource_file/#{unique_name}"
   %div{ id: 'user-deadline', class: "col-md-#{has_parsons ? 12 : 7}", data: { deadline: @user_deadline, server_now: @server_now } }
-    %h2 Your Answer:
+    %h2= (@is_staff_review && @student_user) ? "#{@student_user.display_name}'s Answer:" : 'Your Answer:'
     = semantic_form_for @exercise_version,
       url: (@workout_offering ? organization_workout_offering_exercise_evaluate_path(id: @exercise_version.exercise.id,
         course_id: @workout_offering.course_offering.course.slug,
         organization_id: @workout_offering.course_offering.course.organization.slug,
         term_id: @workout_offering.course_offering.term.slug,
         workout_offering_id: @workout_offering.id,
+        workout_score_id: @workout_score.andand.id,
         lti_launch: @lti_launch) : exercise_evaluate_path(@exercise_version.exercise,
       exercise_version_id: @exercise_version.id,
       workout_id: @workout.andand.id,
+      workout_score_id: @workout_score.andand.id,
       feedback_return: true, lti_launch: @lti_launch,
       lis_result_sourcedid: @workout_score.andand.lis_result_sourcedid,
       lis_outcome_service_url: @workout_score.andand.lis_outcome_service_url)), remote: true do |f|
@@ -124,7 +131,10 @@
             input_html: { class: 'code', readonly: true,
               value: (prior_answer.andand.specific.andand.answer || prompt.prepare_starter_code),
               data: { lang: 'text/x-' + (@exercise.language + (@exercise.language == 'C++'?'src':'')|| 'java').downcase,
-              starter_code: prompt.prepare_starter_code } }
+              starter_code: prompt.prepare_starter_code,
+              exercise_id: @exercise.id,
+              workout_score_id: @workout_score.andand.id,
+              user_id: current_user.andand.id } }
           - else
             %pre{ data: { lang: 'text/x-java' } }
               = prior_answer.andand.specific.andand.answer || prompt.prepare_starter_code
@@ -249,6 +259,7 @@
             course_id: @workout_offering.course_offering.course.slug,
             term_id: @workout_offering.course_offering.term.slug,
             id: @workout_offering.id,
+            workout_score_id: @workout_score.andand.id,
             lti_launch: @lti_launch),
             class: 'btn btn-default btn-next', id: 'nextbtn'
         - elsif @workout && params[:review_user_id].nil? && @workout.exercise_workouts.size > 1

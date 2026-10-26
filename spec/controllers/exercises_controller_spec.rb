@@ -243,6 +243,28 @@ describe ExercisesController do
           expect(controller.instance_variable_get(:@is_staff_review)).to be true
         end
 
+        it "resolves specific attempt by attempt_id and does not show time limit closure alert to instructor" do
+          specific_ws = FactoryBot.build_stubbed(:workout_score, id: 99, workout_offering: workout_offering, user: student, attempt_number: 1)
+          allow(specific_ws).to receive(:closed?).and_return(true)
+          allow(specific_ws).to receive(:attempts_left_for_exercise_version).and_return(3)
+          allow(WorkoutScore).to receive_message_chain(:includes, :find).with(99).and_return(specific_ws)
+          specific_attempt = double('Attempt', id: 934, user: student, user_id: student.id, workout_score: specific_ws, exercise_version: exercise_version)
+          allow(Attempt).to receive(:find_by).with(id: '934').and_return(specific_attempt)
+          allow(workout_offering).to receive(:time_limit_for).with(student).and_return(60)
+
+          get :practice, params: {
+            id: '1',
+            workout_offering_id: '201',
+            review_user_id: '10',
+            attempt_id: '934'
+          }
+
+          expect(response.status).to eq(200)
+          expect(controller.instance_variable_get(:@attempt)).to eq(specific_attempt)
+          expect(controller.instance_variable_get(:@workout_score)).to eq(specific_ws)
+          expect(controller.instance_variable_get(:@msg)).to be_nil
+        end
+
         it "blocks unauthorized non-staff user from reviewing another student" do
           unauthorized_student = FactoryBot.build_stubbed(:user, id: 88)
           allow(controller).to receive(:current_user).and_return(unauthorized_student)

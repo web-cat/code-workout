@@ -225,41 +225,20 @@ class WorkoutsController < ApplicationController
       :exercise_owners
     )
 
-    @workout_score = @workout.score_for(current_user, @workout_offering)
+    is_course_staff = current_user.andand.global_role.andand.is_admin? ||
+      (@workout_offering.respond_to?(:course_offering) && @workout_offering.course_offering.andand.is_staff?(current_user))
+    @can_view_as_student = is_course_staff
+    @as_student = @can_view_as_student && params[:student].to_b
 
-    if @workout_offering && !@workout_offering.ip_allowed?(request.remote_ip, current_user, @workout_score)
-      if current_user
-        ActivityLog.create(
-          user: (current_user.is_a?(User) ? current_user : nil),
-          workout: (@workout.is_a?(Workout) ? @workout : nil),
-          workout_offering: @workout_offering,
-          workout_score: (@workout_score.is_a?(WorkoutScore) ? @workout_score : nil),
-          activity: 'workout_view_ip_blocked',
-          ip_address: request.remote_ip,
-          user_agent: request.user_agent,
-          lti_launch: false
-        )
-      end
-      @message = "This workout cannot be accessed from your network location (#{request.remote_ip})."
-      render 'workout_offerings/error' and return
+    if @workout_offering.respond_to?(:scores_for)
+      @past_scores = @workout_offering.scores_for(current_user)
+      @active_score = @workout_offering.active_score_for(current_user)
+      @can_retake = @workout_offering.can_start_new_attempt?(current_user)
+      @effective_score = @workout_offering.effective_score_for(current_user)
+      @workout_score = @active_score || @workout_offering.kept_workout_score_for(current_user) || @workout_offering.latest_score_for(current_user)
     end
+    @workout_score ||= @workout.score_for(current_user, @workout_offering)
 
-    if @workout_offering && !@workout_offering.user_agent_allowed?(request.user_agent, current_user, @workout_score)
-      if current_user
-        ActivityLog.create(
-          user: (current_user.is_a?(User) ? current_user : nil),
-          workout: (@workout.is_a?(Workout) ? @workout : nil),
-          workout_offering: @workout_offering,
-          workout_score: (@workout_score.is_a?(WorkoutScore) ? @workout_score : nil),
-          activity: 'workout_view_user_agent_blocked',
-          ip_address: request.remote_ip,
-          user_agent: request.user_agent,
-          lti_launch: false
-        )
-      end
-      @message = "This workout requires a specific browser (such as LockDown Browser or Secure Exam Browser) and cannot be accessed from your current browser."
-      render 'workout_offerings/error' and return
-    end
 
     if @workout_score
       @scoring_attempts_by_version_id = Attempt.where(
@@ -385,6 +364,11 @@ class WorkoutsController < ApplicationController
     @lms_instance_id = params[:lms_instance_id]
     @suggested_name = params[:suggested_name]
     @policy = WorkoutPolicy.new
+    @workout_attempt_limit = 1
+    @workout_score_to_keep = 'highest'
+    @score_to_keep = @workout_score_to_keep
+    @exercise_score_to_keep = 'latest'
+    @most_recent = true
 
     if params[:notice]
       flash.now[:notice] = params[:notice]
@@ -551,7 +535,11 @@ class WorkoutsController < ApplicationController
       @time_limit = @workout_offering.andand.time_limit
       @attempt_limit = @workout_offering.andand.attempt_limit
       @published = @workout_offering.andand.published
-      @most_recent = @workout_offering.andand.most_recent
+      @exercise_score_to_keep = @workout_offering.andand.exercise_score_to_keep || 'latest'
+      @most_recent = @exercise_score_to_keep == 'latest'
+      @workout_attempt_limit = @workout_offering.andand.workout_attempt_limit
+      @workout_score_to_keep = @workout_offering.andand.workout_score_to_keep || 'highest'
+      @score_to_keep = @workout_score_to_keep
       @policy = @workout_offering.andand.workout_policy || @workout.workout_policy || WorkoutPolicy.new
 
       @workout_offerings = current_user.managed_workout_offerings_in_term(
@@ -642,6 +630,9 @@ class WorkoutsController < ApplicationController
       @exercises.push(ex_data)
     end
 
+    @workout_attempt_limit = 1
+    @score_to_keep = 'highest'
+
     if params[:course_id]
       @course = Course.find_with_id_or_slug(
         params[:course_id],
@@ -652,6 +643,12 @@ class WorkoutsController < ApplicationController
       @workout_offering = @workout.workout_offerings.first
       @time_limit = @workout_offering.andand.time_limit
       @attempt_limit = @workout_offering.andand.attempt_limit
+      @published = @workout_offering.andand.published
+      @exercise_score_to_keep = @workout_offering.andand.exercise_score_to_keep || 'latest'
+      @most_recent = @exercise_score_to_keep == 'latest'
+      @workout_attempt_limit = @workout_offering.andand.workout_attempt_limit
+      @workout_score_to_keep = @workout_offering.andand.workout_score_to_keep || 'highest'
+      @score_to_keep = @workout_score_to_keep
       @policy = (@workout_offering.andand.workout_policy || @policy).dup
       @organization = Organization.find params[:organization_id]
       all_managed = current_user.andand.managed_course_offerings(course: @course, term: @term) || []
@@ -1354,8 +1351,83 @@ class WorkoutsController < ApplicationController
     end
 
     if @workout
+      @workout_offering = params[:workout_offering_id].present? ? WorkoutOffering.find_by(id: params[:workout_offering_id]) : nil
       if current_user
-        @workout_score = @workout.score_for(current_user, nil,
+        @workout_offering ||= @workout.workout_offerings.find { |wo| wo.course_offering.is_enrolled?(current_user) || wo.course_offering.is_staff?(current_user) }
+      end
+
+      if @workout_offering
+        is_staff = @workout_offering.course_offering.is_staff?(current_user)
+        active_ws = @workout_offering.active_score_for(current_user)
+        score_for_check = (active_ws && !active_ws.closed?) ? active_ws : nil
+
+        if !@workout_offering.ip_allowed?(request.remote_ip, current_user, score_for_check)
+          if current_user
+            lti_context = lti_context_for_token(@lti_launch)
+            ActivityLog.create(
+              user: (current_user.is_a?(User) ? current_user : nil),
+              workout: (@workout.is_a?(Workout) ? @workout : nil),
+              workout_offering: @workout_offering,
+              workout_score: (score_for_check.is_a?(WorkoutScore) ? score_for_check : nil),
+              activity: 'practice_view_ip_blocked',
+              ip_address: request.remote_ip,
+              user_agent: request.user_agent,
+              lms_instance_id: lti_context.andand[:lms_instance_id] || session[:lms_instance_id] || @workout_offering.andand.lms_instance_id,
+              lti_launch: @lti_launch.present?
+            )
+          end
+          @message = "This workout cannot be accessed from your network location (#{request.remote_ip})."
+          if @lti_launch
+            render 'lti/error' and return
+          else
+            render 'workout_offerings/error' and return
+          end
+        end
+
+        if !@workout_offering.user_agent_allowed?(request.user_agent, current_user, score_for_check)
+          if current_user
+            lti_context = lti_context_for_token(@lti_launch)
+            ActivityLog.create(
+              user: (current_user.is_a?(User) ? current_user : nil),
+              workout: (@workout.is_a?(Workout) ? @workout : nil),
+              workout_offering: @workout_offering,
+              workout_score: (score_for_check.is_a?(WorkoutScore) ? score_for_check : nil),
+              activity: 'practice_view_user_agent_blocked',
+              ip_address: request.remote_ip,
+              user_agent: request.user_agent,
+              lms_instance_id: lti_context.andand[:lms_instance_id] || session[:lms_instance_id] || @workout_offering.andand.lms_instance_id,
+              lti_launch: @lti_launch.present?
+            )
+          end
+          @message = "This workout requires a specific browser (such as LockDown Browser or Secure Exam Browser) and cannot be accessed from your current browser."
+          if @lti_launch
+            render 'lti/error' and return
+          else
+            render 'workout_offerings/error' and return
+          end
+        end
+
+        now = Time.zone.now
+        opens = @workout_offering.opening_date_for(current_user)
+        deadline = @workout_offering.hard_deadline_for(current_user)
+
+        if score_for_check.nil? && !is_staff
+          if opens.present? && opens > now
+            redirect_to workout_path(@workout), notice: 'This workout is not yet open for practice.' and return
+          end
+
+          if deadline.present? && now > deadline
+            redirect_to workout_path(@workout), notice: 'The deadline has passed for this workout.' and return
+          end
+
+          if @workout_offering.attempts_taken_for(current_user) > 0 && @workout_offering.attempts_left_for(current_user) <= 0
+            redirect_to workout_path(@workout), notice: 'You have completed all allowed attempts for this workout.' and return
+          end
+        end
+      end
+
+      if current_user
+        @workout_score = @workout.score_for(current_user, @workout_offering,
                                             params[:lis_outcome_service_url],
                                             params[:lis_result_sourcedid])
         if @workout_score.nil?
@@ -1368,7 +1440,17 @@ class WorkoutsController < ApplicationController
             lis_outcome_service_url: params[:lis_outcome_service_url],
             lti_workout: @lti_workout,
             user: current_user,
-            workout: @workout)
+            workout: @workout,
+            workout_offering: @workout_offering,
+            last_ip_address: request.remote_ip.to_s.strip
+          )
+          clean_ua = request.user_agent.to_s.strip
+          if @workout_score.respond_to?(:last_user_agent_id)
+            ua_record = UserAgent.find_or_create_by_raw(clean_ua)
+            @workout_score.last_user_agent_id = ua_record&.id
+          elsif @workout_score.respond_to?(:last_user_agent)
+            @workout_score.last_user_agent = clean_ua
+          end
           @workout_score.save!
         end
         manages_course = current_user.andand.global_role.andand.is_admin? ||
@@ -1399,6 +1481,7 @@ class WorkoutsController < ApplicationController
       redirect_to exercise_practice_path(
         @workout.first_exercise,
         workout_id: @workout.id,
+        workout_offering_id: @workout_offering.andand.id,
         lti_launch: @lti_launch,
         workout_score_id: @workout_score.andand.id
       )
@@ -1512,16 +1595,29 @@ class WorkoutsController < ApplicationController
       policy.update(policy_params)
 
       # Ensure all existing offerings use this policy
-      workout.workout_offerings.update_all(workout_policy_id: policy.id)
+      values = policy.respond_to?(:values) ? policy.values : 0
+      mask = policy.respond_to?(:mask) ? policy.mask : 0
+      workout.workout_offerings.update_all(policy_values: values, policy_mask: mask)
       common[:workout_policy] = policy
       common[:time_limit] = params[:time_limit]
       common[:attempt_limit] = params[:attempt_limit]
+      common[:workout_attempt_limit] = params[:workout_attempt_limit].present? ? params[:workout_attempt_limit].to_i : (params[:workout_attempt_limit] == '' ? nil : 1)
+      common[:workout_score_to_keep] = params[:workout_score_to_keep].presence || params[:score_to_keep].presence || :highest
+      common[:score_to_keep] = common[:workout_score_to_keep]
       common[:published] = params[:published]
-      common[:most_recent] = params[:most_recent]
+      common[:exercise_score_to_keep] = params[:exercise_score_to_keep].presence || (params[:most_recent].in?([false, 'false', 0, '0']) ? 'highest' : 'latest')
+      common[:most_recent] = common[:exercise_score_to_keep] == 'latest'
       common[:lms_assignment_id] = params[:lms_assignment_id]
       common[:lti_assignment_id] = params[:lti_assignment_id]
       common[:resource_link_id] = params[:resource_link_id] || session[:lti_payload]&.[]('resource_link_id')
       common[:lms_instance_id] = params[:lms_instance_id] || session[:lti_payload]&.[]('lms_instance_id')
+
+      is_multiple = common[:workout_attempt_limit].nil? || common[:workout_attempt_limit].to_i > 1 || common[:workout_attempt_limit].to_i <= 0
+      has_time_limit = common[:time_limit].present? && common[:time_limit].to_i > 0
+      if is_multiple && !has_time_limit
+        workout.errors.add(:time_limit, 'is required when multiple workout attempts are allowed')
+        return nil
+      end
 
       if params[:date_yaml].present? || params[:course_offerings].blank?
         Workout.transaction do
@@ -1560,6 +1656,27 @@ class WorkoutsController < ApplicationController
             default_lms_url = data['lms_assignment_url'] || data['url']
             default_lms_url = default_lms_url.to_s.strip if default_lms_url.present?
             default_lms_url = nil if default_lms_url.blank?
+
+            default_workout_attempts = data['workout_attempts'] || data['workout_attempt_limit'] || data['attempts']
+            if default_workout_attempts.present?
+              common[:workout_attempt_limit] = default_workout_attempts.to_i
+              if (common[:workout_attempt_limit] <= 0 || common[:workout_attempt_limit] > 1) && !has_time_limit
+                workout.errors.add(:time_limit, 'is required when multiple workout attempts are allowed')
+                raise ActiveRecord::Rollback
+              end
+            end
+
+            default_score_to_keep = data['workout_score_to_keep']
+            if default_score_to_keep.present?
+              common[:workout_score_to_keep] = default_score_to_keep
+              common[:score_to_keep] = default_score_to_keep
+            end
+
+            default_exercise_score = data['exercise_score_to_keep']
+            if default_exercise_score.present?
+              common[:exercise_score_to_keep] = default_exercise_score.to_s.strip.downcase == 'latest' ? 'latest' : 'highest'
+              common[:most_recent] = common[:exercise_score_to_keep] == 'latest'
+            end
 
             user_tz = current_user.time_zone.andand.name || 'America/New_York'
             @course = Course.find_with_id_or_slug(params[:course_id], params[:organization_id])
@@ -1605,7 +1722,17 @@ class WorkoutsController < ApplicationController
                   section_lms_url = section_lms_url.to_s.strip if section_lms_url.present?
                   lms_assignment_url = section_lms_url.present? ? section_lms_url : default_lms_url
 
-                  new_offerings_data[co.id.to_s] = {
+                  section_attempts = s['workout_attempts'] || s['workout_attempt_limit'] || s['attempts']
+                  if section_attempts.present?
+                    sec_att = section_attempts.to_i
+                    if (sec_att <= 0 || sec_att > 1) && !has_time_limit
+                      workout.errors.add(:time_limit, "is required for section '#{label_str}' when multiple workout attempts are allowed")
+                    end
+                  end
+                  section_score_to_keep = s['workout_score_to_keep']
+                  section_exercise_score = s['exercise_score_to_keep']
+
+                  offering_hash = {
                     'opening_date' => from.andand.to_i.andand.*(1000), # millisecond timestamp for add_workout_offerings
                     'soft_deadline' => due.andand.to_i.andand.*(1000),
                     'hard_deadline' => until_date.andand.to_i.andand.*(1000),
@@ -1614,6 +1741,18 @@ class WorkoutsController < ApplicationController
                     'lms_assignment_url' => lms_assignment_url,
                     'extensions' => []
                   }
+                  if section_attempts.present?
+                    offering_hash['workout_attempt_limit'] = section_attempts.to_i
+                  end
+                  if section_score_to_keep.present?
+                    offering_hash['workout_score_to_keep'] = section_score_to_keep
+                    offering_hash['score_to_keep'] = section_score_to_keep
+                  end
+                  if section_exercise_score.present?
+                    offering_hash['exercise_score_to_keep'] = section_exercise_score.to_s.strip.downcase == 'latest' ? 'latest' : 'highest'
+                    offering_hash['most_recent'] = offering_hash['exercise_score_to_keep'] == 'latest'
+                  end
+                  new_offerings_data[co.id.to_s] = offering_hash
                 else
                   workout.errors.add(:base, "Course offering with label '#{label_str}' not found or not managed by you.")
                 end
@@ -1666,6 +1805,9 @@ class WorkoutsController < ApplicationController
                 ext_browsers = ext_browsers.is_a?(Array) ? ext_browsers.join(', ') : ext_browsers.to_s.strip if ext_browsers.present?
                 ext_browsers = nil if ext_browsers.blank?
 
+                ext_workout_attempts = ext_group['workout_attempts'] || ext_group['workout_attempt_limit'] || ext_group['attempts']
+                ext_workout_attempts = ext_workout_attempts.present? ? ext_workout_attempts.to_i : nil
+
                 ext_time_raw = ext_group['time_limit'] || ext_group['time'] || ext_group['duration']
 
                 students = ext_group['students'] || []
@@ -1697,7 +1839,8 @@ class WorkoutsController < ApplicationController
                         hard_deadline: until_date,
                         time_limit: ext_time_limit,
                         allowed_ips: ext_ips,
-                        allowed_user_agents: ext_browsers
+                        allowed_user_agents: ext_browsers,
+                        workout_attempt_limit: ext_workout_attempts
                       )
                     else
                       workout.errors.add(:base, "Student '#{student_ref}' is not enrolled in any sections for this workout.")
@@ -1776,6 +1919,27 @@ class WorkoutsController < ApplicationController
       # If all offerings share the same non-blank LMS assignment URL, serialize at top-level
       common_url = (all_urls.size == 1 && (workout_offerings || []).all? { |wo| wo.respond_to?(:lms_assignment_url) && wo.lms_assignment_url.present? }) ? all_urls.first : nil
 
+      all_attempts = (workout_offerings || []).map do |wo|
+        wo.respond_to?(:workout_attempt_limit) ? wo.workout_attempt_limit : nil
+      end.compact.uniq
+      common_attempts = (all_attempts.size == 1 && (workout_offerings || []).all? { |wo| wo.respond_to?(:workout_attempt_limit) && wo.workout_attempt_limit.present? }) ? all_attempts.first : nil
+
+      all_score_to_keep = (workout_offerings || []).map do |wo|
+        wo.respond_to?(:workout_score_to_keep) ? wo.workout_score_to_keep.to_s : (wo.respond_to?(:score_to_keep) ? wo.score_to_keep.to_s : nil)
+      end.compact.uniq
+      common_score_to_keep = (all_score_to_keep.size == 1 && (workout_offerings || []).all? { |wo| (wo.respond_to?(:workout_score_to_keep) && wo.workout_score_to_keep.present?) || (wo.respond_to?(:score_to_keep) && wo.score_to_keep.present?) }) ? all_score_to_keep.first : nil
+
+      all_exercise_score_to_keep = (workout_offerings || []).map do |wo|
+        if wo.respond_to?(:exercise_score_to_keep) && !wo.exercise_score_to_keep.nil?
+          wo.exercise_score_to_keep.to_s
+        elsif wo.respond_to?(:most_recent) && !wo.most_recent.nil?
+          wo.most_recent ? 'latest' : 'highest'
+        else
+          nil
+        end
+      end.compact.uniq
+      common_exercise_score = (all_exercise_score_to_keep.size == 1 && (workout_offerings || []).all? { |wo| (wo.respond_to?(:exercise_score_to_keep) && !wo.exercise_score_to_keep.nil?) || (wo.respond_to?(:most_recent) && !wo.most_recent.nil?) }) ? all_exercise_score_to_keep.first : nil
+
       sections = (workout_offerings || []).map do |wo|
         course_offering = wo.respond_to?(:course_offering) ? wo.course_offering : wo
         soft_deadline = wo.respond_to?(:soft_deadline) ? wo.soft_deadline : nil
@@ -1784,6 +1948,14 @@ class WorkoutsController < ApplicationController
         allowed_ips = wo.respond_to?(:allowed_ips) ? wo.allowed_ips.presence : nil
         allowed_user_agents = wo.respond_to?(:allowed_user_agents) ? wo.allowed_user_agents.presence : nil
         wo_url = wo.respond_to?(:lms_assignment_url) ? wo.lms_assignment_url.presence : nil
+        wo_attempts = wo.respond_to?(:workout_attempt_limit) ? wo.workout_attempt_limit : nil
+        wo_keep = wo.respond_to?(:workout_score_to_keep) ? wo.workout_score_to_keep.to_s : (wo.respond_to?(:score_to_keep) ? wo.score_to_keep.to_s : nil)
+        wo_exercise_keep = if wo.respond_to?(:exercise_score_to_keep) && !wo.exercise_score_to_keep.nil?
+                             wo.exercise_score_to_keep.to_s
+                           elsif wo.respond_to?(:most_recent) && !wo.most_recent.nil?
+                             wo.most_recent ? 'latest' : 'highest'
+                           end
+
         sec_hash = {
           'section' => course_offering.display_name_with_term,
           'due' => format_date(soft_deadline, user_tz),
@@ -1798,6 +1970,15 @@ class WorkoutsController < ApplicationController
         end
         if wo_url.present? && wo_url != common_url
           sec_hash['lms_assignment_url'] = wo_url
+        end
+        if wo_attempts.present? && wo_attempts != common_attempts
+          sec_hash['workout_attempts'] = wo_attempts
+        end
+        if wo_keep.present? && wo_keep != common_score_to_keep
+          sec_hash['workout_score_to_keep'] = wo_keep
+        end
+        if wo_exercise_keep.present? && wo_exercise_keep != common_exercise_score
+          sec_hash['exercise_score_to_keep'] = wo_exercise_keep
         end
         sec_hash
       end
@@ -1816,6 +1997,7 @@ class WorkoutsController < ApplicationController
           ext_ips = ext[:allowed_ips] || ext['allowed_ips'] || ext[:ips] || ext['ips']
           ext_browsers = ext[:allowed_user_agents] || ext['allowed_user_agents'] || ext[:user_agents] || ext['user_agents'] || ext[:browsers] || ext['browsers']
           ext_time_limit = ext[:time_limit] || ext['time_limit']
+          ext_attempts = ext[:workout_attempt_limit] || ext['workout_attempt_limit'] || ext[:workout_attempts] || ext['workout_attempts'] || ext[:attempts] || ext['attempts']
 
           user_display = ext[:student_display] || ext['student_display']
           user_email = ext[:student_email] || ext['student_email'] || (User.find_by(id: ext[:student_id] || ext['student_id']).andand.email)
@@ -1827,6 +2009,7 @@ class WorkoutsController < ApplicationController
           ext_ips = ext.respond_to?(:allowed_ips) ? ext.allowed_ips.presence : nil
           ext_browsers = ext.respond_to?(:allowed_user_agents) ? ext.allowed_user_agents.presence : nil
           ext_time_limit = ext.respond_to?(:time_limit) ? ext.time_limit : nil
+          ext_attempts = ext.respond_to?(:workout_attempt_limit) ? ext.workout_attempt_limit : nil
           student_label = "#{ext.user.display_name} <#{ext.user.email}>"
         end
 
@@ -1835,6 +2018,7 @@ class WorkoutsController < ApplicationController
           'from' => format_rel_date(open_d, soft, user_tz) || 'always',
           'until' => format_rel_date(hard, soft, user_tz) || '+0 minutes',
           'time_limit' => ext_time_limit.present? ? ext_time_limit.to_i : nil,
+          'workout_attempts' => ext_attempts.present? ? ext_attempts.to_i : nil,
           'ips' => ext_ips.presence,
           'browsers' => ext_browsers.presence
         }
@@ -1853,6 +2037,7 @@ class WorkoutsController < ApplicationController
           tl = meta['time_limit']
           h['time_limit'] = tl == 0 ? 'unlimited' : (tl == 1 ? '1 minute' : "#{tl} minutes")
         end
+        h['workout_attempts'] = meta['workout_attempts'] if meta['workout_attempts'].present?
         h['ips'] = meta['ips'] if meta['ips'].present?
         h['browsers'] = meta['browsers'] if meta['browsers'].present?
         h['students'] = students
@@ -1869,6 +2054,15 @@ class WorkoutsController < ApplicationController
       end
 
       yaml_obj = {}
+      if common_attempts.present? && common_attempts != 1
+        yaml_obj['workout_attempts'] = common_attempts
+      end
+      if common_score_to_keep.present? && common_score_to_keep != 'highest'
+        yaml_obj['workout_score_to_keep'] = common_score_to_keep
+      end
+      if common_exercise_score.present? && common_exercise_score != 'latest'
+        yaml_obj['exercise_score_to_keep'] = common_exercise_score
+      end
       yaml_obj['ips'] = common_ips if common_ips.present?
       yaml_obj['browsers'] = common_browsers if common_browsers.present?
       yaml_obj['lms_assignment_url'] = common_url.presence || ''

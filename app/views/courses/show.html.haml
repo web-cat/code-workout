@@ -1,5 +1,16 @@
 = render 'layouts/breadcrumb'
 
+- if @can_view_as_student
+  .pull-right{ style: 'margin-top: 5px;' }
+    - if @as_student
+      = link_to url_for(request.query_parameters.except('student')), class: 'btn btn-default btn-sm', title: 'Exit student view' do
+        %i.fa.fa-user
+        Exit Student View
+    - else
+      = link_to url_for(request.query_parameters.merge(student: true)), class: 'btn btn-default btn-sm', title: 'Preview as student' do
+        %i.fa.fa-user-secret
+        Student View
+
 %h1
   = @course.number_and_name
   %small= @term.display_name
@@ -15,8 +26,9 @@
 
 %p.alert.alert-info#notice{style: 'display: none;'}
 
-.privileged-access
-  = render partial: 'privileged_access', locals: { course: @course, is_instructor: @is_instructor, is_privileged: @is_privileged, access_request: @access_request }
+- if !@as_student
+  .privileged-access
+    = render partial: 'privileged_access', locals: { course: @course, is_instructor: @is_instructor, is_privileged: @is_privileged, access_request: @access_request }
 - if @course_offerings && @course_offerings.any?
   = javascript_include_tag('course')
   %p
@@ -25,7 +37,7 @@
         %br/
       %strong= offering.display_name
       = surround '(', (offering.instructors.any? ? '),' : ')') do
-        - if offering.is_manager? current_user
+        - if !@as_student && offering.is_manager?(current_user)
           = link_to 'edit', edit_course_offering_path(offering)
         - else
           = button_to 'unenroll', course_offering_unenroll_path(offering),
@@ -44,10 +56,10 @@
         != offering.graders.map{ |i| link_to i.display_name,
           user_path(i) }.to_sentence
     %br
-    - if current_user.andand.is_a_member_of?(@course.user_group)
+    - if !@as_student && current_user.andand.is_a_member_of?(@course.user_group)
       = link_to "+ Add a section",
         organization_new_course_offering_path(organization_id: @course.organization.id, course_id: @course.id)
-    - if current_user.global_role.is_admin?
+    - if !@as_student && current_user.global_role.is_admin?
       = link_to "Download exercise attempt data for this term",
         download_exercise_attempt_data_path(course_id: @course.id, 
         term_id: @term.id, progsnap: true, format: :zip)
