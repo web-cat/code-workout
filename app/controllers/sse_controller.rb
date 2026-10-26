@@ -52,8 +52,10 @@ class SseController < ApplicationController
       if @workout_score
         @workout = @workout_score.workout
         @workout_offering = @workout_score.workout_offering
+        if @workout_score.respond_to?(:points_for)
           pts = @workout_score.points_for(@exercise)
           @max_points = pts if pts
+        end
       end
     end
 
