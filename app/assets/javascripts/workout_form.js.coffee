@@ -41,6 +41,7 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
         pts = source_pool.find('.pool-points').val() || default_point_value
         data =
           id: ex_id
+          pool_id: ''
           exercise_workout_id: ''
           name: name
           points: pts
@@ -102,6 +103,7 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
       data =
         name: name
         id: ex_id
+        pool_id: ''
         points: default_point_value
       template = Mustache.render(
         $(window.codeworkout.exercise_template)
@@ -232,6 +234,7 @@ init_exercises = ->
           name = name + ": #{ex.name}" if ex.name
           data =
             id: ex.id
+            pool_id: pool.id || ''
             exercise_workout_id: ''
             name: name
             points: pool.points || default_point_value
@@ -271,6 +274,7 @@ init_exercises = ->
           exercise_workout_id = ''
         data =
           id: exercise.id
+          pool_id: ''
           exercise_workout_id: exercise_workout_id
           name: name
           points: exercise.points
@@ -392,8 +396,10 @@ get_pools = ->
     else
       # Single-slot exercise
       ex_id = $slot.data('id')
+      pool_id = $slot.data('pool-id') || null
       points = parseFloat($slot.find('.points').val() || '0')
       pools.push
+        id: pool_id
         position: index + 1
         select_count: 1
         points: points

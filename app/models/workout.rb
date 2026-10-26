@@ -526,6 +526,13 @@ class Workout < ApplicationRecord
     # Destroy pools belonging to this workout that were removed
     self.exercise_pools.where.not(id: submitted_pool_ids).destroy_all
 
+    # Explicitly enforce submitted positions (1..N) to prevent acts_as_list
+    # shifting side-effects caused by inserting new records or destroying old ones.
+    submitted_pool_ids.each_with_index do |pid, idx|
+      self.exercise_pools.where(id: pid).update_all(position: idx + 1)
+    end
+    self.exercise_pools.reload
+
     # Synchronize legacy exercise_workouts for compatibility
     sync_exercise_workouts_from_pools!
   end
@@ -551,6 +558,9 @@ class Workout < ApplicationRecord
 
     if seen_ex_ids.any?
       exercise_workouts.where.not(exercise_id: seen_ex_ids).destroy_all
+      seen_ex_ids.each_with_index do |eid, idx|
+        exercise_workouts.where(exercise_id: eid).update_all(position: idx + 1)
+      end
     else
       exercise_workouts.destroy_all
     end

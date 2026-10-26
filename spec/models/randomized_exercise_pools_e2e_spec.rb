@@ -164,4 +164,49 @@ RSpec.describe 'Randomized Exercise Pools End-to-End', type: :model do
     expect(score.points_for(slot2_ex1)).to eq(20.0)
     expect(score.total_points).to eq(30.0)
   end
+
+  it 'preserves sequence order across multiple edit and save cycles' do
+    # Initial sequence: [single_ex, pool(slot2_ex1, slot2_ex2), single_ex(slot3_ex1)]
+    pools_data_save1 = [
+      { 'position' => 1, 'select_count' => 1, 'points' => 5.0, 'exercise_ids' => [single_ex.id] },
+      { 'position' => 2, 'select_count' => 1, 'points' => 10.0, 'exercise_ids' => [slot2_ex1.id, slot2_ex2.id] },
+      { 'position' => 3, 'select_count' => 1, 'points' => 5.0, 'exercise_ids' => [slot3_ex1.id] }
+    ]
+
+    workout = Workout.new(name: 'Reordering Test Workout', creator: creator)
+    workout.update_or_create(name: 'Reordering Test Workout', pools: pools_data_save1.to_json)
+
+    expect(workout.exercise_pools.count).to eq(3)
+    pools1 = workout.exercise_pools.order(:position).to_a
+    expect(pools1[0].position).to eq(1)
+    expect(pools1[1].position).to eq(2)
+    expect(pools1[2].position).to eq(3)
+    expect(pools1[1].exercises).to match_array([slot2_ex1, slot2_ex2])
+
+    # Second edit and save: with preserved pool IDs (standard client flow)
+    pools_data_save2 = [
+      { 'id' => pools1[0].id, 'position' => 1, 'select_count' => 1, 'points' => 5.0, 'exercise_ids' => [single_ex.id] },
+      { 'id' => pools1[1].id, 'position' => 2, 'select_count' => 1, 'points' => 10.0, 'exercise_ids' => [slot2_ex1.id, slot2_ex2.id] },
+      { 'id' => pools1[2].id, 'position' => 3, 'select_count' => 1, 'points' => 5.0, 'exercise_ids' => [slot3_ex1.id] }
+    ]
+    workout.update_or_create(name: 'Reordering Test Workout', pools: pools_data_save2.to_json)
+
+    pools2 = workout.exercise_pools.reload.order(:position).to_a
+    expect(pools2.map(&:position)).to eq([1, 2, 3])
+    expect(pools2[1].id).to eq(pools1[1].id)
+    expect(pools2[1].exercises).to match_array([slot2_ex1, slot2_ex2])
+
+    # Third edit and save: without single slot IDs (ensuring backend robustness)
+    pools_data_save3 = [
+      { 'position' => 1, 'select_count' => 1, 'points' => 5.0, 'exercise_ids' => [single_ex.id] },
+      { 'id' => pools2[1].id, 'position' => 2, 'select_count' => 1, 'points' => 10.0, 'exercise_ids' => [slot2_ex1.id, slot2_ex2.id] },
+      { 'position' => 3, 'select_count' => 1, 'points' => 5.0, 'exercise_ids' => [slot3_ex1.id] }
+    ]
+    workout.update_or_create(name: 'Reordering Test Workout', pools: pools_data_save3.to_json)
+
+    pools3 = workout.exercise_pools.reload.order(:position).to_a
+    expect(pools3.map(&:position)).to eq([1, 2, 3])
+    expect(pools3[1].id).to eq(pools1[1].id)
+    expect(pools3[1].exercises).to match_array([slot2_ex1, slot2_ex2])
+  end
 end
