@@ -282,6 +282,10 @@ class Ability
       o.can_be_seen_by? user
     end
 
+    can :review, WorkoutOffering do |o|
+      o.course_offering.is_staff?(user)
+    end
+
     can :manage, WorkoutOffering, course_offering:
       { course_enrollments:
         { user_id: user.id, course_role:

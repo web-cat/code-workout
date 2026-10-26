@@ -74,12 +74,13 @@
         Max. number of attempts allowed for each exercise in the workout. Leave blank for unlimited.
 
     .form-group
-      = label_tag :most_recent, 'Exercise score to keep', 
+      = label_tag :exercise_score_to_keep, 'Exercise score to keep', 
         class: 'control-label col-xs-2'
       .col-xs-3
-        = select_tag :most_recent, |
-          options_for_select([['Latest exercise attempt score', 'true'], ['Highest exercise attempt score', 'false']], (@most_recent == false ? 'false' : 'true')), |
-          id: 'most-recent', class: 'form-control input-sm'
+        - selected_exercise_score = (@exercise_score_to_keep.presence || (@most_recent == false ? 'highest' : 'latest')).to_s
+        = select_tag :exercise_score_to_keep, |
+          options_for_select([['Latest exercise attempt score', 'latest'], ['Highest exercise attempt score', 'highest']], selected_exercise_score), |
+          id: 'exercise-score-to-keep', class: 'form-control input-sm'
       %small.col-xs-7.text.text-warning
         When multiple attempts are made on an exercise, which attempt score is counted.
 
@@ -91,38 +92,7 @@
           min: '0', placeholder: 'In minutes, optional', 
           value: @time_limit ? "#{@time_limit}" : '' }
       %small.col-xs-8.text.text-warning
-        In minutes. Leave blank for untimed workouts.
-
-    .form-group
-      = label_tag :allow_multiple_attempts, 'Allow multiple workout attempts?', 
-        class: 'control-label col-xs-2'
-      .col-xs-8
-        .col-xs-1
-          - multiple_allowed = @workout_attempt_limit.nil? || @workout_attempt_limit.to_i > 1 || @workout_attempt_limit.to_i == 0
-          = check_box_tag 'allow_multiple_attempts', '1', multiple_allowed, id: 'allow-multiple-attempts'
-        %small.col-xs-11.text.text-warning
-          Check this box if students can retake the workout to improve their overall score.
-
-    #multiple-attempts-panel{ style: multiple_allowed ? '' : 'display: none;' }
-      .form-group
-        = label_tag :workout_attempt_limit, 'Workout attempts allowed', 
-          class: 'control-label col-xs-2'
-        .col-xs-2
-          %input#workout-attempt-limit.text10.form-control.input-sm.input{ type: 'number',
-            min: '2', placeholder: 'Unlimited if blank or 0', 
-            value: (@workout_attempt_limit && @workout_attempt_limit.to_i > 1) ? "#{@workout_attempt_limit}" : '' }
-        %small.col-xs-8.text.text-warning
-          Max. number of attempts for the entire workout (minimum 2). Leave blank or 0 for unlimited.
-
-      .form-group
-        = label_tag :score_to_keep, 'Workout score to keep', 
-          class: 'control-label col-xs-2'
-        .col-xs-3
-          = select_tag :score_to_keep, |
-            options_for_select([['Highest workout score', 'highest'], ['Latest workout score', 'latest']], (@score_to_keep.to_s == 'latest' ? 'latest' : 'highest')), |
-            id: 'score-to-keep', class: 'form-control input-sm'
-        %small.col-xs-7.text.text-warning
-          When multiple workout attempts are allowed, specify which workout attempt score is retained in the gradebook and LTI.
+        In minutes. Required if multiple workout attempts are specified in YAML.
 
   - if @course
     .form-group

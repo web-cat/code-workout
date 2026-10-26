@@ -664,7 +664,25 @@ class ExercisesController < ApplicationController
     end
 
     @attempt = nil
-    @workout_score = if params[:workout_score_id].present?
+    if params[:attempt_id].present?
+      @attempt = Attempt.find_by(id: params[:attempt_id])
+      if @attempt
+        if @student_user && @attempt.user_id != @student_user.id
+          @attempt = nil
+        else
+          @student_user ||= @attempt.user
+          if @attempt.workout_score && (@workout_offering.nil? || @attempt.workout_score.workout_offering == @workout_offering || @attempt.workout_score.workout_offering_id == @workout_offering.id)
+            @workout_score = @attempt.workout_score
+          end
+          if @attempt.exercise_version
+            @exercise_version = @attempt.exercise_version
+            @exercise = @exercise_version.exercise
+          end
+        end
+      end
+    end
+
+    @workout_score ||= if params[:workout_score_id].present?
       WorkoutScore.find_by(id: params[:workout_score_id]) || (WorkoutScore.find(params[:workout_score_id]) rescue nil)
     end
     @workout_score ||= (
@@ -673,7 +691,8 @@ class ExercisesController < ApplicationController
     ))
 
     if @workout_offering && @workout_score &&
-      @workout_score.workout_offering != @workout_offering
+      (@workout_score.workout_offering.present? && @workout_score.workout_offering != @workout_offering) &&
+      (@workout_score.workout_offering_id.present? && @workout_score.workout_offering_id != @workout_offering.id)
       @workout_score = nil
     end
 
@@ -756,11 +775,9 @@ class ExercisesController < ApplicationController
     end
 
     @workout ||= @workout_score ? @workout_score.workout : nil
-    manages_course = current_user.andand.global_role.andand.is_admin? ||
-      @workout_offering.andand.course_offering.andand.is_manager?(current_user)
 
     policy = @workout_offering.andand.workout_policy
-    if !manages_course && @workout_score.andand.closed? &&
+    if !is_staff && @workout_score.andand.closed? &&
       (policy.andand.see_answers == false ||
        (policy.andand.no_review_before_close && !@workout_offering.andand.shutdown?))
       path = root_path
@@ -781,7 +798,9 @@ class ExercisesController < ApplicationController
     @msg = nil
     @user_deadline = nil
     student_review = false
-    if @user_time_limit
+    if @is_staff_review
+      student_review = true
+    elsif @user_time_limit
       if @workout_score.andand.closed?
         @msg = 'The time limit has passed. This assignment is closed and no ' +
           'longer accepting submissions.'
@@ -806,10 +825,10 @@ class ExercisesController < ApplicationController
 
     # display the scored attempt if in review mode (for students or instructors)
     if @workout_score
-      if params[:attempt_id]
+      if @attempt.nil? && params[:attempt_id].present?
         @attempt = Attempt.find_by(id: params[:attempt_id])
         if @attempt && (@attempt.user != @student_user ||
-          (@workout_offering && @attempt.workout_score != @workout_score))
+          (@workout_offering && @attempt.workout_score && @attempt.workout_score != @workout_score))
           @attempt = nil
         end
       end

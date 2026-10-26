@@ -75,6 +75,7 @@ RSpec.describe 'Randomized Exercise Pools End-to-End', type: :model do
       workout: workout,
       course_offering: course_offering,
       workout_attempt_limit: 5,
+      time_limit: 60,
       opening_date: 1.day.ago,
       soft_deadline: 1.week.from_now
     )

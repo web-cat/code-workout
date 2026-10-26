@@ -17,11 +17,12 @@
       %th Last Attempt
       %th Finished
       %th Score
-      %th Action
+      - if is_staff || is_admin
+        %th Action
   %tbody
     - if scores.blank?
       %tr
-        %td{ colspan: 5 } No attempts recorded.
+        %td{ colspan: (is_staff || is_admin) ? 6 : 5 } No attempts recorded.
     - else
       - scores.each do |score|
         - is_kept = (kept_score && kept_score.id == score.id)
@@ -48,21 +49,22 @@
               = "#{score.score} / #{workout.total_points}"
             - else
               hidden
-          %td
-            - has_action = false
-            - if is_current_review
-              %span.text-muted Reviewing
-              - has_action = true
-            - elsif !score.closed? && review_user == current_user
-              = link_to 'Resume', organization_workout_offering_practice_path(organization_id: workout_offering.course_offering.course.organization.slug, course_id: workout_offering.course_offering.course.slug, term_id: workout_offering.course_offering.term.slug, id: workout_offering.id, workout_score_id: score.id), class: 'btn btn-xs btn-primary'
-              - has_action = true
-            - elsif manages_course || (workout_offering.can_be_seen_by?(current_user) && !workout_offering.andand.workout_policy.andand.no_review_before_close)
-              = link_to 'Review', organization_workout_offering_review_path(organization_id: workout_offering.course_offering.course.organization.slug, course_id: workout_offering.course_offering.course.slug, term_id: workout_offering.course_offering.term.slug, id: workout_offering.id, review_user_id: review_user.id, workout_score_id: score.id), class: 'btn btn-xs btn-default'
-              - has_action = true
-            - if (is_staff || is_admin) && course_offering
-              - if has_action
-                &nbsp;
-              = link_to 'View Log', organization_workout_offering_activity_log_path(id: workout_offering.id, workout_score_id: score.id, organization_id: course_offering.course.organization.slug, course_id: course_offering.course.slug, term_id: course_offering.term.slug), class: 'btn btn-xs btn-info'
-              - has_action = true
-            - unless has_action
-              \-
+          - if is_staff || is_admin
+            %td
+              - has_action = false
+              - if is_current_review
+                %span.text-muted Reviewing
+                - has_action = true
+              - elsif !score.closed? && review_user == current_user
+                = link_to 'Resume', organization_workout_offering_practice_path(organization_id: workout_offering.course_offering.course.organization.slug, course_id: workout_offering.course_offering.course.slug, term_id: workout_offering.course_offering.term.slug, id: workout_offering.id, workout_score_id: score.id), class: 'btn btn-xs btn-primary'
+                - has_action = true
+              - elsif manages_course || (workout_offering.can_be_seen_by?(current_user) && !workout_offering.andand.workout_policy.andand.no_review_before_close)
+                = link_to 'Review', organization_workout_offering_review_path(organization_id: workout_offering.course_offering.course.organization.slug, course_id: workout_offering.course_offering.course.slug, term_id: workout_offering.course_offering.term.slug, id: workout_offering.id, review_user_id: review_user.id, workout_score_id: score.id), class: 'btn btn-xs btn-default'
+                - has_action = true
+              - if (is_staff || is_admin) && course_offering
+                - if has_action
+                  &nbsp;
+                = link_to 'View Log', organization_workout_offering_activity_log_path(id: workout_offering.id, workout_score_id: score.id, organization_id: course_offering.course.organization.slug, course_id: course_offering.course.slug, term_id: course_offering.term.slug), class: 'btn btn-xs btn-info'
+                - has_action = true
+              - unless has_action
+                \-

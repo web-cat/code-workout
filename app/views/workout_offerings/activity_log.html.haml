@@ -39,7 +39,7 @@
                 - ex = @exercise || (event[:details].respond_to?(:exercise_version) && event[:details].exercise_version.andand.exercise) || (event[:details].respond_to?(:exercise) && event[:details].exercise)
                 - if ex
                   &nbsp;
-                  = link_to 'View', organization_workout_offering_exercise_review_path(workout_offering_id: @workout_offering.id, review_user_id: @student.id, id: ex.id, attempt_id: event[:details].id, organization_id: @course_offering.course.organization.slug, course_id: @course_offering.course.slug, term_id: @course_offering.term.slug), class: 'btn btn-default btn-xs'
+                  = link_to 'View', organization_workout_offering_exercise_review_path(workout_offering_id: @workout_offering.id, review_user_id: @student.id, id: ex.id, attempt_id: event[:details].id, workout_score_id: (event[:details].respond_to?(:workout_score_id) ? event[:details].workout_score_id : nil), organization_id: @course_offering.course.organization.slug, course_id: @course_offering.course.slug, term_id: @course_offering.term.slug), class: 'btn btn-default btn-xs'
                 - if event[:details].respond_to?(:prompt_answers)
                   - event[:details].prompt_answers.each do |prompt_answer|
                     - specific = prompt_answer.respond_to?(:specific) && prompt_answer.specific.present? ? prompt_answer.specific : prompt_answer

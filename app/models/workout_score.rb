@@ -480,7 +480,7 @@ class WorkoutScore < ApplicationRecord
 
       record_score = true
       if scoring_attempt
-        if self.workout_offering.andand.most_recent
+        if self.workout_offering.nil? || self.workout_offering.exercise_score_to_keep == 'latest'
           #if  last_attempt
           record_score = (attempt.submit_time > scoring_attempt.submit_time)
         else

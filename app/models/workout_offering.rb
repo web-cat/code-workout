@@ -72,7 +72,34 @@ class WorkoutOffering < ApplicationRecord
     .where('opening_date IS NULL OR opening_date <= ?', Time.zone.now)
   }
 
-  enum score_to_keep: { highest: false, latest: true }
+  enum workout_score_to_keep: { highest: false, latest: true }, _prefix: true
+  enum exercise_score_to_keep: { highest: false, latest: true }, _prefix: true
+
+  alias_attribute :score_to_keep, :workout_score_to_keep
+  alias_attribute :most_recent, :exercise_score_to_keep
+
+  alias_method :latest?, :workout_score_to_keep_latest?
+  alias_method :highest?, :workout_score_to_keep_highest?
+
+  def workout_score_to_keep=(val)
+    if val == true || val == 'true' || val == '1'
+      super('latest')
+    elsif val == false || val == 'false' || val == '0'
+      super('highest')
+    else
+      super(val)
+    end
+  end
+
+  def exercise_score_to_keep=(val)
+    if val == true || val == 'true' || val == '1'
+      super('latest')
+    elsif val == false || val == 'false' || val == '0'
+      super('highest')
+    else
+      super(val)
+    end
+  end
 
   before_validation :sync_workout_policy
 
@@ -81,6 +108,7 @@ class WorkoutOffering < ApplicationRecord
 
   validates :course_offering, presence: true
   validates :workout, presence: true
+  validate :time_limit_required_for_multiple_attempts
 
 
   #~ Instance methods .........................................................
@@ -123,24 +151,32 @@ class WorkoutOffering < ApplicationRecord
 
 
   # -----------------------------------------------------------------
-  # Effective score_to_keep, resolving series inheritance or defaulting to 'highest'
-  def effective_score_to_keep
-    # When WorkoutSeries is present: series_resolver.resolve_base_setting(:score_to_keep)
-    score_to_keep || 'highest'
+  # Effective workout_score_to_keep, resolving series inheritance or defaulting to 'highest'
+  def effective_workout_score_to_keep
+    # When WorkoutSeries is present: series_resolver.resolve_base_setting(:workout_score_to_keep)
+    workout_score_to_keep || 'highest'
+  end
+  alias_method :effective_score_to_keep, :effective_workout_score_to_keep
+
+
+  # -----------------------------------------------------------------
+  # Kept score from a pre-fetched collection of scores for this offering
+  def kept_score_from(scores)
+    valid_scores = (scores || []).select { |s| s.score.present? }
+    return nil if valid_scores.empty?
+
+    if workout_score_to_keep_latest? || effective_workout_score_to_keep.to_s == 'latest'
+      valid_scores.sort_by { |s| s.attempt_number || 1 }.last
+    else # 'highest' (default)
+      valid_scores.max_by(&:score)
+    end
   end
 
 
   # -----------------------------------------------------------------
   # Kept workout score for a user based on scoring policy (highest vs latest)
   def kept_workout_score_for(user)
-    scores = scores_for(user).select { |s| s.score.present? }
-    return nil if scores.empty?
-
-    if latest? || effective_score_to_keep.to_s == 'latest'
-      scores.last
-    else # 'highest' (default)
-      scores.max_by(&:score)
-    end
+    kept_score_from(scores_for(user))
   end
 
 
@@ -197,7 +233,10 @@ class WorkoutOffering < ApplicationRecord
     has_attempts_remaining = attempts_left_for(user) > 0
     no_active_attempt = active_score_for(user).nil?
 
-    is_open && has_attempts_remaining && no_active_attempt && (is_staff || published)
+    tl = time_limit_for(user)
+    timed_if_subsequent = attempts_taken_for(user) == 0 || (tl.present? && tl.to_i > 0)
+
+    is_open && has_attempts_remaining && no_active_attempt && timed_if_subsequent && (is_staff || published)
   end
 
 
@@ -275,8 +314,8 @@ class WorkoutOffering < ApplicationRecord
   def ip_allowed?(client_ip, user = nil, workout_score = nil)
     return true if user && (user.global_role.andand.is_admin? || course_offering.andand.is_staff?(user))
 
-    ws = workout_score || (user ? (active_score_for(user) || score_for(user)) : nil)
-    if ws && ws.last_ip_address.present? && ws.last_ip_address == client_ip.to_s.strip
+    ws = workout_score || (user ? active_score_for(user) : nil)
+    if ws && (!ws.respond_to?(:closed?) || !ws.closed?) && ws.last_ip_address.present? && ws.last_ip_address == client_ip.to_s.strip
       return true
     end
 
@@ -315,9 +354,9 @@ class WorkoutOffering < ApplicationRecord
   def user_agent_allowed?(client_user_agent, user = nil, workout_score = nil)
     return true if user && (user.global_role.andand.is_admin? || course_offering.andand.is_staff?(user))
 
-    ws = workout_score || (user ? (active_score_for(user) || score_for(user)) : nil)
+    ws = workout_score || (user ? active_score_for(user) : nil)
     clean_ua = client_user_agent.to_s.strip
-    if ws && ws.last_user_agent.present? && ws.last_user_agent.to_s == clean_ua
+    if ws && (!ws.respond_to?(:closed?) || !ws.closed?) && ws.last_user_agent.present? && ws.last_user_agent.to_s == clean_ua
       return true
     end
 
@@ -460,7 +499,7 @@ class WorkoutOffering < ApplicationRecord
 
       exercise_versions = workout_score.attempts.map(&:exercise_version)
       exercise_versions.each do |ex|
-        if most_recent
+        if exercise_score_to_keep_latest?
           att = workout_score.attempts.where(exercise_version: ex).max_by(&:started_at)
         else
           att = workout_score.attempts.where(exercise_version: ex).max_by(&:score)
@@ -502,7 +541,7 @@ class WorkoutOffering < ApplicationRecord
 
   def workout_policy
     @workout_policy ||= begin
-      if (policy_mask.nil? || policy_mask == 0) && workout && workout.workout_offerings.where.not(id: id).any?
+      if (policy_mask.nil? || policy_mask == 0) && workout && workout.workout_offerings.respond_to?(:where) && workout.workout_offerings.where.not(id: id).any?
         source = workout.workout_policy
         WorkoutPolicy.new(source.values, source.mask)
       else
@@ -533,6 +572,13 @@ class WorkoutOffering < ApplicationRecord
 
   #~ Private instance methods .................................................
   private
+
+  def time_limit_required_for_multiple_attempts
+    is_multiple = workout_attempt_limit.nil? || workout_attempt_limit > 1 || workout_attempt_limit <= 0
+    if is_multiple && (time_limit.blank? || time_limit.to_i <= 0)
+      errors.add(:time_limit, 'is required when multiple workout attempts are allowed')
+    end
+  end
 
   def sync_workout_policy
     if @workout_policy

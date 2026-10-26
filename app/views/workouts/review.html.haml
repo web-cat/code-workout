@@ -34,7 +34,7 @@
             - if kept_score && kept_score.id == workout_score.id
               %span.label.label-success{ style: 'margin-left: 5px;' } Score
             &nbsp;&nbsp;&nbsp;Scoring Policy:
-            = @workout_offering.score_to_keep == 'latest' ? 'Latest attempt' : 'Highest attempt'
+            = @workout_offering.workout_score_to_keep == 'latest' ? 'Latest attempt' : 'Highest attempt'
         - if workout_score.andand.last_attempted_at
           &nbsp;&nbsp;&nbsp;Last Attempted:
           = l user_time(current_user, workout_score.last_attempted_at)

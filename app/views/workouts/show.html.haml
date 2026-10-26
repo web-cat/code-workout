@@ -7,15 +7,17 @@
 - manages_course = as_student ? false : (@manages_course.nil? ? (current_user ? (is_admin || course_offering.andand.is_manager?(current_user)) : false) : @manages_course)
 - past_scores = @past_scores || (@workout_offering ? @workout_offering.scores_for(current_user) : [])
 - active_score = @active_score || (@workout_offering ? @workout_offering.active_score_for(current_user) : nil)
+- time_limit = (@workout_offering ? @workout_offering.time_limit_for(current_user) : nil)
+- has_time_limit = time_limit.present? && time_limit > 0
 - can_retake = @can_retake.nil? ? (@workout_offering ? @workout_offering.can_start_new_attempt?(current_user) : false) : @can_retake
 - allowed_att = @workout_offering ? @workout_offering.attempts_allowed_for(current_user) : 1
-- multiple_allowed = @workout_offering ? (allowed_att.nil? || allowed_att > 1 || allowed_att == 0) : false
-- last_closed_score = past_scores.present? ? past_scores.select { |s| s.try(:closed?) || s.try(:completed?) }.last : nil
+- multiple_allowed = @workout_offering ? (has_time_limit && (allowed_att.nil? || allowed_att > 1 || allowed_att == 0)) : false
+- last_closed_score = past_scores.present? ? past_scores.select { |s| s.try(:closed?) }.last : nil
 - finished_score = last_closed_score || workout_score
-- is_finished = finished_score && (finished_score.try(:closed?) || finished_score.try(:completed?)) && (active_score.nil? || active_score.try(:closed?) || active_score.try(:completed?))
-- finished_at = finished_score ? (finished_score.try(:completed_at) || finished_score.try(:updated_at)) : nil
+- is_finished = finished_score && finished_score.try(:closed?) && (active_score.nil? || active_score.try(:closed?))
+- finished_at = finished_score ? finished_score.try(:updated_at) : nil
+- workout_policy = @workout_offering.andand.workout_policy || @workout.andand.workout_policy
 = render partial: 'layouts/breadcrumb'
-- time_limit = (@workout_offering ? @workout_offering.time_limit_for(current_user) : nil)
 
 - if can_view_as_student
   .pull-right{ style: 'margin-top: 5px;' }
@@ -44,7 +46,9 @@
   %table.table.table-striped{ style: 'width: auto' }
     %thead
       %tr
-        %th Course
+        %th Course Offering
+        - if multiple_allowed
+          %th Attempts
         %th From
         %th Due
         %th Until
@@ -53,6 +57,10 @@
       - @workout.workout_offerings.each do |woff|
         %tr
           %td= woff.course_offering.display_name
+          - if multiple_allowed
+            %td
+              - att = (woff.time_limit.present? && woff.time_limit > 0) ? woff.workout_attempt_limit : 1
+              = (att.nil? || att <= 0) ? 'Unlimited' : att
           %td
             - if woff.opening_date
               = l user_time(current_user, woff.opening_date)
@@ -80,11 +88,11 @@
       &nbsp;&nbsp;&nbsp;Time Limit:
       = "#{n_to_s(time_limit)} minutes"
     - if multiple_allowed
-      &nbsp;&nbsp;&nbsp;Allowed Attempts:
-      = (allowed_att.nil? || allowed_att <= 0) ? 'Unlimited' : allowed_att
-      &nbsp;&nbsp;&nbsp;Scoring:
-      = @workout_offering.score_to_keep == 'latest' ? 'Latest attempt' : 'Highest attempt'
-      &nbsp;&nbsp;&nbsp;Recorded Score:
+      &nbsp;&nbsp;&nbsp;Attempt:
+      - current_attempt = workout_score ? (workout_score.attempt_number || 1) : 1
+      - allowed_str = (allowed_att.nil? || allowed_att <= 0) ? 'Unlimited' : allowed_att
+      = "#{current_attempt}/#{allowed_str}"
+      &nbsp;&nbsp;&nbsp;Score:
       - if workout_score
         - if workout_score.show_score?
           = @workout_offering.effective_score_for(current_user)
@@ -94,6 +102,8 @@
         0
       = '/'
       = @workout.total_points
+      - if multiple_allowed
+        = @workout_offering.workout_score_to_keep == 'latest' ? '(latest attempt)' : '(highest attempt)'
     - else
       &nbsp;&nbsp;&nbsp;Score:
       - if workout_score
@@ -170,7 +180,8 @@
 %br
 %br
 
-- if @workout_offering && past_scores.present? && (is_staff || (multiple_allowed && past_scores.any? { |s| s.closed? || s.completed? }))
+- if @workout_offering && past_scores.present? && (is_staff || is_admin)
+  -# To show to students: || (multiple_allowed && past_scores.any? { |s| s.closed? }))
   = render partial: 'workouts/attempt_history',
     locals: { scores: past_scores,
       workout: @workout,
@@ -185,10 +196,14 @@
 
 %h2 Exercises
 
-- if !manages_course && workout_score.nil? && @workout_offering.andand.workout_policy.andand.hide_thumbnails_before_start
+- if @exs.empty?
+  .alert.alert-warning No exercises in this workout
+- elsif !manages_course && (workout_policy.andand.see_answers == false || ((workout_policy.andand.no_review_before_close || workout_policy.andand.hide_thumbnails_in_review_before_close) && !@workout_offering.andand.shutdown?))
+  %p= "This workout contains #{pluralize(@exs.size, 'exercise')}."
+  - if workout_score.andand.closed? && !@workout_offering.andand.shutdown? && (workout_policy.andand.no_review_before_close || workout_policy.andand.hide_thumbnails_in_review_before_close)
+    .alert.alert-warning Results will be visible after the assignment closes.
+- elsif !manages_course && workout_score.nil? && workout_policy.andand.hide_thumbnails_before_start
   .alert.alert-warning You must begin this workout before you can see its exercises.
-- elsif !manages_course && workout_score.andand.closed? && !@workout_offering.andand.shutdown? && (@workout_offering.andand.workout_policy.andand.no_review_before_close || @workout_offering.andand.workout_policy.andand.hide_thumbnails_in_review_before_close)
-  .alert.alert-warning Results will be visible after the assignment closes.
 - elsif is_staff && !as_student && @workout.exercise_pools.any?
   .workout-pools
     - @workout.exercise_pools.order(:position).chunk { |p| !p.single_exercise? }.each do |is_pool, group|
@@ -225,8 +240,6 @@
             start_workout: false,
             review: false
           .clearfix
-- elsif @exs.empty?
-  .alert.alert-warning No exercises in this workout
 - else
   - user = current_user
   - has_active_attempt = workout_score.present? && workout_score.respond_to?(:workout_score_exercises) && workout_score.workout_score_exercises.any?

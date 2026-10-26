@@ -128,7 +128,7 @@
     %code 90 minutes
     , or
     %code 90 min
-    .
+    \.
   %li
     %b Hours:
     Specify hours such as
@@ -162,7 +162,7 @@
     %code duration:
     interchangeably with
     %code time_limit:
-    .
+    \.
 
 %h3 Example with Time Limit Overrides:
 %pre.examples
@@ -293,16 +293,140 @@
         students:
           - Alice Smith <asmith@example.edu>
 
-%h2 7. Tips for Success
+%h2 7. Workout and Exercise Scoring Policies
+%p
+  You can allow students to take the workout multiple times and control how their final grades and individual problem scores are recorded using
+  %code workout_attempts:
+  ,
+  %code workout_score_to_keep:
+  , and
+  %code exercise_score_to_keep:
+  in the YAML.
+%ul
+  %li
+    %b workout_attempts:
+    The maximum number of full workout attempts allowed per student (e.g.,
+    %code 2
+    or
+    %code 3
+    ). If omitted, it defaults to 1 attempt. You can also specify
+    %code 0
+    or
+    %code unlimited
+    for unlimited retakes.
+  %li
+    %b Time Limit Requirement:
+    Whenever multiple workout attempts are allowed (attempt limit greater than 1 or unlimited), a
+    %code time_limit
+    is required so students cannot take unlimited time across repeated attempts.
+  %li
+    %b workout_score_to_keep:
+    Controls which workout attempt is used for the overall workout grade:
+    %code highest
+    (default) uses the best score across all attempts, while
+    %code latest
+    uses the score from the most recently completed attempt.
+  %li
+    %b exercise_score_to_keep:
+    Controls which submission score is kept for each individual exercise within an attempt:
+    %code latest
+    (default) records the score of their latest submission on that question, while
+    %code highest
+    records the highest score earned across all submissions on that question.
+  %li
+    %b Global Defaults:
+    Specify
+    %code workout_attempts:
+    ,
+    %code workout_score_to_keep:
+    , or
+    %code exercise_score_to_keep:
+    at the top level to apply to all sections by default.
+  %li
+    %b Per-Section Override:
+    Specify
+    %code workout_attempts:
+    ,
+    %code workout_score_to_keep:
+    , or
+    %code exercise_score_to_keep:
+    inside a specific section to customize scoring for that section.
+  %li
+    %b Student Extension Override:
+    Specify
+    %code workout_attempts:
+    within an extension group to grant additional retakes to individual students (e.g., for makeup exams or special circumstances).
+
+%h3 Example with Workout & Exercise Scoring:
+%pre.examples
+  :preserve
+    workout_attempts: 2                 # Allow 2 workout attempts for all sections
+    workout_score_to_keep: highest      # Keep highest score among workout attempts
+    exercise_score_to_keep: highest     # Keep highest score on each exercise
+    sections:
+      - section: CS 101 Section A
+        due: 2025-09-15 11:59 PM
+        from: 1 week
+        until: +2 days
+      - section: CS 101 Honors
+        due: 2025-09-15 11:59 PM
+        from: 1 week
+        until: +0 minutes
+        workout_attempts: 1             # Only 1 workout attempt for honors
+        exercise_score_to_keep: latest  # Exercise score based on latest attempt
+
+    extensions:
+      - workout_attempts: 3             # 1 extra makeup attempt for Alice
+        students:
+          - Alice Smith <asmith@example.edu>
+
+%h2 8. LMS Assignment URLs
+%p
+  You can associate course offerings with their corresponding assignment in Canvas, Blackboard, or other Learning Management Systems using the
+  %code lms_assignment_url:
+  setting in the YAML.
+%ul
+  %li
+    %b Global Default:
+    Specify
+    %code lms_assignment_url:
+    (or alias
+    %code url:
+    ) at the top level if all sections share the same assignment or if there is a single primary LMS link.
+  %li
+    %b Per-Section Override:
+    If different sections have different assignment IDs or URLs in your LMS, specify
+    %code lms_assignment_url:
+    inside each section under
+    %code sections:
+    \.
+
+%h3 Example with LMS URLs:
+%pre.examples
+  :preserve
+    lms_assignment_url: https://canvas.example.edu/courses/101/assignments/1001
+    sections:
+      - section: CS 101 Section A
+        due: 2025-09-15 11:59 PM
+        from: 1 week
+        until: +2 days
+      - section: CS 101 Section B
+        due: 2025-09-16 11:59 PM
+        from: 1 week
+        until: +2 days
+        lms_assignment_url: https://canvas.example.edu/courses/101/assignments/1002
+
+%h2 9. Tips for Success
 %ul
   %li
     %b Time Zones:
     All absolute dates are interpreted in your current time zone (as set in your profile).
   %li
     %b Validation:
-    The system will notify you if you enter an invalid student or an impossible relative offset (like a positive
+    The system will notify you if you enter an invalid student, an impossible relative offset (like a positive
     %code from
-    date).
+    date), or multiple attempts without a required time limit.
   %li
     %b Human Readable:
     When you save the form, the system will clean up your YAML to ensure it uses standardized units and explicit signs for clarity.
+
