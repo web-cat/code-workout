@@ -129,11 +129,6 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
       $('.empty-msg').css 'display', 'block'
       $('#ex-list').css 'display', 'none'
 
-  $('#allow-multiple-attempts').on 'change', ->
-    if $(this).is(':checked')
-      $('#multiple-attempts-panel').slideDown()
-    else
-      $('#multiple-attempts-panel').slideUp()
 
   $('#btn-submit-wo').click ->
     handle_submit()
@@ -260,6 +255,21 @@ check_completeness = ->
   messages = []
   messages.push 'Workout Name cannot be empty.' if $('#wo-name').val() == ''
   messages.push 'Workout must have at least 1 exercise.' if $('#ex-list li').length == 0
+  if $('#date-yaml').length > 0
+    yaml_text = $('#date-yaml').val() || ''
+    matches = yaml_text.match(/(?:workout_attempts|workout_attempt_limit|attempts)\s*:\s*([0-9]*)/g)
+    if matches
+      has_multiple = false
+      for m in matches
+        val_str = m.replace(/.*:\s*/, '').trim()
+        val = parseInt(val_str, 10)
+        if isNaN(val) || val <= 0 || val > 1
+          has_multiple = true
+          break
+      if has_multiple
+        time_limit_val = parseFloat($('#time-limit').val())
+        if isNaN(time_limit_val) || time_limit_val <= 0
+          messages.push 'Time limit must be greater than 0 when multiple workout attempts are allowed in YAML.'
   return messages
 
 handle_submit = ->
@@ -281,14 +291,6 @@ handle_submit = ->
   fd.append 'description', $('#description').val()
   fd.append 'time_limit', $('#time-limit').val()
   fd.append 'attempt_limit', $('#attempt-limit').val()
-  if $('#allow-multiple-attempts').length > 0
-    if $('#allow-multiple-attempts').is(':checked')
-      fd.append 'workout_attempt_limit', $('#workout-attempt-limit').val()
-    else
-      fd.append 'workout_attempt_limit', '1'
-  else
-    fd.append 'workout_attempt_limit', $('#workout-attempt-limit').val()
-  fd.append 'score_to_keep', $('#score-to-keep').val()
   
   policy = {}
   $('.policy-checkbox').each ->
@@ -298,17 +300,18 @@ handle_submit = ->
   fd.append 'policy', JSON.stringify policy
   
   fd.append 'exercises', JSON.stringify get_exercises()
-  fd.append 'date_yaml', $('#date-yaml').val()
+  fd.append 'date_yaml', $('#date-yaml').val() || ''
   fd.append 'removed_exercises', JSON.stringify window.codeworkout.removed_exercises
   
   fd.append 'is_public', $('#is-public').is ':checked'
   fd.append 'published', $('#published').is ':checked'
   
-  most_recent_el = $('#most-recent, #most_recent')
-  if most_recent_el.is('select')
-    fd.append 'most_recent', most_recent_el.val()
-  else
-    fd.append 'most_recent', most_recent_el.is(':checked')
+  exercise_score_el = $('#exercise-score-to-keep, #exercise_score_to_keep, #most-recent, #most_recent')
+  if exercise_score_el.length
+    if exercise_score_el.is('select')
+      fd.append 'exercise_score_to_keep', exercise_score_el.val()
+    else
+      fd.append 'exercise_score_to_keep', if exercise_score_el.is(':checked') then 'latest' else 'highest'
   
   fd.append 'term_id', window.codeworkout.term_id
   fd.append 'organization_id', window.codeworkout.organization_id

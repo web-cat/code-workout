@@ -303,7 +303,9 @@ describe WorkoutOffering, type: :model do
         workout: workout,
         course_offering: course_offering,
         workout_attempt_limit: 2,
-        score_to_keep: :highest,
+        time_limit: 30,
+        workout_score_to_keep: :highest,
+        exercise_score_to_keep: :latest,
         published: true,
         opening_date: 1.day.ago,
         hard_deadline: 2.days.from_now
@@ -336,14 +338,14 @@ describe WorkoutOffering, type: :model do
         allow(workout_offering).to receive(:workout_scores).and_return([ws1, ws2])
       end
 
-      it "keeps the highest score when score_to_keep is highest" do
-        workout_offering.score_to_keep = :highest
+      it "keeps the highest score when workout_score_to_keep is highest" do
+        workout_offering.workout_score_to_keep = :highest
         expect(workout_offering.effective_score_for(user)).to eq(95.0)
         expect(workout_offering.kept_workout_score_for(user)).to eq(ws2)
       end
 
-      it "keeps the latest attempt score when score_to_keep is latest" do
-        workout_offering.score_to_keep = :latest
+      it "keeps the latest attempt score when workout_score_to_keep is latest" do
+        workout_offering.workout_score_to_keep = :latest
         ws1_high = double('WorkoutScore', id: 101, user_id: 1, workout_id: 5, attempt_number: 1, score: 98.0, closed?: true)
         ws2_low = double('WorkoutScore', id: 102, user_id: 1, workout_id: 5, attempt_number: 2, score: 82.0, closed?: true)
         allow(workout_offering).to receive(:workout_scores).and_return([ws1_high, ws2_low])
@@ -352,11 +354,29 @@ describe WorkoutOffering, type: :model do
         expect(workout_offering.kept_workout_score_for(user)).to eq(ws2_low)
       end
 
-      it "falls back to highest when score_to_keep is nil" do
-        workout_offering.score_to_keep = nil
-        expect(workout_offering.effective_score_to_keep).to eq('highest')
+      it "falls back to highest when workout_score_to_keep is nil" do
+        workout_offering.workout_score_to_keep = nil
+        expect(workout_offering.effective_workout_score_to_keep).to eq('highest')
         expect(workout_offering.effective_score_for(user)).to eq(95.0)
         expect(workout_offering.kept_workout_score_for(user)).to eq(ws2)
+      end
+
+      it "aliases latest? and highest? to workout_score_to_keep predicate methods" do
+        workout_offering.workout_score_to_keep = :latest
+        expect(workout_offering.latest?).to be true
+        expect(workout_offering.highest?).to be false
+
+        workout_offering.workout_score_to_keep = :highest
+        expect(workout_offering.latest?).to be false
+        expect(workout_offering.highest?).to be true
+      end
+
+      it "resolves kept score from a pre-fetched collection with kept_score_from" do
+        workout_offering.workout_score_to_keep = :highest
+        expect(workout_offering.kept_score_from([ws1, ws2])).to eq(ws2)
+
+        workout_offering.workout_score_to_keep = :latest
+        expect(workout_offering.kept_score_from([ws1, ws2])).to eq(ws2)
       end
     end
 
@@ -442,4 +462,54 @@ describe WorkoutOffering, type: :model do
       expect(vis_sql).to include("policy_values & 128")
     end
   end
+
+  describe "validation: time_limit_required_for_multiple_attempts" do
+    let(:workout) { FactoryBot.build_stubbed(:workout) }
+    let(:course_offering) { FactoryBot.build_stubbed(:course_offering) }
+
+    it "is invalid if workout_attempt_limit allows multiple attempts and time_limit is blank" do
+      wo = WorkoutOffering.new(
+        workout: workout,
+        course_offering: course_offering,
+        workout_attempt_limit: 2,
+        time_limit: nil
+      )
+      expect(wo).not_to be_valid
+      expect(wo.errors[:time_limit]).to include('is required when multiple workout attempts are allowed')
+    end
+
+    it "is invalid if workout_attempt_limit is nil (unlimited) and time_limit is <= 0" do
+      wo = WorkoutOffering.new(
+        workout: workout,
+        course_offering: course_offering,
+        workout_attempt_limit: nil,
+        time_limit: 0
+      )
+      expect(wo).not_to be_valid
+      expect(wo.errors[:time_limit]).to include('is required when multiple workout attempts are allowed')
+    end
+
+    it "is valid if workout_attempt_limit allows multiple attempts and time_limit is positive" do
+      wo = WorkoutOffering.new(
+        workout: workout,
+        course_offering: course_offering,
+        workout_attempt_limit: 2,
+        time_limit: 30
+      )
+      wo.valid?
+      expect(wo.errors[:time_limit]).to be_empty
+    end
+
+    it "is valid if workout_attempt_limit is 1 (single attempt) even without time_limit" do
+      wo = WorkoutOffering.new(
+        workout: workout,
+        course_offering: course_offering,
+        workout_attempt_limit: 1,
+        time_limit: nil
+      )
+      wo.valid?
+      expect(wo.errors[:time_limit]).to be_empty
+    end
+  end
 end
+
