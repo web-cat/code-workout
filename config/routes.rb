@@ -491,7 +491,7 @@ Rails.application.routes.draw do
     get ':course_id/:term_id/:workout_offering_id/review/:review_user_id/:id' => 'exercises#practice', as: :workout_offering_exercise_review
     get ':course_id/:term_id/:id' => 'workout_offerings#show', as: :workout_offering
     get ':course_id/:term_id/review/:review_user_id/:id' => 'workout_offerings#review', as: :workout_offering_review
-    post ':id/:term_id/generate_gradebook/' => 'courses#generate_gradebook', as: :course_gradebook
+    match ':id/:term_id/generate_gradebook/' => 'courses#generate_gradebook', via: [:get, :post], as: :course_gradebook
     get ':id(/:term_id)' => 'courses#show', as: :course
   end
 
@@ -509,7 +509,7 @@ Rails.application.routes.draw do
     delete 'unenroll' => :unenroll, as: :unenroll
     get 'upload_roster' => 'upload_roster#index', as: :upload_roster
     post 'upload_roster/upload' => 'upload_roster#upload', as: :upload_roster_upload
-    post 'generate_gradebook' => :generate_gradebook, as: :gradebook
+    match 'generate_gradebook' => :generate_gradebook, via: [:get, :post], as: :gradebook
     post 'add_workout/:workout_name' => 'course_offerings#add_workout', as: :add_workout
     post 'store_workout/:id' => :store_workout, as: :store_workout
     get '/search_enrolled_users' => :search_enrolled_users, as: :search_enrolled_users
@@ -555,10 +555,11 @@ Rails.application.routes.draw do
   end
 
   get 'help' => 'help#index'
-  get 'help/exercise_format' => 'help#exercise_format'
-  get 'help/exercise_peml_format' => 'help#exercise_peml_format'
-  get 'help/lti_configuration' => 'help#lti_configuration'
-  get 'help/specifying_due_dates' => 'help#specifying_due_dates'
+  get 'help/exercise_format' => 'help#exercise_format', as: :help_exercise_format
+  get 'help/exercise_peml_format' => 'help#exercise_peml_format', as: :help_exercise_peml_format
+  get 'help/lti_configuration' => 'help#lti_configuration', as: :help_lti_configuration
+  get 'help/specifying_due_dates' => 'help#specifying_due_dates', as: :help_specifying_due_dates
+  get 'help/exercise_pools' => 'help#exercise_pools', as: :help_exercise_pools
 
   get 'static_pages/home' => 'static_pages#home'
   get 'static_pages/info' => 'static_pages#info'

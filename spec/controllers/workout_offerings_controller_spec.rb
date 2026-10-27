@@ -472,6 +472,34 @@ RSpec.describe WorkoutOfferingsController, type: :controller do
         expect(controller.instance_variable_get(:@message)).to include("requires a specific browser")
       end
 
+      it "redirects to the first exercise for the attempt score when accessing practice" do
+        first_ex = FactoryBot.build_stubbed(:exercise, id: 77)
+        score = double('WorkoutScore', id: 301, closed?: false)
+        allow(workout_offering).to receive(:score_for).with(student).and_return(score)
+        allow(workout_offering).to receive(:active_score_for).with(student).and_return(score)
+        allow(workout_offering).to receive(:can_be_practiced_by?).with(student).and_return(true)
+        allow(workout_offering).to receive(:ip_allowed?).and_return(true)
+        allow(workout_offering).to receive(:user_agent_allowed?).and_return(true)
+
+        expect(workout).to receive(:first_exercise).with(score).and_return(first_ex)
+
+        get :practice, params: {
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          id: '201'
+        }
+
+        expect(response).to redirect_to(organization_workout_offering_exercise_path(
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          workout_offering_id: '201',
+          workout_score_id: 301,
+          id: 77
+        ))
+      end
+
       it "does not create a WorkoutScore when IP is not allowed" do
         allow(workout_offering).to receive(:ip_allowed?).and_return(false)
         expect(WorkoutScore).not_to receive(:new)
@@ -568,6 +596,34 @@ RSpec.describe WorkoutOfferingsController, type: :controller do
         ))
         expect(flash[:notice]).to eq('You have completed all allowed attempts for this workout.')
       end
+
+      it "redirects to exercise review path when score is closed, exercise is specified, and review is allowed" do
+        closed_score = double('WorkoutScore', id: 301, closed?: true)
+        exercise = double('Exercise', id: 45)
+        allow(workout_offering).to receive(:ip_allowed?).and_return(true)
+        allow(workout_offering).to receive(:user_agent_allowed?).and_return(true)
+        allow(workout_offering).to receive(:workout_policy).and_return(WorkoutPolicy.new(see_answers: true, no_review_before_close: false))
+        allow(WorkoutScore).to receive(:find_by).with(id: '301').and_return(closed_score)
+        allow(Exercise).to receive(:find_by).with(id: '45').and_return(exercise)
+
+        get :practice, params: {
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          id: '201',
+          exercise_id: '45',
+          workout_score_id: '301'
+        }
+
+        expect(response).to redirect_to(organization_workout_offering_exercise_path(
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          workout_offering_id: '201',
+          id: 45,
+          workout_score_id: 301
+        ))
+      end
     end
 
     describe "GET #error" do
@@ -607,6 +663,33 @@ RSpec.describe WorkoutOfferingsController, type: :controller do
           workout: workout,
           attempt_number: 2
         )).and_return(double('WorkoutScore', id: 302))
+
+        post :start_attempt, params: {
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          id: '201'
+        }
+
+        expect(response).to redirect_to(organization_workout_offering_exercise_path(
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          workout_offering_id: '201',
+          workout_score_id: 302,
+          id: 55
+        ))
+      end
+
+      it "passes the new attempt score to Workout#first_exercise to redirect to the attempt's sampled exercise" do
+        allow(workout_offering).to receive(:can_start_new_attempt?).with(student).and_return(true)
+        allow(workout_offering).to receive(:active_score_for).with(student).and_return(nil)
+        allow(workout_offering).to receive(:attempts_taken_for).with(student).and_return(1)
+        allow(workout_offering).to receive(:attempts_left_for).with(student).and_return(1)
+
+        new_score = double('WorkoutScore', id: 302)
+        allow(WorkoutScore).to receive(:create!).and_return(new_score)
+        expect(workout).to receive(:first_exercise).with(new_score).and_return(first_exercise)
 
         post :start_attempt, params: {
           organization_id: 'vt',
@@ -784,6 +867,26 @@ RSpec.describe WorkoutOfferingsController, type: :controller do
       expect(response.status).to eq(200)
       expect(controller.instance_variable_get(:@all_scores)).to eq([score1, score2])
       expect(controller.instance_variable_get(:@workout_score)).to eq(score1)
+    end
+
+    it "assigns @exs from attempt snapshot exercises when present" do
+      assigned_ex = double('Exercise', id: 55, name: 'Assigned Ex')
+      wse = double('WorkoutScoreExercise', exercise: assigned_ex)
+      wse_relation = double('WorkoutScoreExercisesRelation', any?: true)
+      allow(wse_relation).to receive(:includes).and_return([wse])
+      allow(score1).to receive(:workout_score_exercises).and_return(wse_relation)
+
+      get :review, params: {
+        organization_id: 'vt',
+        course_id: 'cs1114',
+        term_id: 'fall2026',
+        id: '201',
+        review_user_id: student.id,
+        workout_score_id: 301
+      }
+
+      expect(response.status).to eq(200)
+      expect(controller.instance_variable_get(:@exs)).to eq([assigned_ex])
     end
   end
 end

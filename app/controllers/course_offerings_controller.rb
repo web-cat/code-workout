@@ -388,7 +388,16 @@ class CourseOfferingsController < ApplicationController
   # -------------------------------------------------------------
   def generate_gradebook
     @course_enrolled = CourseEnrollment.where(course_offering: @course_offering).
+                         includes(:user).
                          sort_by{|ce| [ce.user.last_name.to_s.downcase, ce.user.first_name.to_s.downcase, ce.user.email]}
+    if @course_offering.respond_to?(:workout_offerings) && @course_offering.workout_offerings.respond_to?(:pluck)
+      offering_ids = @course_offering.workout_offerings.pluck(:id) rescue []
+      if offering_ids.any?
+        scores = WorkoutScore.where(workout_offering_id: offering_ids) rescue []
+        @scores_by_offering_and_user = scores.group_by { |ws| [ws.workout_offering_id, ws.user_id] } rescue {}
+      end
+    end
+
     respond_to do |format|
       format.csv do
         @filename = "#{@course_offering.course.number}-" \

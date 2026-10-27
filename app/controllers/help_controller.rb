@@ -13,4 +13,7 @@ class HelpController < ApplicationController
   def exercise_peml_format
   end
 
+  def exercise_pools
+  end
+
 end

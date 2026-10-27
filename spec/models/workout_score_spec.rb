@@ -53,6 +53,78 @@ describe WorkoutScore, type: :model do
     end
   end
 
+  describe "#deadline" do
+    let(:user) { FactoryBot.build_stubbed(:user, id: 1) }
+    let(:workout_offering) { FactoryBot.build_stubbed(:workout_offering, id: 20) }
+    let(:start_time) { Time.zone.parse('2026-10-26 12:00:00') }
+    let(:workout_score) do
+      FactoryBot.build_stubbed(
+        :workout_score,
+        user: user,
+        workout_offering: workout_offering,
+        started_at: start_time
+      )
+    end
+
+    it "returns nil when workout offering is nil" do
+      workout_score.workout_offering = nil
+      expect(workout_score.deadline).to be_nil
+    end
+
+    it "returns nil when untimed" do
+      allow(workout_offering).to receive(:time_limit_for).with(user).and_return(nil)
+      expect(workout_score.deadline).to be_nil
+    end
+
+    it "returns started_at + time_limit when no hard deadline exists" do
+      allow(workout_offering).to receive(:time_limit_for).with(user).and_return(30)
+      allow(workout_offering).to receive(:hard_deadline_for).with(user).and_return(nil)
+      expect(workout_score.deadline).to eq(start_time + 30.minutes)
+    end
+
+    it "returns hard_deadline when hard_deadline is earlier than time limit" do
+      allow(workout_offering).to receive(:time_limit_for).with(user).and_return(30)
+      earlier_deadline = start_time + 15.minutes
+      allow(workout_offering).to receive(:hard_deadline_for).with(user).and_return(earlier_deadline)
+      expect(workout_score.deadline).to eq(earlier_deadline)
+    end
+
+    it "returns time limit deadline when hard_deadline is later" do
+      allow(workout_offering).to receive(:time_limit_for).with(user).and_return(30)
+      later_deadline = start_time + 60.minutes
+      allow(workout_offering).to receive(:hard_deadline_for).with(user).and_return(later_deadline)
+      expect(workout_score.deadline).to eq(start_time + 30.minutes)
+    end
+  end
+
+  describe "#time_remaining" do
+    let(:user) { FactoryBot.build_stubbed(:user, id: 1) }
+    let(:workout_offering) { FactoryBot.build_stubbed(:workout_offering, id: 20) }
+    let(:workout_score) do
+      FactoryBot.build_stubbed(
+        :workout_score,
+        user: user,
+        workout_offering: workout_offering,
+        started_at: Time.zone.now - 10.minutes
+      )
+    end
+
+    it "returns nil when untimed" do
+      allow(workout_score).to receive(:deadline).and_return(nil)
+      expect(workout_score.time_remaining).to be_nil
+    end
+
+    it "returns remaining minutes when deadline is in the future" do
+      allow(workout_score).to receive(:deadline).and_return(Time.zone.now + 20.minutes)
+      expect(workout_score.time_remaining).to be_within(0.1).of(20.0)
+    end
+
+    it "returns 0.0 when deadline has passed" do
+      allow(workout_score).to receive(:deadline).and_return(Time.zone.now - 5.minutes)
+      expect(workout_score.time_remaining).to eq(0.0)
+    end
+  end
+
   describe "last_user_agent association and setter" do
     let(:sample_ua) { "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 CLDB/2.1.2.04" }
     let(:ws) { described_class.new }
@@ -131,6 +203,112 @@ describe WorkoutScore, type: :model do
       expect(tp_mock).to receive(:post_replace_result!).with(0.95)
 
       workout_score.update_lti
+    end
+  end
+
+  describe "randomized exercise pools & attempt sampling" do
+    let(:user) { FactoryBot.create(:user) }
+    let(:workout) { FactoryBot.create(:workout) }
+    let(:ex1) { FactoryBot.create(:coding_exercise, name: 'Ex 1') }
+    let(:ex2) { FactoryBot.create(:coding_exercise, name: 'Ex 2') }
+    let(:ex3) { FactoryBot.create(:coding_exercise, name: 'Ex 3') }
+    let(:ex4) { FactoryBot.create(:coding_exercise, name: 'Ex 4') }
+
+    let!(:pool1) do
+      # Pool 1: 1 fixed exercise (k = 1, N = 1)
+      p = ExercisePool.create!(workout: workout, select_count: 1, points: 10.0, position: 1)
+      ExercisePoolItem.create!(exercise_pool: p, exercise: ex1, position: 1)
+      p
+    end
+
+    let!(:pool2) do
+      # Pool 2: 1 chosen from 2 candidates (k = 1, N = 2)
+      p = ExercisePool.create!(workout: workout, select_count: 1, points: 20.0, position: 2)
+      ExercisePoolItem.create!(exercise_pool: p, exercise: ex2, position: 1)
+      ExercisePoolItem.create!(exercise_pool: p, exercise: ex3, position: 2)
+      p
+    end
+
+    describe "#generate_attempt_exercises!" do
+      it "automatically generates attempt exercises on create" do
+        score = WorkoutScore.create!(user: user, workout: workout)
+        expect(score.workout_score_exercises.count).to eq(2)
+        expect(score.exercises_remaining).to eq(2)
+        expect(score.exercises_completed).to eq(0)
+
+        # Slot 1 must be ex1
+        wse1 = score.workout_score_exercises.find_by(position: 1)
+        expect(wse1.exercise).to eq(ex1)
+        expect(wse1.points).to eq(10.0)
+
+        # Slot 2 must be either ex2 or ex3
+        wse2 = score.workout_score_exercises.find_by(position: 2)
+        expect([ex2, ex3]).to include(wse2.exercise)
+        expect(wse2.points).to eq(20.0)
+      end
+
+      it "avoids duplicate exercise selections on retakes when fresh candidates are available" do
+        # Attempt 1
+        score1 = WorkoutScore.create!(user: user, workout: workout)
+        chosen1 = score1.workout_score_exercises.find_by(exercise_pool: pool2).exercise
+
+        # Attempt 2 should pick the unseen candidate from pool2
+        score2 = WorkoutScore.create!(user: user, workout: workout)
+        chosen2 = score2.workout_score_exercises.find_by(exercise_pool: pool2).exercise
+
+        other_candidate = (chosen1 == ex2 ? ex3 : ex2)
+        expect(chosen2).to eq(other_candidate)
+      end
+
+      it "gracefully samples from seen candidates when pool size is exhausted" do
+        score1 = WorkoutScore.create!(user: user, workout: workout)
+        score2 = WorkoutScore.create!(user: user, workout: workout)
+
+        # Attempt 3: All candidates for pool2 have been seen in prior attempts
+        expect {
+          score3 = WorkoutScore.create!(user: user, workout: workout)
+          chosen3 = score3.workout_score_exercises.find_by(exercise_pool: pool2).exercise
+          expect([ex2, ex3]).to include(chosen3)
+        }.not_to raise_error
+      end
+
+      it "supports sampling multiple exercises from a pool (draw k from N where k > 1)" do
+        pool3 = ExercisePool.create!(workout: workout, select_count: 2, points: 15.0, position: 3)
+        ExercisePoolItem.create!(exercise_pool: pool3, exercise: ex2, position: 1)
+        ExercisePoolItem.create!(exercise_pool: pool3, exercise: ex3, position: 2)
+        ExercisePoolItem.create!(exercise_pool: pool3, exercise: ex4, position: 3)
+
+        score = WorkoutScore.create!(user: user, workout: workout)
+        pool3_exercises = score.workout_score_exercises.where(exercise_pool: pool3)
+        expect(pool3_exercises.count).to eq(2)
+        expect(pool3_exercises.map(&:points)).to eq([15.0, 15.0])
+      end
+    end
+
+    describe "helper methods" do
+      let(:score) { WorkoutScore.create!(user: user, workout: workout) }
+
+      it "#points_for returns the attempt-specific points" do
+        expect(score.points_for(ex1)).to eq(10.0)
+      end
+
+      it "#total_points returns sum of assigned exercise points" do
+        expect(score.total_points).to eq(30.0)
+      end
+
+      it "#total_exercises returns count of assigned exercises" do
+        expect(score.total_exercises).to eq(2)
+      end
+
+      it "Workout#first_exercise and #next_exercise respect the attempt snapshot" do
+        assigned = score.workout_score_exercises.order(:position).map(&:exercise)
+        first_ex = assigned.first
+        second_ex = assigned.second
+
+        expect(workout.first_exercise(score)).to eq(first_ex)
+        expect(workout.next_exercise(first_ex, score)).to eq(second_ex)
+        expect(workout.next_exercise(second_ex, score)).to eq(first_ex)
+      end
     end
   end
 end

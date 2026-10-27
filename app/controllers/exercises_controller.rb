@@ -648,9 +648,9 @@ class ExercisesController < ApplicationController
       current_user.global_role.andand.is_admin? ||
       @workout_offering.andand.course_offering.andand.is_staff?(current_user)
     )
-    @is_staff_review = params[:review_user_id].present? && is_staff
+    @is_staff_review = params[:review_user_id].present? && is_staff && (params[:review_user_id].to_s != current_user.id.to_s)
 
-    if params[:review_user_id].present? && !is_staff
+    if params[:review_user_id].present? && !is_staff && (params[:review_user_id].to_s != current_user.id.to_s)
       redirect_to root_path, alert: 'You are not authorized to review other users.' and return
     end
 
@@ -797,31 +797,30 @@ class ExercisesController < ApplicationController
 
     @msg = nil
     @user_deadline = nil
-    student_review = false
+    @student_review = false
     if @is_staff_review
-      student_review = true
+      @student_review = true
+    elsif @workout_score.andand.closed?
+      @msg = 'The time limit has passed. This assignment is closed and no ' +
+        'longer accepting submissions.'
+      @student_review = true
     elsif @user_time_limit
-      if @workout_score.andand.closed?
-        @msg = 'The time limit has passed. This assignment is closed and no ' +
-          'longer accepting submissions.'
-        student_review = true
-      else
-        start_time = @workout_score ? @workout_score.started_at : Time.zone.now
-        @user_deadline = start_time + @user_time_limit.minutes
-        if @workout_offering.hard_deadline_for(current_user)
-          @user_deadline = [@user_deadline,
-            @workout_offering.hard_deadline_for(current_user)].min
-        end
-        @user_deadline = @user_deadline.to_s
-        @user_deadline = @user_deadline.split(" ")[0] + "T" + @user_deadline.split(" ")[1]
-        @server_now = Time.zone.now.to_s
-        @server_now = @server_now.split(" ")[0] + "T" + @server_now.split(" ")[1]
-        @msg = 'Time remaining - ##:##'
+      start_time = @workout_score ? @workout_score.started_at : Time.zone.now
+      @user_deadline = start_time + @user_time_limit.minutes
+      if @workout_offering.hard_deadline_for(current_user)
+        @user_deadline = [@user_deadline,
+          @workout_offering.hard_deadline_for(current_user)].min
       end
+      @user_deadline = @user_deadline.to_s
+      @user_deadline = @user_deadline.split(" ")[0] + "T" + @user_deadline.split(" ")[1]
+      @server_now = Time.zone.now.to_s
+      @server_now = @server_now.split(" ")[0] + "T" + @server_now.split(" ")[1]
+      @msg = 'Time remaining - ##:##'
     elsif @workout_offering && !@workout_offering.andand.can_be_practiced_by?(current_user)
       @msg = 'This assignment is now closed and no longer accepting submissions.'
-      student_review = true
+      @student_review = true
     end
+    student_review = @student_review
 
     # display the scored attempt if in review mode (for students or instructors)
     if @workout_score
@@ -840,10 +839,15 @@ class ExercisesController < ApplicationController
       end
     end
 
-    if @workout.andand.exercise_workouts.andand.where(
+    if @workout_score
+      @max_points = @workout_score.points_for(@exercise)
+    elsif @workout.andand.exercise_workouts.andand.where(
       exercise: @exercise).andand.any?
       @max_points = @workout.exercise_workouts.
         where(exercise: @exercise).first.points
+    elsif @workout
+      pool = @workout.exercise_pools.joins(:exercise_pool_items).where(exercise_pool_items: { exercise_id: @exercise.id }).first
+      @max_points = pool ? pool.points : nil
     end
 
     @responses = ['There are no responses yet!']
@@ -869,7 +873,17 @@ class ExercisesController < ApplicationController
     end
 
     # Preload exercises and attempt data for the workout sidebar
-    if @workout
+    if @workout_score && @workout_score.workout_score_exercises.any?
+      @workout_exercises = @workout_score.workout_score_exercises.includes(
+        exercise: [
+          { current_version: :prompts },
+          :tags,
+          :languages,
+          :exercise_workouts
+        ]
+      ).map(&:exercise)
+      ex_count = @workout_exercises.size
+    elsif @workout
       @workout_exercises = @workout.exercises.includes(
         { current_version: :prompts },
         :tags,
@@ -1123,9 +1137,14 @@ class ExercisesController < ApplicationController
     # prompt = @exercise_version.prompts.first.specific
     # prompt_answer = @attempt.prompt_answers.first  # already specific here
 
-    if @workout.andand.exercise_workouts.andand.where(exercise: @exercise).andand.any?
+    if @workout_score
+      @max_points = @workout_score.points_for(@exercise)
+    elsif @workout.andand.exercise_workouts.andand.where(exercise: @exercise).andand.any?
       @max_points = @workout.exercise_workouts.
         where(exercise: @exercise).first.points
+    elsif @workout
+      pool = @workout.exercise_pools.joins(:exercise_pool_items).where(exercise_pool_items: { exercise_id: @exercise.id }).first
+      @max_points = pool ? pool.points : 10.0
     else # case when exercise being practised is not part of any workout
       @max_points = 10.0
     end
@@ -1200,16 +1219,17 @@ class ExercisesController < ApplicationController
           @workout_offering = @workout_score.workout_offering
           render :js => "window.location = '" +
             organization_workout_offering_practice_path(
-            exercise_id: @workout_score.workout.next_exercise(@exercise),
+            exercise_id: @workout_score.workout.next_exercise(@exercise, @workout_score),
             organization_id: @workout_offering.course_offering.course.organization.slug,
             course_id: @workout_offering.course_offering.course.slug,
             term_id: @workout_offering.course_offering.term.slug,
             id: @workout_offering.id,
+            workout_score_id: @workout_score.id,
             lti_launch: @lti_launch) + "' "
         elsif @workout_score.andand.workout
           render :js => "window.location = '" +
             exercise_practice_path(
-              @workout_score.workout.next_exercise(@exercise),
+              @workout_score.workout.next_exercise(@exercise, @workout_score),
               workout_id: @workout_score.workout.id,
               workout_score_id: @workout_score.andand.id,
               lti_launch: @lti_launch) + "' "

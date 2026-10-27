@@ -82,4 +82,60 @@ describe "courses/generate_gradebook.csv.shaper" do
     expect(rendered).to include('"Doe, Jr."')
     expect(rendered).not_to include('&quot;')
   end
+
+  it 'renders attempt columns with "#{wkt.name} (#{wkt.id}, try #{attempt_number})" when multiple attempts are allowed' do
+    workout_offering1 = double(
+      'WorkoutOffering',
+      id: 501,
+      workout: workout1,
+      workout_id: 42,
+      lti_assignment_id: nil,
+      workout_attempt_limit: 2,
+      workout_scores: [],
+      student_extensions: []
+    )
+    workout_offering2 = double(
+      'WorkoutOffering',
+      id: 502,
+      workout: workout2,
+      workout_id: 107,
+      lti_assignment_id: nil,
+      workout_attempt_limit: 1,
+      workout_scores: [],
+      student_extensions: []
+    )
+    allow(offering).to receive(:workout_offerings).and_return([workout_offering1, workout_offering2])
+
+    student_role = CourseRole.find_by(name: 'Student') || double('CourseRole', id: 3)
+    allow(CourseRole).to receive(:find_by).with(name: 'Student').and_return(student_role)
+
+    student1 = double('User', id: 1, email: 'jane@example.com', first_name: 'Jane', last_name: 'Doe')
+    enrollment1 = double('CourseEnrollment', user_id: 1, user: student1, course_role_id: student_role.id)
+    allow(CourseEnrollment).to receive(:where).with(course_offering_id: offering.id).and_return([enrollment1])
+
+    score_att1 = double('WorkoutScore', attempt_number: 1, score: 75.0)
+    score_att2 = double('WorkoutScore', attempt_number: 2, score: 95.0)
+
+    allow(workout_offering1).to receive(:effective_score_for).with(student1).and_return(95.0)
+    allow(workout_offering1).to receive(:scores_for).with(student1).and_return([score_att1, score_att2])
+    allow(workout_offering2).to receive(:effective_score_for).with(student1).and_return(nil)
+    allow(workout_offering2).to receive(:scores_for).with(student1).and_return([])
+
+    render
+    lines = CSV.parse(rendered)
+    header = lines[0]
+    expect(header).to eq([
+      'Course Offering Id',
+      'Course Offering',
+      'First Name',
+      'Second Name',
+      'Variables and Types (42)',
+      'Variables and Types (42, try 1)',
+      'Variables and Types (42, try 2)',
+      'Loops and Conditionals (107)',
+      'Total'
+    ])
+
+    expect(lines[1]).to eq(['1', 'Section 1', 'Jane', 'Doe', '95.0', '75.0', '95.0', 'Not attempted', '95.0'])
+  end
 end

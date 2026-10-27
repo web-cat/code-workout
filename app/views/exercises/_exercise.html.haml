@@ -58,16 +58,31 @@
                 course_id: workout_offering.course_offering.course.slug,
                 term_id: workout_offering.course_offering.term.slug,
                 id: workout_offering.id,
+                workout_score_id: workout_score.andand.id,
                 lti_launch: @lti_launch)
-          - elsif review && ((@scoring_attempts_by_version_id && @scoring_attempts_by_version_id[exercise.current_version_id].present?) || (@attempts_by_version_id && @attempts_by_version_id[exercise.current_version_id].present?) || (workout_score && workout_score.attempts.loaded? ? workout_score.attempts.any? { |a| a.exercise_version_id == exercise.current_version_id } : Attempt.where(exercise_version: exercise.current_version, user: user).any?))
-            = link_to exercise.display_name,
-              organization_workout_offering_exercise_review_path(id: exercise.id,
-                organization_id: workout_offering.course_offering.course.organization.slug,
-                course_id: workout_offering.course_offering.course.slug,
-                term_id: workout_offering.course_offering.term.slug,
-                review_user_id: user.id, workout_offering_id: workout_offering.id,
-                lti_launch: @lti_launch)
+          - elsif review && (attempt.present? || (@scoring_attempts_by_version_id && @scoring_attempts_by_version_id[exercise.current_version_id].present?) || (@attempts_by_version_id && @attempts_by_version_id[exercise.current_version_id].present?) || (workout_score ? (workout_score.attempts.loaded? ? workout_score.attempts.any? { |a| a.exercise_version_id == exercise.current_version_id } : workout_score.attempts.where(exercise_version: exercise.current_version).any?) : Attempt.where(exercise_version: exercise.current_version, user: user).any?))
+            - if user.id == current_user.id
+              = link_to exercise.display_name,
+                organization_workout_offering_exercise_path(id: exercise.id,
+                  organization_id: workout_offering.course_offering.course.organization.slug,
+                  course_id: workout_offering.course_offering.course.slug,
+                  term_id: workout_offering.course_offering.term.slug,
+                  workout_offering_id: workout_offering.id,
+                  workout_score_id: workout_score.andand.id,
+                  lti_launch: @lti_launch)
+            - else
+              = link_to exercise.display_name,
+                organization_workout_offering_exercise_review_path(id: exercise.id,
+                  organization_id: workout_offering.course_offering.course.organization.slug,
+                  course_id: workout_offering.course_offering.course.slug,
+                  term_id: workout_offering.course_offering.term.slug,
+                  review_user_id: user.id,
+                  workout_offering_id: workout_offering.id,
+                  workout_score_id: workout_score.andand.id,
+                  lti_launch: @lti_launch)
           - elsif review
+            = exercise.display_name
+          - elsif !start_workout
             = exercise.display_name
           - else
             = link_to exercise.display_name,
@@ -76,6 +91,7 @@
                 course_id: workout_offering.course_offering.course.slug,
                 term_id: workout_offering.course_offering.term.slug,
                 workout_offering_id: workout_offering.id,
+                workout_score_id: workout_score.andand.id,
                 lti_launch: @lti_launch)
         - else
           = exercise.display_name

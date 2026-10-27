@@ -1,14 +1,14 @@
 require 'spec_helper'
 
 describe "courses/_tab_workouts.html.haml", type: :view do
-  let(:now) { Time.zone.parse('2026-10-14 12:00:00') }
+  let(:now) { Time.zone.now }
   let(:user) { double('User', id: 1, global_role: double('GlobalRole', is_admin?: false), time_zone: double('TimeZone', name: 'UTC')) }
   let(:org) { double('Organization', id: 1, slug: 'cs') }
   let(:course) { double('Course', id: 1, slug: 'cs-1114', organization: org) }
   let(:term) { double('Term', id: 1, slug: 'fa26') }
 
-  let(:workout1) { double('Workout', id: 101, name: 'Binary Trees', description: 'Trees intro', total_points: 10, exercises: [], highest_difficulty: 1, tags: []) }
-  let(:workout2) { double('Workout', id: 102, name: 'Array Lists', description: 'Arrays intro', total_points: 10, exercises: [], highest_difficulty: 1, tags: []) }
+  let(:workout1) { double('Workout', id: 101, name: 'Binary Trees', description: 'Trees intro', total_points: 10, exercises: [], highest_difficulty: 1, tags: [], num_exercises: 0) }
+  let(:workout2) { double('Workout', id: 102, name: 'Array Lists', description: 'Arrays intro', total_points: 10, exercises: [], highest_difficulty: 1, tags: [], num_exercises: 0) }
 
   let(:wo1) do
     double('WorkoutOffering',

@@ -32,12 +32,20 @@
   .ex-area.form-group
     = label_tag :ex_list, 'Exercises *', class: 'control-label col-xs-2'
     .col-lg-7.col-md-6.col-xs-7
-      - ex_any = @workout.andand.exercise_workouts.any?
+      - ex_any = @workout.andand.exercise_workouts.any? || @workout.andand.exercise_pools.any?
       .empty-msg.alert-msg{ style: "display: #{ex_any ? 'none;' : 'block;'}" }
-        Use the menu on the left to search for exercises.
+        Use the menu on the left to search for exercises, or add an exercise pool below.
 
       %ul.list-group#ex-list{ style: "display: #{ex_any ? 'block;' : 'none;'}",
-        data: { exercises: "#{@exercises.to_json}" } }
+        data: { exercises: "#{@exercises.to_json}", pools: "#{@pools.to_json}" } }
+
+      .btn-toolbar#pool-toolbar{ style: 'margin-top: -15px;' }
+        %button.btn.btn-default.btn-sm#btn-add-pool{ type: 'button' }
+          %i.fa.fa-random
+          Add Exercise Pool
+        = link_to help_exercise_pools_path, target: '_blank', class: 'btn btn-link btn-sm', style: 'margin-left: 5px;', title: 'Learn how to use exercise pools' do
+          %i.fa.fa-question-circle
+          Help with pools
 
   .form-group
     = label_tag :policy, 'Policy Options', class: 'control-label col-xs-2'
@@ -125,6 +133,10 @@
             %button.btn.btn-default.btn-sm#select-date-btn{ type: 'button' }
               %i.fa.fa-calendar
               Select Date
+          .btn-group.pull-right
+            = link_to help_specifying_due_dates_path, target: '_blank', class: 'btn btn-default btn-sm', title: 'Help with specifying due dates and extensions' do
+              %i.fa.fa-question-circle
+              Help with due dates
         = text_area_tag :date_yaml, @date_yaml, id: 'date-yaml', class: 'form-control', rows: 15, spellcheck: false, style: 'border-top-left-radius: 0; border-top-right-radius: 0;'
 
   .form-group

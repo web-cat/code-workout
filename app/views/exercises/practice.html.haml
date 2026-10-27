@@ -63,7 +63,8 @@
           = "#{@msg}"
       #attempts-left
         = render 'attempts_left', attempts_left: @attempts_left
-      - allow_write = true
+      - is_review_mode = @student_review || @is_staff_review || (@workout_score && @workout_score.closed?) || params[:review_user_id].present?
+      - allow_write = !is_review_mode
       - coding_questions = false
       - parsons_questions = false
       - parsons_scripts_loaded = false
@@ -124,9 +125,9 @@
             - prior_attempt = @exercise.latest_attempt_for(current_user)
             - prior_answer = prior_attempt && prior_attempt.prompt_answers.where(prompt: prompt.acting_as).first
           - if prior_answer && @workout_offering
-            - if !@workout_offering.can_be_practiced_by?(current_user)
+            - if !@workout_offering.can_be_practiced_by?(current_user) || is_review_mode
               - allow_write = false
-          - if allow_write && params[:review_user_id].nil?
+          - if allow_write && !is_review_mode
             = f.input :answer_code, as: :text, class: 'code',
             input_html: { class: 'code', readonly: true,
               value: (prior_answer.andand.specific.andand.answer || prompt.prepare_starter_code),
@@ -151,9 +152,9 @@
             - prior_attempt = @exercise.latest_attempt_for(current_user)
             - prior_answer = prior_attempt && prior_attempt.prompt_answers.where(prompt: prompt.acting_as).first
           - if prior_answer && @workout_offering
-            - if !@workout_offering.can_be_practiced_by?(current_user)
+            - if !@workout_offering.can_be_practiced_by?(current_user) || is_review_mode
               - allow_write = false
-          - if allow_write && params[:review_user_id].nil?
+          - if allow_write && !is_review_mode
             - unless parsons_scripts_loaded
               - parsons_scripts_loaded = true
               %script
@@ -229,18 +230,18 @@
               = prior_answer.andand.specific.andand.answer || prompt.prepare_starter_code
       .actions
         - disabled = !current_user.andand.is_staff?(@workout_offering.andand.course_offering) && @attempts_left && @attempts_left == 0
-        - if @workout_offering.nil? || @workout_offering.can_be_practiced_by?(current_user)
-          - if @workout_offering.andand.workout_policy.andand.hide_feedback_before_finish && params[:review_user_id].nil?
+        - if (@workout_offering.nil? || @workout_offering.can_be_practiced_by?(current_user)) && !is_review_mode
+          - if @workout_offering.andand.workout_policy.andand.hide_feedback_before_finish
             = f.submit 'Save my answer!',
               class: 'btn btn-primary btn-submit',
               id: 'primarybtn', disabled: disabled
-          - elsif allow_write && params[:review_user_id].nil?
+          - elsif allow_write
             = f.submit 'Check my answer!',
               class: 'btn btn-primary btn-submit',
               id: 'primarybtn', disabled: disabled
-        - if coding_questions
+        - if !is_review_mode && coding_questions
           %div.btn.btn-default{ data: { toggle: 'modal', target: '#confirm-reset' } } Reset
-        - if parsons_questions
+        - if !is_review_mode && parsons_questions
           %button.btn.btn-default#parsons-reset-btn{ type: 'button' } Reset
           %button.btn.btn-primary#parsons-help-btn{ type: 'button', style: 'display: none;' } Help me
         -if @exercise.tag_list.include? 'Visualizable'
@@ -252,24 +253,50 @@
           -else
             %div.btn.btn-default{id: "visualize", disabled: true, data: {workout: 'null', workout_offering: 'null', lti_launch: @lti_launch}} Visualize
 
-        - if @workout_offering && params[:review_user_id].nil? && @workout_offering.workout.exercise_workouts.size > 1
+        - if @workout_offering && (@workout_score ? @workout_score.total_exercises > 1 : @workout_offering.workout.exercises.size > 1)
+          - next_ex = @workout_offering.workout.next_exercise(@exercise, @workout_score)
+          - if is_review_mode
+            - if @is_staff_review || (params[:review_user_id].present? && params[:review_user_id].to_s != current_user.id.to_s)
+              = button_link 'Next exercise',
+                organization_workout_offering_exercise_review_path(exercise_id: next_ex,
+                id: next_ex.id,
+                organization_id: @workout_offering.course_offering.course.organization.slug,
+                course_id: @workout_offering.course_offering.course.slug,
+                term_id: @workout_offering.course_offering.term.slug,
+                workout_offering_id: @workout_offering.id,
+                review_user_id: @student_user.id,
+                workout_score_id: @workout_score.andand.id,
+                lti_launch: @lti_launch),
+                class: 'btn btn-default btn-next', id: 'nextbtn'
+            - else
+              = button_link 'Next exercise',
+                organization_workout_offering_exercise_path(exercise_id: next_ex,
+                id: next_ex.id,
+                organization_id: @workout_offering.course_offering.course.organization.slug,
+                course_id: @workout_offering.course_offering.course.slug,
+                term_id: @workout_offering.course_offering.term.slug,
+                workout_offering_id: @workout_offering.id,
+                workout_score_id: @workout_score.andand.id,
+                lti_launch: @lti_launch),
+                class: 'btn btn-default btn-next', id: 'nextbtn'
+          - else
+            = button_link 'Next exercise',
+              organization_workout_offering_practice_path(exercise_id: next_ex,
+              organization_id: @workout_offering.course_offering.course.organization.slug,
+              course_id: @workout_offering.course_offering.course.slug,
+              term_id: @workout_offering.course_offering.term.slug,
+              id: @workout_offering.id,
+              workout_score_id: @workout_score.andand.id,
+              lti_launch: @lti_launch),
+              class: 'btn btn-default btn-next', id: 'nextbtn'
+        - elsif @workout && !is_review_mode && (@workout_score ? @workout_score.total_exercises > 1 : @workout.exercises.size > 1)
           = button_link 'Next exercise',
-            organization_workout_offering_practice_path(exercise_id: @workout_offering.workout.next_exercise(@exercise),
-            organization_id: @workout_offering.course_offering.course.organization.slug,
-            course_id: @workout_offering.course_offering.course.slug,
-            term_id: @workout_offering.course_offering.term.slug,
-            id: @workout_offering.id,
-            workout_score_id: @workout_score.andand.id,
-            lti_launch: @lti_launch),
-            class: 'btn btn-default btn-next', id: 'nextbtn'
-        - elsif @workout && params[:review_user_id].nil? && @workout.exercise_workouts.size > 1
-          = button_link 'Next exercise',
-            exercise_practice_path(@workout.next_exercise(@exercise),
+            exercise_practice_path(@workout.next_exercise(@exercise, @workout_score),
             workout_id: @workout.id, workout_score_id: @workout_score.andand.id,
             lti_launch: @lti_launch),
             class: 'btn btn-info btn-next', id: 'nextbtn'
 
-        - if @workout_offering && params[:review_user_id] && (current_user.global_role.is_admin? || @workout_offering.course_offering.is_staff?(current_user))
+        - if @workout_offering && @is_staff_review
           = link_to 'View Activity Log', organization_workout_offering_activity_log_path(id: @workout_offering.id, workout_score_id: @workout_score.id, exercise_id: @exercise.id, organization_id: @workout_offering.course_offering.course.organization.slug, course_id: @workout_offering.course_offering.course.slug, term_id: @workout_offering.course_offering.term.slug), class: 'btn btn-info'
 
       - if @workout.nil? && !@lti_launch

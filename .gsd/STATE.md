@@ -20,3 +20,92 @@
   - `spec/models/user_agent_spec.rb`: 14 examples, 0 failures.
   - `spec/models/activity_log_spec.rb`: 13 examples, 0 failures.
   - Total: 61 examples, 0 failures.
+
+---
+
+## 3. Randomized Exercise Pools in Workouts (In Progress)
+- **Status:** Wave 2 Complete. Wave 3 (Practice Flow & Controllers Integration) ready to start.
+- **Completed Waves:**
+  - **Wave 1: Database Schema & Migrations**
+    - Migration `db/migrate/20261023130000_create_randomized_exercise_pools.rb` implemented with type-agnostic foreign keys (`fk_type`).
+    - Tables created: `exercise_pools`, `exercise_pool_items`, `workout_score_exercises`.
+    - Backfill executed:
+      - 258 `exercise_workouts` backfilled into 258 `exercise_pools` and `exercise_pool_items` ($k=1$).
+      - 313 `workout_score_exercises` backfilled across existing 26 `workout_scores`.
+    - Empirical Verification:
+      - Reversible rollback and re-migration tested successfully via `rake db:rollback && rake db:migrate`.
+      - Schema updated in `db/schema.rb`.
+  - **Wave 2: Models, Associations & Sampling Logic**
+    - Implemented `ExercisePool` (`acts_as_list scope: :workout`, validations, `single_exercise?`, `total_points`).
+    - Implemented `ExercisePoolItem` (`acts_as_list scope: :exercise_pool`, uniqueness validation).
+    - Implemented `WorkoutScoreExercise` (`acts_as_list scope: :workout_score`, validations, associations).
+    - Updated `Workout`: associations (`exercise_pools`, `exercises`), `total_points`, `contains?`, `first_exercise(score)`, and `next_exercise(ex, score)`.
+    - Implemented `WorkoutScore#generate_attempt_exercises!`:
+      - Automatic snapshotting on create via `after_create :generate_attempt_exercises!`.
+      - Anti-duplication resampling: prioritizes unseen candidates across prior attempts on the workout.
+      - Graceful fallback when candidate pools are exhausted.
+      - Added helpers `points_for(exercise)`, `total_points`, and `total_exercises`.
+    - Empirical Verification:
+      - `spec/models/exercise_pool_spec.rb`: 8 examples, 0 failures.
+      - `spec/models/workout_score_exercise_spec.rb`: 5 examples, 0 failures.
+      - `spec/models/workout_score_spec.rb`: 32 examples, 0 failures.
+      - `spec/models/workouts_spec.rb`: 14 examples, 0 failures.
+      - `spec/models/workout_offering_spec.rb`: 42 examples, 0 failures.
+      - Total: 101 examples, 0 failures.
+  - **Wave 3: Practice Flow & Controllers Integration**
+    - Updated `WorkoutOfferingsController#practice` and `start_attempt` to pass attempt `WorkoutScore` to `Workout#first_exercise(score)` so students redirect to their snapshot's first sampled exercise.
+    - Updated `WorkoutsController#practice` to pass `workout_score` to `first_exercise(workout_score)` and forward `workout_score_id`.
+    - Updated `ExercisesController#practice` to:
+      - Assign `@max_points` from `@workout_score.points_for(@exercise)`.
+      - Preload `@workout_exercises` from the attempt's assigned exercises (`@workout_score.workout_score_exercises.map(&:exercise)`), isolating the sidebar thumbs to only assigned items.
+    - Updated `ExercisesController#evaluate` to:
+      - Assign `@max_points` from `@workout_score.points_for(@exercise)`.
+      - Navigate sequential `next_exercise` via `@workout_score.workout.next_exercise(@exercise, @workout_score)` and preserve `workout_score_id`.
+    - Updated `SseController#feedback_update` and `_ajax_feedback.html.haml` to compute points from `@workout_score.points_for(@exercise)`.
+    - Updated `Workout#exercises=` writer to automatically synchronize both legacy `exercise_workouts` and new `exercise_pools`.
+    - Empirical Verification:
+      - `spec/controllers/exercises_controller_spec.rb`: 17 examples, 0 failures.
+      - `spec/controllers/workout_offerings_controller_spec.rb`: 21 examples, 0 failures.
+      - `spec/controllers/workouts_controller_spec.rb`: 77 examples, 0 failures.
+      - Combined Wave 2 & Wave 3 suite (8 spec files): 209 examples, 0 failures.
+  - **Wave 4: Authoring UI & Workout Form Updates**
+    - Updated `Workout#update_or_create` with `reconcile_exercise_pools!(pools_data)` and `sync_exercise_workouts_from_pools!`, supporting both `params[:pools]` and legacy `params[:exercises]`.
+    - Updated `WorkoutsController` (`show`, `review`, `new`, `edit`, `clone`, `create`, `update`):
+      - Passes `params[:pools]` to `update_or_create`.
+      - Populates `@pools` in `populate_pools_and_exercises_for_form`.
+      - Isolates student `@exs` to attempt snapshot exercises in `show` and `review`.
+    - Updated `WorkoutOfferingsController#review` to load assigned exercises from attempt snapshot.
+    - Updated `app/views/workouts/show.html.haml` to display pool groupings with "Draw $k$ of $N$" indicators in staff view and assigned attempt exercises in student view.
+    - Updated `app/views/workouts/review.html.haml` to render attempt snapshot exercises.
+    - Updated `app/views/workouts/_form.html.haml` with `#pool-toolbar`, `#btn-add-pool`, and `data-pools` attribute on `#ex-list`.
+    - Updated `app/assets/templates/exercise.mustache.html` with `#pool-slot-template`, `#pool-candidate-template`, and in-place conversion button.
+    - Enhanced `app/assets/javascripts/workout_form.js.coffee`:
+      - Dynamic pool creation (`#btn-add-pool`) and in-place conversion (`.convert-to-pool`).
+      - Nested jQuery UI sortable with cross-pool drag-and-drop (`connectWith: '.pool-candidates'`).
+      - Active pool targeting from search results and candidate count recalculation ("of N").
+      - Pre-submission validation ($k \le N, N \ge 1$, points $\ge 0$).
+      - Serialization of both `pools` JSON and legacy `exercises` JSON.
+    - Empirical Verification:
+      - `spec/models/workouts_spec.rb`: 15 examples, 0 failures.
+      - `spec/controllers/workouts_controller_spec.rb`: 80 examples, 0 failures.
+      - `spec/controllers/workout_offerings_controller_spec.rb`: 23 examples, 0 failures.
+      - All pool-related spec files: 217 examples, 0 failures.
+  - **Wave 5: End-to-End Verification & Documentation**
+    - Created comprehensive end-to-end integration test in `spec/models/randomized_exercise_pools_e2e_spec.rb` verifying authoring, snapshotting, navigation, retake anti-duplication, pool exhaustion, and rescoring.
+    - Verified edge cases:
+      - Mixed single-exercise slots and $k$-of-$N$ question pools.
+      - Sequential navigation across attempt snapshot instances with wrap-around.
+      - Anti-duplication resampling across multiple retakes.
+      - Graceful candidate drawing when pool candidates are exhausted without crashes or intra-attempt duplicates.
+      - Legacy workout compatibility with 1-of-1 pools.
+    - Generated feature walkthrough artifact: `randomized_exercise_pools_walkthrough.md`.
+    - Empirical Verification:
+      - Total test suite across 9 pool-related spec files: 224 examples, 0 failures.
+- **Status:** All 5 waves complete and fully verified.
+- **Key Decisions:**
+  - Unified slot/pool model: Each slot is an `ExercisePool` ($N \ge 1, 1 \le k \le N$).
+  - Explicit snapshot join table: `workout_score_exercises` captures the exact exercise instances, order, and points for each student attempt.
+  - Uniform slot points: Slot points = $k \times \text{points\_per\_exercise}$.
+  - Anti-duplication resampling: New attempts independently draw candidate exercises, prioritizing unseen items over repeats where possible.
+
+

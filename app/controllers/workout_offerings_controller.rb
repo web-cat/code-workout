@@ -27,17 +27,30 @@ class WorkoutOfferingsController < ApplicationController
       @user_course_role = @course_offering.andand.role_for_user(current_user)
       @is_staff = current_user.andand.global_role.andand.is_admin? || @user_course_role.andand.is_staff?
       @manages_course = current_user.andand.global_role.andand.is_admin? || @user_course_role.andand.can_manage_course?
-      @exs = @workout ? @workout.exercises.includes(
-        :tags,
-        :taggings,
-        :languages,
-        current_version: :prompts
-      ) : []
       @past_scores = @workout_offering.scores_for(current_user)
       @active_score = @workout_offering.active_score_for(current_user)
       @can_retake = @workout_offering.can_start_new_attempt?(current_user)
       @effective_score = @workout_offering.effective_score_for(current_user)
       @workout_score = @active_score || @workout_offering.kept_workout_score_for(current_user) || @workout_offering.latest_score_for(current_user)
+      @exs = if @workout_score && @workout_score.respond_to?(:workout_score_exercises) && @workout_score.workout_score_exercises.any?
+        @workout_score.workout_score_exercises.includes(
+          exercise: [
+            :tags,
+            :taggings,
+            :languages,
+            current_version: :prompts
+          ]
+        ).map(&:exercise)
+      elsif @workout
+        @workout.exercises.includes(
+          :tags,
+          :taggings,
+          :languages,
+          current_version: :prompts
+        )
+      else
+        []
+      end
 
 
       if @workout_score
@@ -76,12 +89,6 @@ class WorkoutOfferingsController < ApplicationController
       @course = @course_offering.andand.course
       @term = @course_offering.andand.term
       @organization = @course.andand.organization
-      @exs = @workout ? @workout.exercises.includes(
-        :tags,
-        :taggings,
-        :languages,
-        current_version: :prompts
-      ) : []
       review_user = params[:review_user_id] ? User.find_by(id: params[:review_user_id]) : current_user
       @all_scores = @workout_offering.scores_for(review_user)
       if params[:workout_score_id].present?
@@ -90,6 +97,26 @@ class WorkoutOfferingsController < ApplicationController
         @workout_score = @all_scores.find { |s| s.attempt_number.to_s == params[:attempt_number].to_s }
       end
       @workout_score ||= @workout_offering.kept_workout_score_for(review_user) || @workout_offering.latest_score_for(review_user)
+
+      @exs = if @workout_score && @workout_score.respond_to?(:workout_score_exercises) && @workout_score.workout_score_exercises.any?
+        @workout_score.workout_score_exercises.includes(
+          exercise: [
+            :tags,
+            :taggings,
+            :languages,
+            current_version: :prompts
+          ]
+        ).map(&:exercise)
+      elsif @workout
+        @workout.exercises.includes(
+          :tags,
+          :taggings,
+          :languages,
+          current_version: :prompts
+        )
+      else
+        []
+      end
 
       if @workout_score
         @scoring_attempts_by_version_id = @workout_score.scored_attempts.group_by(&:exercise_version_id)
@@ -201,7 +228,7 @@ class WorkoutOfferingsController < ApplicationController
         new_score = WorkoutScore.create!(new_score_attrs)
       end
 
-      first_ex = @workout_offering.workout.first_exercise
+      first_ex = @workout_offering.workout.first_exercise(new_score)
       redirect_to organization_workout_offering_exercise_path(
         organization_id: @workout_offering.course_offering.course.organization.slug,
         course_id: @workout_offering.course_offering.course.slug,
@@ -449,7 +476,20 @@ class WorkoutOfferingsController < ApplicationController
         end
 
         if @workout_score.andand.closed?
-          if @workout_offering.can_start_new_attempt?(current_user)
+          policy = @workout_offering.workout_policy
+          can_review = (policy.nil? || policy.see_answers != false) &&
+            (!policy.andand.no_review_before_close || @workout_offering.shutdown?)
+          if ex1.present? && can_review
+            redirect_to organization_workout_offering_exercise_path(
+              id: ex1.id,
+              organization_id: @workout_offering.course_offering.course.organization.slug,
+              course_id: @workout_offering.course_offering.course.slug,
+              term_id: @workout_offering.course_offering.term.slug,
+              workout_offering_id: @workout_offering.id,
+              workout_score_id: @workout_score.id,
+              lti_launch: @lti_launch
+            ) and return
+          elsif @workout_offering.can_start_new_attempt?(current_user)
             redirect_to organization_workout_offering_path(
               organization_id: @workout_offering.course_offering.course.organization.slug,
               course_id: @workout_offering.course_offering.course.slug,
@@ -482,7 +522,7 @@ class WorkoutOfferingsController < ApplicationController
         end
       end
       if ex1.nil?
-        ex1 = @workout_offering.workout.first_exercise
+        ex1 = @workout_offering.workout.first_exercise(@workout_score)
       end
       if @workout_offering.course_offering.is_staff?(current_user) &&
           !@workout_offering.published &&

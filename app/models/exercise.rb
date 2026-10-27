@@ -66,6 +66,9 @@ class Exercise < ApplicationRecord
   has_many :courses, through: :course_exercises
   has_many :exercise_workouts, inverse_of: :exercise, dependent: :destroy
   has_many :workouts, through: :exercise_workouts
+  has_many :exercise_pool_items, inverse_of: :exercise, dependent: :destroy
+  has_many :exercise_pools, through: :exercise_pool_items
+  has_many :workout_score_exercises, inverse_of: :exercise, dependent: :destroy
   belongs_to :exercise_family, inverse_of: :exercises, optional: true
   has_many :exercise_owners, inverse_of: :exercise, dependent: :destroy
   has_many :owners, through: :exercise_owners

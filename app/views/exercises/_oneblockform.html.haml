@@ -8,7 +8,16 @@
       = f.input :exercise_collection, as: :select, collection: access_control_items,
         label: "Who can use this exercise in workouts?", include_blank: false,
         selected: @exercise_collection || 0
-  %h2 Exercise Definition
+  %h2
+    Exercise Definition
+    .pull-right
+      .btn-group
+        = link_to help_exercise_format_path, target: '_blank', class: 'btn btn-default btn-sm', title: 'How to format exercises using YAML' do
+          %i.fa.fa-question-circle
+          Format Guide (YAML)
+        = link_to help_exercise_peml_format_path, target: '_blank', class: 'btn btn-default btn-sm', title: 'How to format exercises using PEML' do
+          %i.fa.fa-file-text-o
+          PEML Format
   = f.semantic_fields_for :exercise_version do |ev|
     = ev.input :text_representation, maxlength: 16.megabytes - 1, as: :text,
       input_html: { class: 'code', autofocus: true, data: { lang: 'text/x-yaml' },

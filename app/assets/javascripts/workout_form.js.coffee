@@ -15,24 +15,95 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
 
   init()
 
-  # To allow reordering of exercises
+  # To allow reordering of exercise slots and receiving candidates dragged out of pools
   sortable = $('#ex-list').sortable
     handle: '.handle'
+    connectWith: '.pool-candidates'
+    placeholder: 'ui-state-highlight'
+    items: '> li'
+    start: (e, ui) ->
+      if ui.item.hasClass('pool-slot')
+        # Temporarily disable pool candidate drop targets so a pool slot cannot be dropped into a pool
+        $('.pool-candidates').sortable('option', 'disabled', true)
+    stop: (e, ui) ->
+      $('.pool-candidates').sortable('option', 'disabled', false)
+      if $('#ex-list > li').length == 0
+        $('.empty-msg').css 'display', 'block'
+        $('#ex-list').css 'display', 'none'
+      else
+        $('.empty-msg').css 'display', 'none'
+        $('#ex-list').css 'display', 'block'
+    receive: (event, ui) ->
+      if ui.item.hasClass('candidate-item')
+        ex_id = ui.item.data('id')
+        name = ui.item.find('.candidate-name').text().trim()
+        source_pool = ui.sender.closest('.pool-slot')
+        pts = source_pool.find('.pool-points').val() || default_point_value
+        data =
+          id: ex_id
+          pool_id: ''
+          exercise_workout_id: ''
+          name: name
+          points: pts
+        new_slot = $(Mustache.render(
+          $(window.codeworkout.exercise_template).filter('#exercise-template').html(),
+          data
+        ))
+        ui.item.replaceWith(new_slot)
+        update_pool_candidate_count(source_pool)
+        $('.empty-msg').css 'display', 'none'
+        $('#ex-list').css 'display', 'block'
 
-  # Add an exercise from search results to the workout
+  # Add a new exercise pool slot
+  $('#btn-add-pool').click ->
+    data =
+      id: ''
+      select_count: 1
+      points: default_point_value
+      candidate_count: 0
+      has_candidates: false
+      exercises: []
+    template = Mustache.render(
+      $(window.codeworkout.exercise_template).filter('#pool-slot-template').html(),
+      data
+    )
+    $slot = $(template)
+    $('#ex-list').append($slot)
+    init_pool_candidates_sortable($slot.find('.pool-candidates'))
+    $('.empty-msg').css 'display', 'none'
+    $('#ex-list').css 'display', 'block'
+
+
+  # Remove candidate from pool
+  $('#ex-list').on 'click', '.delete-candidate', ->
+    candidate = $(this).closest('.candidate-item')
+    pool = candidate.closest('.pool-slot')
+    candidate.remove()
+    update_pool_candidate_count(pool)
+
+  # Remove entire pool slot
+  $('#ex-list').on 'click', '.delete-slot', ->
+    pool = $(this).closest('.pool-slot')
+    pool.remove()
+    if $('#ex-list > li').length == 0
+      $('.empty-msg').css 'display', 'block'
+      $('#ex-list').css 'display', 'none'
+
+  # Add an exercise from search results to the workout (always appends to main list)
   $('.search-results').on 'click', '.add-ex', ->
     ex_id = $(this).data('ex-id')
     ex_name = $(this).data('ex-name')
     name = "X#{ex_id}"
+    if ex_name
+      name = name + ": #{ex_name}"
     can_add = !exercise_is_in_workout(ex_id)
     if can_add
       $('.empty-msg').css 'display', 'none'
       $('#ex-list').css 'display', 'block'
-      if ex_name
-        name = name + ": #{ex_name}"
       data =
         name: name
         id: ex_id
+        pool_id: ''
         points: default_point_value
       template = Mustache.render(
         $(window.codeworkout.exercise_template)
@@ -124,7 +195,7 @@ $('.workouts.new, .workouts.edit, .workouts.clone').ready ->
     if ex_workout_id? && ex_workout_id != ''
       window.codeworkout.removed_exercises.push ex_workout_id
     ex_row.remove()
-    exs = $('#ex-list li').length
+    exs = $('#ex-list > li').length
     if exs == 0
       $('.empty-msg').css 'display', 'block'
       $('#ex-list').css 'display', 'none'
@@ -152,8 +223,45 @@ init_templates = ->
       init_exercises()
 
 init_exercises = ->
+  pools = $('#ex-list').data 'pools'
   exercises = $('#ex-list').data 'exercises'
-  if exercises
+  if pools && pools.length > 0
+    for pool in pools
+      do (pool) ->
+        if pool.exercises && pool.exercises.length == 1 && pool.select_count == 1 && (!pool.name || pool.name == '')
+          ex = pool.exercises[0]
+          name = "X#{ex.id}"
+          name = name + ": #{ex.name}" if ex.name
+          data =
+            id: ex.id
+            pool_id: pool.id || ''
+            exercise_workout_id: ''
+            name: name
+            points: pool.points || default_point_value
+          $('#ex-list').append(Mustache.render(
+            $(window.codeworkout.exercise_template).filter('#exercise-template').html(),
+            data
+          ))
+        else
+          items = []
+          if pool.exercises
+            for ex in pool.exercises
+              name = "X#{ex.id}"
+              name = name + ": #{ex.name}" if ex.name
+              items.push { id: ex.id, name: name }
+          data =
+            id: pool.id || ''
+            select_count: pool.select_count || 1
+            points: pool.points || default_point_value
+            candidate_count: items.length
+            has_candidates: items.length > 0
+            exercises: items
+          $('#ex-list').append(Mustache.render(
+            $(window.codeworkout.exercise_template).filter('#pool-slot-template').html(),
+            data
+          ))
+    init_pool_candidates_sortable($('.pool-candidates'))
+  else if exercises && exercises.length > 0
     for exercise in exercises
       do (exercise) ->
         name = "X#{exercise.id}"
@@ -166,6 +274,7 @@ init_exercises = ->
           exercise_workout_id = ''
         data =
           id: exercise.id
+          pool_id: ''
           exercise_workout_id: exercise_workout_id
           name: name
           points: exercise.points
@@ -173,7 +282,60 @@ init_exercises = ->
           $(window.codeworkout.exercise_template)
             .filter('#exercise-template').html(),
           data))
-    $('#ex-list').removeData 'exercises'
+  $('#ex-list').removeData 'pools'
+  $('#ex-list').removeData 'exercises'
+
+init_pool_candidates_sortable = (elements) ->
+  elements.sortable
+    connectWith: '#ex-list, .pool-candidates'
+    handle: '.candidate-handle, .handle'
+    placeholder: 'ui-state-highlight'
+    items: '> li'
+    receive: (event, ui) ->
+      if ui.item.hasClass('pool-slot')
+        $(ui.sender).sortable('cancel')
+        return false
+
+      ex_id = ui.item.data('id')
+      target_pool = $(this).closest('.pool-slot')
+      # Prevent duplicate candidates in the same pool
+      if target_pool.find(".candidate-item[data-id=#{ex_id}]").not(ui.item).length > 0
+        $(ui.sender).sortable('cancel')
+        form_alert(["Exercise is already a candidate in this exercise pool."])
+        return false
+
+      if ui.item.hasClass('single-slot')
+        name = ui.item.find('.exercise-name').text().trim()
+        cand_data =
+          id: ex_id
+          name: name
+        cand_template = $(Mustache.render(
+          $(window.codeworkout.exercise_template).filter('#pool-candidate-template').html(),
+          cand_data
+        ))
+        ui.item.replaceWith(cand_template)
+        update_pool_candidate_count(target_pool)
+        if $('#ex-list > li').length == 0
+          $('.empty-msg').css 'display', 'block'
+          $('#ex-list').css 'display', 'none'
+      else if ui.item.hasClass('candidate-item')
+        update_pool_candidate_count(target_pool)
+    stop: (e, ui) ->
+      if ui.item && ui.item.parent().length
+        update_pool_candidate_count(ui.item.closest('.pool-slot'))
+      if ui.sender && ui.sender.length
+        update_pool_candidate_count(ui.sender.closest('.pool-slot'))
+
+update_pool_candidate_count = (pool) ->
+  return unless pool && pool.length
+  candidates = pool.find('.pool-candidates .candidate-item')
+  count = candidates.length
+  pool.find('.pool-size-label').text("of #{count}")
+  empty_msg = pool.find('.empty-candidates-msg')
+  if count == 0
+    empty_msg.show()
+  else
+    empty_msg.hide()
 
 insert_at_cursor = (val, use_locked = false) ->
   textarea = $('#date-yaml')
@@ -214,23 +376,56 @@ close_slider = ->
     $('#search-terms').val('')
     $('.search-results').empty()
 
+get_pools = ->
+  pools = []
+  $('#ex-list > li').each (index) ->
+    $slot = $(this)
+    if $slot.hasClass('pool-slot')
+      pool_id = $slot.data('pool-id') || null
+      select_count = parseInt($slot.find('.select-count').val() || '1')
+      points = parseFloat($slot.find('.pool-points').val() || '0')
+      cand_ids = []
+      $slot.find('.pool-candidates .candidate-item').each ->
+        cand_ids.push $(this).data('id')
+      pools.push
+        id: pool_id
+        position: index + 1
+        select_count: select_count
+        points: points
+        exercise_ids: cand_ids
+    else
+      # Single-slot exercise
+      ex_id = $slot.data('id')
+      pool_id = $slot.data('pool-id') || null
+      points = parseFloat($slot.find('.points').val() || '0')
+      pools.push
+        id: pool_id
+        position: index + 1
+        select_count: 1
+        points: points
+        exercise_ids: [ex_id]
+  return pools
+
 get_exercises = ->
-  exs = $('#ex-list li')
   exercises = []
-  i = 0
-  while i < exs.length
-    ex_id = $(exs[i]).data('id')
-    ex_points = $(exs[i]).find('.points').val()
-    ex_points = '0' if ex_points == ''
-    ex_obj = { id: ex_id, points: ex_points }
-    exercises.push(ex_obj)
-    i++
+  $('#ex-list > li').each ->
+    $slot = $(this)
+    if $slot.hasClass('pool-slot')
+      pts = $slot.find('.pool-points').val() || '0'
+      $slot.find('.pool-candidates .candidate-item').each ->
+        exercises.push { id: $(this).data('id'), points: pts }
+    else
+      ex_id = $slot.data('id')
+      pts = $slot.find('.points').val() || '0'
+      exercises.push { id: ex_id, points: pts }
   return exercises
 
 exercise_is_in_workout = (ex_id) ->
-  for exercise in get_exercises() when exercise['id'] is ex_id
-    return true
-  return false
+  found = false
+  $('#ex-list .single-slot, #ex-list .candidate-item').each ->
+    if $(this).data('id') == ex_id
+      found = true
+  return found
 
 form_alert = (messages) ->
   reset_alert_area()
@@ -254,7 +449,16 @@ reset_alert_area = ->
 check_completeness = ->
   messages = []
   messages.push 'Workout Name cannot be empty.' if $('#wo-name').val() == ''
-  messages.push 'Workout must have at least 1 exercise.' if $('#ex-list li').length == 0
+  messages.push 'Workout must have at least 1 exercise.' if $('#ex-list > li').length == 0
+  $('#ex-list > li.pool-slot').each (index) ->
+    candidates = $(this).find('.candidate-item').length
+    select_count = parseInt($(this).find('.select-count').val() || '0')
+    if candidates == 0
+      messages.push "Exercise pool in slot #{index + 1} has no exercises. Please add exercises or remove the pool."
+    else if select_count < 1
+      messages.push "Exercise pool in slot #{index + 1} must draw at least 1 exercise."
+    else if select_count > candidates
+      messages.push "Exercise pool in slot #{index + 1} cannot draw #{select_count} exercises from #{candidates} available candidates."
   if $('#date-yaml').length > 0
     yaml_text = $('#date-yaml').val() || ''
     matches = yaml_text.match(/(?:workout_attempts|workout_attempt_limit|attempts)\s*:\s*([0-9]*)/g)
@@ -299,6 +503,7 @@ handle_submit = ->
     return
   fd.append 'policy', JSON.stringify policy
   
+  fd.append 'pools', JSON.stringify get_pools()
   fd.append 'exercises', JSON.stringify get_exercises()
   fd.append 'date_yaml', $('#date-yaml').val() || ''
   fd.append 'removed_exercises', JSON.stringify window.codeworkout.removed_exercises
