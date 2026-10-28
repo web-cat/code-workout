@@ -1,0 +1,105 @@
+%h1
+  %i.fa.fa-history{ style: 'color: #337ab7; margin-right: 8px;' }
+  Workout Activity Logs
+%p.text-muted
+  Search student workout attempts across public gym workouts and course offerings to inspect activity logs, timestamps, IP addresses, browser agents, and code evaluations.
+
+.panel.panel-default{ style: 'margin-top: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);' }
+  .panel-heading
+    %h3.panel-title{ style: 'font-weight: 600;' }
+      %i.fa.fa-filter{ style: 'margin-right: 5px;' }
+      Search & Filter Attempts
+  .panel-body
+    = form_tag activity_logs_path, method: :get, class: 'form-horizontal' do
+      .row
+        .col-md-4
+          .form-group{ style: 'margin: 0 0 15px 0;' }
+            %label{ for: 'student' } Student (Name, Email, or ID)
+            .input-group
+              %span.input-group-addon
+                %i.fa.fa-user
+              = text_field_tag :student, params[:student], class: 'form-control', placeholder: 'e.g. jane@vt.edu or Smith', autocomplete: 'off'
+        .col-md-4
+          .form-group{ style: 'margin: 0 0 15px 0;' }
+            %label{ for: 'workout' } Workout Name
+            .input-group
+              %span.input-group-addon
+                %i.fa.fa-book
+              = text_field_tag :workout, params[:workout], class: 'form-control', placeholder: 'e.g. Binary Trees or Recursion', autocomplete: 'off'
+        .col-md-4
+          .form-group{ style: 'margin: 0 0 15px 0;' }
+            %label{ for: 'scope' } Workout Scope
+            = select_tag :scope, options_for_select([['All Workouts', 'all'], ['Gym Practice Only', 'gym'], ['Course Offerings Only', 'course']], params[:scope] || 'all'), class: 'form-control'
+
+      .row
+        .col-md-12.text-right{ style: 'margin-top: 5px;' }
+          = submit_tag 'Search Logs', class: 'btn btn-primary'
+          = link_to 'Clear', activity_logs_path, class: 'btn btn-default'
+
+- if @workout_scores.blank?
+  .alert.alert-info{ style: 'margin-top: 20px;' }
+    - if @searched
+      %h4 No Matching Activity Logs Found
+      %p No workout attempts matched your search query. Try broadening your student or workout terms.
+    - else
+      %h4 No Recent Workout Attempts
+      %p Enter a student name, email, or workout title above to search for activity logs.
+- else
+  .panel.panel-default{ style: 'margin-top: 20px;' }
+    .panel-heading
+      %h3.panel-title{ style: 'font-weight: 600;' }
+        %i.fa.fa-list{ style: 'margin-right: 5px;' }
+        - if @searched
+          Matching Workout Attempts (#{@workout_scores.size})
+        - else
+          Recent Workout Attempts (#{@workout_scores.size})
+    .table-responsive
+      %table.table.table-striped.table-hover{ style: 'margin-bottom: 0;' }
+        %thead
+          %tr
+            %th Student
+            %th Workout
+            %th Context / Offering
+            %th Attempt
+            %th Score
+            %th Status
+            %th Last Activity
+            %th.text-right Action
+        %tbody
+          - @workout_scores.each do |score|
+            %tr
+              %td
+                %strong= link_to score.user.display_name, score.user
+                %br
+                %small.text-muted= score.user.email
+              %td
+                %strong= link_to score.workout.name, workout_path(score.workout)
+              %td
+                - if score.workout_offering.present?
+                  - co = score.workout_offering.course_offering
+                  %span.label.label-primary
+                    %i.fa.fa-graduation-cap
+                    = co ? co.display_name_with_term : 'Course Offering'
+                - else
+                  %span.label.label-default
+                    %i.fa.fa-dumbbell
+                    Gym (Self-Paced)
+              %td
+                = "Attempt #{score.attempt_number || 1}"
+              %td
+                - if score.score.present?
+                  %span.badge{ style: 'font-size: 13px;' }= score.score.round(1)
+                - else
+                  %span.text-muted -/-
+              %td
+                - if score.completed?
+                  %span.label.label-success Completed
+                - else
+                  %span.label.label-warning In Progress
+              %td
+                - last_time = score.last_attempted_at || score.updated_at
+                = last_time ? last_time.strftime('%Y-%m-%d %H:%M') : 'N/A'
+              %td.text-right
+                = link_to activity_log_path(score), class: 'btn btn-xs btn-info' do
+                  %i.fa.fa-history
+                  View Log

@@ -395,6 +395,7 @@ Rails.application.routes.draw do
   get '/request_extension' => 'workout_offerings#request_extension'
   post '/add_extension' => 'workout_offerings#add_extension'
   post '/workout_offerings/:id/start_attempt' => 'workout_offerings#start_attempt', as: :start_attempt_workout_offering
+  resources :activity_logs, only: [:index, :show]
 
   # All of the routes anchored at /gym
   scope :gym do

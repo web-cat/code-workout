@@ -21,6 +21,8 @@
                 %ul.list-unstyled
                   %li= link_to 'All workouts', workouts_path
                   %li= link_to 'All exercises', exercises_path
+                  - if current_user.andand.global_role.andand.is_admin?
+                    %li= link_to 'Activity Logs', activity_logs_path
         %li.dropdown
           %a.dropdown-toggle{ href: organizations_path,
             data: { toggle: 'dropdown' }, value: 'Course' }

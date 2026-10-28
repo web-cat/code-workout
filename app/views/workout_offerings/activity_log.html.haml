@@ -1,7 +1,7 @@
 %h1
   Activity Log for #{@student.display_name}
   %br
-  %small on #{@workout_offering.workout.name}
+  %small on #{(@workout_offering.andand.workout || @workout).andand.name}
 
 - if @exercise
   %h2= @exercise.display_name
@@ -39,7 +39,10 @@
                 - ex = @exercise || (event[:details].respond_to?(:exercise_version) && event[:details].exercise_version.andand.exercise) || (event[:details].respond_to?(:exercise) && event[:details].exercise)
                 - if ex
                   &nbsp;
-                  = link_to 'View', organization_workout_offering_exercise_review_path(workout_offering_id: @workout_offering.id, review_user_id: @student.id, id: ex.id, attempt_id: event[:details].id, workout_score_id: (event[:details].respond_to?(:workout_score_id) ? event[:details].workout_score_id : nil), organization_id: @course_offering.course.organization.slug, course_id: @course_offering.course.slug, term_id: @course_offering.term.slug), class: 'btn btn-default btn-xs'
+                  - if @workout_offering && @course_offering
+                    = link_to 'View', organization_workout_offering_exercise_review_path(workout_offering_id: @workout_offering.id, review_user_id: @student.id, id: ex.id, attempt_id: event[:details].id, workout_score_id: (event[:details].respond_to?(:workout_score_id) ? event[:details].workout_score_id : nil), organization_id: @course_offering.course.organization.slug, course_id: @course_offering.course.slug, term_id: @course_offering.term.slug), class: 'btn btn-default btn-xs'
+                  - elsif @workout
+                    = link_to 'Practice', practice_workout_path(id: @workout.id, exercise_id: ex.id), class: 'btn btn-default btn-xs'
                 - if event[:details].respond_to?(:prompt_answers)
                   - event[:details].prompt_answers.each do |prompt_answer|
                     - specific = prompt_answer.respond_to?(:specific) && prompt_answer.specific.present? ? prompt_answer.specific : prompt_answer
@@ -74,4 +77,8 @@
               - elsif event[:type] == 'visualization'
                 Used code visualizer
 
-= link_to 'Back to Review', organization_workout_offering_review_path(organization_id: @course_offering.course.organization.slug, course_id: @course_offering.course.slug, term_id: @course_offering.term.slug, id: @workout_offering.id, review_user_id: @student.id), class: 'btn btn-default'
+- if @workout_offering && @course_offering
+  = link_to 'Back to Review', organization_workout_offering_review_path(organization_id: @course_offering.course.organization.slug, course_id: @course_offering.course.slug, term_id: @course_offering.term.slug, id: @workout_offering.id, review_user_id: @student.id), class: 'btn btn-default'
+  &nbsp;
+- if current_user.andand.global_role.andand.is_admin?
+  = link_to 'Back to Activity Logs', activity_logs_path, class: 'btn btn-default'
