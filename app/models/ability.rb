@@ -89,7 +89,8 @@ class Ability
         Workout,
         Exercise,
         Attempt,
-        ResourceFile
+        ResourceFile,
+        ActivityLog
       ]
     end
 

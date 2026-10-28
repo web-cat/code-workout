@@ -24,6 +24,8 @@
       %tr
         %th Workout name
         %th Score
+        - if current_user.andand.global_role.andand.is_admin?
+          %th.text-right Actions
     %tbody
       - @workout_scores.each do |user_score|
         %tr
@@ -33,6 +35,9 @@
             %td= score
           - else
             %td.textblur -/-
+          - if current_user.andand.global_role.andand.is_admin?
+            %td.text-right
+              = link_to 'View Log', activity_log_path(user_score), class: 'btn btn-xs btn-info'
 
 %br
 
