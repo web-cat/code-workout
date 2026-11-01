@@ -582,4 +582,21 @@ describe ExercisesController do
       expect(controller.instance_variable_get(:@msg)).to be_nil
     end
   end
+
+  describe "GET #embed" do
+    let(:exercise) { FactoryBot.build_stubbed(:exercise, id: 1) }
+
+    before do
+      allow(controller).to receive(:authorize!).and_return(true)
+    end
+
+    it "redirects to exercise_practice_path with embedded: true when id is provided" do
+      allow(Exercise).to receive(:find_by).with(id: '1').and_return(exercise)
+      allow(exercise).to receive(:current_version).and_return(FactoryBot.build_stubbed(:exercise_version, exercise: exercise))
+
+      get :embed, params: { id: '1' }
+
+      expect(response).to redirect_to(exercise_practice_path(id: 1, embedded: true))
+    end
+  end
 end

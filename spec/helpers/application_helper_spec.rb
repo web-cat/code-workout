@@ -28,6 +28,18 @@ describe ApplicationHelper, type: :helper do
       session[:lti_document_target] = 'window'
       expect(helper.embedded_lti_launch?).to be false
     end
+
+    it "returns true when embedded param is present" do
+      controller.params[:embedded] = 'true'
+      expect(helper.embedded_lti_launch?).to be true
+      expect(helper.embedded?).to be true
+    end
+
+    it "returns true when embed param is present" do
+      controller.params[:embed] = 'true'
+      expect(helper.embedded_lti_launch?).to be true
+      expect(helper.embedded?).to be true
+    end
   end
 
   describe "#choice_letter" do
