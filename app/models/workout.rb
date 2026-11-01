@@ -84,9 +84,9 @@ class Workout < ApplicationRecord
   end
 
   # -------------------------------------------------------------
-  # Returns the workout policy of the first offering of this workout, or the default.
+  # Returns the default workout policy for standalone/gym workouts.
   def workout_policy
-    workout_offerings.first.andand.workout_policy || WorkoutPolicy.default
+    WorkoutPolicy.default
   end
 
 
@@ -680,29 +680,37 @@ class Workout < ApplicationRecord
   # -------------------------------------------------------------
   def score_for(user, workout_offering = nil,
                 lis_outcome_service_url = nil, lis_result_sourcedid = nil)
-    if workout_scores.loaded?
+    if workout_scores.is_a?(Array) || (workout_scores.respond_to?(:loaded?) && workout_scores.loaded?)
       scores = workout_scores.select do |s|
         s.user_id == user.andand.id && s.workout_offering_id == workout_offering.andand.id
       end.sort_by { |s| s.updated_at || Time.at(0) }.reverse
 
-      if lis_outcome_service_url || lis_result_sourcedid
+      if lis_outcome_service_url.present? || lis_result_sourcedid.present?
         scores.detect do |s|
           s.lis_outcome_service_url == lis_outcome_service_url &&
             s.lis_result_sourcedid == lis_result_sourcedid
         end
       else
-        scores.first
+        if workout_offering.nil?
+          scores.detect { |s| s.lis_result_sourcedid.blank? && s.lis_outcome_service_url.blank? }
+        else
+          scores.detect { |s| s.lis_result_sourcedid.blank? && s.lis_outcome_service_url.blank? } || scores.first
+        end
       end
     else
       scores = workout_scores.where(
         user: user, workout_offering: workout_offering).order('updated_at DESC')
-      if lis_outcome_service_url || lis_result_sourcedid
+      if lis_outcome_service_url.present? || lis_result_sourcedid.present?
         scores.to_ary.detect do |s|
-          s.lis_outcome_service_url == lis_outcome_service_url and
+          s.lis_outcome_service_url == lis_outcome_service_url &&
             s.lis_result_sourcedid == lis_result_sourcedid
         end
       else
-        scores.first
+        if workout_offering.nil?
+          scores.to_ary.detect { |s| s.lis_result_sourcedid.blank? && s.lis_outcome_service_url.blank? }
+        else
+          scores.to_ary.detect { |s| s.lis_result_sourcedid.blank? && s.lis_outcome_service_url.blank? } || scores.first
+        end
       end
     end
   end

@@ -267,5 +267,57 @@ describe Workout, type: :model do
       end
     end
   end
+
+  describe "#workout_policy" do
+    let(:workout) { FactoryBot.build_stubbed(:workout, id: 1) }
+
+    it "returns default policy with see_answers true and no restrictions" do
+      expect(workout.workout_policy).to eq(WorkoutPolicy.default)
+      expect(workout.workout_policy.see_answers).to be true
+      expect(workout.workout_policy.no_review_before_close).to be false
+    end
+  end
+
+  describe "#score_for context isolation" do
+    let(:user) { FactoryBot.build_stubbed(:user, id: 1) }
+    let(:workout) { FactoryBot.build_stubbed(:workout, id: 1) }
+    let(:lti_score) do
+      FactoryBot.build_stubbed(
+        :workout_score,
+        id: 10,
+        user: user,
+        workout: workout,
+        workout_offering_id: nil,
+        lis_result_sourcedid: 'canvas_assignment_42',
+        lis_outcome_service_url: 'https://canvas.example.edu/api'
+      )
+    end
+    let(:gym_score) do
+      FactoryBot.build_stubbed(
+        :workout_score,
+        id: 20,
+        user: user,
+        workout: workout,
+        workout_offering_id: nil,
+        lis_result_sourcedid: nil,
+        lis_outcome_service_url: nil
+      )
+    end
+
+    it "matches exact LTI context when lis_result_sourcedid is given" do
+      allow(workout).to receive(:workout_scores).and_return([gym_score, lti_score])
+      expect(workout.score_for(user, nil, 'https://canvas.example.edu/api', 'canvas_assignment_42')).to eq(lti_score)
+    end
+
+    it "isolates web gym score from LTI score when no LTI context is provided" do
+      allow(workout).to receive(:workout_scores).and_return([lti_score, gym_score])
+      expect(workout.score_for(user, nil, nil, nil)).to eq(gym_score)
+    end
+
+    it "returns nil for web gym practice if user only has LTI scores" do
+      allow(workout).to receive(:workout_scores).and_return([lti_score])
+      expect(workout.score_for(user, nil, nil, nil)).to be_nil
+    end
+  end
 end
 
