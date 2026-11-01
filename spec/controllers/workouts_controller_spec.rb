@@ -2025,6 +2025,75 @@ describe WorkoutsController do
         workout_score_id: 99
       ))
     end
+
+    it "bypasses course offering restrictions and does not hijack workout offering when embedded: true is present" do
+      allow(workout_offering).to receive(:hard_deadline_for).with(user).and_return(2.days.ago)
+      allow(workout).to receive(:score_for).with(user, nil, nil, nil).and_return(nil)
+      ws = double('WorkoutScore', id: 99, closed?: false, workout_offering: nil, save!: true)
+      allow(WorkoutScore).to receive(:new).with(hash_including(
+        workout_offering: nil
+      )).and_return(ws)
+
+      get :practice, params: { id: '5', embedded: 'true' }
+
+      expect(response).to redirect_to(exercise_practice_path(
+        exercise,
+        workout_id: 5,
+        workout_offering_id: nil,
+        workout_score_id: 99,
+        embedded: true
+      ))
+      expect(controller.instance_variable_get(:@workout_offering)).to be_nil
+    end
+  end
+
+  describe "GET #embed" do
+    let(:public_workout) { FactoryBot.build_stubbed(:workout, id: 62, name: "List ADT Programming Exercise", is_public: true) }
+    let(:private_workout) { FactoryBot.build_stubbed(:workout, id: 63, name: "Private Workout", is_public: false) }
+
+    it "finds workout by workout_id and redirects with embedded: true" do
+      allow(Workout).to receive(:find_by).with(id: '62').and_return(public_workout)
+
+      get :embed, params: { workout_id: '62' }
+
+      expect(response).to redirect_to(practice_workout_path(id: 62, embedded: true))
+    end
+
+    it "finds workout by camelCase workoutId and redirects with embedded: true" do
+      allow(Workout).to receive(:find_by).with(id: '62').and_return(public_workout)
+
+      get :embed, params: { workoutId: '62' }
+
+      expect(response).to redirect_to(practice_workout_path(id: 62, embedded: true))
+    end
+
+    it "finds workout by resource_name and redirects with embedded: true" do
+      relation = double('Relation')
+      allow(Workout).to receive(:where).with('lower(name) = ? and is_public = true', 'list adt programming exercise').and_return(relation)
+      allow(relation).to receive(:first).and_return(public_workout)
+
+      get :embed, params: { resource_name: 'List ADT Programming Exercise' }
+
+      expect(response).to redirect_to(practice_workout_path(id: 62, embedded: true))
+    end
+
+    it "renders error if workout is private" do
+      allow(Workout).to receive(:find_by).with(id: '63').and_return(private_workout)
+
+      get :embed, params: { workout_id: '63' }
+
+      expect(response.status).to eq(200)
+      expect(controller.instance_variable_get(:@message)).to include('no public workouts with that name or id')
+    end
+
+    it "renders error if workout is not found" do
+      allow(Workout).to receive(:find_by).with(id: '999').and_return(nil)
+
+      get :embed, params: { workout_id: '999' }
+
+      expect(response.status).to eq(200)
+      expect(controller.instance_variable_get(:@message)).to include('no public workouts with that name or id')
+    end
   end
 
   describe "GET #practice" do

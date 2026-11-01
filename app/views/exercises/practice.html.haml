@@ -1,4 +1,4 @@
-- if !@lti_launch
+- if !@lti_launch && !embedded_lti_launch?
   = render partial: 'layouts/breadcrumb'
 
 - if @user_deadline
@@ -55,6 +55,7 @@
       workout_id: @workout.andand.id,
       workout_score_id: @workout_score.andand.id,
       feedback_return: true, lti_launch: @lti_launch,
+      embedded: (@embedded || params[:embedded].present? || params[:embed].present?) ? true : nil,
       lis_result_sourcedid: @workout_score.andand.lis_result_sourcedid,
       lis_outcome_service_url: @workout_score.andand.lis_outcome_service_url)), remote: true do |f|
       = f.semantic_errors
@@ -293,7 +294,8 @@
           = button_link 'Next exercise',
             exercise_practice_path(@workout.next_exercise(@exercise, @workout_score),
             workout_id: @workout.id, workout_score_id: @workout_score.andand.id,
-            lti_launch: @lti_launch),
+            lti_launch: @lti_launch,
+            embedded: (@embedded || params[:embedded].present? || params[:embed].present?) ? true : nil),
             class: 'btn btn-info btn-next', id: 'nextbtn'
 
         - if @workout_offering && @is_staff_review

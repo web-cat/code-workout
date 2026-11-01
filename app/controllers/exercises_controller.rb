@@ -600,7 +600,7 @@ class ExercisesController < ApplicationController
       render 'lti/error' and return
     end
 
-    redirect_to exercise_practice_path(id: @exercise.id, lti_launch: true) and return
+    redirect_to exercise_practice_path(id: @exercise.id, embedded: true) and return
 	end
 
 
@@ -613,6 +613,7 @@ class ExercisesController < ApplicationController
     else
       @lti_launch = nil
     end
+    @embedded = params[:embedded].present? || params[:embed].present? || (params[:lti_launch] == 'true' && @lti_launch.nil?)
 
     if params[:exercise_version_id] || params[:id]
       set_exercise_from_params
@@ -951,6 +952,7 @@ class ExercisesController < ApplicationController
   #GET /evaluate/1
   def evaluate
     @lti_launch = params[:lti_launch]
+    @embedded = params[:embedded].present? || params[:embed].present? || (params[:lti_launch] == 'true' && !lti_context_for_token(params[:lti_launch]))
 
 		if params[:exercise_version_id] || params[:id]
       set_exercise_from_params
@@ -1238,7 +1240,8 @@ class ExercisesController < ApplicationController
               @workout_score.workout.next_exercise(@exercise, @workout_score),
               workout_id: @workout_score.workout.id,
               workout_score_id: @workout_score.andand.id,
-              lti_launch: @lti_launch) + "' "
+              lti_launch: @lti_launch,
+              embedded: @embedded ? true : nil) + "' "
         end
       end
     else

@@ -282,18 +282,19 @@ class WorkoutsController < ApplicationController
 
   # -------------------------------------------------------------
   def embed
-		if params[:workout_id].present?
-			@workout = Workout.find_by(id: params[:workout_id])
-		elsif params[:resource_name].present?
-			workouts = Workout.where('lower(name) = ? and is_public = true',
-			  params[:resource_name].downcase)
-			@workout = workouts.first
+    workout_id = params[:workout_id].presence || params[:workoutId].presence
+    if workout_id.present?
+      @workout = Workout.find_by(id: workout_id)
+    elsif params[:resource_name].present?
+      workouts = Workout.where('lower(name) = ? and is_public = true',
+        params[:resource_name].downcase)
+      @workout = workouts.first
     end
 
     if @workout.andand.is_public
-        redirect_to practice_workout_path(
-          id: @workout.id,
-          lti_launch: true) and return
+      redirect_to practice_workout_path(
+        id: @workout.id,
+        embedded: true) and return
     else
       @message = 'Sorry, there are no public workouts with that name or id.'
       render 'lti/error' and return
@@ -1354,6 +1355,7 @@ class WorkoutsController < ApplicationController
   def practice
     @workout = Workout.find_by(id: params[:id])
     @lti_workout = LtiWorkout.find_by(id: params[:lti_workout_id])
+    is_embedded = params[:embedded].present? || params[:embed].present? || (params[:lti_launch] == 'true' && !lti_context_for_token(params[:lti_launch]))
 
     if !@lti_workout
       authorize! :practice, @workout
@@ -1367,7 +1369,7 @@ class WorkoutsController < ApplicationController
 
     if @workout
       @workout_offering = params[:workout_offering_id].present? ? WorkoutOffering.find_by(id: params[:workout_offering_id]) : nil
-      if current_user && !@lti_workout
+      if current_user && !@lti_workout && !is_embedded
         @workout_offering ||= @workout.workout_offerings.find { |wo| wo.course_offering.is_enrolled?(current_user) || wo.course_offering.is_staff?(current_user) }
       end
 
@@ -1498,7 +1500,8 @@ class WorkoutsController < ApplicationController
         workout_id: @workout.id,
         workout_offering_id: @workout_offering.andand.id,
         lti_launch: @lti_launch,
-        workout_score_id: @workout_score.andand.id
+        workout_score_id: @workout_score.andand.id,
+        embedded: is_embedded ? true : nil
       )
     else
       redirect_to workouts, notice: 'Workout not found' and return
