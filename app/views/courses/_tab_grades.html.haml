@@ -66,7 +66,7 @@
                 - grand_total = 0.0
                 - workout_offerings.each do |wkto|
                   - user_scores = @workout_scores_by_offering_and_user ? @workout_scores_by_offering_and_user[[wkto.id, student.id]] : nil
-                  - workout_score = user_scores ? wkto.kept_score_from(user_scores) : wkto.score_for(student)
+                  - workout_score = @workout_scores_by_offering_and_user ? (user_scores.present? ? wkto.kept_score_from(user_scores) : nil) : wkto.score_for(student)
                   - score = workout_score.andand.score
                   - if score
                     %td.col-workout{ class: "col-wkto-#{wkto.id}" }
@@ -94,7 +94,7 @@
             %tr
               %td= wkto.workout.name
               - user_scores = @workout_scores_by_offering_id ? @workout_scores_by_offering_id[wkto.id] : nil
-              - workout_score = user_scores ? wkto.kept_score_from(user_scores) : wkto.score_for(current_user)
+              - workout_score = @workout_scores_by_offering_id ? (user_scores.present? ? wkto.kept_score_from(user_scores) : nil) : wkto.score_for(current_user)
               - score = workout_score.andand.score
               - if score && workout_score.show_score?
                 %td
