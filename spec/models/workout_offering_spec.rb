@@ -378,6 +378,16 @@ describe WorkoutOffering, type: :model do
         workout_offering.workout_score_to_keep = :latest
         expect(workout_offering.kept_score_from([ws1, ws2])).to eq(ws2)
       end
+
+      it "returns kept score for backward-compatible score_for" do
+        workout_offering.workout_score_to_keep = :highest
+        expect(workout_offering.score_for(user)).to eq(ws2)
+      end
+
+      it "returns nil for score_for when scores are empty without re-querying" do
+        expect(workout_offering).to receive(:scores_for).with(user).once.and_return([])
+        expect(workout_offering.score_for(user)).to be_nil
+      end
     end
 
     describe "#can_start_new_attempt?" do

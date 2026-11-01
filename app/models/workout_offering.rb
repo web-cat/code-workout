@@ -184,7 +184,8 @@ class WorkoutOffering < ApplicationRecord
   # Retain score_for for backward compatibility, returning kept score or latest
   def score_for(user)
     return nil unless user
-    kept_workout_score_for(user) || latest_score_for(user)
+    user_scores = scores_for(user)
+    kept_score_from(user_scores) || user_scores.last
   end
 
 
