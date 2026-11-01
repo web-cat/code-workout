@@ -567,5 +567,19 @@ describe ExercisesController do
       expect(controller.instance_variable_get(:@student_review)).to be(true)
       expect(controller.instance_variable_get(:@attempt)).to eq(scoring_attempt)
     end
+
+    it "does not set @msg or review mode for gym workouts without workout offering" do
+      allow(Workout).to receive(:find).with('5').and_return(workout)
+      allow(workout).to receive(:score_for).and_return(workout_score)
+      allow(workout_score).to receive(:workout_offering).and_return(nil)
+      allow(workout_score).to receive(:workout_offering_id).and_return(nil)
+      allow(workout_score).to receive(:closed?).and_return(false)
+
+      get :practice, params: { id: '1', workout_id: '5' }
+
+      expect(response.status).to eq(200)
+      expect(controller.instance_variable_get(:@student_review)).to be(false)
+      expect(controller.instance_variable_get(:@msg)).to be_nil
+    end
   end
 end

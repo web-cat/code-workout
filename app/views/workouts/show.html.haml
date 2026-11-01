@@ -198,11 +198,11 @@
 
 - if @exs.empty?
   .alert.alert-warning No exercises in this workout
-- elsif !manages_course && (workout_policy.andand.see_answers == false || ((workout_policy.andand.no_review_before_close || workout_policy.andand.hide_thumbnails_in_review_before_close) && !@workout_offering.andand.shutdown?))
+- elsif @workout_offering && !manages_course && (workout_policy.andand.see_answers == false || ((workout_policy.andand.no_review_before_close || workout_policy.andand.hide_thumbnails_in_review_before_close) && !@workout_offering.shutdown?))
   %p= "This workout contains #{pluralize(@exs.size, 'exercise')}."
-  - if workout_score.andand.closed? && !@workout_offering.andand.shutdown? && (workout_policy.andand.no_review_before_close || workout_policy.andand.hide_thumbnails_in_review_before_close)
+  - if workout_score.andand.closed? && !@workout_offering.shutdown? && (workout_policy.andand.no_review_before_close || workout_policy.andand.hide_thumbnails_in_review_before_close)
     .alert.alert-warning Results will be visible after the assignment closes.
-- elsif !manages_course && workout_score.nil? && workout_policy.andand.hide_thumbnails_before_start
+- elsif @workout_offering && !manages_course && workout_score.nil? && workout_policy.andand.hide_thumbnails_before_start
   .alert.alert-warning You must begin this workout before you can see its exercises.
 - elsif is_staff && !as_student && @workout.exercise_pools.any?
   .workout-pools

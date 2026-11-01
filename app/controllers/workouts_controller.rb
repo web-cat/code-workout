@@ -1367,7 +1367,7 @@ class WorkoutsController < ApplicationController
 
     if @workout
       @workout_offering = params[:workout_offering_id].present? ? WorkoutOffering.find_by(id: params[:workout_offering_id]) : nil
-      if current_user
+      if current_user && !@lti_workout
         @workout_offering ||= @workout.workout_offerings.find { |wo| wo.course_offering.is_enrolled?(current_user) || wo.course_offering.is_staff?(current_user) }
       end
 
@@ -1471,7 +1471,7 @@ class WorkoutsController < ApplicationController
         manages_course = current_user.andand.global_role.andand.is_admin? ||
           @workout_score.andand.workout_offering.andand.course_offering.andand.is_manager?(current_user)
         policy = @workout_score.andand.workout_offering.andand.workout_policy
-        if !manages_course && @workout_score.andand.closed? &&
+        if @workout_offering && !manages_course && @workout_score.andand.closed? &&
           (policy.andand.see_answers == false ||
            (policy.andand.no_review_before_close && !@workout_score.andand.workout_offering.andand.shutdown?))
           redirect_to workout_path(@workout),

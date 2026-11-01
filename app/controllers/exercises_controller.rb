@@ -690,10 +690,16 @@ class ExercisesController < ApplicationController
           @workout ? @workout.score_for(@student_user, @workout_offering) : nil
     ))
 
-    if @workout_offering && @workout_score &&
-      (@workout_score.workout_offering.present? && @workout_score.workout_offering != @workout_offering) &&
-      (@workout_score.workout_offering_id.present? && @workout_score.workout_offering_id != @workout_offering.id)
-      @workout_score = nil
+    if @workout_offering
+      if @workout_score &&
+        (@workout_score.workout_offering.present? && @workout_score.workout_offering != @workout_offering) &&
+        (@workout_score.workout_offering_id.present? && @workout_score.workout_offering_id != @workout_offering.id)
+        @workout_score = nil
+      end
+    else
+      if @workout_score && @workout_score.workout_offering_id.present?
+        @workout_score = nil
+      end
     end
 
     if !@workout_score && @student_user && @workout_offering
@@ -745,7 +751,7 @@ class ExercisesController < ApplicationController
     end
 
     if @workout_score
-      if @workout_score.lis_result_sourcedid.nil? && @workout_score.lis_outcome_service_url.nil? &&
+      if @workout_offering && @workout_score.lis_result_sourcedid.nil? && @workout_score.lis_outcome_service_url.nil? &&
         (params[:lis_result_sourcedid].present? || params[:lis_outcome_service_url].present?)
         @workout_score.lis_result_sourcedid = params[:lis_result_sourcedid]
         @workout_score.lis_outcome_service_url = params[:lis_outcome_service_url]
@@ -777,20 +783,15 @@ class ExercisesController < ApplicationController
     @workout ||= @workout_score ? @workout_score.workout : nil
 
     policy = @workout_offering.andand.workout_policy
-    if !is_staff && @workout_score.andand.closed? &&
+    if @workout_offering && !is_staff && @workout_score.andand.closed? &&
       (policy.andand.see_answers == false ||
-       (policy.andand.no_review_before_close && !@workout_offering.andand.shutdown?))
-      path = root_path
-      if @workout_offering
-        path = organization_workout_offering_path(
-            organization_id:
-              @workout_offering.course_offering.course.organization.slug,
-            course_id: @workout_offering.course_offering.course.slug,
-            term_id: @workout_offering.course_offering.term.slug,
-            id: @workout_offering.id)
-      elsif @workout
-        path = workout_path(@workout)
-      end
+       (policy.andand.no_review_before_close && !@workout_offering.shutdown?))
+      path = organization_workout_offering_path(
+          organization_id:
+            @workout_offering.course_offering.course.organization.slug,
+          course_id: @workout_offering.course_offering.course.slug,
+          term_id: @workout_offering.course_offering.term.slug,
+          id: @workout_offering.id)
       redirect_to path,
         notice: "The time limit has passed for this workout." and return
     end
@@ -800,7 +801,7 @@ class ExercisesController < ApplicationController
     @student_review = false
     if @is_staff_review
       @student_review = true
-    elsif @workout_score.andand.closed?
+    elsif @workout_offering && @workout_score.andand.closed?
       @msg = 'The time limit has passed. This assignment is closed and no ' +
         'longer accepting submissions.'
       @student_review = true
@@ -990,6 +991,11 @@ class ExercisesController < ApplicationController
 
     if params[:workout_score_id].present?
       @workout_score = WorkoutScore.find_by(id: params[:workout_score_id])
+      if @workout_offering.nil? && @workout_score&.workout_offering_id.present?
+        @workout_score = nil
+      elsif @workout_offering && @workout_score&.workout_offering_id.present? && @workout_score.workout_offering_id != @workout_offering.id
+        @workout_score = nil
+      end
     end
 
     if !@workout_score
@@ -1077,8 +1083,8 @@ class ExercisesController < ApplicationController
     end
 
     # Has the allotted time for the workout offering passed?
-    if @workout_score.andand.closed? &&
-      !@workout_offering.andand.can_be_practiced_by?(@student_drift_user)
+    if @workout_offering && @workout_score.andand.closed? &&
+      !@workout_offering.can_be_practiced_by?(@student_drift_user)
       msg = 'The time limit or deadline for this workout has passed. This assignment is closed and no longer accepting submissions.'
       respond_to do |format|
         format.js do
