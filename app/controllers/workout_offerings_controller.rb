@@ -25,14 +25,24 @@ class WorkoutOfferingsController < ApplicationController
       @term = @course_offering.andand.term
       @organization = @course.andand.organization
       @user_course_role = @course_offering.andand.role_for_user(current_user)
-      @is_staff = current_user.andand.global_role.andand.is_admin? || @user_course_role.andand.is_staff?
-      @manages_course = current_user.andand.global_role.andand.is_admin? || @user_course_role.andand.can_manage_course?
+      is_creator_or_owner = current_user && (
+        (@workout.respond_to?(:creator_id) && @workout.creator_id.present? && @workout.creator_id == current_user.id) ||
+        (@workout.respond_to?(:creator) && @workout.creator.present? && @workout.creator == current_user) ||
+        (current_user.respond_to?(:id) && @workout.respond_to?(:owners) && (
+          @workout.owners.respond_to?(:exists?) ? @workout.owners.exists?(current_user.id) : (@workout.owners.respond_to?(:include?) && @workout.owners.include?(current_user))
+        ))
+      )
+      @is_staff = current_user.andand.global_role.andand.is_admin? || @user_course_role.andand.is_staff? || is_creator_or_owner
+      @manages_course = current_user.andand.global_role.andand.is_admin? || @user_course_role.andand.can_manage_course? || is_creator_or_owner
+      @can_view_as_student = @is_staff
+      @as_student = @can_view_as_student && params[:student].to_b
       @past_scores = @workout_offering.scores_for(current_user)
       @active_score = @workout_offering.active_score_for(current_user)
       @can_retake = @workout_offering.can_start_new_attempt?(current_user)
       @effective_score = @workout_offering.effective_score_for(current_user)
       @workout_score = @active_score || @workout_offering.kept_workout_score_for(current_user) || @workout_offering.latest_score_for(current_user)
-      @exs = if @workout_score && @workout_score.respond_to?(:workout_score_exercises) && @workout_score.workout_score_exercises.any?
+      is_active_or_review = @active_score.present? || (@workout_score.present? && (@workout_score.respond_to?(:closed?) && @workout_score.closed?))
+      @exs = if (!@is_staff || @as_student) && is_active_or_review && @workout_score && @workout_score.respond_to?(:workout_score_exercises) && @workout_score.workout_score_exercises.any?
         @workout_score.workout_score_exercises.includes(
           exercise: [
             :tags,

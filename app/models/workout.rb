@@ -687,8 +687,8 @@ class Workout < ApplicationRecord
 
       if lis_outcome_service_url.present? || lis_result_sourcedid.present?
         scores.detect do |s|
-          s.lis_outcome_service_url == lis_outcome_service_url &&
-            s.lis_result_sourcedid == lis_result_sourcedid
+          (lis_result_sourcedid.blank? || s.lis_result_sourcedid == lis_result_sourcedid) &&
+            (lis_outcome_service_url.blank? || s.lis_outcome_service_url == lis_outcome_service_url)
         end
       else
         if workout_offering.nil?
@@ -702,8 +702,8 @@ class Workout < ApplicationRecord
         user: user, workout_offering: workout_offering).order('updated_at DESC')
       if lis_outcome_service_url.present? || lis_result_sourcedid.present?
         scores.to_ary.detect do |s|
-          s.lis_outcome_service_url == lis_outcome_service_url &&
-            s.lis_result_sourcedid == lis_result_sourcedid
+          (lis_result_sourcedid.blank? || s.lis_result_sourcedid == lis_result_sourcedid) &&
+            (lis_outcome_service_url.blank? || s.lis_outcome_service_url == lis_outcome_service_url)
         end
       else
         if workout_offering.nil?
