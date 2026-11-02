@@ -216,10 +216,23 @@ class WorkoutsController < ApplicationController
           Have a look at these popular workouts instead.'
       } and return
     end
+    is_creator_or_owner = current_user && (
+      (@workout.respond_to?(:creator_id) && @workout.creator_id.present? && @workout.creator_id == current_user.id) ||
+      (@workout.respond_to?(:creator) && @workout.creator.present? && @workout.creator == current_user) ||
+      (current_user.respond_to?(:id) && @workout.respond_to?(:owners) && (
+        @workout.owners.respond_to?(:exists?) ? @workout.owners.exists?(current_user.id) : (@workout.owners.respond_to?(:include?) && @workout.owners.include?(current_user))
+      ))
+    )
     is_course_staff = current_user.andand.global_role.andand.is_admin? ||
-      (@workout_offering.respond_to?(:course_offering) && @workout_offering.course_offering.andand.is_staff?(current_user))
+      (@workout_offering.respond_to?(:course_offering) && @workout_offering.course_offering.andand.is_staff?(current_user)) ||
+      is_creator_or_owner
     @can_view_as_student = is_course_staff
     @as_student = @can_view_as_student && params[:student].to_b
+
+    token = params[:lti_launch]
+    lti_context = lti_context_for_token(token)
+    lis_result_sourcedid = params[:lis_result_sourcedid].presence || lti_context.andand[:lis_result_sourcedid].presence || session[:lis_result_sourcedid].presence
+    lis_outcome_service_url = params[:lis_outcome_service_url].presence || lti_context.andand[:lis_outcome_service_url].presence || session[:lis_outcome_service_url].presence
 
     if @workout_offering.respond_to?(:scores_for)
       @past_scores = @workout_offering.scores_for(current_user)
@@ -228,9 +241,10 @@ class WorkoutsController < ApplicationController
       @effective_score = @workout_offering.effective_score_for(current_user)
       @workout_score = @active_score || @workout_offering.kept_workout_score_for(current_user) || @workout_offering.latest_score_for(current_user)
     end
-    @workout_score ||= @workout.score_for(current_user, @workout_offering)
+    @workout_score ||= @workout.score_for(current_user, @workout_offering, lis_outcome_service_url, lis_result_sourcedid)
 
-    @exs = if (!is_course_staff || @as_student) && @workout_score && @workout_score.respond_to?(:workout_score_exercises) && @workout_score.workout_score_exercises.any?
+    is_active_or_review = @active_score.present? || (@workout_score.present? && (@workout_offering.nil? || (@workout_score.respond_to?(:closed?) && @workout_score.closed?)))
+    @exs = if (!is_course_staff || @as_student) && is_active_or_review && @workout_score && @workout_score.respond_to?(:workout_score_exercises) && @workout_score.workout_score_exercises.any?
       @workout_score.workout_score_exercises.includes(
         exercise: [
           { current_version: :prompts },
@@ -1444,17 +1458,22 @@ class WorkoutsController < ApplicationController
       end
 
       if current_user
+        token = @lti_launch || params[:lti_launch]
+        lti_context = lti_context_for_token(token)
+        lis_result_sourcedid = params[:lis_result_sourcedid].presence || lti_context.andand[:lis_result_sourcedid].presence || session[:lis_result_sourcedid].presence
+        lis_outcome_service_url = params[:lis_outcome_service_url].presence || lti_context.andand[:lis_outcome_service_url].presence || session[:lis_outcome_service_url].presence
+
         @workout_score = @workout.score_for(current_user, @workout_offering,
-                                            params[:lis_outcome_service_url],
-                                            params[:lis_result_sourcedid])
+                                            lis_outcome_service_url,
+                                            lis_result_sourcedid)
         if @workout_score.nil?
           # first time this workout is being accessed, create new
           @workout_score = WorkoutScore.new(
             score: 0,
             exercises_completed: 0,
             exercises_remaining: @workout.exercises.length,
-            lis_result_sourcedid: params[:lis_result_sourcedid],
-            lis_outcome_service_url: params[:lis_outcome_service_url],
+            lis_result_sourcedid: lis_result_sourcedid,
+            lis_outcome_service_url: lis_outcome_service_url,
             lti_workout: @lti_workout,
             user: current_user,
             workout: @workout,
@@ -1501,7 +1520,9 @@ class WorkoutsController < ApplicationController
         workout_offering_id: @workout_offering.andand.id,
         lti_launch: @lti_launch,
         workout_score_id: @workout_score.andand.id,
-        embedded: is_embedded ? true : nil
+        embedded: is_embedded ? true : nil,
+        lis_result_sourcedid: lis_result_sourcedid,
+        lis_outcome_service_url: lis_outcome_service_url
       )
     else
       redirect_to workouts, notice: 'Workout not found' and return

@@ -1,10 +1,11 @@
+- is_creator_or_owner = current_user && ((@workout.respond_to?(:creator_id) && @workout.creator_id.present? && @workout.creator_id == current_user.id) || (@workout.respond_to?(:creator) && @workout.creator.present? && @workout.creator == current_user) || (current_user.respond_to?(:id) && @workout.respond_to?(:owners) && (@workout.owners.respond_to?(:exists?) ? @workout.owners.exists?(current_user.id) : (@workout.owners.respond_to?(:include?) && @workout.owners.include?(current_user)))))
 - course_offering ||= @workout_offering.andand.course_offering
 - workout_score ||= @workout_score || (@workout_offering ? (@active_score || @workout_offering.kept_workout_score_for(current_user) || @workout_offering.latest_score_for(current_user)) : @workout.score_for(current_user, @workout_offering))
-- can_view_as_student = @can_view_as_student.nil? ? (current_user.andand.global_role.andand.is_admin? || course_offering.andand.is_staff?(current_user)) : @can_view_as_student
+- can_view_as_student = @can_view_as_student.nil? ? (current_user.andand.global_role.andand.is_admin? || course_offering.andand.is_staff?(current_user) || is_creator_or_owner) : @can_view_as_student
 - as_student = can_view_as_student && (defined?(@as_student) ? @as_student : params[:student].to_b)
-- is_staff = as_student ? false : (@is_staff.nil? ? (course_offering && course_offering.is_staff?(current_user)) : @is_staff)
+- is_staff = as_student ? false : (@is_staff.nil? ? ((current_user ? current_user.global_role.is_admin? : false) || (course_offering && course_offering.is_staff?(current_user)) || is_creator_or_owner) : @is_staff)
 - is_admin = current_user ? current_user.global_role.is_admin? : false
-- manages_course = as_student ? false : (@manages_course.nil? ? (current_user ? (is_admin || course_offering.andand.is_manager?(current_user)) : false) : @manages_course)
+- manages_course = as_student ? false : (@manages_course.nil? ? (current_user ? (is_admin || course_offering.andand.is_manager?(current_user) || is_creator_or_owner) : false) : @manages_course)
 - past_scores = @past_scores || (@workout_offering ? @workout_offering.scores_for(current_user) : [])
 - active_score = @active_score || (@workout_offering ? @workout_offering.active_score_for(current_user) : nil)
 - time_limit = (@workout_offering ? @workout_offering.time_limit_for(current_user) : nil)
@@ -242,11 +243,11 @@
           .clearfix
 - else
   - user = current_user
-  - has_assigned_pool_exercises = workout_score.present? && workout_score.respond_to?(:workout_score_exercises) && workout_score.workout_score_exercises.any?
   - has_active_attempt = active_score.present? && !active_score.closed?
   - can_review_closed = workout_score.present? && workout_score.closed? && (manages_course || (!workout_policy.andand.no_review_before_close || @workout_offering.andand.shutdown?)) && (workout_policy.nil? || workout_policy.see_answers != false)
   - should_start_workout = has_active_attempt || (past_scores.blank? && active_score.nil?)
   - should_review = !should_start_workout && can_review_closed
+  - has_assigned_pool_exercises = (has_active_attempt || should_review) && workout_score.present? && workout_score.respond_to?(:workout_score_exercises) && workout_score.workout_score_exercises.any?
   - if !has_assigned_pool_exercises && @workout.exercise_pools.any? { |p| !p.single_exercise? }
     - slot_items = []
     - @workout.exercise_pools.order(:position).each do |pool|

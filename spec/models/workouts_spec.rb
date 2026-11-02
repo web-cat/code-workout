@@ -318,6 +318,16 @@ describe Workout, type: :model do
       allow(workout).to receive(:workout_scores).and_return([lti_score])
       expect(workout.score_for(user, nil, nil, nil)).to be_nil
     end
+
+    it "returns nil when an LTI context is provided but only non-LTI gym scores exist" do
+      allow(workout).to receive(:workout_scores).and_return([gym_score])
+      expect(workout.score_for(user, nil, 'https://canvas.example.edu/api', 'different_assignment')).to be_nil
+    end
+
+    it "matches LTI score when lis_result_sourcedid matches" do
+      allow(workout).to receive(:workout_scores).and_return([gym_score, lti_score])
+      expect(workout.score_for(user, nil, nil, 'canvas_assignment_42')).to eq(lti_score)
+    end
   end
 end
 

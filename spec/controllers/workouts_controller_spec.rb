@@ -292,6 +292,41 @@ describe WorkoutsController do
         expect(response.status).to eq(200)
         expect(controller.instance_variable_get(:@exs)).to eq([mock_assigned_exercise])
       end
+
+      it "assigns @exs from workout exercises instead of snapshot exercises when current_user is the workout creator" do
+        creator = FactoryBot.build_stubbed(:user, id: 42)
+        mock_assigned_exercise = double("Exercise", id: 77, name: "Assigned Ex")
+        mock_workout_exercise = double("Exercise", id: 88, name: "Workout Ex")
+        wse = double("WorkoutScoreExercise", exercise: mock_assigned_exercise)
+        wse_relation = double("WorkoutScoreExercisesRelation", any?: true)
+        allow(wse_relation).to receive(:includes).and_return([wse])
+        allow(controller).to receive(:current_user).and_return(creator)
+        allow(mock_workout).to receive(:creator_id).and_return(42)
+        allow(mock_workout.exercises).to receive(:includes).and_return([mock_workout_exercise])
+        allow(mock_score).to receive(:workout_score_exercises).and_return(wse_relation)
+
+        get :show, params: { id: 1 }
+        expect(response.status).to eq(200)
+        expect(controller.instance_variable_get(:@can_view_as_student)).to be true
+        expect(controller.instance_variable_get(:@exs)).to eq([mock_workout_exercise])
+      end
+
+      it "resolves LTI parameters from session and queries score_for with them" do
+        user = FactoryBot.build_stubbed(:user)
+        allow(controller).to receive(:current_user).and_return(user)
+        session[:lis_result_sourcedid] = "session_sourcedid_99"
+        session[:lis_outcome_service_url] = "https://example.com/outcome"
+
+        expect(mock_workout).to receive(:score_for).with(
+          user,
+          nil,
+          "https://example.com/outcome",
+          "session_sourcedid_99"
+        ).and_return(mock_score)
+
+        get :show, params: { id: 1 }
+        expect(response.status).to eq(200)
+      end
     end
 
     context "when workout_offering is present and IP restrictions apply" do
@@ -2120,6 +2155,39 @@ describe WorkoutsController do
         workout_id: 5,
         lti_launch: nil,
         workout_score_id: 99
+      ))
+    end
+
+    it "creates a new WorkoutScore with session LTI context when no matching score exists" do
+      session[:lis_result_sourcedid] = "session_sourcedid_123"
+      session[:lis_outcome_service_url] = "https://canvas.example.com/outcome"
+      allow(workout).to receive(:score_for).with(
+        user,
+        nil,
+        "https://canvas.example.com/outcome",
+        "session_sourcedid_123"
+      ).and_return(nil)
+      new_score = FactoryBot.build_stubbed(
+        :workout_score,
+        id: 101,
+        workout: workout,
+        user: user,
+        lis_result_sourcedid: "session_sourcedid_123",
+        lis_outcome_service_url: "https://canvas.example.com/outcome"
+      )
+      allow(WorkoutScore).to receive(:new).and_return(new_score)
+      allow(new_score).to receive(:save!).and_return(true)
+      allow(workout).to receive(:first_exercise).with(new_score).and_return(exercise)
+
+      get :practice, params: { id: '5' }
+
+      expect(response).to redirect_to(exercise_practice_path(
+        exercise,
+        workout_id: 5,
+        lti_launch: nil,
+        workout_score_id: 101,
+        lis_result_sourcedid: "session_sourcedid_123",
+        lis_outcome_service_url: "https://canvas.example.com/outcome"
       ))
     end
   end

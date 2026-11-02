@@ -129,6 +129,33 @@ RSpec.describe WorkoutOfferingsController, type: :controller do
       end
     end
 
+    context "when user is workout creator but not enrolled or staff in course offering" do
+      let(:creator) { FactoryBot.build_stubbed(:user, id: 999) }
+
+      before do
+        allow(controller).to receive(:current_user).and_return(creator)
+        allow(section1).to receive(:is_staff?).with(creator).and_return(false)
+        allow(section1).to receive(:is_enrolled?).with(creator).and_return(false)
+        allow(section1).to receive(:role_for_user).with(creator).and_return(nil)
+        allow(creator).to receive(:course_offerings_for_term).and_return([])
+        allow(workout_offering).to receive(:can_be_seen_by?).with(creator).and_return(true)
+        allow(workout).to receive(:creator_id).and_return(999)
+      end
+
+      it "treats the creator as staff and manager so they can preview the offering" do
+        get :show, params: {
+          organization_id: 'vt',
+          course_id: 'cs1114',
+          term_id: 'fall2026',
+          id: '201'
+        }
+
+        expect(response.status).to eq(200)
+        expect(controller.instance_variable_get(:@is_staff)).to be true
+        expect(controller.instance_variable_get(:@manages_course)).to be true
+      end
+    end
+
     it "logs a workout_view in ActivityLog" do
       expect(ActivityLog).to receive(:create).with(
         hash_including(

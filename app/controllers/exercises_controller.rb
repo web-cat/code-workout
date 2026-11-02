@@ -688,7 +688,9 @@ class ExercisesController < ApplicationController
     end
     @workout_score ||= (
       @workout_offering ? (@workout_offering.active_score_for(@student_user) || @workout_offering.score_for(@student_user)) : (
-          @workout ? @workout.score_for(@student_user, @workout_offering) : nil
+          @workout ? @workout.score_for(@student_user, @workout_offering,
+                                        params[:lis_outcome_service_url] || session[:lis_outcome_service_url],
+                                        params[:lis_result_sourcedid] || session[:lis_result_sourcedid]) : nil
     ))
 
     if @workout_offering
