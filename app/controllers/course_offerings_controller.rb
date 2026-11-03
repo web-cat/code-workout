@@ -90,6 +90,7 @@ class CourseOfferingsController < ApplicationController
   # GET /course_offerings/1/students
   def search_enrolled_users
     @course_offering = CourseOffering.find params[:id]
+    authorize! :manage, @course_offering
     @terms = escape_javascript(params[:term])
     @terms = @terms.split(@terms.include?(',') ? /\s*,\s*/ : nil)
     @results = User.none
@@ -99,8 +100,9 @@ class CourseOfferingsController < ApplicationController
       searchable = @course_offering.users
     end
     @terms.each do |term|
+      clean_term = "%#{ActiveRecord::Base.sanitize_sql_like(term.to_s.strip.downcase)}%"
       @results = @results + searchable
-        .where("lower(first_name) like ? or lower(last_name) like ? or lower(email) like ?", "%#{term.downcase}%", "%#{term.downcase}%", "%#{term.downcase}%")
+        .where("lower(first_name) like ? or lower(last_name) like ? or lower(email) like ?", clean_term, clean_term, clean_term)
     end
 
     render json: @results.uniq.to_json and return
@@ -116,13 +118,23 @@ class CourseOfferingsController < ApplicationController
       render json: [] and return
     end
 
-    term = escape_javascript(params[:term]).downcase
+    is_staff = current_user && (
+      current_user.global_role.is_admin? ||
+      current_user.is_a_member_of?(@course.user_group) ||
+      CourseOffering.where(course: @course, term: @term).any? { |co| co.is_staff?(current_user) }
+    )
+
+    unless is_staff
+      render json: { error: 'Unauthorized to search students for this course' }, status: :forbidden and return
+    end
+
+    clean_term = "%#{ActiveRecord::Base.sanitize_sql_like(params[:term].to_s.strip.downcase)}%"
 
     # Get all students enrolled in any course offering for this course in this term
     course_offerings = CourseOffering.where(course: @course, term: @term)
     users = User.joins(:course_enrollments)
                 .where(course_enrollments: { course_offering_id: course_offerings.map(&:id) })
-                .where("lower(first_name) like ? or lower(last_name) like ? or lower(email) like ?", "%#{term}%", "%#{term}%", "%#{term}%")
+                .where("lower(first_name) like ? or lower(last_name) like ? or lower(email) like ?", clean_term, clean_term, clean_term)
                 .distinct
 
     render json: users.map { |u| {

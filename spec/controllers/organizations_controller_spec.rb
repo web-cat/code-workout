@@ -111,4 +111,41 @@ describe OrganizationsController, type: :controller do
       expect(controller.instance_variable_get(:@term)).to eq(mock_term)
     end
   end
+
+  describe 'POST #create' do
+    it 'authorizes :create on Organization' do
+      expect(controller).to receive(:authorize!).with(:create, Organization)
+      allow_any_instance_of(Organization).to receive(:save).and_return(true)
+
+      post :create, params: { name: 'Virginia Tech', abbreviation: 'VT' }
+      expect(response.status).to eq(200)
+      json = JSON.parse(response.body)
+      expect(json['success']).to be true
+      expect(json['id']).to eq('vt')
+    end
+
+    it 'denies unauthorized users from creating organizations' do
+      allow(controller).to receive(:authorize!).with(:create, Organization).and_raise(CanCan::AccessDenied.new("Not authorized!"))
+
+      post :create, params: { name: 'Virginia Tech', abbreviation: 'VT' }
+      expect(response).to redirect_to(root_path)
+      expect(flash[:error]).to be_present
+    end
+  end
+
+  describe 'GET #search' do
+    it 'escapes SQL wildcards in search query' do
+      relation = double('ActiveRecord::Relation')
+      expect(Organization).to receive(:where).with(
+        'lower(name) like ? or lower(abbreviation) like ? or slug like ?',
+        '%test\\%org%',
+        '%test\\%org%',
+        '%test\\%org%'
+      ).and_return(relation)
+      allow(relation).to receive(:to_json).and_return('[]')
+
+      get :search, params: { term: 'test%org' }
+      expect(response.status).to eq(200)
+    end
+  end
 end

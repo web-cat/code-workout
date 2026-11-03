@@ -16,6 +16,7 @@ RSpec.describe SseController, type: :controller do
 
     before do
       allow(Attempt).to receive_message_chain(:includes, :find_by).and_return(mock_attempt)
+      allow(controller).to receive(:authorize_attempt_access!).and_return(true)
     end
 
     it "eager loads prompt_answers with :actable without causing association errors on MCQs" do
@@ -51,6 +52,55 @@ RSpec.describe SseController, type: :controller do
       expect(controller.instance_variable_get(:@workout_score)).to eq(mock_score)
       expect(controller.instance_variable_get(:@workout)).to eq(mock_workout)
       expect(controller.instance_variable_get(:@workout_offering)).to eq(mock_offering)
+    end
+  end
+
+  describe "Authorization and IDOR Prevention" do
+    let(:mock_attempt) { double("Attempt", id: 42, user_id: 100, feedback_ready: false, workout_score: nil, exercise_version: double(exercise: nil)) }
+
+    it "returns 404 Not Found when attempt does not exist" do
+      allow(Attempt).to receive_message_chain(:includes, :find_by).and_return(nil)
+      get :feedback_update, params: { att_id: 9999, format: :js }
+      expect(response.status).to eq(404)
+    end
+
+    it "denies unauthenticated actor attempting to access another user's attempt" do
+      allow(Attempt).to receive_message_chain(:includes, :find_by).and_return(mock_attempt)
+      allow(controller).to receive(:current_user).and_return(nil)
+      allow(controller).to receive(:authorize!).with(:read, mock_attempt).and_raise(CanCan::AccessDenied.new("Not authorized!"))
+
+      get :feedback_update, params: { att_id: 42, format: :js }
+      expect(response).to redirect_to(root_path)
+      expect(flash[:error]).to be_present
+    end
+
+    it "allows guest practice when session[:student_drift_user_id] matches attempt user_id" do
+      allow(Attempt).to receive_message_chain(:includes, :find_by).and_return(mock_attempt)
+      allow(controller).to receive(:current_user).and_return(nil)
+      session[:student_drift_user_id] = 100
+
+      get :feedback_update, params: { att_id: 42, format: :js }
+      expect(response.status).to eq(200)
+    end
+
+    it "allows authenticated user to view attempt when authorized by CanCan" do
+      student = FactoryBot.build_stubbed(:user, id: 100)
+      allow(controller).to receive(:current_user).and_return(student)
+      allow(Attempt).to receive_message_chain(:includes, :find_by).and_return(mock_attempt)
+      expect(controller).to receive(:authorize!).with(:read, mock_attempt).and_return(true)
+
+      get :feedback_update, params: { att_id: 42, format: :js }
+      expect(response.status).to eq(200)
+    end
+
+    it "enforces authorization in feedback_poll" do
+      allow(Attempt).to receive(:find_by).with(id: '42').and_return(mock_attempt)
+      allow(controller).to receive(:current_user).and_return(nil)
+      allow(controller).to receive(:authorize!).with(:read, mock_attempt).and_raise(CanCan::AccessDenied.new("Not authorized!"))
+
+      get :feedback_poll, params: { att_id: 42, format: :js }
+      expect(response).to redirect_to(root_path)
+      expect(flash[:error]).to be_present
     end
   end
 end

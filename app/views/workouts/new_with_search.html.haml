@@ -1,0 +1,9 @@
+%h1 Exercise Search Results
+
+- if @exers.blank?
+  %p No exercises found.
+- else
+  %ul.exercise-list
+    - @exers.each do |exercise|
+      %li= link_to exercise.name, exercise_path(exercise)
+

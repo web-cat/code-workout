@@ -131,6 +131,18 @@ describe WorkoutsController do
       expect(response.status).to eq(200)
       expect(controller.instance_variable_get(:@course_offerings)).to eq([mock_course_offering])
     end
+
+    context "when user is not authenticated" do
+      before do
+        allow(controller).to receive(:current_user).and_return(nil)
+      end
+
+      it "does not authorize unauthenticated users and redirects to root_path" do
+        get :new
+        expect(response).to redirect_to(root_path)
+        expect(flash[:notice]).to eq('Unauthorized to create new workout')
+      end
+    end
   end
 
   describe "GET #clone" do
@@ -494,6 +506,18 @@ describe WorkoutsController do
       expect(response.status).to eq(200)
       json = JSON.parse(response.body)
       expect(json['url']).to eq('/gym/workouts/45/practice')
+    end
+
+    context "when user is not authenticated" do
+      before do
+        allow(controller).to receive(:current_user).and_return(nil)
+      end
+
+      it "does not authorize unauthenticated users and redirects to root_path" do
+        post :create, params: { name: 'Attempted Workout' }
+        expect(response).to redirect_to(root_path)
+        expect(flash[:notice]).to eq('Unauthorized to create workout')
+      end
     end
   end
 
@@ -2189,6 +2213,144 @@ describe WorkoutsController do
         lis_result_sourcedid: "session_sourcedid_123",
         lis_outcome_service_url: "https://canvas.example.com/outcome"
       ))
+    end
+  end
+
+  describe "GET and POST #new_with_search" do
+    let(:public_relation) { double("ExerciseRelation") }
+
+    before do
+      allow(Exercise).to receive(:publicly_visible).and_return(public_relation)
+      allow(public_relation).to receive(:where).and_return([double("Exercise", id: 1, name: "Factorial")])
+    end
+
+    it "allows unauthenticated users to search exercises" do
+      allow(controller).to receive(:current_user).and_return(nil)
+
+      get :new_with_search, params: { searchkey: 'Factorial' }
+      expect(response.status).to eq(200)
+      expect(controller.instance_variable_get(:@exers)).not_to be_nil
+    end
+
+    it "sanitizes wildcards and searches using parameterized binding" do
+      allow(controller).to receive(:current_user).and_return(nil)
+
+      expect(public_relation).to receive(:where).with(
+        'exercises.name LIKE ?',
+        '%50\\%\\_done%'
+      ).and_return([])
+
+      get :new_with_search, params: { searchkey: '50%_done' }
+      expect(response.status).to eq(200)
+    end
+
+    it "does not execute SQL injection payloads passed via searchkey" do
+      allow(controller).to receive(:current_user).and_return(nil)
+
+      injection_payload = "' OR 1=1; DROP TABLE users; --"
+      sanitized_term = "%#{ActiveRecord::Base.sanitize_sql_like(injection_payload)}%"
+      expect(public_relation).to receive(:where).with(
+        'exercises.name LIKE ?',
+        sanitized_term
+      ).and_return([])
+
+      get :new_with_search, params: { searchkey: injection_payload }
+      expect(response.status).to eq(200)
+    end
+
+    it "returns Exercise.none when searchkey is empty or blank" do
+      allow(controller).to receive(:current_user).and_return(nil)
+
+      get :new_with_search, params: { searchkey: '   ' }
+      expect(response.status).to eq(200)
+      expect(controller.instance_variable_get(:@exers)).to eq(Exercise.none)
+    end
+
+    it "allows searching via POST request body" do
+      allow(controller).to receive(:current_user).and_return(nil)
+
+      expect(public_relation).to receive(:where).with(
+        'exercises.name LIKE ?',
+        '%Recursion%'
+      ).and_return([])
+
+      post :new_with_search, params: { searchkey: 'Recursion' }
+      expect(response.status).to eq(200)
+    end
+
+    it "scopes to Exercise.visible_to_user when user is authenticated" do
+      user = FactoryBot.build_stubbed(:user)
+      user_relation = double("UserExerciseRelation")
+      allow(controller).to receive(:current_user).and_return(user)
+      allow(Exercise).to receive(:visible_to_user).with(user).and_return(user_relation)
+      expect(user_relation).to receive(:where).with('exercises.name LIKE ?', '%Recursion%').and_return([])
+
+      get :new_with_search, params: { searchkey: 'Recursion' }
+      expect(response.status).to eq(200)
+    end
+  end
+
+  describe "YAML import authorization" do
+    let(:user) { FactoryBot.build_stubbed(:user, id: 10) }
+
+    before do
+      allow(controller).to receive(:current_user).and_return(user)
+    end
+
+    describe "GET #upload_yaml" do
+      it "authorizes :create on Workout" do
+        expect(controller).to receive(:authorize!).with(:create, Workout)
+        get :upload_yaml
+      end
+
+      it "denies unauthorized users" do
+        allow(controller).to receive(:authorize!).with(:create, Workout).and_raise(CanCan::AccessDenied.new("Not authorized!"))
+        get :upload_yaml
+        expect(response).to redirect_to(root_path)
+        expect(flash[:error]).to be_present
+      end
+    end
+
+    describe "POST #yaml_create" do
+      it "authorizes :create on Workout" do
+        expect(controller).to receive(:authorize!).with(:create, Workout)
+        post :yaml_create
+        expect(response).to redirect_to(workouts_path)
+        expect(flash[:alert]).to eq('Please choose a YAML file to upload.')
+      end
+
+      it "denies unauthorized users" do
+        allow(controller).to receive(:authorize!).with(:create, Workout).and_raise(CanCan::AccessDenied.new("Not authorized!"))
+        post :yaml_create
+        expect(response).to redirect_to(root_path)
+        expect(flash[:error]).to be_present
+      end
+
+      it "sets creator_id to current_user when importing workouts" do
+        allow(controller).to receive(:authorize!).with(:create, Workout).and_return(true)
+
+        tempfile = Tempfile.new(['workouts', '.yaml'])
+        tempfile.write(<<~YAML)
+          - workout:
+              name: Sample Workout
+              scrambled: false
+              description: Test description
+              tags: ruby
+        YAML
+        tempfile.rewind
+        file = Rack::Test::UploadedFile.new(tempfile.path, 'text/yaml')
+
+        workout_mock = double('Workout', id: 99)
+        expect(Workout).to receive(:new).and_return(workout_mock)
+        expect(workout_mock).to receive(:name=).with('Sample Workout')
+        expect(workout_mock).to receive(:scrambled=).with(false)
+        expect(workout_mock).to receive(:description=).with('Test description')
+        expect(workout_mock).to receive(:creator_id=).with(10)
+        expect(workout_mock).to receive(:save).and_return(true)
+
+        post :yaml_create, params: { form: { yamlfile: file } }
+        expect(response).to redirect_to(workouts_path)
+      end
     end
   end
 end

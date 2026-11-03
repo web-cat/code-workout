@@ -146,4 +146,101 @@ describe CoursesController do
       expect(controller.instance_variable_get(:@exercises)).to eq([])
     end
   end
+
+  describe "Authorization and Security" do
+    let(:organization) { FactoryBot.build_stubbed(:organization, id: 1, slug: 'vt') }
+    let(:course) { FactoryBot.build_stubbed(:course, id: 1, slug: 'cs1114', organization: organization) }
+
+    before do
+      allow(Organization).to receive(:find).and_return(organization)
+      allow(Course).to receive(:find_with_id_or_slug).and_return(course)
+      allow(Course).to receive(:find).and_return(course)
+    end
+
+    describe "GET #new" do
+      it "authorizes :create on Course" do
+        expect(controller).to receive(:authorize!).with(:create, Course)
+        get :new, params: { organization_id: 'vt' }
+      end
+
+      it "denies unauthorized users from accessing new course form" do
+        allow(controller).to receive(:authorize!).with(:create, Course).and_raise(CanCan::AccessDenied.new("Not authorized!"))
+        get :new, params: { organization_id: 'vt' }
+        expect(response).to redirect_to(root_path)
+        expect(flash[:error]).to be_present
+      end
+    end
+
+    describe "POST #create" do
+      it "authorizes :create on Course" do
+        expect(controller).to receive(:authorize!).with(:create, Course)
+        allow_any_instance_of(Course).to receive(:save) do |instance|
+          instance.id = 100
+          true
+        end
+        allow(UserGroup).to receive(:create).and_return(double('UserGroup', add_user_to_group: true))
+
+        post :create, params: {
+          organization_id: 'vt',
+          course: { name: 'Intro', number: 'CS 101', slug: 'cs101' }
+        }
+      end
+
+      it "denies unauthorized users from creating courses" do
+        allow(controller).to receive(:authorize!).with(:create, Course).and_raise(CanCan::AccessDenied.new("Not authorized!"))
+        post :create, params: {
+          organization_id: 'vt',
+          course: { name: 'Intro', number: 'CS 101', slug: 'cs101' }
+        }
+        expect(response).to redirect_to(root_path)
+        expect(flash[:error]).to be_present
+      end
+    end
+
+    describe "GET #edit" do
+      it "authorizes :update on @course" do
+        expect(controller).to receive(:authorize!).with(:update, course)
+        get :edit, params: { organization_id: 'vt', id: 'cs1114' }
+      end
+
+      it "denies unauthorized users from editing courses" do
+        allow(controller).to receive(:authorize!).with(:update, course).and_raise(CanCan::AccessDenied.new("Not authorized!"))
+        get :edit, params: { organization_id: 'vt', id: 'cs1114' }
+        expect(response).to redirect_to(root_path)
+        expect(flash[:error]).to be_present
+      end
+    end
+
+    describe "POST #generate_gradebook" do
+      it "authorizes :generate_gradebook on @course" do
+        expect(controller).to receive(:authorize!).with(:generate_gradebook, course)
+        post :generate_gradebook, params: { organization_id: 'vt', id: 'cs1114', term_id: 'fall2026' }, format: :csv
+      end
+
+      it "denies unauthorized users from generating gradebooks" do
+        allow(controller).to receive(:authorize!).with(:generate_gradebook, course).and_raise(CanCan::AccessDenied.new("Not authorized!"))
+        post :generate_gradebook, params: { organization_id: 'vt', id: 'cs1114', term_id: 'fall2026' }, format: :csv
+        expect(response).to redirect_to(root_path)
+        expect(flash[:error]).to be_present
+      end
+    end
+
+    describe "GET #search" do
+      it "authorizes :search on Course and escapes SQL wildcards" do
+        expect(controller).to receive(:authorize!).with(:search, Course)
+        courses_relation = double('CoursesRelation')
+        allow(organization).to receive(:courses).and_return(courses_relation)
+
+        expect(courses_relation).to receive(:where).with(
+          'lower(name) like ? or lower(number) like ? or slug like ?',
+          '%test\\%query%',
+          '%test\\%query%',
+          '%test\\%query%'
+        ).and_return([])
+
+        get :search, params: { organization_id: 'vt', term: 'test%query' }, format: :json
+        expect(response.status).to eq(200)
+      end
+    end
+  end
 end

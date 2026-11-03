@@ -7,7 +7,8 @@ class SseController < ApplicationController
   def feedback_wait
     max_attempt = params[:att_id]
     @attempt = Attempt.find_by(id: params[:att_id])
-    authorize! :read, @attempt
+    head :not_found and return unless @attempt
+    authorize_attempt_access!(@attempt)
 
     response.headers['Content-Type'] = 'text/event-stream'
 
@@ -42,20 +43,21 @@ class SseController < ApplicationController
       { prompt_answers: :actable }
     ).find_by(id: params[:att_id])
 
-    if @attempt
-      @attempts_exhausted = params[:attempts_exhausted].to_b
-      @exercise_version = @attempt.exercise_version
-      @exercise = @exercise_version.andand.exercise
-      @max_points = @exercise.andand.experience
-      @student_drift_user = current_user ? current_user : session[:drift_user_id]
-      @workout_score = @attempt.workout_score
-      if @workout_score
-        @workout = @workout_score.workout
-        @workout_offering = @workout_score.workout_offering
-        if @workout_score.respond_to?(:points_for)
-          pts = @workout_score.points_for(@exercise)
-          @max_points = pts if pts
-        end
+    head :not_found and return unless @attempt
+    authorize_attempt_access!(@attempt)
+
+    @attempts_exhausted = params[:attempts_exhausted].to_b
+    @exercise_version = @attempt.exercise_version
+    @exercise = @exercise_version.andand.exercise
+    @max_points = @exercise.andand.experience
+    @student_drift_user = current_user ? current_user : session[:drift_user_id]
+    @workout_score = @attempt.workout_score
+    if @workout_score
+      @workout = @workout_score.workout
+      @workout_offering = @workout_score.workout_offering
+      if @workout_score.respond_to?(:points_for)
+        pts = @workout_score.points_for(@exercise)
+        @max_points = pts if pts
       end
     end
 
@@ -67,6 +69,9 @@ class SseController < ApplicationController
   # -------------------------------------------------------------
   def feedback_poll
     @attempt = Attempt.find_by(id: params[:att_id])
+    head :not_found and return unless @attempt
+    authorize_attempt_access!(@attempt)
+
     @exercise_version = @attempt.exercise_version
     @student_drift_user = current_user ?
       current_user :
@@ -74,7 +79,6 @@ class SseController < ApplicationController
         User.find_by(id: session[:student_drift_user_id]) :
         User.find_by(id: params[:drift_user_id]))
     @exercise = @exercise_version.exercise
-    # authorize! :read, @attempt
     if !@attempt.feedback_ready
       respond_to do |format|
         format.js
@@ -84,6 +88,16 @@ class SseController < ApplicationController
         att_id: params[:att_id],
         attempts_exhausted: params[:attempts_exhausted] and return
     end
+  end
+
+  private
+
+  def authorize_attempt_access!(attempt)
+    drift_user_id = session[:student_drift_user_id] || session[:drift_user_id]
+    if current_user.nil? && drift_user_id.present? && attempt.respond_to?(:user_id) && attempt.user_id == drift_user_id.to_i
+      return true
+    end
+    authorize! :read, attempt
   end
 
 end

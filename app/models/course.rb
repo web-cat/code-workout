@@ -62,11 +62,11 @@ class Course < ApplicationRecord
   # -------------------------------------------------------------
   def self.search(terms)
     resultant = []
-    term_array = terms.split
+    term_array = terms.to_s.split
     term_array.each do |term|
-      term = "%" + term + "%"
-      Course.where("name LIKE ?",term).find_each do |course|
-        resultant<<course.id
+      clean_term = "%#{ActiveRecord::Base.sanitize_sql_like(term)}%"
+      Course.where("name LIKE ?", clean_term).find_each do |course|
+        resultant << course.id
       end
     end
 

@@ -255,6 +255,85 @@ describe CourseOfferingsController do
       expect(response.status).to eq(200)
       expect(JSON.parse(response.body)).to eq([])
     end
+
+    it "denies non-staff users and returns 403 Forbidden" do
+      student_user = FactoryBot.build_stubbed(:user, id: 99)
+      allow(controller).to receive(:current_user).and_return(student_user)
+      allow(Course).to receive(:find_with_id_or_slug).with('itsc2214', 'uncc').and_return(mock_course)
+      allow(Term).to receive(:find).with('fall-2026').and_return(mock_term)
+      allow(mock_course).to receive(:user_group).and_return(nil)
+      allow(CourseOffering).to receive(:where).with(course: mock_course, term: mock_term).and_return([])
+
+      get :search_students, params: {
+        organization_id: 'uncc',
+        course_id: 'itsc2214',
+        term_id: 'fall-2026',
+        term: 'krish'
+      }, format: :json
+
+      expect(response.status).to eq(403)
+      expect(JSON.parse(response.body)).to have_key('error')
+    end
+
+    it "escapes SQL wildcards in search query" do
+      allow(Course).to receive(:find_with_id_or_slug).with('itsc2214', 'uncc').and_return(mock_course)
+      allow(Term).to receive(:find).with('fall-2026').and_return(mock_term)
+
+      mock_offering = double('CourseOffering', id: 50)
+      allow(CourseOffering).to receive(:where).with(course: mock_course, term: mock_term).and_return([mock_offering])
+
+      matching_users = double('ActiveRecord::Relation')
+      allow(User).to receive(:joins).with(:course_enrollments).and_return(matching_users)
+      allow(matching_users).to receive(:where).with(course_enrollments: { course_offering_id: [50] }).and_return(matching_users)
+      expect(matching_users).to receive(:where).with(
+        "lower(first_name) like ? or lower(last_name) like ? or lower(email) like ?",
+        "%test\\%query%", "%test\\%query%", "%test\\%query%"
+      ).and_return(matching_users)
+      allow(matching_users).to receive(:distinct).and_return([])
+
+      get :search_students, params: {
+        organization_id: 'uncc',
+        course_id: 'itsc2214',
+        term_id: 'fall-2026',
+        term: 'test%query'
+      }, format: :json
+
+      expect(response.status).to eq(200)
+    end
+  end
+
+  describe "GET search_enrolled_users" do
+    let(:offering) { double('CourseOffering', id: 50, users: User.none) }
+
+    before do
+      allow(CourseOffering).to receive(:find).with('50').and_return(offering)
+    end
+
+    it "authorizes :manage on course_offering" do
+      expect(controller).to receive(:authorize!).with(:manage, offering)
+      get :search_enrolled_users, params: { id: '50', term: 'krish' }, format: :json
+      expect(response.status).to eq(200)
+    end
+
+    it "denies non-managers from searching enrolled users" do
+      allow(controller).to receive(:authorize!).with(:manage, offering).and_raise(CanCan::AccessDenied.new("Not authorized!"))
+      get :search_enrolled_users, params: { id: '50', term: 'krish' }, format: :json
+      expect(response).to redirect_to(root_path)
+      expect(flash[:error]).to be_present
+    end
+
+    it "escapes SQL wildcards in search query" do
+      allow(controller).to receive(:authorize!).with(:manage, offering).and_return(true)
+      searchable = double('ActiveRecord::Relation')
+      allow(offering).to receive(:users).and_return(searchable)
+      expect(searchable).to receive(:where).with(
+        "lower(first_name) like ? or lower(last_name) like ? or lower(email) like ?",
+        "%test\\%query%", "%test\\%query%", "%test\\%query%"
+      ).and_return(User.none)
+
+      get :search_enrolled_users, params: { id: '50', term: 'test%query' }, format: :json
+      expect(response.status).to eq(200)
+    end
   end
 
 end

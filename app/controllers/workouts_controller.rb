@@ -374,7 +374,7 @@ class WorkoutsController < ApplicationController
       @organization = params[:organization_id] ?
         Organization.find(params[:organization_id]) : nil
       @course = Course.find_with_id_or_slug(params[:course_id], params[:organization_id])
-      all_managed = current_user.managed_course_offerings(course: @course, term: @term)
+      all_managed = current_user ? current_user.managed_course_offerings(course: @course, term: @term) : []
       if session[:target_course_offering_ids].present?
         target_ids = session[:target_course_offering_ids].map(&:to_i)
         scoped = all_managed.select { |co| target_ids.include?(co.id) }
@@ -396,8 +396,8 @@ class WorkoutsController < ApplicationController
     # Only let the user through if
     # they're an admin OR
     # there's a course involved AND they have course level permissions
-    unless current_user.global_role.is_admin? ||
-      (@course && current_user.can?(:new, Workout))
+    unless current_user && (current_user.global_role.is_admin? ||
+      (@course && current_user.can?(:new, Workout)))
       redirect_to root_path, notice: @message and return
     end
 
@@ -515,11 +515,26 @@ class WorkoutsController < ApplicationController
 
 
   # -------------------------------------------------------------
-  # GET /workouts/new_with_search/:searchkey
+  # GET /workouts/new_with_search(/:searchkey)
+  # POST /gym/workouts/new_with_search
   def new_with_search
     @workout = Workout.new
-    @exers = Exercise.find_by_sql(
-      "SELECT * FROM exercises WHERE name LIKE '%#{params[:searchkey]}%'")
+    search_term = params[:searchkey].to_s.strip
+
+    @exers = if search_term.present?
+      term = "%#{ActiveRecord::Base.sanitize_sql_like(search_term)}%"
+      scope = current_user ? Exercise.visible_to_user(current_user) : Exercise.publicly_visible
+      scope.where('exercises.name LIKE ?', term)
+    else
+      Exercise.none
+    end
+    @exercises = @exers
+
+    respond_to do |format|
+      format.html
+      format.js
+      format.json { render json: @exers }
+    end
   end
 
 
@@ -706,6 +721,10 @@ class WorkoutsController < ApplicationController
 
   # -------------------------------------------------------------
   def create
+    unless current_user
+      redirect_to root_path, notice: 'Unauthorized to create workout' and return
+    end
+
     @workout = Workout.new
     @workout.creator_id = current_user.id
     @lti_launch = params[:lti_launch]
@@ -1232,12 +1251,19 @@ class WorkoutsController < ApplicationController
 
   # -------------------------------------------------------------
   def upload_yaml
-
+    authorize! :create, Workout
+    render plain: ''
   end
 
 
   # -------------------------------------------------------------
   def yaml_create
+    authorize! :create, Workout
+
+    unless params[:form] && params[:form][:yamlfile]
+      redirect_to workouts_path, alert: 'Please choose a YAML file to upload.' and return
+    end
+
     @yaml_wkts = YAML.safe_load(File.read(params[:form].fetch(:yamlfile).path))
     @yaml_wkts.each do |workout|
       wkt = workout['workout']
@@ -1245,9 +1271,12 @@ class WorkoutsController < ApplicationController
       @wkt.name = wkt['name']
       @wkt.scrambled = wkt['scrambled']
       @wkt.description = wkt['description']
+      @wkt.creator_id = current_user.id if current_user
       @wkt.save
-      wkt['tags'].split(",").each do |t|
-        Tag.tag_this_with(@wkt,t,Tag.skill)
+      if wkt['tags'].present? && defined?(Tag) && Tag.respond_to?(:tag_this_with)
+        wkt['tags'].split(",").each do |t|
+          Tag.tag_this_with(@wkt,t,Tag.skill)
+        end
       end
       wkt['exercises'].andand.each_with_index do |exer,i|
         if Exercise.find(exer['exid'][1..-1].to_i)

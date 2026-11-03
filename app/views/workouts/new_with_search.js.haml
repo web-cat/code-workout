@@ -1,0 +1,7 @@
+$('.exercise-search-results').empty();
+- if @exers.blank?
+  $('.exercise-search-results').append("<p>No exercises found.</p>");
+- else
+  - @exers.each do |exercise|
+    $('.exercise-search-results').append("<div class='exercise-item'>#{escape_javascript(link_to(exercise.name, exercise_path(exercise)))}</div>");
+

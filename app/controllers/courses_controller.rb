@@ -230,6 +230,7 @@ class CoursesController < ApplicationController
   # -------------------------------------------------------------
   # GET /courses/new
   def new
+    authorize! :create, Course
     @course = Course.new
   end
 
@@ -237,12 +238,15 @@ class CoursesController < ApplicationController
   # -------------------------------------------------------------
   # GET /courses/1/edit
   def edit
+    @course = Course.find_with_id_or_slug(params[:id])
+    authorize! :update, @course
   end
 
 
   # -------------------------------------------------------------
   # POST /courses
   def create
+    authorize! :create, Course
     create_params = params[:course]
     @organization = Organization.find(params[:organization_id])
     @course = Course.new(
@@ -279,7 +283,8 @@ class CoursesController < ApplicationController
   # -------------------------------------------------------------
   # PATCH/PUT /courses/1
   def update
-    @course = Course.find params[:id]
+    @course = Course.find_with_id_or_slug(params[:id]) || Course.find(params[:id])
+    authorize! :update, @course
     if @course.update(course_params)
       redirect_to organization_courses_path(
         @course.organization,
@@ -295,6 +300,7 @@ class CoursesController < ApplicationController
   # DELETE /courses/1
   def destroy
     @course = Course.find_with_id_or_slug(params[:id])
+    authorize! :destroy, @course
     description = @course.display_name
     if @course.destroy
       redirect_to organization_path(@course.organization),
@@ -308,12 +314,16 @@ class CoursesController < ApplicationController
 
   # -------------------------------------------------------------
   def search
+    authorize! :search, Course
     @organization = Organization.find params[:organization_id]
-    if params[:term] && params[:slug]
+    if params[:term].present? && params[:slug].present?
       @courses = Course.find_by(organization: @organization, slug: params[:term])
-    elsif params[:term]
+    elsif params[:term].present?
+      cleaned_term = ActiveRecord::Base.sanitize_sql_like(params[:term].to_s.strip.downcase)
+      search_term = "%#{cleaned_term}%"
+      slug_term = "%#{ActiveRecord::Base.sanitize_sql_like(params[:term].to_s.strip)}%"
       @courses = @organization.courses.where('lower(name) like ? or lower(number) like ? or slug like ?',
-        "%#{params[:term].downcase}%", "%#{params[:term].downcase}%", "%#{params[:term]}%")
+        search_term, search_term, slug_term)
     else
       @courses = @organization.courses
     end
@@ -335,6 +345,7 @@ class CoursesController < ApplicationController
   # POST /courses/:organization_id/:id/:term_id/generate_gradebook
   def generate_gradebook
     @course = Course.find_with_id_or_slug(params[:id], params[:organization_id])
+    authorize! :generate_gradebook, @course
     respond_to do |format|
       format.html
       format.csv do
