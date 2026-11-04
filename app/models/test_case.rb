@@ -59,6 +59,64 @@ class TestCase < ApplicationRecord
     numericality: { greater_than_or_equal_to: 0.0 }
 
 
+  #~ Class methods ............................................................
+
+  # -------------------------------------------------------------
+  # Extracts the body of a specific method from source code (Java/C/C++, Python, Ruby)
+  # Returns [body_text, start_line_offset] or nil if no declaration found
+  def self.extract_method_body(code, method_name)
+    return nil if code.blank? || method_name.blank?
+
+    # Java / C / C++ style: [modifiers] returnType methodName(...) [throws ...] { ... }
+    decl_match = code.match(/(?:@\w+(?:\([^)]*\))?\s+)*(?:(?:public|private|protected|static|final|native|synchronized|abstract|default)\s+)*[\w<>\[\],\s]+\s+#{Regexp.escape(method_name)}\s*\([^)]*\)\s*(?:throws\s+[\w,\s]+)?\{/m)
+    if decl_match
+      body_start = decl_match.end(0)
+      start_line = code[0...body_start].lines.count
+      brace_count = 1
+      idx = body_start
+      while idx < code.length && brace_count > 0
+        char = code[idx]
+        if char == '{'
+          brace_count += 1
+        elsif char == '}'
+          brace_count -= 1
+        end
+        idx += 1
+      end
+      body_end = brace_count == 0 ? (idx - 1) : idx
+      body = code[body_start...body_end]
+      return [body, start_line]
+    end
+
+    # Python style: def methodName(...):
+    py_match = code.match(/^([ \t]*)def\s+#{Regexp.escape(method_name)}\s*\([^)]*\)\s*:[ \t]*(?:\r?\n|$)/)
+    if py_match
+      def_indent = py_match[1].length
+      body_start = py_match.end(0)
+      start_line = code[0...body_start].lines.count
+      body_lines = []
+      code[body_start..-1].lines.each do |line|
+        if !line.strip.empty? && line[/^[ \t]*/].length <= def_indent
+          break
+        end
+        body_lines << line
+      end
+      return [body_lines.join, start_line]
+    end
+
+    # Ruby style: def methodName ...
+    rb_match = code.match(/^([ \t]*)def\s+(?:self\.)?#{Regexp.escape(method_name)}\b[^\r\n]*(?:\r?\n|$)/)
+    if rb_match
+      body_start = rb_match.end(0)
+      start_line = code[0...body_start].lines.count
+      body = code[body_start..-1]
+      return [body, start_line]
+    end
+
+    nil
+  end
+
+
   #~ Instance methods .........................................................
 
   # -------------------------------------------------------------
@@ -105,7 +163,14 @@ class TestCase < ApplicationRecord
     end
     options = nil
     regex = self.input
-    if regex =~ /^\s*loop(s?)\s*$/i
+    is_recursion = false
+    target_method = nil
+
+    if regex =~ /^\s*recursion(?:\s*:\s*(\w+))?\s*$/i
+      is_recursion = true
+      target_method = $1.presence || self.coding_prompt.andand.method_name
+      regex = "\\b((this|super|self)\\s*\\.\\s*|)#{Regexp.escape(target_method.to_s)}\\s*\\("
+    elsif regex =~ /^\s*loop(s?)\s*$/i
       regex = 'keywords:for,while,do'
     elsif regex =~ /^\s*list(s?)\s*$/i
       regex = 'classes:List,ArrayList,LinkedList'
@@ -115,9 +180,21 @@ class TestCase < ApplicationRecord
       regex = 'classes:Set,HashSet,TreeSet'
     elsif regex =~ /^\s*array(s?)\s*$/i
       regex = '/\[[^\]]*\]/'
-    elsif regex =~ /^\s*recursion\s*$/i
-      regex = 'self method:' + self.coding_prompt.method_name
     end
+
+    search_code = code
+    line_offset = 0
+    has_declaration = false
+
+    if is_recursion && target_method.present? && !code.blank?
+      method_body_info = TestCase.extract_method_body(code, target_method)
+      if method_body_info
+        has_declaration = true
+        search_code = method_body_info[0]
+        line_offset = method_body_info[1]
+      end
+    end
+
     nresp = self.negative_feedback
     nresp_operator = 'use'
     if regex =~ /^\s*keyword(s?)\s*:\s*/
@@ -139,15 +216,15 @@ class TestCase < ApplicationRecord
       if last < regex.length - 1
         options = regex[(last + 1)..-1]
       end
-      regex = regex[1..last]
+      regex = regex[1...last]
     end
     actual_count = 0
     first_occurrence_line = nil
     last_occurrence_line = nil
-    if !code.blank?
-      code.scan(Regexp.new(regex, options)) do |hit|
+    if !search_code.blank?
+      search_code.scan(Regexp.new(regex, options)) do |hit|
         actual_count += 1
-        last_occurrence_line = $`.lines.count
+        last_occurrence_line = $`.lines.count + line_offset
         if first_occurrence_line.nil?
           first_occurrence_line = last_occurrence_line
         end
@@ -156,9 +233,17 @@ class TestCase < ApplicationRecord
     if actual_count < required_min_count
       passed = false
       if nresp.blank?
-        nresp = 'Answer must ' + nresp_operator + ' ' + self.input
-        if required_min_count > 1
-          nresp = nresp + ' at least ' + required_min_count + ' times'
+        if is_recursion
+          if has_declaration
+            nresp = "The solution must be recursive: '#{target_method}' is declared, but it is never called recursively."
+          else
+            nresp = "The solution must be recursive (method '#{target_method}' must call itself)."
+          end
+        else
+          nresp = 'Answer must ' + nresp_operator + ' ' + self.input
+          if required_min_count > 1
+            nresp = nresp + ' at least ' + required_min_count.to_s + ' times'
+          end
         end
       end
     elsif !required_max_count.nil? && actual_count > required_max_count
@@ -167,7 +252,7 @@ class TestCase < ApplicationRecord
         nresp = 'Answer cannot ' + nresp_operator + ' ' + self.input
         if required_max_count > 0
           nresp = "line #{last_occurrence_line}: " + nresp + ' more than ' +
-            required_max_count + ' ' + 'time'.pluralize(required_max_count)
+            required_max_count.to_s + ' ' + 'time'.pluralize(required_max_count)
         else
           nresp = "line #{first_occurrence_line}: " + nresp
         end
