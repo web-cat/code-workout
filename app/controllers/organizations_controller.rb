@@ -37,9 +37,11 @@ include AbbrHelper
   def search
     if params[:slug] && params[:term]
       @organizations = Organization.find_by(slug: params[:term]) # leaving the name pluralized for rendering
-    elsif params[:term]
+    elsif params[:term].present?
+      cleaned_term = "%#{ActiveRecord::Base.sanitize_sql_like(params[:term].to_s.strip.downcase)}%"
+      slug_term = "%#{ActiveRecord::Base.sanitize_sql_like(params[:term].to_s.strip)}%"
       @organizations = Organization.where('lower(name) like ? or lower(abbreviation) like ? or slug like ?',
-        "%#{params[:term].downcase}%", "%#{params[:term].downcase}%", "%#{params[:term]}%")
+        cleaned_term, cleaned_term, slug_term)
     else
       @organizations = Organization.all
     end
@@ -121,10 +123,12 @@ include AbbrHelper
   end
 
   def create
+    authorize! :create, Organization
+
     @organization = Organization.new(
       name: to_title_case(params[:name]),
       abbreviation: params[:abbreviation],
-      slug: params[:abbreviation].downcase,
+      slug: params[:abbreviation].to_s.strip.downcase,
       is_hidden: params[:is_hidden]
     )
 

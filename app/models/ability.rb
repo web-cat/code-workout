@@ -174,6 +174,19 @@ class Ability
         course.creator_id == user.id || user.is_a_member_of?(course.user_group)
       end
 
+      can [:update, :destroy], Course do |course|
+        course.creator_id == user.id ||
+          user.is_a_member_of?(course.user_group) ||
+          course.course_offerings.any? { |co| co.is_manager?(user) }
+      end
+
+      can :generate_gradebook, Course do |course|
+        user.global_role.is_admin? ||
+          course.creator_id == user.id ||
+          user.is_a_member_of?(course.user_group) ||
+          course.course_offerings.any? { |co| co.is_staff?(user) }
+      end
+
       can :request_privileged_access, Course do |course|
         user.global_role.is_admin? ||
         (

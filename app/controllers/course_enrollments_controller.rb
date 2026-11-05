@@ -1,4 +1,5 @@
 class CourseEnrollmentsController < ApplicationController
+  before_action :ensure_authenticated_user!
 
   def new
     parse_params
@@ -10,6 +11,7 @@ class CourseEnrollmentsController < ApplicationController
 
   def destroy
     course_enrollment = CourseEnrollment.find params[:id]
+    authorize! :destroy, course_enrollment
     course_enrollment.destroy
 
     respond_to do |format|
@@ -29,6 +31,7 @@ class CourseEnrollmentsController < ApplicationController
 
   def roster_upload
     @course_offering = CourseOffering.find params[:course_offering_id]
+    authorize! :manage, @course_offering
     file = params[:rosterfile]
     has_headers = ActiveRecord::Type::Boolean.new.cast(params[:has_headers])
 
@@ -129,21 +132,29 @@ class CourseEnrollmentsController < ApplicationController
   end
 
   def enroll_users
-    emails = params[:emails]
     @course_offering = CourseOffering.find params[:course_offering_id]
-    if params[:course_role_id]
+    can_manage = current_user.present? && (current_user.manages?(@course_offering) || can?(:manage, @course_offering))
+
+    unless @course_offering.can_enroll? || can_manage
+      redirect_to root_path, alert: 'The enrollment cutoff date for this course offering has already passed.' and return
+    end
+
+    if params[:course_role_id].present? && can_manage
       @course_role = CourseRole.find params[:course_role_id]
     else
       @course_role = CourseRole.student
     end
 
+    emails = params[:emails] || []
+    unless can_manage
+      user_email = current_user.andand.email.to_s.strip.downcase
+      emails = emails.select { |e| e.to_s.strip.downcase == user_email }
+    end
+
     errors = []
     successes = 0
     any_enrolled = false
-    if @course_offering.can_enroll? || current_user.manages?(@course_offering)
-      # The course offering is open for enrollment or the current user can override
-      # the enrollment deadline
-      emails.each do |email|
+    emails.each do |email|
         user = User.find_by email: email
         if user
           if user.is_enrolled?(@course_offering) && !user.manages?(@course_offering)
@@ -163,9 +174,6 @@ class CourseEnrollmentsController < ApplicationController
           errors.push("<li>Did not find a user associated with the email #{email}.</li>")
         end
       end
-    else
-      errors.push("<li>The enrollment cutoff date for this course offering has already passed.</li>")
-    end
 
     all = successes == emails.length
     any = successes > 0
@@ -188,6 +196,11 @@ class CourseEnrollmentsController < ApplicationController
   end
 
   private
+
+  def ensure_authenticated_user!
+    return if current_user.present?
+    authenticate_user!
+  end
 
   def parse_params
     @term = Term.find params[:term_id] if params[:term_id]

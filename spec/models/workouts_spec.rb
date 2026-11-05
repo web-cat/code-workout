@@ -329,5 +329,51 @@ describe Workout, type: :model do
       expect(workout.score_for(user, nil, nil, 'canvas_assignment_42')).to eq(lti_score)
     end
   end
+
+  describe ".search" do
+    let(:relation) { double('ActiveRecord::Relation') }
+
+    before do
+      allow(Workout).to receive_message_chain(:includes, :where).and_return(relation)
+      allow(relation).to receive(:tagged_with).and_return([])
+    end
+
+    it "handles unbalanced regex characters without database errors by using parameterized LIKE queries" do
+      terms = ['test(unbalanced[']
+      sanitized_term = "%#{ActiveRecord::Base.sanitize_sql_like('test(unbalanced[')}%"
+
+      name_relation = double('NameRelation')
+      expect(relation).to receive(:where).with(
+        'workouts.name LIKE ?',
+        sanitized_term
+      ).and_return(name_relation)
+      allow(name_relation).to receive(:distinct).and_return([double('Workout')])
+
+      results = Workout.search(terms, nil, nil, nil)
+      expect(results).to be_present
+    end
+
+    it "escapes SQL wildcards (% and _) in search terms" do
+      terms = ['50%_off']
+      sanitized_term = "%#{ActiveRecord::Base.sanitize_sql_like('50%_off')}%"
+
+      name_relation = double('NameRelation')
+      expect(relation).to receive(:where).with(
+        'workouts.name LIKE ?',
+        sanitized_term
+      ).and_return(name_relation)
+      allow(name_relation).to receive(:distinct).and_return([])
+
+      Workout.search(terms, nil, nil, nil)
+    end
+
+    it "returns all available workouts when terms are blank" do
+      mock_workouts = [double('Workout')]
+      allow(relation).to receive(:to_a).and_return(mock_workouts)
+
+      results = Workout.search([], nil, nil, nil)
+      expect(results).to eq(mock_workouts)
+    end
+  end
 end
 

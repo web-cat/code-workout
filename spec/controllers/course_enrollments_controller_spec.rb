@@ -18,6 +18,14 @@ describe CourseEnrollmentsController, type: :controller do
     allow(user).to receive(:course_offerings_for_term).and_return([mock_course_offering])
   end
 
+  describe 'authentication' do
+    it 'redirects unauthenticated users to the sign-in page' do
+      allow(controller).to receive(:current_user).and_return(nil)
+      get :new, params: { organization_id: 'vt', course_id: 'cs1114', term_id: 'fall2026' }
+      expect(response).to redirect_to(new_user_session_path)
+    end
+  end
+
   describe 'GET #new (js format)' do
     it 'renders the new.js.erb template without leaving raw ERB tags' do
       get :new, params: {
@@ -134,6 +142,138 @@ describe CourseEnrollmentsController, type: :controller do
       expect(flash[:success]).to include('1 new user accounts created')
       expect(flash[:success]).to include('1 users enrolled')
       expect(response).to redirect_to(organization_course_path(id: 'cs1114', organization_id: 'vt', term_id: 'fall2026'))
+    end
+
+    it 'denies access to non-managers' do
+      non_manager = FactoryBot.build_stubbed(:user, id: 99)
+      allow(controller).to receive(:current_user).and_return(non_manager)
+      allow(controller).to receive(:authorize!).with(:manage, course_offering).and_raise(CanCan::AccessDenied.new("Not authorized!"))
+
+      post :roster_upload, params: {
+        organization_id: 'vt',
+        course_id: 'cs1114',
+        term_id: 'fall2026',
+        course_offering_id: '300'
+      }
+
+      expect(response).to redirect_to(root_path)
+      expect(flash[:error]).to be_present
+    end
+  end
+
+  describe 'DELETE #destroy' do
+    let(:enrollment) { double('CourseEnrollment', id: 55, course_offering: mock_course_offering) }
+
+    before do
+      allow(CourseEnrollment).to receive(:find).with('55').and_return(enrollment)
+    end
+
+    it 'authorizes :destroy on the course enrollment before destroying' do
+      expect(controller).to receive(:authorize!).with(:destroy, enrollment)
+      expect(enrollment).to receive(:destroy)
+
+      delete :destroy, params: { id: '55' }, format: :json
+      expect(response.status).to eq(200)
+    end
+
+    it 'denies non-authorized users from deleting enrollments' do
+      allow(controller).to receive(:authorize!).with(:destroy, enrollment).and_raise(CanCan::AccessDenied.new("Not authorized!"))
+
+      delete :destroy, params: { id: '55' }, format: :json
+      expect(response).to redirect_to(root_path)
+      expect(flash[:error]).to be_present
+    end
+  end
+
+  describe 'POST #enroll_users' do
+    let(:student_role) { double('CourseRole', id: 1) }
+    let(:instructor_role) { double('CourseRole', id: 2) }
+    let(:student_user) { FactoryBot.build_stubbed(:user, id: 50, email: 'student@example.com') }
+    let(:target_course_offering) do
+      double('CourseOffering', id: 400, can_enroll?: true, course: mock_course, term: mock_term)
+    end
+
+    before do
+      allow(CourseOffering).to receive(:find).with('400').and_return(target_course_offering)
+      allow(CourseRole).to receive(:student).and_return(student_role)
+      allow(CourseRole).to receive(:find).with('2').and_return(instructor_role)
+    end
+
+    it 'prevents non-managers from escalating role to instructor' do
+      allow(controller).to receive(:current_user).and_return(student_user)
+      allow(student_user).to receive(:manages?).with(target_course_offering).and_return(false)
+      allow(controller).to receive(:can?).with(:manage, target_course_offering).and_return(false)
+
+      allow(User).to receive(:find_by).with(email: 'student@example.com').and_return(student_user)
+      allow(student_user).to receive(:is_enrolled?).with(target_course_offering).and_return(false)
+
+      enrollment_double = double('CourseEnrollment')
+      allow(enrollment_double).to receive(:save).and_return(true)
+
+      expect(CourseEnrollment).to receive(:new).with(
+        course_role: student_role,
+        course_offering: target_course_offering,
+        user: student_user
+      ).and_return(enrollment_double)
+
+      post :enroll_users, params: {
+        organization_id: 'vt',
+        course_id: 'cs1114',
+        term_id: 'fall2026',
+        course_offering_id: '400',
+        course_role_id: '2',
+        emails: ['student@example.com']
+      }
+
+      expect(controller.instance_variable_get(:@course_role)).to eq(student_role)
+    end
+
+    it 'prevents non-managers from enrolling other users' do
+      allow(controller).to receive(:current_user).and_return(student_user)
+      allow(student_user).to receive(:manages?).with(target_course_offering).and_return(false)
+      allow(controller).to receive(:can?).with(:manage, target_course_offering).and_return(false)
+
+      allow(User).to receive(:find_by).with(email: 'student@example.com').and_return(student_user)
+      allow(student_user).to receive(:is_enrolled?).with(target_course_offering).and_return(false)
+
+      enrollment_double = double('CourseEnrollment')
+      allow(enrollment_double).to receive(:save).and_return(true)
+
+      expect(CourseEnrollment).to receive(:new).with(
+        course_role: student_role,
+        course_offering: target_course_offering,
+        user: student_user
+      ).and_return(enrollment_double)
+
+      # Attempting to enroll victim@example.com along with self
+      post :enroll_users, params: {
+        organization_id: 'vt',
+        course_id: 'cs1114',
+        term_id: 'fall2026',
+        course_offering_id: '400',
+        emails: ['victim@example.com', 'student@example.com']
+      }
+
+      # victim@example.com was filtered out
+      expect(CourseEnrollment).not_to receive(:new).with(hash_including(user: double(email: 'victim@example.com')))
+    end
+
+    it 'blocks non-managers when enrollment cutoff date has passed' do
+      allow(controller).to receive(:current_user).and_return(student_user)
+      allow(student_user).to receive(:manages?).with(target_course_offering).and_return(false)
+      allow(controller).to receive(:can?).with(:manage, target_course_offering).and_return(false)
+      allow(target_course_offering).to receive(:can_enroll?).and_return(false)
+
+      post :enroll_users, params: {
+        organization_id: 'vt',
+        course_id: 'cs1114',
+        term_id: 'fall2026',
+        course_offering_id: '400',
+        emails: ['student@example.com']
+      }
+
+      expect(response).to redirect_to(root_path)
+      expect(flash[:alert]).to include('cutoff date')
     end
   end
 end

@@ -720,7 +720,7 @@ class Workout < ApplicationRecord
 
   # -------------------------------------------------------------
   def self.search(terms, user, course, searching_offerings)
-    split_terms = terms.blank? ? '.' : terms.join('|')
+    clean_terms = (terms || []).map(&:to_s).map(&:strip).reject(&:blank?)
 
     if user
       available_workouts = Workout.includes(:tags, :exercise_workouts, exercises: :irt_data).where(
@@ -734,15 +734,15 @@ class Workout < ApplicationRecord
         workout_offerings = course.course_offerings.joins(:workout_offerings, :term)
           .order('terms.ends_on DESC')
           .flat_map(&:workout_offerings)
-        if terms.blank?
+        if clean_terms.blank?
           workouts_to_search = available_workouts
         else
-          workouts_to_search = available_workouts.tagged_with(terms, any: true, wild: true, on: :tags) +
-            available_workouts.tagged_with(terms, any: true, wild: true, on: :languages) +
-            available_workouts.tagged_with(terms, any: true, wild: true, on: :styles)
-          if split_terms
-            workouts_to_search = workouts_to_search + available_workouts.where('name regexp (?)', split_terms)
-          end
+          workouts_to_search = available_workouts.tagged_with(clean_terms, any: true, wild: true, on: :tags) +
+            available_workouts.tagged_with(clean_terms, any: true, wild: true, on: :languages) +
+            available_workouts.tagged_with(clean_terms, any: true, wild: true, on: :styles)
+          name_clauses = clean_terms.map { 'workouts.name LIKE ?' }.join(' OR ')
+          name_params = clean_terms.map { |t| "%#{ActiveRecord::Base.sanitize_sql_like(t)}%" }
+          workouts_to_search = workouts_to_search + available_workouts.where(name_clauses, *name_params)
         end
         workouts_to_search = workouts_to_search.flat_map(&:id)
 
@@ -775,10 +775,17 @@ class Workout < ApplicationRecord
       available_workouts = Workout.includes(:tags, :exercise_workouts, exercises: :irt_data).where(is_public: true)
     end
 
-    return available_workouts.tagged_with(terms, any: true, wild: true, on: :tags) +
-      available_workouts.tagged_with(terms, any: true, wild: true, on: :languages) +
-      available_workouts.tagged_with(terms, any: true, wild: true, on: :styles) +
-      available_workouts.where('name regexp (?)', split_terms).distinct
+    if clean_terms.blank?
+      return available_workouts.to_a
+    end
+
+    name_clauses = clean_terms.map { 'workouts.name LIKE ?' }.join(' OR ')
+    name_params = clean_terms.map { |t| "%#{ActiveRecord::Base.sanitize_sql_like(t)}%" }
+
+    return available_workouts.tagged_with(clean_terms, any: true, wild: true, on: :tags) +
+      available_workouts.tagged_with(clean_terms, any: true, wild: true, on: :languages) +
+      available_workouts.tagged_with(clean_terms, any: true, wild: true, on: :styles) +
+      available_workouts.where(name_clauses, *name_params).distinct
   end
 
 

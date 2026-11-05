@@ -153,7 +153,7 @@ class Exercise < ApplicationRecord
       name_params = []
       search_words.each do |word|
         name_clauses << 'exercises.name LIKE ?'
-        name_params << "%#{word}%"
+        name_params << "%#{ActiveRecord::Base.sanitize_sql_like(word)}%"
       end
 
       if name_clauses.any?
@@ -176,7 +176,7 @@ class Exercise < ApplicationRecord
         tag_params = []
         search_words.each do |word|
           tag_clauses << 'tags.name LIKE ?'
-          tag_params << "%#{word}%"
+          tag_params << "%#{ActiveRecord::Base.sanitize_sql_like(word)}%"
         end
         matching_tag_ids = Exercise.joins(taggings: :tag)
           .where(tag_clauses.join(' OR '), *tag_params)

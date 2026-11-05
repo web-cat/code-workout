@@ -435,7 +435,7 @@ Rails.application.routes.draw do
     get  'workouts/download' => 'workouts#download'
     get  'workouts/:id/add_exercises' => 'workouts#add_exercises'
     post 'workouts/link_exercises'  => 'workouts#link_exercises'
-    get  'workouts/new_with_search/:searchkey'  => 'workouts#new_with_search',
+    get  'workouts/new_with_search(/:searchkey)'  => 'workouts#new_with_search',
       as: :workouts_with_search
     post 'workouts/new_with_search'  => 'workouts#new_with_search',
       as: :workouts_exercise_search
