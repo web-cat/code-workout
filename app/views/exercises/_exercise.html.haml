@@ -1,5 +1,5 @@
 - size ||= 'lg'
-- start_workout ||= nil
+- start_workout = local_assigns[:start_workout]
 - new_workout ||= nil
 - user ||= current_user || User.find_by(id: session[:student_drift_user_id])
 - review ||= false
@@ -82,7 +82,7 @@
                   lti_launch: @lti_launch)
           - elsif review
             = exercise.display_name
-          - elsif !start_workout
+          - elsif start_workout == false
             = exercise.display_name
           - else
             = link_to exercise.display_name,
