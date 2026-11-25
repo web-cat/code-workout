@@ -60,7 +60,7 @@
                 id: workout_offering.id,
                 workout_score_id: workout_score.andand.id,
                 lti_launch: @lti_launch)
-          - elsif review && (attempt.present? || (@scoring_attempts_by_version_id && @scoring_attempts_by_version_id[exercise.current_version_id].present?) || (@attempts_by_version_id && @attempts_by_version_id[exercise.current_version_id].present?) || (workout_score ? (workout_score.attempts.loaded? ? workout_score.attempts.any? { |a| a.exercise_version_id == exercise.current_version_id } : workout_score.attempts.where(exercise_version: exercise.current_version).any?) : Attempt.where(exercise_version: exercise.current_version, user: user).any?))
+          - elsif review
             - if user.id == current_user.id
               = link_to exercise.display_name,
                 organization_workout_offering_exercise_path(id: exercise.id,
@@ -80,8 +80,6 @@
                   workout_offering_id: workout_offering.id,
                   workout_score_id: workout_score.andand.id,
                   lti_launch: @lti_launch)
-          - elsif review
-            = exercise.display_name
           - elsif start_workout == false
             = exercise.display_name
           - else

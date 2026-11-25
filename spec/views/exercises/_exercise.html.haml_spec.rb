@@ -120,5 +120,26 @@ describe "exercises/_exercise.html.haml" do
       )
       expect(rendered).to have_link(exercise.display_name, href: expected_url)
     end
+
+    it "renders a clickable link to the exercise during review even when the student has not attempted it" do
+      render partial: 'exercises/exercise', locals: {
+        exercise: exercise,
+        user: user,
+        workout_offering: workout_offering,
+        workout_score: workout_score,
+        workout: workout,
+        review: true
+      }
+
+      expected_url = organization_workout_offering_exercise_path(
+        id: exercise.id,
+        organization_id: organization.slug,
+        course_id: course.slug,
+        term_id: term.slug,
+        workout_offering_id: workout_offering.id,
+        workout_score_id: workout_score.id
+      )
+      expect(rendered).to have_link(exercise.display_name, href: expected_url)
+    end
   end
 end
